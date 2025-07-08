@@ -1,0 +1,172 @@
+
+export const msCities = [
+  "Água Clara",
+  "Alcinópolis",
+  "Amambai",
+  "Anastácio",
+  "Anaurilândia",
+  "Angélica",
+  "Antônio João",
+  "Aparecida do Taboado",
+  "Aquidauana",
+  "Aral Moreira",
+  "Bandeirantes",
+  "Bataguassu",
+  "Batayporã",
+  "Bela Vista",
+  "Bodoquena",
+  "Bonito",
+  "Brasilândia",
+  "Caarapó",
+  "Camapuã",
+  "Campo Grande",
+  "Caracol",
+  "Cassilândia",
+  "Chapadão do Sul",
+  "Corguinho",
+  "Coronel Sapucaia",
+  "Corumbá",
+  "Costa Rica",
+  "Coxim",
+  "Deodápolis",
+  "Dois Irmãos do Buriti",
+  "Douradina",
+  "Dourados",
+  "Eldorado",
+  "Fátima do Sul",
+  "Figueirão",
+  "Glória de Dourados",
+  "Guia Lopes da Laguna",
+  "Iguatemi",
+  "Inocência",
+  "Itaporã",
+  "Itaquiraí",
+  "Ivinhema",
+  "Japorã",
+  "Jaraguari",
+  "Jardim",
+  "Jateí",
+  "Juti",
+  "Ladário",
+  "Laguna Carapã",
+  "Maracaju",
+  "Miranda",
+  "Mundo Novo",
+  "Naviraí",
+  "Nioaque",
+  "Nova Alvorada do Sul",
+  "Nova Andradina",
+  "Novo Horizonte do Sul",
+  "Paranaíba",
+  "Paranhos",
+  "Pedro Gomes",
+  "Ponta Porã",
+  "Porto Murtinho",
+  "Ribas do Rio Pardo",
+  "Rio Brilhante",
+  "Rio Negro",
+  "Rio Verde de Mato Grosso",
+  "Rochedo",
+  "Santa Rita do Pardo",
+  "São Gabriel do Oeste",
+  "Selvíria",
+  "Sete Quedas",
+  "Sidrolândia",
+  "Sonora",
+  "Tacuru",
+  "Taquarussu",
+  "Terenos",
+  "Três Lagoas",
+  "Vicentina"
+];
+
+export const neighborhoods = [
+  "Centro",
+  "Coophavila II",
+  "Jardim Anache",
+  "Jardim Batistão",
+  "Jardim Leblon",
+  "Jardim Noroeste",
+  "Jardim São Bento",
+  "Monte Castelo",
+  "Nova Lima",
+  "Tiradentes",
+  "Vila Carvalho",
+  "Vila Nasser",
+  "Vila Planalto",
+  "Aero Rancho",
+  "Bandeira",
+  "Carandá",
+  "Chácara Cachoeira",
+  "Coronel Antonino",
+  "Danúbio Azul",
+  "Guanandi",
+  "Jardim Canguru",
+  "Jardim Cidade Morena",
+  "Jardim Imá",
+  "Jardim Inápolis",
+  "Jardim Monumento",
+  "Jardim Parati",
+  "Lagoa Azul",
+  "Mata do Jacinto",
+  "Pioneiros",
+  "Santa Fé",
+  "São Conrado",
+  "Vila Alba",
+  "Vila Sobrinho",
+  "Outro"
+];
+
+// Dados auxiliares para análises e relatórios
+export const msRegions = [
+  {
+    name: "Pantanal",
+    cities: ["Corumbá", "Aquidauana", "Miranda", "Bodoquena", "Bonito"],
+    description: "Maior planície alagável do mundo"
+  },
+  {
+    name: "Bonito e Região",
+    cities: ["Bonito", "Jardim", "Guia Lopes da Laguna", "Bodoquena"],
+    description: "Destino de ecoturismo mundial"
+  },
+  {
+    name: "Campo Grande e Região",
+    cities: ["Campo Grande", "Sidrolândia", "Nova Alvorada do Sul", "Ribas do Rio Pardo"],
+    description: "Centro urbano e portal de entrada"
+  },
+  {
+    name: "Costa Leste",
+    cities: ["Três Lagoas", "Brasilândia", "Água Clara", "Selvíria"],
+    description: "Região de cerrado e desenvolvimento"
+  },
+  {
+    name: "Portal de Entrada do Pantanal",
+    cities: ["Coxim", "Sonora", "Pedro Gomes", "Camapuã"],
+    description: "Porta de entrada norte do Pantanal"
+  },
+  {
+    name: "Rota de Integração Latino-Americana",
+    cities: ["Dourados", "Ponta Porã", "Amambai", "Coronel Sapucaia"],
+    description: "Fronteira e integração regional"
+  }
+];
+
+export const travelOrganizationOptions = [
+  { value: "agencia_fisica", label: "Agência de viagem física" },
+  { value: "corporativo", label: "Empresa organizou / Corporativo" },
+  { value: "sites", label: "Sites (Booking, Expedia, etc.)" },
+  { value: "aplicativo", label: "Aplicativo de viagem" },
+  { value: "recomendacao", label: "Recomendação de amigos/família" },
+  { value: "redes_sociais", label: "Redes sociais" },
+  { value: "proprio", label: "Organizei por conta própria" },
+  { value: "Outro", label: "Outro" }
+];
+
+export const timeInCityOptions = [
+  { value: "menos-1-ano", label: "Menos de 1 ano" },
+  { value: "1-3-anos", label: "1-3 anos" },
+  { value: "4-10-anos", label: "4-10 anos" },
+  { value: "11-20-anos", label: "11-20 anos" },
+  { value: "mais-20-anos", label: "Mais de 20 anos" },
+  { value: "nasceu-aqui", label: "Nasceu aqui" }
+];

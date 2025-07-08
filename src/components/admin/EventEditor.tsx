@@ -1,0 +1,400 @@
+
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Save, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface Event {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  start_date: string;
+  end_date: string | null;
+  image_url: string | null;
+}
+
+interface EventDetails {
+  id: string;
+  event_id: string;
+  official_name: string | null;
+  exact_location: string | null;
+  cover_image_url: string | null;
+  video_url: string | null;
+  detailed_description: string | null;
+  schedule_info: string | null;
+  event_type: string | null;
+  registration_link: string | null;
+  extra_info: string | null;
+  map_latitude: number | null;
+  map_longitude: number | null;
+  is_free: boolean;
+}
+
+const EventEditor = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [event, setEvent] = useState<Event | null>(null);
+  const [details, setDetails] = useState<EventDetails>({
+    id: '',
+    event_id: '',
+    official_name: '',
+    exact_location: '',
+    cover_image_url: '',
+    video_url: null,
+    detailed_description: null,
+    schedule_info: null,
+    event_type: '',
+    registration_link: null,
+    extra_info: null,
+    map_latitude: null,
+    map_longitude: null,
+    is_free: false
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+
+      try {
+        // Buscar informações básicas do evento
+        const { data: eventData, error: eventError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (eventError) throw eventError;
+        setEvent(eventData);
+
+        // Buscar detalhes do evento
+        const { data: detailsData, error: detailsError } = await supabase
+          .from('event_details')
+          .select('*')
+          .eq('event_id', id)
+          .single();
+
+        if (detailsData) {
+          setDetails({
+            id: detailsData.id,
+            event_id: detailsData.event_id,
+            official_name: detailsData.official_name || '',
+            exact_location: detailsData.exact_location || '',
+            cover_image_url: detailsData.cover_image_url || '',
+            video_url: detailsData.video_url,
+            detailed_description: detailsData.detailed_description,
+            schedule_info: detailsData.schedule_info,
+            event_type: detailsData.event_type || '',
+            registration_link: detailsData.registration_link,
+            extra_info: detailsData.extra_info,
+            map_latitude: detailsData.map_latitude,
+            map_longitude: detailsData.map_longitude,
+            is_free: detailsData.is_free || false
+          });
+        } else {
+          // Se não existem detalhes, criar um registro com valores padrão
+          setDetails(prev => ({
+            ...prev,
+            event_id: id
+          }));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do evento.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, toast]);
+
+  const handleSave = async () => {
+    if (!event || !id) return;
+
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para editar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Atualizar ou inserir detalhes
+      const { error } = await supabase
+        .from('event_details')
+        .upsert({
+          event_id: id,
+          official_name: details.official_name,
+          exact_location: details.exact_location,
+          cover_image_url: details.cover_image_url,
+          video_url: details.video_url,
+          detailed_description: details.detailed_description,
+          schedule_info: details.schedule_info,
+          event_type: details.event_type,
+          registration_link: details.registration_link,
+          extra_info: details.extra_info,
+          map_latitude: details.map_latitude,
+          map_longitude: details.map_longitude,
+          is_free: details.is_free,
+          updated_by: user.id,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Evento atualizado com sucesso!",
+      });
+
+      navigate(`/eventos/${id}`);
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as alterações.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-ms-primary-blue"></div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Evento não encontrado</h1>
+          <Button onClick={() => navigate('/eventos')}>Voltar para Eventos</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ms-container py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/eventos/${id}`)}
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Voltar
+          </Button>
+          <h1 className="text-3xl font-bold text-ms-primary-blue">
+            Editar: {event.name}
+          </h1>
+        </div>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save size={16} className="mr-2" />
+          {saving ? 'Salvando...' : 'Salvar'}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Informações básicas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações Gerais</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="official_name">Nome Oficial</Label>
+              <Input
+                id="official_name"
+                value={details.official_name || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, official_name: e.target.value }))}
+                placeholder="Nome oficial do evento"
+              />
+            </div>
+            <div>
+              <Label htmlFor="exact_location">Localização Exata</Label>
+              <Input
+                id="exact_location"
+                value={details.exact_location || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, exact_location: e.target.value }))}
+                placeholder="Endereço completo do evento"
+              />
+            </div>
+            <div>
+              <Label htmlFor="event_type">Tipo de Evento</Label>
+              <Select
+                value={details.event_type || ''}
+                onValueChange={(value) => setDetails(prev => ({ ...prev, event_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cultural">Cultural</SelectItem>
+                  <SelectItem value="esportivo">Esportivo</SelectItem>
+                  <SelectItem value="gastronômico">Gastronômico</SelectItem>
+                  <SelectItem value="religioso">Religioso</SelectItem>
+                  <SelectItem value="educativo">Educativo</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_free"
+                checked={details.is_free}
+                onCheckedChange={(checked) => setDetails(prev => ({ ...prev, is_free: !!checked }))}
+              />
+              <Label htmlFor="is_free">Evento gratuito</Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mídia */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Mídia</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="cover_image_url">Imagem de Capa</Label>
+              <Input
+                id="cover_image_url"
+                value={details.cover_image_url || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                placeholder="URL da imagem de capa"
+              />
+            </div>
+            <div>
+              <Label htmlFor="video_url">URL do Vídeo</Label>
+              <Input
+                id="video_url"
+                value={details.video_url || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, video_url: e.target.value || null }))}
+                placeholder="URL do vídeo promocional"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Descrição detalhada */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Descrição Detalhada</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="detailed_description">Descrição</Label>
+              <Textarea
+                id="detailed_description"
+                value={details.detailed_description || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, detailed_description: e.target.value || null }))}
+                rows={6}
+                placeholder="Descrição detalhada do evento..."
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Informações adicionais */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações Adicionais</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="schedule_info">Programação</Label>
+              <Textarea
+                id="schedule_info"
+                value={details.schedule_info || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, schedule_info: e.target.value || null }))}
+                rows={3}
+                placeholder="Informações sobre horários e programação..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="registration_link">Link de Inscrição</Label>
+              <Input
+                id="registration_link"
+                value={details.registration_link || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, registration_link: e.target.value || null }))}
+                placeholder="URL para inscrições"
+              />
+            </div>
+            <div>
+              <Label htmlFor="extra_info">Informações Extras</Label>
+              <Textarea
+                id="extra_info"
+                value={details.extra_info || ''}
+                onChange={(e) => setDetails(prev => ({ ...prev, extra_info: e.target.value || null }))}
+                rows={3}
+                placeholder="Outras informações relevantes..."
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Localização */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Coordenadas no Mapa</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={details.map_latitude || ''}
+                  onChange={(e) => setDetails(prev => ({ ...prev, map_latitude: parseFloat(e.target.value) || null }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={details.map_longitude || ''}
+                  onChange={(e) => setDetails(prev => ({ ...prev, map_longitude: parseFloat(e.target.value) || null }))}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default EventEditor;

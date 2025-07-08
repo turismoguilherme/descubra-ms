@@ -1,0 +1,20 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Custom MS tourism colors */
+:root {
+  --ms-primary-blue: #2563eb;
+  --ms-secondary-yellow: #fbbf24;
+  --ms-pantanal-green: #16a34a;
+  --ms-cerrado-brown: #a16207;
+  --ms-guavira-purple: #7c3aed;
+  --ms-rivers-blue: #0ea5e9;
+}
+
+.ms-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
