@@ -24,7 +24,7 @@ const Footer = () => {
               <img 
                 src="/lovable-uploads/1e2f844e-0cd3-4b3b-84b6-85904f67ebc7.png" 
                 alt="Descubra Mato Grosso do Sul" 
-                className="h-14 w-auto filter brightness-0 invert"
+                className="h-14 w-auto"
               />
             </div>
             <p className="text-gray-100 mb-4 max-w-sm">
