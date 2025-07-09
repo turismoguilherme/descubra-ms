@@ -5,14 +5,60 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Custom MS tourism colors */
+/* Descubra MS - Nova identidade visual baseada na logo */
 :root {
-  --ms-primary-blue: #2563eb;
-  --ms-secondary-yellow: #fbbf24;
-  --ms-pantanal-green: #16a34a;
-  --ms-cerrado-brown: #a16207;
-  --ms-guavira-purple: #7c3aed;
-  --ms-rivers-blue: #0ea5e9;
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 220 91% 29%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 48 96% 89%;
+  --secondary-foreground: 48 100% 20%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 10% 3.9%;
+  --radius: 0.5rem;
+
+  /* Cores da nova identidade Descubra MS */
+  --ms-primary-blue: 220 91% 29%;          /* Azul rio da logo */
+  --ms-secondary-yellow: 48 96% 55%;       /* Amarelo dourado da logo */
+  --ms-pantanal-green: 140 65% 42%;        /* Verde floresta do Pantanal */
+  --ms-cerrado-orange: 24 95% 53%;         /* Laranja cerrado da logo */
+  --ms-discovery-teal: 180 84% 32%;        /* Azul-verde da paisagem */
+  --ms-earth-brown: 30 45% 35%;            /* Tons terrosos da logo */
+  --ms-sky-blue: 210 100% 70%;             /* Azul céu suave */
+  --ms-nature-green-light: 140 50% 75%;    /* Verde claro complementar */
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
 }
 
 .ms-container {

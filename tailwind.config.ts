@@ -63,17 +63,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Cores do Mato Grosso do Sul conforme identidade visual
+				// Nova identidade visual "Descubra MS" baseada na logo
 				ms: {
-					'primary-blue': '#003087',    // Cor primária (azul da logo)
-					'secondary-yellow': '#FFC107', // Cor secundária (amarelo da logo)
-					'pantanal-green': '#2E7D32',  // Cor complementar (verde Pantanal)
-					'cerrado-orange': '#E67E22',
-					'guavira-purple': '#8E44AD',
-					'terra-brown': '#A04000',
-					'rivers-blue': '#3498DB',
-					'nature-green-light': '#ABEBC6',
-					'nature-green-dark': '#145A32'
+					'primary-blue': 'hsl(var(--ms-primary-blue))',          // Azul rio principal
+					'secondary-yellow': 'hsl(var(--ms-secondary-yellow))',   // Amarelo dourado
+					'pantanal-green': 'hsl(var(--ms-pantanal-green))',      // Verde floresta
+					'cerrado-orange': 'hsl(var(--ms-cerrado-orange))',      // Laranja cerrado
+					'discovery-teal': 'hsl(var(--ms-discovery-teal))',      // Azul-verde descoberta
+					'earth-brown': 'hsl(var(--ms-earth-brown))',            // Tons terrosos
+					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
+					'nature-green-light': 'hsl(var(--ms-nature-green-light))' // Verde claro
 				}
 			},
 			borderRadius: {

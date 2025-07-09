@@ -64,13 +64,13 @@ const LoginForm = () => {
       <div className="flex justify-center py-6 bg-white">
         <img 
           src="/lovable-uploads/1e2f844e-0cd3-4b3b-84b6-85904f67ebc7.png" 
-          alt="Isto é Mato Grosso do Sul" 
+          alt="Descubra Mato Grosso do Sul" 
           className="h-[60px] w-auto" 
         />
       </div>
 
       {/* Formulário de login */}
-      <div className="flex-grow bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green py-12 px-4">
+      <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
         <div className="ms-container max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-2xl font-semibold text-ms-primary-blue mb-2 text-center">
             Entrar na sua conta
@@ -125,7 +125,7 @@ const LoginForm = () => {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-[#FFC107] text-black hover:bg-[#FFC107]/90"
+                className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold"
               >
                 <LogIn size={20} className="mr-2" />
                 {loading ? 'Entrando...' : 'Entrar'}

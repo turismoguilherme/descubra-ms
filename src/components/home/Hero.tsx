@@ -31,8 +31,11 @@ const Hero = () => {
   }
 
   return (
-    <div className="relative h-[70vh] bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://source.unsplash.com/photo-1482938289607-e9573fc25ebb')] bg-cover bg-center opacity-40"></div>
+    <div className="relative h-[70vh] bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green overflow-hidden">
+      <div className="absolute inset-0 bg-[url('https://source.unsplash.com/photo-1482938289607-e9573fc25ebb')] bg-cover bg-center opacity-30"></div>
+      {/* Elementos decorativos inspirados na logo */}
+      <div className="absolute top-10 right-10 w-32 h-32 bg-ms-secondary-yellow/20 rounded-full blur-xl animate-pulse-slow"></div>
+      <div className="absolute bottom-20 left-10 w-24 h-24 bg-ms-cerrado-orange/30 rounded-full blur-lg animate-pulse-slow delay-1000"></div>
       
       <div className="relative h-full flex items-center justify-center">
         <div className="ms-container text-center px-4">
@@ -40,24 +43,24 @@ const Hero = () => {
             {title || 'Descubra Mato Grosso do Sul'}
           </h1>
           <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto drop-shadow-md">
-            {subtitle || 'Do Pantanal ao Cerrado, uma experiência única de natureza, cultura e aventura'}
+            {subtitle || 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               to="/welcome" 
-              className="bg-ms-secondary-yellow text-ms-primary-blue font-bold px-6 py-3 rounded-md hover:bg-ms-secondary-yellow/90 transition-colors shadow-lg"
+              className="bg-ms-secondary-yellow text-ms-primary-blue font-bold px-8 py-4 rounded-xl hover:bg-ms-secondary-yellow/90 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
             >
-              {buttonRegister || 'Cadastre-se'}
+              {buttonRegister || 'Descubra Agora'}
             </Link>
             <Link 
               to="/passaporte" 
-              className="bg-ms-primary-blue text-white font-medium px-6 py-3 rounded-md hover:bg-ms-primary-blue/90 transition-colors shadow-lg"
+              className="bg-ms-pantanal-green text-white font-medium px-8 py-4 rounded-xl hover:bg-ms-pantanal-green/90 transition-all duration-300 transform hover:scale-105 shadow-xl"
             >
               {buttonPassport || 'Passaporte Digital'}
             </Link>
             <Link 
               to="/delinha" 
-              className="bg-white text-ms-primary-blue font-medium px-6 py-3 rounded-md hover:bg-gray-100 transition-colors shadow-lg"
+              className="bg-white/90 backdrop-blur-sm text-ms-primary-blue font-medium px-8 py-4 rounded-xl hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-xl"
             >
               {buttonDelinha || 'Converse com a Delinha'}
             </Link>

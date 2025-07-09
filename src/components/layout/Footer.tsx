@@ -16,7 +16,7 @@ const Footer = () => {
   const contactPhone = getContentValue('footer_contact_phone');
 
   return (
-    <footer className="bg-ms-rivers-blue text-white">
+    <footer className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white">
       <div className="ms-container py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* About Section */}
@@ -24,12 +24,12 @@ const Footer = () => {
             <div className="mb-6">
               <img 
                 src="/lovable-uploads/1e2f844e-0cd3-4b3b-84b6-85904f67ebc7.png" 
-                alt="Isto é Mato Grosso do Sul" 
-                className="h-12 filter invert brightness-0"
+                alt="Descubra Mato Grosso do Sul" 
+                className="h-14 w-auto filter brightness-0 invert"
               />
             </div>
             <p className="text-gray-100 mb-4 max-w-sm">
-              {description || 'Sua plataforma digital para explorar as maravilhas do Mato Grosso do Sul, conhecer a cultura local e planejar suas viagens.'}
+              {description || 'Descubra as maravilhas do Pantanal, Cerrado e muito mais. Sua jornada pelo coração da América do Sul começa aqui.'}
             </p>
             <p className="text-gray-200 text-sm">
               {initiative || 'Uma iniciativa da Fundtur-MS'}

@@ -16,7 +16,7 @@ const Index = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="h-[500px] bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green animate-pulse" />
+        <div className="h-[500px] bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green animate-pulse" />
         <div className="container mx-auto px-4 py-8 space-y-8">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />

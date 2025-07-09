@@ -37,8 +37,8 @@ const Navbar = () => {
           <Link to="/" className="flex items-center">
             <img 
               src="/lovable-uploads/1e2f844e-0cd3-4b3b-84b6-85904f67ebc7.png" 
-              alt="Isto é Mato Grosso do Sul" 
-              className="h-10 w-auto" 
+              alt="Descubra Mato Grosso do Sul" 
+              className="h-12 w-auto transition-transform duration-300 hover:scale-105" 
             />
           </Link>
 
@@ -85,7 +85,7 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-ms-primary-blue hover:bg-ms-primary-blue/90">
+                  <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
                     Cadastrar
                   </Button>
                 </Link>
@@ -154,7 +154,7 @@ const Navbar = () => {
                       </Button>
                     </Link>
                     <Link to="/register" onClick={() => setIsOpen(false)}>
-                      <Button size="sm" className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90">
+                      <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
                         Cadastrar
                       </Button>
                     </Link>

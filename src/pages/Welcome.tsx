@@ -34,8 +34,8 @@ const Welcome = () => {
         <div className="relative flex-grow flex items-center justify-center">
           {/* Smooth animated background */}
           <div className="absolute inset-0 bg-[url('https://source.unsplash.com/photo-1513635269975-59663e0ac1ad')] bg-cover bg-center">
-            <div className="absolute inset-0 bg-gradient-to-r from-ms-primary-blue/85 to-ms-pantanal-green/85"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-ms-secondary-yellow/5 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-ms-primary-blue/85 via-ms-discovery-teal/75 to-ms-pantanal-green/85"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-ms-secondary-yellow/10 to-ms-cerrado-orange/5"></div>
             {/* Subtle moving light effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-pulse opacity-30"></div>
           </div>
@@ -44,12 +44,12 @@ const Welcome = () => {
           <div className="relative z-10 text-center px-4 py-16">
             <div className="animate-fade-in">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white mb-6 drop-shadow-lg transform transition-all duration-500 hover:scale-105">
-                Bem-vindo ao Mato Grosso do Sul
+                Descubra Mato Grosso do Sul
               </h1>
               
               <p className="text-xl text-white mb-10 max-w-2xl mx-auto animate-fade-in delay-300">
-                Descubra um mundo de aventuras, natureza exuberante, cultura única e gastronomia autêntica.
-                <span className="inline-block ml-2">🌟</span>
+                Do Pantanal ao Cerrado, explore paisagens únicas, rica biodiversidade e cultura autêntica no coração da América do Sul.
+                <span className="inline-block ml-2">🦎</span>
               </p>
             </div>
             
@@ -97,7 +97,7 @@ const Welcome = () => {
                     <div className="w-8 h-8 bg-ms-pantanal-green rounded-full flex items-center justify-center">
                       <Camera className="w-4 h-4 text-white" />
                     </div>
-                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-ms-cerrado-orange rounded-full flex items-center justify-center">
                       <Heart className="w-4 h-4 text-white" />
                     </div>
                   </div>
