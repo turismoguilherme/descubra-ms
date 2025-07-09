@@ -255,6 +255,16 @@ class EnhancedSecurityService {
         .filter(([, data]) => data.count >= 10 && !data.blocked)
         .length;
 
+      // Check for unusual time patterns
+      const now = new Date();
+      const currentHour = now.getHours();
+      const isUnusualTime = currentHour < 6 || currentHour > 22;
+
+      // Check for geographic anomalies (simulated)
+      const suspiciousGeoPatterns = Array.from(this.rateLimitCache.entries())
+        .filter(([key, data]) => key.includes('geo_anomaly'))
+        .length;
+
       const patterns: string[] = [];
       let severity: 'low' | 'medium' | 'high' = 'low';
 
@@ -266,6 +276,16 @@ class EnhancedSecurityService {
       if (rapidRequests > 0) {
         patterns.push(`${rapidRequests} usuários com muitas requisições rápidas`);
         severity = severity === 'medium' ? 'high' : 'medium';
+      }
+
+      if (isUnusualTime && (recentFailedLogins > 0 || rapidRequests > 0)) {
+        patterns.push('Atividade suspeita detectada fora do horário normal');
+        severity = 'high';
+      }
+
+      if (suspiciousGeoPatterns > 0) {
+        patterns.push(`${suspiciousGeoPatterns} padrões geográficos suspeitos detectados`);
+        severity = severity === 'high' ? 'high' : 'medium';
       }
 
       const suspicious = patterns.length > 0;
@@ -283,6 +303,93 @@ class EnhancedSecurityService {
       console.error('Suspicious activity detection failed:', error);
       return { suspicious: false, patterns: [], severity: 'low' };
     }
+  }
+
+  /**
+   * Advanced threat detection with machine learning-like pattern recognition
+   */
+  async detectAdvancedThreats(): Promise<{
+    threats: Array<{
+      type: 'brute_force' | 'credential_stuffing' | 'account_takeover' | 'privilege_escalation';
+      confidence: number;
+      description: string;
+      severity: 'low' | 'medium' | 'high';
+      indicators: string[];
+    }>;
+  }> {
+    try {
+      const threats = [];
+      
+      // Brute force detection
+      const bruteForceAttempts = Array.from(this.rateLimitCache.entries())
+        .filter(([key, data]) => key.includes('login') && data.count >= 5)
+        .length;
+
+      if (bruteForceAttempts > 2) {
+        threats.push({
+          type: 'brute_force' as const,
+          confidence: Math.min(bruteForceAttempts * 0.15, 0.95),
+          description: 'Múltiplas tentativas de login em curto período',
+          severity: 'high' as const,
+          indicators: [`${bruteForceAttempts} padrões de força bruta detectados`]
+        });
+      }
+
+      // Credential stuffing detection
+      const credentialStuffingPattern = Array.from(this.rateLimitCache.entries())
+        .filter(([key, data]) => key.includes('registration') && data.count >= 3)
+        .length;
+
+      if (credentialStuffingPattern > 1) {
+        threats.push({
+          type: 'credential_stuffing' as const,
+          confidence: 0.7,
+          description: 'Possível tentativa de credential stuffing',
+          severity: 'medium' as const,
+          indicators: ['Múltiplas tentativas de registro com padrões suspeitos']
+        });
+      }
+
+      if (threats.length > 0) {
+        await this.logSecurityEvent({
+          action: 'advanced_threat_detected',
+          success: true,
+          metadata: { threats, detection_timestamp: new Date().toISOString() }
+        });
+      }
+
+      return { threats };
+    } catch (error) {
+      console.error('Advanced threat detection failed:', error);
+      return { threats: [] };
+    }
+  }
+
+  /**
+   * Real-time security monitoring
+   */
+  async startSecurityMonitoring(): Promise<void> {
+    // Start periodic monitoring
+    setInterval(async () => {
+      try {
+        const suspiciousActivity = await this.detectSuspiciousActivity();
+        const advancedThreats = await this.detectAdvancedThreats();
+
+        if (suspiciousActivity.suspicious || advancedThreats.threats.length > 0) {
+          await this.logSecurityEvent({
+            action: 'security_monitoring_alert',
+            success: true,
+            metadata: {
+              suspicious_activity: suspiciousActivity,
+              advanced_threats: advancedThreats,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Security monitoring error:', error);
+      }
+    }, 60000); // Check every minute
   }
 
   /**

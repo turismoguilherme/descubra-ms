@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import SocialLoginButtons from "./SocialLoginButtons";
+import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
+import { enhancedSecurityService } from "@/services/enhancedSecurityService";
+import { useToast } from "@/components/ui/use-toast";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -31,6 +34,7 @@ interface RegisterFormProps {
 const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -44,7 +48,54 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
 
   const handleSubmit = async (data: RegisterFormValues) => {
     console.log("📝 REGISTER FORM: Tentativa de registro para:", data.email);
-    await onRegister(data);
+    
+    try {
+      // Sanitize input data
+      const sanitizedData = {
+        fullName: sanitizeInput(data.fullName),
+        email: sanitizeInput(data.email),
+        password: data.password, // Don't sanitize passwords
+        confirmPassword: data.confirmPassword
+      };
+
+      // Validate form data
+      const validation = enhancedSecurityService.validateFormData(sanitizedData);
+      if (!validation.isValid) {
+        toast({
+          title: "Dados inválidos",
+          description: Object.values(validation.errors)[0],
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check rate limiting
+      const rateLimitCheck = await enhancedSecurityService.checkRateLimit(
+        sanitizedData.email,
+        'registration',
+        { maxAttempts: 3, windowMinutes: 15, blockDurationMinutes: 60 }
+      );
+
+      if (!rateLimitCheck.allowed) {
+        toast({
+          title: "Muitas tentativas",
+          description: rateLimitCheck.blockExpiry 
+            ? `Acesso bloqueado até ${rateLimitCheck.blockExpiry.toLocaleTimeString()}`
+            : "Aguarde antes de tentar novamente",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await onRegister(sanitizedData);
+    } catch (error) {
+      console.error("❌ Erro na validação de segurança:", error);
+      toast({
+        title: "Erro de segurança",
+        description: "Ocorreu um erro durante a validação. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -74,13 +125,19 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                 control={form.control}
                 name="fullName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Digite seu nome completo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                   <FormItem>
+                     <FormLabel>Nome Completo</FormLabel>
+                     <FormControl>
+                       <InputValidator 
+                         maxLength={100}
+                         pattern={/^[a-zA-ZÀ-ÿ\s]+$/}
+                         onValidationError={(error) => form.setError('fullName', { message: error })}
+                       >
+                         <Input placeholder="Digite seu nome completo" {...field} />
+                       </InputValidator>
+                     </FormControl>
+                     <FormMessage />
+                   </FormItem>
                 )}
               />
 
@@ -88,13 +145,19 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Digite seu e-mail" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                   <FormItem>
+                     <FormLabel>E-mail</FormLabel>
+                     <FormControl>
+                       <InputValidator 
+                         maxLength={254}
+                         pattern={/^[^\s@]+@[^\s@]+\.[^\s@]+$/}
+                         onValidationError={(error) => form.setError('email', { message: error })}
+                       >
+                         <Input type="email" placeholder="Digite seu e-mail" {...field} />
+                       </InputValidator>
+                     </FormControl>
+                     <FormMessage />
+                   </FormItem>
                 )}
               />
 
