@@ -14,7 +14,518 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      content_audit_log: {
+        Row: {
+          action: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string
+          timestamp: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name: string
+          timestamp?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string
+          timestamp?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      destination_details: {
+        Row: {
+          created_at: string | null
+          destination_id: string
+          id: string
+          image_gallery: string[] | null
+          map_latitude: number | null
+          map_longitude: number | null
+          promotional_text: string | null
+          tourism_tags: string[] | null
+          updated_at: string | null
+          updated_by: string | null
+          video_type: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          destination_id: string
+          id?: string
+          image_gallery?: string[] | null
+          map_latitude?: number | null
+          map_longitude?: number | null
+          promotional_text?: string | null
+          tourism_tags?: string[] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          video_type?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          destination_id?: string
+          id?: string
+          image_gallery?: string[] | null
+          map_latitude?: number | null
+          map_longitude?: number | null
+          promotional_text?: string | null
+          tourism_tags?: string[] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          video_type?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destination_details_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      destinations: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          name: string
+          region: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          name: string
+          region?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          name?: string
+          region?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      event_details: {
+        Row: {
+          auto_hide: boolean | null
+          cover_image_url: string | null
+          created_at: string | null
+          detailed_description: string | null
+          event_id: string
+          event_type: string | null
+          exact_location: string | null
+          extra_info: string | null
+          id: string
+          is_free: boolean | null
+          map_latitude: number | null
+          map_longitude: number | null
+          official_name: string | null
+          registration_link: string | null
+          schedule_info: string | null
+          updated_at: string | null
+          updated_by: string | null
+          video_url: string | null
+          visibility_end_date: string | null
+        }
+        Insert: {
+          auto_hide?: boolean | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          detailed_description?: string | null
+          event_id: string
+          event_type?: string | null
+          exact_location?: string | null
+          extra_info?: string | null
+          id?: string
+          is_free?: boolean | null
+          map_latitude?: number | null
+          map_longitude?: number | null
+          official_name?: string | null
+          registration_link?: string | null
+          schedule_info?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          video_url?: string | null
+          visibility_end_date?: string | null
+        }
+        Update: {
+          auto_hide?: boolean | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          detailed_description?: string | null
+          event_id?: string
+          event_type?: string | null
+          exact_location?: string | null
+          extra_info?: string | null
+          id?: string
+          is_free?: boolean | null
+          map_latitude?: number | null
+          map_longitude?: number | null
+          official_name?: string | null
+          registration_link?: string | null
+          schedule_info?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          video_url?: string | null
+          visibility_end_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_details_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          auto_hide: boolean | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          is_visible: boolean | null
+          location: string | null
+          name: string
+          start_date: string
+          updated_at: string | null
+          visibility_end_date: string | null
+        }
+        Insert: {
+          auto_hide?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          location?: string | null
+          name: string
+          start_date: string
+          updated_at?: string | null
+          visibility_end_date?: string | null
+        }
+        Update: {
+          auto_hide?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          location?: string | null
+          name?: string
+          start_date?: string
+          updated_at?: string | null
+          visibility_end_date?: string | null
+        }
+        Relationships: []
+      }
+      passport_stamps: {
+        Row: {
+          checkpoint_id: string | null
+          destination_id: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          route_id: string | null
+          stamp_type: string | null
+          stamped_at: string | null
+          user_id: string
+        }
+        Insert: {
+          checkpoint_id?: string | null
+          destination_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          route_id?: string | null
+          stamp_type?: string | null
+          stamped_at?: string | null
+          user_id: string
+        }
+        Update: {
+          checkpoint_id?: string | null
+          destination_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          route_id?: string | null
+          stamp_type?: string | null
+          stamped_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_stamps_checkpoint_id_fkey"
+            columns: ["checkpoint_id"]
+            isOneToOne: false
+            referencedRelation: "route_checkpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_stamps_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_stamps_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_checkpoints: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          destination_id: string | null
+          id: string
+          is_mandatory: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          order_sequence: number
+          route_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          destination_id?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          order_sequence: number
+          route_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          destination_id?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          order_sequence?: number
+          route_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_checkpoints_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_checkpoints_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          difficulty: string | null
+          distance_km: number | null
+          estimated_duration: unknown | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          region: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          distance_km?: number | null
+          estimated_duration?: unknown | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          region?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          distance_km?: number | null
+          estimated_duration?: unknown | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          region?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          created_at: string | null
+          display_name: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          region: string | null
+          updated_at: string | null
+          user_id: string
+          user_type: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          region?: string | null
+          updated_at?: string | null
+          user_id: string
+          user_type?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          region?: string | null
+          updated_at?: string | null
+          user_id?: string
+          user_type?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          region: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          region?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          region?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
