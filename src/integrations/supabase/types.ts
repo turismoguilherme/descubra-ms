@@ -531,6 +531,60 @@ export type Database = {
         }
         Relationships: []
       }
+      institutional_surveys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          objective: string
+          questions: Json
+          region: string | null
+          responses_count: number | null
+          start_date: string | null
+          status: string | null
+          target_audience: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          objective: string
+          questions: Json
+          region?: string | null
+          responses_count?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          objective?: string
+          questions?: Json
+          region?: string | null
+          responses_count?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       knowledge_base_entries: {
         Row: {
           category: string
@@ -730,6 +784,51 @@ export type Database = {
           name?: string
           region?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      secretary_files: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          file_path: string
+          file_size: number
+          file_type: string
+          filename: string
+          id: string
+          original_name: string
+          updated_at: string
+          uploaded_by: string | null
+          uploaded_by_name: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_path: string
+          file_size: number
+          file_type: string
+          filename: string
+          id?: string
+          original_name: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          filename?: string
+          id?: string
+          original_name?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
         }
         Relationships: []
       }
