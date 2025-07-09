@@ -11,6 +11,7 @@ export interface CATLocation {
 
 export interface CATCheckin {
   id?: string;
+  attendant_id?: string;
   attendant_name: string;
   cat_name: string;
   latitude: number;
@@ -94,17 +95,16 @@ class CATCheckinService {
   // Registrar check-in no banco de dados
   async registerCheckin(checkinData: Omit<CATCheckin, 'id'>): Promise<CATCheckin | null> {
     try {
-      // Inserir na tabela de check-ins (usando security_logs por enquanto)
+      // Inserir na tabela de check-ins
       const { data, error } = await supabase
-        .from('security_logs')
+        .from('cat_checkins')
         .insert({
-          action: 'cat_checkin',
-          success: checkinData.status === 'confirmado',
-          table_name: 'cat_checkins',
-          record_id: `${checkinData.cat_name}_${Date.now()}`,
-          user_agent: checkinData.device_info,
-          error_message: checkinData.status !== 'confirmado' ? 
-            `Distância: ${checkinData.distance_from_cat}m` : null
+          cat_name: checkinData.cat_name,
+          status: checkinData.status,
+          latitude: checkinData.latitude,
+          longitude: checkinData.longitude,
+          distance_from_cat: checkinData.distance_from_cat,
+          user_id: checkinData.attendant_id || null
         })
         .select()
         .single();
@@ -119,7 +119,14 @@ class CATCheckinService {
 
       return {
         id: data.id,
-        ...checkinData,
+        attendant_id: checkinData.attendant_id,
+        attendant_name: checkinData.attendant_name,
+        cat_name: data.cat_name,
+        latitude: data.latitude || 0,
+        longitude: data.longitude || 0,
+        status: data.status as 'confirmado' | 'fora_da_area',
+        distance_from_cat: data.distance_from_cat || 0,
+        device_info: checkinData.device_info,
         created_at: data.created_at
       };
     } catch (error) {
@@ -133,36 +140,17 @@ class CATCheckinService {
     const today = new Date().toISOString().split('T')[0];
     
     try {
-      // Buscar registro existente
-      const { data: existing } = await supabase
-        .from('cat_performance')
-        .select('*')
-        .eq('attendant_name', attendantName)
-        .eq('cat_name', catName)
-        .eq('date', today)
-        .single();
-
-      if (existing) {
-        // Atualizar registro existente
-        await supabase
-          .from('cat_performance')
-          .update({
-            total_checkins: existing.total_checkins + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existing.id);
-      } else {
-        // Criar novo registro
-        await supabase
-          .from('cat_performance')
-          .insert({
-            attendant_id: crypto.randomUUID(),
+      // Usar user_interactions para tracking de performance
+      await supabase
+        .from('user_interactions')
+        .insert({
+          interaction_type: 'cat_checkin',
+          metadata: {
             attendant_name: attendantName,
             cat_name: catName,
-            date: today,
-            total_checkins: 1
-          });
-      }
+            date: today
+          }
+        });
     } catch (error) {
       console.error('Erro ao atualizar métricas de performance:', error);
     }
@@ -172,24 +160,24 @@ class CATCheckinService {
   async getAttendantCheckins(limit: number = 10): Promise<CATCheckin[]> {
     try {
       const { data, error } = await supabase
-        .from('security_logs')
+        .from('cat_checkins')
         .select('*')
-        .eq('action', 'cat_checkin')
         .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
 
-      return data?.map(log => ({
-        id: log.id,
-        attendant_name: 'Atendente', // Extrair do user_agent se necessário
-        cat_name: log.record_id?.split('_')[0] || 'CAT',
-        latitude: 0, // Dados não disponíveis nesta tabela
-        longitude: 0,
-        status: log.success ? 'confirmado' : 'fora_da_area' as const,
-        distance_from_cat: 0,
-        device_info: log.user_agent,
-        created_at: log.created_at
+      return data?.map(checkin => ({
+        id: checkin.id,
+        attendant_id: checkin.user_id || '',
+        attendant_name: 'Atendente',
+        cat_name: checkin.cat_name,
+        latitude: checkin.latitude || 0,
+        longitude: checkin.longitude || 0,
+        status: checkin.status as 'confirmado' | 'fora_da_area',
+        distance_from_cat: checkin.distance_from_cat || 0,
+        device_info: '',
+        created_at: checkin.created_at
       })) || [];
     } catch (error) {
       console.error('Erro ao buscar check-ins:', error);
@@ -203,24 +191,24 @@ class CATCheckinService {
     
     try {
       const { data, error } = await supabase
-        .from('security_logs')
+        .from('cat_checkins')
         .select('*')
-        .eq('action', 'cat_checkin')
         .gte('created_at', `${today}T00:00:00.000Z`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data?.map(log => ({
-        id: log.id,
+      return data?.map(checkin => ({
+        id: checkin.id,
+        attendant_id: checkin.user_id || '',
         attendant_name: 'Atendente',
-        cat_name: log.record_id?.split('_')[0] || 'CAT',
-        latitude: 0,
-        longitude: 0,
-        status: log.success ? 'confirmado' : 'fora_da_area' as const,
-        distance_from_cat: 0,
-        device_info: log.user_agent,
-        created_at: log.created_at
+        cat_name: checkin.cat_name,
+        latitude: checkin.latitude || 0,
+        longitude: checkin.longitude || 0,
+        status: checkin.status as 'confirmado' | 'fora_da_area',
+        distance_from_cat: checkin.distance_from_cat || 0,
+        device_info: '',
+        created_at: checkin.created_at
       })) || [];
     } catch (error) {
       console.error('Erro ao buscar check-ins de hoje:', error);
@@ -231,15 +219,13 @@ class CATCheckinService {
   // Obter métricas de performance
   async getPerformanceMetrics(attendantName?: string, period: number = 7): Promise<any[]> {
     try {
+      // Usar user_interactions para métricas de performance
       let query = supabase
-        .from('cat_performance')
+        .from('user_interactions')
         .select('*')
-        .gte('date', new Date(Date.now() - period * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('date', { ascending: false });
-
-      if (attendantName) {
-        query = query.eq('attendant_name', attendantName);
-      }
+        .eq('interaction_type', 'cat_checkin')
+        .gte('created_at', new Date(Date.now() - period * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false });
 
       const { data, error } = await query;
       if (error) throw error;

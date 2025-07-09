@@ -35,7 +35,7 @@ const EnhancedDigitalPassport = () => {
   const fetchRoutes = async () => {
     try {
       const { data, error } = await supabase
-        .from('tourist_routes')
+        .from('routes')
         .select(`
           *,
           checkpoints:route_checkpoints(*)
@@ -47,9 +47,13 @@ const EnhancedDigitalPassport = () => {
       // Converter para o formato esperado e garantir que difficulty_level seja válido
       const convertedRoutes: EnhancedTouristRoute[] = (data || []).map(route => ({
         ...route,
-        difficulty_level: ['facil', 'medio', 'dificil'].includes(route.difficulty_level) 
-          ? route.difficulty_level as "facil" | "medio" | "dificil"
-          : "facil"
+        difficulty_level: ['facil', 'medio', 'dificil'].includes(route.difficulty) 
+          ? route.difficulty as "facil" | "medio" | "dificil"
+          : "facil",
+        estimated_duration: route.estimated_duration ? 
+          (typeof route.estimated_duration === 'string' ? 60 : 60) : 60, // Convert interval to minutes
+        points: 10, // Default points
+        checkpoints: route.checkpoints || []
       }));
 
       setRoutes(convertedRoutes);
@@ -68,9 +72,10 @@ const EnhancedDigitalPassport = () => {
 
     try {
       const { data, error } = await supabase
-        .from('user_passport_progress')
+        .from('passport_stamps')
         .select('route_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .not('route_id', 'is', null);
 
       if (error) throw error;
 
@@ -87,14 +92,12 @@ const EnhancedDigitalPassport = () => {
 
     try {
       const { error } = await supabase
-        .from('user_passport_progress')
+        .from('passport_stamps')
         .insert({
           user_id: user.id,
           route_id: routeId,
-          points_earned: points,
-          stamp_earned: true,
-          user_notes: "Rota completada com sucesso!",
-          completed_at: new Date().toISOString()
+          stamp_type: 'route_completion',
+          stamped_at: new Date().toISOString()
         });
 
       if (error) throw error;

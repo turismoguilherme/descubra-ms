@@ -17,11 +17,10 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
-  location: string | null;
-  website: string | null;
+  city: string | null;
+  region: string | null;
   created_at: string;
   updated_at: string;
-  wants_to_collaborate?: boolean;
 }
 
 const Profile = () => {
@@ -33,9 +32,8 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     bio: "",
-    location: "",
-    website: "",
-    wants_to_collaborate: false
+    city: "",
+    region: ""
   });
 
   useEffect(() => {
@@ -63,9 +61,8 @@ const Profile = () => {
       setFormData({
         full_name: data.full_name || "",
         bio: data.bio || "",
-        location: data.location || "",
-        website: data.website || "",
-        wants_to_collaborate: data.wants_to_collaborate || false
+        city: data.city || "",
+        region: data.region || ""
       });
     } catch (error) {
       console.error('Error:', error);
@@ -87,9 +84,8 @@ const Profile = () => {
           user_id: user?.id,
           full_name: "",
           bio: "",
-          location: "",
-          website: "",
-          wants_to_collaborate: false
+          city: "",
+          region: ""
         })
         .select()
         .single();
@@ -100,9 +96,8 @@ const Profile = () => {
       setFormData({
         full_name: "",
         bio: "",
-        location: "",
-        website: "",
-        wants_to_collaborate: false
+        city: "",
+        region: ""
       });
     } catch (error) {
       console.error('Error creating profile:', error);
@@ -176,37 +171,23 @@ const Profile = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Localização</Label>
+            <Label htmlFor="city">Cidade</Label>
             <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Sua cidade/estado"
+              id="city"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              placeholder="Sua cidade"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website">Website</Label>
+            <Label htmlFor="region">Região</Label>
             <Input
-              id="website"
-              value={formData.website}
-              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              placeholder="https://seusite.com"
-              type="url"
+              id="region"
+              value={formData.region}
+              onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+              placeholder="Sua região"
             />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="wants_to_collaborate"
-              checked={formData.wants_to_collaborate}
-              onCheckedChange={(checked) => 
-                setFormData({ ...formData, wants_to_collaborate: checked })
-              }
-            />
-            <Label htmlFor="wants_to_collaborate">
-              Quero colaborar com o projeto
-            </Label>
           </div>
 
           <Button 

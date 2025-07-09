@@ -39,24 +39,46 @@ class CATAIService {
     try {
       const response = await this.generateResponse(question);
       
+      // Usar tabela knowledge_base_entries para armazenar as consultas
       const { data, error } = await supabase
-        .from('cat_ai_queries')
+        .from('knowledge_base_entries')
         .insert({
-          attendant_id: attendantId,
-          attendant_name: attendantName,
-          cat_location: catLocation,
-          question: question,
-          response: response,
-          response_source: 'ai_generated',
-          latitude: latitude,
-          longitude: longitude
+          title: `Consulta CAT - ${question.substring(0, 50)}...`,
+          content: `Pergunta: ${question}\nResposta: ${response}`,
+          category: 'cat_query',
+          region: catLocation || 'N/A',
+          metadata: {
+            attendant_id: attendantId,
+            attendant_name: attendantName,
+            cat_location: catLocation,
+            question: question,
+            response: response,
+            response_source: 'ai_generated',
+            latitude: latitude,
+            longitude: longitude
+          }
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      return data;
+      // Converter para formato CATAIQuery
+      const convertedData: CATAIQuery = {
+        id: data.id,
+        attendant_id: (data.metadata as any)?.attendant_id || attendantId,
+        attendant_name: (data.metadata as any)?.attendant_name || attendantName,
+        cat_location: (data.metadata as any)?.cat_location,
+        question: (data.metadata as any)?.question || question,
+        response: (data.metadata as any)?.response || response,
+        response_source: (data.metadata as any)?.response_source,
+        latitude: (data.metadata as any)?.latitude,
+        longitude: (data.metadata as any)?.longitude,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
+      return convertedData;
     } catch (error) {
       console.error('Error submitting CAT AI query:', error);
       return null;
@@ -66,14 +88,26 @@ class CATAIService {
   async getUserQueries(attendantId: string): Promise<CATAIQuery[]> {
     try {
       const { data, error } = await supabase
-        .from('cat_ai_queries')
+        .from('knowledge_base_entries')
         .select('*')
-        .eq('attendant_id', attendantId)
+        .eq('category', 'cat_query')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data || [];
+      return (data || []).map(item => ({
+        id: item.id,
+        attendant_id: (item.metadata as any)?.attendant_id || '',
+        attendant_name: (item.metadata as any)?.attendant_name || '',
+        cat_location: (item.metadata as any)?.cat_location,
+        question: (item.metadata as any)?.question || '',
+        response: (item.metadata as any)?.response || '',
+        response_source: (item.metadata as any)?.response_source,
+        latitude: (item.metadata as any)?.latitude,
+        longitude: (item.metadata as any)?.longitude,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      })).filter(item => item.attendant_id === attendantId);
     } catch (error) {
       console.error('Error fetching user queries:', error);
       return [];
@@ -84,13 +118,26 @@ class CATAIService {
   async getAllQueries(): Promise<CATAIQuery[]> {
     try {
       const { data, error } = await supabase
-        .from('cat_ai_queries')
+        .from('knowledge_base_entries')
         .select('*')
+        .eq('category', 'cat_query')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data || [];
+      return (data || []).map(item => ({
+        id: item.id,
+        attendant_id: (item.metadata as any)?.attendant_id || '',
+        attendant_name: (item.metadata as any)?.attendant_name || '',
+        cat_location: (item.metadata as any)?.cat_location,
+        question: (item.metadata as any)?.question || '',
+        response: (item.metadata as any)?.response || '',
+        response_source: (item.metadata as any)?.response_source,
+        latitude: (item.metadata as any)?.latitude,
+        longitude: (item.metadata as any)?.longitude,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
     } catch (error) {
       console.error('Error fetching all queries:', error);
       return [];
@@ -107,9 +154,21 @@ class CATAIService {
 
   async updateFeedback(queryId: string, isUseful: boolean): Promise<boolean> {
     try {
+      // Buscar o item atual para atualizar o metadata
+      const { data: current } = await supabase
+        .from('knowledge_base_entries')
+        .select('metadata')
+        .eq('id', queryId)
+        .single();
+
+      const updatedMetadata = {
+        ...(current?.metadata as any || {}),
+        feedback_useful: isUseful
+      };
+
       const { error } = await supabase
-        .from('cat_ai_queries')
-        .update({ feedback_useful: isUseful })
+        .from('knowledge_base_entries')
+        .update({ metadata: updatedMetadata })
         .eq('id', queryId);
 
       if (error) throw error;
@@ -124,19 +183,25 @@ class CATAIService {
   async getFrequentQuestions(category?: string): Promise<FrequentQuestion[]> {
     try {
       let query = supabase
-        .from('cat_frequent_questions')
+        .from('knowledge_base_entries')
         .select('*')
-        .eq('is_active', true);
+        .eq('category', 'frequent_question')
+        .eq('is_verified', true);
 
-      if (category) {
-        query = query.eq('category', category);
-      }
-
-      const { data, error } = await query.order('frequency_count', { ascending: false });
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data || [];
+      return (data || []).map(item => ({
+        id: item.id,
+        question_pattern: item.title,
+        suggested_response: item.content,
+        frequency_count: (item.metadata as any)?.frequency_count || 1,
+        category: (item.metadata as any)?.category || 'geral',
+        is_active: true,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
     } catch (error) {
       console.error('Error fetching frequent questions:', error);
       return [];

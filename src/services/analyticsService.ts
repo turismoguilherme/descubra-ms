@@ -23,18 +23,17 @@ class AnalyticsService {
   async getTourismStats(region?: string, dateRange?: { start: string; end: string }): Promise<TourismStats> {
     try {
       let query = supabase
-        .from('tourism_analytics')
+        .from('user_interactions')
         .select('*')
-        .eq('metric_type', 'page_views');
+        .eq('interaction_type', 'page_view');
 
-      if (region) {
-        query = query.eq('region', region);
-      }
+      // Note: user_interactions doesn't have a direct region column
+      // We'll filter client-side from metadata
 
       if (dateRange) {
         query = query
-          .gte('date', dateRange.start)
-          .lte('date', dateRange.end);
+          .gte('created_at', dateRange.start)
+          .lte('created_at', dateRange.end);
       }
 
       const { data, error } = await query;
@@ -55,18 +54,21 @@ class AnalyticsService {
 
   processMetricsData(metrics: any[]): TourismStats {
     // Converter dados para AnalyticsMetric format
-    const convertedMetrics: AnalyticsMetric[] = metrics.map(metric => ({
-      id: metric.id,
-      region: metric.region,
-      city: metric.city,
-      date: metric.date,
-      metric_type: metric.metric_type,
-      metric_value: metric.metric_value,
-      additional_data: typeof metric.additional_data === 'object' ? metric.additional_data : {},
-      created_at: metric.created_at
-    }));
+    const convertedMetrics: AnalyticsMetric[] = metrics.map(metric => {
+      const metadata = typeof metric.metadata === 'object' && !Array.isArray(metric.metadata) ? metric.metadata : {};
+      return {
+        id: metric.id,
+        region: (metadata as any)?.region || 'N/A',
+        city: (metadata as any)?.city || 'N/A',
+        date: metric.created_at.split('T')[0],
+        metric_type: metric.interaction_type,
+        metric_value: 1, // Each interaction counts as 1
+        additional_data: metadata,
+        created_at: metric.created_at
+      };
+    });
 
-    const totalVisitors = convertedMetrics.reduce((sum, metric) => sum + metric.metric_value, 0);
+    const totalVisitors = convertedMetrics.length;
     
     const regionStats = convertedMetrics.reduce((acc, metric) => {
       if (!acc[metric.region]) {
@@ -105,17 +107,16 @@ class AnalyticsService {
   async getAnalyticsMetrics(region?: string, dateRange?: { start: string; end: string }): Promise<AnalyticsMetric[]> {
     try {
       let query = supabase
-        .from('tourism_analytics')
+        .from('user_interactions')
         .select('*');
 
-      if (region) {
-        query = query.eq('region', region);
-      }
+      // Note: user_interactions doesn't have a direct region column
+      // We'll filter client-side from metadata
 
       if (dateRange) {
         query = query
-          .gte('date', dateRange.start)
-          .lte('date', dateRange.end);
+          .gte('created_at', dateRange.start)
+          .lte('created_at', dateRange.end);
       }
 
       const { data, error } = await query;
@@ -123,16 +124,19 @@ class AnalyticsService {
       if (error) throw error;
 
       // Converter dados para AnalyticsMetric format
-      return (data || []).map(metric => ({
-        id: metric.id,
-        region: metric.region,
-        city: metric.city,
-        date: metric.date,
-        metric_type: metric.metric_type,
-        metric_value: metric.metric_value,
-        additional_data: typeof metric.additional_data === 'object' ? metric.additional_data : {},
-        created_at: metric.created_at
-      }));
+      return (data || []).map(metric => {
+        const metadata = typeof metric.metadata === 'object' && !Array.isArray(metric.metadata) ? metric.metadata : {};
+        return {
+          id: metric.id,
+          region: (metadata as any)?.region || 'N/A',
+          city: (metadata as any)?.city || 'N/A',
+          date: metric.created_at.split('T')[0],
+          metric_type: metric.interaction_type,
+          metric_value: 1,
+          additional_data: metadata,
+          created_at: metric.created_at
+        };
+      });
     } catch (error) {
       console.error('Error fetching analytics metrics:', error);
       return [];
@@ -149,9 +153,7 @@ class AnalyticsService {
       await supabase.from('user_interactions').insert({
         user_id: userId,
         interaction_type: interactionType,
-        element_id: elementId,
-        interaction_data: additionalData,
-        timestamp: new Date().toISOString()
+        metadata: additionalData
       });
     } catch (error) {
       console.error('Error recording interaction:', error);
@@ -168,10 +170,8 @@ class AnalyticsService {
       await supabase.from('user_interactions').insert({
         user_id: userId,
         interaction_type: 'page_view',
-        page_path: pagePath,
-        region: region,
-        city: city,
-        timestamp: new Date().toISOString()
+        page_url: pagePath,
+        metadata: { region: region, city: city }
       });
     } catch (error) {
       console.error('Error recording page view:', error);
@@ -186,13 +186,14 @@ class AnalyticsService {
     additionalData?: Record<string, any>
   ): Promise<void> {
     try {
-      await supabase.from('tourism_analytics').insert({
-        region,
-        city,
-        date: new Date().toISOString().split('T')[0],
-        metric_type: metricType,
-        metric_value: value,
-        additional_data: additionalData
+      await supabase.from('user_interactions').insert({
+        interaction_type: metricType,
+        metadata: { 
+          region, 
+          city, 
+          value, 
+          ...additionalData 
+        }
       });
     } catch (error) {
       console.error('Error recording analytic:', error);
