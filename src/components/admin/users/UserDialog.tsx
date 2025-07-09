@@ -133,6 +133,9 @@ const UserDialog = ({ isDialogOpen, setIsDialogOpen, editingUser, form, onSubmit
                       <SelectItem value="gestor" className="font-medium text-blue-600">
                         🔵 Gestor Regional
                       </SelectItem>
+                      <SelectItem value="municipal_manager" className="font-medium text-green-600">
+                        🟢 Gerente Municipal
+                      </SelectItem>
                       <SelectItem value="municipal" className="font-medium text-green-600">
                         🟢 Gestor Municipal
                       </SelectItem>

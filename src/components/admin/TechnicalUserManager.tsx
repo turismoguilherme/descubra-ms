@@ -4,11 +4,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Search } from "lucide-react";
+import { Users, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import UserTable from "./users/UserTable";
 import UserDialog, { formSchema } from "./users/UserDialog";
+import UserStatisticsCard from "./users/UserStatistics";
+import UserFilters from "./users/UserFilters";
 import { UserData } from "./users/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserRole } from "@/hooks/useSecureAuth";
@@ -18,6 +20,9 @@ const TechnicalUserManager = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
@@ -34,15 +39,14 @@ const TechnicalUserManager = () => {
     },
   });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.rpc('get_users_with_details');
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('get_users_with_details');
 
-        if (error) {
-          throw error;
-        }
+      if (error) {
+        throw error;
+      }
         
         const mappedUsers: UserData[] = data?.map((user: any) => ({
           id: user.id,
@@ -52,8 +56,11 @@ const TechnicalUserManager = () => {
           user_type: user.user_type,
           role: user.role || 'user',
           region: user.region || 'all',
-          status: 'active', // Assumir ativo por padrão
-          created_at: user.created_at
+          status: user.status || 'active',
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at,
+          phone: user.phone,
+          city: user.city
         })) || [];
         
         setUsers(mappedUsers);
@@ -69,21 +76,44 @@ const TechnicalUserManager = () => {
       }
     };
 
+  useEffect(() => {
     fetchUsers();
   }, [toast]);
   
   useEffect(() => {
     const results = users.filter(user => {
       const regionName = user.region && msRegions[user.region as keyof typeof msRegions] || user.region || '';
-      return (
+      
+      // Filter by search term
+      const matchesSearch = searchTerm === "" || (
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
         regionName.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      
+      // Filter by role
+      const matchesRole = selectedRole === "all" || user.role === selectedRole;
+      
+      // Filter by region
+      const matchesRegion = selectedRegion === "all" || 
+        (selectedRegion === "all_regions" && user.region === "all") ||
+        user.region === selectedRegion;
+      
+      // Filter by status
+      const matchesStatus = selectedStatus === "all" || user.status === selectedStatus;
+      
+      return matchesSearch && matchesRole && matchesRegion && matchesStatus;
     });
     setFilteredUsers(results);
-  }, [searchTerm, users]);
+  }, [searchTerm, selectedRole, selectedRegion, selectedStatus, users]);
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedRole("all");
+    setSelectedRegion("all");
+    setSelectedStatus("all");
+  };
 
   const openNewUserDialog = () => {
     setEditingUser(null);
@@ -172,8 +202,11 @@ const TechnicalUserManager = () => {
           user_type: user.user_type,
           role: user.role || 'user',
           region: user.region || 'all',
-          status: 'active',
-          created_at: user.created_at
+          status: user.status || 'active',
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at,
+          phone: user.phone,
+          city: user.city
         })) || [];
         
         setUsers(mappedUsersRefresh);
@@ -216,55 +249,83 @@ const TechnicalUserManager = () => {
   };
 
   return (
-    <Card className="bg-white shadow-lg border-0">
-      <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg">
-        <CardTitle className="text-2xl font-bold">👥 Gerenciamento de Usuários</CardTitle>
-        <CardDescription className="text-blue-100 text-base">
-          Gerencie usuários, funções e permissões por região turística do MS
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row justify-between gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <Input
-                placeholder="Buscar por nome, email, função ou região..."
-                className="pl-10 h-12 border-2 border-gray-300 focus:border-blue-500 rounded-lg"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+    <div className="space-y-6">
+      <UserStatisticsCard />
+      
+      <Card className="bg-white shadow-lg border-0">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                <Users className="h-6 w-6" />
+                Gerenciamento de Usuários
+              </CardTitle>
+              <CardDescription className="text-blue-100 text-base mt-1">
+                Gerencie usuários, funções e permissões por região turística do MS
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setLoading(true);
+                  fetchUsers();
+                }}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Atualizar
+              </Button>
+              <UserDialog 
+                isDialogOpen={isDialogOpen}
+                setIsDialogOpen={setIsDialogOpen}
+                editingUser={editingUser}
+                form={form}
+                onSubmit={onSubmit}
+                openNewUserDialog={openNewUserDialog}
               />
             </div>
-            <UserDialog 
-              isDialogOpen={isDialogOpen}
-              setIsDialogOpen={setIsDialogOpen}
-              editingUser={editingUser}
-              form={form}
-              onSubmit={onSubmit}
-              openNewUserDialog={openNewUserDialog}
-            />
           </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-6">
+            <UserFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedRole={selectedRole}
+              setSelectedRole={setSelectedRole}
+              selectedRegion={selectedRegion}
+              setSelectedRegion={setSelectedRegion}
+              selectedStatus={selectedStatus}
+              setSelectedStatus={setSelectedStatus}
+              clearFilters={clearFilters}
+            />
 
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  <strong>Sistema de Regiões Turísticas:</strong> Cada usuário tem acesso específico às regiões turísticas 
-                  do MS e suas respectivas cidades. Administradores e técnicos têm acesso a todas as regiões.
-                </p>
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-700">
+                    <strong>Sistema de Regiões Turísticas:</strong> Cada usuário tem acesso específico às regiões turísticas 
+                    do MS e suas respectivas cidades. Administradores e técnicos têm acesso a todas as regiões.
+                  </p>
+                </div>
+                <div className="text-sm text-blue-600 font-medium">
+                  {filteredUsers.length} de {users.length} usuários
+                </div>
               </div>
             </div>
-          </div>
 
-          <UserTable 
-            loading={loading}
-            users={filteredUsers}
-            openEditUserDialog={openEditUserDialog}
-            toggleUserStatus={toggleUserStatus}
-          />
-        </div>
-      </CardContent>
-    </Card>
+            <UserTable 
+              loading={loading}
+              users={filteredUsers}
+              openEditUserDialog={openEditUserDialog}
+              toggleUserStatus={toggleUserStatus}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

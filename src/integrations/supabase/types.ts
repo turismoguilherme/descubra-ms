@@ -1319,9 +1319,31 @@ export type Database = {
         Args: { user_email: string }
         Returns: boolean
       }
+      ensure_admin_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_user_role: {
         Args: { check_user_id: string }
         Returns: string
+      }
+      get_user_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          role_name: string
+          user_count: number
+          active_count: number
+        }[]
+      }
+      get_users_by_role: {
+        Args: { target_role: string }
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          region: string
+          created_at: string
+        }[]
       }
       get_users_with_details: {
         Args: Record<PropertyKey, never>
@@ -1332,10 +1354,18 @@ export type Database = {
           user_type: string
           role: string
           region: string
+          status: string
           created_at: string
+          last_sign_in_at: string
+          phone: string
+          city: string
         }[]
       }
       is_admin_user: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
+      is_manager: {
         Args: { check_user_id: string }
         Returns: boolean
       }

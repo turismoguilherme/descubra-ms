@@ -9,4 +9,13 @@ export interface UserData {
   region: string;
   status: string;
   created_at: string;
+  last_sign_in_at?: string;
+  phone?: string;
+  city?: string;
+}
+
+export interface UserStatistics {
+  role_name: string;
+  user_count: number;
+  active_count: number;
 }
