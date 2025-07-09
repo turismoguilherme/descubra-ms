@@ -813,6 +813,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      is_admin_user: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
