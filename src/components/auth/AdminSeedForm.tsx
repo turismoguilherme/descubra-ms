@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, UserPlus } from "lucide-react";
 import { createInitialAdminUser, needsInitialAdmin, AdminSeedData } from "@/utils/adminSeeding";
+import { AdminElevateUser } from "@/components/admin/AdminElevateUser";
 
 const adminSeedSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -78,29 +79,35 @@ const AdminSeedForm = () => {
 
   if (!needsAdmin || created) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Shield className="w-12 h-12 text-green-600 mx-auto mb-4" />
-            <CardTitle className="text-green-600">
-              {created ? "Admin Criado!" : "Sistema Configurado"}
-            </CardTitle>
-            <CardDescription>
-              {created 
-                ? "O usuário administrador foi criado com sucesso." 
-                : "O sistema já possui usuários administradores."
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => window.location.href = "/login"} 
-              className="w-full"
-            >
-              Ir para Login
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+        <div className="w-full max-w-4xl space-y-6">
+          <Card className="w-full max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <Shield className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <CardTitle className="text-green-600">
+                {created ? "Admin Criado!" : "Sistema Configurado"}
+              </CardTitle>
+              <CardDescription>
+                {created 
+                  ? "O usuário administrador foi criado com sucesso." 
+                  : "O sistema já possui usuários administradores."
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => window.location.href = "/login"} 
+                className="w-full"
+              >
+                Ir para Login
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <div className="flex justify-center">
+            <AdminElevateUser />
+          </div>
+        </div>
       </div>
     );
   }

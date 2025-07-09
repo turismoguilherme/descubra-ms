@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-export type UserRole = 'admin' | 'tech' | 'municipal_manager' | 'atendente' | 'gestor' | 'user';
+export type UserRole = 'admin' | 'tech' | 'municipal' | 'municipal_manager' | 'gestor' | 'atendente' | 'user';
 
 export const useSecureAuth = () => {
   const { user, session, loading: authLoading, signOut } = useAuth();
@@ -65,9 +65,9 @@ export const useSecureAuth = () => {
   }, [user?.id, authLoading]);
 
   const isAuthenticated = !!session;
-  const isManager = userRole && ['admin', 'tech', 'municipal_manager', 'gestor', 'atendente'].includes(userRole);
+  const isManager = userRole && ['admin', 'tech', 'municipal', 'municipal_manager', 'gestor', 'atendente'].includes(userRole);
   const isAdmin = userRole === 'admin' || userRole === 'tech';
-  const isMunicipalManager = userRole === 'municipal_manager' || userRole === 'gestor';
+  const isMunicipalManager = userRole === 'municipal_manager' || userRole === 'gestor' || userRole === 'municipal';
   const isAttendant = userRole === 'atendente';
 
   // Get recommended dashboard route based on role

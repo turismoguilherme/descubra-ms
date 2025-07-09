@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
-export const manuallyUpdateUserRole = async (userId: string, newRole: 'admin' | 'municipal' | 'tech' | 'atendente' | 'gestor' | 'user') => {
+export const manuallyUpdateUserRole = async (userId: string, newRole: 'admin' | 'tech' | 'municipal' | 'municipal_manager' | 'gestor' | 'atendente' | 'user') => {
   try {
     console.log(`🔧 MANUAL ROLE UPDATE: Atualizando role para ${newRole} do usuário ${userId}`);
     

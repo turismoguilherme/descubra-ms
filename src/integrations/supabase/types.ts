@@ -1315,6 +1315,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      elevate_to_admin: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { check_user_id: string }
         Returns: string
