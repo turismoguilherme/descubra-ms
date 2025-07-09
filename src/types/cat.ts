@@ -1,10 +1,15 @@
 
 export interface CATLocation {
   id: string;
-  cat_name: string;
+  name: string;
+  address?: string;
+  city: string;
+  region?: string;
   latitude: number;
   longitude: number;
-  address?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  working_hours?: string;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;

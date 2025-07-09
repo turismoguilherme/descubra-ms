@@ -134,6 +134,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cat_locations: {
+        Row: {
+          address: string | null
+          city: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          region: string | null
+          updated_at: string
+          working_hours: string | null
+        }
+        Insert: {
+          address?: string | null
+          city: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          region?: string | null
+          updated_at?: string
+          working_hours?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          region?: string | null
+          updated_at?: string
+          working_hours?: string | null
+        }
+        Relationships: []
+      }
       city_tour_bookings: {
         Row: {
           city: string
@@ -1184,6 +1232,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_role: {
+        Args: { check_user_id: string }
+        Returns: string
+      }
       get_users_with_details: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1198,6 +1250,17 @@ export type Database = {
       }
       is_admin_user: {
         Args: { check_user_id: string }
+        Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          event_action: string
+          event_user_id?: string
+          event_success?: boolean
+          event_error_message?: string
+          event_ip_address?: string
+          event_user_agent?: string
+        }
         Returns: boolean
       }
     }

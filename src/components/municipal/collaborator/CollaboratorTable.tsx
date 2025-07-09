@@ -47,10 +47,10 @@ const CollaboratorTable: React.FC<CollaboratorTableProps> = ({
                 {roles.find(r => r.value === collaborator.role)?.label}
               </Badge>
             </TableCell>
-            <TableCell>{collaborator.city}</TableCell>
+            <TableCell>{collaborator.municipality}</TableCell>
             <TableCell>
-              <Badge variant={collaborator.is_active ? "default" : "secondary"}>
-                {collaborator.is_active ? "Ativo" : "Inativo"}
+            <Badge variant={collaborator.status === 'active' ? "default" : "secondary"}>
+              {collaborator.status === 'active' ? "Ativo" : "Inativo"}
               </Badge>
             </TableCell>
             <TableCell>

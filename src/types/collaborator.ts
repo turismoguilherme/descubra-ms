@@ -3,13 +3,18 @@ export interface Collaborator {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   position: string;
   role: string;
-  city: string;
-  is_active?: boolean;
-  manager_id: string;
-  created_at?: string;
-  updated_at?: string;
+  department?: string;
+  municipality: string;
+  region?: string;
+  status?: string;
+  permissions?: any;
+  created_by?: string;
+  created_by_name?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CollaboratorFormData {
@@ -17,7 +22,7 @@ export interface CollaboratorFormData {
   email: string;
   position: string;
   role: string;
-  city: string;
+  municipality: string;
 }
 
 // Constantes de papéis/funções
