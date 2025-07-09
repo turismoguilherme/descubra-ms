@@ -9,10 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import SocialLoginButtons from "./SocialLoginButtons";
-import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
+import { sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
-import { SimpleAuthSecurity } from "@/components/security/SimpleAuthSecurity";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -70,11 +69,11 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
         return;
       }
 
-      // Simplified rate limiting check (non-blocking)
+      // Rate limiting check only on submit
       const rateLimitCheck = await enhancedSecurityService.checkRateLimit(
         sanitizedData.email,
         'registration',
-        { maxAttempts: 8, windowMinutes: 15, blockDurationMinutes: 60 }
+        { maxAttempts: 10, windowMinutes: 15, blockDurationMinutes: 30 }
       );
 
       if (!rateLimitCheck.allowed) {
@@ -108,12 +107,16 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
         />
       </div>
 
-      {/* Formulário de registro com segurança aprimorada */}
+      {/* Formulário de registro */}
       <div className="flex-grow bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green py-12 px-4">
-        <div className="ms-container max-w-md mx-auto">
-          <SimpleAuthSecurity operationType="register">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <div className="ms-container max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Criar Conta</h2>
+            <p className="text-gray-600">Crie sua conta para começar</p>
+          </div>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="fullName"
@@ -121,13 +124,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                    <FormItem>
                      <FormLabel>Nome Completo</FormLabel>
                      <FormControl>
-                       <InputValidator 
-                         maxLength={100}
-                         pattern={/^[a-zA-ZÀ-ÿ\s]+$/}
-                         onValidationError={(error) => form.setError('fullName', { message: error })}
-                       >
-                         <Input placeholder="Digite seu nome completo" {...field} />
-                       </InputValidator>
+                        <Input placeholder="Digite seu nome completo" {...field} />
                      </FormControl>
                      <FormMessage />
                    </FormItem>
@@ -141,13 +138,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                    <FormItem>
                      <FormLabel>E-mail</FormLabel>
                      <FormControl>
-                       <InputValidator 
-                         maxLength={254}
-                         pattern={/^[^\s@]+@[^\s@]+\.[^\s@]+$/}
-                         onValidationError={(error) => form.setError('email', { message: error })}
-                       >
-                         <Input type="email" placeholder="Digite seu e-mail" {...field} />
-                       </InputValidator>
+                        <Input type="email" placeholder="Digite seu e-mail" {...field} />
                      </FormControl>
                      <FormMessage />
                    </FormItem>
@@ -216,31 +207,30 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                 <UserPlus size={20} className="mr-2" />
                 {loading ? 'Criando conta...' : 'Criar Conta'}
               </Button>
-              </form>
-            </Form>
+            </form>
+          </Form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Ou registre-se com</span>
-                </div>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
               </div>
-
-              <SocialLoginButtons onSocialLogin={onSocialLogin} />
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Ou registre-se com</span>
+              </div>
             </div>
 
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">
-                Já tem uma conta?{" "}
-                <Link to="/login" className="text-ms-primary-blue hover:underline font-medium">
-                  Fazer login
-                </Link>
-              </p>
-            </div>
-          </SimpleAuthSecurity>
+            <SocialLoginButtons onSocialLogin={onSocialLogin} />
+          </div>
+
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Já tem uma conta?{" "}
+              <Link to="/login" className="text-ms-primary-blue hover:underline font-medium">
+                Fazer login
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
