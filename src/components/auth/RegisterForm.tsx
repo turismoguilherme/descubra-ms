@@ -12,7 +12,7 @@ import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
-import { EnhancedAuthSecurity } from "@/components/security/EnhancedAuthSecurity";
+import { SimpleAuthSecurity } from "@/components/security/SimpleAuthSecurity";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -70,19 +70,17 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
         return;
       }
 
-      // Check rate limiting
+      // Simplified rate limiting check (non-blocking)
       const rateLimitCheck = await enhancedSecurityService.checkRateLimit(
         sanitizedData.email,
         'registration',
-        { maxAttempts: 3, windowMinutes: 15, blockDurationMinutes: 60 }
+        { maxAttempts: 8, windowMinutes: 15, blockDurationMinutes: 60 }
       );
 
       if (!rateLimitCheck.allowed) {
         toast({
           title: "Muitas tentativas",
-          description: rateLimitCheck.blockExpiry 
-            ? `Acesso bloqueado até ${rateLimitCheck.blockExpiry.toLocaleTimeString()}`
-            : "Aguarde antes de tentar novamente",
+          description: "Aguarde antes de tentar novamente",
           variant: "destructive",
         });
         return;
@@ -113,13 +111,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
       {/* Formulário de registro com segurança aprimorada */}
       <div className="flex-grow bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green py-12 px-4">
         <div className="ms-container max-w-md mx-auto">
-          <EnhancedAuthSecurity
-            operationType="register"
-            identifier={form.watch('email') || 'anonymous'}
-            onSecurityFail={(reason) => {
-              console.log('Security failed:', reason);
-            }}
-          >
+          <SimpleAuthSecurity operationType="register">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -248,7 +240,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                 </Link>
               </p>
             </div>
-          </EnhancedAuthSecurity>
+          </SimpleAuthSecurity>
         </div>
       </div>
     </div>

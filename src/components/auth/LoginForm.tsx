@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
-import { EnhancedAuthSecurity } from "@/components/security/EnhancedAuthSecurity";
+import { SimpleAuthSecurity } from "@/components/security/SimpleAuthSecurity";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -57,19 +57,17 @@ const LoginForm = () => {
         return;
       }
 
-      // Check rate limiting
+      // Simplified rate limiting check (non-blocking)
       const rateLimitCheck = await enhancedSecurityService.checkRateLimit(
         sanitizedData.email,
         'login',
-        { maxAttempts: 5, windowMinutes: 15, blockDurationMinutes: 30 }
+        { maxAttempts: 10, windowMinutes: 15, blockDurationMinutes: 30 }
       );
 
       if (!rateLimitCheck.allowed) {
         toast({
           title: "Muitas tentativas",
-          description: rateLimitCheck.blockExpiry 
-            ? `Acesso bloqueado até ${rateLimitCheck.blockExpiry.toLocaleTimeString()}`
-            : "Aguarde antes de tentar novamente",
+          description: "Aguarde antes de tentar novamente",
           variant: "destructive",
         });
         return;
@@ -110,13 +108,7 @@ const LoginForm = () => {
       {/* Formulário de login com segurança aprimorada */}
       <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
         <div className="ms-container max-w-md mx-auto">
-          <EnhancedAuthSecurity
-            operationType="login"
-            identifier={form.watch('email') || 'anonymous'}
-            onSecurityFail={(reason) => {
-              console.log('Security failed:', reason);
-            }}
-          >
+          <SimpleAuthSecurity operationType="login">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -208,7 +200,7 @@ const LoginForm = () => {
                 </Link>
               </p>
             </div>
-          </EnhancedAuthSecurity>
+          </SimpleAuthSecurity>
         </div>
       </div>
     </div>

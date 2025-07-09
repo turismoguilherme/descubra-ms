@@ -46,8 +46,11 @@ export const EnhancedAuthSecurity: React.FC<EnhancedAuthSecurityProps> = ({
   };
 
   useEffect(() => {
-    checkSecurityStatus();
-  }, [identifier, operationType]);
+    // Only check on mount, not on every change
+    if (identifier && identifier !== 'anonymous') {
+      checkSecurityStatus();
+    }
+  }, []); // Remove dependencies to prevent loops
 
   const checkSecurityStatus = async () => {
     try {
@@ -90,15 +93,7 @@ export const EnhancedAuthSecurity: React.FC<EnhancedAuthSecurityProps> = ({
         onSecurityPass?.();
       }
 
-      // Check for suspicious activity
-      const suspiciousActivity = await enhancedSecurityService.detectSuspiciousActivity();
-      if (suspiciousActivity.suspicious && suspiciousActivity.severity === 'high') {
-        setSecurityStatus(prev => ({
-          ...prev,
-          level: 'warning',
-          message: 'Atividade suspeita detectada - procedendo com cautela'
-        }));
-      }
+      // Simplify - remove real-time suspicious activity checks
 
     } catch (error) {
       console.error('Security check failed:', error);

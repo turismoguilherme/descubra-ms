@@ -7,15 +7,17 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { TourismDataProvider } from "@/context/TourismDataContext";
 import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker";
+import LoadingFallback from "@/components/ui/loading-fallback";
+
+// Critical components (no lazy loading)
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Welcome from "@/pages/Welcome";
 
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
 const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
-
-const Index = lazy(() => import("@/pages/Index"));
-const Welcome = lazy(() => import("@/pages/Welcome"));
-const Register = lazy(() => import("@/pages/Register"));
-const Login = lazy(() => import("@/pages/Login"));
 const Management = lazy(() => import("@/pages/Management"));
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
@@ -58,40 +60,40 @@ function App() {
               <ProfileCompletionChecker>
                 <div className="min-h-screen bg-background font-sans antialiased">
                   <Routes>
-                  <Route path="/" element={<Suspense fallback={<div>Carregando...</div>}><Index /></Suspense>} />
-                  <Route path="/welcome" element={<Suspense fallback={<div>Carregando...</div>}><Welcome /></Suspense>} />
-                  <Route path="/register" element={<Suspense fallback={<div>Carregando...</div>}><Register /></Suspense>} />
-                   <Route path="/login" element={<Suspense fallback={<div>Carregando...</div>}><Login /></Suspense>} />
-                   <Route path="/password-reset" element={<Suspense fallback={<div>Carregando...</div>}><PasswordResetForm /></Suspense>} />
-                   <Route path="/admin-seed" element={<Suspense fallback={<div>Carregando...</div>}><AdminSeedForm /></Suspense>} />
-                  <Route path="/management" element={<Suspense fallback={<div>Carregando...</div>}><Management /></Suspense>} />
-                  <Route path="/technical-admin" element={<Suspense fallback={<div>Carregando...</div>}><TechnicalAdmin /></Suspense>} />
-                  <Route path="/passaporte" element={<Suspense fallback={<div>Carregando...</div>}><DigitalPassport /></Suspense>} />
-                  <Route path="/delinha" element={<Suspense fallback={<div>Carregando...</div>}><Delinha /></Suspense>} />
-                  <Route path="/admin-login" element={<Suspense fallback={<div>Carregando...</div>}><AdminLogin /></Suspense>} />
-                  <Route path="/cat-attendant" element={<Suspense fallback={<div>Carregando...</div>}><CATAttendant /></Suspense>} />
-                  <Route path="/municipal-admin" element={<Suspense fallback={<div>Carregando...</div>}><MunicipalAdmin /></Suspense>} />
-                  <Route path="/destinos" element={<Suspense fallback={<div>Carregando...</div>}><Destinos /></Suspense>} />
-                  <Route path="/destinos/:id" element={<Suspense fallback={<div>Carregando...</div>}><DestinoDetalhes /></Suspense>} />
-                  <Route path="/eventos" element={<Suspense fallback={<div>Carregando...</div>}><Eventos /></Suspense>} />
-                  <Route path="/eventos/:id" element={<Suspense fallback={<div>Carregando...</div>}><EventoDetalhes /></Suspense>} />
-                  <Route path="/roteiros" element={<Suspense fallback={<div>Carregando...</div>}><Roteiros /></Suspense>} />
-                  <Route path="/parceiros" element={<Suspense fallback={<div>Carregando...</div>}><Partners /></Suspense>} />
-                  <Route path="/sobre" element={<Suspense fallback={<div>Carregando...</div>}><Sobre /></Suspense>} />
-                  <Route path="/mapa" element={<Suspense fallback={<div>Carregando...</div>}><Mapa /></Suspense>} />
-                  <Route path="/profile" element={<Suspense fallback={<div>Carregando...</div>}><Profile /></Suspense>} />
-                  <Route path="/seja-um-parceiro" element={<Suspense fallback={<div>Carregando...</div>}><BecomePartner /></Suspense>} />
-                  <Route path="/contribuir" element={<Suspense fallback={<div>Carregando...</div>}><Contribute /></Suspense>} />
-                  <Route path="/colaborador" element={<Suspense fallback={<div>Carregando...</div>}><Colaborador /></Suspense>} />
-                  <Route path="/role-dashboard" element={<Suspense fallback={<div>Carregando...</div>}><RoleDashboard /></Suspense>} />
-                  <Route path="/destination-editor" element={<Suspense fallback={<div>Carregando...</div>}><DestinationEditor /></Suspense>} />
-                  <Route path="/event-editor" element={<Suspense fallback={<div>Carregando...</div>}><EventEditor /></Suspense>} />
-                  <Route path="/tourism-data" element={<Suspense fallback={<div>Carregando...</div>}><TourismData /></Suspense>} />
-                  <Route path="/delinha-ai" element={<Suspense fallback={<div>Carregando...</div>}><DelinhaAI /></Suspense>} />
-                  <Route path="/management-ai" element={<Suspense fallback={<div>Carregando...</div>}><ManagementAI /></Suspense>} />
-                  <Route path="/enhanced-passport" element={<Suspense fallback={<div>Carregando...</div>}><EnhancedDigitalPassport /></Suspense>} />
-                  <Route path="/events-management" element={<Suspense fallback={<div>Carregando...</div>}><EventsManagement /></Suspense>} />
-                  <Route path="*" element={<Suspense fallback={<div>Carregando...</div>}><NotFound /></Suspense>} />
+                  <Route path="/" element={<Index />} />
+                  <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/register" element={<Register />} />
+                   <Route path="/login" element={<Login />} />
+                   <Route path="/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
+                   <Route path="/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
+                  <Route path="/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
+                  <Route path="/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
+                  <Route path="/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
+                  <Route path="/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
+                  <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
+                  <Route path="/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
+                  <Route path="/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
+                  <Route path="/destinos" element={<Suspense fallback={<LoadingFallback />}><Destinos /></Suspense>} />
+                  <Route path="/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
+                  <Route path="/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
+                  <Route path="/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
+                  <Route path="/roteiros" element={<Suspense fallback={<LoadingFallback />}><Roteiros /></Suspense>} />
+                  <Route path="/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
+                  <Route path="/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
+                  <Route path="/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
+                  <Route path="/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
+                  <Route path="/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><BecomePartner /></Suspense>} />
+                  <Route path="/contribuir" element={<Suspense fallback={<LoadingFallback />}><Contribute /></Suspense>} />
+                  <Route path="/colaborador" element={<Suspense fallback={<LoadingFallback />}><Colaborador /></Suspense>} />
+                  <Route path="/role-dashboard" element={<Suspense fallback={<LoadingFallback />}><RoleDashboard /></Suspense>} />
+                  <Route path="/destination-editor" element={<Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>} />
+                  <Route path="/event-editor" element={<Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>} />
+                  <Route path="/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
+                  <Route path="/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><DelinhaAI /></Suspense>} />
+                  <Route path="/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
+                  <Route path="/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
+                  <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
+                  <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
                  </Routes>
                </div>
              </ProfileCompletionChecker>

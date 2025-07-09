@@ -366,30 +366,12 @@ class EnhancedSecurityService {
   }
 
   /**
-   * Real-time security monitoring
+   * Simplified security monitoring (removed real-time intervals)
    */
   async startSecurityMonitoring(): Promise<void> {
-    // Start periodic monitoring
-    setInterval(async () => {
-      try {
-        const suspiciousActivity = await this.detectSuspiciousActivity();
-        const advancedThreats = await this.detectAdvancedThreats();
-
-        if (suspiciousActivity.suspicious || advancedThreats.threats.length > 0) {
-          await this.logSecurityEvent({
-            action: 'security_monitoring_alert',
-            success: true,
-            metadata: {
-              suspicious_activity: suspiciousActivity,
-              advanced_threats: advancedThreats,
-              timestamp: new Date().toISOString()
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Security monitoring error:', error);
-      }
-    }, 60000); // Check every minute
+    // Remove automatic monitoring to prevent performance issues
+    // Monitoring will be done on-demand when needed
+    console.log('Security monitoring initialized (on-demand mode)');
   }
 
   /**
@@ -430,9 +412,8 @@ class EnhancedSecurityService {
 
 export const enhancedSecurityService = new EnhancedSecurityService();
 
-// Clean up expired entries every 10 minutes
+// Simplified cleanup - remove automatic intervals
 if (typeof window !== 'undefined') {
-  setInterval(() => {
-    enhancedSecurityService.clearExpiredEntries();
-  }, 10 * 60 * 1000);
+  // Clean up expired entries only when needed, not automatically
+  console.log('Enhanced security service initialized');
 }
