@@ -48,7 +48,7 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               to="/welcome" 
-              className="bg-ms-secondary-yellow text-black font-bold px-8 py-4 rounded-xl hover:bg-ms-secondary-yellow/90 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
+              className="bg-ms-secondary-yellow text-gray-800 font-bold px-8 py-4 rounded-xl hover:bg-ms-secondary-yellow/90 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
             >
               {buttonRegister || 'Descubra Agora'}
             </Link>
