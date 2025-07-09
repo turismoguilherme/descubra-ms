@@ -52,7 +52,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
       {/* Header com logo */}
       <div className="flex justify-center py-6 bg-white">
         <img 
-          src="/lovable-uploads/1e2f844e-0cd3-4b3b-84b6-85904f67ebc7.png" 
+          src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" 
           alt="Descubra Mato Grosso do Sul" 
           className="h-[60px] w-auto" 
         />

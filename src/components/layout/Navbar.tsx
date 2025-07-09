@@ -44,7 +44,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img alt="Descubra Mato Grosso do Sul" src="/lovable-uploads/65d98e2b-e4b5-4d2d-9486-8e1f94fb38b4.png" className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-fill" />
+            <img alt="Descubra Mato Grosso do Sul" src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-fill" />
           </Link>
 
           {/* Desktop Navigation */}

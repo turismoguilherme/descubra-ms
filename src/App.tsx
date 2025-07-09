@@ -38,6 +38,7 @@ const TourismData = lazy(() => import("@/pages/TourismData"));
 const DelinhaAI = lazy(() => import("@/pages/DelinhaAI"));
 const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
 const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPassport"));
+const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ function App() {
                   <Route path="/delinha-ai" element={<Suspense fallback={<div>Carregando...</div>}><DelinhaAI /></Suspense>} />
                   <Route path="/management-ai" element={<Suspense fallback={<div>Carregando...</div>}><ManagementAI /></Suspense>} />
                   <Route path="/enhanced-passport" element={<Suspense fallback={<div>Carregando...</div>}><EnhancedDigitalPassport /></Suspense>} />
+                  <Route path="/events-management" element={<Suspense fallback={<div>Carregando...</div>}><EventsManagement /></Suspense>} />
                   <Route path="*" element={<Suspense fallback={<div>Carregando...</div>}><NotFound /></Suspense>} />
                 </Routes>
               </div>

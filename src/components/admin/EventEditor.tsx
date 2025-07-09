@@ -37,6 +37,8 @@ interface EventDetails {
   map_latitude: number | null;
   map_longitude: number | null;
   is_free: boolean;
+  visibility_end_date: string | null;
+  auto_hide: boolean;
 }
 
 const EventEditor = () => {
@@ -59,7 +61,9 @@ const EventEditor = () => {
     extra_info: null,
     map_latitude: null,
     map_longitude: null,
-    is_free: false
+    is_free: false,
+    visibility_end_date: null,
+    auto_hide: true
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -101,7 +105,9 @@ const EventEditor = () => {
             extra_info: detailsData.extra_info,
             map_latitude: detailsData.map_latitude,
             map_longitude: detailsData.map_longitude,
-            is_free: detailsData.is_free || false
+            is_free: detailsData.is_free || false,
+            visibility_end_date: (detailsData as any).visibility_end_date || null,
+            auto_hide: (detailsData as any).auto_hide || true
           });
         } else {
           // Se não existem detalhes, criar um registro com valores padrão
@@ -158,9 +164,11 @@ const EventEditor = () => {
           map_latitude: details.map_latitude,
           map_longitude: details.map_longitude,
           is_free: details.is_free,
+          visibility_end_date: details.visibility_end_date,
+          auto_hide: details.auto_hide,
           updated_by: user.id,
           updated_at: new Date().toISOString()
-        });
+        } as any);
 
       if (error) throw error;
 
@@ -274,6 +282,29 @@ const EventEditor = () => {
                 onCheckedChange={(checked) => setDetails(prev => ({ ...prev, is_free: !!checked }))}
               />
               <Label htmlFor="is_free">Evento gratuito</Label>
+            </div>
+            <div>
+              <Label htmlFor="visibility_end_date">Data de Remoção da Plataforma</Label>
+              <Input
+                id="visibility_end_date"
+                type="datetime-local"
+                value={details.visibility_end_date ? new Date(details.visibility_end_date).toISOString().slice(0, 16) : ''}
+                onChange={(e) => setDetails(prev => ({ 
+                  ...prev, 
+                  visibility_end_date: e.target.value ? new Date(e.target.value).toISOString() : null 
+                }))}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Data em que o evento será automaticamente removido da plataforma
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="auto_hide"
+                checked={details.auto_hide}
+                onCheckedChange={(checked) => setDetails(prev => ({ ...prev, auto_hide: !!checked }))}
+              />
+              <Label htmlFor="auto_hide">Ocultar automaticamente após a data de remoção</Label>
             </div>
           </CardContent>
         </Card>
