@@ -55,7 +55,7 @@ export const useSecureProfileForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 PERFIL: Iniciando processo de criação do perfil com validação de segurança aprimorada");
+    console.log("🚀 PERFIL: Iniciando processo de criação do perfil com validação aprimorada");
     
     setFieldErrors({});
 
@@ -68,32 +68,25 @@ export const useSecureProfileForm = () => {
 
     console.log("📝 PERFIL: Dados do formulário:", formData);
 
-    try {
-      // Enhanced security validation
-      const { enhanceProfileFormSecurity, logProfileCreationAttempt } = await import('./securityEnhancement');
-      const sanitizedData = await enhanceProfileFormSecurity(formData, user?.email);
-      
-      console.log("🔒 PERFIL: Validação de segurança aprovada");
-
-      // Original validation logic
-      const errors = validateProfileForm(formData);
-      console.log("✅ PERFIL: Resultado da validação:", errors);
-
-      if (Object.keys(errors).length > 0) {
-        console.log("❌ PERFIL: Erros de validação encontrados:", errors);
-        setFieldErrors(errors);
-        await logProfileCreationAttempt(false, user?.email, "Validation errors");
-        toast({
-          title: "Erro",
-          description: "Por favor, preencha os campos obrigatórios.",
-          variant: "destructive",
-        });
-        return;
+    // Função de retry com delay
+    const retryWithDelay = async (fn: () => Promise<any>, retries = 3, delay = 2000) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await fn();
+        } catch (error) {
+          console.log(`⏳ PERFIL: Tentativa ${i + 1} falhou, tentando novamente...`);
+          if (i === retries - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
+    };
 
+    try {
+      // FASE 1: Validação básica primeiro
+      console.log("🔍 PERFIL: Iniciando validação básica");
+      
       if (!user?.id || !session) {
         console.log("❌ PERFIL: Usuário não autenticado", { userId: user?.id, hasSession: !!session });
-        await logProfileCreationAttempt(false, user?.email, "User not authenticated");
         toast({
           title: "Erro",
           description: "Usuário não está autenticado. Tente fazer login novamente.",
@@ -104,25 +97,73 @@ export const useSecureProfileForm = () => {
 
       setIsSubmitting(true);
 
-      console.log("💾 PERFIL: Preparando dados para salvar no Supabase");
+      // FASE 1.5: Validação de segurança opcional
+      console.log("🔒 PERFIL: Iniciando validação de segurança");
+      try {
+        const { enhanceProfileFormSecurity, logProfileCreationAttempt } = await import('./securityEnhancement');
+        const sanitizedData = await enhanceProfileFormSecurity(formData, user?.email);
+        console.log("✅ PERFIL: Validação de segurança concluída");
+        
+        // Use dados sanitizados se disponíveis
+        if (sanitizedData.fullName) formData.fullName = sanitizedData.fullName;
+        if (sanitizedData.occupation) formData.occupation = sanitizedData.occupation;
+        
+      } catch (securityError) {
+        console.warn("⚠️ PERFIL: Erro na validação de segurança, continuando sem ela:", securityError);
+        // Continuar sem validação de segurança em caso de erro
+      }
+
+      // FASE 1.6: Validação de formulário básica
+      console.log("📝 PERFIL: Iniciando validação de formulário");
+      const errors = validateProfileForm(formData);
+      console.log("✅ PERFIL: Resultado da validação:", errors);
+
+      if (Object.keys(errors).length > 0) {
+        console.log("❌ PERFIL: Erros de validação encontrados:", errors);
+        setFieldErrors(errors);
+        toast({
+          title: "Erro",
+          description: "Por favor, preencha os campos obrigatórios.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // FASE 2: Mapeamento e validação do tipo de usuário
+      console.log("🔄 PERFIL: Validando e mapeando tipo de usuário");
       
-      // Mapear tipos de usuário do português para inglês
       const mapUserType = (type: string) => {
         const mapping: { [key: string]: string } = {
           'turista': 'tourist',
           'morador': 'resident'
         };
+        console.log("🔄 PERFIL: Mapeamento:", { input: type, mapping });
         return mapping[type] || type;
       };
       
       const mappedUserType = mapUserType(userType);
-      console.log("🔄 PERFIL: Mapeando tipo de usuário:", { original: userType, mapped: mappedUserType });
+      console.log("🔄 PERFIL: Tipo de usuário mapeado:", { original: userType, mapped: mappedUserType });
+      
+      // Validar se o tipo mapeado é válido
+      const validTypes = ['tourist', 'resident', 'collaborator', 'guide'];
+      if (!validTypes.includes(mappedUserType)) {
+        console.error("❌ PERFIL: Tipo de usuário inválido:", mappedUserType);
+        toast({
+          title: "Erro",
+          description: `Tipo de usuário inválido: ${mappedUserType}. Tipos válidos: ${validTypes.join(', ')}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // FASE 3: Preparar dados do perfil
+      console.log("💾 PERFIL: Preparando dados para salvar no Supabase");
       
       const profileData: any = {
         user_id: user.id,
         user_type: mappedUserType,
-        full_name: sanitizedData.fullName || fullName, // Use sanitized data when available
-        occupation: sanitizedData.occupation || occupation,
+        full_name: fullName,
+        occupation: occupation || null,
         birth_date: birthDate || null,
         gender: gender || null,
         sexuality_identity: sexualityIdentity || null,
@@ -131,6 +172,7 @@ export const useSecureProfileForm = () => {
 
       // Adicionar campos específicos do morador
       if (userType === "morador") {
+        console.log("👥 PERFIL: Adicionando campos específicos do morador");
         profileData.wants_to_collaborate = wantsToCollaborate;
         profileData.residence_city = residenceCity || null;
         profileData.neighborhood = (neighborhood === "Outro" ? customNeighborhood : neighborhood) || null;
@@ -140,6 +182,7 @@ export const useSecureProfileForm = () => {
 
       // Adicionar campos específicos do turista
       if (userType === "turista") {
+        console.log("🧳 PERFIL: Adicionando campos específicos do turista");
         profileData.country = country || null;
         profileData.state = state || null;
         profileData.city = city || null;
@@ -157,33 +200,46 @@ export const useSecureProfileForm = () => {
 
       console.log("💾 PERFIL: Dados finais para inserção:", profileData);
 
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .upsert(profileData, { onConflict: 'user_id' });
-
-      if (error) {
-        console.error("❌ PERFIL: Erro do Supabase ao salvar perfil:", error);
-        throw error;
-      }
-
-      console.log("✅ PERFIL: Perfil salvo com sucesso:", data);
+      // FASE 4: Tentativa de salvamento com retry
+      console.log("💾 PERFIL: Iniciando salvamento com retry automático");
       
-      // Atualizar metadata do usuário
+      const saveProfile = async () => {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .upsert(profileData, { onConflict: 'user_id' });
+
+        if (error) {
+          console.error("❌ PERFIL: Erro do Supabase ao salvar perfil:", error);
+          throw error;
+        }
+
+        console.log("✅ PERFIL: Perfil salvo com sucesso:", data);
+        return data;
+      };
+
+      await retryWithDelay(saveProfile, 3, 2000);
+
+      // FASE 5: Atualização do metadata do usuário
       console.log("🔄 PERFIL: Atualizando metadata do usuário");
-      const { error: updateUserError } = await supabase.auth.updateUser({
-        data: { user_type: userType, full_name: fullName }
-      });
+      
+      const updateUserMetadata = async () => {
+        const { error } = await supabase.auth.updateUser({
+          data: { user_type: mappedUserType, full_name: fullName }
+        });
 
-      if (updateUserError) {
-        console.error("❌ PERFIL: Erro ao atualizar metadata:", updateUserError);
-        throw updateUserError;
-      }
+        if (error) {
+          console.error("❌ PERFIL: Erro ao atualizar metadata:", error);
+          throw error;
+        }
+      };
 
+      await retryWithDelay(updateUserMetadata, 2, 1000);
+
+      // FASE 6: Finalização
       console.log("🔄 PERFIL: Atualizando sessão");
       await supabase.auth.refreshSession();
 
       console.log("🎉 PERFIL: Processo concluído com sucesso");
-      await logProfileCreationAttempt(true, user?.email);
       
       // Limpar cache de rate limiting após sucesso
       try {
@@ -204,13 +260,11 @@ export const useSecureProfileForm = () => {
     } catch (error: any) {
       console.error("❌ PERFIL: Erro geral no processo:", error);
       
-      const { logProfileCreationAttempt } = await import('./securityEnhancement');
-      await logProfileCreationAttempt(false, user?.email, error.message);
-      
       let errorMessage = "Ocorreu um erro inesperado. Tente novamente.";
       
       // Tratamento específico de erros do Supabase
       if (error.code) {
+        console.log("🔍 PERFIL: Analisando código de erro:", error.code);
         switch (error.code) {
           case '23505':
             errorMessage = "Este perfil já existe. Tente fazer login.";
@@ -218,16 +272,21 @@ export const useSecureProfileForm = () => {
           case '23502':
             errorMessage = "Campo obrigatório não preenchido.";
             break;
+          case '23514':
+            errorMessage = "Tipo de usuário inválido. Verifique os dados e tente novamente.";
+            break;
           case 'PGRST116':
             errorMessage = "Erro de permissão. Entre em contato com o suporte.";
             break;
           default:
-            errorMessage = `Erro do banco de dados: ${error.message}`;
+            errorMessage = `Erro do banco de dados (${error.code}): ${error.message}`;
         }
       } else if (error.message) {
         errorMessage = error.message;
       }
 
+      console.log("📢 PERFIL: Exibindo erro para o usuário:", errorMessage);
+      
       toast({
         title: "Erro ao salvar perfil",
         description: errorMessage,

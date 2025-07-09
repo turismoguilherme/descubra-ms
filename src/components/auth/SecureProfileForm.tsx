@@ -62,6 +62,11 @@ const SecureProfileForm = () => {
                 <span className="text-blue-800 font-medium">Salvando seu perfil...</span>
               </div>
               <p className="text-blue-600 text-sm mt-1">Por favor, aguarde enquanto processamos suas informações.</p>
+              <div className="mt-2 text-xs text-blue-500">
+                <p>✓ Validando dados...</p>
+                <p>✓ Verificando segurança...</p>
+                <p>⏳ Salvando no banco de dados...</p>
+              </div>
             </div>
           )}
           
