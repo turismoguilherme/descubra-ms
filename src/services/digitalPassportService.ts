@@ -294,14 +294,10 @@ export const claimUserReward = async (rewardId: string, claimLocation?: string):
   };
 };
 
-// Serviços para Estatísticas
+// Serviços para Estatísticas (mockado - função não existe)
 export const fetchRegionStatistics = async (regionId: string) => {
-  const { data, error } = await supabase.rpc('get_region_statistics', {
-    region_uuid: regionId
-  });
-  
-  if (error) throw error;
-  return data?.[0] || {
+  // Como a função get_region_statistics não existe, retornamos dados mockados
+  return {
     total_users: 0,
     completed_routes: 0,
     most_visited_city: 'N/A',

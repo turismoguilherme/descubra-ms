@@ -18,11 +18,10 @@ export const securityService = {
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
       const { error } = await supabase.rpc('log_security_event', {
-        p_user_id: event.user_id || null,
-        p_action: event.action,
-        p_success: event.success ?? true,
-        p_error_message: event.error_message || null,
-        p_metadata: event.metadata ? JSON.stringify(event.metadata) : null
+        event_action: event.action,
+        event_user_id: event.user_id || null,
+        event_success: event.success ?? true,
+        event_error_message: event.error_message || null
       });
 
       if (error) {
@@ -85,7 +84,12 @@ export const securityService = {
     recordId?: string
   ): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('is_admin_or_tech');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data, error } = await supabase.rpc('is_admin_user', {
+        check_user_id: user.id
+      });
 
       if (error) {
         console.error('Error validating admin operation:', error);
@@ -97,11 +101,11 @@ export const securityService = {
         action: `admin_operation_${operationType}`,
         table_name: tableName,
         record_id: recordId,
-        success: data as boolean,
+        success: Boolean(data),
         metadata: { operation_type: operationType }
       });
 
-      return data as boolean;
+      return Boolean(data);
     } catch (error) {
       console.error('Failed to validate admin operation:', error);
       return false;

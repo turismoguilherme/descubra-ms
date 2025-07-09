@@ -45,7 +45,7 @@ export interface UserStamp {
 
 export const fetchTouristRoutes = async () => {
   const { data, error } = await supabase
-    .from('tourist_routes')
+    .from('routes')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
@@ -56,7 +56,7 @@ export const fetchTouristRoutes = async () => {
 
 export const fetchRouteById = async (routeId: string) => {
   const { data, error } = await supabase
-    .from('tourist_routes')
+    .from('routes')
     .select('*')
     .eq('id', routeId)
     .single();
@@ -70,21 +70,48 @@ export const fetchRouteCheckpoints = async (routeId: string): Promise<RouteCheck
     .from('route_checkpoints')
     .select('*')
     .eq('route_id', routeId)
-    .order('order_index', { ascending: true });
+    .order('order_sequence', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  
+  // Map order_sequence to order_index for compatibility
+  return (data || []).map(checkpoint => ({
+    ...checkpoint,
+    order_index: checkpoint.order_sequence,
+    latitude: checkpoint.latitude || 0,
+    longitude: checkpoint.longitude || 0
+  }));
 };
 
 export const createUserCheckin = async (checkinData: Omit<UserRouteCheckin, 'id' | 'created_at'>) => {
+  // Use passport_stamps instead of user_route_checkins
   const { data, error } = await supabase
-    .from('user_route_checkins')
-    .insert([checkinData])
+    .from('passport_stamps')
+    .insert([{
+      user_id: checkinData.user_id,
+      route_id: checkinData.route_id,
+      checkpoint_id: checkinData.checkpoint_id,
+      latitude: checkinData.latitude,
+      longitude: checkinData.longitude,
+      stamp_type: 'route_checkin',
+      stamped_at: checkinData.checkin_at
+    }])
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+  
+  // Return in expected format
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    route_id: data.route_id || '',
+    checkpoint_id: data.checkpoint_id,
+    checkin_at: data.stamped_at || checkinData.checkin_at,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    created_at: data.stamped_at
+  };
 };
 
 export const updateUserPassportStats = async (userId: string, points: number) => {

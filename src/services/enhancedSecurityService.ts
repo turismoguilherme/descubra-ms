@@ -36,11 +36,10 @@ class EnhancedSecurityService {
       };
 
       const { error } = await supabase.rpc('log_security_event', {
-        p_user_id: sanitizedEvent.user_id || null,
-        p_action: sanitizedEvent.action,
-        p_success: sanitizedEvent.success ?? true,
-        p_error_message: sanitizedEvent.error_message || null,
-        p_metadata: sanitizedEvent.metadata ? JSON.stringify(sanitizedEvent.metadata) : null
+        event_action: sanitizedEvent.action,
+        event_user_id: sanitizedEvent.user_id || null,
+        event_success: sanitizedEvent.success ?? true,
+        event_error_message: sanitizedEvent.error_message || null
       });
 
       if (error) {
@@ -202,13 +201,16 @@ class EnhancedSecurityService {
     recordId?: string
   ): Promise<{ authorized: boolean; auditId?: string }> {
     try {
-      const { data, error } = await supabase.rpc('is_admin_or_tech');
+      // Use is_admin_user instead of is_admin_or_tech
+      const { data, error } = await supabase.rpc('is_admin_user', {
+        check_user_id: (await supabase.auth.getUser()).data.user?.id
+      });
       
       const auditData = {
         action: `admin_validation_${sanitizeText(operationType)}`,
         table_name: tableName ? sanitizeText(tableName) : undefined,
         record_id: recordId ? sanitizeText(recordId) : undefined,
-        success: !error && data,
+        success: !error && Boolean(data),
         error_message: error?.message,
         metadata: { 
           operation_type: operationType,
@@ -220,7 +222,7 @@ class EnhancedSecurityService {
       await this.logSecurityEvent(auditData);
 
       return { 
-        authorized: !error && data as boolean,
+        authorized: !error && Boolean(data),
         auditId: auditData.metadata.validation_timestamp
       };
     } catch (error) {
