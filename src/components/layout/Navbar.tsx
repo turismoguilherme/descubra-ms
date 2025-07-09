@@ -44,7 +44,16 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img alt="Descubra Mato Grosso do Sul" src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-fill" />
+            <img 
+              alt="Descubra Mato Grosso do Sul" 
+              src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" 
+              className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
+              loading="eager"
+              onError={(e) => {
+                console.error('Logo failed to load');
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           </Link>
 
           {/* Desktop Navigation */}

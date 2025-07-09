@@ -24,7 +24,12 @@ const Footer = () => {
               <img 
                 src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" 
                 alt="Descubra Mato Grosso do Sul" 
-                className="h-14 w-auto"
+                className="h-14 w-auto object-contain"
+                loading="lazy"
+                onError={(e) => {
+                  console.error('Footer logo failed to load');
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </div>
             <p className="text-gray-100 mb-4 max-w-sm">
