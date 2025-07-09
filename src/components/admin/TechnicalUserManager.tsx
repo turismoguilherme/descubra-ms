@@ -44,7 +44,19 @@ const TechnicalUserManager = () => {
           throw error;
         }
         
-        setUsers(data as UserData[] || []);
+        const mappedUsers: UserData[] = data?.map((user: any) => ({
+          id: user.id,
+          name: user.full_name || user.email || 'Sem nome',
+          email: user.email,
+          full_name: user.full_name,
+          user_type: user.user_type,
+          role: user.role || 'user',
+          region: user.region || 'all',
+          status: 'active', // Assumir ativo por padrão
+          created_at: user.created_at
+        })) || [];
+        
+        setUsers(mappedUsers);
       } catch (error: any) {
         console.error("Error fetching users:", error);
         toast({

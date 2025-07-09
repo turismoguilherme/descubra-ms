@@ -630,6 +630,60 @@ export type Database = {
         }
         Relationships: []
       }
+      municipal_collaborators: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          department: string | null
+          email: string
+          id: string
+          municipality: string
+          name: string
+          permissions: Json | null
+          phone: string | null
+          position: string
+          region: string | null
+          role: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          department?: string | null
+          email: string
+          id?: string
+          municipality: string
+          name: string
+          permissions?: Json | null
+          phone?: string | null
+          position: string
+          region?: string | null
+          role: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          department?: string | null
+          email?: string
+          id?: string
+          municipality?: string
+          name?: string
+          permissions?: Json | null
+          phone?: string | null
+          position?: string
+          region?: string | null
+          role?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       passport_stamps: {
         Row: {
           checkpoint_id: string | null
@@ -864,6 +918,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      survey_responses: {
+        Row: {
+          created_at: string
+          id: string
+          respondent_email: string | null
+          respondent_id: string | null
+          respondent_name: string | null
+          responses: Json
+          submitted_at: string
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          respondent_email?: string | null
+          respondent_id?: string | null
+          respondent_name?: string | null
+          responses: Json
+          submitted_at?: string
+          survey_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          respondent_email?: string | null
+          respondent_id?: string | null
+          respondent_name?: string | null
+          responses?: Json
+          submitted_at?: string
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tourism_intelligence_documents: {
         Row: {
