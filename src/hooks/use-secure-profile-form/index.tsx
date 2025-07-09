@@ -106,9 +106,21 @@ export const useSecureProfileForm = () => {
 
       console.log("💾 PERFIL: Preparando dados para salvar no Supabase");
       
+      // Mapear tipos de usuário do português para inglês
+      const mapUserType = (type: string) => {
+        const mapping: { [key: string]: string } = {
+          'turista': 'tourist',
+          'morador': 'resident'
+        };
+        return mapping[type] || type;
+      };
+      
+      const mappedUserType = mapUserType(userType);
+      console.log("🔄 PERFIL: Mapeando tipo de usuário:", { original: userType, mapped: mappedUserType });
+      
       const profileData: any = {
         user_id: user.id,
-        user_type: userType,
+        user_type: mappedUserType,
         full_name: sanitizedData.fullName || fullName, // Use sanitized data when available
         occupation: sanitizedData.occupation || occupation,
         birth_date: birthDate || null,
