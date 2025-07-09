@@ -19,7 +19,7 @@ export const useCollaborators = () => {
     email: "",
     position: "",
     role: "",
-    city: "",
+    municipality: "",
   });
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export const useCollaborators = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.position || !formData.role || !formData.city) {
+    if (!formData.name || !formData.email || !formData.position || !formData.role || !formData.municipality) {
       toast({
         title: "Erro",
         description: "Todos os campos são obrigatórios",
@@ -112,7 +112,7 @@ export const useCollaborators = () => {
       email: collaborator.email,
       position: collaborator.position,
       role: collaborator.role,
-      city: collaborator.city,
+      municipality: collaborator.municipality,
     });
     setIsDialogOpen(true);
   };
@@ -144,7 +144,7 @@ export const useCollaborators = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", email: "", position: "", role: "", city: "" });
+    setFormData({ name: "", email: "", position: "", role: "", municipality: "" });
     setEditingCollaborator(null);
     setIsDialogOpen(false);
   };
@@ -152,7 +152,7 @@ export const useCollaborators = () => {
   const filteredCollaborators = collaborators.filter(collaborator => {
     const matchesSearch = collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          collaborator.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCity = !filterCity || collaborator.city === filterCity;
+    const matchesCity = !filterCity || collaborator.municipality === filterCity;
     const matchesRole = !filterRole || collaborator.role === filterRole;
     
     return matchesSearch && matchesCity && matchesRole;

@@ -34,13 +34,9 @@ export const enhancedSignInService = async (email: string, password: string) => 
       // Log de segurança simplificado
       try {
         await supabase.rpc('log_security_event', {
-          p_user_id: data.user.id,
-          p_action: 'login_success',
-          p_success: true,
-          p_metadata: { 
-            email: data.user.email, 
-            provider: 'email'
-          }
+          event_action: 'login_success',
+          event_user_id: data.user.id,
+          event_success: true
         });
       } catch (logError) {
         console.warn("⚠️ Erro ao registrar log:", logError);

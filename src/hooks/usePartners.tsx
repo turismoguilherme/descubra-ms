@@ -42,13 +42,24 @@ const fetchApprovedPartners = async (): Promise<Partner[]> => {
   const { data, error } = await supabase
     .from("institutional_partners")
     .select("*")
-    .eq('status', 'approved')
+    .eq('is_active', true)
     .order("name");
 
   if (error) throw new Error(error.message);
-  return (data || []).map(item => ({
-    ...item,
-    category: item.category as 'local' | 'regional' | 'estadual'
+  return (data || []).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    logo_url: item.logo_url,
+    website_url: item.website_url,
+    contact_email: item.contact_email,
+    category: 'local' as const,
+    city: '',
+    segment: '',
+    tier: '',
+    status: 'approved',
+    created_at: item.created_at,
+    updated_at: item.updated_at
   }));
 };
 

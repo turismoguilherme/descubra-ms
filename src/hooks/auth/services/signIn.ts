@@ -10,11 +10,10 @@ export const signInService = async (email: string, password: string) => {
 
     if (error) {
       await supabase.rpc('log_security_event', {
-        p_user_id: null,
-        p_action: 'login_failure',
-        p_success: false,
-        p_error_message: error.message,
-        p_metadata: { email, source: 'signInService' }
+        event_action: 'login_failure',
+        event_success: false,
+        event_error_message: error.message,
+        
       });
       let errorMessage = error.message;
       
@@ -32,11 +31,10 @@ export const signInService = async (email: string, password: string) => {
     return { error };
   } catch (error: any) {
     await supabase.rpc('log_security_event', {
-      p_user_id: null,
-      p_action: 'login_exception',
-      p_success: false,
-      p_error_message: error.message,
-      p_metadata: { email, source: 'signInService_catch' }
+      event_action: 'login_exception',
+      event_success: false,
+      event_error_message: error.message,
+      
     });
     console.error("❌ Erro catch no login:", error);
     showToast("Erro no login", error.message || "Erro inesperado", "destructive");

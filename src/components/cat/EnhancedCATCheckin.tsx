@@ -90,8 +90,8 @@ const EnhancedCATCheckin = ({ assignedCAT }: EnhancedCATCheckinProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   {catLocations.map((location) => (
-                    <SelectItem key={location.id} value={location.cat_name}>
-                      {location.cat_name}
+                    <SelectItem key={location.id} value={location.name}>
+                      {location.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

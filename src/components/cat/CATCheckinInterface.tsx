@@ -70,8 +70,8 @@ const CATCheckinInterface = ({ assignedCAT, attendantName }: CATCheckinInterface
               </SelectTrigger>
               <SelectContent>
                 {catLocations.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.cat_name}>
-                    {cat.cat_name}
+                <SelectItem key={cat.id} value={cat.name}>
+                  {cat.name}
                   </SelectItem>
                 ))}
               </SelectContent>

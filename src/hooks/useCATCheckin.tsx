@@ -145,7 +145,7 @@ export const useCATCheckin = ({ assignedCAT }: UseCATCheckinProps = {}) => {
       }
 
       // Buscar localização do CAT selecionado
-      const selectedCATLocation = catLocations.find(cat => cat.cat_name === selectedCAT);
+      const selectedCATLocation = catLocations.find(cat => cat.name === selectedCAT);
       if (!selectedCATLocation) {
         toast({
           title: "Erro",

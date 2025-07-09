@@ -19,18 +19,30 @@ export const useRouteManagement = (userRegion?: string) => {
   const loadRoutes = useCallback(async () => {
     try {
       setLoading(true);
-      const rawData = await fetchTouristRoutes();
+      const { data, error } = await supabase
+        .from('routes')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) throw error;
       
-      // Convert the raw data to match TouristRoute interface
-      const data: TouristRoute[] = rawData.map(route => ({
-        ...route,
-        difficulty_level: route.difficulty_level as "facil" | "medio" | "dificil"
+      // Map routes data to TouristRoute format
+      const formattedRoutes: TouristRoute[] = (data || []).map(route => ({
+        id: route.id,
+        name: route.name || '',
+        description: route.description,
+        region: route.region,
+        difficulty_level: (route.difficulty || 'facil') as "facil" | "medio" | "dificil",
+        estimated_duration: route.estimated_duration ? parseInt(route.estimated_duration.toString()) : 60,
+        promotional_text: route.description,
+        video_url: '',
+        is_active: route.is_active || true
       }));
       
       // Filtrar por região se necessário
       const filteredRoutes = userRegion && userRegion !== "all" 
-        ? data.filter(route => route.region === userRegion)
-        : data;
+        ? formattedRoutes.filter(route => route.region === userRegion)
+        : formattedRoutes;
       
       setRoutes(filteredRoutes);
     } catch (error) {
@@ -52,15 +64,13 @@ export const useRouteManagement = (userRegion?: string) => {
 
       // Criar o roteiro
       const { data: route, error: routeError } = await supabase
-        .from('tourist_routes')
+        .from('routes')
         .insert({
           name: routeData.name,
           description: routeData.description,
           region: routeData.region,
-          difficulty_level: routeData.difficulty_level,
-          estimated_duration: routeData.estimated_duration,
-          promotional_text: routeData.promotional_text,
-          video_url: routeData.video_url,
+          difficulty: routeData.difficulty_level,
+          estimated_duration: `${routeData.estimated_duration} minutes`,
           is_active: routeData.is_active,
           created_by: user.user.id
         })
@@ -71,14 +81,18 @@ export const useRouteManagement = (userRegion?: string) => {
 
       // Criar checkpoints se fornecidos
       if (routeData.checkpoints && routeData.checkpoints.length > 0) {
-        const checkpoints = routeData.checkpoints.map(checkpoint => ({
-          ...checkpoint,
-          route_id: route.id
+        const formattedCheckpoints = routeData.checkpoints.map(checkpoint => ({
+          route_id: route.id,
+          name: checkpoint.name,
+          description: checkpoint.description,
+          latitude: checkpoint.latitude,
+          longitude: checkpoint.longitude,
+          order_sequence: checkpoint.order_index
         }));
 
         const { error: checkpointsError } = await supabase
           .from('route_checkpoints')
-          .insert(checkpoints);
+          .insert(formattedCheckpoints);
 
         if (checkpointsError) throw checkpointsError;
       }
@@ -97,15 +111,13 @@ export const useRouteManagement = (userRegion?: string) => {
 
       // Atualizar o roteiro
       const { data: route, error: routeError } = await supabase
-        .from('tourist_routes')
+        .from('routes')
         .update({
           name: routeData.name,
           description: routeData.description,
           region: routeData.region,
-          difficulty_level: routeData.difficulty_level,
-          estimated_duration: routeData.estimated_duration,
-          promotional_text: routeData.promotional_text,
-          video_url: routeData.video_url,
+          difficulty: routeData.difficulty_level,
+          estimated_duration: `${routeData.estimated_duration} minutes`,
           is_active: routeData.is_active,
           updated_at: new Date().toISOString()
         })
@@ -125,14 +137,18 @@ export const useRouteManagement = (userRegion?: string) => {
 
         // Inserir novos checkpoints
         if (routeData.checkpoints.length > 0) {
-          const checkpoints = routeData.checkpoints.map(checkpoint => ({
-            ...checkpoint,
-            route_id: routeId
+          const formattedCheckpoints = routeData.checkpoints.map(checkpoint => ({
+            route_id: routeId,
+            name: checkpoint.name,
+            description: checkpoint.description,
+            latitude: checkpoint.latitude,
+            longitude: checkpoint.longitude,
+            order_sequence: checkpoint.order_index
           }));
 
           const { error: checkpointsError } = await supabase
             .from('route_checkpoints')
-            .insert(checkpoints);
+            .insert(formattedCheckpoints);
 
           if (checkpointsError) throw checkpointsError;
         }
@@ -155,7 +171,7 @@ export const useRouteManagement = (userRegion?: string) => {
 
       // Deletar o roteiro
       const { error } = await supabase
-        .from('tourist_routes')
+        .from('routes')
         .delete()
         .eq('id', routeId);
 
@@ -168,29 +184,20 @@ export const useRouteManagement = (userRegion?: string) => {
 
   const getRouteStatistics = async (routeId: string) => {
     try {
-      // Buscar estatísticas dos check-ins
-      const { data: checkins, error: checkinsError } = await supabase
-        .from('user_route_checkins')
+      // Buscar estatísticas de selos/carimbos do passaporte
+      const { data: stamps, error: stampsError } = await supabase
+        .from('passport_stamps')
         .select('user_id')
         .eq('route_id', routeId);
 
-      if (checkinsError) throw checkinsError;
+      if (stampsError) throw stampsError;
 
-      // Buscar estatísticas de conclusões
-      const { data: completions, error: completionsError } = await supabase
-        .from('user_passport_progress')
-        .select('user_id')
-        .eq('route_id', routeId);
-
-      if (completionsError) throw completionsError;
-
-      const uniqueCheckinUsers = new Set(checkins?.map(c => c.user_id) || []).size;
-      const uniqueCompletionUsers = new Set(completions?.map(c => c.user_id) || []).size;
+      const uniqueUsers = new Set(stamps?.map(s => s.user_id) || []).size;
 
       return {
-        totalCheckins: checkins?.length || 0,
-        totalCompletions: completions?.length || 0,
-        uniqueUsers: uniqueCheckinUsers
+        totalCheckins: 0, // Not available without dedicated table
+        totalCompletions: stamps?.length || 0,
+        uniqueUsers: uniqueUsers
       };
     } catch (error) {
       console.error("Erro ao buscar estatísticas:", error);

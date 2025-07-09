@@ -18,11 +18,9 @@ export const signInWithProviderService = async (provider: 'google' | 'facebook')
 
     if (error) {
       await supabase.rpc('log_security_event', {
-        p_user_id: null,
-        p_action: 'oauth_login_failure',
-        p_success: false,
-        p_error_message: error.message,
-        p_metadata: { provider }
+        event_action: 'oauth_login_failure',
+        event_success: false,
+        event_error_message: error.message,
       });
       let errorMessage = `Erro no login com ${provider}`;
       
@@ -42,11 +40,10 @@ export const signInWithProviderService = async (provider: 'google' | 'facebook')
 
   } catch (error: any) {
     await supabase.rpc('log_security_event', {
-      p_user_id: null,
-      p_action: 'oauth_login_exception',
-      p_success: false,
-      p_error_message: error.message,
-      p_metadata: { provider }
+      event_action: 'oauth_login_exception',
+      event_success: false,
+      event_error_message: error.message,
+      
     });
     console.error(`❌ Erro catch OAuth ${provider}:`, error);
     showToast("Erro no login", "Erro inesperado. Tente novamente.", "destructive");

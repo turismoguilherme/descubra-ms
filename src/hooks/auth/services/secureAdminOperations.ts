@@ -12,11 +12,9 @@ export const validateAdminOperation = async (operationType: string): Promise<boo
     if (error) {
       console.error("Admin validation error:", error);
       await supabase.rpc('log_security_event', {
-        p_user_id: null,
-        p_action: `admin_validation_${operationType}`,
-        p_success: false,
-        p_error_message: error.message,
-        p_metadata: { operation_type: operationType }
+        event_action: `admin_validation_${operationType}`,
+        event_success: false,
+        event_error_message: error.message,
       });
       return false;
     }
@@ -25,10 +23,9 @@ export const validateAdminOperation = async (operationType: string): Promise<boo
     const isAuthorized = ['admin', 'tech', 'municipal', 'municipal_manager', 'gestor'].includes(userRole);
     
     await supabase.rpc('log_security_event', {
-      p_user_id: (await supabase.auth.getUser()).data.user?.id,
-      p_action: `admin_validation_${operationType}`,
-      p_success: isAuthorized,
-      p_metadata: { operation_type: operationType, user_role: userRole }
+      event_action: `admin_validation_${operationType}`,
+      event_user_id: (await supabase.auth.getUser()).data.user?.id,
+      event_success: isAuthorized,
     });
 
     console.log("🔍 Validação admin:", { userRole, isAuthorized, operationType });
@@ -37,11 +34,10 @@ export const validateAdminOperation = async (operationType: string): Promise<boo
   } catch (error: any) {
     console.error("Admin validation exception:", error);
     await supabase.rpc('log_security_event', {
-      p_user_id: null,
-      p_action: `admin_validation_exception_${operationType}`,
-      p_success: false,
-      p_error_message: error.message,
-      p_metadata: { operation_type: operationType }
+      event_action: `admin_validation_exception_${operationType}`,
+      event_success: false,
+      event_error_message: error.message,
+      
     });
     return false;
   }
@@ -86,15 +82,9 @@ export const validatePassportAdminOperation = async (
 
     // Log da operação
     await supabase.rpc('log_security_event', {
-      p_user_id: (await supabase.auth.getUser()).data.user?.id,
-      p_action: `passport_${operationType}_validation`,
-      p_success: isAuthorized,
-      p_metadata: { 
-        operation_type: operationType, 
-        target_region: targetRegion,
-        user_role: data.role,
-        user_region: data.region
-      }
+      event_action: `passport_${operationType}_validation`,
+      event_user_id: (await supabase.auth.getUser()).data.user?.id,
+      event_success: isAuthorized
     });
 
     return isAuthorized;
@@ -130,27 +120,20 @@ export const secureCreateUser = async (userData: {
 
     // Log the user creation attempt with enhanced security logging
     await supabase.rpc('log_security_event', {
-      p_user_id: (await supabase.auth.getUser()).data.user?.id,
-      p_action: 'admin_create_user_attempt',
-      p_success: true,
-      p_metadata: { 
-        target_email: userData.email, 
-        target_role: userData.role,
-        target_region: userData.region,
-        source: 'secureCreateUser',
-        security_level: 'high'
-      }
+      event_action: 'admin_create_user_attempt',
+      event_user_id: (await supabase.auth.getUser()).data.user?.id,
+      event_success: true
     });
 
     return { error: null };
   } catch (error: any) {
     console.error("Secure user creation error:", error);
     await supabase.rpc('log_security_event', {
-      p_user_id: (await supabase.auth.getUser()).data.user?.id,
-      p_action: 'admin_create_user_error',
-      p_success: false,
-      p_error_message: error.message,
-      p_metadata: { target_email: userData.email, security_level: 'high' }
+      event_action: 'admin_create_user_error',
+      event_user_id: (await supabase.auth.getUser()).data.user?.id,
+      event_success: false,
+      event_error_message: error.message,
+      
     });
     return { error };
   }
@@ -172,14 +155,9 @@ export const secureDeleteUser = async (userId: string) => {
 
   try {
     await supabase.rpc('log_security_event', {
-      p_user_id: (await supabase.auth.getUser()).data.user?.id,
-      p_action: 'admin_delete_user_attempt',
-      p_success: true,
-      p_metadata: { 
-        target_user_id: userId, 
-        source: 'secureDeleteUser',
-        security_level: 'critical'
-      }
+      event_action: 'admin_delete_user_attempt',
+      event_user_id: (await supabase.auth.getUser()).data.user?.id,
+      event_success: true
     });
 
     return { error: null };

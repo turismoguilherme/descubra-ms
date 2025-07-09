@@ -38,14 +38,9 @@ export const validateSecureOperation = async (operation: string): Promise<boolea
 
     // Log security validation attempt
     await supabase.rpc('log_security_event', {
-      p_user_id: user.id,
-      p_action: `security_validation_${operation}`,
-      p_success: true,
-      p_metadata: {
-        operation,
-        timestamp: new Date().toISOString(),
-        source: 'SecurityValidator'
-      }
+      event_action: `security_validation_${operation}`,
+      event_user_id: user.id,
+      event_success: true
     });
 
     return true;

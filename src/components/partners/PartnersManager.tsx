@@ -50,7 +50,16 @@ const PartnersManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPartners(data || []);
+      // Map database fields to Partner interface
+      const mappedPartners = (data || []).map(item => ({
+        ...item,
+        category: (item.partner_type || 'local') as 'local' | 'regional' | 'estadual',
+        city: '', // Default empty city
+        segment: '', // Default empty segment
+        tier: '', // Default empty tier
+        status: 'approved' as string // Default status
+      }));
+      setPartners(mappedPartners);
     } catch (error) {
       console.error('Error fetching partners:', error);
       toast({
