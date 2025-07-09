@@ -44,7 +44,7 @@ const Navbar = () => {
       <div className="ms-container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img 
                 alt="Descubra Mato Grosso do Sul" 
