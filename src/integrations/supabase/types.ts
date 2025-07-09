@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      cat_checkins: {
+        Row: {
+          cat_name: string
+          created_at: string
+          distance_from_cat: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          status: string
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          cat_name: string
+          created_at?: string
+          distance_from_cat?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          status?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          cat_name?: string
+          created_at?: string
+          distance_from_cat?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          status?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      city_tour_bookings: {
+        Row: {
+          city: string
+          created_at: string
+          current_bookings: number
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_capacity: number
+          meeting_point: string | null
+          tour_date: string
+          tour_time: string
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          current_bookings?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_capacity?: number
+          meeting_point?: string | null
+          tour_date: string
+          tour_time: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          current_bookings?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_capacity?: number
+          meeting_point?: string | null
+          tour_date?: string
+          tour_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      city_tour_settings: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          is_public: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       content_audit_log: {
         Row: {
           action: string
@@ -537,6 +639,7 @@ export type Database = {
       }
       tourism_intelligence_documents: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           file_path: string
@@ -545,13 +648,16 @@ export type Database = {
           filename: string
           id: string
           is_processed: boolean | null
+          mime_type: string | null
           original_name: string
           tags: string[] | null
           updated_at: string
           upload_date: string
           uploaded_by: string | null
+          uploader_name: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           file_path: string
@@ -560,13 +666,16 @@ export type Database = {
           filename: string
           id?: string
           is_processed?: boolean | null
+          mime_type?: string | null
           original_name: string
           tags?: string[] | null
           updated_at?: string
           upload_date?: string
           uploaded_by?: string | null
+          uploader_name?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           file_path?: string
@@ -575,11 +684,13 @@ export type Database = {
           filename?: string
           id?: string
           is_processed?: boolean | null
+          mime_type?: string | null
           original_name?: string
           tags?: string[] | null
           updated_at?: string
           upload_date?: string
           uploaded_by?: string | null
+          uploader_name?: string | null
         }
         Relationships: []
       }
@@ -690,7 +801,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_users_with_details: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          user_type: string
+          role: string
+          region: string
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
