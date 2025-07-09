@@ -44,6 +44,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const provider = session.user.app_metadata?.provider;
           
           if (provider === 'google' || provider === 'facebook') {
+            console.log("🔐 AUTH PROVIDER: Login OAuth detectado", {
+              provider,
+              userEmail: session.user.email,
+              hasUserType: !!session.user.user_metadata?.user_type
+            });
+            
             showToast("Login realizado!", `Bem-vindo via ${provider}!`);
             
             // Limpar parâmetros OAuth da URL
@@ -51,6 +57,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               const newUrl = window.location.origin + window.location.pathname;
               window.history.replaceState({}, document.title, newUrl);
             }
+            
+            // Para usuários OAuth, verificar se o perfil está completo
+            // O ProfileCompletionChecker vai lidar com isso
           } else if (provider === 'email') {
             showToast("Login realizado!", "Bem-vindo!");
           }

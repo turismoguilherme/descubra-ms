@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { TourismDataProvider } from "@/context/TourismDataContext";
+import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker";
 
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
@@ -54,8 +55,9 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <BrowserRouter>
-              <div className="min-h-screen bg-background font-sans antialiased">
-                <Routes>
+              <ProfileCompletionChecker>
+                <div className="min-h-screen bg-background font-sans antialiased">
+                  <Routes>
                   <Route path="/" element={<Suspense fallback={<div>Carregando...</div>}><Index /></Suspense>} />
                   <Route path="/welcome" element={<Suspense fallback={<div>Carregando...</div>}><Welcome /></Suspense>} />
                   <Route path="/register" element={<Suspense fallback={<div>Carregando...</div>}><Register /></Suspense>} />
@@ -90,14 +92,15 @@ function App() {
                   <Route path="/enhanced-passport" element={<Suspense fallback={<div>Carregando...</div>}><EnhancedDigitalPassport /></Suspense>} />
                   <Route path="/events-management" element={<Suspense fallback={<div>Carregando...</div>}><EventsManagement /></Suspense>} />
                   <Route path="*" element={<Suspense fallback={<div>Carregando...</div>}><NotFound /></Suspense>} />
-                </Routes>
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </TourismDataProvider>
-    </QueryClientProvider>
-  );
+                 </Routes>
+               </div>
+             </ProfileCompletionChecker>
+           </BrowserRouter>
+         </TooltipProvider>
+       </AuthProvider>
+     </TourismDataProvider>
+   </QueryClientProvider>
+ );
 }
 
 export default App;
