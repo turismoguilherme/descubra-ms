@@ -46,7 +46,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center">
             <img 
               alt="Descubra Mato Grosso do Sul" 
-              src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" 
+              src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
               className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
               loading="eager"
               onError={(e) => {

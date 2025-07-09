@@ -22,7 +22,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img 
-                src="/lovable-uploads/8ae2c853-8dcf-4572-aa51-51e40d922b51.png" 
+                src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-14 w-auto object-contain"
                 loading="lazy"
