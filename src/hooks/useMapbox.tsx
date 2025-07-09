@@ -1,9 +1,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import mapboxgl from "mapbox-gl";
-
-// Temporary access token - in production, use environment variables
-const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZWFpIiwiYSI6ImNsc3o0YWsybjBlcngya3FsNm8xeHdpZXEifQ.SfhLzB9S6xrM9svYfGxmhg";
+import { config } from "@/config/environment";
 
 interface UseMapboxOptions {
   style?: "map" | "satellite";
@@ -30,7 +28,13 @@ export const useMapbox = (options: UseMapboxOptions = {}) => {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
     
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    const mapboxToken = config.mapbox.getToken();
+    if (!config.mapbox.isValidToken(mapboxToken)) {
+      console.error("Invalid or missing Mapbox token");
+      return;
+    }
+    
+    mapboxgl.accessToken = mapboxToken;
     
     const mapStyle = style === "map" 
       ? 'mapbox://styles/mapbox/streets-v12' 
