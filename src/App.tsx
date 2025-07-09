@@ -19,6 +19,25 @@ const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
 const CATAttendant = lazy(() => import("@/pages/CATAttendant"));
 const MunicipalAdmin = lazy(() => import("@/pages/MunicipalAdmin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const Destinos = lazy(() => import("@/pages/Destinos"));
+const Eventos = lazy(() => import("@/pages/Eventos"));
+const Roteiros = lazy(() => import("@/pages/Roteiros"));
+const Partners = lazy(() => import("@/pages/Partners"));
+const Sobre = lazy(() => import("@/pages/Sobre"));
+const Mapa = lazy(() => import("@/pages/Mapa"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const BecomePartner = lazy(() => import("@/pages/BecomePartner"));
+const Contribute = lazy(() => import("@/pages/Contribute"));
+const Colaborador = lazy(() => import("@/pages/Colaborador"));
+const RoleDashboard = lazy(() => import("@/pages/RoleDashboard"));
+const DestinationEditor = lazy(() => import("@/pages/DestinationEditor"));
+const EventEditor = lazy(() => import("@/pages/EventEditor"));
+const DestinoDetalhes = lazy(() => import("@/pages/DestinoDetalhes"));
+const EventoDetalhes = lazy(() => import("@/pages/EventoDetalhes"));
+const TourismData = lazy(() => import("@/pages/TourismData"));
+const DelinhaAI = lazy(() => import("@/pages/DelinhaAI"));
+const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
+const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPassport"));
 
 const queryClient = new QueryClient();
 
@@ -43,6 +62,25 @@ function App() {
                   <Route path="/admin-login" element={<Suspense fallback={<div>Carregando...</div>}><AdminLogin /></Suspense>} />
                   <Route path="/cat-attendant" element={<Suspense fallback={<div>Carregando...</div>}><CATAttendant /></Suspense>} />
                   <Route path="/municipal-admin" element={<Suspense fallback={<div>Carregando...</div>}><MunicipalAdmin /></Suspense>} />
+                  <Route path="/destinos" element={<Suspense fallback={<div>Carregando...</div>}><Destinos /></Suspense>} />
+                  <Route path="/destinos/:id" element={<Suspense fallback={<div>Carregando...</div>}><DestinoDetalhes /></Suspense>} />
+                  <Route path="/eventos" element={<Suspense fallback={<div>Carregando...</div>}><Eventos /></Suspense>} />
+                  <Route path="/eventos/:id" element={<Suspense fallback={<div>Carregando...</div>}><EventoDetalhes /></Suspense>} />
+                  <Route path="/roteiros" element={<Suspense fallback={<div>Carregando...</div>}><Roteiros /></Suspense>} />
+                  <Route path="/parceiros" element={<Suspense fallback={<div>Carregando...</div>}><Partners /></Suspense>} />
+                  <Route path="/sobre" element={<Suspense fallback={<div>Carregando...</div>}><Sobre /></Suspense>} />
+                  <Route path="/mapa" element={<Suspense fallback={<div>Carregando...</div>}><Mapa /></Suspense>} />
+                  <Route path="/profile" element={<Suspense fallback={<div>Carregando...</div>}><Profile /></Suspense>} />
+                  <Route path="/seja-um-parceiro" element={<Suspense fallback={<div>Carregando...</div>}><BecomePartner /></Suspense>} />
+                  <Route path="/contribuir" element={<Suspense fallback={<div>Carregando...</div>}><Contribute /></Suspense>} />
+                  <Route path="/colaborador" element={<Suspense fallback={<div>Carregando...</div>}><Colaborador /></Suspense>} />
+                  <Route path="/role-dashboard" element={<Suspense fallback={<div>Carregando...</div>}><RoleDashboard /></Suspense>} />
+                  <Route path="/destination-editor" element={<Suspense fallback={<div>Carregando...</div>}><DestinationEditor /></Suspense>} />
+                  <Route path="/event-editor" element={<Suspense fallback={<div>Carregando...</div>}><EventEditor /></Suspense>} />
+                  <Route path="/tourism-data" element={<Suspense fallback={<div>Carregando...</div>}><TourismData /></Suspense>} />
+                  <Route path="/delinha-ai" element={<Suspense fallback={<div>Carregando...</div>}><DelinhaAI /></Suspense>} />
+                  <Route path="/management-ai" element={<Suspense fallback={<div>Carregando...</div>}><ManagementAI /></Suspense>} />
+                  <Route path="/enhanced-passport" element={<Suspense fallback={<div>Carregando...</div>}><EnhancedDigitalPassport /></Suspense>} />
                   <Route path="*" element={<Suspense fallback={<div>Carregando...</div>}><NotFound /></Suspense>} />
                 </Routes>
               </div>

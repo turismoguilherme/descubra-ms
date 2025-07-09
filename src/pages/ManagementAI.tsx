@@ -43,7 +43,7 @@ const ManagementAI = () => {
           </div>
           
           <p className="text-gray-600 mb-8">
-            Gerencie os três sistemas de IA integrados ao aplicativo "Isto é Mato Grosso do Sul". 
+            Gerencie os três sistemas de IA integrados ao aplicativo "Descubra Mato Grosso do Sul". 
             Cada sistema atende a um público específico com funcionalidades personalizadas.
           </p>
           

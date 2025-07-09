@@ -41,7 +41,7 @@ const mockSections: Section[] = [
     page: "home",
     name: "Hero Principal",
     content: {
-      title: "Explore o Mato Grosso do Sul",
+      title: "Descubra Mato Grosso do Sul",
       subtitle: "Descubra as maravilhas naturais e culturais do coração do Brasil",
       cta: "Explorar Destinos"
     }

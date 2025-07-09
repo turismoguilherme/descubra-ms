@@ -82,7 +82,7 @@ const Footer = () => {
             </div>
              <h3 className="text-lg font-semibold mb-2 text-white">Contato</h3>
             <p className="text-gray-100 text-sm">
-              {contactEmail || 'contato@istoems.com.br'}<br />
+              {contactEmail || 'contato@descubramsconline.com.br'}<br />
               {contactPhone || '(67) 3318-7600'}
             </p>
           </div>
@@ -90,7 +90,7 @@ const Footer = () => {
 
         <div className="border-t border-ms-primary-blue/50 mt-12 pt-8 text-center text-gray-100 text-sm">
           <p>
-            © {new Date().getFullYear()} Isto é Mato Grosso do Sul. Todos os direitos reservados.
+            © {new Date().getFullYear()} Descubra Mato Grosso do Sul. Todos os direitos reservados.
           </p>
           <p className="mt-2">
             Desenvolvido por: Guilherme Arevalo

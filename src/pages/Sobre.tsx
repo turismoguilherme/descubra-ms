@@ -15,7 +15,7 @@ const Sobre = () => {
             <Info size={48} className="text-white mx-auto mb-4" />
             <h1 className="text-4xl font-bold text-white mb-6">Sobre o Projeto</h1>
             <p className="text-white/90 text-xl max-w-2xl mx-auto">
-              Conheça mais sobre o aplicativo "Isto é Mato Grosso do Sul" e sua missão
+              Conheça mais sobre o aplicativo "Descubra Mato Grosso do Sul" e sua missão
             </p>
           </div>
         </div>
@@ -25,7 +25,7 @@ const Sobre = () => {
             <div className="bg-white rounded-lg shadow-md p-8 mb-10">
               <h2 className="text-2xl font-bold text-ms-pantanal-green mb-4">Nossa Missão</h2>
               <p className="text-gray-600 mb-6">
-                O aplicativo "Isto é Mato Grosso do Sul" nasceu com o objetivo de ser uma 
+                O aplicativo "Descubra Mato Grosso do Sul" nasceu com o objetivo de ser uma 
                 ferramenta digital completa para turistas que visitam o estado, ajudando-os 
                 a explorar destinos, conhecer a cultura local e planejar suas viagens de 
                 forma personalizada e acessível.
@@ -121,7 +121,7 @@ const Sobre = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Contato</h4>
-                  <p>contato@istoems.com.br<br />Tel: (67) 3318-7600</p>
+                  <p>contato@descubramsconline.com.br<br />Tel: (67) 3318-7600</p>
                 </div>
               </div>
               

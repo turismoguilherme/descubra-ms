@@ -153,7 +153,7 @@ const TourismData = () => {
             data={pdfExportData}
             columns={pdfColumns}
             filename="relatorio-turismo-ms"
-            title="Relatório de Turismo - Mato Grosso do Sul"
+            title="Relatório de Turismo - Descubra Mato Grosso do Sul"
           />
         </div>
 
