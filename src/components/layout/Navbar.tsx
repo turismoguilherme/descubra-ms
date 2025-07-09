@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import UserMenu from "./UserMenu";
+import logoDescubraMS from "@/assets/logo-descubra-ms.png";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {
@@ -44,16 +45,26 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img 
-              alt="Descubra Mato Grosso do Sul" 
-              src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-              className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-              loading="eager"
-              onError={(e) => {
-                console.error('Logo failed to load');
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            <div className="flex items-center">
+              <img 
+                alt="Descubra Mato Grosso do Sul" 
+                src={logoDescubraMS} 
+                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
+                loading="eager"
+                onError={(e) => {
+                  console.error('Logo failed to load');
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'block';
+                }}
+              />
+              <div 
+                className="hidden text-2xl font-bold text-ms-primary-blue"
+                style={{ display: 'none' }}
+              >
+                Descubra MS
+              </div>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

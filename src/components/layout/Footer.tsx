@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
+import logoDescubraMS from "@/assets/logo-descubra-ms.png";
 
 const Footer = () => {
   const { getContentValue } = useInstitutionalContent();
@@ -22,15 +23,23 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img 
-                src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+                src={logoDescubraMS} 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-14 w-auto object-contain"
                 loading="lazy"
                 onError={(e) => {
                   console.error('Footer logo failed to load');
                   e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'block';
                 }}
               />
+              <div 
+                className="hidden text-2xl font-bold text-white"
+                style={{ display: 'none' }}
+              >
+                Descubra Mato Grosso do Sul
+              </div>
             </div>
             <p className="text-gray-100 mb-4 max-w-sm">
               {description || 'Descubra as maravilhas do Pantanal, Cerrado e muito mais. Sua jornada pelo coração da América do Sul começa aqui.'}
