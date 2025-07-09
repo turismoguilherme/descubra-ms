@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
-import logoDescubraMS from "@/assets/logo-descubra-ms.png";
+
 
 const Footer = () => {
   const { getContentValue } = useInstitutionalContent();
@@ -23,7 +23,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img 
-                src={logoDescubraMS} 
+                src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-14 w-auto object-contain"
                 loading="lazy"
