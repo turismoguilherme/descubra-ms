@@ -8,11 +8,12 @@ import RegionMap from "./map/RegionMap";
 import RegionChart from "./chart/RegionChart";
 import MapLegend from "./map/MapLegend";
 import { BarChart3, Map, MapPin, Compass } from "lucide-react";
+import { config } from "@/config/environment";
 
 const RegionHeatMapSection = () => {
   const [mapView, setMapView] = useState<"heatmap" | "chart">("heatmap");
   const { data, isLoading } = useTourismDataContext();
-  const [mapboxToken, setMapboxToken] = useState<string>(localStorage.getItem('mapbox_token') || "");
+  const [mapboxToken, setMapboxToken] = useState<string>(config.mapbox.getToken());
   const [mapError, setMapError] = useState<boolean>(false);
   
   // Enhanced region data with proper coordinates and colors
@@ -57,8 +58,13 @@ const RegionHeatMapSection = () => {
   }, [mapboxToken]);
 
   const handleTokenSubmit = (token: string) => {
-    setMapboxToken(token);
-    setMapError(false);
+    try {
+      config.mapbox.setToken(token);
+      setMapboxToken(token);
+      setMapError(false);
+    } catch (error) {
+      console.error("Invalid Mapbox token:", error);
+    }
   };
   
   if (isLoading) {

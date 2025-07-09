@@ -148,6 +148,11 @@ const LoginForm = () => {
 
           <div className="mt-4 text-center space-y-2">
             <p className="text-sm text-gray-600">
+              <Link to="/password-reset" className="text-ms-primary-blue hover:underline">
+                Esqueceu sua senha?
+              </Link>
+            </p>
+            <p className="text-sm text-gray-600">
               Não tem uma conta?{" "}
               <Link to="/register" className="text-ms-primary-blue hover:underline font-medium">
                 Criar conta

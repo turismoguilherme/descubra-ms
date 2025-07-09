@@ -5,6 +5,7 @@ import { RequestBody, ResponseBody } from "./types.ts";
 import { processKnowledgeBase, formatKnowledgeContent } from "./knowledge.ts";
 import { generateCATPrompt, generateTouristPrompt, formatSourcesContext } from "./prompts.ts";
 import { callOpenAI } from "./openai.ts";
+import { validateRequest, getClientIP } from "./validation.ts";
 
 /**
  * Main request handler for all incoming requests
@@ -15,7 +16,27 @@ export async function handleRequest(req: Request): Promise<Response> {
     throw new Error("OpenAI API key not found in environment variables");
   }
 
-  const { prompt, knowledgeBase = [], userInfo, threadId, useOfficialSources = true } = await req.json() as RequestBody;
+  // Get client IP for rate limiting
+  const clientIP = getClientIP(req);
+  
+  // Parse and validate request body
+  const requestBody = await req.json();
+  const validation = validateRequest(requestBody, clientIP);
+  
+  if (!validation.isValid) {
+    return new Response(
+      JSON.stringify({ 
+        error: validation.error,
+        code: "VALIDATION_ERROR"
+      }),
+      { 
+        status: 400, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
+    );
+  }
+
+  const { prompt, knowledgeBase = [], userInfo, threadId, useOfficialSources = true } = validation.sanitizedBody!;
   
   // Handle ping test
   if (prompt === "ping") {

@@ -7,6 +7,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { TourismDataProvider } from "@/context/TourismDataContext";
 
+// Security components
+const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
+const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
+
 const Index = lazy(() => import("@/pages/Index"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
 const Register = lazy(() => import("@/pages/Register"));
@@ -55,7 +59,9 @@ function App() {
                   <Route path="/" element={<Suspense fallback={<div>Carregando...</div>}><Index /></Suspense>} />
                   <Route path="/welcome" element={<Suspense fallback={<div>Carregando...</div>}><Welcome /></Suspense>} />
                   <Route path="/register" element={<Suspense fallback={<div>Carregando...</div>}><Register /></Suspense>} />
-                  <Route path="/login" element={<Suspense fallback={<div>Carregando...</div>}><Login /></Suspense>} />
+                   <Route path="/login" element={<Suspense fallback={<div>Carregando...</div>}><Login /></Suspense>} />
+                   <Route path="/password-reset" element={<Suspense fallback={<div>Carregando...</div>}><PasswordResetForm /></Suspense>} />
+                   <Route path="/admin-seed" element={<Suspense fallback={<div>Carregando...</div>}><AdminSeedForm /></Suspense>} />
                   <Route path="/management" element={<Suspense fallback={<div>Carregando...</div>}><Management /></Suspense>} />
                   <Route path="/technical-admin" element={<Suspense fallback={<div>Carregando...</div>}><TechnicalAdmin /></Suspense>} />
                   <Route path="/passaporte" element={<Suspense fallback={<div>Carregando...</div>}><DigitalPassport /></Suspense>} />

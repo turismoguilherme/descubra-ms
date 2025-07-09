@@ -5,7 +5,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { HeatMapData } from "@/types/management";
 
 // Temporary access token - in production, use environment variables
-const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZWFpIiwiYSI6ImNsc3o0YWsybjBlcngya3FsNm8xeHdpZXEifQ.SfhLzB9S6xrM9svYfGxmhg";
+// Remove hardcoded token - use environment configuration
+import { config } from "@/config/environment";
+const MAPBOX_TOKEN = config.mapbox.getToken();
 
 interface HeatMapVisualizationProps {
   heatMapData: HeatMapData[];

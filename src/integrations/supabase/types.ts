@@ -790,6 +790,33 @@ export type Database = {
           },
         ]
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       route_checkpoints: {
         Row: {
           created_at: string | null
@@ -1232,6 +1259,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_initial_admin_user: {
+        Args: {
+          admin_email: string
+          admin_password: string
+          admin_name?: string
+        }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { check_user_id: string }
         Returns: string
@@ -1261,6 +1296,10 @@ export type Database = {
           event_ip_address?: string
           event_user_agent?: string
         }
+        Returns: boolean
+      }
+      validate_password_reset_token: {
+        Args: { token_hash: string; user_email: string }
         Returns: boolean
       }
     }
