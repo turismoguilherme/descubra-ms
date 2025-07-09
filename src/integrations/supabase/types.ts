@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          data_sources: string[] | null
+          description: string
+          generated_by: string | null
+          id: string
+          insight_type: string
+          priority: string | null
+          recommendations: Json | null
+          region: string
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          data_sources?: string[] | null
+          description: string
+          generated_by?: string | null
+          id?: string
+          insight_type: string
+          priority?: string | null
+          recommendations?: Json | null
+          region: string
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          data_sources?: string[] | null
+          description?: string
+          generated_by?: string | null
+          id?: string
+          insight_type?: string
+          priority?: string | null
+          recommendations?: Json | null
+          region?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      attendant_timesheet: {
+        Row: {
+          cat_location: string
+          clock_in_time: string
+          clock_out_time: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          total_hours: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cat_location: string
+          clock_in_time?: string
+          clock_out_time?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          total_hours?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cat_location?: string
+          clock_in_time?: string
+          clock_out_time?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          total_hours?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cat_checkins: {
         Row: {
           cat_name: string
@@ -447,6 +531,51 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base_entries: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          data_type: string | null
+          id: string
+          is_verified: boolean | null
+          metadata: Json | null
+          region: string | null
+          source: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          data_type?: string | null
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          region?: string | null
+          source?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          data_type?: string | null
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          region?: string | null
+          source?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       passport_stamps: {
         Row: {
           checkpoint_id: string | null
@@ -720,6 +849,66 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_interactions: {
+        Row: {
+          created_at: string
+          destination_id: string | null
+          duration_seconds: number | null
+          event_id: string | null
+          id: string
+          interaction_type: string
+          ip_address: unknown | null
+          metadata: Json | null
+          page_url: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          destination_id?: string | null
+          duration_seconds?: number | null
+          event_id?: string | null
+          id?: string
+          interaction_type: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          page_url?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          destination_id?: string | null
+          duration_seconds?: number | null
+          event_id?: string | null
+          id?: string
+          interaction_type?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          page_url?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interactions_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_interactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {

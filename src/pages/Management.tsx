@@ -5,7 +5,9 @@ import { useSecureAuth } from "@/hooks/useSecureAuth";
 import RegionSelector from "@/components/management/RegionSelector";
 import DashboardMetrics from "@/components/management/DashboardMetrics";
 import DashboardTabs from "@/components/management/DashboardTabs";
+import StrategicAnalyticsAI from "@/components/analytics/StrategicAnalyticsAI";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Shield, AlertTriangle, RefreshCw } from "lucide-react";
@@ -174,8 +176,27 @@ const Management = () => {
               </Button>
             </div>
           </div>
-          <DashboardMetrics />
-          <DashboardTabs region={selectedRegion} />
+          {/* Sistema de Tabs Principal para Gestores */}
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm">
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="analytics-ai">IA Analítica</TabsTrigger>
+              <TabsTrigger value="management">Gestão</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard">
+              <DashboardMetrics />
+              <DashboardTabs region={selectedRegion} />
+            </TabsContent>
+
+            <TabsContent value="analytics-ai">
+              <StrategicAnalyticsAI userRegion={selectedRegion} />
+            </TabsContent>
+
+            <TabsContent value="management">
+              <DashboardTabs region={selectedRegion} />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />

@@ -9,6 +9,7 @@ import { MapPin, MessageSquare, BarChart3, Clock } from "lucide-react";
 import EnhancedCATCheckin from "@/components/cat/EnhancedCATCheckin";
 import CATAIInterface from "@/components/cat/CATAIInterface";
 import AnalyticsDashboard from "@/components/management/AnalyticsDashboard";
+import AttendantTimesheet from "@/components/cat/AttendantTimesheet";
 
 const CATAttendant = () => {
   const { user, userRole, isAuthenticated, isAttendant, isAdmin, loading, handleSecureLogout } = useSecureAuth();
@@ -118,27 +119,9 @@ const CATAttendant = () => {
             <AnalyticsDashboard userRole="atendente" />
           </TabsContent>
 
-          {/* Aba de Horários */}
+          {/* Aba de Horários - Sistema de Ponto */}
           <TabsContent value="schedule">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Clock className="w-5 h-5 mr-2" />
-                  Controle de Horários
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Controle de Horários
-                  </h3>
-                  <p className="text-gray-500">
-                    Funcionalidade em desenvolvimento para controle de horários e escalas.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <AttendantTimesheet />
           </TabsContent>
         </Tabs>
         </div>
