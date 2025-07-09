@@ -7,7 +7,6 @@ const Footer = () => {
   const { getContentValue } = useInstitutionalContent();
 
   const description = getContentValue('footer_description');
-  const initiative = getContentValue('footer_initiative');
   const facebookLink = getContentValue('footer_facebook_link');
   const instagramLink = getContentValue('footer_instagram_link');
   const twitterLink = getContentValue('footer_twitter_link');
@@ -32,7 +31,7 @@ const Footer = () => {
               {description || 'Descubra as maravilhas do Pantanal, Cerrado e muito mais. Sua jornada pelo coração da América do Sul começa aqui.'}
             </p>
             <p className="text-gray-200 text-sm">
-              {initiative || 'Uma iniciativa da Fundtur-MS'}
+              Uma iniciativa de Guilherme Arevalo
             </p>
           </div>
 
