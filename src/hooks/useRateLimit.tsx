@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { securityService } from '@/services/securityService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -10,8 +10,8 @@ export const useRateLimit = () => {
   const checkRateLimit = async (
     identifier: string, 
     actionType: string, 
-    maxAttempts: number = 5, 
-    windowMinutes: number = 15
+    maxAttempts: number = 10, 
+    windowMinutes: number = 5
   ): Promise<boolean> => {
     try {
       const allowed = await securityService.checkRateLimit(
@@ -42,9 +42,20 @@ export const useRateLimit = () => {
     }
   };
 
+  const clearRateLimit = useCallback((identifier: string, actionType: string) => {
+    try {
+      const key = `rate_limit_${identifier}_${actionType}`;
+      localStorage.removeItem(key);
+      setIsBlocked(false);
+    } catch (error) {
+      console.error('Error clearing rate limit:', error);
+    }
+  }, []);
+
   return {
     isBlocked,
     checkRateLimit,
-    setIsBlocked
+    setIsBlocked,
+    clearRateLimit
   };
 };

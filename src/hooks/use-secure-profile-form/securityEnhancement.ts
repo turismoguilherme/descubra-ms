@@ -5,11 +5,11 @@ import { sanitizeText, sanitizeEmail, validateInput } from "@/utils/sanitization
 export const enhanceProfileFormSecurity = async (formData: any, userEmail?: string) => {
   console.log("🔒 SECURITY: Starting enhanced profile form validation");
 
-  // Rate limiting check
+  // Rate limiting check com configuração mais permissiva
   const rateLimitResult = await enhancedSecurityService.checkRateLimit(
     userEmail || 'anonymous',
     'profile_creation',
-    { maxAttempts: 3, windowMinutes: 10, blockDurationMinutes: 20 }
+    { maxAttempts: 10, windowMinutes: 15, blockDurationMinutes: 5 }
   );
 
   if (!rateLimitResult.allowed) {

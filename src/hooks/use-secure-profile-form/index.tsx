@@ -122,6 +122,7 @@ export const useSecureProfileForm = () => {
         profileData.wants_to_collaborate = wantsToCollaborate;
         profileData.residence_city = residenceCity || null;
         profileData.neighborhood = (neighborhood === "Outro" ? customNeighborhood : neighborhood) || null;
+        profileData.custom_neighborhood = customNeighborhood || null;
         profileData.time_in_city = timeInCity || null;
       }
 
@@ -131,6 +132,7 @@ export const useSecureProfileForm = () => {
         profileData.state = state || null;
         profileData.city = city || null;
         profileData.travel_organization = (travelOrganization === "Outro" ? customTravelOrganization : travelOrganization) || null;
+        profileData.custom_travel_organization = customTravelOrganization || null;
         profileData.stay_duration = stayDuration || null;
         profileData.travel_motives = otherMotive ? [...travelMotives, otherMotive] : travelMotives;
         profileData.other_motive = otherMotive || null;
@@ -170,6 +172,16 @@ export const useSecureProfileForm = () => {
 
       console.log("🎉 PERFIL: Processo concluído com sucesso");
       await logProfileCreationAttempt(true, user?.email);
+      
+      // Limpar cache de rate limiting após sucesso
+      try {
+        const key = `rate_limit_${user?.email || 'anonymous'}_profile_creation`;
+        localStorage.removeItem(key);
+        console.log("🧹 PERFIL: Cache de rate limiting limpo após sucesso");
+      } catch (error) {
+        console.error("Erro ao limpar cache de rate limiting:", error);
+      }
+      
       toast({
         title: "Perfil criado!",
         description: "Seu perfil foi salvo com segurança no sistema.",

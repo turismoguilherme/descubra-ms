@@ -1181,49 +1181,97 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          accessibility_preference: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
           city: string | null
+          country: string | null
           created_at: string | null
+          custom_neighborhood: string | null
+          custom_travel_organization: string | null
           display_name: string | null
           full_name: string | null
+          gender: string | null
           id: string
+          neighborhood: string | null
+          occupation: string | null
+          other_motive: string | null
           phone: string | null
           region: string | null
+          residence_city: string | null
+          sexuality_identity: string | null
+          state: string | null
+          stay_duration: string | null
+          time_in_city: string | null
+          travel_motives: string[] | null
+          travel_organization: string | null
           updated_at: string | null
           user_id: string
           user_type: string | null
+          wants_to_collaborate: boolean | null
         }
         Insert: {
+          accessibility_preference?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
+          custom_neighborhood?: string | null
+          custom_travel_organization?: string | null
           display_name?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
+          neighborhood?: string | null
+          occupation?: string | null
+          other_motive?: string | null
           phone?: string | null
           region?: string | null
+          residence_city?: string | null
+          sexuality_identity?: string | null
+          state?: string | null
+          stay_duration?: string | null
+          time_in_city?: string | null
+          travel_motives?: string[] | null
+          travel_organization?: string | null
           updated_at?: string | null
           user_id: string
           user_type?: string | null
+          wants_to_collaborate?: boolean | null
         }
         Update: {
+          accessibility_preference?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
+          custom_neighborhood?: string | null
+          custom_travel_organization?: string | null
           display_name?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
+          neighborhood?: string | null
+          occupation?: string | null
+          other_motive?: string | null
           phone?: string | null
           region?: string | null
+          residence_city?: string | null
+          sexuality_identity?: string | null
+          state?: string | null
+          stay_duration?: string | null
+          time_in_city?: string | null
+          travel_motives?: string[] | null
+          travel_organization?: string | null
           updated_at?: string | null
           user_id?: string
           user_type?: string | null
+          wants_to_collaborate?: boolean | null
         }
         Relationships: []
       }
