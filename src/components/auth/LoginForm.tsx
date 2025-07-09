@@ -11,9 +11,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
-import { RateLimiter } from "@/components/security/RateLimiter";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
+import { EnhancedAuthSecurity } from "@/components/security/EnhancedAuthSecurity";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -107,18 +107,18 @@ const LoginForm = () => {
         />
       </div>
 
-      {/* Formulário de login */}
+      {/* Formulário de login com segurança aprimorada */}
       <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
-        <div className="ms-container max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-semibold text-ms-primary-blue mb-2 text-center">
-            Entrar na sua conta
-          </h1>
-          <p className="text-gray-600 text-center mb-6">
-            Faça login para acessar o sistema
-          </p>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="ms-container max-w-md mx-auto">
+          <EnhancedAuthSecurity
+            operationType="login"
+            identifier={form.watch('email') || 'anonymous'}
+            onSecurityFail={(reason) => {
+              console.log('Security failed:', reason);
+            }}
+          >
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -174,40 +174,41 @@ const LoginForm = () => {
                 <LogIn size={20} className="mr-2" />
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
-            </form>
-          </Form>
+              </form>
+            </Form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Ou continue com</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Ou continue com</span>
-              </div>
+
+              <SocialLoginButtons />
             </div>
 
-            <SocialLoginButtons />
-          </div>
-
-          <div className="mt-4 text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              <Link to="/password-reset" className="text-ms-primary-blue hover:underline">
-                Esqueceu sua senha?
-              </Link>
-            </p>
-            <p className="text-sm text-gray-600">
-              Não tem uma conta?{" "}
-              <Link to="/register" className="text-ms-primary-blue hover:underline font-medium">
-                Criar conta
-              </Link>
-            </p>
-            <p className="text-sm">
-              <Link to="/admin-login" className="text-ms-primary-blue hover:underline">
-                Acesso Administrativo
-              </Link>
-            </p>
-          </div>
+            <div className="mt-4 text-center space-y-2">
+              <p className="text-sm text-gray-600">
+                <Link to="/password-reset" className="text-ms-primary-blue hover:underline">
+                  Esqueceu sua senha?
+                </Link>
+              </p>
+              <p className="text-sm text-gray-600">
+                Não tem uma conta?{" "}
+                <Link to="/register" className="text-ms-primary-blue hover:underline font-medium">
+                  Criar conta
+                </Link>
+              </p>
+              <p className="text-sm">
+                <Link to="/admin-login" className="text-ms-primary-blue hover:underline">
+                  Acesso Administrativo
+                </Link>
+              </p>
+            </div>
+          </EnhancedAuthSecurity>
         </div>
       </div>
     </div>

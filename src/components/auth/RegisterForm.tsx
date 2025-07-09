@@ -12,6 +12,7 @@ import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
+import { EnhancedAuthSecurity } from "@/components/security/EnhancedAuthSecurity";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -109,18 +110,18 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
         />
       </div>
 
-      {/* Formulário de registro */}
+      {/* Formulário de registro com segurança aprimorada */}
       <div className="flex-grow bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green py-12 px-4">
-        <div className="ms-container max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-semibold text-ms-primary-blue mb-2 text-center">
-            Criar sua conta
-          </h1>
-          <p className="text-gray-600 text-center mb-6">
-            Registre-se para começar sua jornada
-          </p>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <div className="ms-container max-w-md mx-auto">
+          <EnhancedAuthSecurity
+            operationType="register"
+            identifier={form.watch('email') || 'anonymous'}
+            onSecurityFail={(reason) => {
+              console.log('Security failed:', reason);
+            }}
+          >
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="fullName"
@@ -223,30 +224,31 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                 <UserPlus size={20} className="mr-2" />
                 {loading ? 'Criando conta...' : 'Criar Conta'}
               </Button>
-            </form>
-          </Form>
+              </form>
+            </Form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Ou registre-se com</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Ou registre-se com</span>
-              </div>
+
+              <SocialLoginButtons onSocialLogin={onSocialLogin} />
             </div>
 
-            <SocialLoginButtons onSocialLogin={onSocialLogin} />
-          </div>
-
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Já tem uma conta?{" "}
-              <Link to="/login" className="text-ms-primary-blue hover:underline font-medium">
-                Fazer login
-              </Link>
-            </p>
-          </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                Já tem uma conta?{" "}
+                <Link to="/login" className="text-ms-primary-blue hover:underline font-medium">
+                  Fazer login
+                </Link>
+              </p>
+            </div>
+          </EnhancedAuthSecurity>
         </div>
       </div>
     </div>

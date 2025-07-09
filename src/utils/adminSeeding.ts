@@ -1,6 +1,9 @@
-// Admin user seeding utilities
+// DEPRECATED: Admin user seeding utilities
+// WARNING: This functionality is deprecated for security reasons
+// Admin users should be created through secure channels only
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 
 export interface AdminSeedData {
   email: string;
@@ -9,14 +12,31 @@ export interface AdminSeedData {
 }
 
 /**
- * Create initial admin user using Supabase Auth
- * This function should only be used in development/setup scenarios
+ * DEPRECATED: Create initial admin user using Supabase Auth
+ * WARNING: This function is deprecated for security reasons
+ * Admin users should be created through secure administrative channels only
  */
 export async function createInitialAdminUser(data: AdminSeedData): Promise<boolean> {
   try {
-    console.log("🔧 Creating initial admin user...");
+    // Security check: Only allow in development mode
+    if (process.env.NODE_ENV === 'production') {
+      console.error("🚨 Admin seeding is disabled in production for security reasons");
+      toast.error("Criação de admin não permitida em produção");
+      
+      // Log security violation
+      await enhancedSecurityService.logSecurityEvent({
+        action: 'admin_seeding_production_attempt',
+        success: false,
+        error_message: 'Attempted admin seeding in production environment',
+        metadata: { environment: 'production', blocked: true }
+      });
+      
+      return false;
+    }
 
-    // First, check if any admin users already exist
+    console.log("🔧 Creating initial admin user... (DEVELOPMENT ONLY)");
+
+    // Enhanced security checks
     const { data: existingAdmins, error: checkError } = await supabase
       .from('user_roles')
       .select('id')
