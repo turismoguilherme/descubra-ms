@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import UserMenu from "./UserMenu";
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {
@@ -46,22 +45,15 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
-              <img 
-                alt="Descubra Mato Grosso do Sul" 
-                src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
-                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                loading="eager"
-                onError={(e) => {
-                  console.error('Logo failed to load');
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'block';
-                }}
-              />
-              <div 
-                className="hidden text-2xl font-bold text-ms-primary-blue"
-                style={{ display: 'none' }}
-              >
+              <img alt="Descubra Mato Grosso do Sul" src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" loading="eager" onError={e => {
+              console.error('Logo failed to load');
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'block';
+            }} />
+              <div className="hidden text-2xl font-bold text-ms-primary-blue" style={{
+              display: 'none'
+            }}>
                 Descubra MS
               </div>
             </div>
@@ -87,7 +79,7 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
+                  <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
                     Cadastrar
                   </Button>
                 </Link>
