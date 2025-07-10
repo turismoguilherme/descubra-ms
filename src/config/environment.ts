@@ -31,18 +31,44 @@ export const config = {
   },
   
   security: {
-    // Rate limiting configuration
+    // Enhanced rate limiting configuration
     rateLimits: {
-      login: { maxAttempts: 5, windowMinutes: 15 },
-      registration: { maxAttempts: 3, windowMinutes: 60 },
-      passwordReset: { maxAttempts: 3, windowMinutes: 60 },
-      aiQueries: { maxAttempts: 100, windowMinutes: 60 }
+      login: { maxAttempts: 5, windowMinutes: 15, blockDurationMinutes: 45 },
+      registration: { maxAttempts: 3, windowMinutes: 60, blockDurationMinutes: 60 },
+      passwordReset: { maxAttempts: 3, windowMinutes: 60, blockDurationMinutes: 120 },
+      aiQueries: { maxAttempts: 50, windowMinutes: 60, blockDurationMinutes: 30 },
+      adminOperations: { maxAttempts: 3, windowMinutes: 30, blockDurationMinutes: 120 }
     },
     
     // Session configuration
     session: {
       timeoutMinutes: 240, // 4 hours
-      refreshThresholdMinutes: 30 // Refresh token when 30min remaining
+      refreshThresholdMinutes: 30, // Refresh token when 30min remaining
+      maxConcurrentSessions: 3 // Limit concurrent sessions per user
+    },
+    
+    // Security validation
+    validation: {
+      passwordMinLength: 8,
+      passwordRequireSpecialChars: true,
+      passwordRequireNumbers: true,
+      passwordRequireUppercase: true,
+      maxLoginAttempts: 5,
+      sessionIntegrityCheck: true
+    },
+    
+    // Content Security Policy
+    csp: {
+      enabled: true,
+      reportOnly: false,
+      directives: [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: https:",
+        "font-src 'self' data:",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co"
+      ]
     }
   }
 };

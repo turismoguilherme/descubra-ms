@@ -57,11 +57,11 @@ const LoginForm = () => {
         return;
       }
 
-      // Simplified rate limiting check (non-blocking)
+      // Enhanced rate limiting for login attempts
       const rateLimitCheck = await enhancedSecurityService.checkRateLimit(
         sanitizedData.email,
         'login',
-        { maxAttempts: 10, windowMinutes: 15, blockDurationMinutes: 30 }
+        { maxAttempts: 5, windowMinutes: 15, blockDurationMinutes: 45 }
       );
 
       if (!rateLimitCheck.allowed) {

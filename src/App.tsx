@@ -8,6 +8,8 @@ import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { TourismDataProvider } from "@/context/TourismDataContext";
 import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker";
 import LoadingFallback from "@/components/ui/loading-fallback";
+import { SecurityHeaders } from "@/components/security/SecurityHeaders";
+import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
 
 // Critical components (no lazy loading)
 import Index from "@/pages/Index";
@@ -49,16 +51,24 @@ const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
 
 const queryClient = new QueryClient();
 
+// Wrapper para monitoramento de segurança
+function SecurityWrapper({ children }: { children: React.ReactNode }) {
+  useSecurityMonitoring();
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <SecurityHeaders />
       <TourismDataProvider>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <ProfileCompletionChecker>
-                <div className="min-h-screen bg-background font-sans antialiased">
+          <SecurityWrapper>
+            <TooltipProvider>
+              <Toaster />
+              <BrowserRouter>
+                <ProfileCompletionChecker>
+                  <div className="min-h-screen bg-background font-sans antialiased">
                   <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/welcome" element={<Welcome />} />
@@ -94,15 +104,16 @@ function App() {
                   <Route path="/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
                   <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
                   <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
-                 </Routes>
-               </div>
-             </ProfileCompletionChecker>
-           </BrowserRouter>
-         </TooltipProvider>
-       </AuthProvider>
-     </TourismDataProvider>
-   </QueryClientProvider>
- );
+                  </Routes>
+                  </div>
+                </ProfileCompletionChecker>
+              </BrowserRouter>
+            </TooltipProvider>
+          </SecurityWrapper>
+        </AuthProvider>
+      </TourismDataProvider>
+    </QueryClientProvider>
+  );
 }
 
 export default App;

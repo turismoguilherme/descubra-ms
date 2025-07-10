@@ -29,7 +29,5 @@ export const elevateToAdmin = async (userEmail: string): Promise<boolean> => {
   }
 };
 
-// Tornar disponível globalmente para uso no console
-if (typeof window !== 'undefined') {
-  (window as any).elevateToAdmin = elevateToAdmin;
-}
+// Função removida da exposição global por motivos de segurança
+// Para usar: importe diretamente onde necessário em vez de usar window object

@@ -16,7 +16,11 @@ import { useToast } from "@/components/ui/use-toast";
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
+  password: z.string()
+    .min(8, { message: "Senha deve ter pelo menos 8 caracteres" })
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, { 
+      message: "Senha deve conter ao menos: 1 letra minúscula, 1 maiúscula e 1 número" 
+    }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Senhas não coincidem",
@@ -69,11 +73,11 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
         return;
       }
 
-      // Rate limiting check only on submit
+      // Enhanced rate limiting for registration
       const rateLimitCheck = await enhancedSecurityService.checkRateLimit(
         sanitizedData.email,
         'registration',
-        { maxAttempts: 10, windowMinutes: 15, blockDurationMinutes: 30 }
+        { maxAttempts: 3, windowMinutes: 60, blockDurationMinutes: 60 }
       );
 
       if (!rateLimitCheck.allowed) {
