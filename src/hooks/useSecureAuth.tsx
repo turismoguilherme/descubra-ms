@@ -1,81 +1,60 @@
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-export type UserRole = 'admin' | 'tech' | 'municipal' | 'municipal_manager' | 'gestor' | 'atendente' | 'user';
+export type UserRole = 
+  | 'admin' 
+  | 'tech' 
+  | 'diretor_estadual'
+  | 'gestor_igr'
+  | 'gestor_municipal'
+  | 'atendente'
+  | 'user';
 
 export const useSecureAuth = () => {
-  const { user, session, loading: authLoading, signOut } = useAuth();
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [userRegion, setUserRegion] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, session, userProfile, loading: authLoading, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const refreshUserPermissions = async () => {
-    if (!user?.id) {
-      setUserRole(null);
-      setUserRegion(null);
-      return;
-    }
-    
-    console.log("🔄 Buscando permissões para usuário:", user.email);
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role, region')
-        .eq('user_id', user.id)
-        .single();
+  // Deriva o estado de autenticação e papéis a partir do AuthProvider
+  const {
+    role,
+    cityId,
+    regionId,
+    isAuthenticated,
+    isGestor,
+    isAdmin,
+    isDiretorEstadual,
+    isGestorIgr,
+    isGestorMunicipal,
+    isAtendente
+  } = useMemo(() => {
+    const profile = userProfile;
+    const currentRole = profile?.role as UserRole || null;
 
-      if (error) {
-        console.log("⚠️ Usuário sem role definida:", error.message);
-        setUserRole('user'); // Default role
-        setUserRegion(null);
-      } else if (data) {
-        console.log("✅ Role encontrada:", data.role);
-        setUserRole(data.role as UserRole);
-        setUserRegion(data.region || null);
-      }
-    } catch (error) {
-      console.error("❌ Erro ao buscar permissões:", error);
-      setUserRole('user'); // Default fallback
-      setUserRegion(null);
-    }
-  };
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (authLoading) return;
-
-      if (user?.id) {
-        await refreshUserPermissions();
-      } else {
-        setUserRole(null);
-        setUserRegion(null);
-      }
-      
-      setLoading(false);
+    return {
+      role: currentRole,
+      cityId: profile?.city_id || null,
+      regionId: profile?.region_id || null,
+      isAuthenticated: !!session && !!profile,
+      isAdmin: currentRole === 'admin' || currentRole === 'tech',
+      isDiretorEstadual: currentRole === 'diretor_estadual',
+      isGestorIgr: currentRole === 'gestor_igr',
+      isGestorMunicipal: currentRole === 'gestor_municipal',
+      isAtendente: currentRole === 'atendente',
+      isGestor: ['admin', 'tech', 'diretor_estadual', 'gestor_igr', 'gestor_municipal', 'atendente'].includes(currentRole || ''),
     };
-
-    checkAuth();
-  }, [user?.id, authLoading]);
-
-  const isAuthenticated = !!session;
-  const isManager = userRole && ['admin', 'tech', 'municipal', 'municipal_manager', 'gestor', 'atendente'].includes(userRole);
-  const isAdmin = userRole === 'admin' || userRole === 'tech';
-  const isMunicipalManager = userRole === 'municipal_manager' || userRole === 'gestor' || userRole === 'municipal';
-  const isAttendant = userRole === 'atendente';
-
-  // Get recommended dashboard route based on role
+  }, [session, userProfile]);
+  
+  // Rota recomendada com base no papel do usuário
   const getDashboardRoute = () => {
     if (isAdmin) return '/technical-admin';
-    if (isMunicipalManager) return '/municipal-admin';
-    if (isAttendant) return '/cat-attendant';
-    return '/management';
+    if (isDiretorEstadual || isGestorIgr) return '/management'; // Painel principal para visão macro
+    if (isGestorMunicipal) return '/municipal-admin';
+    if (isAtendente) return '/cat-attendant';
+    return '/'; // Rota padrão para usuários comuns ou se não houver rota específica
   };
 
   const handleSecureLogout = async () => {
@@ -92,27 +71,22 @@ export const useSecureAuth = () => {
     }
   };
 
-  console.log("🔐 Estado de autenticação:", {
-    isAuthenticated,
-    userRole,
-    isManager,
-    isAdmin,
-    userEmail: user?.email
-  });
-
   return {
     user,
     session,
-    userRole,
-    userRegion,
+    profile: userProfile,
+    role,
+    cityId,
+    regionId,
     isAuthenticated,
-    isManager,
+    isGestor,
     isAdmin,
-    isMunicipalManager,
-    isAttendant,
+    isDiretorEstadual,
+    isGestorIgr,
+    isGestorMunicipal,
+    isAtendente,
     getDashboardRoute,
-    loading: authLoading || loading,
+    loading: authLoading,
     handleSecureLogout,
-    refreshUserPermissions
   };
 };

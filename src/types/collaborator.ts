@@ -7,7 +7,7 @@ export interface Collaborator {
   position: string;
   role: string;
   department?: string;
-  municipality: string;
+  city_id: string; // Trocado de municipality para city_id
   region?: string;
   status?: string;
   permissions?: any;
@@ -22,7 +22,7 @@ export interface CollaboratorFormData {
   email: string;
   position: string;
   role: string;
-  municipality: string;
+  // O campo municipality foi removido
 }
 
 // Constantes de papéis/funções
@@ -35,21 +35,4 @@ export const roles = [
   { value: 'guia', label: 'Guia Turístico' },
 ];
 
-// Constantes de cidades
-export const cities = [
-  'Campo Grande',
-  'Dourados',
-  'Três Lagoas',
-  'Corumbá',
-  'Ponta Porã',
-  'Aquidauana',
-  'Coxim',
-  'Nova Andradina',
-  'Paranaíba',
-  'Bonito',
-  'Naviraí',
-  'Miranda',
-  'Jardim',
-  'Sidrolândia',
-  'Maracaju',
-];
+// A lista de cidades hardcoded foi removida para usar dados do banco de dados.

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext, AuthContextType } from "./AuthContext";
@@ -7,6 +7,7 @@ import { showToast } from "./authToast";
 import { enhancedSignInService } from "./services/enhancedSignIn";
 import { signInWithProviderService, signOutService, resendConfirmationEmailService } from "./services";
 import { signUpService } from "./services/signUpService";
+import { UserProfile } from "@/types/auth";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -15,7 +16,51 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = useCallback(async (user: User | null) => {
+    if (!user) {
+      setUserProfile(null);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select(`
+          role,
+          city_id,
+          region_id,
+          user_profiles (
+            full_name
+          )
+        `)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error("❌ Erro ao buscar perfil do usuário:", error);
+        setUserProfile(null);
+        return;
+      }
+      
+      if (data) {
+        const profile: UserProfile = {
+          user_id: user.id,
+          role: data.role,
+          city_id: data.city_id,
+          region_id: data.region_id,
+          // @ts-ignore
+          full_name: data.user_profiles?.full_name || user.email,
+        };
+        setUserProfile(profile);
+      }
+    } catch (e) {
+      console.error("❌ Exceção ao buscar perfil:", e);
+      setUserProfile(null);
+    }
+  }, []);
+
 
   useEffect(() => {
     // Verificar parâmetros OAuth na URL
@@ -35,9 +80,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     
     // Configurar listener de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        await fetchUserProfile(currentUser); // Buscar perfil ao logar
         setLoading(false);
 
         if (event === 'SIGNED_IN' && session?.user) {
@@ -68,6 +115,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
+          setUserProfile(null); // Limpar perfil ao deslogar
         }
       }
     );
@@ -81,7 +129,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           console.error("❌ Erro ao obter sessão:", error);
         } else {
           setSession(session);
-          setUser(session?.user ?? null);
+          const currentUser = session?.user ?? null;
+          setUser(currentUser);
+          await fetchUserProfile(currentUser); // Buscar perfil na sessão inicial
         }
       } catch (error) {
         console.error("❌ Erro em getInitialSession:", error);
@@ -95,7 +145,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     setLoading(true);
@@ -107,6 +157,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     const result = await enhancedSignInService(email, password);
+    // O onAuthStateChange vai cuidar de buscar o perfil
     setLoading(false);
     return result;
   };
@@ -123,6 +174,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     setLoading(true);
     await signOutService();
+    setUserProfile(null); // Limpar perfil
     setLoading(false);
   };
 
@@ -144,6 +196,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     user,
     session,
+    userProfile, // Adicionado ao contexto
     loading,
     signUp,
     signIn,

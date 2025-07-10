@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { InteractionTracker } from "@/services/tracking/InteractionTrackerService";
 
 const destinos = [
   {
@@ -29,6 +30,14 @@ const destinos = [
 ];
 
 const DestaquesSection = () => {
+  const handleDestinationClick = (destino: { id: number; nome: string }) => {
+    InteractionTracker.track({
+      interaction_type: 'destination_click',
+      target_id: destino.id.toString(),
+      target_name: destino.nome,
+    });
+  };
+
   return (
     <section className="py-16 bg-white">
       <div className="ms-container">
@@ -36,7 +45,12 @@ const DestaquesSection = () => {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {destinos.map((destino) => (
-            <Link key={destino.id} to={`/destinos/${destino.id}`} className="card-hover">
+            <Link 
+              key={destino.id} 
+              to={`/destinos/${destino.id}`} 
+              className="card-hover"
+              onClick={() => handleDestinationClick(destino)}
+            >
               <div className="bg-white rounded-lg overflow-hidden shadow-md h-full">
                 <div className="h-48 overflow-hidden">
                   <img 

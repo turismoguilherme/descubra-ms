@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,11 @@ interface CityTourSettings {
   is_public: boolean;
 }
 
-const CityTourManager = () => {
+interface CityTourManagerProps {
+  cityId: string;
+}
+
+const CityTourManager = ({ cityId }: CityTourManagerProps) => {
   const [bookings, setBookings] = useState<CityTourBooking[]>([]);
   const [settings, setSettings] = useState<CityTourSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +44,6 @@ const CityTourManager = () => {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
-    city: "Campo Grande",
     tour_date: "",
     tour_time: "",
     max_capacity: 30,
@@ -49,20 +52,16 @@ const CityTourManager = () => {
   });
 
   const [settingsData, setSettingsData] = useState({
-    city: "Campo Grande",
     is_public: false,
   });
 
-  useEffect(() => {
-    fetchBookings();
-    fetchSettings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
+    if (!cityId) return;
     try {
       const { data, error } = await supabase
         .from('city_tour_bookings')
         .select('*')
+        .eq('city_id', cityId) // Filtra por cityId
         .order('tour_date', { ascending: true });
 
       if (error) {
@@ -80,13 +79,15 @@ const CityTourManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cityId, toast]);
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
+    if (!cityId) return;
     try {
       const { data, error } = await supabase
         .from('city_tour_settings')
         .select('*')
+        .eq('city_id', cityId) // Filtra por cityId
         .limit(1)
         .maybeSingle();
 
@@ -96,12 +97,17 @@ const CityTourManager = () => {
       }
       if (data) {
         setSettings(data);
-        setSettingsData({ city: data.city, is_public: data.is_public });
+        setSettingsData({ is_public: data.is_public });
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
     }
-  };
+  }, [cityId, toast]);
+
+  useEffect(() => {
+    fetchBookings();
+    fetchSettings();
+  }, [fetchBookings, fetchSettings]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +128,8 @@ const CityTourManager = () => {
       const { error } = await supabase
         .from('city_tour_bookings')
         .insert([{
-          city: formData.city,
+          // O campo 'city' foi removido e substituído por 'city_id'
+          city_id: cityId,
           tour_date: formData.tour_date,
           tour_time: formData.tour_time,
           max_capacity: formData.max_capacity,
@@ -139,7 +146,6 @@ const CityTourManager = () => {
       });
 
       setFormData({
-        city: "Campo Grande",
         tour_date: "",
         tour_time: "",
         max_capacity: 30,
@@ -168,10 +174,11 @@ const CityTourManager = () => {
       const { error } = await supabase
         .from('city_tour_settings')
         .upsert([{
-          city: settingsData.city,
+          // O campo 'city' foi removido e substituído por 'city_id'
+          city_id: cityId,
           is_public: settingsData.is_public,
           manager_id: user.id,
-        }]);
+        }], { onConflict: 'city_id' }); // 'upsert' agora usa city_id como chave de conflito
 
       if (error) throw error;
       
@@ -210,15 +217,6 @@ const CityTourManager = () => {
                   <DialogTitle>Configurações de Visibilidade</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSettingsSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="city">Cidade</Label>
-                    <Input
-                      id="city"
-                      value={settingsData.city}
-                      onChange={(e) => setSettingsData({ ...settingsData, city: e.target.value })}
-                      required
-                    />
-                  </div>
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="is_public"
@@ -248,15 +246,6 @@ const CityTourManager = () => {
                   <DialogTitle>Criar Agendamento de City Tour</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="city">Cidade</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      required
-                    />
-                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="tour_date">Data</Label>

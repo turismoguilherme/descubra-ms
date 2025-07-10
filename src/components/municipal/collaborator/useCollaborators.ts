@@ -1,14 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Collaborator, CollaboratorFormData } from "@/types/collaborator";
 
-export const useCollaborators = () => {
+// O hook agora aceita cityId como um argumento obrigatório
+export const useCollaborators = (cityId: string) => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCity, setFilterCity] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCollaborator, setEditingCollaborator] = useState<Collaborator | null>(null);
@@ -22,15 +22,15 @@ export const useCollaborators = () => {
     municipality: "",
   });
 
-  useEffect(() => {
-    fetchCollaborators();
-  }, []);
+  const fetchCollaborators = useCallback(async () => {
+    if (!cityId) return; // Não faz nada se não houver cityId
 
-  const fetchCollaborators = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('municipal_collaborators')
         .select('*')
+        .eq('city_id', cityId) // Filtro principal pelo cityId
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -45,12 +45,16 @@ export const useCollaborators = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cityId, toast]); // Adiciona cityId e toast às dependências
+
+  useEffect(() => {
+    fetchCollaborators();
+  }, [fetchCollaborators]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.position || !formData.role || !formData.municipality) {
+    if (!formData.name || !formData.email || !formData.position || !formData.role) {
       toast({
         title: "Erro",
         description: "Todos os campos são obrigatórios",
@@ -66,7 +70,9 @@ export const useCollaborators = () => {
       const collaboratorData = {
         ...formData,
         manager_id: user.id,
+        city_id: cityId, // Associa o novo colaborador ao cityId do gestor
       };
+      delete collaboratorData.municipality;
 
       if (editingCollaborator) {
         const { error } = await supabase
@@ -149,13 +155,13 @@ export const useCollaborators = () => {
     setIsDialogOpen(false);
   };
 
+  // A filtragem por cidade no cliente é removida
   const filteredCollaborators = collaborators.filter(collaborator => {
     const matchesSearch = collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          collaborator.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCity = !filterCity || collaborator.municipality === filterCity;
     const matchesRole = !filterRole || collaborator.role === filterRole;
     
-    return matchesSearch && matchesCity && matchesRole;
+    return matchesSearch && matchesRole;
   });
 
   return {
@@ -163,8 +169,6 @@ export const useCollaborators = () => {
     loading,
     searchTerm,
     setSearchTerm,
-    filterCity,
-    setFilterCity,
     filterRole,
     setFilterRole,
     isDialogOpen,

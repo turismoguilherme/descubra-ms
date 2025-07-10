@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Survey, SurveyResponse } from "@/types/municipal";
 
-const SurveyManager = () => {
+interface SurveyManagerProps {
+  cityId: string;
+}
+
+const SurveyManager = ({ cityId }: SurveyManagerProps) => {
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,15 +35,13 @@ const SurveyManager = () => {
     endDate: ""
   });
 
-  useEffect(() => {
-    fetchSurveys();
-  }, []);
-
-  const fetchSurveys = async () => {
+  const fetchSurveys = useCallback(async () => {
+    if (!cityId) return;
     try {
       const { data, error } = await supabase
         .from('institutional_surveys')
         .select('*')
+        .eq('city_id', cityId) // Filtra por cityId
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -54,7 +56,11 @@ const SurveyManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cityId, toast]);
+
+  useEffect(() => {
+    fetchSurveys();
+  }, [fetchSurveys]);
 
   const handleCreateSurvey = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +78,7 @@ const SurveyManager = () => {
         start_date: surveyForm.startDate || null,
         end_date: surveyForm.endDate || null,
         created_by: user.id,
-        city: 'Campo Grande',
+        city_id: cityId, // Associa ao cityId
         is_active: true
       };
 

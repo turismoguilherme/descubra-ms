@@ -14,23 +14,41 @@ import FileManager from "@/components/municipal/FileManager";
 import SurveyManager from "@/components/municipal/SurveyManager";
 import { useNavigate } from "react-router-dom";
 
+// Novo tipo para props dos componentes filhos
+interface ManagerProps {
+  cityId: string;
+}
+
 const MunicipalAdmin = () => {
   const [activeTab, setActiveTab] = useState("collaborators");
-  const { userRole, userRegion, isAuthenticated, isMunicipalManager, isAdmin, handleSecureLogout, loading } = useSecureAuth();
+  const { 
+    role, 
+    cityId,
+    isAuthenticated, 
+    isGestorMunicipal, 
+    isAdmin, 
+    handleSecureLogout, 
+    loading 
+  } = useSecureAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/admin-login');
+    if (loading) return;
+    
+    if (!isAuthenticated) {
+      navigate('/admin-login', { replace: true });
       return;
     }
     
-    if (!loading && isAuthenticated && !isMunicipalManager && !isAdmin) {
-      navigate('/management');
+    // Apenas gestores municipais e admins podem acessar
+    if (!isGestorMunicipal && !isAdmin) {
+      navigate('/management', { replace: true });
     }
-  }, [loading, isAuthenticated, isMunicipalManager, isAdmin, navigate]);
+  }, [loading, isAuthenticated, isGestorMunicipal, isAdmin, navigate]);
 
-  if (loading || !isAuthenticated) {
+  if (loading || !isAuthenticated || !cityId) {
+    // Adicionamos a checagem de cityId aqui. 
+    // Um gestor municipal DEVE ter uma cidade associada.
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -58,12 +76,12 @@ const MunicipalAdmin = () => {
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-sm text-gray-600">Usuário</div>
-                <Badge variant="outline">{userRole}</Badge>
+                <Badge variant="outline">{role}</Badge>
               </div>
-              {userRegion && (
+              {cityId && (
                 <div className="text-right">
                   <div className="text-sm text-gray-600">Região</div>
-                  <Badge variant="outline">{userRegion}</Badge>
+                  <Badge variant="outline">{cityId}</Badge>
                 </div>
               )}
               <Button onClick={handleSecureLogout} variant="outline" size="sm">
@@ -141,19 +159,22 @@ const MunicipalAdmin = () => {
             </TabsList>
 
             <TabsContent value="collaborators">
-              <CollaboratorManager />
+              <CollaboratorManager cityId={cityId} />
             </TabsContent>
 
             <TabsContent value="city_tours">
-              <CityTourManager />
+              {/* Assumindo que CityTourManager também precisará do cityId */}
+              <CityTourManager cityId={cityId} />
             </TabsContent>
 
             <TabsContent value="files">
-              <FileManager />
+              {/* Assumindo que FileManager também precisará do cityId */}
+              <FileManager cityId={cityId} />
             </TabsContent>
 
             <TabsContent value="surveys">
-              <SurveyManager />
+              {/* Assumindo que SurveyManager também precisará do cityId */}
+              <SurveyManager cityId={cityId} />
             </TabsContent>
           </Tabs>
         </div>

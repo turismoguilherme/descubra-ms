@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import AdminEditButton from "@/components/admin/AdminEditButton";
+import { usePageTracking } from "@/hooks/usePageTracking"; // Importa o hook
 
 interface Destination {
   id: string;
@@ -36,6 +37,13 @@ const DestinoDetalhes = () => {
   const [destination, setDestination] = useState<Destination | null>(null);
   const [details, setDetails] = useState<DestinationDetails | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Chama o hook de rastreamento
+  // Ele só enviará os dados de 'target' quando 'destination' for carregado
+  usePageTracking({
+    target_id: destination?.id,
+    target_name: destination?.name,
+  });
 
   useEffect(() => {
     const checkAuth = async () => {

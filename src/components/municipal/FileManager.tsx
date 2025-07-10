@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SecretaryFile } from "@/types/municipal";
 
-const FileManager = () => {
+interface FileManagerProps {
+  cityId: string;
+}
+
+const FileManager = ({ cityId }: FileManagerProps) => {
   const [files, setFiles] = useState<SecretaryFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -29,15 +33,13 @@ const FileManager = () => {
     isPublic: false
   });
 
-  useEffect(() => {
-    fetchFiles();
-  }, []);
-
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
+    if (!cityId) return;
     try {
       const { data, error } = await supabase
         .from('secretary_files')
         .select('*')
+        .eq('city_id', cityId) // Filtra por cityId
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -52,7 +54,11 @@ const FileManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cityId, toast]);
+
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +87,7 @@ const FileManager = () => {
         file_type: getFileType(uploadForm.file.type),
         category: uploadForm.category,
         description: uploadForm.description,
-        city: 'Campo Grande',
+        city_id: cityId, // Associa ao cityId
         is_public: uploadForm.isPublic,
         uploaded_by: user.id,
         uploader_name: user.email

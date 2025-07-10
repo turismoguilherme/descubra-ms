@@ -10,59 +10,48 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shield, AlertTriangle, RefreshCw } from "lucide-react";
+import { Shield, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Management = () => {
+  // O estado da região selecionada ainda é local da página
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+
   const {
-    userRole,
-    userRegion,
+    role,
+    regionId,
     isAuthenticated,
-    isManager,
+    isGestor,
     isAdmin,
-    isMunicipalManager,
-    isAttendant,
+    isDiretorEstadual,
+    isGestorIgr,
     getDashboardRoute,
     loading,
     handleSecureLogout,
-    refreshUserPermissions
   } = useSecureAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated && userRegion && userRegion !== "all") {
-      setSelectedRegion(userRegion);
-    }
-  }, [isAuthenticated, userRegion]);
-
-  useEffect(() => {
     if (loading) return;
-    
-    console.log("🔍 Management - Estado de autenticação:", {
-      loading,
-      isAuthenticated,
-      userRole,
-      isManager,
-      isAdmin,
-      recommendedRoute: getDashboardRoute()
-    });
-    
-    if (!isAuthenticated) {
-      console.log("❌ Usuário não autenticado, redirecionando para admin-login");
+
+    // Se não for um gestor, redireciona para a página de login
+    if (!isGestor) {
       navigate("/admin-login", { replace: true });
       return;
     }
 
-    // Auto-redirect to specialized dashboard if user has specific role
-    if (isAuthenticated && userRole) {
-      const recommendedRoute = getDashboardRoute();
-      if (recommendedRoute !== '/management' && window.location.pathname === '/management') {
-        console.log(`🔄 Redirecionando ${userRole} para dashboard específico: ${recommendedRoute}`);
-        navigate(recommendedRoute, { replace: true });
-      }
+    // Redireciona para o dashboard específico, se não for a página de management
+    const recommendedRoute = getDashboardRoute();
+    if (recommendedRoute !== '/management' && window.location.pathname === '/management') {
+      navigate(recommendedRoute, { replace: true });
     }
-  }, [isAuthenticated, loading, navigate, userRole, isManager, getDashboardRoute]);
+    
+    // Define a região do usuário como padrão se ele for um gestor de IGR
+    if (isGestorIgr && regionId) {
+      setSelectedRegion(regionId);
+    }
+
+  }, [isAuthenticated, isGestor, loading, navigate, getDashboardRoute, isGestorIgr, regionId]);
 
   if (loading) {
     return (
@@ -72,13 +61,6 @@ const Management = () => {
           <div className="text-center text-ms-primary-blue">
             <div className="animate-spin mb-3 mx-auto rounded-full border-4 border-blue-200 border-t-ms-primary-blue h-12 w-12"></div>
             <div className="font-semibold">Verificando permissões...</div>
-            <div className="text-sm text-gray-500 mt-2">Aguarde um instante.</div>
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-4 text-xs bg-gray-100 p-2 rounded">
-                <p>Debug: Role = {userRole || 'carregando...'}</p>
-                <p>Debug: Manager = {isManager ? 'sim' : 'não'}</p>
-              </div>
-            )}
           </div>
         </main>
         <Footer />
@@ -86,14 +68,9 @@ const Management = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (!isManager) {
-    console.log("❌ Usuário sem permissões de manager:", { userRole, isManager });
-    
-    return (
+  // Se o usuário não for um gestor com acesso a esta página, mostra acesso restrito
+  if (!isDiretorEstadual && !isGestorIgr && !isAdmin) {
+     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow bg-gray-50 flex items-center justify-center">
@@ -101,35 +78,19 @@ const Management = () => {
             <CardHeader>
               <CardTitle className="flex items-center text-amber-600">
                 <AlertTriangle className="mr-2 h-5 w-5" />
-                Acesso Restrito
+                Acesso Não Autorizado
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Esta área é restrita para gestores e administradores do sistema.
+                Você não tem permissão para acessar este painel de controle.
               </p>
               <p className="text-sm text-gray-500 mb-4">
-                Sua role atual: <strong>{userRole || 'nenhuma'}</strong>
+                Seu papel atual: <strong>{role || 'nenhum'}</strong>
               </p>
-              <p className="text-xs text-gray-400 mb-4">
-                Roles aceitas: admin, tech, municipal, municipal_manager, gestor, atendente
-              </p>
-              <div className="space-y-3">
-                <Button
-                  onClick={refreshUserPermissions}
-                  className="w-full flex items-center gap-2"
-                  variant="outline"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Atualizar Permissões
-                </Button>
-                <Button
-                  onClick={() => navigate("/")}
-                  className="w-full"
-                >
-                  Voltar para o Início
-                </Button>
-              </div>
+              <Button onClick={() => navigate("/")} className="w-full">
+                Voltar para o Início
+              </Button>
             </CardContent>
           </Card>
         </main>
@@ -138,6 +99,7 @@ const Management = () => {
     );
   }
 
+  // Renderiza o dashboard de Management para Diretor Estadual, Gestor IGR e Admins
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -147,21 +109,11 @@ const Management = () => {
             <RegionSelector
               selectedRegion={selectedRegion}
               setSelectedRegion={setSelectedRegion}
-              userRegion={userRegion}
-              userRole={userRole}
+              userRegionId={isGestorIgr ? regionId : null} // Passa a região do gestor IGR
+              userRole={role}
             />
 
             <div className="flex items-center gap-3">
-              <Button 
-                onClick={refreshUserPermissions}
-                variant="outline" 
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Atualizar Permissões
-              </Button>
-
               {isAdmin && (
                 <Link to="/technical-admin">
                   <Button variant="outline" className="flex items-center">
@@ -170,13 +122,11 @@ const Management = () => {
                   </Button>
                 </Link>
               )}
-
               <Button onClick={handleSecureLogout} variant="outline" className="whitespace-nowrap">
                 Sair do Sistema
               </Button>
             </div>
           </div>
-          {/* Sistema de Tabs Principal para Gestores */}
           <Tabs defaultValue="dashboard" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
@@ -185,7 +135,7 @@ const Management = () => {
             </TabsList>
 
             <TabsContent value="dashboard">
-              <DashboardMetrics />
+              <DashboardMetrics region={selectedRegion}/>
               <DashboardTabs region={selectedRegion} />
             </TabsContent>
 

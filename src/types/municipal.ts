@@ -11,7 +11,7 @@ export interface SecretaryFile {
   file_type: string;
   category?: string;
   description?: string;
-  city?: string;
+  city_id: string; // Trocado de city para city_id
   is_public?: boolean;
   uploaded_by: string;
   uploader_name?: string;
@@ -25,7 +25,7 @@ export interface Survey {
   description?: string;
   objective: string;
   questions: any; // JSONB
-  city?: string;
+  city_id: string; // Trocado de city para city_id
   is_active?: boolean;
   start_date?: string;
   end_date?: string;

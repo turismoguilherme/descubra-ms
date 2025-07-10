@@ -9,7 +9,11 @@ import CollaboratorTable from "./collaborator/CollaboratorTable";
 import CollaboratorForm from "./collaborator/CollaboratorForm";
 import { useCollaborators } from "./collaborator/useCollaborators";
 
-const CollaboratorManager = () => {
+interface CollaboratorManagerProps {
+  cityId: string;
+}
+
+const CollaboratorManager = ({ cityId }: CollaboratorManagerProps) => {
   const {
     collaborators,
     loading,
@@ -28,7 +32,7 @@ const CollaboratorManager = () => {
     handleEdit,
     handleDelete,
     resetForm,
-  } = useCollaborators();
+  } = useCollaborators(cityId); // Passa o cityId para o hook
 
   return (
     <div className="space-y-6">
