@@ -182,6 +182,38 @@ export type Database = {
         }
         Relationships: []
       }
+      cities: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          region_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          region_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          region_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cities_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       city_tour_bookings: {
         Row: {
           city: string
@@ -339,6 +371,7 @@ export type Database = {
       }
       destinations: {
         Row: {
+          city_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -350,6 +383,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -361,6 +395,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -371,7 +406,15 @@ export type Database = {
           region?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "destinations_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_details: {
         Row: {
@@ -450,6 +493,7 @@ export type Database = {
       events: {
         Row: {
           auto_hide: boolean | null
+          city_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -465,6 +509,7 @@ export type Database = {
         }
         Insert: {
           auto_hide?: boolean | null
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -480,6 +525,7 @@ export type Database = {
         }
         Update: {
           auto_hide?: boolean | null
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -493,7 +539,15 @@ export type Database = {
           updated_at?: string | null
           visibility_end_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institutional_content: {
         Row: {
@@ -817,6 +871,27 @@ export type Database = {
         }
         Relationships: []
       }
+      regions: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       route_checkpoints: {
         Row: {
           created_at: string | null
@@ -873,6 +948,7 @@ export type Database = {
       }
       routes: {
         Row: {
+          city_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -887,6 +963,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -901,6 +978,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -914,7 +992,15 @@ export type Database = {
           region?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "routes_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       secretary_files: {
         Row: {
@@ -1277,30 +1363,51 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          city_id: string | null
           created_at: string | null
           created_by: string | null
           id: string
           region: string | null
+          region_id: string | null
           role: string
           user_id: string
         }
         Insert: {
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
           region?: string | null
+          region_id?: string | null
           role: string
           user_id: string
         }
         Update: {
+          city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
           region?: string | null
+          region_id?: string | null
           role?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1315,9 +1422,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_password_reset_token: {
+        Args: { user_email: string }
+        Returns: string
+      }
+      detect_suspicious_activity: {
+        Args: { check_user_id: string }
+        Returns: Json
+      }
       elevate_to_admin: {
         Args: { user_email: string }
-        Returns: boolean
+        Returns: undefined
       }
       ensure_admin_exists: {
         Args: Record<PropertyKey, never>
@@ -1367,6 +1482,16 @@ export type Database = {
       }
       is_manager: {
         Args: { check_user_id: string }
+        Returns: boolean
+      }
+      log_enhanced_security_event: {
+        Args: {
+          event_action: string
+          event_user_id?: string
+          event_success?: boolean
+          event_error_message?: string
+          event_metadata?: Json
+        }
         Returns: boolean
       }
       log_security_event: {

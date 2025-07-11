@@ -57,7 +57,7 @@ export const config = {
       sessionIntegrityCheck: true
     },
     
-    // Content Security Policy
+    // Enhanced Content Security Policy
     csp: {
       enabled: true,
       reportOnly: false,
@@ -67,8 +67,21 @@ export const config = {
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: https:",
         "font-src 'self' data:",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co"
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'"
       ]
+    },
+
+    // Advanced security features
+    advanced: {
+      enableIntegrityChecks: true,
+      enableSecurityHeaders: true,
+      enableAuditLogging: true,
+      enableSuspiciousActivityDetection: true,
+      blockSuspiciousIPs: false,
+      requireMFAForAdmins: false
     }
   }
 };

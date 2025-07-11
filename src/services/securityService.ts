@@ -14,14 +14,21 @@ export interface SecurityEvent {
 }
 
 export const securityService = {
-  // Log security events using existing function
+  // Enhanced security event logging with metadata support
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      const { error } = await supabase.rpc('log_security_event', {
+      const metadata = {
+        ip_address: event.ip_address,
+        user_agent: event.user_agent,
+        ...event.metadata
+      };
+
+      const { error } = await supabase.rpc('log_enhanced_security_event', {
         event_action: event.action,
         event_user_id: event.user_id || null,
         event_success: event.success ?? true,
-        event_error_message: event.error_message || null
+        event_error_message: event.error_message || null,
+        event_metadata: metadata
       });
 
       if (error) {
@@ -29,6 +36,25 @@ export const securityService = {
       }
     } catch (error) {
       console.error('Failed to log security event:', error);
+    }
+  },
+
+  // Detect suspicious user activity
+  async detectSuspiciousActivity(userId: string): Promise<any> {
+    try {
+      const { data, error } = await supabase.rpc('detect_suspicious_activity', {
+        check_user_id: userId
+      });
+
+      if (error) {
+        console.error('Error detecting suspicious activity:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Failed to detect suspicious activity:', error);
+      return null;
     }
   },
 

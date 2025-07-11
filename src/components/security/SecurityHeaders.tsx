@@ -7,7 +7,7 @@ import { config } from '@/config/environment';
  */
 export const SecurityHeaders = () => {
   useEffect(() => {
-    // Configure Content Security Policy
+    // Configure enhanced Content Security Policy
     if (config.security.csp.enabled) {
       const cspContent = config.security.csp.directives.join('; ');
       const meta = document.createElement('meta');
@@ -16,13 +16,15 @@ export const SecurityHeaders = () => {
       document.head.appendChild(meta);
     }
 
-    // Configure outros cabeçalhos de segurança via meta tags
+    // Configure enhanced security headers
     const securityMetas = [
       { name: 'referrer', content: 'strict-origin-when-cross-origin' },
       { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
       { httpEquiv: 'X-Frame-Options', content: 'DENY' },
       { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
-      { httpEquiv: 'Strict-Transport-Security', content: 'max-age=31536000; includeSubDomains' }
+      { httpEquiv: 'Strict-Transport-Security', content: 'max-age=31536000; includeSubDomains; preload' },
+      { httpEquiv: 'Permissions-Policy', content: 'camera=(), microphone=(), geolocation=()' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' }
     ];
 
     securityMetas.forEach(({ name, httpEquiv, content }) => {
