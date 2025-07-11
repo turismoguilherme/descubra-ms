@@ -1,9 +1,15 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { roles, cities } from "@/types/collaborator";
+import { roles } from "@/types/collaborator";
 
 interface CollaboratorFiltersProps {
   searchTerm: string;
@@ -39,11 +45,11 @@ const CollaboratorFilters: React.FC<CollaboratorFiltersProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas as cidades</SelectItem>
-          {cities.map((city) => (
+          {/* cities.map((city) => (
             <SelectItem key={city} value={city}>
               {city}
             </SelectItem>
-          ))}
+          ))} */}
         </SelectContent>
       </Select>
       <Select value={filterRole} onValueChange={setFilterRole}>

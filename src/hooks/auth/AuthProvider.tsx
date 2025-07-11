@@ -25,36 +25,43 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return;
     }
     try {
-      const { data, error } = await supabase
+      // Passo 1: Buscar o perfil do usuário em `user_profiles`
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error("❌ Erro ao buscar perfil (user_profiles):", profileError);
+      }
+
+      // Passo 2: Buscar o papel e localidades em `user_roles`
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
-        .select(`
-          role,
-          city_id,
-          region_id,
-          user_profiles (
-            full_name
-          )
-        `)
+        .select('role, city_id, region_id')
         .eq('user_id', user.id)
         .single();
 
-      if (error) {
-        console.error("❌ Erro ao buscar perfil do usuário:", error);
-        setUserProfile(null);
-        return;
+      if (roleError) {
+        console.error("❌ Erro ao buscar papéis (user_roles):", roleError);
+        // Não definir como nulo aqui, um usuário pode não ter um papel ainda
       }
-      
-      if (data) {
+
+      // Passo 3: Combinar os dados
+      if (user) {
         const profile: UserProfile = {
           user_id: user.id,
-          role: data.role,
-          city_id: data.city_id,
-          region_id: data.region_id,
-          // @ts-ignore
-          full_name: data.user_profiles?.full_name || user.email,
+          full_name: profileData?.full_name || user.email || '',
+          role: roleData?.role || 'user', // Padrão para 'user' se não houver papel
+          city_id: roleData?.city_id || null,
+          region_id: roleData?.region_id || null,
         };
         setUserProfile(profile);
+      } else {
+        setUserProfile(null);
       }
+
     } catch (e) {
       console.error("❌ Exceção ao buscar perfil:", e);
       setUserProfile(null);

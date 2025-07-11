@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { CollaboratorFormData, Collaborator, roles, cities } from "@/types/collaborator";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { CollaboratorFormData, Collaborator, roles } from "@/types/collaborator";
 
 interface CollaboratorFormProps {
   isOpen: boolean;
@@ -85,11 +87,11 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
                 <SelectValue placeholder="Selecione um município" />
               </SelectTrigger>
               <SelectContent>
-                {cities.map((city) => (
+                {/* cities.map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
                   </SelectItem>
-                ))}
+                ))} */}
               </SelectContent>
             </Select>
           </div>

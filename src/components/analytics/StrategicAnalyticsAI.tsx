@@ -7,7 +7,7 @@ import { useStrategicAnalytics } from '@/hooks/useStrategicAnalytics';
 import ChatMessage from '@/components/ai/ChatMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export function StrategicAnalyticsAI() {
+export default function StrategicAnalyticsAI() {
   const { messages, isLoading, error, sendMessage } = useStrategicAnalytics();
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
