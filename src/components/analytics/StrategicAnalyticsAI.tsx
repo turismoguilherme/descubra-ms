@@ -43,9 +43,9 @@ export default function StrategicAnalyticsAI() {
               </div>
             )}
             {messages.map((msg, index) => (
-              <ChatMessage key={index} message={{ id: index, text: msg.text, isBot: !msg.isUser }} />
+              <ChatMessage key={index} message={{ id: index, text: msg.text, isUser: msg.isUser, timestamp: new Date() }} enviarFeedback={() => {}} />
             ))}
-            {isLoading && <ChatMessage message={{ id: 999, text: 'Analisando dados...', isBot: true }} />}
+            {isLoading && <ChatMessage message={{ id: 999, text: 'Analisando dados...', isUser: false, timestamp: new Date() }} enviarFeedback={() => {}} />}
           </div>
         </ScrollArea>
       </div>

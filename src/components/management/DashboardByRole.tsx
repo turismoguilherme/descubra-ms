@@ -30,7 +30,7 @@ const DashboardByRole: React.FC<DashboardByRoleProps> = ({ userRole, userRegion 
     );
   }
 
-  if (userRole === 'gestor' || userRole === 'municipal_manager') {
+  if (userRole === 'gestor_municipal' || userRole === 'municipal_manager') {
     return (
       <div className="space-y-6">
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">

@@ -13,7 +13,7 @@ interface ChatMessageProps {
 const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   return (
     <motion.div 
-      className={`flex ${message.isBot ? "justify-start" : "justify-end"}`}
+      className={`flex ${!message.isUser ? "justify-start" : "justify-end"}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -21,7 +21,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
       <div 
         className={cn(
           "relative max-w-[80%] rounded-lg p-3 shadow-sm transition-all",
-          message.isBot 
+          !message.isUser 
             ? message.error 
               ? "bg-red-900/50 text-red-200 border-l-4 border-red-500" 
               : message.isTyping
@@ -38,7 +38,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
           </div>
         ) : (
           <>
-            <p className="whitespace-pre-line">{message.texto}</p>
+            <p className="whitespace-pre-line">{message.text}</p>
             
             {message.timestamp && (
               <div className="text-xs text-gray-400 mt-1 text-right">
@@ -46,7 +46,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
               </div>
             )}
             
-            {message.isBot && !message.error && (
+            {!message.isUser && !message.error && (
               <div className="mt-2 flex justify-end gap-1">
                 <button 
                   onClick={() => enviarFeedback(true)}

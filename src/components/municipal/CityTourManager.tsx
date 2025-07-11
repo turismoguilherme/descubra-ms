@@ -61,7 +61,7 @@ const CityTourManager = ({ cityId }: CityTourManagerProps) => {
       const { data, error } = await supabase
         .from('city_tour_bookings')
         .select('*')
-        .eq('city_id', cityId) // Filtra por cityId
+        .eq('city', cityId) // Filtra por city
         .order('tour_date', { ascending: true });
 
       if (error) {
@@ -87,7 +87,7 @@ const CityTourManager = ({ cityId }: CityTourManagerProps) => {
       const { data, error } = await supabase
         .from('city_tour_settings')
         .select('*')
-        .eq('city_id', cityId) // Filtra por cityId
+        .eq('city', cityId) // Filtra por city
         .limit(1)
         .maybeSingle();
 
@@ -128,14 +128,12 @@ const CityTourManager = ({ cityId }: CityTourManagerProps) => {
       const { error } = await supabase
         .from('city_tour_bookings')
         .insert([{
-          // O campo 'city' foi removido e substituído por 'city_id'
-          city_id: cityId,
+          city: cityId || 'default',
           tour_date: formData.tour_date,
           tour_time: formData.tour_time,
           max_capacity: formData.max_capacity,
           description: formData.description,
           meeting_point: formData.meeting_point,
-          manager_id: user.id,
         }]);
 
       if (error) throw error;
@@ -174,11 +172,9 @@ const CityTourManager = ({ cityId }: CityTourManagerProps) => {
       const { error } = await supabase
         .from('city_tour_settings')
         .upsert([{
-          // O campo 'city' foi removido e substituído por 'city_id'
-          city_id: cityId,
+          city: cityId || 'default',
           is_public: settingsData.is_public,
-          manager_id: user.id,
-        }], { onConflict: 'city_id' }); // 'upsert' agora usa city_id como chave de conflito
+        }], { onConflict: 'city' });
 
       if (error) throw error;
       

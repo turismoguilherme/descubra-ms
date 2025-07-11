@@ -7,7 +7,7 @@ export interface Collaborator {
   position: string;
   role: string;
   department?: string;
-  city_id: string; // Trocado de municipality para city_id
+  municipality: string; // Mantém municipality conforme schema da tabela
   region?: string;
   status?: string;
   permissions?: any;
@@ -22,7 +22,6 @@ export interface CollaboratorFormData {
   email: string;
   position: string;
   role: string;
-  // O campo municipality foi removido
 }
 
 // Constantes de papéis/funções

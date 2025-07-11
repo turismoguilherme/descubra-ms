@@ -21,8 +21,8 @@ export type KnowledgeCategory = "destinos" | "informações" | "eventos" | "gast
  */
 export interface AIMessage {
   id: number;
-  texto: string;
-  isBot: boolean;
+  text: string;
+  isUser: boolean;
   source?: string;
   error?: boolean;
   timestamp: Date;
