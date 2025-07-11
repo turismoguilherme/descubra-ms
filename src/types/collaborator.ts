@@ -22,6 +22,7 @@ export interface CollaboratorFormData {
   email: string;
   position: string;
   role: string;
+  city: string;
   // O campo municipality foi removido
 }
 

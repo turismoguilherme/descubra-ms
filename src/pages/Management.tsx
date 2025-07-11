@@ -5,7 +5,7 @@ import { useSecureAuth } from "@/hooks/useSecureAuth";
 import RegionSelector from "@/components/management/RegionSelector";
 import DashboardMetrics from "@/components/management/DashboardMetrics";
 import DashboardTabs from "@/components/management/DashboardTabs";
-import StrategicAnalyticsAI from "@/components/analytics/StrategicAnalyticsAI";
+import { StrategicAnalyticsAI } from "@/components/analytics/StrategicAnalyticsAI";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";

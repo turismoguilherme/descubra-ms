@@ -7,7 +7,7 @@ import { useStrategicAnalytics } from '@/hooks/useStrategicAnalytics';
 import ChatMessage from '@/components/ai/ChatMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function StrategicAnalyticsAI() {
+export const StrategicAnalyticsAI = ({ userRegion }: { userRegion: string }) => {
   const { messages, isLoading, error, sendMessage } = useStrategicAnalytics();
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -42,10 +42,10 @@ export default function StrategicAnalyticsAI() {
                 <p className="text-sm text-gray-400">Ex: "Quais os destinos mais visitados no último mês?"</p>
               </div>
             )}
-            {messages.map((msg, index) => (
-              <ChatMessage key={index} message={{ id: index, text: msg.text, isBot: !msg.isUser }} />
+            {messages.map((msg) => (
+              <ChatMessage key={msg.id} message={{ id: msg.id, text: msg.content, isBot: msg.role === 'ai' }} />
             ))}
-            {isLoading && <ChatMessage message={{ id: 999, text: 'Analisando dados...', isBot: true }} />}
+            {isLoading && <ChatMessage message={{ id: 'loading', text: 'Analisando dados...', isBot: true }} />}
           </div>
         </ScrollArea>
       </div>
@@ -73,4 +73,4 @@ export default function StrategicAnalyticsAI() {
       </div>
     </div>
   );
-}
+};

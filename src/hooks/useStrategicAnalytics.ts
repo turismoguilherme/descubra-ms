@@ -19,27 +19,27 @@ export function useStrategicAnalytics() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const response = await supabase.functions.invoke("strategic-analytics-ai", {
+      const { data, error: functionError } = await supabase.functions.invoke("strategic-analytics-ai", {
         body: { query: message },
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (functionError) {
+        throw functionError;
       }
 
       const aiMessage: AIMessage = {
         id: Date.now() + 1,
         role: "ai",
-        content: response.data.reply,
+        content: data.reply,
       };
       setMessages((prev) => [...prev, aiMessage]);
 
     } catch (e: any) {
       console.error('Error calling strategic-analytics-ai function:', e);
       setError('Desculpe, não foi possível obter uma resposta da IA. Tente novamente mais tarde.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   }, []);
 
   return { messages, isLoading, error, sendMessage };

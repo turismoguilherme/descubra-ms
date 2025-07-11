@@ -32,8 +32,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('id', user.id)
         .single();
 
+      // MUDANÇA: Interromper se o perfil principal falhar
       if (profileError) {
-        console.error("❌ Erro ao buscar perfil (user_profiles):", profileError);
+        // Não tratar como erro fatal se for 'PGRST116' (nenhuma linha encontrada), 
+        // pois o perfil pode ainda não existir.
+        if (profileError.code !== 'PGRST116') {
+          console.error("❌ Erro fatal ao buscar perfil (user_profiles):", profileError);
+          setUserProfile(null); // Garante que o perfil fique nulo
+          return; // Interrompe a execução
+        }
+        console.warn("⚠️ Perfil não encontrado em user_profiles, continuando com dados mínimos.");
       }
 
       // Passo 2: Buscar o papel e localidades em `user_roles`
@@ -43,7 +51,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('user_id', user.id)
         .single();
 
-      if (roleError) {
+      if (roleError && roleError.code !== 'PGRST116') {
         console.error("❌ Erro ao buscar papéis (user_roles):", roleError);
         // Não definir como nulo aqui, um usuário pode não ter um papel ainda
       }

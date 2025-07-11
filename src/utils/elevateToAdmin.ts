@@ -29,5 +29,12 @@ export const elevateToAdmin = async (userEmail: string): Promise<boolean> => {
   }
 };
 
+// Expondo a função no console para fins de desenvolvimento e reparo
+if (import.meta.env.DEV) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  window.elevateToAdmin = elevateToAdmin;
+}
+
 // Função removida da exposição global por motivos de segurança
 // Para usar: importe diretamente onde necessário em vez de usar window object

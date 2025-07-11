@@ -1,66 +1,96 @@
-# Cronologia e Status do Projeto "Descubra MS"
+# Cronologia e Status do Projeto "Descubra MS" (Atualizado)
 
 Este documento serve como um registro do trabalho de desenvolvimento e do estado atual do projeto, especialmente após a reestruturação administrativa e a introdução de novas funcionalidades de IA.
 
 ## Resumo
-A conversa iniciou-se com o objetivo de entender o projeto "Descubra MS". Concluímos que se trata de uma plataforma de turismo para o Mato Grosso do Sul, com um portal para turistas e uma área administrativa para gestão de conteúdo.
+O projeto passou por uma grande reestruturação administrativa e pela implementação inicial de uma IA analítica. No entanto, o desenvolvimento foi bloqueado por um erro crítico que impede a inicialização da aplicação após o login, resultando em uma tela branca.
 
-O foco principal do nosso trabalho foi uma reestruturação completa da área administrativa, solicitada pelo usuário para alinhar a plataforma com a organização real do turismo no estado, que é dividida em 10 Regiões Turísticas (IGRs) e 60 municípios.
+---
 
-## Fase 1: Reestruturação Administrativa (Concluída)
+## Sessão de Depuração e Diagnóstico Final (Concluído)
 
-**Objetivo:** Alinhar a estrutura de dados e permissões do sistema com a hierarquia real de gestão do turismo (estadual, regional, municipal).
-
-**Trabalho Realizado:**
-1.  **Banco de Dados:**
-    *   Criação de novas tabelas: `regions` e `cities`.
-    *   Atualização da tabela `user_roles` com novos papéis (`diretor_estadual`, `gestor_igr`, `gestor_municipal`, `atendente`).
-    *   Adição de `city_id` and `region_id` à `user_roles` para associar gestores às suas localidades.
-2.  **População de Dados:** Criação de um script para popular as tabelas `regions` e `cities`.
-3.  **Permissões (RLS):** Reescrita completa das políticas de Row Level Security (RLS) para garantir que cada papel acesse apenas os dados de sua competência.
-4.  **Frontend:**
-    *   `AuthProvider.tsx` foi centralizado para buscar o perfil completo do usuário (papel, cidade, região) no login.
-    *   O painel `MunicipalAdmin.tsx` e seus sub-componentes foram refatorados para filtrar todo o conteúdo pelo `city_id` do gestor logado.
-5.  **Migração de Dados Antigos:** Atualização de tabelas de conteúdo existentes para usar `city_id` em vez de um campo de texto, garantindo a integridade referencial.
-
-## Fase 2: IA Consultora Estratégica (Iniciada)
-
-**Objetivo:** Criar uma interface de IA que fornece análises e insights estratégicos para gestores com base no comportamento dos usuários na plataforma.
+**Objetivo:** Identificar a causa raiz da tela branca e dos erros de carregamento.
 
 **Trabalho Realizado:**
-1.  **Coleta de Dados (Backend):**
-    *   Criação da tabela `user_interactions` para registrar eventos como visualizações de página, cliques, etc.
-2.  **Coleta de Dados (Frontend):**
-    *   `InteractionTrackerService.ts`: Serviço centralizado para enviar eventos de interação.
-    *   `usePageTracking.ts`: Hook para rastrear automaticamente a navegação do usuário.
-    *   Implementação do rastreamento em páginas de destino e componentes de destaque.
-3.  **Desenvolvimento da IA (Backend):**
-    *   Criação da estrutura da Supabase Edge Function `strategic-analytics-ai`.
-    *   Implementação de um *handler* com lógica simulada (mock) que retorna uma resposta fixa para fins de teste.
-4.  **Desenvolvimento da IA (Frontend):**
-    *   `StrategicAnalyticsAI.tsx`: Componente de UI com uma interface de chat.
-    *   `useStrategicAnalytics.ts`: Hook para gerenciar a comunicação com a Edge Function.
-5.  **Deployment:** A função `strategic-analytics-ai` foi implantada no ambiente Supabase do usuário.
+1.  **Correções Iniciais:**
+    *   Resolvido erro de dependência `vite` com `npm install`.
+    *   Corrigidos erros de sintaxe e de importação em múltiplos arquivos (`useStrategicAnalytics.ts`, `Management.tsx`, etc.).
+2.  **Análise do `AuthProvider`:**
+    *   A lógica de busca de perfil foi revisada e tornada mais robusta para expor erros de forma mais clara, em vez de falhar silenciosamente.
+3.  **Investigação de Causa Raiz:**
+    *   O sintoma (tela branca) e os erros de rede (HTTP 406) apontaram conclusivamente para um problema de permissão no banco de dados.
+    *   **DIAGNÓSTICO FINAL:** As políticas de segurança a nível de linha (RLS) nas tabelas `user_profiles` e `user_roles` do Supabase estão corrompidas ou mal configuradas, impedindo que a aplicação leia os dados essenciais do usuário logado, o que causa o "congelamento" e a tela branca.
 
-## Fase 3: Sessão de Depuração (Em Andamento)
+---
 
-**Objetivo:** Resolver uma série de problemas que impedem a execução da aplicação localmente, bloqueando os testes da nova funcionalidade de IA.
+## Plano de Ação: Correção Definitiva (A Fazer)
 
-**Erros Corrigidos:**
-*   **Erro de Build:** `vite` não era reconhecido como um comando. Resolvido com `npm install --legacy-peer-deps`.
-*   **Erro de Sintaxe:** Corrigido um `finally` inesperado no hook `useStrategicAnalytics.ts`.
-*   **Erro de Importação:** Corrigidos múltiplos erros de importação/exportação em `Management.tsx`, `CollaboratorFilters.tsx`, e `CollaboratorForm.tsx`.
+**Objetivo:** Aplicar a correção no Supabase para restaurar o funcionamento da aplicação.
 
-### **Problema Atual e Bloqueador Principal**
+**AÇÃO REQUERIDA (Passo a Passo):**
 
-*   **Sintoma:** Após o login (especialmente com o usuário `admin`), a aplicação exibe uma tela de "Carregando..." indefinidamente ou uma tela branca. O console de rede do navegador mostra erros **HTTP 406 (Not Acceptable)** ao tentar buscar dados do usuário.
-*   **Diagnóstico:** A causa mais provável é a **política de Row Level Security (RLS)** na tabela `user_profiles`. Suspeita-se que a política atual está excessivamente restritiva, impedindo que o `AuthProvider` leia o perfil do usuário logado, o que interrompe o fluxo de inicialização da aplicação. Durante a investigação, também foi identificado e corrigido que as tabelas `regions` e `cities` não haviam sido criadas no banco de dados (o usuário as criou manualmente executando os scripts SQL).
-*   **Status:** Aguardando validação do diagnóstico.
+**1. Limpar Políticas Antigas no Supabase:**
+   *   Acesse o painel do seu projeto no **Supabase**.
+   *   Vá para **Database** > **Policies**.
+   *   Encontre a tabela **`user_profiles`** e **DELETE/REMOVA** todas as políticas existentes nela.
+   *   Encontre a tabela **`user_roles`** e **DELETE/REMOVA** todas as políticas existentes nela.
+   *   *Este passo é crucial para garantir que as novas políticas sejam aplicadas corretamente.*
 
-## Próximos Passos Imediatos
+**2. Executar o Script de Correção no SQL Editor:**
+   *   No painel do Supabase, vá para o **SQL Editor**.
+   *   Copie e cole o script SQL completo abaixo.
+   *   Clique no botão **"RUN"** para executá-lo.
 
-1.  **Confirmar a Causa Raiz:** A ação mais crítica agora é **desabilitar temporariamente o RLS na tabela `user_profiles`** no painel do Supabase.
-    *   **Se isso resolver o problema**, confirma-se que a política RLS é a culpada, e o próximo passo será reescrevê-la corretamente.
-    *   **Se não resolver**, continuaremos a investigação, focando no fluxo de autenticação.
-2.  **Testar a Aplicação:** Uma vez que a aplicação esteja rodando, testar o fluxo de login para todos os papéis e a funcionalidade da IA Estratégica.
-3.  **Finalizar a IA:** Substituir a lógica simulada da Edge Function pela integração real com a API da OpenAI. 
+```sql
+-- PASSO 1: Função auxiliar para obter o papel (role) do usuário logado.
+-- Esta função é segura e permite que as políticas de segurança verifiquem
+-- a permissão do usuário de forma eficiente.
+CREATE OR REPLACE FUNCTION public.get_current_user_role()
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Se o usuário não estiver logado, ele é um 'anônimo'.
+  IF auth.uid() IS NULL THEN
+    RETURN 'anon';
+  END IF;
+
+  -- Busca o papel (role) na tabela user_roles.
+  -- Se não encontrar, retorna 'user' como padrão.
+  RETURN COALESCE(
+    (SELECT role FROM public.user_roles WHERE user_id = auth.uid() LIMIT 1),
+    'user'
+  );
+END;
+$$;
+
+
+-- PASSO 2: Nova política de segurança para a tabela `user_profiles`.
+-- Garante que os usuários possam LER (SELECT) seus próprios perfis
+-- e que os 'admins' possam ler todos os perfis.
+CREATE POLICY "Enable read access for users on their own profile and for admins"
+ON public.user_profiles
+FOR SELECT
+USING (
+  (auth.uid() = id) OR (get_current_user_role() = 'admin')
+);
+
+
+-- PASSO 3: Nova política de segurança para a tabela `user_roles`.
+-- Garante que os usuários possam LER (SELECT) seus próprios papéis
+-- e que os 'admins' possam ler todos os papéis.
+CREATE POLICY "Enable read access for users on their own role and for admins"
+ON public.user_roles
+FOR SELECT
+USING (
+  (auth.uid() = user_id) OR (get_current_user_role() = 'admin')
+);
+```
+
+**3. Testar a Aplicação:**
+   *   Após executar o script com sucesso no Supabase, reinicie o servidor de desenvolvimento local (`npm run dev`).
+   *   Tente fazer o login. A aplicação deve carregar normalmente.
+
+**Status Atual:** Aguardando a execução do plano de ação acima. A solução para o problema está contida neste plano. 
