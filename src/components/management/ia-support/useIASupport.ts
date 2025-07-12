@@ -123,10 +123,10 @@ export const useIASupport = () => {
     try {
       const formattedConversations = conversations.map(conv => ({
         id: Number(conv.id.replace('query-', '')),
-        texto: format === 'text' 
+        text: format === 'text' 
           ? `Pergunta: ${conv.query}\n\nResposta: ${conv.response}`
           : conv.query,
-        isBot: false,
+        isUser: false,
         timestamp: conv.timestamp
       })).flatMap((item, index) => {
         // For PDF, we need to create separate entries for question and answer
@@ -136,8 +136,8 @@ export const useIASupport = () => {
             item,
             {
               id: Number(item.id) + 0.5,
-              texto: conv.response,
-              isBot: true,
+              text: conv.response,
+              isUser: false,
               timestamp: new Date(conv.timestamp.getTime() + 1000) // 1 second after question
             }
           ];

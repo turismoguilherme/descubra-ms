@@ -13,8 +13,9 @@ export function useStrategicAnalytics() {
 
     const userMessage: AIMessage = {
       id: Date.now(),
-      role: "user",
-      content: message,
+      text: message,
+      isUser: true,
+      timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMessage]);
 
@@ -29,8 +30,9 @@ export function useStrategicAnalytics() {
 
       const aiMessage: AIMessage = {
         id: Date.now() + 1,
-        role: "ai",
-        content: response.data.reply,
+        text: response.data.reply,
+        isUser: false,
+        timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
 

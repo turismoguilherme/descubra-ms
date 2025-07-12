@@ -6,7 +6,7 @@ import { BarChart3, Users, MapPin, MessageSquare, Calendar, Shield } from "lucid
 import DashboardTabs from "./DashboardTabs";
 
 interface DashboardByRoleProps {
-  userRole: UserRole | null;
+  userRole: string | null;
   userRegion: string | null;
 }
 

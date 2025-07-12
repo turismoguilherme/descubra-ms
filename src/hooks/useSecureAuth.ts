@@ -32,12 +32,33 @@ export const useSecureAuth = () => {
   const isAdmin = role?.role === 'admin' || role?.role === 'tech';
   const isManager = ['admin', 'tech', 'municipal_manager', 'gestor', 'municipal'].includes(role?.role || '');
   const isGestor = role?.role === 'gestor' || role?.role === 'municipal_manager';
+  const isAttendant = role?.role === 'atendente';
+  const isDiretorEstadual = role?.role === 'diretor_estadual';
+  const isGestorIgr = role?.role === 'gestor_igr';
+  const isGestorMunicipal = role?.role === 'gestor_municipal';
   
   // Legacy properties for backward compatibility
   const userRole = role?.role || 'user';
   const userRegion = role?.region || '';
   const cityId = role?.city_id || '';
   const regionId = role?.region_id || '';
+
+  // Helper function to get dashboard route based on role
+  const getDashboardRoute = () => {
+    if (!role) return '/';
+    switch (role.role) {
+      case 'admin':
+      case 'tech':
+        return '/technical-admin';
+      case 'municipal_manager':
+      case 'gestor':
+        return '/municipal-admin';
+      case 'atendente':
+        return '/cat-attendant';
+      default:
+        return '/';
+    }
+  };
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -148,10 +169,15 @@ export const useSecureAuth = () => {
     isAdmin,
     isManager,
     isGestor,
+    isAttendant,
+    isDiretorEstadual,
+    isGestorIgr,
+    isGestorMunicipal,
     loading,
     // Legacy properties
     userRole,
     userRegion,
+    getDashboardRoute,
     refreshUserPermissions,
     handleSecureLogout,
   };

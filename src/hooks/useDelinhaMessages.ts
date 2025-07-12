@@ -6,8 +6,8 @@ const STORAGE_KEY = "delinha_chat_history";
 
 const DEFAULT_WELCOME_MESSAGE: AIMessage = {
   id: 1,
-  texto: "Olá, meu bem! Eu sou a Delinha, sua guia turística aqui do Mato Grosso do Sul. Me conta, o que você quer conhecer na nossa terra? Estou aqui pra te ajudar a descobrir as maravilhas do nosso estado!",
-  isBot: true,
+  text: "Olá, meu bem! Eu sou a Delinha, sua guia turística aqui do Mato Grosso do Sul. Me conta, o que você quer conhecer na nossa terra? Estou aqui pra te ajudar a descobrir as maravilhas do nosso estado!",
+  isUser: false,
   timestamp: new Date()
 };
 

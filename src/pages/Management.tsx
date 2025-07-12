@@ -86,7 +86,7 @@ const Management = () => {
                 Você não tem permissão para acessar este painel de controle.
               </p>
               <p className="text-sm text-gray-500 mb-4">
-                Seu papel atual: <strong>{role || 'nenhum'}</strong>
+                Seu papel atual: <strong>{role?.role || 'nenhum'}</strong>
               </p>
               <Button onClick={() => navigate("/")} className="w-full">
                 Voltar para o Início
