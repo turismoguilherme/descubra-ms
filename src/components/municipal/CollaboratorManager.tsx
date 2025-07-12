@@ -19,8 +19,7 @@ const CollaboratorManager = ({ cityId }: CollaboratorManagerProps) => {
     loading,
     searchTerm,
     setSearchTerm,
-    filterCity,
-    setFilterCity,
+    // filterCity e setFilterCity removidos pois não estão no hook
     filterRole,
     setFilterRole,
     isDialogOpen,
@@ -48,8 +47,8 @@ const CollaboratorManager = ({ cityId }: CollaboratorManagerProps) => {
           <CollaboratorFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            filterCity={filterCity}
-            setFilterCity={setFilterCity}
+            filterCity=""
+            setFilterCity={() => {}}
             filterRole={filterRole}
             setFilterRole={setFilterRole}
           />

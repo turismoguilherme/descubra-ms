@@ -154,7 +154,7 @@ const TechnicalUserManager = () => {
             const { error } = await supabase
                 .from('user_roles')
                 .update({
-                    role: values.role as UserRole,
+                role: values.role,
                     region: values.region
                 })
                 .eq('user_id', editingUser.id);
@@ -172,7 +172,7 @@ const TechnicalUserManager = () => {
                     email: values.email,
                     password: values.password,
                     name: values.name,
-                    role: values.role as UserRole,
+                    role: values.role,
                     region: values.region,
                 }
             });

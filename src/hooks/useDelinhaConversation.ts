@@ -16,8 +16,8 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
     // Adiciona a mensagem do usuário
     const novaMensagemUsuario: AIMessage = {
       id: Date.now(),
-      texto: inputMensagem,
-      isBot: false,
+      text: inputMensagem,
+      isUser: true,
       timestamp: new Date()
     };
     
@@ -25,13 +25,13 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
     setIsLoading(true);
     
     try {
-      console.log("Enviando mensagem para a Delinha:", novaMensagemUsuario.texto);
+      console.log("Enviando mensagem para a Delinha:", novaMensagemUsuario.text);
       
       // Adicionar mensagem de digitando...
       const mensagemDigitando: AIMessage = {
         id: Date.now() + 0.5,
-        texto: "Digitando...",
-        isBot: true,
+        text: "Digitando...",
+        isUser: false,
         timestamp: new Date(),
         isTyping: true
       };
@@ -40,7 +40,7 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
       
       // Chamar o serviço da API Delinha
       const resposta = await delinhaService.askQuestion(
-        novaMensagemUsuario.texto,
+        novaMensagemUsuario.text,
         knowledgeBase,
         usuarioInfo
       );
@@ -52,8 +52,8 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
       
       const novaMensagemBot: AIMessage = {
         id: Date.now() + 1,
-        texto: resposta.response,
-        isBot: true,
+        text: resposta.response,
+        isUser: false,
         timestamp: new Date()
       };
       
@@ -74,8 +74,8 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
       // Adicionar mensagem de erro do bot
       const mensagemErro: AIMessage = {
         id: Date.now() + 1,
-        texto: "Puxa vida, tive um probleminha aqui. Você pode tentar me perguntar de outro jeito, meu bem?",
-        isBot: true,
+        text: "Puxa vida, tive um probleminha aqui. Você pode tentar me perguntar de outro jeito, meu bem?",
+        isUser: false,
         error: true,
         timestamp: new Date()
       };

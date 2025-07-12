@@ -13,8 +13,9 @@ export function useStrategicAnalytics() {
 
     const userMessage: AIMessage = {
       id: Date.now(),
-      role: "user",
-      content: message,
+      text: message,
+      isUser: true,
+      timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMessage]);
 

@@ -3,7 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useProfileCompletion = () => {
-  const { user, loading: authLoading } = useAuth();
+  const auth = useAuth();
+  const { user, loading: authLoading } = auth || { user: null, loading: true };
   const [loading, setLoading] = useState(true);
   const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
 

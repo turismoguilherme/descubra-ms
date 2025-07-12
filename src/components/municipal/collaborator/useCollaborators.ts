@@ -19,7 +19,6 @@ export const useCollaborators = (cityId: string) => {
     email: "",
     position: "",
     role: "",
-    municipality: "",
   });
 
   const fetchCollaborators = useCallback(async () => {
@@ -30,7 +29,7 @@ export const useCollaborators = (cityId: string) => {
       const { data, error } = await supabase
         .from('municipal_collaborators')
         .select('*')
-        .eq('city_id', cityId) // Filtro principal pelo cityId
+        .eq('municipality', cityId) // Filtro pelo município
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -69,10 +68,9 @@ export const useCollaborators = (cityId: string) => {
 
       const collaboratorData = {
         ...formData,
-        manager_id: user.id,
-        city_id: cityId, // Associa o novo colaborador ao cityId do gestor
+        created_by: user.id,
+        municipality: cityId, // Usa municipality conforme schema da tabela
       };
-      delete collaboratorData.municipality;
 
       if (editingCollaborator) {
         const { error } = await supabase
@@ -118,7 +116,7 @@ export const useCollaborators = (cityId: string) => {
       email: collaborator.email,
       position: collaborator.position,
       role: collaborator.role,
-      municipality: collaborator.municipality,
+      // city_id removido pois não está na interface CollaboratorFormData
     });
     setIsDialogOpen(true);
   };
@@ -150,7 +148,7 @@ export const useCollaborators = (cityId: string) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", email: "", position: "", role: "", municipality: "" });
+    setFormData({ name: "", email: "", position: "", role: "" });
     setEditingCollaborator(null);
     setIsDialogOpen(false);
   };

@@ -41,11 +41,15 @@ const SurveyManager = ({ cityId }: SurveyManagerProps) => {
       const { data, error } = await supabase
         .from('institutional_surveys')
         .select('*')
-        .eq('city_id', cityId) // Filtra por cityId
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSurveys(data || []);
+      // Add city_id to each survey for type compatibility
+      const surveysWithCityId = (data || []).map(survey => ({
+        ...survey,
+        city_id: cityId || ''
+      }));
+      setSurveys(surveysWithCityId);
     } catch (error) {
       console.error('Error fetching surveys:', error);
       toast({

@@ -82,7 +82,7 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
           </div>
           <div>
             <Label htmlFor="municipality">Município</Label>
-            <Select value={formData.municipality} onValueChange={(value) => setFormData({ ...formData, municipality: value })}>
+            <Select value="" onValueChange={() => {}}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um município" />
               </SelectTrigger>

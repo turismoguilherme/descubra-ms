@@ -39,11 +39,15 @@ const FileManager = ({ cityId }: FileManagerProps) => {
       const { data, error } = await supabase
         .from('secretary_files')
         .select('*')
-        .eq('city_id', cityId) // Filtra por cityId
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFiles(data || []);
+      // Add city_id to each file for type compatibility
+      const filesWithCityId = (data || []).map(file => ({
+        ...file,
+        city_id: cityId || ''
+      }));
+      setFiles(filesWithCityId);
     } catch (error) {
       console.error('Error fetching files:', error);
       toast({

@@ -22,8 +22,8 @@ export const formatConversationAsText = (messages: AIMessage[]): string => {
       ? message.timestamp.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
       : '';
     
-    const sender = message.isBot ? 'Delinha' : 'Você';
-    text += `[${time}] ${sender}: ${message.texto}\n\n`;
+    const sender = !message.isUser ? 'Delinha' : 'Você';
+    text += `[${time}] ${sender}: ${message.text}\n\n`;
   });
   
   return text;
@@ -86,7 +86,7 @@ export const exportConversationAsPDF = async (messages: AIMessage[]): Promise<vo
       ? message.timestamp.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
       : '';
     
-    const sender = message.isBot ? 'Delinha' : 'Você';
+    const sender = !message.isUser ? 'Delinha' : 'Você';
     
     // Adiciona o cabeçalho da mensagem
     doc.setFont('helvetica', 'bold');
@@ -98,7 +98,7 @@ export const exportConversationAsPDF = async (messages: AIMessage[]): Promise<vo
     doc.setFont('helvetica', 'normal');
     
     // Divide o texto em linhas para quebra automática
-    const textLines = doc.splitTextToSize(message.texto, pageWidth - margin * 2);
+    const textLines = doc.splitTextToSize(message.text, pageWidth - margin * 2);
     
     // Verifica se precisa adicionar uma nova página
     if (yPosition + (textLines.length * lineHeight) > doc.internal.pageSize.getHeight() - margin) {
