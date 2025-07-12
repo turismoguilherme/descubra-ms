@@ -108,86 +108,108 @@ const AuthPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            <LogIn className="mx-auto mb-2 h-8 w-8 text-blue-600" />
-            Acesso ao Sistema
-          </CardTitle>
-          <p className="text-gray-600 text-sm">
-            Entre com suas credenciais para acessar o sistema
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu.email@exemplo.com"
-                required
-                disabled={loading}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua senha"
-                  required
-                  disabled={loading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setShowPassword(!showPassword)}
+    <div className="min-h-screen flex flex-col">
+      {/* Header com logo */}
+      <div className="flex justify-center py-6 bg-white">
+        <img 
+          src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+          alt="Descubra Mato Grosso do Sul" 
+          className="h-[60px] w-auto"
+          onError={(e) => {
+            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMkQ3MkQ5Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TVMGVGV4dD4KPC9zdmc+';
+          }}
+        />
+      </div>
+
+      {/* Formulário de login com gradient de fundo */}
+      <div className="flex-grow bg-gradient-to-br from-blue-600 via-teal-500 to-green-600 py-12 px-4">
+        <div className="max-w-md mx-auto">
+          <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex flex-col items-center">
+                <LogIn className="mb-3 h-10 w-10 text-blue-600" />
+                Acesso ao Sistema
+              </CardTitle>
+              <p className="text-gray-600 text-sm">
+                Entre com suas credenciais para acessar o sistema
+              </p>
+            </CardHeader>
+            <CardContent className="px-6 pb-6">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu.email@exemplo.com"
+                    required
+                    disabled={loading}
+                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="password" className="text-gray-700 font-medium">Senha</Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Digite sua senha"
+                      required
+                      disabled={loading}
+                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-gray-100"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-yellow-500 text-blue-900 hover:bg-yellow-400 font-semibold py-2.5 mt-6"
                   disabled={loading}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                  {loading ? (
+                    <>
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-blue-900 border-t-transparent rounded-full"></div>
+                      Entrando...
+                    </>
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Entrar
+                    </>
                   )}
                 </Button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <strong className="text-blue-800">Para testes:</strong><br />
+                  Email: guilhermearevalo27@gmail.com<br />
+                  Senha: (sua senha)
+                </div>
               </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  Entrando...
-                </>
-              ) : (
-                'Entrar'
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-              <strong>Para testes:</strong><br />
-              Email: admin@sistema.com<br />
-              Senha: admin123
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
