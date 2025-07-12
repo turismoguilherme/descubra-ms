@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/AuthContext";
 import { Download, Trash2, FileText, Calendar, User } from "lucide-react";
 import { TourismDocument } from "./DocumentManager";
 

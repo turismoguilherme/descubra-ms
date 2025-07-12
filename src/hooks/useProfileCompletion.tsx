@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useProfileCompletion = () => {

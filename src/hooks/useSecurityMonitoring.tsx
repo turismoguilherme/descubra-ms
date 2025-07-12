@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/AuthContext';
 import { securityAuditService } from '@/services/securityAuditService';
 import { config } from '@/config/environment';
 

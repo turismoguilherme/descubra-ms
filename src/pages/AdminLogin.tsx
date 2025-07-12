@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/AuthContext";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 
 const adminLoginSchema = z.object({

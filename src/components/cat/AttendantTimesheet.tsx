@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Clock, LogIn, LogOut, Timer, Calendar, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/AuthContext";
 
 interface TimesheetEntry {
   id: string;
