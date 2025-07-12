@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/auth/AuthProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { TourismDataProvider } from "@/context/TourismDataContext";
 import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker";
 import LoadingFallback from "@/components/ui/loading-fallback";
@@ -16,6 +16,7 @@ import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
+import AuthPage from "@/pages/AuthPage";
 
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
@@ -74,6 +75,7 @@ function App() {
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/register" element={<Register />} />
                    <Route path="/login" element={<Login />} />
+                   <Route path="/auth" element={<AuthPage />} />
                    <Route path="/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
                    <Route path="/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
                   <Route path="/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
