@@ -76,7 +76,7 @@ const MunicipalAdmin = () => {
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-sm text-gray-600">Usuário</div>
-                <Badge variant="outline">{role}</Badge>
+                <Badge variant="outline">{String(role || 'user')}</Badge>
               </div>
               {cityId && (
                 <div className="text-right">

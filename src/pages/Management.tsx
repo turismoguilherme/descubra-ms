@@ -40,11 +40,7 @@ const Management = () => {
       return;
     }
 
-    // Redireciona para o dashboard específico, se não for a página de management
-    const recommendedRoute = getDashboardRoute();
-    if (recommendedRoute !== '/management' && window.location.pathname === '/management') {
-      navigate(recommendedRoute, { replace: true });
-    }
+    // Allow users to stay on management page if they have the right roles
     
     // Define a região do usuário como padrão se ele for um gestor de IGR
     if (isGestorIgr && regionId) {
@@ -109,8 +105,8 @@ const Management = () => {
             <RegionSelector
               selectedRegion={selectedRegion}
               setSelectedRegion={setSelectedRegion}
-              userRegionId={isGestorIgr ? regionId : null} // Passa a região do gestor IGR
-              userRole={role}
+              userRegion={isGestorIgr ? regionId : null} // Passa a região do gestor IGR
+              userRole={String(role || 'user')}
             />
 
             <div className="flex items-center gap-3">
@@ -135,12 +131,12 @@ const Management = () => {
             </TabsList>
 
             <TabsContent value="dashboard">
-              <DashboardMetrics region={selectedRegion}/>
+              <DashboardMetrics />
               <DashboardTabs region={selectedRegion} />
             </TabsContent>
 
             <TabsContent value="analytics-ai">
-              <StrategicAnalyticsAI userRegion={selectedRegion} />
+              <StrategicAnalyticsAI />
             </TabsContent>
 
             <TabsContent value="management">
