@@ -59,6 +59,7 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  console.log("🔧 DEBUG: App component rendering");
   return (
     <QueryClientProvider client={queryClient}>
       <SecurityHeaders />

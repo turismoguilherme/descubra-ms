@@ -213,6 +213,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     resetPassword,
   };
 
+  console.log("🔧 DEBUG: AuthProvider rendering with value:", value);
+  
   return (
     <AuthContext.Provider value={value}>
       {children}
