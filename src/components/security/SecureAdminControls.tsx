@@ -13,7 +13,7 @@ import {
   Settings,
   KeyRound
 } from "lucide-react";
-import { useAuth } from "@/hooks/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
 import { 

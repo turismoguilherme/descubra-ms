@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { useAuth } from '@/hooks/auth/AuthContext';
+import { useAuth } from "@/hooks/useAuth";
 import { securityAuditService } from '@/services/securityAuditService';
 import { config } from '@/config/environment';
 
@@ -7,7 +7,8 @@ import { config } from '@/config/environment';
  * Hook para monitoramento contínuo de segurança
  */
 export const useSecurityMonitoring = () => {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const { user } = auth || { user: null };
 
   // Monitorar tentativas de acesso não autorizado
   const monitorUnauthorizedAccess = useCallback(() => {

@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/auth/AuthContext';
+import { useAuth } from "@/hooks/useAuth";
 import { enhancedSecurityService } from '@/services/enhancedSecurityService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
