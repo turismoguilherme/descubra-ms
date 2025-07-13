@@ -43,9 +43,9 @@ export const StrategicAnalyticsAI = ({ userRegion }: { userRegion: string }) => 
               </div>
             )}
             {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={{ id: msg.id.toString(), text: msg.content || '', isBot: msg.content?.includes('ai') || false }} />
+              <ChatMessage key={msg.id} message={{ id: msg.id, text: msg.text, isBot: !msg.isUser }} />
             ))}
-            {isLoading && <ChatMessage message={{ id: 'loading', text: 'Analisando dados...', isBot: true }} />}
+            {isLoading && <ChatMessage message={{ id: 999999, text: 'Analisando dados...', isBot: true }} />}
           </div>
         </ScrollArea>
       </div>
