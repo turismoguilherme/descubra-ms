@@ -1509,6 +1509,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      secure_update_user_role: {
+        Args: {
+          target_user_id: string
+          new_role: string
+          requesting_user_id?: string
+        }
+        Returns: boolean
+      }
       validate_password_reset_token: {
         Args: { token_hash: string; user_email: string }
         Returns: boolean
