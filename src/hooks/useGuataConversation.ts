@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { AIMessage } from "@/types/ai";
 import { useToast } from "@/components/ui/use-toast";
-import { delinhaService } from "@/services/ai";
+import { guataService } from "@/services/ai";
 import { useGuataMessages } from "@/hooks/useGuataMessages";
 
 export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
@@ -39,7 +39,7 @@ export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
       setMensagens(prev => [...prev, mensagemDigitando]);
       
       // Chamar o serviço da API Guatá
-      const resposta = await delinhaService.askQuestion(
+      const resposta = await guataService.askQuestion(
         novaMensagemUsuario.text,
         knowledgeBase,
         usuarioInfo

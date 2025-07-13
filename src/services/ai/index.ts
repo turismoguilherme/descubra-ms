@@ -1,15 +1,15 @@
 
 import { KnowledgeItem } from "@/types/ai";
-import { delinhaClient } from "./client/delinhaClient";
+import { guataClient } from "./client/guataClient";
 import { knowledgeService } from "./knowledge/knowledgeService";
 import { localProcessor } from "./processing/localProcessor";
-import { DelinhaResponse, DelinhaUserInfo } from "./types/delinhaTypes";
+import { GuataResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
 /**
- * Serviço principal da Delinha que coordena os demais módulos
+ * Serviço principal do Guatá que coordena os demais módulos
  */
-export class DelinhaService {
+export class GuataService {
   // Último prompt usado (para debugging)
   private lastPrompt: string = "";
 
@@ -19,8 +19,8 @@ export class DelinhaService {
   async askQuestion(
     prompt: string,
     knowledgeBase?: KnowledgeItem[],
-    userInfo?: DelinhaUserInfo
-  ): Promise<DelinhaResponse> {
+    userInfo?: GuataUserInfo
+  ): Promise<GuataResponse> {
     try {
       this.lastPrompt = prompt;
       
@@ -43,10 +43,10 @@ export class DelinhaService {
         });
       }
       
-      // Chamar o cliente Delinha para obter a resposta da IA
-      return await delinhaClient.sendQuery(prompt, relevantKnowledge, userInfo);
+      // Chamar o cliente Guatá para obter a resposta da IA
+      return await guataClient.sendQuery(prompt, relevantKnowledge, userInfo);
     } catch (error) {
-      console.error("Erro no serviço da Delinha:", error);
+      console.error("Erro no serviço do Guatá:", error);
       
       // Usar processamento local como fallback
       console.log("Usando processamento local de fallback após erro");
@@ -56,6 +56,6 @@ export class DelinhaService {
 }
 
 // Exportar uma única instância do serviço e os tipos necessários
-export const delinhaService = new DelinhaService();
+export const guataService = new GuataService();
 export { OfficialSources };
-export type { DelinhaResponse, DelinhaUserInfo };
+export type { GuataResponse, GuataUserInfo };

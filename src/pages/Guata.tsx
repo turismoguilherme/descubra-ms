@@ -5,12 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import GuataHeader from "@/components/delinha/GuataHeader";
-import GuataChat from "@/components/delinha/GuataChat";
+import GuataHeader from "@/components/guata/GuataHeader";
+import GuataChat from "@/components/guata/GuataChat";
 import { useGuataConnection } from "@/hooks/useGuataConnection";
 import { useGuataConversation } from "@/hooks/useGuataConversation";
 import { useGuataInput } from "@/hooks/useGuataInput";
-import SuggestionQuestions from "@/components/delinha/SuggestionQuestions";
+import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
 import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/guataKnowledgeBase";
 
 const Guata = () => {

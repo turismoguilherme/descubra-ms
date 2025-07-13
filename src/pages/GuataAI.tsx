@@ -2,9 +2,9 @@
 import React from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import GuataChat from "@/components/delinha/GuataChat";
-import SuggestionQuestions from "@/components/delinha/SuggestionQuestions";
-import GuataHeader from "@/components/delinha/GuataHeader";
+import GuataChat from "@/components/guata/GuataChat";
+import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
+import GuataHeader from "@/components/guata/GuataHeader";
 import { useGuataInput } from "@/hooks/useGuataInput";
 import { useGuataConnection } from "@/hooks/useGuataConnection";
 import { useGuataConversation } from "@/hooks/useGuataConversation";

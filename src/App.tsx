@@ -81,8 +81,8 @@ function App() {
                   <Route path="/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
                   <Route path="/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                   <Route path="/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
-                   <Route path="/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                   <Route path="/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                    <Route path="/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                     <Route path="/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
                   <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
                   <Route path="/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
                   <Route path="/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
@@ -102,8 +102,8 @@ function App() {
                   <Route path="/destination-editor" element={<Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>} />
                   <Route path="/event-editor" element={<Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>} />
                   <Route path="/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
-                   <Route path="/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
-                   <Route path="/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
+                    <Route path="/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
+                     <Route path="/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
                   <Route path="/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
                   <Route path="/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
                   <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />

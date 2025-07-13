@@ -50,7 +50,7 @@ const ChatInput = ({
         >
           <input
             type="text"
-            placeholder="Pergunte à Delinha sobre o MS..."
+            placeholder="Pergunte ao Guatá sobre o MS..."
             className={cn(
               "w-full bg-white/10 text-white placeholder:text-gray-400 rounded-full px-4 py-2 pr-10",
               "focus:outline-none focus:ring-2 focus:ring-ms-guavira-purple focus:bg-white/20",
@@ -88,7 +88,7 @@ const ChatInput = ({
               <span className="inline-block w-2 h-2 bg-ms-guavira-purple rounded-full animate-pulse"></span>
               Processando sua pergunta...
             </span>
-          ) : "Converse com a Delinha sobre destinos, eventos ou atrações"}
+          ) : "Converse com o Guatá sobre destinos, eventos ou atrações"}
         </p>
       </div>
     </div>

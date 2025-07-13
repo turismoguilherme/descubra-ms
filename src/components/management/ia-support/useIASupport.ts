@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { delinhaService } from "@/services/ai";
+import { guataService } from "@/services/ai";
 import { exportConversationAsText, exportConversationAsPDF } from "@/utils/exportUtils";
 import { ConversationItem } from "./types";
 
@@ -39,7 +39,7 @@ export const useIASupport = () => {
     
     try {
       // Usar o serviço da Delinha para obter resposta baseada em fontes oficiais
-      const response = await delinhaService.askQuestion(
+      const response = await guataService.askQuestion(
         iaQuery,
         [
           {

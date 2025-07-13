@@ -33,8 +33,8 @@ const Navbar = () => {
     path: "/sobre"
   }];
   const authenticatedNavItems = [{
-    name: "Delinha IA",
-    path: "/delinha"
+    name: "Guatá IA",
+    path: "/guata"
   }, {
     name: "Passaporte Digital",
     path: "/passaporte"

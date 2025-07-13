@@ -10,7 +10,7 @@ const Hero = () => {
   const subtitle = getContentValue('hero_subtitle');
   const buttonRegister = getContentValue('hero_button_register');
   const buttonPassport = getContentValue('hero_button_passport');
-  const buttonDelinha = getContentValue('hero_button_delinha');
+  const buttonGuata = getContentValue('hero_button_guata') || getContentValue('hero_button_delinha');
 
   if (isLoading) {
     return (
@@ -59,10 +59,10 @@ const Hero = () => {
               {buttonPassport || 'Passaporte Digital'}
             </Link>
             <Link 
-              to="/delinha" 
+              to="/guata" 
               className="bg-white/90 backdrop-blur-sm text-ms-primary-blue font-medium px-8 py-4 rounded-xl hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-xl"
             >
-              {buttonDelinha || 'Converse com a Delinha'}
+              {buttonGuata || 'Converse com o Guatá'}
             </Link>
           </div>
         </div>

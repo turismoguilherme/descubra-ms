@@ -11,7 +11,7 @@ const TourismDescription = () => {
           
           <p className="mb-6 text-lg">
             Prepare-se para descobrir o melhor de MS de um jeito inovador e inteligente. 
-            Com a ajuda da Delinha, sua guia virtual inspirada na cultura local, 
+            Com a ajuda do Guatá, seu guia virtual inspirado na cultura local, 
             você explora atrativos como Bonito, Pantanal, Serra da Bodoquena e muito mais!
           </p>
           
