@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { sanitizeInput } from "@/components/security/InputValidator";
@@ -103,17 +104,31 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          {/* Logo dentro do card */}
-          <div className="flex justify-center mb-8">
-            <img 
-              src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-              alt="Descubra Mato Grosso do Sul" 
-              className="h-[60px] w-auto" 
-            />
-          </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header branco com logo */}
+      <div className="bg-white py-6 shadow-sm">
+        <div className="flex justify-center">
+          <img 
+            src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+            alt="Descubra Mato Grosso do Sul" 
+            className="h-[60px] w-auto" 
+          />
+        </div>
+      </div>
+
+      {/* Corpo com gradiente e card centralizado */}
+      <div className="flex-1 bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md">
+          <Card className="bg-white shadow-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-center text-2xl font-bold text-ms-primary-blue">
+                Criar Conta
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                Cadastre-se para explorar o turismo de MS
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -228,14 +243,16 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
             <SocialLoginButtons onSocialLogin={onSocialLogin} />
           </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Já tem uma conta?{" "}
-              <Link to="/login" className="text-ms-primary-blue hover:underline font-medium">
-                Fazer login
-              </Link>
-            </p>
-          </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                Já tem uma conta?{" "}
+                <Link to="/login" className="text-ms-primary-blue hover:underline font-medium">
+                  Fazer login
+                </Link>
+              </p>
+            </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

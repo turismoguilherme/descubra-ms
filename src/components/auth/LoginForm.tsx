@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -95,17 +96,31 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          {/* Logo dentro do card */}
-          <div className="flex justify-center mb-8">
-            <img 
-              src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-              alt="Descubra Mato Grosso do Sul" 
-              className="h-[60px] w-auto" 
-            />
-          </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header branco com logo */}
+      <div className="bg-white py-6 shadow-sm">
+        <div className="flex justify-center">
+          <img 
+            src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+            alt="Descubra Mato Grosso do Sul" 
+            className="h-[60px] w-auto" 
+          />
+        </div>
+      </div>
+
+      {/* Corpo com gradiente e card centralizado */}
+      <div className="flex-1 bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md">
+          <Card className="bg-white shadow-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-center text-2xl font-bold text-ms-primary-blue">
+                Fazer Login
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                Acesse sua conta para explorar o turismo de MS
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -156,48 +171,50 @@ const LoginForm = () => {
               )}
             />
 
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold"
-            >
-              <LogIn size={20} className="mr-2" />
-              {loading ? 'Entrando...' : 'Entrar'}
-            </Button>
-            </form>
-          </Form>
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold"
+              >
+                <LogIn size={20} className="mr-2" />
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+              </form>
+            </Form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Ou continue com</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Ou continue com</span>
-              </div>
+
+              <SocialLoginButtons />
             </div>
 
-            <SocialLoginButtons />
-          </div>
-
-          <div className="mt-4 text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              <Link to="/password-reset" className="text-ms-primary-blue hover:underline">
-                Esqueceu sua senha?
-              </Link>
-            </p>
-            <p className="text-sm text-gray-600">
-              Não tem uma conta?{" "}
-              <Link to="/register" className="text-ms-primary-blue hover:underline font-medium">
-                Criar conta
-              </Link>
-            </p>
-            <p className="text-sm">
-              <Link to="/admin-login" className="text-ms-primary-blue hover:underline">
-                Acesso Administrativo
-              </Link>
-            </p>
-          </div>
+            <div className="mt-4 text-center space-y-2">
+              <p className="text-sm text-gray-600">
+                <Link to="/password-reset" className="text-ms-primary-blue hover:underline">
+                  Esqueceu sua senha?
+                </Link>
+              </p>
+              <p className="text-sm text-gray-600">
+                Não tem uma conta?{" "}
+                <Link to="/register" className="text-ms-primary-blue hover:underline font-medium">
+                  Criar conta
+                </Link>
+              </p>
+              <p className="text-sm">
+                <Link to="/admin-login" className="text-ms-primary-blue hover:underline">
+                  Acesso Administrativo
+                </Link>
+              </p>
+            </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
