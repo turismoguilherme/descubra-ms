@@ -50,7 +50,14 @@ export class GuataService {
       
       // Usar processamento local como fallback
       console.log("Usando processamento local de fallback após erro");
-      return localProcessor.processQuery(prompt, knowledgeBase, userInfo);
+      const fallbackResponse = localProcessor.processQuery(prompt, knowledgeBase, userInfo);
+      
+      // Garantir compatibilidade com GuataResponse
+      return {
+        resposta: fallbackResponse.response || "Resposta não disponível",
+        response: fallbackResponse.response || "Resposta não disponível",
+        source: fallbackResponse.source
+      };
     }
   }
 }

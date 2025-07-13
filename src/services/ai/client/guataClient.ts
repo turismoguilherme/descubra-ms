@@ -24,11 +24,10 @@ export class GuataClient {
       let contextInfo = "";
       if (knowledgeBase && knowledgeBase.length > 0) {
         contextInfo = knowledgeBase.map(item => `
-Título: ${item.titulo}
-Categoria: ${item.categoria}
-Conteúdo: ${item.conteudo}
-${item.tags ? `Tags: ${item.tags.join(', ')}` : ''}
-${item.regiao ? `Região: ${item.regiao}` : ''}
+Título: ${item.title}
+Categoria: ${item.category}
+Conteúdo: ${item.content}
+${item.source ? `Fonte: ${item.source}` : ''}
 ---`).join('\n');
       }
 
@@ -88,6 +87,7 @@ Por favor, responda baseado nas informações fornecidas sobre turismo em Mato G
       
       return {
         resposta: "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
+        response: "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
         erro: error instanceof Error ? error.message : "Erro desconhecido"
       };
     }
