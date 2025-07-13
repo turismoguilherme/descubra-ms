@@ -95,19 +95,18 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header com logo */}
-      <div className="flex justify-center py-6 bg-white">
-        <img 
-          src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-          alt="Descubra Mato Grosso do Sul" 
-          className="h-[60px] w-auto" 
-        />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          {/* Logo dentro do card */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+              alt="Descubra Mato Grosso do Sul" 
+              className="h-[60px] w-auto" 
+            />
+          </div>
 
-      {/* Formulário de login */}
-      <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
-        <div className="ms-container max-w-md mx-auto">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
