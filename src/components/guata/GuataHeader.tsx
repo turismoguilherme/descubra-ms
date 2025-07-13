@@ -1,5 +1,5 @@
 
-import React from "react";
+import guataMascoteImage from "@/assets/guata-mascote.jpg";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +17,7 @@ const GuataHeader: React.FC<GuataHeaderProps> = ({ onClearConversation, mensagen
         <div className="flex items-center space-x-4">
           <Avatar className="w-16 h-16 border-2 border-ms-primary-blue">
             <AvatarImage 
-              src="/lovable-uploads/0a95baed-e289-4cbf-968c-c046719edb73.png" 
+              src={guataMascoteImage} 
               alt="Guatá AI"
               className="object-cover"
             />
