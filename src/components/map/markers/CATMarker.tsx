@@ -27,12 +27,33 @@ const CATMarker = ({ map, cats }: CATMarkerProps) => {
     cats.forEach(cat => {
       const el = document.createElement('div');
       el.className = 'custom-marker cat-marker';
-      el.innerHTML = `<div class="marker-pin bg-ms-secondary-yellow"></div>`;
+      
+      // Secure DOM manipulation instead of innerHTML
+      const markerPin = document.createElement('div');
+      markerPin.className = 'marker-pin bg-ms-secondary-yellow';
+      el.appendChild(markerPin);
+      
+      // Secure popup content creation
+      const popupContent = document.createElement('div');
+      
+      const title = document.createElement('h3');
+      title.className = 'text-base font-semibold';
+      title.textContent = cat.nome;
+      
+      const address = document.createElement('p');
+      address.className = 'text-sm';
+      address.textContent = cat.endereco;
+      
+      const schedule = document.createElement('p');
+      schedule.className = 'text-sm';
+      schedule.textContent = cat.horario;
+      
+      popupContent.appendChild(title);
+      popupContent.appendChild(address);
+      popupContent.appendChild(schedule);
       
       const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`<h3 class="text-base font-semibold">${cat.nome}</h3>
-                  <p class="text-sm">${cat.endereco}</p>
-                  <p class="text-sm">${cat.horario}</p>`);
+        .setDOMContent(popupContent);
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([cat.coordenadas.lng, cat.coordenadas.lat])

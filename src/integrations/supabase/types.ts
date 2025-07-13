@@ -1414,6 +1414,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_initial_admin_if_needed: {
+        Args: { admin_email: string; admin_user_id: string }
+        Returns: boolean
+      }
       create_initial_admin_user: {
         Args: {
           admin_email: string

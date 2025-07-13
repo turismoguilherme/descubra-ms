@@ -25,11 +25,28 @@ const DestinationMarker = ({ map, destinations }: DestinationMarkerProps) => {
     destinations.forEach(destino => {
       const el = document.createElement('div');
       el.className = 'custom-marker destination-marker';
-      el.innerHTML = `<div class="marker-pin bg-ms-pantanal-green"></div>`;
+      
+      // Secure DOM manipulation instead of innerHTML
+      const markerPin = document.createElement('div');
+      markerPin.className = 'marker-pin bg-ms-pantanal-green';
+      el.appendChild(markerPin);
+      
+      // Secure popup content creation
+      const popupContent = document.createElement('div');
+      
+      const title = document.createElement('h3');
+      title.className = 'text-base font-semibold';
+      title.textContent = destino.nome;
+      
+      const region = document.createElement('p');
+      region.className = 'text-sm';
+      region.textContent = `Região: ${destino.regiao}`;
+      
+      popupContent.appendChild(title);
+      popupContent.appendChild(region);
       
       const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`<h3 class="text-base font-semibold">${destino.nome}</h3>
-                  <p class="text-sm">Região: ${destino.regiao}</p>`);
+        .setDOMContent(popupContent);
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([destino.lng, destino.lat])

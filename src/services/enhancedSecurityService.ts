@@ -237,6 +237,58 @@ class EnhancedSecurityService {
   }
 
   /**
+   * Secure user role update using new security functions
+   */
+  async updateUserRole(targetUserId: string, newRole: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('secure_update_user_role', {
+        target_user_id: targetUserId,
+        new_role: newRole
+      });
+
+      if (error) {
+        await this.logSecurityEvent({
+          action: 'secure_role_update_failed',
+          user_id: targetUserId,
+          success: false,
+          error_message: error.message,
+          metadata: { attempted_role: newRole }
+        });
+        return false;
+      }
+
+      return Boolean(data);
+    } catch (error: any) {
+      await this.logSecurityEvent({
+        action: 'secure_role_update_error',
+        user_id: targetUserId,
+        success: false,
+        error_message: error.message,
+        metadata: { attempted_role: newRole }
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Send critical security alert
+   */
+  async sendSecurityAlert(alert: {
+    type: 'privilege_escalation' | 'suspicious_activity' | 'unauthorized_access';
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    metadata?: Record<string, any>;
+  }): Promise<void> {
+    try {
+      await supabase.functions.invoke('security-monitor', {
+        body: { alert }
+      });
+    } catch (error) {
+      console.error('Failed to send security alert:', error);
+    }
+  }
+
+  /**
    * Monitor suspicious activity patterns
    */
   async detectSuspiciousActivity(): Promise<{

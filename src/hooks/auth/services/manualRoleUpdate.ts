@@ -4,31 +4,31 @@ import { showToast } from "../authToast";
 
 export const manuallyUpdateUserRole = async (userId: string, newRole: 'admin' | 'tech' | 'municipal' | 'municipal_manager' | 'gestor' | 'atendente' | 'user') => {
   try {
-    console.log(`🔧 MANUAL ROLE UPDATE: Atualizando role para ${newRole} do usuário ${userId}`);
+    console.log(`🔧 SECURE ROLE UPDATE: Atualizando role para ${newRole} do usuário ${userId}`);
     
-    const { data, error } = await supabase
-      .from('user_roles')
-      .upsert({
-        user_id: userId,
-        role: newRole,
-        region: newRole === 'admin' || newRole === 'tech' ? 'all' : null
-      }, {
-        onConflict: 'user_id'
-      })
-      .select()
-      .single();
+    // Use the secure role update function instead of direct table manipulation
+    const { data, error } = await supabase.rpc('secure_update_user_role', {
+      target_user_id: userId,
+      new_role: newRole
+    });
 
     if (error) {
-      console.error("❌ MANUAL ROLE UPDATE: Erro ao atualizar role:", error);
-      showToast("Erro", "Não foi possível atualizar a role do usuário.", "destructive");
+      console.error("❌ SECURE ROLE UPDATE: Erro ao atualizar role:", error);
+      showToast("Erro", `Não foi possível atualizar a role: ${error.message}`, "destructive");
       return false;
     }
 
-    console.log("✅ MANUAL ROLE UPDATE: Role atualizada com sucesso:", data);
+    if (!data) {
+      console.error("❌ SECURE ROLE UPDATE: Operação negada por política de segurança");
+      showToast("Erro", "Operação negada: verificações de segurança falharam.", "destructive");
+      return false;
+    }
+
+    console.log("✅ SECURE ROLE UPDATE: Role atualizada com sucesso");
     showToast("Sucesso", `Role atualizada para: ${newRole}`, "default");
     return true;
   } catch (error: any) {
-    console.error("❌ MANUAL ROLE UPDATE: Erro crítico:", error);
+    console.error("❌ SECURE ROLE UPDATE: Erro crítico:", error);
     showToast("Erro", "Erro crítico ao atualizar role.", "destructive");
     return false;
   }

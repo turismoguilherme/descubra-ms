@@ -16,7 +16,7 @@ export const useMapboxMap = ({ mapboxToken, center = [-55.0000, -20.5000], zoom 
     if (!mapContainer.current || map.current || !mapboxToken) return;
     
     try {
-      console.log("Inicializando mapa com token:", mapboxToken.substring(0, 10) + "...");
+      console.log("Inicializando mapa...");
       mapboxgl.accessToken = mapboxToken;
       
       map.current = new mapboxgl.Map({
