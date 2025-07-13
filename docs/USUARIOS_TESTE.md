@@ -1,6 +1,6 @@
 # Usuários de Teste - Sistema Descubra MS
 
-Para testar o sistema, use estes usuários já criados manualmente no Supabase Auth:
+Para testar o sistema, você deve criar os usuários manualmente no Supabase Auth e depois executar uma função para criar os perfis correspondentes.
 
 ## Credenciais de Teste
 
@@ -36,15 +36,37 @@ Para testar o sistema, use estes usuários já criados manualmente no Supabase A
 
 ## Como Criar os Usuários
 
+### Passo 1: Criar Usuários no Supabase Auth
 1. Acesse o painel do Supabase
 2. Vá em Authentication > Users
-3. Clique em "Invite a user" para cada email acima
+3. Clique em "Add user" para cada email acima
 4. Use as senhas fornecidas
-5. Após criar cada usuário, complete o perfil e papel usando o sistema
+5. Marque "Auto Confirm User" para pular a confirmação de email
+
+### Passo 2: Criar Perfis e Papéis
+Após criar todos os usuários no Auth, execute esta função SQL no Supabase:
+
+```sql
+SELECT * FROM public.create_test_user_profiles();
+```
+
+Esta função criará automaticamente:
+- Perfis de usuário na tabela `user_profiles`
+- Papéis na tabela `user_roles` (exceto para usuários comuns)
+- Logs de auditoria
 
 ## Notas Importantes
 
-- Todos os usuários já têm senhas que atendem aos critérios de segurança
-- Os papéis serão atribuídos automaticamente após o primeiro login
-- Para testar diferentes funcionalidades, use os diferentes tipos de usuário
+- **IMPORTANTE:** Os usuários devem ser criados primeiro no Supabase Auth antes de executar a função
+- Todos os usuários têm senhas que atendem aos critérios de segurança
 - O sistema está configurado para confirmação automática de email em desenvolvimento
+- Para testar diferentes funcionalidades, use os diferentes tipos de usuário
+- Os UUIDs dos usuários serão gerados automaticamente pela função
+
+## Solução de Problemas
+
+Se houver problemas com login:
+1. Verifique se o usuário foi criado no Supabase Auth
+2. Verifique se a função `create_test_user_profiles()` foi executada
+3. Confirme que o Site URL e Redirect URLs estão configurados corretamente no Supabase
+4. Use as credenciais exatas fornecidas acima

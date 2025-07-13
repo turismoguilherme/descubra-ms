@@ -72,21 +72,23 @@ const UserManagement = () => {
   const createTestUsers = async () => {
     setIsCreatingTests(true);
     try {
-      const { data, error } = await supabase.rpc('create_test_users');
+      const { data, error } = await supabase.rpc('create_test_user_profiles');
       
       if (error) throw error;
       
-      setTestUsers(data || []);
+      // A nova função retorna dados com formato diferente
+      const testUserData = data as Array<{user_id_created: string, email_ref: string, role_assigned: string}>;
+      
       toast({
         title: "Sucesso",
-        description: `${data?.length || 0} usuários de teste criados com sucesso!`,
+        description: `${testUserData?.length || 0} perfis de usuários de teste criados! Lembre-se de criar os usuários no Supabase Auth primeiro.`,
         variant: "default"
       });
       
       // Atualizar lista de usuários
       await fetchUsers();
     } catch (error) {
-      console.error("Erro ao criar usuários de teste:", error);
+      console.error("Erro ao criar perfis de usuários de teste:", error);
       toast({
         title: "Erro",
         description: "Falha ao criar usuários de teste",

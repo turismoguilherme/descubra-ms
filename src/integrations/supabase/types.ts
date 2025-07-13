@@ -1430,12 +1430,12 @@ export type Database = {
         Args: { user_email: string }
         Returns: string
       }
-      create_test_users: {
+      create_test_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          email: string
-          password: string
-          role: string
+          user_id_created: string
+          email_ref: string
+          role_assigned: string
         }[]
       }
       detect_suspicious_activity: {
