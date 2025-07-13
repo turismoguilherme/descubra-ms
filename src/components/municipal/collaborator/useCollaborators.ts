@@ -19,6 +19,7 @@ export const useCollaborators = (cityId: string) => {
     email: "",
     position: "",
     role: "",
+    city: "",
   });
 
   const fetchCollaborators = useCallback(async () => {
@@ -116,7 +117,7 @@ export const useCollaborators = (cityId: string) => {
       email: collaborator.email,
       position: collaborator.position,
       role: collaborator.role,
-      // city_id removido pois não está na interface CollaboratorFormData
+      city: collaborator.municipality || "",
     });
     setIsDialogOpen(true);
   };
@@ -148,7 +149,7 @@ export const useCollaborators = (cityId: string) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", email: "", position: "", role: "" });
+    setFormData({ name: "", email: "", position: "", role: "", city: "" });
     setEditingCollaborator(null);
     setIsDialogOpen(false);
   };

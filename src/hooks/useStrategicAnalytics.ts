@@ -30,7 +30,6 @@ export function useStrategicAnalytics() {
 
       const aiMessage: AIMessage = {
         id: Date.now() + 1,
-        role: "ai",
         content: data.reply,
       };
       setMessages((prev) => [...prev, aiMessage]);

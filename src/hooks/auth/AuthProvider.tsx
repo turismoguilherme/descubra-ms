@@ -1,209 +1,219 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthContext, AuthContextType } from "./AuthContext";
-import { showToast } from "./authToast";
-import { enhancedSignInService } from "./services/enhancedSignIn";
-import { signInWithProviderService, signOutService, resendConfirmationEmailService } from "./services";
-import { signUpService } from "./services/signUpService";
 import { UserProfile } from "@/types/auth";
+import { AuthContext, AuthContextType } from "./AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const fetchUserProfile = useCallback(async (user: User | null) => {
-    if (!user) {
-      setUserProfile(null);
-      return;
-    }
+  const fetchUserProfile = async (userId: string) => {
     try {
-      // Passo 1: Buscar o perfil do usuário em `user_profiles`
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
+      // Buscar perfil do usuário
+      const { data: profileData } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-      // MUDANÇA: Interromper se o perfil principal falhar
-      if (profileError) {
-        // Não tratar como erro fatal se for 'PGRST116' (nenhuma linha encontrada), 
-        // pois o perfil pode ainda não existir.
-        if (profileError.code !== 'PGRST116') {
-          console.error("❌ Erro fatal ao buscar perfil (user_profiles):", profileError);
-          setUserProfile(null); // Garante que o perfil fique nulo
-          return; // Interrompe a execução
-        }
-        console.warn("⚠️ Perfil não encontrado em user_profiles, continuando com dados mínimos.");
-      }
+      // Buscar role do usuário
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role, city_id, region_id")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-      // Passo 2: Buscar o papel e localidades em `user_roles`
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role, city_id, region_id')
-        .eq('user_id', user.id)
-        .single();
+      // Criar perfil combinado
+      const profile: UserProfile = {
+        user_id: userId,
+        full_name: profileData?.full_name || '',
+        role: roleData?.role || 'user',
+        city_id: roleData?.city_id || null,
+        region_id: roleData?.region_id || null
+      };
 
-      if (roleError && roleError.code !== 'PGRST116') {
-        console.error("❌ Erro ao buscar papéis (user_roles):", roleError);
-        // Não definir como nulo aqui, um usuário pode não ter um papel ainda
-      }
-
-      // Passo 3: Combinar os dados
-      if (user) {
-        const profile: UserProfile = {
-          user_id: user.id,
-          full_name: profileData?.full_name || user.email || '',
-          role: roleData?.role || 'user', // Padrão para 'user' se não houver papel
-          city_id: roleData?.city_id || null,
-          region_id: roleData?.region_id || null,
-        };
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
-
-    } catch (e) {
-      console.error("❌ Exceção ao buscar perfil:", e);
-      setUserProfile(null);
+      setUserProfile(profile);
+    } catch (error) {
+      console.error("Erro ao buscar perfil:", error);
     }
-  }, []);
-
+  };
 
   useEffect(() => {
-    // Verificar parâmetros OAuth na URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasError = urlParams.has('error');
-    
-    if (hasError) {
-      const error = urlParams.get('error');
-      const errorDescription = urlParams.get('error_description');
-      console.error("❌ Erro OAuth:", error, errorDescription);
-      showToast("Erro na autenticação", errorDescription || "Erro durante login social", "destructive");
-      
-      // Limpar URL
-      const newUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-    
-    // Configurar listener de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        await fetchUserProfile(currentUser); // Buscar perfil ao logar
-        setLoading(false);
+        setUser(session?.user ?? null);
 
-        if (event === 'SIGNED_IN' && session?.user) {
-          const provider = session.user.app_metadata?.provider;
-          
-          if (provider === 'google' || provider === 'facebook') {
-            console.log("🔐 AUTH PROVIDER: Login OAuth detectado", {
-              provider,
-              userEmail: session.user.email,
-              hasUserType: !!session.user.user_metadata?.user_type
-            });
-            
-            showToast("Login realizado!", `Bem-vindo via ${provider}!`);
-            
-            // Limpar parâmetros OAuth da URL
-            if (window.location.search) {
-              const newUrl = window.location.origin + window.location.pathname;
-              window.history.replaceState({}, document.title, newUrl);
-            }
-            
-            // Para usuários OAuth, verificar se o perfil está completo
-            // O ProfileCompletionChecker vai lidar com isso
-          } else if (provider === 'email') {
-            showToast("Login realizado!", "Bem-vindo!");
-          }
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setUserProfile(null);
         }
-        
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setSession(null);
-          setUserProfile(null); // Limpar perfil ao deslogar
-        }
+
+        setLoading(false);
       }
     );
 
-    // Verificar sessão inicial
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("❌ Erro ao obter sessão:", error);
-        } else {
-          setSession(session);
-          const currentUser = session?.user ?? null;
-          setUser(currentUser);
-          await fetchUserProfile(currentUser); // Buscar perfil na sessão inicial
-        }
-      } catch (error) {
-        console.error("❌ Erro em getInitialSession:", error);
-      } finally {
-        setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
       }
-    };
+      
+      setLoading(false);
+    });
 
-    getInitialSession();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fetchUserProfile]);
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    setLoading(true);
-    const result = await signUpService(email, password, fullName);
-    setLoading(false);
-    return result;
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Cadastro realizado!",
+        description: "Verifique seu email para confirmar a conta.",
+      });
+
+      return { data, error: null };
+    } catch (error: any) {
+      toast({
+        title: "Erro no cadastro",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
-    const result = await enhancedSignInService(email, password);
-    // O onAuthStateChange vai cuidar de buscar o perfil
-    setLoading(false);
-    return result;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error: any) {
+      let errorMessage = "Erro ao fazer login";
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha inválidos";
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
+      }
+      
+      toast({
+        title: "Erro no login",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      return { data: null, error };
+    }
   };
 
   const signInWithProvider = async (provider: 'google' | 'facebook') => {
-    setLoading(true);
-    const result = await signInWithProviderService(provider);
-    if (result.error) {
-      setLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error: any) {
+      toast({
+        title: "Erro no login social",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+      return { data: null, error };
     }
-    return result;
   };
 
   const signOut = async () => {
-    setLoading(true);
-    await signOutService();
-    setUserProfile(null); // Limpar perfil
-    setLoading(false);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+    } catch (error: any) {
+      toast({
+        title: "Erro no logout",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+    }
   };
 
   const resendConfirmationEmail = async (email: string) => {
-    setLoading(true);
-    const result = await resendConfirmationEmailService(email);
-    setLoading(false);
-    return result;
-  }
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email reenviado!",
+        description: "Verifique sua caixa de entrada.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      toast({
+        title: "Erro ao reenviar email",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) {
-      showToast("Erro ao redefinir senha", error.message, "destructive");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+
+      toast({
+        title: "Email de recuperação enviado!",
+        description: "Verifique sua caixa de entrada.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao redefinir senha",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -211,7 +221,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     user,
     session,
-    userProfile, // Adicionado ao contexto
+    userProfile,
     loading,
     signUp,
     signIn,

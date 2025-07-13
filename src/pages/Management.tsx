@@ -136,7 +136,7 @@ const Management = () => {
             </TabsContent>
 
             <TabsContent value="analytics-ai">
-              <StrategicAnalyticsAI />
+              <StrategicAnalyticsAI userRegion={selectedRegion} />
             </TabsContent>
 
             <TabsContent value="management">
