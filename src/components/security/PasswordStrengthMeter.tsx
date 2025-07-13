@@ -83,7 +83,7 @@ export const PasswordStrengthMeter = ({ password, className = "" }: PasswordStre
     };
   }, [password]);
 
-  if (!password) {
+  if (!password || password.length === 0) {
     return null;
   }
 
