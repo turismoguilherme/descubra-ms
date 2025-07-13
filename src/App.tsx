@@ -10,6 +10,7 @@ import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker
 import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
+import SecurityProvider from "@/components/security/SecurityProvider";
 
 // Critical components (no lazy loading)
 import Index from "@/pages/Index";
@@ -64,8 +65,13 @@ function App() {
       <SecurityHeaders />
       <TourismDataProvider>
         <AuthProvider>
-          <SecurityWrapper>
-            <TooltipProvider>
+          <SecurityProvider
+            enableSessionTimeout={true}
+            sessionTimeoutMinutes={30}
+            sessionWarningMinutes={5}
+          >
+            <SecurityWrapper>
+              <TooltipProvider>
               <Toaster />
               <BrowserRouter>
                 <ProfileCompletionChecker>
@@ -112,8 +118,9 @@ function App() {
                   </div>
                 </ProfileCompletionChecker>
               </BrowserRouter>
-            </TooltipProvider>
-          </SecurityWrapper>
+              </TooltipProvider>
+            </SecurityWrapper>
+          </SecurityProvider>
         </AuthProvider>
       </TourismDataProvider>
     </QueryClientProvider>

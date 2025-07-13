@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Eye, AlertTriangle, Users } from "lucide-react";
 import SecurityMonitor from "../security/SecurityMonitor";
 import EnhancedSecurityMonitor from "../security/EnhancedSecurityMonitor";
+import EnhancedSecurityMetrics from "../security/EnhancedSecurityMetrics";
 import AuditExportButton from "./AuditExportButton";
 
 const SecurityDashboard = () => {
@@ -78,14 +79,19 @@ const SecurityDashboard = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="enhanced" className="space-y-4">
+      <Tabs defaultValue="metrics" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="metrics">Métricas Avançadas</TabsTrigger>
           <TabsTrigger value="enhanced">Monitor Aprimorado</TabsTrigger>
           <TabsTrigger value="monitor">Monitor Básico</TabsTrigger>
           <TabsTrigger value="policies">Políticas RLS</TabsTrigger>
           <TabsTrigger value="audit">Auditoria Completa</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="metrics">
+          <EnhancedSecurityMetrics />
+        </TabsContent>
         
         <TabsContent value="enhanced">
           <EnhancedSecurityMonitor />

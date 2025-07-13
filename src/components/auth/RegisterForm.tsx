@@ -12,6 +12,7 @@ import SocialLoginButtons from "./SocialLoginButtons";
 import { sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
+import PasswordStrengthMeter from "@/components/security/PasswordStrengthMeter";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -39,6 +40,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
+  const [currentPassword, setCurrentPassword] = useState("");
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -159,8 +161,12 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                       <FormControl>
                         <Input 
                           type={showPassword ? "text" : "password"} 
-                          placeholder="Crie uma senha (mín. 6 caracteres)" 
-                          {...field} 
+                          placeholder="Crie uma senha (mín. 8 caracteres)" 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setCurrentPassword(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <button
@@ -171,6 +177,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    <PasswordStrengthMeter password={currentPassword} className="mt-2" />
                     <FormMessage />
                   </FormItem>
                 )}
