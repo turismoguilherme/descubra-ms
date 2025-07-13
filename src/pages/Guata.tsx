@@ -5,19 +5,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import DelinhaHeader from "@/components/delinha/DelinhaHeader";
-import DelinhaChat from "@/components/delinha/DelinhaChat";
-import { useDelinhaConnection } from "@/hooks/useDelinhaConnection";
-import { useDelinhaConversation } from "@/hooks/useDelinhaConversation";
-import { useDelinhaInput } from "@/hooks/useDelinhaInput";
+import GuataHeader from "@/components/delinha/GuataHeader";
+import GuataChat from "@/components/delinha/GuataChat";
+import { useGuataConnection } from "@/hooks/useGuataConnection";
+import { useGuataConversation } from "@/hooks/useGuataConversation";
+import { useGuataInput } from "@/hooks/useGuataInput";
 import SuggestionQuestions from "@/components/delinha/SuggestionQuestions";
-import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/delinhaKnowledgeBase";
+import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/guataKnowledgeBase";
 
-const Delinha = () => {
+const Guata = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { isConnected, connectionChecking } = useDelinhaConnection();
+  const { isConnected, connectionChecking } = useGuataConnection();
   
   // Carrega a base de conhecimento e informações do usuário
   const knowledgeBase = getInitialKnowledgeBase();
@@ -29,7 +29,7 @@ const Delinha = () => {
     enviarMensagem: enviarMensagemBase,
     handleLimparConversa,
     enviarFeedback
-  } = useDelinhaConversation(knowledgeBase, usuarioInfo);
+  } = useGuataConversation(knowledgeBase, usuarioInfo);
   
   const { 
     inputMensagem, 
@@ -37,13 +37,13 @@ const Delinha = () => {
     isGravandoAudio, 
     toggleMicrofone,
     handleKeyDown: handleKeyDownBase
-  } = useDelinhaInput();
+  } = useGuataInput();
 
   useEffect(() => {
     if (!loading && !user) {
       toast({
         title: "Acesso restrito",
-        description: "Faça login para conversar com a Delinha.",
+        description: "Faça login para conversar com o Guatá.",
         variant: "destructive",
       });
       navigate("/login");
@@ -75,14 +75,14 @@ const Delinha = () => {
       
       <main className="flex-grow py-8">
         <div className="ms-container max-w-4xl mx-auto">
-          <DelinhaHeader 
+          <GuataHeader 
             onClearConversation={handleLimparConversa}
             mensagens={mensagens}
           />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             <div className="lg:col-span-2">
-              <DelinhaChat
+              <GuataChat
                 mensagens={mensagens}
                 inputMensagem={inputMensagem}
                 setInputMensagem={setInputMensagem}
@@ -114,4 +114,4 @@ const Delinha = () => {
   );
 };
 
-export default Delinha;
+export default Guata;

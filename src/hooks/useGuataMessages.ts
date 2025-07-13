@@ -2,16 +2,16 @@
 import { useState, useEffect } from "react";
 import { AIMessage } from "@/types/ai";
 
-const STORAGE_KEY = "delinha_chat_history";
+const STORAGE_KEY = "guata_chat_history";
 
 const DEFAULT_WELCOME_MESSAGE: AIMessage = {
   id: 1,
-  text: "Olá, meu bem! Eu sou a Delinha, sua guia turística aqui do Mato Grosso do Sul. Me conta, o que você quer conhecer na nossa terra? Estou aqui pra te ajudar a descobrir as maravilhas do nosso estado!",
+  text: "Olá! Você está pronto para explorar o coração do Brasil? Eu sou o Guatá, e serei o seu guia pessoal nessa aventura pelo Mato Grosso do Sul. Como uma capivara nascida e criada aqui, conheço cada segredo e cada maravilha deste lugar. Mas você sabe de onde vem o meu nome? \"Guatá\" é uma palavra de origem Tupi-Guarani que significa \"aquele que caminha\" ou \"o passeador\". Não poderia haver nome melhor, pois a minha paixão é exatamente essa: caminhar com você pelas trilhas, navegar pelos rios e te mostrar a beleza da nossa natureza e cultura. Prepare-se para passear ao meu lado e descobrir um Mato Grosso do Sul que vai ficar para sempre na sua memória!",
   isUser: false,
   timestamp: new Date()
 };
 
-export const useDelinhaMessages = () => {
+export const useGuataMessages = () => {
   // Inicializa com uma mensagem vazia, será substituída no useEffect
   const [mensagens, setMensagens] = useState<AIMessage[]>([]);
   

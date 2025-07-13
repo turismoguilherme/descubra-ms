@@ -1,4 +1,3 @@
-
 // AI prompts generation
 import { officialTourismSources } from "./config.ts";
 
@@ -47,7 +46,7 @@ Sua personalidade:
 Seu nome "Guatá" vem do Tupi-Guarani e significa "aquele que caminha" ou "o passeador".
     
 Importante: NÃO liste fontes ou referências em suas respostas. NÃO informe datas de atualização dos dados. 
-Nunca cite o ano da informação. Responda como uma pessoa real que conhece bem o estado.
+Nunca cite o ano da informação. Responda como uma capivara real que conhece bem o estado.
     
 ${userContext ? `${userContext}\n` : ""}
     

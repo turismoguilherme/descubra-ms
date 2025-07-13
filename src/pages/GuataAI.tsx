@@ -2,21 +2,21 @@
 import React from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import DelinhaChat from "@/components/delinha/DelinhaChat";
+import GuataChat from "@/components/delinha/GuataChat";
 import SuggestionQuestions from "@/components/delinha/SuggestionQuestions";
-import DelinhaHeader from "@/components/delinha/DelinhaHeader";
-import { useDelinhaInput } from "@/hooks/useDelinhaInput";
-import { useDelinhaConnection } from "@/hooks/useDelinhaConnection";
-import { useDelinhaConversation } from "@/hooks/useDelinhaConversation";
-import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/delinhaKnowledgeBase";
+import GuataHeader from "@/components/delinha/GuataHeader";
+import { useGuataInput } from "@/hooks/useGuataInput";
+import { useGuataConnection } from "@/hooks/useGuataConnection";
+import { useGuataConversation } from "@/hooks/useGuataConversation";
+import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/guataKnowledgeBase";
 
-const DelinhaAI = () => {
+const GuataAI = () => {
   // Carrega a base de conhecimento e informações do usuário
   const knowledgeBase = getInitialKnowledgeBase();
   const usuarioInfo = getDefaultUserInfo();
   
   // Hooks para gerenciar diferentes aspectos da interface
-  const { isConnected, connectionChecking } = useDelinhaConnection();
+  const { isConnected, connectionChecking } = useGuataConnection();
   const { 
     inputMensagem, 
     setInputMensagem, 
@@ -24,14 +24,14 @@ const DelinhaAI = () => {
     toggleMicrofone, 
     handleKeyDown,
     handleSugestaoClick 
-  } = useDelinhaInput();
+  } = useGuataInput();
   const {
     mensagens,
     isLoading,
     enviarMensagem,
     handleLimparConversa,
     enviarFeedback
-  } = useDelinhaConversation(knowledgeBase, usuarioInfo);
+  } = useGuataConversation(knowledgeBase, usuarioInfo);
 
   // Handler para enviar mensagem quando o usuário pressiona Enter
   const handleKeyDownWithSend = (e: React.KeyboardEvent) => {
@@ -53,14 +53,14 @@ const DelinhaAI = () => {
       <main className="flex-grow">
         <div className="container py-8">
           <div className="max-w-4xl mx-auto">
-            <DelinhaHeader 
+            <GuataHeader 
               onClearConversation={handleLimparConversa} 
               mensagens={mensagens}
             />
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
               <div className="lg:col-span-2">
-                <DelinhaChat
+                <GuataChat
                   mensagens={mensagens}
                   inputMensagem={inputMensagem}
                   setInputMensagem={setInputMensagem}
@@ -87,4 +87,4 @@ const DelinhaAI = () => {
   );
 };
 
-export default DelinhaAI;
+export default GuataAI;

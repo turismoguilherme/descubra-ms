@@ -24,7 +24,7 @@ export class DelinhaClient {
       console.log("ThreadId atual:", this.currentThreadId);
       
       // Chamar a função do Supabase que usa o OpenAI Assistant
-      const { data, error } = await supabase.functions.invoke("delinha-ai", {
+      const { data, error } = await supabase.functions.invoke("guata-ai", {
         body: { 
           prompt, 
           knowledgeBase,

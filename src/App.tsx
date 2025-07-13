@@ -24,7 +24,7 @@ const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
 const Management = lazy(() => import("@/pages/Management"));
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
-const Delinha = lazy(() => import("@/pages/Delinha"));
+const Guata = lazy(() => import("@/pages/Guata"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
 const CATAttendant = lazy(() => import("@/pages/CATAttendant"));
 const MunicipalAdmin = lazy(() => import("@/pages/MunicipalAdmin"));
@@ -45,7 +45,7 @@ const EventEditor = lazy(() => import("@/pages/EventEditor"));
 const DestinoDetalhes = lazy(() => import("@/pages/DestinoDetalhes"));
 const EventoDetalhes = lazy(() => import("@/pages/EventoDetalhes"));
 const TourismData = lazy(() => import("@/pages/TourismData"));
-const DelinhaAI = lazy(() => import("@/pages/DelinhaAI"));
+const GuataAI = lazy(() => import("@/pages/GuataAI"));
 const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
 const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPassport"));
 const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
@@ -81,7 +81,8 @@ function App() {
                   <Route path="/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
                   <Route path="/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                   <Route path="/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
-                  <Route path="/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
+                   <Route path="/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                   <Route path="/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
                   <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
                   <Route path="/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
                   <Route path="/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
@@ -101,7 +102,8 @@ function App() {
                   <Route path="/destination-editor" element={<Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>} />
                   <Route path="/event-editor" element={<Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>} />
                   <Route path="/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
-                  <Route path="/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><DelinhaAI /></Suspense>} />
+                   <Route path="/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
+                   <Route path="/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
                   <Route path="/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
                   <Route path="/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
                   <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />

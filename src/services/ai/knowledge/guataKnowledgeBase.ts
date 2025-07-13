@@ -1,7 +1,7 @@
 
 import { KnowledgeItem } from "@/types/ai";
 
-// Base de conhecimento inicial da Delinha
+// Base de conhecimento inicial do Guatá
 export const getInitialKnowledgeBase = (): KnowledgeItem[] => [
   {
     id: "bonito",

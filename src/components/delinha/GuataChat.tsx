@@ -1,11 +1,11 @@
 
 import React from "react";
 import { AIMessage } from "@/types/ai";
-import DelinhaProfile from "./DelinhaProfile";
+import GuataProfile from "./GuataProfile";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
-interface DelinhaChatProps {
+interface GuataChatProps {
   mensagens: AIMessage[];
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
@@ -19,7 +19,7 @@ interface DelinhaChatProps {
   enviarFeedback: (positivo: boolean) => void;
 }
 
-const DelinhaChat = ({
+const GuataChat = ({
   mensagens,
   inputMensagem,
   setInputMensagem,
@@ -31,11 +31,11 @@ const DelinhaChat = ({
   connectionChecking,
   handleKeyDown,
   enviarFeedback
-}: DelinhaChatProps) => {
+}: GuataChatProps) => {
   return (
     <div className="bg-black bg-opacity-20 rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
       <div className="p-4 border-b border-white/10">
-        <DelinhaProfile 
+        <GuataProfile 
           isConnected={isConnected} 
           connectionChecking={connectionChecking} 
         />
@@ -59,4 +59,4 @@ const DelinhaChat = ({
   );
 };
 
-export default DelinhaChat;
+export default GuataChat;

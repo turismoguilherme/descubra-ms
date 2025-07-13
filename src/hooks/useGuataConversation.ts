@@ -3,10 +3,10 @@ import { useState } from "react";
 import { AIMessage } from "@/types/ai";
 import { useToast } from "@/components/ui/use-toast";
 import { delinhaService } from "@/services/ai";
-import { useDelinhaMessages } from "@/hooks/useDelinhaMessages";
+import { useGuataMessages } from "@/hooks/useGuataMessages";
 
-export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => {
-  const { mensagens, setMensagens, limparHistorico } = useDelinhaMessages();
+export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
+  const { mensagens, setMensagens, limparHistorico } = useGuataMessages();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -25,7 +25,7 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
     setIsLoading(true);
     
     try {
-      console.log("Enviando mensagem para a Delinha:", novaMensagemUsuario.text);
+      console.log("Enviando mensagem para o Guatá:", novaMensagemUsuario.text);
       
       // Adicionar mensagem de digitando...
       const mensagemDigitando: AIMessage = {
@@ -38,14 +38,14 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
       
       setMensagens(prev => [...prev, mensagemDigitando]);
       
-      // Chamar o serviço da API Delinha
+      // Chamar o serviço da API Guatá
       const resposta = await delinhaService.askQuestion(
         novaMensagemUsuario.text,
         knowledgeBase,
         usuarioInfo
       );
       
-      console.log("Resposta recebida da Delinha:", resposta);
+      console.log("Resposta recebida do Guatá:", resposta);
       
       // Remover mensagem de digitando
       setMensagens(prev => prev.filter(msg => !msg.isTyping));
@@ -74,7 +74,7 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
       // Adicionar mensagem de erro do bot
       const mensagemErro: AIMessage = {
         id: Date.now() + 1,
-        text: "Puxa vida, tive um probleminha aqui. Você pode tentar me perguntar de outro jeito, meu bem?",
+        text: "Opa, tive um probleminha aqui no meu sistema! Pode tentar me perguntar de outro jeito? Às vezes a conexão do Pantanal falha um pouquinho!",
         isUser: false,
         error: true,
         timestamp: new Date()
@@ -92,17 +92,17 @@ export const useDelinhaConversation = (knowledgeBase: any, usuarioInfo: any) => 
       limparHistorico();
       toast({
         title: "Histórico limpo",
-        description: "Sua conversa com a Delinha foi reiniciada."
+        description: "Sua conversa com o Guatá foi reiniciada."
       });
     }
   };
 
   const enviarFeedback = (positivo: boolean) => {
     toast({
-      title: positivo ? "Obrigada pelo feedback!" : "Vou melhorar, prometo!",
+      title: positivo ? "Obrigado pelo feedback!" : "Vou melhorar, prometo!",
       description: positivo 
-        ? "Que bom que consegui te ajudar, meu bem!" 
-        : "Desculpe se não consegui te ajudar dessa vez.",
+        ? "Que bom que consegui te ajudar! Vamos continuar explorando o MS juntos!" 
+        : "Desculpe se não consegui te ajudar dessa vez. Vou me esforçar mais!",
     });
   };
 

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
-export const useDelinhaInput = () => {
+export const useGuataInput = () => {
   const [inputMensagem, setInputMensagem] = useState("");
   const [isGravandoAudio, setIsGravandoAudio] = useState(false);
   const { toast } = useToast();
