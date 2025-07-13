@@ -107,20 +107,15 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
       {/* Header com logo */}
       <div className="flex justify-center py-6 bg-white">
         <img 
-          src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+          src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
           alt="Descubra Mato Grosso do Sul" 
           className="h-[60px] w-auto" 
         />
       </div>
 
       {/* Formulário de registro */}
-      <div className="flex-grow bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green py-12 px-4">
-        <div className="ms-container max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
-          <div className="mb-6 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Criar Conta</h2>
-            <p className="text-gray-600">Crie sua conta para começar</p>
-          </div>
-          
+      <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
+        <div className="ms-container max-w-md mx-auto">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -213,7 +208,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-[#FFC107] text-black hover:bg-[#FFC107]/90"
+                className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold"
               >
                 <UserPlus size={20} className="mr-2" />
                 {loading ? 'Criando conta...' : 'Criar Conta'}
