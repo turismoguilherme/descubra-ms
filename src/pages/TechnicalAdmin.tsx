@@ -11,7 +11,7 @@ import DataDashboard from "@/components/admin/DataDashboard";
 import UserDataManager from "@/components/admin/UserDataManager";
 import SystemMaintenancePanel from "@/components/admin/SystemMaintenancePanel";
 import AccessLogs from "@/components/admin/AccessLogs";
-import TechnicalUserManager from "@/components/admin/TechnicalUserManager";
+import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import ContentManager from "@/components/admin/ContentManager";
 import InstitutionalContentManager from "@/components/admin/InstitutionalContentManager";
 import { useNavigate } from "react-router-dom";
@@ -171,7 +171,7 @@ const TechnicalAdmin = () => {
             </TabsContent>
 
             <TabsContent value="users">
-              <TechnicalUserManager />
+              <AdminUserManagement />
             </TabsContent>
 
             <TabsContent value="maintenance">
