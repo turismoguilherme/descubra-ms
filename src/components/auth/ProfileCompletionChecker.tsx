@@ -23,14 +23,15 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
         '/login', 
         '/password-reset', 
         '/admin-seed',
-        '/admin-login'
+        '/admin-login',
+        '/complete-profile' // Adiciona a nova página à lista de permissões
       ];
 
       const isAllowedPath = allowedPaths.includes(location.pathname);
       
       if (profileComplete === false && !isAllowedPath) {
-        console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para /register");
-        navigate('/register');
+        console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para /complete-profile");
+        navigate('/complete-profile');
       }
     }
   }, [profileComplete, loading, user, navigate, location.pathname]);
