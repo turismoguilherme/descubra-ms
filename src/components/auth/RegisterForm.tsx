@@ -14,6 +14,7 @@ import { sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
 import PasswordStrengthMeter from "@/components/security/PasswordStrengthMeter";
+import logoDescubraMS from "@/assets/logo-descubra-ms.png";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -109,7 +110,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
       <div className="bg-white py-6 shadow-sm">
         <div className="flex justify-center">
           <img 
-            src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+            src={logoDescubraMS} 
             alt="Descubra Mato Grosso do Sul" 
             className="h-[60px] w-auto" 
           />

@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
+import logoDescubraMS from "@/assets/logo-descubra-ms.png";
 
 
 const loginSchema = z.object({
@@ -101,7 +102,7 @@ const LoginForm = () => {
       <div className="bg-white py-6 shadow-sm">
         <div className="flex justify-center">
           <img 
-            src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
+            src={logoDescubraMS} 
             alt="Descubra Mato Grosso do Sul" 
             className="h-[60px] w-auto" 
           />
