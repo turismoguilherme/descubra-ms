@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Users, UserPlus, Shield, Trash2, AlertTriangle, Crown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AdvancedAdminConfirmation } from "@/components/security/AdvancedAdminConfirmation";
+import { serverSideSecurityService } from "@/services/serverSideSecurityService";
 
 interface User {
   id: string;
@@ -33,6 +35,15 @@ const AdminUserManagement = () => {
   const [isElevating, setIsElevating] = useState(false);
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  
+  // Advanced confirmation states
+  const [showElevateConfirmation, setShowElevateConfirmation] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showRoleUpdateConfirmation, setShowRoleUpdateConfirmation] = useState(false);
+  const [pendingOperation, setPendingOperation] = useState<{
+    type: 'elevate' | 'delete' | 'role_update';
+    data: any;
+  } | null>(null);
 
   const roles = [
     { value: "admin", label: "Administrador", color: "bg-red-500" },
@@ -229,7 +240,18 @@ const AdminUserManagement = () => {
             </div>
             <div className="flex items-end">
               <Button 
-                onClick={elevateUserToAdmin} 
+                onClick={() => {
+                  if (!elevateEmail.trim()) {
+                    toast({
+                      title: "Erro",
+                      description: "Digite o email do usuário",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  setPendingOperation({ type: 'elevate', data: { email: elevateEmail.trim() } });
+                  setShowElevateConfirmation(true);
+                }}
                 disabled={isElevating || !elevateEmail.trim()}
                 className="bg-yellow-600 hover:bg-yellow-700"
               >
@@ -291,7 +313,24 @@ const AdminUserManagement = () => {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button onClick={updateUserRole} className="w-full">
+              <Button 
+                onClick={() => {
+                  if (!selectedUserId || !newUserRole) {
+                    toast({
+                      title: "Erro",
+                      description: "Selecione um usuário e um papel",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  setPendingOperation({ 
+                    type: 'role_update', 
+                    data: { userId: selectedUserId, role: newUserRole } 
+                  });
+                  setShowRoleUpdateConfirmation(true);
+                }}
+                className="w-full"
+              >
                 Atualizar Papel
               </Button>
             </div>
@@ -332,64 +371,18 @@ const AdminUserManagement = () => {
                     {user.status === 'active' ? 'Ativo' : 'Inativo'}
                   </Badge>
                   
-                  {/* Botão de deletar usuário */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => setUserToDelete(user)}
-                        disabled={user.role === 'admin' && user.id === user.id} // Não permitir auto-delete de admin
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle className="text-red-600">⚠️ Deletar Usuário</DialogTitle>
-                        <DialogDescription>
-                          Esta ação é <strong>IRREVERSÍVEL</strong> e removerá o usuário completamente do sistema.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Alert variant="destructive">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription>
-                            Para confirmar, digite exatamente o email: <strong>{userToDelete?.email}</strong>
-                          </AlertDescription>
-                        </Alert>
-                        <div className="space-y-2">
-                          <Label>Confirme o email para deletar</Label>
-                          <Input
-                            type="email"
-                            placeholder="Digite o email para confirmar"
-                            value={deleteConfirmEmail}
-                            onChange={(e) => setDeleteConfirmEmail(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="destructive" 
-                            onClick={deleteUserFromAuth}
-                            disabled={deleteConfirmEmail !== userToDelete?.email}
-                            className="flex-1"
-                          >
-                            Confirmar Deleção
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => {
-                              setUserToDelete(null);
-                              setDeleteConfirmEmail("");
-                            }}
-                            className="flex-1"
-                          >
-                            Cancelar
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  {/* Botão de deletar usuário com confirmação avançada */}
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => {
+                      setPendingOperation({ type: 'delete', data: user });
+                      setShowDeleteConfirmation(true);
+                    }}
+                    disabled={user.role === 'admin' && user.id === user.id} // Não permitir auto-delete de admin
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -401,6 +394,120 @@ const AdminUserManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Advanced Confirmation Dialogs */}
+      <AdvancedAdminConfirmation
+        open={showElevateConfirmation}
+        onOpenChange={setShowElevateConfirmation}
+        title="🚨 Elevar Usuário a Administrador"
+        description={`Esta operação elevará ${pendingOperation?.data?.email} a administrador com privilégios completos no sistema. Esta ação é irreversível e será auditada.`}
+        operationType="elevate_user_to_admin"
+        confirmationText="ELEVAR ADMIN"
+        severity="critical"
+        cooldownSeconds={15}
+        onConfirm={async () => {
+          setIsElevating(true);
+          try {
+            const { error } = await supabase.rpc('elevate_to_admin', {
+              user_email: pendingOperation?.data?.email
+            });
+            
+            if (error) throw error;
+            
+            toast({
+              title: "Usuário elevado com sucesso",
+              description: `${pendingOperation?.data?.email} agora é administrador`,
+              variant: "default"
+            });
+            
+            setElevateEmail("");
+            await fetchUsers();
+          } catch (error: any) {
+            toast({
+              title: "Erro ao elevar usuário",
+              description: error.message || "Falha na operação",
+              variant: "destructive"
+            });
+            throw error;
+          } finally {
+            setIsElevating(false);
+          }
+        }}
+      />
+
+      <AdvancedAdminConfirmation
+        open={showRoleUpdateConfirmation}
+        onOpenChange={setShowRoleUpdateConfirmation}
+        title="⚠️ Atualizar Papel do Usuário"
+        description={`Esta operação alterará o papel do usuário para "${roles.find(r => r.value === pendingOperation?.data?.role)?.label}". Esta mudança afetará as permissões do usuário imediatamente.`}
+        operationType="update_user_role"
+        confirmationText="ALTERAR PAPEL"
+        severity="medium"
+        cooldownSeconds={5}
+        onConfirm={async () => {
+          try {
+            const { data, error } = await supabase.rpc('secure_update_user_role', {
+              target_user_id: pendingOperation?.data?.userId,
+              new_role: pendingOperation?.data?.role
+            });
+            
+            if (error) throw error;
+            
+            if (data) {
+              toast({
+                title: "Papel atualizado com sucesso",
+                description: "As permissões do usuário foram atualizadas",
+                variant: "default"
+              });
+              await fetchUsers();
+              setSelectedUserId("");
+              setNewUserRole("");
+            } else {
+              throw new Error("Falha ao atualizar papel do usuário");
+            }
+          } catch (error: any) {
+            toast({
+              title: "Erro ao atualizar papel",
+              description: error.message || "Falha na operação",
+              variant: "destructive"
+            });
+            throw error;
+          }
+        }}
+      />
+
+      <AdvancedAdminConfirmation
+        open={showDeleteConfirmation}
+        onOpenChange={setShowDeleteConfirmation}
+        title="💀 DELETAR USUÁRIO PERMANENTEMENTE"
+        description={`Esta operação removerá PERMANENTEMENTE o usuário ${pendingOperation?.data?.email} do sistema. Todos os dados associados serão perdidos. Esta ação NÃO PODE ser desfeita.`}
+        operationType="delete_user_permanently"
+        confirmationText="DELETAR PERMANENTEMENTE"
+        severity="critical"
+        cooldownSeconds={20}
+        onConfirm={async () => {
+          try {
+            const { error } = await supabase.auth.admin.deleteUser(pendingOperation?.data?.id);
+            
+            if (error) throw error;
+            
+            toast({
+              title: "Usuário deletado",
+              description: `${pendingOperation?.data?.email} foi removido permanentemente`,
+              variant: "default"
+            });
+            
+            await fetchUsers();
+          } catch (error: any) {
+            toast({
+              title: "Erro ao deletar usuário",
+              description: error.message || "Falha na operação",
+              variant: "destructive"
+            });
+            throw error;
+          }
+        }}
+      />
     </div>
   );
 };
