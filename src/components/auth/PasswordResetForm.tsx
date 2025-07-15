@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Mail, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,31 +79,44 @@ const PasswordResetForm = () => {
   if (emailSent) {
     return (
       <div className="min-h-screen flex flex-col">
-        <div className="flex justify-center py-6 bg-white">
-          <img 
-            src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-            alt="Descubra Mato Grosso do Sul" 
-            className="h-[60px] w-auto" 
-          />
+        {/* Header branco com logo */}
+        <div className="bg-white py-6 shadow-sm">
+          <div className="flex justify-center">
+            <img 
+              src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+              alt="Descubra Mato Grosso do Sul" 
+              className="h-[60px] w-auto" 
+            />
+          </div>
         </div>
 
-        <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
-          <div className="ms-container max-w-md mx-auto bg-white rounded-lg shadow-lg p-6 text-center">
-            <Mail size={48} className="mx-auto text-ms-primary-blue mb-4" />
-            <h1 className="text-2xl font-semibold text-ms-primary-blue mb-4">
-              Email Enviado!
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Enviamos um link para redefinir sua senha para o email informado. 
-              Verifique sua caixa de entrada e siga as instruções.
-            </p>
-            <Link 
-              to="/login" 
-              className="inline-flex items-center text-ms-primary-blue hover:underline"
-            >
-              <ArrowLeft size={16} className="mr-2" />
-              Voltar ao Login
-            </Link>
+        {/* Corpo com gradiente e card centralizado */}
+        <div className="flex-1 bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
+          <div className="w-full max-w-md">
+            <Card className="bg-white shadow-xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-center text-2xl font-bold text-ms-primary-blue">
+                  Email Enviado!
+                </CardTitle>
+                <CardDescription className="text-center text-gray-600">
+                  Verifique sua caixa de entrada
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 text-center">
+                <Mail size={48} className="mx-auto text-ms-primary-blue mb-4" />
+                <p className="text-gray-600">
+                  Enviamos um link para redefinir sua senha para o email informado. 
+                  Verifique sua caixa de entrada e siga as instruções.
+                </p>
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center text-ms-primary-blue hover:underline"
+                >
+                  <ArrowLeft size={16} className="mr-2" />
+                  Voltar ao Login
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -111,63 +125,73 @@ const PasswordResetForm = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex justify-center py-6 bg-white">
-        <img 
-          src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-          alt="Descubra Mato Grosso do Sul" 
-          className="h-[60px] w-auto" 
-        />
+      {/* Header branco com logo */}
+      <div className="bg-white py-6 shadow-sm">
+        <div className="flex justify-center">
+          <img 
+            src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+            alt="Descubra Mato Grosso do Sul" 
+            className="h-[60px] w-auto" 
+          />
+        </div>
       </div>
 
-      <div className="flex-grow bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
-        <div className="ms-container max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-semibold text-ms-primary-blue mb-2 text-center">
-            Redefinir Senha
-          </h1>
-          <p className="text-gray-600 text-center mb-6">
-            Digite seu email para receber um link de redefinição de senha
-          </p>
+      {/* Corpo com gradiente e card centralizado */}
+      <div className="flex-1 bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md">
+          <Card className="bg-white shadow-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-center text-2xl font-bold text-ms-primary-blue">
+                Redefinir Senha
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                Digite seu email para receber um link de redefinição de senha
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="Digite seu e-mail" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>E-mail</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Digite seu e-mail" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold"
-              >
-                <Mail size={20} className="mr-2" />
-                {loading ? 'Enviando...' : 'Enviar Link de Redefinição'}
-              </Button>
-            </form>
-          </Form>
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold"
+                  >
+                    <Mail size={20} className="mr-2" />
+                    {loading ? 'Enviando...' : 'Enviar Link de Redefinição'}
+                  </Button>
+                </form>
+              </Form>
 
-          <div className="mt-6 text-center">
-            <Link 
-              to="/login" 
-              className="inline-flex items-center text-sm text-ms-primary-blue hover:underline"
-            >
-              <ArrowLeft size={16} className="mr-2" />
-              Voltar ao Login
-            </Link>
-          </div>
+              <div className="mt-4 text-center">
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center text-sm text-ms-primary-blue hover:underline"
+                >
+                  <ArrowLeft size={16} className="mr-2" />
+                  Voltar ao Login
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
