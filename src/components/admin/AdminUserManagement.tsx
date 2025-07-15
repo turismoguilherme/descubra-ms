@@ -13,6 +13,10 @@ import { Users, UserPlus, Shield, Trash2, AlertTriangle, Crown } from "lucide-re
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AdvancedAdminConfirmation } from "@/components/security/AdvancedAdminConfirmation";
 import { serverSideSecurityService } from "@/services/serverSideSecurityService";
+import { useAdvancedRateLimit } from "@/hooks/useAdvancedRateLimit";
+import { SecurityAlertMonitor } from "@/components/security/SecurityAlertMonitor";
+import { SessionTimeoutWarning } from "@/components/security/SessionTimeoutWarning";
+import { CSRFForm, useCSRF } from "@/components/security/CSRFProtection";
 
 interface User {
   id: string;
@@ -27,6 +31,8 @@ interface User {
 const AdminUserManagement = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { token: csrfToken } = useCSRF();
+  const { checkAdvancedRateLimit, isBlocked, securityLevel } = useAdvancedRateLimit();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -88,6 +94,21 @@ const AdminUserManagement = () => {
       return;
     }
 
+    // Advanced rate limiting check
+    const rateLimitAllowed = await checkAdvancedRateLimit(
+      user?.id || 'anonymous',
+      'elevate_user_to_admin',
+      { 
+        maxAttempts: 3, 
+        windowMinutes: 60, 
+        blockDurationMinutes: 120 
+      }
+    );
+
+    if (!rateLimitAllowed) {
+      return; // Rate limit message already shown by hook
+    }
+
     setIsElevating(true);
     try {
       const { error } = await supabase.rpc('elevate_to_admin', {
@@ -123,6 +144,21 @@ const AdminUserManagement = () => {
         description: "Selecione um usuário e um papel",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Advanced rate limiting check
+    const rateLimitAllowed = await checkAdvancedRateLimit(
+      user?.id || 'anonymous',
+      'update_user_role',
+      { 
+        maxAttempts: 5, 
+        windowMinutes: 30, 
+        blockDurationMinutes: 60 
+      }
+    );
+
+    if (!rateLimitAllowed) {
       return;
     }
 
@@ -209,12 +245,33 @@ const AdminUserManagement = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Security Components */}
+      <SessionTimeoutWarning
+        warningTimeMinutes={5}
+        timeoutMinutes={30}
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gerenciamento Avançado de Usuários</h1>
           <p className="text-muted-foreground">Controle completo de usuários e permissões administrativas</p>
         </div>
+        <div className="flex items-center gap-2">
+          {securityLevel !== 'normal' && (
+            <Badge variant={securityLevel === 'high' ? 'destructive' : 'secondary'}>
+              {securityLevel === 'elevated' ? '⚠️ Segurança Elevada' : '🚨 Alto Risco'}
+            </Badge>
+          )}
+          {isBlocked && (
+            <Badge variant="destructive">
+              🚫 Acesso Restrito
+            </Badge>
+          )}
+        </div>
       </div>
+
+      {/* Security Alert Monitor */}
+      <SecurityAlertMonitor />
 
       {/* Elevar usuário para admin */}
       <Card>
@@ -228,37 +285,41 @@ const AdminUserManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Label>Email do usuário</Label>
-              <Input
-                type="email"
-                placeholder="usuario@exemplo.com"
-                value={elevateEmail}
-                onChange={(e) => setElevateEmail(e.target.value)}
-              />
+          <CSRFForm onSubmit={(e, token) => {
+            e.preventDefault();
+            if (!elevateEmail.trim()) {
+              toast({
+                title: "Erro",
+                description: "Digite o email do usuário",
+                variant: "destructive"
+              });
+              return;
+            }
+            setPendingOperation({ type: 'elevate', data: { email: elevateEmail.trim(), csrfToken: token } });
+            setShowElevateConfirmation(true);
+          }}>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label>Email do usuário</Label>
+                <Input
+                  type="email"
+                  placeholder="usuario@exemplo.com"
+                  value={elevateEmail}
+                  onChange={(e) => setElevateEmail(e.target.value)}
+                  disabled={isBlocked}
+                />
+              </div>
+              <div className="flex items-end">
+                <Button 
+                  type="submit"
+                  disabled={isElevating || !elevateEmail.trim() || isBlocked}
+                  className="bg-yellow-600 hover:bg-yellow-700"
+                >
+                  {isElevating ? "Elevando..." : "Elevar a Admin"}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-end">
-              <Button 
-                onClick={() => {
-                  if (!elevateEmail.trim()) {
-                    toast({
-                      title: "Erro",
-                      description: "Digite o email do usuário",
-                      variant: "destructive"
-                    });
-                    return;
-                  }
-                  setPendingOperation({ type: 'elevate', data: { email: elevateEmail.trim() } });
-                  setShowElevateConfirmation(true);
-                }}
-                disabled={isElevating || !elevateEmail.trim()}
-                className="bg-yellow-600 hover:bg-yellow-700"
-              >
-                {isElevating ? "Elevando..." : "Elevar a Admin"}
-              </Button>
-            </div>
-          </div>
+          </CSRFForm>
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
@@ -281,60 +342,64 @@ const AdminUserManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label>Usuário</Label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map(user => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.full_name || user.email} ({user.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CSRFForm onSubmit={(e, token) => {
+            e.preventDefault();
+            if (!selectedUserId || !newUserRole) {
+              toast({
+                title: "Erro",
+                description: "Selecione um usuário e um papel",
+                variant: "destructive"
+              });
+              return;
+            }
+            setPendingOperation({ 
+              type: 'role_update', 
+              data: { userId: selectedUserId, role: newUserRole, csrfToken: token } 
+            });
+            setShowRoleUpdateConfirmation(true);
+          }}>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Usuário</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId} disabled={isBlocked}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name || user.email} ({user.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Novo Papel</Label>
+                <Select value={newUserRole} onValueChange={setNewUserRole} disabled={isBlocked}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um papel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map(role => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button 
+                  type="submit"
+                  className="w-full"
+                  disabled={isBlocked}
+                >
+                  Atualizar Papel
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Novo Papel</Label>
-              <Select value={newUserRole} onValueChange={setNewUserRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um papel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map(role => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end">
-              <Button 
-                onClick={() => {
-                  if (!selectedUserId || !newUserRole) {
-                    toast({
-                      title: "Erro",
-                      description: "Selecione um usuário e um papel",
-                      variant: "destructive"
-                    });
-                    return;
-                  }
-                  setPendingOperation({ 
-                    type: 'role_update', 
-                    data: { userId: selectedUserId, role: newUserRole } 
-                  });
-                  setShowRoleUpdateConfirmation(true);
-                }}
-                className="w-full"
-              >
-                Atualizar Papel
-              </Button>
-            </div>
-          </div>
+          </CSRFForm>
         </CardContent>
       </Card>
 

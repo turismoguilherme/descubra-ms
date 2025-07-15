@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
+import { CSRFProvider } from "@/components/security/CSRFProtection";
 import { TourismDataProvider } from "@/context/TourismDataContext";
 import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker";
 import LoadingFallback from "@/components/ui/loading-fallback";
@@ -65,11 +66,12 @@ function App() {
       <SecurityHeaders />
       <TourismDataProvider>
         <AuthProvider>
-          <SecurityProvider
-            enableSessionTimeout={true}
-            sessionTimeoutMinutes={30}
-            sessionWarningMinutes={5}
-          >
+          <CSRFProvider>
+            <SecurityProvider
+              enableSessionTimeout={true}
+              sessionTimeoutMinutes={30}
+              sessionWarningMinutes={5}
+            >
             <SecurityWrapper>
               <TooltipProvider>
               <Toaster />
@@ -120,7 +122,8 @@ function App() {
               </BrowserRouter>
               </TooltipProvider>
             </SecurityWrapper>
-          </SecurityProvider>
+            </SecurityProvider>
+          </CSRFProvider>
         </AuthProvider>
       </TourismDataProvider>
     </QueryClientProvider>
