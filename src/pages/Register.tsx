@@ -16,6 +16,13 @@ const Register = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("🔄 REGISTER EFFECT: User, loading, profileComplete, profileLoading state changed", {
+      user: user?.id, // Logar apenas o ID do usuário para evitar logs muito grandes
+      loadingAuth: loading,
+      profileComplete: profileComplete,
+      loadingProfile: profileLoading,
+    });
+
     if (!loading && !profileLoading && user) {
       console.log("👤 REGISTER: Usuário logado detectado, verificando perfil...", {
         userEmail: user.email,
@@ -30,13 +37,24 @@ const Register = () => {
       } else {
         console.log("👤 REGISTER: Perfil incompleto, indo para etapa 2");
         setStep(2);
+        navigate('/complete-profile-new'); // Redireciona para a página de completar perfil
       }
+    } else if (!loading && !user) {
+      console.log("👤 REGISTER: Nenhum usuário logado após carregamento.");
+      // Se o carregamento terminou e não há usuário, significa que não logou ou deslogou.
+      // Mantenha o passo 1 (registro/login inicial)
+      setStep(1);
     }
   }, [user, loading, profileLoading, profileComplete, navigate]);
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     console.log("🔐 Tentativa de login social:", provider);
-    await signInWithProvider(provider);
+    const { error } = await signInWithProvider(provider);
+    if (error) {
+      console.error("❌ SOCIAL LOGIN: Erro ao iniciar login social:", error);
+    } else {
+      console.log("✅ SOCIAL LOGIN: Login social iniciado, aguardando redirecionamento...");
+    }
   };
 
   const handleRegister = async (values: RegisterFormValues) => {

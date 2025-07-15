@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { cities } from "@/data/cities";
+import { msCities } from "@/data/cities";
 import { msRegions } from "@/data/msRegions";
 
 const CompleteProfileNew = () => {
@@ -34,36 +34,44 @@ const CompleteProfileNew = () => {
     
     if (!user) {
       toast.error("Usuário não autenticado");
+      console.error("❌ COMPLETE_PROFILE: Tentativa de submeter sem usuário logado.");
       return;
     }
 
     setIsSubmitting(true);
+    console.log("🔄 COMPLETE_PROFILE: Iniciando upsert do perfil para user.id:", user.id);
+    console.log("🔄 COMPLETE_PROFILE: Dados do formulário:", formData);
 
     try {
       const { error } = await supabase
         .from('user_profiles')
         .upsert({
-          id: user.id,
+          user_id: user.id, // Correção: Usar user_id para vincular ao auth.users.id
           full_name: formData.full_name,
           city_id: formData.city_id ? parseInt(formData.city_id) : null,
           region_id: formData.region_id ? parseInt(formData.region_id) : null,
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'user_id' }); // Importante: Usar onConflict para o upsert baseado em user_id
 
       if (error) {
-        throw error;
+        console.error("❌ COMPLETE_PROFILE: Erro ao salvar perfil:", error);
+        toast.error(`Erro ao completar perfil: ${error.message}`);
+        setIsSubmitting(false);
+        return;
       }
 
       toast.success("Perfil atualizado com sucesso!");
+      console.log("✅ COMPLETE_PROFILE: Perfil atualizado com sucesso para user.id:", user.id);
       
       // Recarregar a página para atualizar o contexto
       window.location.reload();
       
     } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
+      console.error("❌ COMPLETE_PROFILE: Erro ao atualizar perfil (catch):", error);
       toast.error("Erro ao atualizar perfil");
     } finally {
       setIsSubmitting(false);
+      console.log("✅ COMPLETE_PROFILE: isSubmitting setado para false.");
     }
   };
 
@@ -151,7 +159,7 @@ const CompleteProfileNew = () => {
                     <SelectValue placeholder="Selecione uma cidade" />
                   </SelectTrigger>
                   <SelectContent>
-                    {cities.map((city) => (
+                    {msCities.map((city) => (
                       <SelectItem key={city.id} value={city.id.toString()}>
                         {city.name}
                       </SelectItem>

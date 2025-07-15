@@ -1,4 +1,4 @@
-IA Consultora Estratégica
+ Consultora Estratégica
 
 Este documento detalha a arquitetura e implementação da funcionalidade "IA Consultora Estratégica", projetada para fornecer insights analíticos sobre o comportamento do usuário na plataforma Descubra MS.
 
