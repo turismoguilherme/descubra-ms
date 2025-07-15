@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
+import { securityLogger } from "@/utils/secureLogger";
 
 
 
@@ -39,7 +40,7 @@ const LoginForm = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    console.log("🔐 Tentativa de login para:", data.email);
+    securityLogger.log("Login attempt", true, "Form submitted");
     
     try {
       // Sanitize input data
@@ -78,7 +79,7 @@ const LoginForm = () => {
       const { data: loginData, error } = await signIn(sanitizedData.email, sanitizedData.password);
       
       if (!error && loginData?.user) {
-        console.log("✅ Login realizado com sucesso");
+        securityLogger.log("Login successful", true);
         // Não precisa navegar aqui, o ProfileCompletionChecker vai gerenciar
       }
     } catch (err: any) {

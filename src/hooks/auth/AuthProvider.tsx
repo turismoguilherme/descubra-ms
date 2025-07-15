@@ -6,6 +6,7 @@ import { AuthContext, AuthContextType } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { signUpService } from "./services/index";
 import { signInWithProviderService } from "./services/signInWithProviderService";
+import { secureLogger, securityLogger } from "@/utils/secureLogger";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setProfileLoading(true);
     
     try {
-      console.log("🔄 AUTH: Buscando perfil para usuário:", user.id);
+      secureLogger.log("🔄 AUTH: Buscando perfil para usuário:", user.id);
       
       // Buscar perfil do usuário
       const { data: profileData, error: profileError } = await supabase
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       setUserProfile(combinedProfile);
       setIsProfileComplete(!!profileData);
-      console.log("✅ AUTH: Perfil carregado:", combinedProfile);
+      secureLogger.log("✅ AUTH: Perfil carregado");
 
     } catch (error) {
       console.error("❌ AUTH: Erro ao carregar perfil:", error);
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     let mounted = true;
 
-    console.log("🔄 AUTH: Iniciando AuthProvider");
+    secureLogger.log("🔄 AUTH: Iniciando AuthProvider");
 
     const getInitialSession = async () => {
       try {
@@ -115,7 +116,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       async (event, session) => {
         if (!mounted) return;
         
-        console.log("🔄 AUTH: Auth state changed:", event);
+        securityLogger.log("Auth state changed", true, event);
         
         // Atualizar estado síncrono apenas
         setSession(session);
@@ -150,11 +151,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("🔐 AUTH: Tentando login com email:", email);
+      securityLogger.log("Login attempt", true, "Email login initiated");
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       
-      console.log("✅ AUTH: Login bem-sucedido, dados:", data);
+      securityLogger.log("Login successful", true);
       
       // Não buscar perfil aqui - deixar o onAuthStateChange lidar com isso
       

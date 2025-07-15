@@ -18,45 +18,60 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Generate secure random passwords or use environment variables
+    const generateSecurePassword = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+      let password = '';
+      for (let i = 0; i < 16; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
+
+    const getSecurePassword = (role: string) => {
+      const envPassword = Deno.env.get(`TEST_PASSWORD_${role.toUpperCase()}`);
+      return envPassword || generateSecurePassword();
+    };
+
     const testAccounts = [
       { 
         email: 'admin@ms.gov.br', 
-        password: 'Admin123!', 
+        password: getSecurePassword('admin'),
         role: 'admin',
         full_name: 'Administrador Teste',
         user_type: 'collaborator'
       },
       { 
         email: 'diretor@ms.gov.br', 
-        password: 'Diretor123!', 
+        password: getSecurePassword('diretor'),
         role: 'diretor_estadual',
         full_name: 'Diretor Estadual Teste',
         user_type: 'collaborator'
       },
       { 
         email: 'gestor-igr@ms.gov.br', 
-        password: 'Gestor123!', 
+        password: getSecurePassword('gestor_igr'),
         role: 'gestor_igr',
         full_name: 'Gestor IGR Teste',
         user_type: 'collaborator'
       },
       { 
         email: 'gestor-municipal@ms.gov.br', 
-        password: 'Municipal123!', 
+        password: getSecurePassword('gestor_municipal'),
         role: 'gestor_municipal',
         full_name: 'Gestor Municipal Teste',
         user_type: 'collaborator'
       },
       { 
         email: 'atendente@ms.gov.br', 
-        password: 'Atendente123!', 
+        password: getSecurePassword('atendente'),
         role: 'atendente',
         full_name: 'Atendente CAT Teste',
         user_type: 'collaborator'
       },
       { 
         email: 'usuario@ms.gov.br', 
-        password: 'Usuario123!', 
+        password: getSecurePassword('usuario'),
         role: 'user',
         full_name: 'Usuário Teste',
         user_type: 'tourist'
@@ -150,7 +165,8 @@ serve(async (req) => {
           email: account.email,
           status: 'created',
           message: 'Usuário criado com sucesso',
-          user_id: authData.user.id
+          user_id: authData.user.id,
+          password: account.password // Include password in response for testing
         })
 
       } catch (error) {
