@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       host: "::",
-      port: 3000, // Porta fixa para desenvolvimento
+      port: 8080, // Porta fixa para desenvolvimento
     },
     plugins: [
       react(),

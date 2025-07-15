@@ -108,13 +108,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(session?.user ?? null);
       console.log("✅ AUTH: Sessão inicial obtida:", session);
       
-      // CORREÇÃO OFICIAL: Evitar deadlock despachando a chamada para fora do fluxo síncrono.
-      setTimeout(() => {
-        fetchAndSetUserProfile(session?.user ?? null).finally(() => {
-          setLoading(false);
-          console.log("✅ AUTH: getInitialSession concluído, loading = false.");
-        });
-      }, 0);
+      // Buscar perfil do usuário
+      await fetchAndSetUserProfile(session?.user ?? null);
+      setLoading(false);
+      console.log("✅ AUTH: getInitialSession concluído, loading = false.");
     };
 
     getInitialSession();
@@ -125,15 +122,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // CORREÇÃO OFICIAL: Evitar deadlock despachando a chamada para fora do fluxo síncrono.
-        setTimeout(() => {
-          fetchAndSetUserProfile(session?.user ?? null).finally(() => {
-            // Apenas para o listener, podemos não precisar do loading, 
-            // mas é bom ter para consistência se a sessão mudar.
-            if (loading) setLoading(false);
-            console.log("✅ AUTH: onAuthStateChange concluído.");
-          });
-        }, 0);
+        // Buscar perfil do usuário quando login ocorre
+        fetchAndSetUserProfile(session?.user ?? null).finally(() => {
+          setLoading(false);
+          console.log("✅ AUTH: onAuthStateChange concluído.");
+        });
       }
     );
 
@@ -161,9 +154,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Atualizar perfil do usuário após login bem-sucedido
       if (data.user) {
-        setTimeout(() => {
-          fetchAndSetUserProfile(data.user);
-        }, 0);
+        await fetchAndSetUserProfile(data.user);
       }
       
       toast({
