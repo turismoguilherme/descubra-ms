@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isProfileComplete, setIsProfileComplete] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchAndSetUserProfile = useCallback(async (user: User | null) => {
@@ -26,6 +27,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return;
     }
 
+    // Evitar buscar perfil se já está carregando
+    if (profileLoading) return;
+    
+    setProfileLoading(true);
+    
     try {
       console.log("🔄 AUTH: Buscando perfil para usuário:", user.id);
       
@@ -71,8 +77,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error("❌ AUTH: Erro ao carregar perfil:", error);
       setUserProfile(null);
       setIsProfileComplete(false);
+    } finally {
+      setProfileLoading(false);
     }
-  }, []);
+  }, [profileLoading]);
 
   useEffect(() => {
     let mounted = true;
@@ -88,7 +96,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Só buscar perfil se tiver usuário E não estiver carregando
+        // Buscar perfil se tiver usuário
         if (session?.user && mounted) {
           await fetchAndSetUserProfile(session.user);
         }
@@ -104,7 +112,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!mounted) return;
         
         console.log("🔄 AUTH: Auth state changed:", event);
@@ -117,6 +125,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (!session?.user) {
           setUserProfile(null);
           setIsProfileComplete(null);
+        } else if (event === 'SIGNED_IN') {
+          // Buscar perfil apenas quando o usuário faz login
+          setTimeout(() => {
+            fetchAndSetUserProfile(session.user);
+          }, 100);
         }
         
         setLoading(false);

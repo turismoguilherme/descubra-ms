@@ -11,8 +11,6 @@ export const useProfileCompletion = () => {
   const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
-    console.log("🔄 PROFILE_COMPLETION: Atualizando estado", { isProfileComplete, loading, user: !!user });
-    
     // Só definir como completo se tiver dados definitivos
     if (!loading && user) {
       setProfileComplete(isProfileComplete);

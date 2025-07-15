@@ -11,8 +11,6 @@ import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker
 import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
-import { useAuth } from "@/hooks/useAuth";
-import { useProfileSync } from "@/hooks/useProfileSync";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
@@ -64,15 +62,10 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
   // Sempre chamar o hook, mas ele vai lidar com casos onde user não está disponível
   useSecurityMonitoring();
   
-  // Sincronizar perfil quando necessário
-  useProfileSync();
-  
   return <>{children}</>;
 }
 
 function App() {
-  console.log("🚀 App.tsx está sendo renderizado");
-  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

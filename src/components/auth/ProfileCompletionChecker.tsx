@@ -10,8 +10,6 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
   const location = useLocation();
 
   useEffect(() => {
-    console.log("🔄 PROFILE_CHECKER: Verificando perfil", { profileComplete, loading, user: !!user, path: location.pathname });
-    
     // Só verificar se não está carregando e tem usuário
     if (!loading && user && profileComplete === false) {
       const allowedPaths = [
@@ -28,7 +26,6 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Só redirecionar se não está numa rota permitida
       if (!isAllowedPath) {
-        console.log("🔄 PROFILE_CHECKER: Redirecionando para completar perfil");
         navigate('/complete-profile');
       }
     }
