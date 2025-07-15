@@ -77,6 +77,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     let mounted = true;
 
+    console.log("🔄 AUTH: Iniciando AuthProvider");
+
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -86,7 +88,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        // Só buscar perfil se tiver usuário E não estiver carregando
+        if (session?.user && mounted) {
           await fetchAndSetUserProfile(session.user);
         }
       } catch (error) {
@@ -101,28 +104,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
         
         console.log("🔄 AUTH: Auth state changed:", event);
+        
+        // Atualizar estado síncrono apenas
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Usar setTimeout para evitar deadlocks
-          setTimeout(async () => {
-            if (mounted) {
-              await fetchAndSetUserProfile(session.user);
-            }
-          }, 0);
-        } else {
+        // Resetar perfil se não houver usuário
+        if (!session?.user) {
           setUserProfile(null);
           setIsProfileComplete(null);
         }
         
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 
@@ -130,13 +127,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchAndSetUserProfile]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const result = await signUpService(email, password, fullName);
-    if (result.user) {
-      await fetchAndSetUserProfile(result.user); // Atualiza perfil após cadastro
-    }
+    // Não buscar perfil aqui - deixar o onAuthStateChange lidar com isso
     return result;
   };
   
@@ -148,10 +143,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       console.log("✅ AUTH: Login bem-sucedido, dados:", data);
       
-      // Atualizar perfil do usuário após login bem-sucedido
-      if (data.user) {
-        await fetchAndSetUserProfile(data.user);
-      }
+      // Não buscar perfil aqui - deixar o onAuthStateChange lidar com isso
       
       toast({
         title: "Login bem-sucedido!",

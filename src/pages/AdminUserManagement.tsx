@@ -334,6 +334,21 @@ const AdminUserManagement: React.FC = () => {
                 </p>
               </div>
 
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-blue-800">
+                    <strong>Como usar as contas de teste:</strong>
+                  </p>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• <strong>Email:</strong> [role]@ms.gov.br (ex: admin@ms.gov.br)</li>
+                    <li>• <strong>Senha:</strong> [Role]123! (ex: Admin123!)</li>
+                    <li>• Cada conta terá acesso diferente baseado no seu role</li>
+                    <li>• Use para testar diferentes níveis de permissão</li>
+                    <li>• Essas contas são criadas no Supabase Auth</li>
+                  </ul>
+                </div>
+              </div>
+
               <Button onClick={createTestAccounts} className="w-full">
                 Criar Todas as Contas de Teste
               </Button>

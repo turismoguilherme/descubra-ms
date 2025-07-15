@@ -10,30 +10,29 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
   const location = useLocation();
 
   useEffect(() => {
-    // Adicionar timeout para evitar loops infinitos
-    const timeoutId = setTimeout(() => {
-      if (!loading && user) {
-        const allowedPaths = [
-          '/register', 
-          '/login', 
-          '/password-reset', 
-          '/admin-seed',
-          '/admin-login',
-          '/complete-profile',
-          '/admin-user-management'
-        ];
+    console.log("🔄 PROFILE_CHECKER: Verificando perfil", { profileComplete, loading, user: !!user, path: location.pathname });
+    
+    // Só verificar se não está carregando e tem usuário
+    if (!loading && user && profileComplete === false) {
+      const allowedPaths = [
+        '/register', 
+        '/login', 
+        '/password-reset', 
+        '/admin-seed',
+        '/admin-login',
+        '/complete-profile',
+        '/admin-user-management'
+      ];
 
-        const isAllowedPath = allowedPaths.includes(location.pathname);
-        
-        // Só redirecionar se perfil incompleto E não está numa rota permitida
-        if (profileComplete === false && !isAllowedPath) {
-          navigate('/complete-profile');
-        }
+      const isAllowedPath = allowedPaths.includes(location.pathname);
+      
+      // Só redirecionar se não está numa rota permitida
+      if (!isAllowedPath) {
+        console.log("🔄 PROFILE_CHECKER: Redirecionando para completar perfil");
+        navigate('/complete-profile');
       }
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [profileComplete, loading, user, navigate, location.pathname]);
+    }
+  }, [profileComplete, loading, user, location.pathname, navigate]);
 
   // Mostrar loading enquanto verifica o perfil
   if (loading) {

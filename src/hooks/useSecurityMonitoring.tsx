@@ -12,6 +12,8 @@ export const useSecurityMonitoring = () => {
   const authContext = useContext(AuthContext);
   const user = authContext?.user || null;
 
+  console.log("🔄 SECURITY: Iniciando monitoramento de segurança", { user: !!user });
+
   // Monitorar tentativas de acesso não autorizado
   const monitorUnauthorizedAccess = useCallback(() => {
     const handleVisibilityChange = () => {
@@ -151,6 +153,14 @@ export const useSecurityMonitoring = () => {
   }, [user]);
 
   useEffect(() => {
+    // Evitar múltiplas execuções
+    let hasRun = false;
+    
+    if (hasRun) return;
+    hasRun = true;
+    
+    console.log("🔄 SECURITY: Configurando monitoramento");
+    
     const cleanupFunctions = [
       monitorUnauthorizedAccess(),
       monitorStorageManipulation(),
@@ -159,9 +169,10 @@ export const useSecurityMonitoring = () => {
     ].filter((fn): fn is () => void => typeof fn === 'function');
 
     return () => {
+      console.log("🔄 SECURITY: Limpando monitoramento");
       cleanupFunctions.forEach(cleanup => cleanup());
     };
-  }, [monitorUnauthorizedAccess, monitorStorageManipulation, monitorConsoleAccess, monitorDevTools]);
+  }, [user?.id]); // Depender apenas do ID do usuário
 
   return {
     reportViolation: securityAuditService.reportSecurityViolation.bind(securityAuditService),
