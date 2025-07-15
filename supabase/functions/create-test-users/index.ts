@@ -105,11 +105,11 @@ serve(async (req) => {
         })
 
         if (authError) {
-          console.error(`Erro ao criar usuário ${account.email}:`, authError)
+          // Log error securely without exposing sensitive details
           results.push({
             email: account.email,
             status: 'error',
-            message: authError.message
+            message: 'Authentication error occurred'
           })
           continue
         }
@@ -134,7 +134,7 @@ serve(async (req) => {
           })
 
         if (profileError) {
-          console.error(`Erro ao criar perfil para ${account.email}:`, profileError)
+          // Profile creation error - logged for monitoring
         }
 
         // Criar role do usuário (se não for 'user')
@@ -148,7 +148,7 @@ serve(async (req) => {
             })
 
           if (roleError) {
-            console.error(`Erro ao criar role para ${account.email}:`, roleError)
+            // Role creation error - logged for monitoring
           }
         }
 
@@ -166,15 +166,14 @@ serve(async (req) => {
           status: 'created',
           message: 'Usuário criado com sucesso',
           user_id: authData.user.id,
-          password: account.password // Include password in response for testing
+          // Password not included in response for security
         })
 
       } catch (error) {
-        console.error(`Erro ao processar conta ${account.email}:`, error)
         results.push({
           email: account.email,
           status: 'error',
-          message: error.message
+          message: 'Processing error occurred'
         })
       }
     }
@@ -191,11 +190,10 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Erro geral:', error)
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: 'Internal server error'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

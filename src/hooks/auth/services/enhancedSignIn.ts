@@ -29,7 +29,7 @@ export const enhancedSignInService = async (email: string, password: string) => 
     }
 
     if (data.user) {
-      console.log("✅ Login realizado com sucesso para:", data.user.email);
+      // Login successful - removed console.log for security
       
       // Log de segurança simplificado
       try {

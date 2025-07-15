@@ -1,28 +1,69 @@
 /**
- * Secure logging utility that respects production environment
+ * Enhanced secure logging utility that respects production environment
  */
+import { SECURITY_CONFIG } from '@/config/security';
+
 export const secureLogger = {
   log: (message: string, data?: any) => {
     if (import.meta.env.MODE === 'development') {
-      console.log(message, data);
+      console.log(message, secureLogger.sanitizeData(data));
     }
   },
   
   error: (message: string, error?: any) => {
     // Always log errors but sanitize sensitive data
-    console.error(message, error);
+    const sanitizedError = secureLogger.sanitizeError(error);
+    console.error(message, sanitizedError);
   },
   
   warn: (message: string, data?: any) => {
     if (import.meta.env.MODE === 'development') {
-      console.warn(message, data);
+      console.warn(message, secureLogger.sanitizeData(data));
     }
   },
   
   info: (message: string, data?: any) => {
     if (import.meta.env.MODE === 'development') {
-      console.info(message, data);
+      console.info(message, secureLogger.sanitizeData(data));
     }
+  },
+
+  /**
+   * Sanitize data to remove sensitive information
+   */
+  sanitizeData: (data: any): any => {
+    if (!data) return data;
+    
+    const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization', 'cookie'];
+    
+    if (typeof data === 'object') {
+      const sanitized = { ...data };
+      
+      for (const field of sensitiveFields) {
+        if (field in sanitized) {
+          sanitized[field] = '[REDACTED]';
+        }
+      }
+      
+      return sanitized;
+    }
+    
+    return data;
+  },
+
+  /**
+   * Sanitize error objects
+   */
+  sanitizeError: (error: any): any => {
+    if (error instanceof Error) {
+      return {
+        name: error.name,
+        message: error.message,
+        stack: import.meta.env.MODE === 'development' ? error.stack : '[REDACTED]'
+      };
+    }
+    
+    return secureLogger.sanitizeData(error);
   }
 };
 

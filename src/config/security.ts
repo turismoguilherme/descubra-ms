@@ -36,5 +36,21 @@ export const SECURITY_CONFIG = {
     SECURITY_EVENTS: true,
     PERFORMANCE_EVENTS: false,
     DEBUG_IN_PRODUCTION: false,
+    MAX_LOG_RETENTION_DAYS: 30,
+  },
+
+  // Additional security configurations
+  AUTHENTICATION: {
+    SESSION_TIMEOUT_WARNING_MINUTES: 5,
+    REQUIRE_EMAIL_VERIFICATION: true,
+    ENABLE_MFA: false, // Can be enabled in future
+    LOCKOUT_DURATION_MINUTES: 30,
+  },
+
+  // Content filtering
+  CONTENT_SECURITY: {
+    ENABLE_XSS_PROTECTION: true,
+    ENABLE_CSRF_PROTECTION: true,
+    SANITIZE_HTML_INPUT: true,
   },
 } as const;
