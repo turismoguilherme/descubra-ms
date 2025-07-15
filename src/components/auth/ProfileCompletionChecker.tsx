@@ -10,7 +10,8 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading && user) {
+    // Só verificar se não está carregando e há usuário
+    if (!loading && user && profileComplete !== null) {
       console.log("🔍 PROFILE CHECKER: Verificando perfil", {
         profileComplete,
         currentPath: location.pathname,
@@ -29,12 +30,13 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
 
       const isAllowedPath = allowedPaths.includes(location.pathname);
       
+      // Só redirecionar se perfil incompleto E não está numa rota permitida
       if (profileComplete === false && !isAllowedPath) {
         console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para /complete-profile");
         navigate('/complete-profile');
       }
     }
-  }, [profileComplete, loading, user, navigate, location.pathname]);
+  }, [profileComplete, loading, user, navigate, location.pathname]); // Removido 'user' duplicado
 
   // Mostrar loading enquanto verifica o perfil
   if (loading) {

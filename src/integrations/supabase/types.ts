@@ -1414,6 +1414,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_user_role: {
+        Args: {
+          p_user_id: string
+          p_role: string
+          p_city_id?: string
+          p_region_id?: string
+        }
+        Returns: boolean
+      }
       create_initial_admin_if_needed: {
         Args: { admin_email: string; admin_user_id: string }
         Returns: boolean
@@ -1519,6 +1528,10 @@ export type Database = {
           event_ip_address?: string
           event_user_agent?: string
         }
+        Returns: boolean
+      }
+      promote_user_to_role: {
+        Args: { p_email: string; p_role: string }
         Returns: boolean
       }
       secure_update_user_role: {

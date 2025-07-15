@@ -53,6 +53,7 @@ const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
 const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPassport"));
 const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
 const CompleteProfile = lazy(() => import("@/pages/CompleteProfileNew")); // Alterado para CompleteProfileNew
+const AdminUserManagement = lazy(() => import("@/pages/AdminUserManagement"));
 
 const queryClient = new QueryClient();
 
@@ -121,6 +122,7 @@ function App() {
                             <Route path="/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
                             <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
                             <Route path="/complete-profile" element={<Suspense fallback={<LoadingFallback />}><CompleteProfile /></Suspense>} />
+                            <Route path="/admin-users" element={<Suspense fallback={<LoadingFallback />}><AdminUserManagement /></Suspense>} />
                             <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
                           </Routes>
                         </div>

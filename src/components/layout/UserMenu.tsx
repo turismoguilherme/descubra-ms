@@ -104,12 +104,20 @@ const UserMenu = () => {
         )}
 
         {isAdmin && (
-          <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Link to="/technical-admin" className="flex items-center">
-              <Shield className="mr-2 h-4 w-4 text-red-500" />
-              <span>Admin Técnico</span>
-            </Link>
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link to="/technical-admin" className="flex items-center">
+                <Shield className="mr-2 h-4 w-4 text-red-500" />
+                <span>Admin Técnico</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link to="/admin-users" className="flex items-center">
+                <Users className="mr-2 h-4 w-4 text-blue-500" />
+                <span>Gerenciar Usuários</span>
+              </Link>
+            </DropdownMenuItem>
+          </>
         )}
 
         <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />

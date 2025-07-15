@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUserProfile(null);
       setIsProfileComplete(null);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     const getInitialSession = async () => {
@@ -134,7 +134,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       subscription.unsubscribe();
       console.log("🗑️ AUTH: onAuthStateChange subscription unsubscribed.");
     };
-  }, [fetchAndSetUserProfile, loading]);
+  }, [fetchAndSetUserProfile]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const result = await signUpService(email, password, fullName);
