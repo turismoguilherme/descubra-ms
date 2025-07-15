@@ -14,8 +14,8 @@ export const runDiagnostics = () => {
   console.log("🌐 DOM disponível:", typeof document !== "undefined");
   console.log("🔧 Window disponível:", typeof window !== "undefined");
   
-  // Verificar se React está disponível
-  console.log("⚛️ React disponível:", typeof React !== "undefined");
+// Verificar se React está disponível
+  console.log("⚛️ React disponível:", typeof window !== "undefined" && "React" in window);
   
   // Verificar se o elemento root existe
   const rootElement = document.getElementById('root');

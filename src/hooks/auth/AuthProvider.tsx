@@ -80,7 +80,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log("✅ AUTH: roleData encontrado:", roleData);
 
       const combinedProfile: UserProfile = {
-        id: user.id,
         full_name: profileData?.full_name || user.user_metadata?.full_name || user.email || 'Novo Usuário',
         role: roleData?.role || 'authenticated', // Definir um role padrão se não encontrado
         city_id: roleData?.city_id || null,
@@ -106,7 +105,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log("🔄 AUTH: getInitialSession iniciado.");
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
+      setUser(session?.user ?? null);
       console.log("✅ AUTH: Sessão inicial obtida:", session);
+      
       // CORREÇÃO OFICIAL: Evitar deadlock despachando a chamada para fora do fluxo síncrono.
       setTimeout(() => {
         fetchAndSetUserProfile(session?.user ?? null).finally(() => {
@@ -122,6 +123,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       (_event, session) => {
         console.log("🔄 AUTH: onAuthStateChange disparado. Evento:", _event, "Sessão:", session);
         setSession(session);
+        setUser(session?.user ?? null);
+        
         // CORREÇÃO OFICIAL: Evitar deadlock despachando a chamada para fora do fluxo síncrono.
         setTimeout(() => {
           fetchAndSetUserProfile(session?.user ?? null).finally(() => {
@@ -142,22 +145,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const result = await signUpService(email, password, fullName);
-    if (result.data.user) {
-      await fetchAndSetUserProfile(result.data.user); // Atualiza perfil após cadastro
+    if (result.user) {
+      await fetchAndSetUserProfile(result.user); // Atualiza perfil após cadastro
     }
     return result;
   };
   
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("🔐 AUTH: Tentando login com email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      
+      console.log("✅ AUTH: Login bem-sucedido, dados:", data);
+      
+      // Atualizar perfil do usuário após login bem-sucedido
+      if (data.user) {
+        setTimeout(() => {
+          fetchAndSetUserProfile(data.user);
+        }, 0);
+      }
+      
       toast({
         title: "Login bem-sucedido!",
         description: "Bem-vindo de volta!",
       });
       return { data, error: null };
     } catch (error: any) {
+      console.error("❌ AUTH: Erro no login:", error);
       toast({
         title: "Erro no login",
         description: error.message || "Ocorreu um erro inesperado.",
@@ -190,6 +205,52 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return result;
   };
 
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      if (error) throw error;
+      
+      toast({
+        title: "Email de confirmação enviado",
+        description: "Verifique sua caixa de entrada.",
+      });
+      return { error: null };
+    } catch (error: any) {
+      console.error("Erro ao reenviar email:", error);
+      toast({
+        title: "Erro ao reenviar email",
+        description: error.message || "Não foi possível reenviar o email.",
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/password-reset`,
+      });
+      if (error) throw error;
+      
+      toast({
+        title: "Email de recuperação enviado",
+        description: "Verifique sua caixa de entrada.",
+      });
+    } catch (error: any) {
+      console.error("Erro ao recuperar senha:", error);
+      toast({
+        title: "Erro ao recuperar senha",
+        description: error.message || "Não foi possível enviar o email.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -200,7 +261,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signIn,
     signOut,
     signInWithProvider,
-    fetchUserProfile: fetchAndSetUserProfile, // Expor a função mesclada
+    resendConfirmationEmail,
+    resetPassword,
+    fetchUserProfile: fetchAndSetUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

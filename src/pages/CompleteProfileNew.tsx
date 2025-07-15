@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { msCities } from "@/data/cities";
-import { msRegions } from "@/data/msRegions";
+import { msCities, msRegions } from "@/data/cities";
 
 const CompleteProfileNew = () => {
   const { user, userProfile, loading } = useAuth();
@@ -140,11 +139,11 @@ const CompleteProfileNew = () => {
                     <SelectValue placeholder="Selecione uma região" />
                   </SelectTrigger>
                   <SelectContent>
-                    {msRegions.map((region) => (
-                      <SelectItem key={region.id} value={region.id.toString()}>
-                        {region.name}
-                      </SelectItem>
-                    ))}
+                     {msRegions.map((region, index) => (
+                       <SelectItem key={index} value={index.toString()}>
+                         {region.name}
+                       </SelectItem>
+                     ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -159,11 +158,11 @@ const CompleteProfileNew = () => {
                     <SelectValue placeholder="Selecione uma cidade" />
                   </SelectTrigger>
                   <SelectContent>
-                    {msCities.map((city) => (
-                      <SelectItem key={city.id} value={city.id.toString()}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
+                     {msCities.map((city, index) => (
+                       <SelectItem key={index} value={index.toString()}>
+                         {city}
+                       </SelectItem>
+                     ))}
                   </SelectContent>
                 </Select>
               </div>

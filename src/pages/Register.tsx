@@ -37,7 +37,7 @@ const Register = () => {
       } else {
         console.log("👤 REGISTER: Perfil incompleto, indo para etapa 2");
         setStep(2);
-        navigate('/complete-profile-new'); // Redireciona para a página de completar perfil
+        navigate('/complete-profile'); // Redireciona para a página de completar perfil
       }
     } else if (!loading && !user) {
       console.log("👤 REGISTER: Nenhum usuário logado após carregamento.");

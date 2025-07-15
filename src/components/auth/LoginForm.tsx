@@ -75,16 +75,11 @@ const LoginForm = () => {
         return;
       }
 
-      const { error } = await signIn(sanitizedData.email, sanitizedData.password);
+      const { data: loginData, error } = await signIn(sanitizedData.email, sanitizedData.password);
       
-      if (!error) {
+      if (!error && loginData?.user) {
         console.log("✅ Login realizado com sucesso");
-        toast({
-          title: "Login realizado!",
-          description: "Bem-vindo de volta!",
-          duration: 3000,
-        });
-        navigate("/");
+        // Não precisa navegar aqui, o ProfileCompletionChecker vai gerenciar
       }
     } catch (err: any) {
       console.error("❌ Erro no formulário:", err);
