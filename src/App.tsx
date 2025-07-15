@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker
 import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
+import { useAuth } from "@/hooks/useAuth";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
@@ -59,7 +60,9 @@ const queryClient = new QueryClient();
 
 // Wrapper para monitoramento de segurança
 function SecurityWrapper({ children }: { children: React.ReactNode }) {
+  // Sempre chamar o hook, mas ele vai lidar com casos onde user não está disponível
   useSecurityMonitoring();
+  
   return <>{children}</>;
 }
 
