@@ -1,7 +1,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSessionSecurity } from "@/hooks/useSessionSecurity";
-import SessionTimeoutWarning from "./SessionTimeoutWarning";
+import { SessionTimeoutWarning } from "./SessionTimeoutWarning";
 
 interface SecurityContextType {
   isSecure: boolean;
@@ -56,7 +56,6 @@ export const SecurityProvider = ({
         <SessionTimeoutWarning
           timeoutMinutes={sessionTimeoutMinutes}
           warningTimeMinutes={sessionWarningMinutes}
-          enabled={true}
         />
       )}
     </SecurityContext.Provider>
