@@ -130,47 +130,49 @@ const AdminUserManagement: React.FC = () => {
   };
 
   const createTestAccounts = async () => {
-    const testAccounts = [
-      { email: 'admin@ms.gov.br', password: 'Admin123!', role: 'admin' },
-      { email: 'diretor@ms.gov.br', password: 'Diretor123!', role: 'diretor_estadual' },
-      { email: 'gestor-igr@ms.gov.br', password: 'Gestor123!', role: 'gestor_igr' },
-      { email: 'gestor-municipal@ms.gov.br', password: 'Municipal123!', role: 'gestor_municipal' },
-      { email: 'atendente@ms.gov.br', password: 'Atendente123!', role: 'atendente' },
-      { email: 'usuario@ms.gov.br', password: 'Usuario123!', role: 'user' }
-    ];
+    try {
+      const { data, error } = await supabase.functions.invoke('create-test-users', {
+        body: {}
+      });
 
-    for (const account of testAccounts) {
-      try {
-        // Criar usuário na autenticação
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: account.email,
-          password: account.password,
-          email_confirm: true
+      if (error) {
+        console.error('Erro ao criar contas de teste:', error);
+        toast({
+          title: "Erro ao criar contas de teste",
+          description: error.message || "Não foi possível criar as contas de teste.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data?.success) {
+        const successCount = data.results.filter((r: any) => r.status === 'created').length;
+        const existingCount = data.results.filter((r: any) => r.status === 'already_exists').length;
+        const errorCount = data.results.filter((r: any) => r.status === 'error').length;
+
+        let message = `${successCount} contas criadas com sucesso.`;
+        if (existingCount > 0) {
+          message += ` ${existingCount} já existiam.`;
+        }
+        if (errorCount > 0) {
+          message += ` ${errorCount} falharam.`;
+        }
+
+        toast({
+          title: "Processo concluído",
+          description: message
         });
 
-        if (authError) {
-          console.error(`Erro ao criar usuário ${account.email}:`, authError);
-          continue;
-        }
-
-        // Promover usuário para o role correto
-        if (authData.user) {
-          await supabase.rpc('promote_user_to_role', {
-            p_email: account.email,
-            p_role: account.role
-          });
-        }
-      } catch (error) {
-        console.error(`Erro ao criar conta ${account.email}:`, error);
+        loadUsers();
       }
+    } catch (error) {
+      console.error('Erro geral ao criar contas:', error);
+      toast({
+        title: "Erro ao criar contas de teste",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive"
+      });
     }
-
-    toast({
-      title: "Contas de teste criadas",
-      description: "Todas as contas de teste foram criadas com sucesso."
-    });
-
-    loadUsers();
   };
 
   useEffect(() => {

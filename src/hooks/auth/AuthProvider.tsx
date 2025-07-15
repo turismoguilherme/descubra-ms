@@ -20,121 +20,117 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { toast } = useToast();
 
   const fetchAndSetUserProfile = useCallback(async (user: User | null) => {
-    console.log("🔄 AUTH: fetchAndSetUserProfile chamado com user:", user?.id);
-
     if (!user) {
       setUserProfile(null);
       setIsProfileComplete(null);
-      console.log("🔄 AUTH: Usuário nulo, perfil resetado.");
       return;
     }
 
     try {
-      // 1. Garantir que um perfil básico exista para o usuário autenticado.
-      // Isso lida com casos onde usuários se cadastram via provedores sociais e um perfil ainda não foi criado.
-      const initialProfileData = {
-        user_id: user.id,
-        full_name: user.user_metadata?.full_name || user.email || 'Novo Usuário', // Usar nome da meta ou email como fallback
-      };
-
-      console.log("🔄 AUTH: Tentando upsert básico do perfil...", initialProfileData);
-      const { data: upsertedProfile, error: upsertError } = await supabase
-        .from('user_profiles')
-        .upsert(initialProfileData, { onConflict: 'user_id' })
-        .select('full_name, id, created_at, updated_at') // Selecionar campos necessários para o retorno
-        .single();
-
-      if (upsertError) {
-        console.error("❌ AUTH: Erro no upsert inicial do perfil:", upsertError);
-        throw upsertError;
-      }
-
-      console.log("✅ AUTH: Perfil básico upserted/existente:", upsertedProfile);
-
-      // 2. Buscar o perfil completo do usuário (incluindo o ID do perfil da tabela user_profiles)
+      console.log("🔄 AUTH: Buscando perfil para usuário:", user.id);
+      
+      // Buscar perfil do usuário
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('full_name, id') // Selecione apenas o que está em user_profiles
-        .eq('user_id', user.id) // Correção: Usar user_id para vincular ao auth.users.id
+        .select('full_name, user_type, created_at, updated_at')
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (profileError && profileError.code !== 'PGRST116') {
-        console.error("❌ AUTH: Erro ao buscar profileData:", profileError);
+        console.error("❌ AUTH: Erro ao buscar perfil:", profileError);
         throw profileError;
       }
 
-      // ... restante do código para buscar roleData e combinar ...
-
-      // 3. Buscar o papel (role) do usuário
+      // Buscar role do usuário
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role, city_id, region_id')
-        .eq('user_id', user.id) // Usar user_id para vincular ao auth.users.id
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (roleError && roleError.code !== 'PGRST116') {
-        console.error("❌ AUTH: Erro ao buscar roleData:", roleError);
+        console.error("❌ AUTH: Erro ao buscar role:", roleError);
         throw roleError;
       }
 
-      console.log("✅ AUTH: roleData encontrado:", roleData);
-
       const combinedProfile: UserProfile = {
-        full_name: profileData?.full_name || user.user_metadata?.full_name || user.email || 'Novo Usuário',
-        role: roleData?.role || 'authenticated', // Definir um role padrão se não encontrado
+        full_name: profileData?.full_name || user.user_metadata?.full_name || user.email || 'Usuário',
+        role: roleData?.role || 'user',
         city_id: roleData?.city_id || null,
         region_id: roleData?.region_id || null,
         email: user.email || '',
-        created_at: upsertedProfile?.created_at || new Date().toISOString(),
-        updated_at: upsertedProfile?.updated_at || new Date().toISOString(),
+        created_at: profileData?.created_at || new Date().toISOString(),
+        updated_at: profileData?.updated_at || new Date().toISOString(),
       };
 
       setUserProfile(combinedProfile);
-      setIsProfileComplete(!!profileData && !!roleData); // Perfil completo se ambos existirem
-      console.log("✅ AUTH: Perfil combinado e estado completo:", combinedProfile, "isProfileComplete:", !!profileData && !!roleData);
+      setIsProfileComplete(!!profileData);
+      console.log("✅ AUTH: Perfil carregado:", combinedProfile);
 
     } catch (error) {
-      console.error("❌ AUTH: Erro geral no fetchAndSetUserProfile:", error);
+      console.error("❌ AUTH: Erro ao carregar perfil:", error);
       setUserProfile(null);
-      setIsProfileComplete(null);
+      setIsProfileComplete(false);
     }
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
     const getInitialSession = async () => {
-      console.log("🔄 AUTH: getInitialSession iniciado.");
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      console.log("✅ AUTH: Sessão inicial obtida:", session);
-      
-      // Buscar perfil do usuário
-      await fetchAndSetUserProfile(session?.user ?? null);
-      setLoading(false);
-      console.log("✅ AUTH: getInitialSession concluído, loading = false.");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchAndSetUserProfile(session.user);
+        }
+      } catch (error) {
+        console.error("❌ AUTH: Erro ao obter sessão inicial:", error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
     };
 
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        console.log("🔄 AUTH: onAuthStateChange disparado. Evento:", _event, "Sessão:", session);
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log("🔄 AUTH: Auth state changed:", event);
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Buscar perfil do usuário quando login ocorre
-        fetchAndSetUserProfile(session?.user ?? null).finally(() => {
+        if (session?.user) {
+          // Usar setTimeout para evitar deadlocks
+          setTimeout(async () => {
+            if (mounted) {
+              await fetchAndSetUserProfile(session.user);
+            }
+          }, 0);
+        } else {
+          setUserProfile(null);
+          setIsProfileComplete(null);
+        }
+        
+        if (mounted) {
           setLoading(false);
-          console.log("✅ AUTH: onAuthStateChange concluído.");
-        });
+        }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
-      console.log("🗑️ AUTH: onAuthStateChange subscription unsubscribed.");
     };
-  }, [fetchAndSetUserProfile]);
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const result = await signUpService(email, password, fullName);

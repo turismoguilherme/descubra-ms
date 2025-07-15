@@ -10,33 +10,30 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
   const location = useLocation();
 
   useEffect(() => {
-    // Só verificar se não está carregando e há usuário
-    if (!loading && user && profileComplete !== null) {
-      console.log("🔍 PROFILE CHECKER: Verificando perfil", {
-        profileComplete,
-        currentPath: location.pathname,
-        userEmail: user.email
-      });
+    // Adicionar timeout para evitar loops infinitos
+    const timeoutId = setTimeout(() => {
+      if (!loading && user) {
+        const allowedPaths = [
+          '/register', 
+          '/login', 
+          '/password-reset', 
+          '/admin-seed',
+          '/admin-login',
+          '/complete-profile',
+          '/admin-user-management'
+        ];
 
-      // Rotas que não precisam de perfil completo
-      const allowedPaths = [
-        '/register', 
-        '/login', 
-        '/password-reset', 
-        '/admin-seed',
-        '/admin-login',
-        '/complete-profile' // Adiciona a nova página à lista de permissões
-      ];
-
-      const isAllowedPath = allowedPaths.includes(location.pathname);
-      
-      // Só redirecionar se perfil incompleto E não está numa rota permitida
-      if (profileComplete === false && !isAllowedPath) {
-        console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para /complete-profile");
-        navigate('/complete-profile');
+        const isAllowedPath = allowedPaths.includes(location.pathname);
+        
+        // Só redirecionar se perfil incompleto E não está numa rota permitida
+        if (profileComplete === false && !isAllowedPath) {
+          navigate('/complete-profile');
+        }
       }
-    }
-  }, [profileComplete, loading, user, navigate, location.pathname]); // Removido 'user' duplicado
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [profileComplete, loading, user, navigate, location.pathname]);
 
   // Mostrar loading enquanto verifica o perfil
   if (loading) {
