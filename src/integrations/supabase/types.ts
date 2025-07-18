@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_master_insights: {
+        Row: {
+          actions: Json | null
+          confidence_score: number | null
+          created_at: string | null
+          data_sources: string[] | null
+          description: string
+          generated_by: string | null
+          id: string
+          insight_type: string
+          priority: string | null
+          recommendations: Json | null
+          region: string | null
+          state_code: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          actions?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          data_sources?: string[] | null
+          description: string
+          generated_by?: string | null
+          id?: string
+          insight_type: string
+          priority?: string | null
+          recommendations?: Json | null
+          region?: string | null
+          state_code?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          actions?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          data_sources?: string[] | null
+          description?: string
+          generated_by?: string | null
+          id?: string
+          insight_type?: string
+          priority?: string | null
+          recommendations?: Json | null
+          region?: string | null
+          state_code?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       attendant_timesheet: {
         Row: {
           cat_location: string
@@ -1405,6 +1459,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_description: string | null
+          achievement_name: string
+          achievement_type: string
+          created_at: string | null
+          icon_url: string | null
+          id: string
+          points_awarded: number | null
+          state_id: string | null
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_description?: string | null
+          achievement_name: string
+          achievement_type: string
+          created_at?: string | null
+          icon_url?: string | null
+          id?: string
+          points_awarded?: number | null
+          state_id?: string | null
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_description?: string | null
+          achievement_name?: string
+          achievement_type?: string
+          created_at?: string | null
+          icon_url?: string | null
+          id?: string
+          points_awarded?: number | null
+          state_id?: string | null
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_interactions: {
         Row: {

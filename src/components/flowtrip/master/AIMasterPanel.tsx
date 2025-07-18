@@ -23,41 +23,45 @@ export const AIMasterPanel: React.FC = () => {
       const mockInsights: AIMasterInsight[] = [
         {
           id: '1',
-          type: 'performance',
+          insight_type: 'performance',
           priority: 'high',
           title: 'Performance do Estado MS',
           description: 'Engagement dos usuários cresceu 35% este mês. Recomendar aumentar eventos.',
           state_code: 'ms',
           actions: ['Criar mais eventos', 'Expandir gamificação'],
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         },
         {
           id: '2',
-          type: 'billing',
+          insight_type: 'billing',
           priority: 'medium',
           title: 'Faturamento Otimizado',
           description: 'Oportunidade de upgrade para plano Enterprise detectada.',
           actions: ['Contatar cliente', 'Preparar proposta'],
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         },
         {
           id: '3',
-          type: 'support',
+          insight_type: 'support',
           priority: 'critical',
           title: 'Suporte Pendente',
           description: '12 tickets de suporte aguardando resposta há mais de 24h.',
           actions: ['Priorizar atendimento', 'Automatizar respostas comuns'],
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         },
         {
           id: '4',
-          type: 'analytics',
+          insight_type: 'analytics',
           priority: 'low',
           title: 'Nova Tendência Identificada',
           description: 'Turismo de aventura crescendo 40%. Sugerir novos destinos.',
           state_code: 'ms',
           actions: ['Analisar destinos', 'Criar categoria'],
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       ];
 

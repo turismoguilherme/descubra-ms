@@ -146,13 +146,67 @@ export interface FlowTripUserProfile {
 
 export interface AIMasterInsight {
   id: string;
-  type: 'performance' | 'billing' | 'support' | 'analytics';
+  insight_type: 'performance' | 'billing' | 'support' | 'analytics' | 'user_behavior' | 'content_optimization';
   priority: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   description: string;
   state_code?: string;
   actions: string[];
+  confidence_score?: number;
+  region?: string;
+  data_sources?: string[];
+  recommendations?: Record<string, any>;
+  generated_by?: string;
+  status?: 'active' | 'resolved' | 'dismissed';
   created_at: string;
+  updated_at: string;
+}
+
+export interface UserAchievement {
+  id: string;
+  user_id: string;
+  state_id: string;
+  achievement_type: string;
+  achievement_name: string;
+  achievement_description?: string;
+  points_awarded: number;
+  icon_url?: string;
+  unlocked_at: string;
+  created_at: string;
+}
+
+export interface UserInteraction {
+  id: string;
+  user_id?: string;
+  state_id?: string;
+  interaction_type: string;
+  page_url?: string;
+  destination_id?: string;
+  event_id?: string;
+  session_id?: string;
+  duration_seconds?: number;
+  metadata?: Record<string, any>;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+}
+
+export interface FlowTripStateFeature {
+  id: string;
+  state_id: string;
+  feature_name: string;
+  is_enabled: boolean;
+  config: Record<string, any>;
+  created_at: string;
+}
+
+export interface FlowTripMasterConfig {
+  id: string;
+  config_key: string;
+  config_value: any;
+  description?: string;
+  updated_by?: string;
+  updated_at: string;
 }
 
 export interface StateAnalytics {
