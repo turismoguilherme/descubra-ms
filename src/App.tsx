@@ -57,6 +57,9 @@ const CompleteProfile = lazy(() => import("@/pages/CompleteProfileNew"));
 const AdminUserManagement = lazy(() => import("@/pages/AdminUserManagement"));
 const FlowTrip = lazy(() => import("@/pages/FlowTrip"));
 const FlowTripDashboard = lazy(() => import("@/pages/FlowTripDashboard"));
+const MasterRoutes = lazy(() => import("@/components/MasterRoutes"));
+const StateAdminRoutes = lazy(() => import("@/components/StateAdminRoutes"));
+const AttendantRoutes = lazy(() => import("@/components/AttendantRoutes"));
 
 const queryClient = new QueryClient();
 
@@ -127,6 +130,9 @@ function App() {
                               <Route path="/admin-users" element={<Suspense fallback={<LoadingFallback />}><AdminUserManagement /></Suspense>} />
                               <Route path="/flowtrip" element={<Suspense fallback={<LoadingFallback />}><FlowTrip /></Suspense>} />
                               <Route path="/flowtrip/dashboard" element={<Suspense fallback={<LoadingFallback />}><FlowTripDashboard /></Suspense>} />
+                              <Route path="/master/*" element={<Suspense fallback={<LoadingFallback />}><MasterRoutes /></Suspense>} />
+                              <Route path="/:stateCode/admin/*" element={<Suspense fallback={<LoadingFallback />}><StateAdminRoutes /></Suspense>} />
+                              <Route path="/:stateCode/attendant/*" element={<Suspense fallback={<LoadingFallback />}><AttendantRoutes /></Suspense>} />
                               <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
                             </Routes>
                           </div>
