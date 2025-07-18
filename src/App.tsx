@@ -3,10 +3,11 @@ import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { CSRFProvider } from "@/components/security/CSRFProtection";
 import { TourismDataProvider } from "@/context/TourismDataContext";
+import { BrandProvider } from "@/context/BrandContext";
 import ProfileCompletionChecker from "@/components/auth/ProfileCompletionChecker";
 import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
@@ -14,7 +15,9 @@ import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
 import SecurityProvider from "@/components/security/SecurityProvider";
 
 // Critical components (no lazy loading)
-import Index from "@/pages/Index";
+import FlowTripSaaS from "@/pages/FlowTripSaaS";
+import MSIndex from "@/pages/MSIndex";
+import ContatoFlowTrip from "@/pages/ContatoFlowTrip";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
@@ -76,49 +79,75 @@ function App() {
               <TooltipProvider>
               <Toaster />
               <BrowserRouter>
-                <ProfileCompletionChecker>
-                  <div className="min-h-screen bg-background font-sans antialiased">
-                  <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/welcome" element={<Welcome />} />
-                  <Route path="/register" element={<Register />} />
-                   <Route path="/login" element={<Login />} />
-                   <Route path="/auth" element={<AuthPage />} />
-                   <Route path="/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
-                   <Route path="/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
-                  <Route path="/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
-                  <Route path="/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
-                  <Route path="/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
-                    <Route path="/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                     <Route path="/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                  <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
-                  <Route path="/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
-                  <Route path="/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
-                  <Route path="/destinos" element={<Suspense fallback={<LoadingFallback />}><Destinos /></Suspense>} />
-                  <Route path="/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
-                  <Route path="/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
-                  <Route path="/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
-                  <Route path="/roteiros" element={<Suspense fallback={<LoadingFallback />}><Roteiros /></Suspense>} />
-                  <Route path="/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
-                  <Route path="/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
-                  <Route path="/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
-                  <Route path="/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
-                  <Route path="/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><BecomePartner /></Suspense>} />
-                  <Route path="/contribuir" element={<Suspense fallback={<LoadingFallback />}><Contribute /></Suspense>} />
-                  <Route path="/colaborador" element={<Suspense fallback={<LoadingFallback />}><Colaborador /></Suspense>} />
-                  <Route path="/role-dashboard" element={<Suspense fallback={<LoadingFallback />}><RoleDashboard /></Suspense>} />
-                  <Route path="/destination-editor" element={<Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>} />
-                  <Route path="/event-editor" element={<Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>} />
-                  <Route path="/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
-                    <Route path="/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
-                     <Route path="/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
-                  <Route path="/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
-                  <Route path="/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
-                  <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
-                  <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
-                  </Routes>
-                  </div>
-                </ProfileCompletionChecker>
+                <BrandProvider>
+                  <ProfileCompletionChecker>
+                    <div className="min-h-screen bg-background font-sans antialiased">
+                    <Routes>
+                      {/* FlowTrip SaaS Routes */}
+                      <Route path="/" element={<FlowTripSaaS />} />
+                      <Route path="/flowtrip" element={<FlowTripSaaS />} />
+                      <Route path="/contato" element={<ContatoFlowTrip />} />
+                      
+                      {/* MS Routes */}
+                      <Route path="/ms" element={<MSIndex />} />
+                      <Route path="/ms/welcome" element={<Welcome />} />
+                      <Route path="/ms/register" element={<Register />} />
+                      <Route path="/ms/login" element={<Login />} />
+                      <Route path="/ms/auth" element={<AuthPage />} />
+                      <Route path="/ms/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
+                      <Route path="/ms/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
+                      <Route path="/ms/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
+                      <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
+                      <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
+                      <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                      <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                      <Route path="/ms/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
+                      <Route path="/ms/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
+                      <Route path="/ms/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
+                      <Route path="/ms/destinos" element={<Suspense fallback={<LoadingFallback />}><Destinos /></Suspense>} />
+                      <Route path="/ms/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
+                      <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
+                      <Route path="/ms/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
+                      <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><Roteiros /></Suspense>} />
+                      <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
+                      <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
+                      <Route path="/ms/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
+                      <Route path="/ms/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
+                      <Route path="/ms/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><BecomePartner /></Suspense>} />
+                      <Route path="/ms/contribuir" element={<Suspense fallback={<LoadingFallback />}><Contribute /></Suspense>} />
+                      <Route path="/ms/colaborador" element={<Suspense fallback={<LoadingFallback />}><Colaborador /></Suspense>} />
+                      <Route path="/ms/role-dashboard" element={<Suspense fallback={<LoadingFallback />}><RoleDashboard /></Suspense>} />
+                      <Route path="/ms/destination-editor" element={<Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>} />
+                      <Route path="/ms/event-editor" element={<Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>} />
+                      <Route path="/ms/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
+                      <Route path="/ms/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
+                      <Route path="/ms/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
+                      <Route path="/ms/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
+                      <Route path="/ms/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
+                      <Route path="/ms/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
+                      
+                      {/* Legacy redirects - manter compatibilidade */}
+                      <Route path="/welcome" element={<Navigate to="/ms/welcome" replace />} />
+                      <Route path="/register" element={<Navigate to="/ms/register" replace />} />
+                      <Route path="/login" element={<Navigate to="/ms/login" replace />} />
+                      <Route path="/auth" element={<Navigate to="/ms/auth" replace />} />
+                      <Route path="/passaporte" element={<Navigate to="/ms/passaporte" replace />} />
+                      <Route path="/guata" element={<Navigate to="/ms/guata" replace />} />
+                      <Route path="/delinha" element={<Navigate to="/ms/delinha" replace />} />
+                      <Route path="/destinos" element={<Navigate to="/ms/destinos" replace />} />
+                      <Route path="/destinos/:id" element={<Navigate to="/ms/destinos/:id" replace />} />
+                      <Route path="/eventos" element={<Navigate to="/ms/eventos" replace />} />
+                      <Route path="/eventos/:id" element={<Navigate to="/ms/eventos/:id" replace />} />
+                      <Route path="/roteiros" element={<Navigate to="/ms/roteiros" replace />} />
+                      <Route path="/parceiros" element={<Navigate to="/ms/parceiros" replace />} />
+                      <Route path="/sobre" element={<Navigate to="/ms/sobre" replace />} />
+                      <Route path="/mapa" element={<Navigate to="/ms/mapa" replace />} />
+                      
+                      <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
+                    </Routes>
+                    </div>
+                  </ProfileCompletionChecker>
+                </BrandProvider>
               </BrowserRouter>
               </TooltipProvider>
             </SecurityWrapper>
