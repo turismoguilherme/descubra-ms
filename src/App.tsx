@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -60,6 +59,8 @@ const FlowTripDashboard = lazy(() => import("@/pages/FlowTripDashboard"));
 const MasterRoutes = lazy(() => import("@/components/MasterRoutes"));
 const StateAdminRoutes = lazy(() => import("@/components/StateAdminRoutes"));
 const AttendantRoutes = lazy(() => import("@/components/AttendantRoutes"));
+const FlowTripSaaS = lazy(() => import("@/pages/FlowTripSaaS"));
+const FlowTripPortal = lazy(() => import("@/pages/FlowTripPortal"));
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,9 @@ function App() {
                               <Route path="/admin-users" element={<Suspense fallback={<LoadingFallback />}><AdminUserManagement /></Suspense>} />
                               <Route path="/flowtrip" element={<Suspense fallback={<LoadingFallback />}><FlowTrip /></Suspense>} />
                               <Route path="/flowtrip/dashboard" element={<Suspense fallback={<LoadingFallback />}><FlowTripDashboard /></Suspense>} />
+                              <Route path="/flowtrip-saas" element={<Suspense fallback={<LoadingFallback />}><FlowTripSaaS /></Suspense>} />
+                              <Route path="/portal" element={<Suspense fallback={<LoadingFallback />}><FlowTripPortal /></Suspense>} />
+                              <Route path="/ms" element={<Index />} />
                               <Route path="/master/*" element={<Suspense fallback={<LoadingFallback />}><MasterRoutes /></Suspense>} />
                               <Route path="/:stateCode/admin/*" element={<Suspense fallback={<LoadingFallback />}><StateAdminRoutes /></Suspense>} />
                               <Route path="/:stateCode/attendant/*" element={<Suspense fallback={<LoadingFallback />}><AttendantRoutes /></Suspense>} />
