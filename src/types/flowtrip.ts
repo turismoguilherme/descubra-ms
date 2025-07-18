@@ -80,3 +80,89 @@ export const ACTIVITY_POINTS = {
   SOCIAL_SHARE: 3,
   ACHIEVEMENT_UNLOCK: 50
 } as const;
+
+// ============= MULTI-TENANT TYPES =============
+
+export interface FlowTripState {
+  id: string;
+  code: string;
+  name: string;
+  logo_url?: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  has_alumia: boolean;
+  plan_type: 'basic' | 'premium' | 'enterprise';
+  is_active: boolean;
+  billing_email?: string;
+  contract_start_date?: string;
+  contract_end_date?: string;
+  monthly_fee: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StateFeature {
+  id: string;
+  state_id: string;
+  feature_name: string;
+  is_enabled: boolean;
+  config: Record<string, any>;
+  created_at: string;
+}
+
+export interface MasterConfig {
+  id: string;
+  config_key: string;
+  config_value: any;
+  description?: string;
+  updated_by?: string;
+  updated_at: string;
+}
+
+export interface UserState {
+  state_id: string;
+  state_code: string;
+  state_name: string;
+  user_role: string;
+}
+
+export type FlowTripRole = 
+  | 'admin'           // Master FlowTrip
+  | 'tech'            // Técnico FlowTrip
+  | 'diretor_estadual'// Diretor Estadual
+  | 'gestor_igr'      // Gestor IGR
+  | 'gestor_municipal'// Gestor Municipal
+  | 'municipal_manager'// Manager Municipal
+  | 'atendente'       // Atendente CAT
+  | 'user';           // Turista
+
+export interface FlowTripUserProfile {
+  id: string;
+  role: FlowTripRole;
+  states: UserState[];
+  currentState?: FlowTripState;
+}
+
+export interface AIMasterInsight {
+  id: string;
+  type: 'performance' | 'billing' | 'support' | 'analytics';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  state_code?: string;
+  actions: string[];
+  created_at: string;
+}
+
+export interface StateAnalytics {
+  state_code: string;
+  total_users: number;
+  active_users: number;
+  points_distributed: number;
+  stamps_collected: number;
+  events_created: number;
+  destinations_visited: number;
+  monthly_growth: number;
+  engagement_score: number;
+}

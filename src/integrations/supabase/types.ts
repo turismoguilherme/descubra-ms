@@ -569,6 +569,125 @@ export type Database = {
           },
         ]
       }
+      flowtrip_master_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          description: string | null
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      flowtrip_state_features: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          feature_name: string
+          id: string
+          is_enabled: boolean | null
+          state_id: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          feature_name: string
+          id?: string
+          is_enabled?: boolean | null
+          state_id?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          feature_name?: string
+          id?: string
+          is_enabled?: boolean | null
+          state_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_state_features_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_states: {
+        Row: {
+          accent_color: string | null
+          billing_email: string | null
+          code: string
+          contract_end_date: string | null
+          contract_start_date: string | null
+          created_at: string | null
+          has_alumia: boolean | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          monthly_fee: number | null
+          name: string
+          plan_type: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          billing_email?: string | null
+          code: string
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          has_alumia?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          name: string
+          plan_type?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          billing_email?: string | null
+          code?: string
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          has_alumia?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          name?: string
+          plan_type?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       institutional_content: {
         Row: {
           content_key: string
@@ -1493,6 +1612,7 @@ export type Database = {
           region: string | null
           region_id: string | null
           role: string
+          state_id: string | null
           user_id: string
         }
         Insert: {
@@ -1503,6 +1623,7 @@ export type Database = {
           region?: string | null
           region_id?: string | null
           role: string
+          state_id?: string | null
           user_id: string
         }
         Update: {
@@ -1513,6 +1634,7 @@ export type Database = {
           region?: string | null
           region_id?: string | null
           role?: string
+          state_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1528,6 +1650,13 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
             referencedColumns: ["id"]
           },
         ]
@@ -1594,6 +1723,15 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: string
       }
+      get_user_states: {
+        Args: { check_user_id: string }
+        Returns: {
+          state_id: string
+          state_code: string
+          state_name: string
+          user_role: string
+        }[]
+      }
       get_user_statistics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1627,6 +1765,14 @@ export type Database = {
           phone: string
           city: string
         }[]
+      }
+      has_state_role: {
+        Args: {
+          check_user_id: string
+          required_role: string
+          check_state_id: string
+        }
+        Returns: boolean
       }
       is_admin_user: {
         Args: { check_user_id: string }
