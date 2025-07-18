@@ -380,6 +380,7 @@ export type Database = {
           location: string | null
           name: string
           region: string | null
+          state_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -392,6 +393,7 @@ export type Database = {
           location?: string | null
           name: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -404,6 +406,7 @@ export type Database = {
           location?: string | null
           name?: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -412,6 +415,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "destinations_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -504,6 +514,7 @@ export type Database = {
           location: string | null
           name: string
           start_date: string
+          state_id: string | null
           updated_at: string | null
           visibility_end_date: string | null
         }
@@ -520,6 +531,7 @@ export type Database = {
           location?: string | null
           name: string
           start_date: string
+          state_id?: string | null
           updated_at?: string | null
           visibility_end_date?: string | null
         }
@@ -536,6 +548,7 @@ export type Database = {
           location?: string | null
           name?: string
           start_date?: string
+          state_id?: string | null
           updated_at?: string | null
           visibility_end_date?: string | null
         }
@@ -545,6 +558,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -788,36 +808,45 @@ export type Database = {
       }
       passport_stamps: {
         Row: {
+          activity_type: string | null
           checkpoint_id: string | null
           destination_id: string | null
           id: string
           latitude: number | null
           longitude: number | null
+          points_earned: number | null
           route_id: string | null
           stamp_type: string | null
           stamped_at: string | null
+          state_id: string | null
           user_id: string
         }
         Insert: {
+          activity_type?: string | null
           checkpoint_id?: string | null
           destination_id?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          points_earned?: number | null
           route_id?: string | null
           stamp_type?: string | null
           stamped_at?: string | null
+          state_id?: string | null
           user_id: string
         }
         Update: {
+          activity_type?: string | null
           checkpoint_id?: string | null
           destination_id?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          points_earned?: number | null
           route_id?: string | null
           stamp_type?: string | null
           stamped_at?: string | null
+          state_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -840,6 +869,13 @@ export type Database = {
             columns: ["route_id"]
             isOneToOne: false
             referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_stamps_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -960,6 +996,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           region: string | null
+          state_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -975,6 +1012,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -990,6 +1028,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -998,6 +1037,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routes_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -1077,6 +1123,42 @@ export type Database = {
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      states: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1261,6 +1343,47 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_levels: {
+        Row: {
+          created_at: string | null
+          current_level: string | null
+          id: string
+          level_number: number | null
+          state_id: string | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_level?: string | null
+          id?: string
+          level_number?: number | null
+          state_id?: string | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_level?: string | null
+          id?: string
+          level_number?: number | null
+          state_id?: string | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_levels_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -1545,6 +1668,10 @@ export type Database = {
           requesting_user_id?: string
         }
         Returns: boolean
+      }
+      update_user_points: {
+        Args: { p_user_id: string; p_state_id: string; p_points: number }
+        Returns: undefined
       }
       validate_password_reset_token: {
         Args: { token_hash: string; user_email: string }

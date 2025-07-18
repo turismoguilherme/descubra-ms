@@ -54,6 +54,8 @@ const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPasspo
 const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
 const CompleteProfile = lazy(() => import("@/pages/CompleteProfileNew")); // Alterado para CompleteProfileNew
 const AdminUserManagement = lazy(() => import("@/pages/AdminUserManagement"));
+const FlowTrip = lazy(() => import("@/pages/FlowTrip"));
+const FlowTripDashboard = lazy(() => import("@/pages/FlowTripDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -123,6 +125,8 @@ function App() {
                             <Route path="/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
                             <Route path="/complete-profile" element={<Suspense fallback={<LoadingFallback />}><CompleteProfile /></Suspense>} />
                             <Route path="/admin-users" element={<Suspense fallback={<LoadingFallback />}><AdminUserManagement /></Suspense>} />
+                            <Route path="/flowtrip" element={<Suspense fallback={<LoadingFallback />}><FlowTrip /></Suspense>} />
+                            <Route path="/flowtrip/dashboard" element={<Suspense fallback={<LoadingFallback />}><FlowTripDashboard /></Suspense>} />
                             <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
                           </Routes>
                         </div>

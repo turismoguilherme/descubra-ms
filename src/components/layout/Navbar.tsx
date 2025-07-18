@@ -35,6 +35,9 @@ const Navbar = () => {
     path: "/sobre"
   }];
   const authenticatedNavItems = [{
+    name: "FlowTrip",
+    path: "/flowtrip"
+  }, {
     name: "Guatá IA",
     path: "/guata"
   }, {
