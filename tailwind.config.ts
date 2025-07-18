@@ -63,37 +63,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Nova identidade visual "Descubra MS" baseada na logo
-				ms: {
-					'primary-blue': 'hsl(var(--ms-primary-blue))',          // Azul rio principal
-					'secondary-yellow': 'hsl(var(--ms-secondary-yellow))',   // Amarelo dourado
-					'pantanal-green': 'hsl(var(--ms-pantanal-green))',      // Verde floresta
-					'cerrado-orange': 'hsl(var(--ms-cerrado-orange))',      // Laranja cerrado
-					'discovery-teal': 'hsl(var(--ms-discovery-teal))',      // Azul-verde descoberta
-					'earth-brown': 'hsl(var(--ms-earth-brown))',            // Tons terrosos
-					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
-					'nature-green-light': 'hsl(var(--ms-nature-green-light))' // Verde claro
-				},
-				// FlowTrip Corporate Design System - Elegante e Profissional
+				// FlowTrip Professional Government Colors
 				flowtrip: {
-					'navy-primary': 'hsl(var(--flowtrip-navy-primary))',        // Navy profundo
-					'navy-light': 'hsl(var(--flowtrip-navy-light))',            // Navy médio
-					'orange-vibrant': 'hsl(var(--flowtrip-orange-vibrant))',    // Laranja vibrante
-					'orange-light': 'hsl(var(--flowtrip-orange-light))',        // Laranja claro
-					'teal-elegant': 'hsl(var(--flowtrip-teal-elegant))',        // Teal elegante
-					'teal-light': 'hsl(var(--flowtrip-teal-light))',            // Teal claro
-					'gray-100': 'hsl(var(--flowtrip-gray-100))',
-					'gray-200': 'hsl(var(--flowtrip-gray-200))',
-					'gray-300': 'hsl(var(--flowtrip-gray-300))',
-					'gray-500': 'hsl(var(--flowtrip-gray-500))',
-					'gray-700': 'hsl(var(--flowtrip-gray-700))',
-					'gray-900': 'hsl(var(--flowtrip-gray-900))',
-					'white': 'hsl(var(--flowtrip-white))',
-					'bg-primary': 'hsl(var(--flowtrip-bg-primary))',
-					'bg-secondary': 'hsl(var(--flowtrip-bg-secondary))',
-					'text-primary': 'hsl(var(--flowtrip-text-primary))',
-					'text-secondary': 'hsl(var(--flowtrip-text-secondary))',
-					'text-tertiary': 'hsl(var(--flowtrip-text-tertiary))'
+					'navy-primary': 'hsl(var(--flowtrip-navy-primary))',      // #1a365d
+					'gray-primary': 'hsl(var(--flowtrip-gray-primary))',      // #2d3748
+					'blue-accent': 'hsl(var(--flowtrip-blue-accent))',        // #3182ce
+					'white': 'hsl(var(--flowtrip-white))',                    // #ffffff
+					'gray-light': 'hsl(var(--flowtrip-gray-light))',          // #f7fafc
+					'text-primary': 'hsl(var(--flowtrip-text-primary))',      // #2d3748
+					'text-secondary': 'hsl(var(--flowtrip-text-secondary))',  // #4a5568
+					'border': 'hsl(var(--flowtrip-border))'                   // #e2e8f0
 				}
 			},
 			borderRadius: {
@@ -102,7 +81,18 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ['Poppins', 'sans-serif'],
+				sans: ['Roboto', 'sans-serif'],
+			},
+			fontSize: {
+				'xs': 'var(--flowtrip-text-xs)',
+				'sm': 'var(--flowtrip-text-sm)',
+				'base': 'var(--flowtrip-text-base)',
+				'lg': 'var(--flowtrip-text-lg)',
+				'xl': 'var(--flowtrip-text-xl)',
+				'2xl': 'var(--flowtrip-text-2xl)',
+				'3xl': 'var(--flowtrip-text-3xl)',
+				'4xl': 'var(--flowtrip-text-4xl)',
+				'5xl': 'var(--flowtrip-text-5xl)',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -120,19 +110,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				'pulse-slow': {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.7' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 3s ease-in-out infinite'
-			},
-			backgroundImage: {
-				'gradient-ms': 'linear-gradient(to right, #003087, #2E7D32)',
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},
