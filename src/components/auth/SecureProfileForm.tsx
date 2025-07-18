@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React from 'react';
 import ProfileCommonFields from "./ProfileCommonFields";
-import CollaborationQuestion from "./CollaborationQuestion";
 
 const SecureProfileForm = () => {
   const {
@@ -33,7 +32,6 @@ const SecureProfileForm = () => {
     customNeighborhood, setCustomNeighborhood,
     timeInCity, setTimeInCity,
     isSubmitting,
-    wantsToCollaborate, setWantsToCollaborate,
     fieldErrors,
     handleSubmit
   } = useSecureProfileForm();
@@ -43,7 +41,7 @@ const SecureProfileForm = () => {
       <div className="flex justify-center py-6 bg-white">
         <img 
           src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
-          alt="Descubra Mato Grosso do Sul" 
+          alt="FlowTrip Platform" 
           className="h-[60px] w-auto" 
         />
       </div>
@@ -169,15 +167,6 @@ const SecureProfileForm = () => {
                   {fieldErrors.neighborhood && <span className="text-red-600 text-xs">{fieldErrors.neighborhood}</span>}
                   {fieldErrors.timeInCity && <span className="text-red-600 text-xs">{fieldErrors.timeInCity}</span>}
                 </div>
-                <CollaborationQuestion
-                  wantsToCollaborate={wantsToCollaborate}
-                  setWantsToCollaborate={setWantsToCollaborate}
-                  error={!!fieldErrors.wantsToCollaborate}
-                  disabled={isSubmitting}
-                />
-                {fieldErrors.wantsToCollaborate && (
-                  <span className="text-red-600 text-xs">{fieldErrors.wantsToCollaborate}</span>
-                )}
               </div>
             )}
             

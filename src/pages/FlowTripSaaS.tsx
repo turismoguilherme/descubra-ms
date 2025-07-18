@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Gamepad2,
   Users,
   BarChart3,
   Globe,
@@ -19,7 +18,10 @@ import {
   CheckCircle,
   Star,
   Building2,
-  Smartphone
+  Smartphone,
+  Brain,
+  Database,
+  TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FlowTripLogo from '@/components/flowtrip/FlowTripLogo';
@@ -29,33 +31,33 @@ const FlowTripSaaS = () => {
 
   const features = [
     {
-      icon: Gamepad2,
-      title: "Gamificação Inteligente",
-      description: "Sistema de pontos, níveis e conquistas que engaja turistas e aumenta o tempo de permanência no destino",
+      icon: Brain,
+      title: "Analytics Inteligente",
+      description: "Sistema de IA que analisa dados automaticamente e gera insights sobre comportamento turístico",
       color: "from-blue-500 to-blue-600"
+    },
+    {
+      icon: Database,
+      title: "Importação Automática",
+      description: "Conecta-se automaticamente a fontes de dados para importar eventos, atrativos e informações turísticas",
+      color: "from-purple-500 to-purple-600"
     },
     {
       icon: Users,
       title: "Gestão Multi-usuário",
       description: "Painel administrativo para estados, municípios e operadores turísticos com permissões personalizadas",
-      color: "from-purple-500 to-purple-600"
+      color: "from-green-500 to-green-600"
     },
     {
-      icon: BarChart3,
-      title: "Analytics Avançado",
-      description: "Relatórios detalhados sobre comportamento do turista, ROI e performance dos destinos",
-      color: "from-green-500 to-green-600"
+      icon: TrendingUp,
+      title: "ROI Mensurável",
+      description: "Relatórios detalhados sobre performance dos destinos e retorno sobre investimento em turismo",
+      color: "from-orange-500 to-orange-600"
     },
     {
       icon: Globe,
       title: "Multi-idiomas",
       description: "Plataforma preparada para turismo internacional com suporte a múltiplos idiomas",
-      color: "from-orange-500 to-orange-600"
-    },
-    {
-      icon: Zap,
-      title: "IA Integrada",
-      description: "Assistente virtual inteligente que oferece recomendações personalizadas aos turistas",
       color: "from-cyan-500 to-cyan-600"
     },
     {
@@ -70,7 +72,7 @@ const FlowTripSaaS = () => {
     "Aumento de 40% no engajamento do turista",
     "Redução de 60% no tempo de gestão administrativa",
     "ROI mensurável através de analytics detalhados",
-    "Integração com sistemas existentes",
+    "Integração automática com sistemas existentes",
     "Suporte técnico especializado 24/7",
     "Onboarding personalizado para cada destino"
   ];
@@ -79,7 +81,7 @@ const FlowTripSaaS = () => {
     {
       name: "Mato Grosso do Sul",
       logo: "/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png",
-      description: "Primeiro estado a implementar turismo gamificado no Brasil"
+      description: "Primeiro estado a implementar destinos inteligentes no Brasil"
     }
   ];
 
@@ -104,10 +106,17 @@ const FlowTripSaaS = () => {
                 Portal do Cliente
               </Button>
               <Button 
+                onClick={() => navigate('/ms')}
+                variant="outline"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
+                Ver Demonstração
+              </Button>
+              <Button 
                 onClick={() => navigate('#contato')}
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
               >
-                Quero Contratar
+                Solicitar Proposta
               </Button>
             </div>
           </div>
@@ -129,8 +138,8 @@ const FlowTripSaaS = () => {
               Transforme seu Destino com FlowTrip
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto">
-              A primeira plataforma SaaS de turismo gamificado do Brasil. Aumente o engajamento, 
-              fidelize turistas e otimize a gestão do seu destino turístico.
+              A primeira plataforma SaaS de destinos inteligentes do Brasil. Automatize a gestão turística, 
+              conecte dados em tempo real e transforme visitantes em embaixadores do seu destino.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button 
@@ -148,7 +157,7 @@ const FlowTripSaaS = () => {
                 onClick={() => navigate('/ms')}
               >
                 <MapPin className="mr-2 h-5 w-5" />
-                Ver Case MS
+                Ver Demo MS
               </Button>
             </div>
           </motion.div>
@@ -168,14 +177,14 @@ const FlowTripSaaS = () => {
                 O que é FlowTrip?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                FlowTrip é uma plataforma SaaS especializada em turismo gamificado que transforma 
-                a experiência do visitante através de tecnologia, engajamento e dados inteligentes.
+                FlowTrip é uma plataforma SaaS especializada em destinos inteligentes que automatiza 
+                a gestão turística através de tecnologia, conectividade de dados e inteligência artificial.
               </p>
               <div className="space-y-4">
-                {['Gamificação personalizada para cada destino', 
+                {['Importação automática de eventos e atrativos', 
                   'Analytics e relatórios em tempo real', 
-                  'Gestão multi-nível (Estado/Município/Operador)',
-                  'Integração com sistemas existentes'].map((item, index) => (
+                  'Gestão hierárquica (Estado/Município/Operador)',
+                  'Passaporte digital gamificado para turistas'].map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <span className="text-gray-700">{item}</span>
@@ -192,18 +201,18 @@ const FlowTripSaaS = () => {
               <div className="bg-gradient-to-br from-blue-400 to-purple-600 rounded-2xl p-8 text-white">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
-                    <Gamepad2 className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Gamificação</h3>
-                    <p className="text-sm opacity-90">Sistema de pontos e conquistas</p>
+                    <Brain className="h-12 w-12 mx-auto mb-3" />
+                    <h3 className="font-semibold mb-2">IA Integrada</h3>
+                    <p className="text-sm opacity-90">Analytics inteligentes</p>
                   </div>
                   <div className="text-center">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Analytics</h3>
-                    <p className="text-sm opacity-90">Relatórios inteligentes</p>
+                    <Database className="h-12 w-12 mx-auto mb-3" />
+                    <h3 className="font-semibold mb-2">Automação</h3>
+                    <p className="text-sm opacity-90">Dados sincronizados</p>
                   </div>
                   <div className="text-center">
                     <Users className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Multi-usuário</h3>
+                    <h3 className="font-semibold mb-2">Multi-tenant</h3>
                     <p className="text-sm opacity-90">Gestão hierárquica</p>
                   </div>
                   <div className="text-center">
@@ -231,7 +240,7 @@ const FlowTripSaaS = () => {
               Funcionalidades que Transformam Destinos
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Tecnologia de ponta para criar experiências únicas e mensuráveis no turismo
+              Tecnologia de ponta para criar destinos inteligentes, automatizados e mensuráveis
             </p>
           </motion.div>
 
@@ -312,6 +321,7 @@ const FlowTripSaaS = () => {
                   <Button 
                     variant="outline"
                     className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    onClick={() => navigate('/ms')}
                   >
                     Conheça nossos cases
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -378,7 +388,7 @@ const FlowTripSaaS = () => {
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
               Agende uma demonstração personalizada e descubra como FlowTrip pode 
-              revolucionar a experiência turística do seu estado ou município.
+              revolucionar a gestão turística do seu estado ou município.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button 
@@ -410,8 +420,8 @@ const FlowTripSaaS = () => {
             <div className="col-span-1 md:col-span-2">
               <FlowTripLogo size="lg" className="mb-6" />
               <p className="text-gray-300 mb-4 max-w-md">
-                A plataforma SaaS líder em turismo gamificado, transformando destinos 
-                em experiências inteligentes e mensuráveis.
+                A plataforma SaaS líder em destinos inteligentes, transformando a gestão turística 
+                através de automação e inteligência artificial.
               </p>
             </div>
             <div>
