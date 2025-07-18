@@ -1,327 +1,301 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Navigation, CheckCircle, Clock, Star } from 'lucide-react';
+import { MapPin, Navigation, Target, Map as MapIcon, Satellite } from 'lucide-react';
+import { useMapbox } from '@/hooks/useMapbox';
 import { useFlowTrip } from '@/context/FlowTripContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-interface Destination {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  image_url?: string;
-  region?: string;
-}
-
-interface CheckInLocation {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  hasCheckedIn: boolean;
-}
+import { toast } from 'sonner';
 
 const InteractiveMap = () => {
-  const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [checkInLocations, setCheckInLocations] = useState<CheckInLocation[]>([]);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const { addStamp, passportStamps, currentState } = useFlowTrip();
-  const { toast } = useToast();
+  const { addStamp, addPoints } = useFlowTrip();
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [mapStyle, setMapStyle] = useState<'map' | 'satellite'>('map');
+  
+  const { map, mapContainer, mapLoaded } = useMapbox({
+    style: mapStyle,
+    center: [-54.6295, -20.4428], // Campo Grande, MS
+    zoom: 6
+  });
+
+  // Destinos exemplo em Mato Grosso do Sul
+  const destinations = [
+    {
+      id: 1,
+      name: 'Pantanal',
+      coordinates: [-56.0892, -19.0208],
+      description: 'A maior planície alagável do mundo',
+      points: 100,
+      type: 'natureza'
+    },
+    {
+      id: 2,
+      name: 'Bonito',
+      coordinates: [-56.4729, -21.1320],
+      description: 'Águas cristalinas e cavernas',
+      points: 80,
+      type: 'ecoturismo'
+    },
+    {
+      id: 3,
+      name: 'Campo Grande',
+      coordinates: [-54.6295, -20.4428],
+      description: 'Capital de Mato Grosso do Sul',
+      points: 50,
+      type: 'urbano'
+    },
+    {
+      id: 4,
+      name: 'Chapada dos Guimarães',
+      coordinates: [-55.7500, -15.4611],
+      description: 'Cachoeiras e trilhas espetaculares',
+      points: 90,
+      type: 'aventura'
+    }
+  ];
 
   useEffect(() => {
-    fetchDestinations();
-    getUserLocation();
-  }, [currentState]);
+    if (!map || !mapLoaded) return;
 
-  const fetchDestinations = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('destinations')
-        .select('*')
-        .limit(20);
-
-      if (error) throw error;
+    // Add markers for destinations
+    destinations.forEach(destination => {
+      const marker = document.createElement('div');
+      marker.className = 'w-8 h-8 bg-primary rounded-full border-2 border-white shadow-lg cursor-pointer flex items-center justify-center hover:scale-110 transition-transform';
+      marker.innerHTML = '<div class="w-3 h-3 bg-white rounded-full"></div>';
       
-      const destinationsWithCheckins = data?.map(dest => ({
-        ...dest,
-        hasCheckedIn: passportStamps.some(stamp => stamp.destination_id === dest.id)
-      })) || [];
-
-      setDestinations(destinationsWithCheckins);
-      
-      // Simular localizações para check-in (em produção seria baseado em coordenadas reais)
-      const mockLocations: CheckInLocation[] = destinationsWithCheckins.map(dest => ({
-        id: dest.id,
-        name: dest.name,
-        latitude: -20.4435 + (Math.random() - 0.5) * 0.1,
-        longitude: -54.6478 + (Math.random() - 0.5) * 0.1,
-        hasCheckedIn: passportStamps.some(stamp => stamp.destination_id === dest.id)
-      }));
-      
-      setCheckInLocations(mockLocations);
-    } catch (error) {
-      console.error('Error fetching destinations:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Usar localização padrão de Campo Grande, MS
-          setUserLocation({
-            lat: -20.4435,
-            lng: -54.6478
-          });
-        }
-      );
-    } else {
-      // Fallback para Campo Grande, MS
-      setUserLocation({
-        lat: -20.4435,
-        lng: -54.6478
+      marker.addEventListener('click', () => {
+        setSelectedDestination(destination);
+        map.flyTo({
+          center: destination.coordinates as [number, number],
+          zoom: 10,
+          duration: 2000
+        });
       });
-    }
-  };
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radius da Terra em km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
+      new (window as any).mapboxgl.Marker(marker)
+        .setLngLat(destination.coordinates)
+        .addTo(map);
+    });
+  }, [map, mapLoaded]);
 
-  const handleCheckIn = async (location: CheckInLocation) => {
-    if (!userLocation) {
-      toast({
-        title: 'Localização não disponível',
-        description: 'Permita o acesso à localização para fazer check-in.',
-        variant: 'destructive'
-      });
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocalização não suportada pelo navegador');
       return;
     }
 
-    setIsCheckingIn(true);
-    try {
-      const distance = calculateDistance(
-        userLocation.lat, userLocation.lng,
-        location.latitude, location.longitude
-      );
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords: [number, number] = [
+          position.coords.longitude,
+          position.coords.latitude
+        ];
+        setUserLocation(coords);
+        
+        if (map) {
+          map.flyTo({
+            center: coords,
+            zoom: 12,
+            duration: 2000
+          });
 
-      // Permitir check-in se estiver a menos de 5km (para demonstração)
-      if (distance <= 5) {
-        await addStamp({
-          destination_id: location.id,
-          activity_type: 'check_in',
-          points_earned: 10,
-          latitude: userLocation.lat,
-          longitude: userLocation.lng
-        });
+          // Add user location marker
+          const userMarker = document.createElement('div');
+          userMarker.className = 'w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse';
+          
+          new (window as any).mapboxgl.Marker(userMarker)
+            .setLngLat(coords)
+            .addTo(map);
+        }
 
-        toast({
-          title: '✅ Check-in realizado!',
-          description: `+10 pontos! Você fez check-in em ${location.name}`,
-        });
-
-        // Atualizar status local
-        setCheckInLocations(prev => 
-          prev.map(loc => 
-            loc.id === location.id 
-              ? { ...loc, hasCheckedIn: true }
-              : loc
-          )
-        );
-      } else {
-        toast({
-          title: 'Muito longe',
-          description: `Você precisa estar mais próximo de ${location.name} para fazer check-in.`,
-          variant: 'destructive'
-        });
+        toast.success('Localização encontrada!');
+      },
+      (error) => {
+        toast.error('Erro ao obter localização');
+        console.error('Geolocation error:', error);
       }
-    } catch (error) {
-      console.error('Error checking in:', error);
-      toast({
-        title: 'Erro no check-in',
-        description: 'Não foi possível realizar o check-in.',
-        variant: 'destructive'
+    );
+  };
+
+  const checkInAtLocation = async () => {
+    if (!selectedDestination) {
+      toast.error('Selecione um destino primeiro');
+      return;
+    }
+
+    try {
+      await addStamp({
+        activity_type: 'check_in',
+        points_earned: selectedDestination.points,
+        stamp_type: 'location'
       });
-    } finally {
-      setIsCheckingIn(false);
+
+      toast.success(`Check-in realizado em ${selectedDestination.name}! +${selectedDestination.points} pontos`);
+      setSelectedDestination(null);
+    } catch (error) {
+      toast.error('Erro ao realizar check-in');
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Card className="animate-pulse">
-          <CardHeader className="h-24 bg-muted/50" />
-          <CardContent className="h-64 bg-muted/20" />
-        </Card>
-      </div>
-    );
-  }
+  const getDestinationTypeColor = (type: string) => {
+    switch (type) {
+      case 'natureza': return 'bg-green-100 text-green-800';
+      case 'ecoturismo': return 'bg-blue-100 text-blue-800';
+      case 'urbano': return 'bg-gray-100 text-gray-800';
+      case 'aventura': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Card className="bg-gradient-to-r from-primary to-secondary text-white">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-6 w-6" />
-            Mapa Interativo
-          </CardTitle>
-          <p className="text-white/80">
-            Faça check-in nos destinos e ganhe pontos!
-          </p>
-        </CardHeader>
-      </Card>
-
-      {/* User Location Status */}
-      {userLocation && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-green-800">
-              <Navigation className="h-5 w-5" />
-              <span>Localização ativa - Pronto para check-ins!</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Map Placeholder */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-8 text-center">
-            <MapPin className="h-16 w-16 mx-auto mb-4 text-primary" />
-            <h3 className="text-lg font-semibold mb-2">Mapa Interativo</h3>
-            <p className="text-muted-foreground mb-4">
-              Visualize destinos próximos e faça check-in para ganhar pontos
-            </p>
-            <Badge variant="outline" className="bg-white">
-              Funcionalidade em desenvolvimento
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Destinations List */}
+      {/* Header Controls */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5" />
-            Destinos Próximos
+            <MapIcon className="h-5 w-5" />
+            Mapa Interativo - Mato Grosso do Sul
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {checkInLocations.map((location) => {
-              const destination = destinations.find(d => d.id === location.id);
-              const distance = userLocation 
-                ? calculateDistance(userLocation.lat, userLocation.lng, location.latitude, location.longitude)
-                : 0;
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={getCurrentLocation}
+              variant="outline"
+              size="sm"
+            >
+              <Navigation className="h-4 w-4 mr-2" />
+              Minha Localização
+            </Button>
+            
+            <Button
+              onClick={() => setMapStyle(mapStyle === 'map' ? 'satellite' : 'map')}
+              variant="outline"
+              size="sm"
+            >
+              <Satellite className="h-4 w-4 mr-2" />
+              {mapStyle === 'map' ? 'Satélite' : 'Mapa'}
+            </Button>
 
-              return (
-                <div
-                  key={location.id}
-                  className={`p-4 rounded-lg border transition-all cursor-pointer ${
-                    selectedDestination?.id === location.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setSelectedDestination(destination || null)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{location.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {destination?.location || 'Localização'}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {distance.toFixed(1)} km de distância
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {location.hasCheckedIn ? (
-                        <Badge variant="secondary" className="gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Visitado
-                        </Badge>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCheckIn(location);
-                          }}
-                          disabled={isCheckingIn}
-                          className="gap-1"
-                        >
-                          <MapPin className="h-3 w-3" />
-                          Check-in (+10pts)
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {selectedDestination && (
+              <Button 
+                onClick={checkInAtLocation}
+                className="bg-green-500 hover:bg-green-600"
+                size="sm"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Check-in (+{selectedDestination.points} pts)
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Selected Destination Details */}
-      {selectedDestination && (
-        <Card className="border-primary">
-          <CardHeader>
-            <CardTitle>{selectedDestination.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {selectedDestination.image_url && (
-                <img 
-                  src={selectedDestination.image_url} 
-                  alt={selectedDestination.name}
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-              )}
-              <p className="text-muted-foreground">
-                {selectedDestination.description}
-              </p>
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{selectedDestination.location}</span>
+      {/* Main Map */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3">
+          <Card className="h-[500px] overflow-hidden">
+            <div ref={mapContainer} className="w-full h-full" />
+            {!mapLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+                </div>
               </div>
-              {selectedDestination.region && (
-                <Badge variant="outline">{selectedDestination.region}</Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            )}
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+          {/* Selected Destination */}
+          {selectedDestination && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  {selectedDestination.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Badge className={getDestinationTypeColor(selectedDestination.type)}>
+                  {selectedDestination.type}
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  {selectedDestination.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Pontos:</span>
+                  <Badge variant="outline" className="text-primary">
+                    +{selectedDestination.points} pts
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Destinations List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Destinos Disponíveis</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {destinations.map((destination) => (
+                <div
+                  key={destination.id}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted/50 ${
+                    selectedDestination?.id === destination.id 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border'
+                  }`}
+                  onClick={() => {
+                    setSelectedDestination(destination);
+                    if (map) {
+                      map.flyTo({
+                        center: destination.coordinates as [number, number],
+                        zoom: 10,
+                        duration: 2000
+                      });
+                    }
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium text-sm">{destination.name}</h4>
+                    <Badge variant="outline" className="text-xs">
+                      +{destination.points}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {destination.description}
+                  </p>
+                  <Badge 
+                    className={`text-xs ${getDestinationTypeColor(destination.type)}`}
+                    variant="secondary"
+                  >
+                    {destination.type}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Instructions */}
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="font-medium text-sm mb-2">Como usar:</h4>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Clique nos marcadores no mapa</li>
+                <li>• Ou selecione na lista ao lado</li>
+                <li>• Use sua localização para check-ins</li>
+                <li>• Ganhe pontos por cada visita</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
