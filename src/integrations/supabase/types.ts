@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_master_insights: {
+        Row: {
+          actions: Json | null
+          confidence_score: number | null
+          created_at: string | null
+          data_sources: string[] | null
+          description: string
+          generated_by: string | null
+          id: string
+          insight_type: string
+          priority: string | null
+          recommendations: Json | null
+          region: string | null
+          state_code: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          actions?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          data_sources?: string[] | null
+          description: string
+          generated_by?: string | null
+          id?: string
+          insight_type: string
+          priority?: string | null
+          recommendations?: Json | null
+          region?: string | null
+          state_code?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          actions?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          data_sources?: string[] | null
+          description?: string
+          generated_by?: string | null
+          id?: string
+          insight_type?: string
+          priority?: string | null
+          recommendations?: Json | null
+          region?: string | null
+          state_code?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       attendant_timesheet: {
         Row: {
           cat_location: string
@@ -380,6 +434,7 @@ export type Database = {
           location: string | null
           name: string
           region: string | null
+          state_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -392,6 +447,7 @@ export type Database = {
           location?: string | null
           name: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -404,6 +460,7 @@ export type Database = {
           location?: string | null
           name?: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -412,6 +469,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "destinations_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -504,6 +568,7 @@ export type Database = {
           location: string | null
           name: string
           start_date: string
+          state_id: string | null
           updated_at: string | null
           visibility_end_date: string | null
         }
@@ -520,6 +585,7 @@ export type Database = {
           location?: string | null
           name: string
           start_date: string
+          state_id?: string | null
           updated_at?: string | null
           visibility_end_date?: string | null
         }
@@ -536,6 +602,7 @@ export type Database = {
           location?: string | null
           name?: string
           start_date?: string
+          state_id?: string | null
           updated_at?: string | null
           visibility_end_date?: string | null
         }
@@ -545,6 +612,447 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_clients: {
+        Row: {
+          client_name: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contract_end_date: string | null
+          contract_start_date: string | null
+          created_at: string | null
+          id: string
+          state_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          id?: string
+          state_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          id?: string
+          state_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_clients_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_invoices: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string | null
+          due_date: string
+          id: string
+          invoice_number: string
+          paid_at: string | null
+          status: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          client_id?: string | null
+          created_at?: string | null
+          due_date: string
+          id?: string
+          invoice_number: string
+          paid_at?: string | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          paid_at?: string | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flowtrip_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_master_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          description: string | null
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      flowtrip_onboarding_steps: {
+        Row: {
+          client_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          order_sequence: number
+          step_description: string | null
+          step_name: string
+        }
+        Insert: {
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          order_sequence: number
+          step_description?: string | null
+          step_name: string
+        }
+        Update: {
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          order_sequence?: number
+          step_description?: string | null
+          step_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_onboarding_steps_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_state_features: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          feature_name: string
+          id: string
+          is_enabled: boolean | null
+          state_id: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          feature_name: string
+          id?: string
+          is_enabled?: boolean | null
+          state_id?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          feature_name?: string
+          id?: string
+          is_enabled?: boolean | null
+          state_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_state_features_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_states: {
+        Row: {
+          accent_color: string | null
+          billing_email: string | null
+          code: string
+          contract_end_date: string | null
+          contract_start_date: string | null
+          created_at: string | null
+          has_alumia: boolean | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          monthly_fee: number | null
+          name: string
+          plan_type: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          billing_email?: string | null
+          code: string
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          has_alumia?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          name: string
+          plan_type?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          billing_email?: string | null
+          code?: string
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          has_alumia?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          name?: string
+          plan_type?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      flowtrip_subscriptions: {
+        Row: {
+          billing_cycle: string | null
+          client_id: string | null
+          created_at: string | null
+          features: Json | null
+          id: string
+          max_destinations: number | null
+          max_users: number | null
+          monthly_fee: number | null
+          next_billing_date: string | null
+          plan_type: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_cycle?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          features?: Json | null
+          id?: string
+          max_destinations?: number | null
+          max_users?: number | null
+          monthly_fee?: number | null
+          next_billing_date?: string | null
+          plan_type?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_cycle?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          features?: Json | null
+          id?: string
+          max_destinations?: number | null
+          max_users?: number | null
+          monthly_fee?: number | null
+          next_billing_date?: string | null
+          plan_type?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_subscriptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_support_tickets: {
+        Row: {
+          assigned_to: string | null
+          client_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_support_tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_usage_metrics: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          metric_type: string
+          metric_value: number
+          recorded_date: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          metric_value: number
+          recorded_date?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number
+          recorded_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_usage_metrics_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flowtrip_white_label_configs: {
+        Row: {
+          client_id: string | null
+          config_key: string
+          config_value: Json
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          config_key: string
+          config_value: Json
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          config_key?: string
+          config_value?: Json
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flowtrip_white_label_configs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -788,36 +1296,45 @@ export type Database = {
       }
       passport_stamps: {
         Row: {
+          activity_type: string | null
           checkpoint_id: string | null
           destination_id: string | null
           id: string
           latitude: number | null
           longitude: number | null
+          points_earned: number | null
           route_id: string | null
           stamp_type: string | null
           stamped_at: string | null
+          state_id: string | null
           user_id: string
         }
         Insert: {
+          activity_type?: string | null
           checkpoint_id?: string | null
           destination_id?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          points_earned?: number | null
           route_id?: string | null
           stamp_type?: string | null
           stamped_at?: string | null
+          state_id?: string | null
           user_id: string
         }
         Update: {
+          activity_type?: string | null
           checkpoint_id?: string | null
           destination_id?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          points_earned?: number | null
           route_id?: string | null
           stamp_type?: string | null
           stamped_at?: string | null
+          state_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -840,6 +1357,13 @@ export type Database = {
             columns: ["route_id"]
             isOneToOne: false
             referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_stamps_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -960,6 +1484,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           region: string | null
+          state_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -975,6 +1500,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -990,6 +1516,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           region?: string | null
+          state_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -998,6 +1525,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routes_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -1077,6 +1611,42 @@ export type Database = {
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      states: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1205,6 +1775,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_description: string | null
+          achievement_name: string
+          achievement_type: string
+          created_at: string | null
+          icon_url: string | null
+          id: string
+          points_awarded: number | null
+          state_id: string | null
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_description?: string | null
+          achievement_name: string
+          achievement_type: string
+          created_at?: string | null
+          icon_url?: string | null
+          id?: string
+          points_awarded?: number | null
+          state_id?: string | null
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_description?: string | null
+          achievement_name?: string
+          achievement_type?: string
+          created_at?: string | null
+          icon_url?: string | null
+          id?: string
+          points_awarded?: number | null
+          state_id?: string | null
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_interactions: {
         Row: {
           created_at: string
@@ -1261,6 +1878,47 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_levels: {
+        Row: {
+          created_at: string | null
+          current_level: string | null
+          id: string
+          level_number: number | null
+          state_id: string | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_level?: string | null
+          id?: string
+          level_number?: number | null
+          state_id?: string | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_level?: string | null
+          id?: string
+          level_number?: number | null
+          state_id?: string | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_levels_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -1370,6 +2028,7 @@ export type Database = {
           region: string | null
           region_id: string | null
           role: string
+          state_id: string | null
           user_id: string
         }
         Insert: {
@@ -1380,6 +2039,7 @@ export type Database = {
           region?: string | null
           region_id?: string | null
           role: string
+          state_id?: string | null
           user_id: string
         }
         Update: {
@@ -1390,6 +2050,7 @@ export type Database = {
           region?: string | null
           region_id?: string | null
           role?: string
+          state_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1407,6 +2068,13 @@ export type Database = {
             referencedRelation: "regions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "flowtrip_states"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -1414,6 +2082,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_user_role: {
+        Args: {
+          p_user_id: string
+          p_role: string
+          p_city_id?: string
+          p_region_id?: string
+        }
+        Returns: boolean
+      }
       create_initial_admin_if_needed: {
         Args: { admin_email: string; admin_user_id: string }
         Returns: boolean
@@ -1450,6 +2127,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      fix_incomplete_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1457,6 +2138,15 @@ export type Database = {
       get_user_role: {
         Args: { check_user_id: string }
         Returns: string
+      }
+      get_user_states: {
+        Args: { check_user_id: string }
+        Returns: {
+          state_id: string
+          state_code: string
+          state_name: string
+          user_role: string
+        }[]
       }
       get_user_statistics: {
         Args: Record<PropertyKey, never>
@@ -1492,6 +2182,14 @@ export type Database = {
           city: string
         }[]
       }
+      has_state_role: {
+        Args: {
+          check_user_id: string
+          required_role: string
+          check_state_id: string
+        }
+        Returns: boolean
+      }
       is_admin_user: {
         Args: { check_user_id: string }
         Returns: boolean
@@ -1521,6 +2219,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      promote_user_to_role: {
+        Args: { p_email: string; p_role: string }
+        Returns: boolean
+      }
       secure_update_user_role: {
         Args: {
           target_user_id: string
@@ -1528,6 +2230,10 @@ export type Database = {
           requesting_user_id?: string
         }
         Returns: boolean
+      }
+      update_user_points: {
+        Args: { p_user_id: string; p_state_id: string; p_points: number }
+        Returns: undefined
       }
       validate_password_reset_token: {
         Args: { token_hash: string; user_email: string }

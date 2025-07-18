@@ -1,6 +1,6 @@
 import React from 'react';
 import UniversalNavbar from './UniversalNavbar';
-import Footer from './Footer';
+import UniversalFooter from './UniversalFooter';
 
 interface UniversalLayoutProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ const UniversalLayout = ({ children }: UniversalLayoutProps) => {
       <main className="flex-grow">
         {children}
       </main>
-      <Footer />
+      <UniversalFooter />
     </div>
   );
 };
