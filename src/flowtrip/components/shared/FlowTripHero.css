@@ -1,0 +1,174 @@
+/* Hero Section FlowTrip - Estilo "Destinos Inteligentes" */
+.flowtrip-hero {
+  text-align: center;
+  padding: 8rem 2rem 4rem;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 2px solid #ed8936;
+  border-radius: 50px;
+  margin-bottom: 3rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ed8936;
+  box-shadow: 0 4px 12px rgba(237, 137, 54, 0.15);
+  font-family: 'Roboto', sans-serif;
+}
+
+.badge-icon {
+  font-size: 1rem;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 2rem;
+  font-family: 'Roboto', sans-serif;
+}
+
+.title-part-blue { color: #1a365d; }
+.title-part-orange { color: #ed8936; }
+.title-part-gray { color: #2d3748; }
+.title-part-teal { color: #38b2ac; }
+
+.hero-description {
+  font-size: 1.25rem;
+  color: #4a5568;
+  max-width: 700px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
+  font-family: 'Roboto', sans-serif;
+}
+
+.highlight-blue { color: #1a365d; }
+.highlight-orange { color: #ed8936; }
+
+.hero-actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 4rem;
+}
+
+.btn-primary-large {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2.5rem;
+  background: #1a365d;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Roboto', sans-serif;
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+}
+
+.btn-primary-large:hover {
+  background: #2d3748;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 54, 93, 0.4);
+}
+
+.btn-outline-orange {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2.5rem;
+  background: white;
+  color: #ed8936;
+  border: 2px solid #ed8936;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Roboto', sans-serif;
+}
+
+.btn-outline-orange:hover {
+  background: #ed8936;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 4rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1a365d;
+  font-family: 'Roboto', sans-serif;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .flowtrip-hero {
+    padding: 6rem 1rem 3rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-description {
+    font-size: 1.1rem;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn-primary-large,
+  .btn-outline-orange {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+  
+  .hero-stats {
+    flex-direction: column;
+    gap: 2rem;
+  }
+} 
