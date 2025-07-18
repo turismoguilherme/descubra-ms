@@ -22,13 +22,13 @@ const FlowTripLogo = ({ size = 'md', showText = true, className = '' }: FlowTrip
   };
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
-      <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden shadow-xl`}>
-        {/* Gradiente circular inspirado na logo */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-blue-600 to-teal-500 animate-pulse-slow" />
+    <div className={`flex items-center gap-3 ${className}`}>
+      <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden flowtrip-shadow-elegant`}>
+        {/* Gradiente circular azul-púrpura conforme especificado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-flowtrip-accent-orange via-flowtrip-primary-blue to-flowtrip-secondary-teal animate-pulse-slow" />
         
         {/* Círculo interno com efeito de profundidade */}
-        <div className="absolute inset-1 bg-gradient-to-br from-blue-700 to-blue-800 rounded-full flex items-center justify-center">
+        <div className="absolute inset-1 bg-gradient-to-br from-flowtrip-primary-blue to-blue-800 rounded-full flex items-center justify-center">
           <Plane className="h-1/2 w-1/2 text-white rotate-45 drop-shadow-lg" />
         </div>
         
@@ -37,12 +37,12 @@ const FlowTripLogo = ({ size = 'md', showText = true, className = '' }: FlowTrip
       </div>
       
       {showText && (
-        <div className="flex flex-col">
-          <span className={`font-bold bg-gradient-to-r from-blue-700 via-orange-500 to-teal-600 bg-clip-text text-transparent ${textSizeClasses[size]} leading-none`}>
+        <div className="flex flex-col justify-center">
+          <span className={`font-bold flowtrip-text-gradient ${textSizeClasses[size]} leading-none tracking-tight`}>
             FlowTrip
           </span>
-          <span className="text-xs text-gray-500 font-medium tracking-wider uppercase">
-            Destinos Inteligentes
+          <span className="text-xs text-flowtrip-text-tertiary font-medium tracking-widest uppercase leading-relaxed">
+            DESTINOS INTELIGENTES
           </span>
         </div>
       )}

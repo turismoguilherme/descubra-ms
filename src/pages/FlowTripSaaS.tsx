@@ -46,42 +46,38 @@ const FlowTripSaaS = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header mais limpo e orgânico */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4">
+      {/* Header FlowTrip "Destinos Inteligentes" */}
+      <header className="bg-flowtrip-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50 flowtrip-shadow-md">
+        <div className="flowtrip-container">
           <div className="flex items-center justify-between h-20">
             <FlowTripLogo size="md" />
             
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#funcionalidades" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+              <a href="#funcionalidades" className="text-flowtrip-text-secondary hover:text-flowtrip-primary-blue flowtrip-transition-smooth font-medium">
                 Funcionalidades
               </a>
-              <a href="#resultados" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+              <a href="#resultados" className="text-flowtrip-text-secondary hover:text-flowtrip-primary-blue flowtrip-transition-smooth font-medium">
                 Resultados
               </a>
-              <a href="#clientes" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+              <a href="#clientes" className="text-flowtrip-text-secondary hover:text-flowtrip-primary-blue flowtrip-transition-smooth font-medium">
                 Cases
+              </a>
+              <a href="#portal" className="text-flowtrip-text-secondary hover:text-flowtrip-primary-blue flowtrip-transition-smooth font-medium">
+                Portal do Cliente
               </a>
             </nav>
             
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/portal')}
-                className="text-gray-700 hover:text-blue-600 font-medium"
-              >
-                Portal do Cliente
-              </Button>
+            <div className="flex items-center gap-3">
               <Button 
                 onClick={() => navigate('/ms')}
                 variant="outline"
-                className="text-blue-600 border-blue-200 hover:bg-blue-50 font-medium"
+                className="text-flowtrip-primary-blue border-flowtrip-primary-blue/20 hover:bg-flowtrip-primary-blue/5 font-medium px-6"
               >
                 Ver Demo MS
               </Button>
               <Button 
                 onClick={() => navigate('#contato')}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg font-medium"
+                className="bg-flowtrip-primary-blue hover:bg-flowtrip-primary-blue/90 text-white font-medium px-6 flowtrip-shadow-md hover:flowtrip-shadow-lg flowtrip-transition-smooth"
               >
                 Falar Conosco
               </Button>

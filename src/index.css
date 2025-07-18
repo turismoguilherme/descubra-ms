@@ -36,6 +36,46 @@
   --ms-earth-brown: 30 45% 35%;            /* Tons terrosos da logo */
   --ms-sky-blue: 210 100% 70%;             /* Azul céu suave */
   --ms-nature-green-light: 140 50% 75%;    /* Verde claro complementar */
+
+  /* FlowTrip Design System - "Destinos Inteligentes" */
+  --flowtrip-primary-blue: 208 100% 22%;     /* #1a365d - Azul escuro */
+  --flowtrip-secondary-teal: 176 39% 47%;    /* #38b2ac - Teal */
+  --flowtrip-accent-orange: 24 75% 56%;      /* #ed8936 - Laranja */
+  --flowtrip-white: 0 0% 100%;               /* Branco */
+  --flowtrip-dark-gray: 215 28% 17%;         /* #2d3748 - Cinza escuro */
+  --flowtrip-medium-gray: 215 25% 27%;       /* #4a5568 - Cinza médio */
+  --flowtrip-light-gray: 215 16% 47%;        /* #718096 - Cinza claro */
+
+  /* FlowTrip Semantic Colors */
+  --flowtrip-bg-primary: var(--flowtrip-white);
+  --flowtrip-bg-secondary: 210 40% 98%;      /* Background suave */
+  --flowtrip-text-primary: var(--flowtrip-dark-gray);
+  --flowtrip-text-secondary: var(--flowtrip-medium-gray);
+  --flowtrip-text-tertiary: var(--flowtrip-light-gray);
+
+  /* FlowTrip Gradients */
+  --flowtrip-gradient-primary: linear-gradient(135deg, hsl(var(--flowtrip-primary-blue)), hsl(var(--flowtrip-secondary-teal)));
+  --flowtrip-gradient-hero: linear-gradient(135deg, hsl(var(--flowtrip-primary-blue)) 0%, hsl(var(--flowtrip-accent-orange)) 50%, hsl(var(--flowtrip-secondary-teal)) 100%);
+  --flowtrip-gradient-subtle: linear-gradient(180deg, hsl(var(--flowtrip-bg-primary)), hsl(var(--flowtrip-bg-secondary)));
+
+  /* FlowTrip Shadows */
+  --flowtrip-shadow-sm: 0 1px 2px 0 hsl(var(--flowtrip-primary-blue) / 0.05);
+  --flowtrip-shadow-md: 0 4px 6px -1px hsl(var(--flowtrip-primary-blue) / 0.1);
+  --flowtrip-shadow-lg: 0 10px 15px -3px hsl(var(--flowtrip-primary-blue) / 0.1);
+  --flowtrip-shadow-xl: 0 20px 25px -5px hsl(var(--flowtrip-primary-blue) / 0.1);
+
+  /* FlowTrip Typography Sizes */
+  --flowtrip-text-xs: 0.75rem;     /* 12px */
+  --flowtrip-text-sm: 0.875rem;    /* 14px */
+  --flowtrip-text-base: 1rem;      /* 16px */
+  --flowtrip-text-lg: 1.125rem;    /* 18px */
+  --flowtrip-text-xl: 1.25rem;     /* 20px */
+  --flowtrip-text-2xl: 1.5rem;     /* 24px */
+  --flowtrip-text-3xl: 1.875rem;   /* 30px */
+  --flowtrip-text-4xl: 2.25rem;    /* 36px */
+  --flowtrip-text-5xl: 3rem;       /* 48px */
+  --flowtrip-text-6xl: 3.75rem;    /* 60px */
+  --flowtrip-text-7xl: 4.5rem;     /* 72px */
 }
 
 .dark {
@@ -62,4 +102,58 @@
 
 .ms-container {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* FlowTrip Design System Utilities */
+.flowtrip-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.flowtrip-text-gradient {
+  background: var(--flowtrip-gradient-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.flowtrip-bg-gradient {
+  background: var(--flowtrip-gradient-primary);
+}
+
+.flowtrip-shadow-elegant {
+  box-shadow: var(--flowtrip-shadow-xl), 0 0 40px hsl(var(--flowtrip-primary-blue) / 0.15);
+}
+
+.flowtrip-transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FlowTrip Typography Classes */
+.flowtrip-title-hero {
+  font-size: var(--flowtrip-text-7xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.flowtrip-title-section {
+  font-size: var(--flowtrip-text-4xl);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.flowtrip-text-lead {
+  font-size: var(--flowtrip-text-xl);
+  line-height: 1.6;
+  color: hsl(var(--flowtrip-text-secondary));
+}
+
+@media (max-width: 768px) {
+  .flowtrip-title-hero {
+    font-size: var(--flowtrip-text-5xl);
+  }
+  
+  .flowtrip-title-section {
+    font-size: var(--flowtrip-text-3xl);
+  }
 }

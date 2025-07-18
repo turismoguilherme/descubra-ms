@@ -73,6 +73,21 @@ export default {
 					'earth-brown': 'hsl(var(--ms-earth-brown))',            // Tons terrosos
 					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
 					'nature-green-light': 'hsl(var(--ms-nature-green-light))' // Verde claro
+				},
+				// FlowTrip Design System - "Destinos Inteligentes"
+				flowtrip: {
+					'primary-blue': 'hsl(var(--flowtrip-primary-blue))',      // #1a365d
+					'secondary-teal': 'hsl(var(--flowtrip-secondary-teal))',   // #38b2ac
+					'accent-orange': 'hsl(var(--flowtrip-accent-orange))',     // #ed8936
+					'white': 'hsl(var(--flowtrip-white))',
+					'dark-gray': 'hsl(var(--flowtrip-dark-gray))',             // #2d3748
+					'medium-gray': 'hsl(var(--flowtrip-medium-gray))',         // #4a5568
+					'light-gray': 'hsl(var(--flowtrip-light-gray))',           // #718096
+					'bg-primary': 'hsl(var(--flowtrip-bg-primary))',
+					'bg-secondary': 'hsl(var(--flowtrip-bg-secondary))',
+					'text-primary': 'hsl(var(--flowtrip-text-primary))',
+					'text-secondary': 'hsl(var(--flowtrip-text-secondary))',
+					'text-tertiary': 'hsl(var(--flowtrip-text-tertiary))'
 				}
 			},
 			borderRadius: {
