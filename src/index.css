@@ -37,32 +37,39 @@
   --ms-sky-blue: 210 100% 70%;             /* Azul céu suave */
   --ms-nature-green-light: 140 50% 75%;    /* Verde claro complementar */
 
-  /* FlowTrip Design System - "Destinos Inteligentes" */
-  --flowtrip-primary-blue: 208 100% 22%;     /* #1a365d - Azul escuro */
-  --flowtrip-secondary-teal: 176 39% 47%;    /* #38b2ac - Teal */
-  --flowtrip-accent-orange: 24 75% 56%;      /* #ed8936 - Laranja */
-  --flowtrip-white: 0 0% 100%;               /* Branco */
-  --flowtrip-dark-gray: 215 28% 17%;         /* #2d3748 - Cinza escuro */
-  --flowtrip-medium-gray: 215 25% 27%;       /* #4a5568 - Cinza médio */
-  --flowtrip-light-gray: 215 16% 47%;        /* #718096 - Cinza claro */
+  /* FlowTrip Corporate Design System - Elegante e Profissional */
+  --flowtrip-navy-primary: 210 100% 12%;      /* #001E3D - Navy profundo */
+  --flowtrip-navy-light: 210 70% 25%;         /* #1B4A72 - Navy médio */
+  --flowtrip-orange-vibrant: 18 100% 55%;     /* #FF6B1A - Laranja vibrante */
+  --flowtrip-orange-light: 18 90% 65%;        /* #FF8A4C - Laranja claro */
+  --flowtrip-teal-elegant: 175 55% 35%;       /* #2D8B87 - Teal elegante */
+  --flowtrip-teal-light: 175 40% 50%;         /* #4DAEA7 - Teal claro */
+  --flowtrip-gray-100: 210 15% 95%;           /* #F8F9FB */
+  --flowtrip-gray-200: 210 12% 85%;           /* #E2E6EA */
+  --flowtrip-gray-300: 210 10% 70%;           /* #B8C2CC */
+  --flowtrip-gray-500: 210 8% 45%;            /* #6B7885 */
+  --flowtrip-gray-700: 210 12% 25%;           /* #3A4553 */
+  --flowtrip-gray-900: 210 18% 15%;           /* #1F2937 */
+  --flowtrip-white: 0 0% 100%;
 
   /* FlowTrip Semantic Colors */
-  --flowtrip-bg-primary: var(--flowtrip-white);
-  --flowtrip-bg-secondary: 210 40% 98%;      /* Background suave */
-  --flowtrip-text-primary: var(--flowtrip-dark-gray);
-  --flowtrip-text-secondary: var(--flowtrip-medium-gray);
-  --flowtrip-text-tertiary: var(--flowtrip-light-gray);
+  --flowtrip-bg-primary: 210 25% 97%;         /* Background principal */
+  --flowtrip-bg-secondary: 0 0% 98%;          /* Background secundário */
+  --flowtrip-text-primary: 210 18% 15%;       /* Texto principal */
+  --flowtrip-text-secondary: 210 12% 35%;     /* Texto secundário */
+  --flowtrip-text-tertiary: 210 8% 55%;       /* Texto terciário */
 
-  /* FlowTrip Gradients */
-  --flowtrip-gradient-primary: linear-gradient(135deg, hsl(var(--flowtrip-primary-blue)), hsl(var(--flowtrip-secondary-teal)));
-  --flowtrip-gradient-hero: linear-gradient(135deg, hsl(var(--flowtrip-primary-blue)) 0%, hsl(var(--flowtrip-accent-orange)) 50%, hsl(var(--flowtrip-secondary-teal)) 100%);
+  /* FlowTrip Corporate Gradients */
+  --flowtrip-gradient-primary: linear-gradient(135deg, hsl(var(--flowtrip-navy-primary)), hsl(var(--flowtrip-orange-vibrant)));
+  --flowtrip-gradient-hero: linear-gradient(135deg, hsl(var(--flowtrip-navy-primary)) 0%, hsl(var(--flowtrip-navy-light)) 50%, hsl(var(--flowtrip-teal-elegant)) 100%);
   --flowtrip-gradient-subtle: linear-gradient(180deg, hsl(var(--flowtrip-bg-primary)), hsl(var(--flowtrip-bg-secondary)));
+  --flowtrip-gradient-card: linear-gradient(135deg, hsl(var(--flowtrip-white)) 0%, hsl(var(--flowtrip-gray-100)) 100%);
 
-  /* FlowTrip Shadows */
-  --flowtrip-shadow-sm: 0 1px 2px 0 hsl(var(--flowtrip-primary-blue) / 0.05);
-  --flowtrip-shadow-md: 0 4px 6px -1px hsl(var(--flowtrip-primary-blue) / 0.1);
-  --flowtrip-shadow-lg: 0 10px 15px -3px hsl(var(--flowtrip-primary-blue) / 0.1);
-  --flowtrip-shadow-xl: 0 20px 25px -5px hsl(var(--flowtrip-primary-blue) / 0.1);
+  /* FlowTrip Corporate Shadows */
+  --flowtrip-shadow-sm: 0 2px 4px 0 hsl(var(--flowtrip-navy-primary) / 0.06);
+  --flowtrip-shadow-md: 0 8px 20px -6px hsl(var(--flowtrip-navy-primary) / 0.12);
+  --flowtrip-shadow-lg: 0 15px 35px -10px hsl(var(--flowtrip-navy-primary) / 0.2);
+  --flowtrip-shadow-xl: 0 25px 50px -15px hsl(var(--flowtrip-navy-primary) / 0.25);
 
   /* FlowTrip Typography Sizes */
   --flowtrip-text-xs: 0.75rem;     /* 12px */
@@ -104,28 +111,48 @@
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
-/* FlowTrip Design System Utilities */
+/* FlowTrip Corporate Design System Utilities */
 .flowtrip-container {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  @apply max-w-7xl mx-auto px-6 lg:px-8 xl:px-12;
 }
 
 .flowtrip-text-gradient {
-  background: var(--flowtrip-gradient-hero);
+  background: var(--flowtrip-gradient-primary);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.flowtrip-bg-gradient {
-  background: var(--flowtrip-gradient-primary);
+.flowtrip-hero-gradient {
+  background: var(--flowtrip-gradient-hero);
+}
+
+.flowtrip-card-gradient {
+  background: var(--flowtrip-gradient-card);
 }
 
 .flowtrip-shadow-elegant {
-  box-shadow: var(--flowtrip-shadow-xl), 0 0 40px hsl(var(--flowtrip-primary-blue) / 0.15);
+  box-shadow: var(--flowtrip-shadow-xl), 0 0 40px hsl(var(--flowtrip-navy-primary) / 0.15);
+}
+
+.flowtrip-shadow-md {
+  box-shadow: var(--flowtrip-shadow-md);
+}
+
+.flowtrip-shadow-lg {
+  box-shadow: var(--flowtrip-shadow-lg);
 }
 
 .flowtrip-transition-smooth {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flowtrip-hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.flowtrip-hover-scale:hover {
+  transform: translateY(-2px) scale(1.02);
 }
 
 /* FlowTrip Typography Classes */

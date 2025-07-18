@@ -74,15 +74,21 @@ export default {
 					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
 					'nature-green-light': 'hsl(var(--ms-nature-green-light))' // Verde claro
 				},
-				// FlowTrip Design System - "Destinos Inteligentes"
+				// FlowTrip Corporate Design System - Elegante e Profissional
 				flowtrip: {
-					'primary-blue': 'hsl(var(--flowtrip-primary-blue))',      // #1a365d
-					'secondary-teal': 'hsl(var(--flowtrip-secondary-teal))',   // #38b2ac
-					'accent-orange': 'hsl(var(--flowtrip-accent-orange))',     // #ed8936
+					'navy-primary': 'hsl(var(--flowtrip-navy-primary))',        // Navy profundo
+					'navy-light': 'hsl(var(--flowtrip-navy-light))',            // Navy médio
+					'orange-vibrant': 'hsl(var(--flowtrip-orange-vibrant))',    // Laranja vibrante
+					'orange-light': 'hsl(var(--flowtrip-orange-light))',        // Laranja claro
+					'teal-elegant': 'hsl(var(--flowtrip-teal-elegant))',        // Teal elegante
+					'teal-light': 'hsl(var(--flowtrip-teal-light))',            // Teal claro
+					'gray-100': 'hsl(var(--flowtrip-gray-100))',
+					'gray-200': 'hsl(var(--flowtrip-gray-200))',
+					'gray-300': 'hsl(var(--flowtrip-gray-300))',
+					'gray-500': 'hsl(var(--flowtrip-gray-500))',
+					'gray-700': 'hsl(var(--flowtrip-gray-700))',
+					'gray-900': 'hsl(var(--flowtrip-gray-900))',
 					'white': 'hsl(var(--flowtrip-white))',
-					'dark-gray': 'hsl(var(--flowtrip-dark-gray))',             // #2d3748
-					'medium-gray': 'hsl(var(--flowtrip-medium-gray))',         // #4a5568
-					'light-gray': 'hsl(var(--flowtrip-light-gray))',           // #718096
 					'bg-primary': 'hsl(var(--flowtrip-bg-primary))',
 					'bg-secondary': 'hsl(var(--flowtrip-bg-secondary))',
 					'text-primary': 'hsl(var(--flowtrip-text-primary))',

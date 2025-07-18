@@ -18,6 +18,11 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // FlowTrip Corporate variants
+        "flowtrip-primary": "bg-flowtrip-navy-primary text-white hover:bg-flowtrip-navy-light shadow-lg hover:shadow-xl transition-all duration-300",
+        "flowtrip-secondary": "bg-flowtrip-orange-vibrant text-white hover:bg-flowtrip-orange-light shadow-lg hover:shadow-xl transition-all duration-300",
+        "flowtrip-outline": "border-2 border-flowtrip-navy-primary text-flowtrip-navy-primary bg-transparent hover:bg-flowtrip-navy-primary hover:text-white transition-all duration-300",
+        "flowtrip-ghost": "text-flowtrip-navy-primary hover:bg-flowtrip-gray-100 transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",
