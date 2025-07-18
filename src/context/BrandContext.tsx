@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useMultiTenant } from '@/hooks/useMultiTenant';
 
 export type BrandType = 'flowtrip' | 'ms';
 
@@ -82,12 +83,10 @@ const msConfig: BrandConfig = {
     fallback: 'Descubra MS'
   },
   navigation: [
-    { name: 'Início', path: '/ms' },
     { name: 'Destinos', path: '/ms/destinos' },
     { name: 'Eventos', path: '/ms/eventos' },
-    { name: 'Roteiros', path: '/ms/roteiros' },
     { name: 'Parceiros', path: '/ms/parceiros' },
-    { name: 'Sobre', path: '/ms/sobre' }
+    { name: 'Entrar', path: '/ms/login' }
   ],
   authenticatedNavigation: [
     { name: 'Guatá IA', path: '/ms/guata' },
@@ -110,14 +109,44 @@ const msConfig: BrandConfig = {
 
 export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
+  const { isFlowTripMain, currentTenant } = useMultiTenant();
   
   const config = useMemo(() => {
-    // Detectar contexto baseado na URL
-    if (location.pathname.startsWith('/ms')) {
+    // Multi-tenant: detectar contexto baseado na URL e tenant
+    if (!isFlowTripMain && currentTenant) {
+      // Configuração dinâmica baseada no tenant (estado)
+      return {
+        ...msConfig,
+        logo: {
+          ...msConfig.logo,
+          src: currentTenant.logo,
+          alt: `Descubra ${currentTenant.name}`,
+          fallback: `Descubra ${currentTenant.slug.toUpperCase()}`
+        },
+        navigation: msConfig.navigation.map(nav => ({
+          ...nav,
+          path: nav.path.replace('/ms', `/${currentTenant.slug}`)
+        })),
+        authenticatedNavigation: msConfig.authenticatedNavigation.map(nav => ({
+          ...nav,
+          path: nav.path.replace('/ms', `/${currentTenant.slug}`)
+        })),
+        hero: {
+          ...msConfig.hero,
+          title: `Descubra ${currentTenant.name}`,
+          buttons: {
+            ...msConfig.hero.buttons,
+            primary: { ...msConfig.hero.buttons.primary, path: `/${currentTenant.slug}/welcome` },
+            secondary: { ...msConfig.hero.buttons.secondary, path: `/${currentTenant.slug}/passaporte` },
+            tertiary: { ...msConfig.hero.buttons.tertiary, path: `/${currentTenant.slug}/guata` }
+          }
+        }
+      };
+    } else if (location.pathname.startsWith('/ms')) {
       return msConfig;
     }
     return flowTripConfig;
-  }, [location.pathname]);
+  }, [location.pathname, isFlowTripMain, currentTenant]);
 
   const isFlowTrip = config.brand === 'flowtrip';
   const isMS = config.brand === 'ms';

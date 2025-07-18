@@ -109,15 +109,15 @@ const UniversalFooter = () => {
     <footer className={`${isFlowTrip 
       ? 'bg-gradient-to-r from-slate-900 to-slate-800' 
       : 'bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal'} text-white`}>
-      <div className="ms-container py-16">
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isFlowTrip ? '6' : '5'} gap-8`}>
+      <div className="ms-container py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="lg:col-span-2">
-            <div className="mb-6">
+            <div className="mb-4">
               <img 
                 src={config.logo.src} 
                 alt={config.logo.alt}
-                className="h-14 w-auto object-contain"
+                className="h-12 w-auto object-contain"
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
@@ -126,87 +126,16 @@ const UniversalFooter = () => {
                 }}
               />
               <div 
-                className="hidden text-2xl font-bold text-white"
+                className="hidden text-xl font-bold text-white"
                 style={{ display: 'none' }}
               >
                 {config.logo.fallback}
               </div>
             </div>
-            <p className="text-gray-100 mb-4 max-w-sm">
+            <p className="text-gray-100 mb-4 max-w-md text-sm">
               {contact.description}
             </p>
-            <p className="text-gray-200 text-sm">
-              {isFlowTrip 
-                ? "Desenvolvido por FlowTrip Labs" 
-                : "Uma iniciativa de Guilherme Arevalo"}
-            </p>
-          </div>
-
-          {/* Primary Links */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">
-              {isFlowTrip ? "Soluções" : "Links Rápidos"}
-            </h3>
-            <ul className="space-y-3">
-              {links.primary.map((link) => (
-                <li key={link.to}>
-                  <Link 
-                    to={link.to} 
-                    className="text-gray-100 hover:text-white transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          {/* Secondary Links */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">
-              {isFlowTrip ? "Empresa" : "Mais"}
-            </h3>
-            <ul className="space-y-3">
-              {links.secondary.map((link) => (
-                <li key={link.to}>
-                  <Link 
-                    to={link.to} 
-                    className="text-gray-100 hover:text-white transition-colors flex items-center gap-1"
-                  >
-                    {link.icon && <link.icon size={16} />}
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Additional Sections for FlowTrip */}
-          {additionalSections.map((section, index) => (
-            <div key={index}>
-              <h3 className="text-lg font-semibold mb-4 text-white">{section.title}</h3>
-              <ul className="space-y-3">
-                {section.items.map((item) => (
-                  <li key={item.to}>
-                    <Link 
-                      to={item.to} 
-                      className="text-gray-100 hover:text-white transition-colors flex items-center gap-1"
-                    >
-                      {item.icon && <item.icon size={16} />}
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          {/* Contact and Social */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">
-              {isFlowTrip ? "Conecte-se" : "Siga-nos"}
-            </h3>
-            <div className="flex space-x-4 mb-6">
+            <div className="flex space-x-4">
               {socialIcons.map((social) => (
                 <a 
                   key={social.label}
@@ -216,28 +145,55 @@ const UniversalFooter = () => {
                   aria-label={social.label}
                   className="text-gray-100 hover:text-white transition-colors"
                 >
-                  <social.icon size={24} />
+                  <social.icon size={20} />
                 </a>
               ))}
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-white">Contato</h3>
-            <p className="text-gray-100 text-sm">
-              {contact.email}<br />
-              {contact.phone}
-            </p>
+          </div>
+
+          {/* Navigation Links */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 text-white">
+              {isFlowTrip ? "Plataforma" : "Explore"}
+            </h3>
+            <ul className="space-y-2">
+              {links.primary.slice(0, 4).map((link) => (
+                <li key={link.to}>
+                  <Link 
+                    to={link.to} 
+                    className="text-gray-100 hover:text-white transition-colors text-sm"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          {/* Contact */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 text-white">Contato</h3>
+            <div className="space-y-2 text-sm">
+              <p className="text-gray-100">{contact.email}</p>
+              <p className="text-gray-100">{contact.phone}</p>
+              {isFlowTrip && (
+                <Link 
+                  to="/admin-login" 
+                  className="text-gray-100 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  <ShieldCheck size={14} />
+                  Portal Cliente
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
         <div className={`border-t ${isFlowTrip 
           ? 'border-slate-700' 
-          : 'border-ms-primary-blue/50'} mt-12 pt-8 text-center text-gray-100 text-sm`}>
+          : 'border-ms-primary-blue/50'} mt-8 pt-6 text-center text-gray-100 text-xs`}>
           <p>
             © {new Date().getFullYear()} {config.logo.alt}. Todos os direitos reservados.
-          </p>
-          <p className="mt-2">
-            {isFlowTrip 
-              ? "FlowTrip® é uma marca registrada da FlowTrip Labs" 
-              : "Desenvolvido por: Guilherme Arevalo"}
           </p>
         </div>
       </div>
