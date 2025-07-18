@@ -4,10 +4,13 @@ import { Navigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, User, Map, Trophy, Zap, Star } from 'lucide-react';
+import { BarChart3, User, Map, Trophy, Zap, Star, MessageSquare, Calendar } from 'lucide-react';
 import TouristDashboard from '@/components/flowtrip/TouristDashboard';
 import PointsSystem from '@/components/flowtrip/PointsSystem';
 import DigitalPassport from '@/components/flowtrip/DigitalPassport';
+import EventsList from '@/components/flowtrip/EventsList';
+import InteractiveMap from '@/components/flowtrip/InteractiveMap';
+import AIChat from '@/components/flowtrip/AIChat';
 import { FlowTripProvider } from '@/context/FlowTripContext';
 
 const FlowTripDashboard = () => {
@@ -48,18 +51,30 @@ const FlowTripDashboard = () => {
 
           {/* Tabs principais */}
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-6 mb-8">
               <TabsTrigger value="dashboard" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Dashboard
               </TabsTrigger>
               <TabsTrigger value="points" className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
-                Pontos & Níveis
+                Pontos
               </TabsTrigger>
               <TabsTrigger value="passport" className="flex items-center gap-2">
                 <Trophy className="h-4 w-4" />
                 Passaporte
+              </TabsTrigger>
+              <TabsTrigger value="events" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Eventos
+              </TabsTrigger>
+              <TabsTrigger value="map" className="flex items-center gap-2">
+                <Map className="h-4 w-4" />
+                Mapa
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                IA
               </TabsTrigger>
             </TabsList>
 
@@ -73,6 +88,18 @@ const FlowTripDashboard = () => {
 
             <TabsContent value="passport">
               <DigitalPassport />
+            </TabsContent>
+
+            <TabsContent value="events">
+              <EventsList />
+            </TabsContent>
+
+            <TabsContent value="map">
+              <InteractiveMap />
+            </TabsContent>
+
+            <TabsContent value="ai">
+              <AIChat />
             </TabsContent>
           </Tabs>
 
