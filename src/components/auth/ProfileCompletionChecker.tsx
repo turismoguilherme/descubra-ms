@@ -10,26 +10,30 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
   const location = useLocation();
 
   useEffect(() => {
-    // Só verificar se não está carregando e tem usuário
-    if (!loading && user && profileComplete === false) {
+    if (!loading && user) {
+      console.log("🔍 PROFILE CHECKER: Verificando perfil", {
+        profileComplete,
+        currentPath: location.pathname,
+        userEmail: user.email
+      });
+
+      // Rotas que não precisam de perfil completo
       const allowedPaths = [
         '/register', 
         '/login', 
         '/password-reset', 
         '/admin-seed',
-        '/admin-login',
-        '/complete-profile',
-        '/admin-user-management'
+        '/admin-login'
       ];
 
       const isAllowedPath = allowedPaths.includes(location.pathname);
       
-      // Só redirecionar se não está numa rota permitida
-      if (!isAllowedPath) {
-        navigate('/complete-profile');
+      if (profileComplete === false && !isAllowedPath) {
+        console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para /register");
+        navigate('/register');
       }
     }
-  }, [profileComplete, loading, user, location.pathname, navigate]);
+  }, [profileComplete, loading, user, navigate, location.pathname]);
 
   // Mostrar loading enquanto verifica o perfil
   if (loading) {

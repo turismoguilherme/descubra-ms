@@ -6,8 +6,7 @@ import { UserProfile } from "@/types/auth";
 export interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userProfile: UserProfile | null;
-  isProfileComplete: boolean | null;
+  userProfile: UserProfile | null; // Adicionado
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
@@ -15,7 +14,6 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<any>;
   resetPassword: (email: string) => Promise<void>;
-  fetchUserProfile: (user: User | null) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

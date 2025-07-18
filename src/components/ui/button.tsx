@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -19,10 +18,6 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // FlowTrip Professional variants - Government Style
-        "flowtrip-primary": "bg-flowtrip-navy-primary text-white hover:bg-flowtrip-gray-primary transition-all duration-200 font-semibold",
-        "flowtrip-outline": "border-2 border-flowtrip-navy-primary text-flowtrip-navy-primary bg-transparent hover:bg-flowtrip-navy-primary hover:text-white transition-all duration-200 font-semibold",
-        "flowtrip-secondary": "bg-flowtrip-blue-accent text-white hover:bg-flowtrip-navy-primary transition-all duration-200 font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2",

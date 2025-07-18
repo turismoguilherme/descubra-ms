@@ -6,8 +6,8 @@ import './index.css'
 import '@/utils/elevateToAdmin'
 
 const root = createRoot(document.getElementById('root')!)
-
 root.render(
-  // Removendo React.StrictMode temporariamente para depuração
-  <App />
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 )

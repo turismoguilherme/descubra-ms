@@ -1,6 +1,5 @@
-import { useEffect, useCallback, useContext } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAuth } from "@/hooks/useAuth";
-import { AuthContext } from "@/hooks/auth/AuthContext";
 import { securityAuditService } from '@/services/securityAuditService';
 import { config } from '@/config/environment';
 
@@ -8,11 +7,8 @@ import { config } from '@/config/environment';
  * Hook para monitoramento contínuo de segurança
  */
 export const useSecurityMonitoring = () => {
-  // Verificação mais robusta do contexto de autenticação
-  const authContext = useContext(AuthContext);
-  const user = authContext?.user || null;
-
-  // Removido log excessivo
+  const auth = useAuth();
+  const { user } = auth || { user: null };
 
   // Monitorar tentativas de acesso não autorizado
   const monitorUnauthorizedAccess = useCallback(() => {
@@ -153,14 +149,6 @@ export const useSecurityMonitoring = () => {
   }, [user]);
 
   useEffect(() => {
-    // Evitar múltiplas execuções usando ref
-    const isInitialized = document.body.dataset.securityMonitoringInitialized;
-    
-    if (isInitialized) return;
-    document.body.dataset.securityMonitoringInitialized = 'true';
-    
-    // Removido log excessivo
-    
     const cleanupFunctions = [
       monitorUnauthorizedAccess(),
       monitorStorageManipulation(),
@@ -170,9 +158,8 @@ export const useSecurityMonitoring = () => {
 
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup());
-      delete document.body.dataset.securityMonitoringInitialized;
     };
-  }, []);
+  }, [monitorUnauthorizedAccess, monitorStorageManipulation, monitorConsoleAccess, monitorDevTools]);
 
   return {
     reportViolation: securityAuditService.reportSecurityViolation.bind(securityAuditService),

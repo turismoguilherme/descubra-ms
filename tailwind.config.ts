@@ -63,16 +63,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// FlowTrip Professional Government Colors
-				flowtrip: {
-					'navy-primary': 'hsl(var(--flowtrip-navy-primary))',      // #1a365d
-					'gray-primary': 'hsl(var(--flowtrip-gray-primary))',      // #2d3748
-					'blue-accent': 'hsl(var(--flowtrip-blue-accent))',        // #3182ce
-					'white': 'hsl(var(--flowtrip-white))',                    // #ffffff
-					'gray-light': 'hsl(var(--flowtrip-gray-light))',          // #f7fafc
-					'text-primary': 'hsl(var(--flowtrip-text-primary))',      // #2d3748
-					'text-secondary': 'hsl(var(--flowtrip-text-secondary))',  // #4a5568
-					'border': 'hsl(var(--flowtrip-border))'                   // #e2e8f0
+				// Nova identidade visual "Descubra MS" baseada na logo
+				ms: {
+					'primary-blue': 'hsl(var(--ms-primary-blue))',          // Azul rio principal
+					'secondary-yellow': 'hsl(var(--ms-secondary-yellow))',   // Amarelo dourado
+					'pantanal-green': 'hsl(var(--ms-pantanal-green))',      // Verde floresta
+					'cerrado-orange': 'hsl(var(--ms-cerrado-orange))',      // Laranja cerrado
+					'discovery-teal': 'hsl(var(--ms-discovery-teal))',      // Azul-verde descoberta
+					'earth-brown': 'hsl(var(--ms-earth-brown))',            // Tons terrosos
+					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
+					'nature-green-light': 'hsl(var(--ms-nature-green-light))' // Verde claro
 				}
 			},
 			borderRadius: {
@@ -81,18 +81,7 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ['Roboto', 'sans-serif'],
-			},
-			fontSize: {
-				'xs': 'var(--flowtrip-text-xs)',
-				'sm': 'var(--flowtrip-text-sm)',
-				'base': 'var(--flowtrip-text-base)',
-				'lg': 'var(--flowtrip-text-lg)',
-				'xl': 'var(--flowtrip-text-xl)',
-				'2xl': 'var(--flowtrip-text-2xl)',
-				'3xl': 'var(--flowtrip-text-3xl)',
-				'4xl': 'var(--flowtrip-text-4xl)',
-				'5xl': 'var(--flowtrip-text-5xl)',
+				sans: ['Poppins', 'sans-serif'],
 			},
 			keyframes: {
 				'accordion-down': {
@@ -110,11 +99,19 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-slow': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-slow': 'pulse-slow 3s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'gradient-ms': 'linear-gradient(to right, #003087, #2E7D32)',
 			}
 		}
 	},

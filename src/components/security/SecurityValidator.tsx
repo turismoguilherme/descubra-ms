@@ -2,11 +2,10 @@
 import React from "react";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { FlowTripRole } from "@/types/flowtrip";
 
 interface SecurityValidatorProps {
   children: React.ReactNode;
-  requiredRole?: FlowTripRole;
+  requiredRole?: 'admin' | 'tech' | 'gestor' | 'municipal' | 'municipal_manager' | 'atendente';
   fallback?: React.ReactNode;
 }
 

@@ -10,7 +10,7 @@ const SocialLoginButtons = ({ onSocialLogin }: SocialLoginButtonsProps) => {
   const { signInWithProvider } = useAuth();
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
-    // Removed console.log for production security
+    console.log(`🔐 SOCIAL LOGIN: Tentativa de login com ${provider}`);
     
     try {
       if (onSocialLogin) {

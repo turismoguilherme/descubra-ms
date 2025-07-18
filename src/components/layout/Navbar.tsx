@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import UserMenu from "./UserMenu";
-// import logo from "@/assets/guata-mascote.jpg"; // Usando a nova logo
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {
@@ -17,7 +15,7 @@ const Navbar = () => {
   };
   const navItems = [{
     name: "Início",
-    path: "/",
+    path: "/"
   }, {
     name: "Destinos",
     path: "/destinos"
@@ -35,9 +33,6 @@ const Navbar = () => {
     path: "/sobre"
   }];
   const authenticatedNavItems = [{
-    name: "FlowTrip",
-    path: "/flowtrip"
-  }, {
     name: "Guatá IA",
     path: "/guata"
   }, {
@@ -52,7 +47,7 @@ const Navbar = () => {
             <div className="flex items-center">
               <img 
                 alt="Descubra Mato Grosso do Sul" 
-                src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" // Usar a logo correta
+                src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
                 loading="eager" 
                 onError={e => {
