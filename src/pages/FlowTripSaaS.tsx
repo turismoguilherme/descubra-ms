@@ -2,121 +2,88 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Users,
-  BarChart3,
-  Globe,
-  Zap,
-  Shield,
-  Crown,
-  MapPin,
   Calendar,
   Camera,
   ArrowRight,
   CheckCircle,
   Star,
   Building2,
-  Smartphone,
-  Brain,
-  Database,
-  TrendingUp
+  Crown,
+  MapPin,
+  Phone,
+  Mail,
+  MessageCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FlowTripLogo from '@/components/flowtrip/FlowTripLogo';
+import HeroSection from '@/components/flowtrip/HeroSection';
+import FeaturesSection from '@/components/flowtrip/FeaturesSection';
 
 const FlowTripSaaS = () => {
   const navigate = useNavigate();
 
-  const features = [
-    {
-      icon: Brain,
-      title: "Analytics Inteligente",
-      description: "Sistema de IA que analisa dados automaticamente e gera insights sobre comportamento turístico",
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      icon: Database,
-      title: "Importação Automática",
-      description: "Conecta-se automaticamente a fontes de dados para importar eventos, atrativos e informações turísticas",
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      icon: Users,
-      title: "Gestão Multi-usuário",
-      description: "Painel administrativo para estados, municípios e operadores turísticos com permissões personalizadas",
-      color: "from-green-500 to-green-600"
-    },
-    {
-      icon: TrendingUp,
-      title: "ROI Mensurável",
-      description: "Relatórios detalhados sobre performance dos destinos e retorno sobre investimento em turismo",
-      color: "from-orange-500 to-orange-600"
-    },
-    {
-      icon: Globe,
-      title: "Multi-idiomas",
-      description: "Plataforma preparada para turismo internacional com suporte a múltiplos idiomas",
-      color: "from-cyan-500 to-cyan-600"
-    },
-    {
-      icon: Shield,
-      title: "Segurança Empresarial",
-      description: "Infraestrutura segura com backup automático e conformidade com LGPD",
-      color: "from-red-500 to-red-600"
-    }
-  ];
-
   const benefits = [
-    "Aumento de 40% no engajamento do turista",
-    "Redução de 60% no tempo de gestão administrativa",
-    "ROI mensurável através de analytics detalhados",
-    "Integração automática com sistemas existentes",
-    "Suporte técnico especializado 24/7",
-    "Onboarding personalizado para cada destino"
+    "Aumento comprovado de 40% no engajamento turístico",
+    "Redução de 60% no tempo gasto com gestão administrativa",
+    "ROI mensurável através de analytics inteligentes",
+    "Integração automática com sistemas já existentes",
+    "Suporte técnico especializado disponível 24/7",
+    "Treinamento completo da equipe incluído no pacote"
   ];
 
-  const clients = [
+  const testimonials = [
     {
       name: "Mato Grosso do Sul",
       logo: "/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png",
-      description: "Primeiro estado a implementar destinos inteligentes no Brasil"
+      description: "Primeiro estado brasileiro a implementar destinos inteligentes com sucesso",
+      quote: "FlowTrip revolucionou nossa gestão turística. Os resultados superaram todas as expectativas."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+    <div className="min-h-screen bg-white">
+      {/* Header mais limpo e orgânico */}
+      <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             <FlowTripLogo size="md" />
+            
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#funcionalidades" className="text-gray-700 hover:text-blue-600 transition-colors">Funcionalidades</a>
-              <a href="#clientes" className="text-gray-700 hover:text-blue-600 transition-colors">Clientes</a>
-              <a href="#contato" className="text-gray-700 hover:text-blue-600 transition-colors">Contato</a>
+              <a href="#funcionalidades" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                Funcionalidades
+              </a>
+              <a href="#resultados" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                Resultados
+              </a>
+              <a href="#clientes" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                Cases
+              </a>
             </nav>
+            
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/portal')}
-                className="text-gray-700 hover:text-blue-600"
+                className="text-gray-700 hover:text-blue-600 font-medium"
               >
                 Portal do Cliente
               </Button>
               <Button 
                 onClick={() => navigate('/ms')}
                 variant="outline"
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 font-medium"
               >
-                Ver Demonstração
+                Ver Demo MS
               </Button>
               <Button 
                 onClick={() => navigate('#contato')}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg font-medium"
               >
-                Solicitar Proposta
+                Falar Conosco
               </Button>
             </div>
           </div>
@@ -124,207 +91,85 @@ const FlowTripSaaS = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 overflow-hidden">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Badge variant="outline" className="mb-6 text-blue-600 border-blue-200 bg-blue-50 px-4 py-2">
-              🚀 Plataforma SaaS para Destinos Inteligentes
-            </Badge>
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
-              Transforme seu Destino com FlowTrip
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto">
-              A primeira plataforma SaaS de destinos inteligentes do Brasil. Automatize a gestão turística, 
-              conecte dados em tempo real e transforme visitantes em embaixadores do seu destino.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button 
-                size="lg" 
-                className="text-lg px-8 py-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                onClick={() => navigate('#contato')}
-              >
-                <Crown className="mr-2 h-5 w-5" />
-                Solicitar Demonstração
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="text-lg px-8 py-6 border-blue-200 text-blue-600 hover:bg-blue-50"
-                onClick={() => navigate('/ms')}
-              >
-                <MapPin className="mr-2 h-5 w-5" />
-                Ver Demo MS
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* O que é FlowTrip */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl font-bold mb-6 text-gray-900">
-                O que é FlowTrip?
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                FlowTrip é uma plataforma SaaS especializada em destinos inteligentes que automatiza 
-                a gestão turística através de tecnologia, conectividade de dados e inteligência artificial.
-              </p>
-              <div className="space-y-4">
-                {['Importação automática de eventos e atrativos', 
-                  'Analytics e relatórios em tempo real', 
-                  'Gestão hierárquica (Estado/Município/Operador)',
-                  'Passaporte digital gamificado para turistas'].map((item, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-700">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className="bg-gradient-to-br from-blue-400 to-purple-600 rounded-2xl p-8 text-white">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="text-center">
-                    <Brain className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">IA Integrada</h3>
-                    <p className="text-sm opacity-90">Analytics inteligentes</p>
-                  </div>
-                  <div className="text-center">
-                    <Database className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Automação</h3>
-                    <p className="text-sm opacity-90">Dados sincronizados</p>
-                  </div>
-                  <div className="text-center">
-                    <Users className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Multi-tenant</h3>
-                    <p className="text-sm opacity-90">Gestão hierárquica</p>
-                  </div>
-                  <div className="text-center">
-                    <Smartphone className="h-12 w-12 mx-auto mb-3" />
-                    <h3 className="font-semibold mb-2">Mobile First</h3>
-                    <p className="text-sm opacity-90">Experiência otimizada</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Funcionalidades */}
-      <section id="funcionalidades" className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-6 text-gray-900">
-              Funcionalidades que Transformam Destinos
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Tecnologia de ponta para criar destinos inteligentes, automatizados e mensuráveis
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className="h-full hover:shadow-xl transition-all duration-300 group border-0 bg-white/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <feature.icon className="h-8 w-8 text-white" />
-                    </div>
-                    <CardTitle className="text-xl text-gray-900">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-base text-gray-600">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+      <section id="funcionalidades">
+        <FeaturesSection />
       </section>
 
-      {/* Benefícios */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+      {/* Seção "Por que escolher" mais visual */}
+      <section id="resultados" className="py-24 bg-gradient-to-b from-blue-50/30 to-orange-50/30 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23000000" fill-opacity="0.03"%3E%3Ccircle cx="7" cy="7" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-4xl font-bold mb-6 text-gray-900">
-                Por que escolher FlowTrip?
+              <Badge variant="outline" className="mb-6 text-orange-600 border-orange-200 bg-white/80">
+                <Star className="mr-2 h-4 w-4" />
+                Resultados Comprovados
+              </Badge>
+              
+              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-gray-900 leading-tight">
+                Por que destinos escolhem
+                <span className="bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
+                  {" "}FlowTrip?
+                </span>
               </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Resultados comprovados que transformam a gestão turística e a experiência do visitante.
+              
+              <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+                Não vendemos apenas software. Entregamos transformação real com resultados 
+                mensuráveis que impactam toda a cadeia turística.
               </p>
-              <div className="grid grid-cols-1 gap-4">
+              
+              <div className="space-y-4">
                 {benefits.map((benefit, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors"
+                    className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/60 transition-colors group"
                   >
-                    <Star className="h-5 w-5 text-blue-500" />
-                    <span className="text-gray-700">{benefit}</span>
+                    <CheckCircle className="h-6 w-6 text-green-500 mt-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-gray-700 leading-relaxed">{benefit}</span>
                   </motion.div>
                 ))}
               </div>
             </motion.div>
+            
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="p-8 bg-gradient-to-br from-blue-50 to-purple-50 border-0">
+              <Card className="p-10 bg-gradient-to-br from-white via-blue-50/50 to-teal-50/50 border-0 shadow-2xl backdrop-blur-sm">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6">
-                    <Crown className="h-10 w-10 text-white" />
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-600 to-teal-600 rounded-full mb-8 shadow-xl">
+                    <Crown className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-4 text-gray-900">
-                    Parceiro do Trade Turístico
+                  
+                  <h3 className="text-3xl font-bold mb-6 text-gray-900">
+                    Parceria Estratégica
                   </h3>
-                  <p className="text-gray-600 mb-6">
-                    Desenvolvido em parceria com órgãos de turismo e especialistas do setor, 
-                    garantindo soluções alinhadas com as necessidades reais do mercado.
+                  
+                  <p className="text-gray-600 mb-8 leading-relaxed text-lg">
+                    Desenvolvido junto com especialistas do trade turístico brasileiro, 
+                    FlowTrip entende as necessidades reais do mercado nacional.
                   </p>
+                  
                   <Button 
+                    size="lg"
                     variant="outline"
-                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50 font-medium"
                     onClick={() => navigate('/ms')}
                   >
-                    Conheça nossos cases
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    Ver caso de sucesso
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </Card>
@@ -333,8 +178,8 @@ const FlowTripSaaS = () => {
         </div>
       </section>
 
-      {/* Clientes */}
-      <section id="clientes" className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Cases de Sucesso */}
+      <section id="clientes" className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -342,31 +187,45 @@ const FlowTripSaaS = () => {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-6 text-gray-900">
-              Nossos Clientes
+            <Badge variant="outline" className="mb-6 text-teal-600 border-teal-200 bg-teal-50">
+              <Building2 className="mr-2 h-4 w-4" />
+              Cases de Sucesso
+            </Badge>
+            
+            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-gray-900">
+              Destinos que já
+              <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+                {" "}Transformaram
+              </span>
             </h2>
+            
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Destinos que já transformaram sua gestão turística com FlowTrip
+              Conheça os pioneiros que apostaram na inovação e colhem os frutos da transformação digital no turismo
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {clients.map((client, index) => (
+          <div className="max-w-4xl mx-auto">
+            {testimonials.map((client, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                transition={{ duration: 0.6 }}
               >
-                <Card className="h-full bg-white/80 backdrop-blur-sm border-0 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-8 text-center">
+                <Card className="bg-gradient-to-br from-white via-gray-50/50 to-blue-50/30 border-0 shadow-xl hover:shadow-2xl transition-all duration-500 p-10">
+                  <CardContent className="text-center">
                     <img 
                       src={client.logo} 
                       alt={client.name}
-                      className="h-16 w-auto mx-auto mb-4 object-contain"
+                      className="h-20 w-auto mx-auto mb-8 object-contain"
                     />
-                    <h3 className="text-xl font-bold mb-3 text-gray-900">{client.name}</h3>
-                    <p className="text-gray-600">{client.description}</p>
+                    
+                    <blockquote className="text-2xl font-medium text-gray-800 mb-8 italic leading-relaxed">
+                      "{client.quote}"
+                    </blockquote>
+                    
+                    <h3 className="text-2xl font-bold mb-4 text-gray-900">{client.name}</h3>
+                    <p className="text-gray-600 text-lg">{client.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -375,74 +234,113 @@ const FlowTripSaaS = () => {
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section id="contato" className="py-20 bg-gradient-to-r from-blue-600 to-purple-700">
-        <div className="container mx-auto px-4 text-center">
+      {/* CTA Final mais convidativo */}
+      <section id="contato" className="py-24 bg-gradient-to-r from-blue-600 via-blue-700 to-teal-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="50" cy="50" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]" />
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl font-bold mb-6 text-white">
-              Pronto para transformar seu destino?
+            <h2 className="text-4xl md:text-6xl font-bold mb-8 text-white leading-tight">
+              Vamos transformar seu
+              <br />
+              <span className="bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text text-transparent">
+                destino juntos?
+              </span>
             </h2>
-            <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
-              Agende uma demonstração personalizada e descubra como FlowTrip pode 
+            
+            <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Agende uma conversa sem compromisso e descubra como FlowTrip pode 
               revolucionar a gestão turística do seu estado ou município.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
               <Button 
                 size="lg"
                 variant="secondary"
-                className="text-lg px-8 py-6 bg-white text-blue-600 hover:bg-gray-100"
+                className="text-lg px-10 py-6 bg-white text-blue-700 hover:bg-gray-100 shadow-xl font-medium"
               >
-                <Calendar className="mr-2 h-5 w-5" />
+                <Calendar className="mr-3 h-5 w-5" />
                 Agendar Demonstração
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-lg px-8 py-6 border-white/30 text-white hover:bg-white/10"
+                className="text-lg px-10 py-6 border-white/30 text-white hover:bg-white/10 font-medium"
                 onClick={() => navigate('/portal')}
               >
-                <Building2 className="mr-2 h-5 w-5" />
+                <Building2 className="mr-3 h-5 w-5" />
                 Portal do Cliente
               </Button>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-white/80">
+              <div className="flex items-center gap-2">
+                <Phone className="h-5 w-5" />
+                <span>+55 (67) 9999-9999</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                <span>contato@flowtrip.com.br</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                <span>Chat disponível 24/7</span>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
+      {/* Footer mais humanizado */}
+      <footer className="bg-slate-900 text-white py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="col-span-1 md:col-span-2">
-              <FlowTripLogo size="lg" className="mb-6" />
-              <p className="text-gray-300 mb-4 max-w-md">
-                A plataforma SaaS líder em destinos inteligentes, transformando a gestão turística 
-                através de automação e inteligência artificial.
+              <FlowTripLogo size="lg" className="mb-8" />
+              <p className="text-gray-300 mb-6 max-w-md leading-relaxed text-lg">
+                Pioneiros em destinos inteligentes no Brasil, transformando a gestão turística 
+                através da tecnologia e da paixão por criar experiências inesquecíveis.
               </p>
+              <div className="flex space-x-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">Li</span>
+                </div>
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">F</span>
+                </div>
+                <div className="w-12 h-12 bg-pink-600 rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">IG</span>
+                </div>
+              </div>
             </div>
+            
             <div>
-              <h3 className="font-semibold mb-4">Empresa</h3>
-              <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Sobre</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Casos de Sucesso</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              <h3 className="font-semibold mb-6 text-lg">Empresa</h3>
+              <ul className="space-y-3 text-gray-300">
+                <li><a href="#" className="hover:text-white transition-colors">Sobre Nós</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Nossa História</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Equipe</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Carreiras</a></li>
               </ul>
             </div>
+            
             <div>
-              <h3 className="font-semibold mb-4">Suporte</h3>
-              <ul className="space-y-2 text-gray-300">
+              <h3 className="font-semibold mb-6 text-lg">Suporte</h3>
+              <ul className="space-y-3 text-gray-300">
+                <li><a href="#" className="hover:text-white transition-colors">Central de Ajuda</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Documentação</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
                 <li><a href="/portal" className="hover:text-white transition-colors">Portal do Cliente</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 FlowTrip. Todos os direitos reservados.</p>
+          
+          <div className="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 FlowTrip - Destinos Inteligentes. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
