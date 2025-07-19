@@ -2,12 +2,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe } from 'lucide-react';
-import SimpleNavbar from '@/components/layout/SimpleNavbar';
+import RestoredNavbar from '@/components/layout/RestoredNavbar';
 
 const FlowTripSaaS = () => {
   return (
     <div className="min-h-screen bg-white">
-      <SimpleNavbar />
+      <RestoredNavbar />
       
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 text-white">
