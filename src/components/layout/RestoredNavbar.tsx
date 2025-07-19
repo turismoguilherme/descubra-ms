@@ -3,43 +3,27 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useBrand } from "@/context/BrandContext";
 import UserMenu from "./UserMenu";
+import FlowTripLogo from "./FlowTripLogo";
 
 const RestoredNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const { config, isFlowTrip } = useBrand();
   const location = useLocation();
 
   const isActivePath = (path: string) => {
     return location.pathname === path;
   };
 
+  // Detectar se estamos no contexto FlowTrip (página principal) ou MS
+  const isFlowTrip = !location.pathname.startsWith('/ms');
+
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo FlowTrip */}
-          <Link to={isFlowTrip ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
-            <div className="flex items-center">
-              <img 
-                alt="FlowTrip"
-                src="/flowtrip-logo.png"
-                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                loading="eager" 
-                onError={(e) => {
-                  console.error('FlowTrip logo failed to load');
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'block';
-                }} 
-              />
-              <div className="text-2xl font-bold text-blue-600" style={{ display: 'none' }}>
-                FlowTrip
-              </div>
-            </div>
-          </Link>
+          <FlowTripLogo isFlowTrip={isFlowTrip} />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
