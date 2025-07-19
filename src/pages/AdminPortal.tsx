@@ -5,8 +5,58 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BarChart3, Users, MapPin, Calendar, TrendingUp, Settings, Bell, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
+import { getTestData, isTestMode } from '@/utils/testDashboards';
+import AtendenteDashboard from '@/components/admin/dashboards/AtendenteDashboard';
+import MunicipalDashboard from '@/components/admin/dashboards/MunicipalDashboard';
+import RegionalDashboard from '@/components/admin/dashboards/RegionalDashboard';
+import EstadualDashboard from '@/components/admin/dashboards/EstadualDashboard';
 
 const AdminPortal = () => {
+  const { userRole, getDashboardComponent } = useRoleBasedAccess();
+
+  // Debug logs
+  console.log('🔍 AdminPortal Debug:');
+  console.log('userRole:', userRole);
+  console.log('isTestMode:', isTestMode());
+  console.log('testData:', getTestData());
+  console.log('getDashboardComponent:', getDashboardComponent());
+
+  // Renderizar dashboard específico baseado no role
+  const renderDashboard = () => {
+    console.log('🎯 Renderizando dashboard para role:', userRole);
+    
+    switch (userRole) {
+      case 'atendente':
+        console.log('✅ Renderizando AtendenteDashboard');
+        return <AtendenteDashboard />;
+      case 'gestor_municipal':
+        console.log('✅ Renderizando MunicipalDashboard');
+        return <MunicipalDashboard />;
+      case 'gestor_igr':
+        console.log('✅ Renderizando RegionalDashboard');
+        return <RegionalDashboard />;
+      case 'diretor_estadual':
+        console.log('✅ Renderizando EstadualDashboard');
+        return <EstadualDashboard />;
+      case 'admin':
+        console.log('✅ Renderizando AdminDashboard');
+        return <AdminDashboard />;
+      default:
+        console.log('⚠️ Role não reconhecido, usando DefaultDashboard');
+        return <DefaultDashboard />;
+    }
+  };
+
+  return (
+    <UniversalLayout>
+      {renderDashboard()}
+    </UniversalLayout>
+  );
+};
+
+// Dashboard padrão para admin (mantém o design original)
+const AdminDashboard = () => {
   const stats = [
     {
       icon: <Users className="h-6 w-6 text-primary" />,
@@ -273,6 +323,42 @@ const AdminPortal = () => {
         </section>
       </div>
     </UniversalLayout>
+  );
+};
+
+// Dashboard padrão para usuários sem role específico
+const DefaultDashboard = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <section className="bg-gradient-to-r from-gray-600 to-gray-700 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-2">
+              Acesso Restrito
+            </h1>
+            <p className="text-gray-100">
+              Você não tem permissão para acessar esta área administrativa.
+            </p>
+          </div>
+        </div>
+      </section>
+      
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-8 text-center">
+              <h2 className="text-xl font-semibold mb-4">Acesso Negado</h2>
+              <p className="text-gray-600 mb-6">
+                Esta área é restrita a usuários com permissões administrativas específicas.
+              </p>
+              <Button asChild>
+                <Link to="/">Voltar ao Início</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </div>
   );
 };
 

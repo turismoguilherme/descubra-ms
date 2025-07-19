@@ -17,20 +17,36 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
         userEmail: user.email
       });
 
+      // Detectar tenant do path atual
+      const pathSegments = location.pathname.split('/').filter(Boolean);
+      const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
+      const isTenantPath = currentTenant && currentTenant.length === 2;
+      
+      console.log("🏛️ PROFILE CHECKER: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+
       // Rotas que não precisam de perfil completo
       const allowedPaths = [
         '/register', 
         '/login', 
         '/password-reset', 
         '/admin-seed',
-        '/admin-login'
+        '/admin-login',
+        '/auth'
       ];
 
-      const isAllowedPath = allowedPaths.includes(location.pathname);
+      // Verificar se é uma rota permitida (com ou sem tenant)
+      const isAllowedPath = allowedPaths.some(allowedPath => 
+        location.pathname === allowedPath || 
+        (isTenantPath && location.pathname === `/${currentTenant}${allowedPath}`)
+      );
+      
+      console.log("✅ PROFILE CHECKER: É rota permitida?", isAllowedPath);
       
       if (profileComplete === false && !isAllowedPath) {
-        console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para /register");
-        navigate('/register');
+        // Manter contexto do tenant ao redirecionar
+        const redirectPath = isTenantPath ? `/${currentTenant}/register` : '/register';
+        console.log("🚨 PROFILE CHECKER: Perfil incompleto, redirecionando para", redirectPath);
+        navigate(redirectPath);
       }
     }
   }, [profileComplete, loading, user, navigate, location.pathname]);

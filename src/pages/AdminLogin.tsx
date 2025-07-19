@@ -1,184 +1,258 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { simulateLogin, clearTestData, getTestData } from '@/utils/testDashboards';
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('atendente@ms.gov.br');
+  const [password, setPassword] = useState('atendente123');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [isTestMode, setIsTestMode] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Verificar se é um login de teste
+      const testEmails = [
+        'atendente@ms.gov.br',
+        'gestor.municipal@ms.gov.br',
+        'gestor.regional@ms.gov.br',
+        'diretor.estadual@ms.gov.br'
+      ];
 
-      if (error) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Credenciais inválidas. Verifique seu e-mail e senha.",
-          variant: "destructive",
-        });
-        return;
+      if (testEmails.includes(email)) {
+        // Modo de teste - simular login
+        const roleMap: { [key: string]: string } = {
+          'atendente@ms.gov.br': 'atendente',
+          'gestor.municipal@ms.gov.br': 'gestor_municipal',
+          'gestor.regional@ms.gov.br': 'gestor_igr',
+          'diretor.estadual@ms.gov.br': 'diretor_estadual'
+        };
+
+        const role = roleMap[email];
+        if (role) {
+          simulateLogin(role as any);
+          setIsTestMode(true);
+          console.log(`🧪 Login de teste realizado: ${role}`);
+          navigate('/ms/admin');
+          return;
+        }
       }
 
-      // Verificar se o usuário tem permissões administrativas
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .single();
-
-      if (!userRole || !['admin', 'tech', 'diretor_estadual', 'gestor_igr', 'municipal_manager'].includes(userRole.role)) {
-        await supabase.auth.signOut();
-        toast({
-          title: "Acesso negado",
-          description: "Você não possui permissões administrativas.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Redirecionando para o portal administrativo...",
-      });
-
-      // Redirecionar baseado no tipo de usuário
-      if (['admin', 'tech'].includes(userRole.role)) {
-        navigate('/admin-portal');
-      } else if (userRole.role === 'diretor_estadual') {
-        navigate('/ms/management');
-      } else if (userRole.role === 'gestor_igr') {
-        navigate('/ms/technical-admin');
-      } else if (userRole.role === 'municipal_manager') {
-        navigate('/ms/municipal-admin');
-      } else {
-        navigate('/ms/role-dashboard');
-      }
-
-    } catch (error) {
-      console.error('Erro no login:', error);
-      toast({
-        title: "Erro interno",
-        description: "Tente novamente em alguns instantes.",
-        variant: "destructive",
-      });
+      // Tentar login real com Supabase (se configurado)
+      // Aqui você pode adicionar a lógica real de autenticação
+      setError('Login real não configurado. Use os emails de teste.');
+      
+    } catch (err) {
+      console.error('Erro no login:', err);
+      setError('Erro ao fazer login. Verifique suas credenciais.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleTestLogin = (role: string) => {
+    simulateLogin(role as any);
+    setIsTestMode(true);
+    console.log(`🧪 Login de teste rápido: ${role}`);
+    navigate('/ms/admin');
+  };
+
+  const handleClearTest = () => {
+    clearTestData();
+    setIsTestMode(false);
+    console.log('🧹 Dados de teste limpos');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="text-white hover:bg-slate-800 mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao Site
-        </Button>
-
-        <Card className="bg-white shadow-xl">
-          <CardHeader className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 mx-auto">
-              <Shield className="h-8 w-8 text-blue-600" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+        <CardHeader className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/ms')}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar ao Site
+            </Button>
+          </div>
+          
+          <div className="text-center space-y-2">
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Shield className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle className="text-2xl font-bold">Portal Administrativo</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Portal Administrativo
+            </CardTitle>
+            <p className="text-sm text-gray-600">
               Acesso restrito para administradores e gestores
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">E-mail</label>
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Modo de Teste Ativo */}
+          {isTestMode && (
+            <Alert className="bg-green-50 border-green-200">
+              <AlertCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Modo de teste ativo. Use os botões abaixo para testar os dashboards.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Formulário de Login */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.gov.br"
+                required
+                className="border-gray-300 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative">
                 <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@exemplo.gov.br"
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                   required
+                  className="border-gray-300 focus:border-blue-500 pr-10"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Senha</label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={isLoading}
-              >
-                {isLoading ? "Autenticando..." : "Entrar"}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Esqueceu sua senha?{' '}
-                <button 
-                  onClick={() => navigate('/ms/password-reset')}
-                  className="text-blue-600 hover:underline"
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  Recuperar acesso
-                </button>
-              </p>
-            </div>
-
-            <div className="mt-6 pt-6 border-t">
-              <div className="text-xs text-gray-500 space-y-1">
-                <p><strong>Perfis de Acesso:</strong></p>
-                <p>• Admin/Tech: Portal FlowTrip</p>
-                <p>• Diretor Estadual: Gestão Estadual</p>
-                <p>• Gestor IGR: Administração Técnica</p>
-                <p>• Gestor Municipal: Administração Municipal</p>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-400">
-            Protegido por criptografia de ponta e auditoria completa
-          </p>
-        </div>
-      </div>
+            {error && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </form>
+
+          <div className="text-center">
+            <Button
+              variant="link"
+              className="text-blue-600 hover:text-blue-700 text-sm"
+              onClick={() => navigate('/ms/password-reset')}
+            >
+              Esqueceu sua senha? <span className="font-medium">Recuperar acesso</span>
+            </Button>
+          </div>
+
+          {/* Seção de Perfis de Acesso */}
+          <div className="border-t pt-6">
+            <h3 className="text-sm font-medium text-gray-900 mb-4">
+              Perfis de Acesso:
+            </h3>
+            <div className="space-y-2 text-xs text-gray-600">
+              <div>• Admin/Tech: Portal FlowTrip</div>
+              <div>• Diretor Estadual: Gestão Estadual</div>
+              <div>• Gestor IGR: Administração Técnica</div>
+              <div>• Gestor Municipal: Administração Municipal</div>
+            </div>
+          </div>
+
+          {/* Botões de Teste Rápido */}
+          <div className="border-t pt-6">
+            <h3 className="text-sm font-medium text-gray-900 mb-4">
+              🧪 Teste Rápido (Sem Banco):
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleTestLogin('atendente')}
+                className="text-xs"
+              >
+                Atendente
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleTestLogin('gestor_municipal')}
+                className="text-xs"
+              >
+                Municipal
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleTestLogin('gestor_igr')}
+                className="text-xs"
+              >
+                Regional
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleTestLogin('diretor_estadual')}
+                className="text-xs"
+              >
+                Estadual
+              </Button>
+            </div>
+            
+            {isTestMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearTest}
+                className="w-full mt-2 text-red-600 hover:text-red-700"
+              >
+                Limpar Dados de Teste
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

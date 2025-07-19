@@ -79,12 +79,25 @@ const LoginForm = () => {
       
       if (!error) {
         console.log("✅ Login realizado com sucesso");
+        
+        // Detectar tenant do path atual para manter contexto
+        const currentPath = window.location.pathname;
+        const pathSegments = currentPath.split('/').filter(Boolean);
+        const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
+        const isTenantPath = currentTenant && currentTenant.length === 2;
+        
+        console.log("🏛️ LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+        
+        // Redirecionar mantendo contexto do tenant
+        const redirectPath = isTenantPath ? `/${currentTenant}` : '/';
+        console.log("🔄 LOGIN: Redirecionando para:", redirectPath);
+        
         toast({
           title: "Login realizado!",
           description: "Bem-vindo de volta!",
           duration: 3000,
         });
-        navigate("/");
+        navigate(redirectPath);
       }
     } catch (err: any) {
       console.error("❌ Erro no formulário:", err);

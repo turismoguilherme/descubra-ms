@@ -14,7 +14,7 @@ import { sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { useToast } from "@/components/ui/use-toast";
 import PasswordStrengthMeter from "@/components/security/PasswordStrengthMeter";
-
+import AccessibilityQuestion, { AccessibilityPreferences } from "./AccessibilityQuestion";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
@@ -33,7 +33,7 @@ const registerSchema = z.object({
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface RegisterFormProps {
-  onRegister: (values: RegisterFormValues) => Promise<void>;
+  onRegister: (values: RegisterFormValues, accessibilityPreferences?: AccessibilityPreferences) => Promise<void>;
   onSocialLogin: (provider: 'google' | 'facebook') => Promise<void>;
   loading: boolean;
 }
@@ -43,6 +43,8 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
+  const [showAccessibilityQuestion, setShowAccessibilityQuestion] = useState(false);
+  const [formData, setFormData] = useState<RegisterFormValues | null>(null);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -93,7 +95,9 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
         return;
       }
 
-      await onRegister(sanitizedData);
+      // Salvar dados e mostrar pergunta de acessibilidade
+      setFormData(sanitizedData);
+      setShowAccessibilityQuestion(true);
     } catch (error) {
       console.error("❌ Erro na validação de segurança:", error);
       toast({
@@ -103,6 +107,29 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
       });
     }
   };
+
+  const handleAccessibilityComplete = async (accessibilityPreferences: AccessibilityPreferences) => {
+    if (formData) {
+      console.log("🎯 REGISTER: Completando registro com preferências de acessibilidade");
+      await onRegister(formData, accessibilityPreferences);
+    }
+  };
+
+  const handleAccessibilityBack = () => {
+    setShowAccessibilityQuestion(false);
+    setFormData(null);
+  };
+
+  // Se estiver mostrando a pergunta de acessibilidade
+  if (showAccessibilityQuestion) {
+    return (
+      <AccessibilityQuestion
+        onComplete={handleAccessibilityComplete}
+        onBack={handleAccessibilityBack}
+        loading={loading}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

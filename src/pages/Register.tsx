@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import RegisterForm, { RegisterFormValues } from "@/components/auth/RegisterForm";
+import { AccessibilityPreferences } from "@/components/auth/AccessibilityQuestion";
 import SecureProfileForm from "@/components/auth/SecureProfileForm";
 import EmailConfirmationMessage from "@/components/auth/EmailConfirmationMessage";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
@@ -39,8 +40,10 @@ const Register = () => {
     await signInWithProvider(provider);
   };
 
-  const handleRegister = async (values: RegisterFormValues) => {
+  const handleRegister = async (values: RegisterFormValues, accessibilityPreferences?: AccessibilityPreferences) => {
     console.log("📝 Tentativa de registro:", values.email);
+    console.log("🎯 Preferências de acessibilidade:", accessibilityPreferences);
+    
     const { email, password, fullName } = values;
     const { error, user: signedUpUser, session } = await signUp(email, password, fullName);
 

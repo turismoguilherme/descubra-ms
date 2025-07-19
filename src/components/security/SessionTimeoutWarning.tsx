@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -26,36 +26,52 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [warningTimer, setWarningTimer] = useState<NodeJS.Timeout | null>(null);
   const [logoutTimer, setLogoutTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  // Use refs to avoid dependency issues
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const logoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const resetCountRef = useRef(0);
 
   // Reset activity and timers
   const resetTimers = useCallback(() => {
+    console.log('🔄 SessionTimeoutWarning: resetTimers called, count:', ++resetCountRef.current);
+    
     const now = Date.now();
     setLastActivity(now);
     setShowWarning(false);
     setRemainingTime(warningTimeMinutes * 60);
 
-    // Clear existing timers
-    if (warningTimer) clearTimeout(warningTimer);
-    if (logoutTimer) clearTimeout(logoutTimer);
+    // Clear existing timers using refs
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = null;
+    }
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+      logoutTimerRef.current = null;
+    }
 
     // Set new warning timer
     const warningDelay = (timeoutMinutes - warningTimeMinutes) * 60 * 1000;
     const newWarningTimer = setTimeout(() => {
+      console.log('⚠️ SessionTimeoutWarning: Warning timer triggered');
       setShowWarning(true);
       startCountdown();
     }, warningDelay);
-    setWarningTimer(newWarningTimer);
+    warningTimerRef.current = newWarningTimer;
 
     // Set new logout timer
     const logoutDelay = timeoutMinutes * 60 * 1000;
     const newLogoutTimer = setTimeout(() => {
+      console.log('🚪 SessionTimeoutWarning: Logout timer triggered');
       handleAutoLogout();
     }, logoutDelay);
-    setLogoutTimer(newLogoutTimer);
-  }, [warningTimeMinutes, timeoutMinutes, warningTimer, logoutTimer]);
+    logoutTimerRef.current = newLogoutTimer;
+  }, [warningTimeMinutes, timeoutMinutes]);
 
   // Start countdown when warning is shown
   const startCountdown = useCallback(() => {
+    console.log('⏰ SessionTimeoutWarning: Starting countdown');
     const countdown = setInterval(() => {
       setRemainingTime(prev => {
         if (prev <= 1) {
@@ -72,6 +88,7 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Handle automatic logout
   const handleAutoLogout = useCallback(async () => {
+    console.log('🚪 SessionTimeoutWarning: Auto logout triggered');
     try {
       await enhancedSecurityService.logSecurityEvent({
         action: 'session_timeout_auto_logout',
@@ -99,6 +116,7 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Extend session
   const handleExtendSession = useCallback(async () => {
+    console.log('⏰ SessionTimeoutWarning: Extending session');
     try {
       await enhancedSecurityService.logSecurityEvent({
         action: 'session_extended',
@@ -121,13 +139,15 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
     }
   }, [user?.id, warningTimeMinutes, remainingTime, onExtendSession, resetTimers]);
 
-  // Activity tracking
+  // Activity tracking - FIXED: Removed problematic dependencies
   useEffect(() => {
+    console.log('🔍 SessionTimeoutWarning: useEffect triggered, user:', !!user);
     if (!user) return;
 
     const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     const handleActivity = () => {
+      console.log('🖱️ SessionTimeoutWarning: Activity detected');
       resetTimers();
     };
 
@@ -150,14 +170,15 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
     resetTimers();
 
     return () => {
+      console.log('🧹 SessionTimeoutWarning: Cleanup effect');
       activityEvents.forEach(event => {
         document.removeEventListener(event, throttledHandleActivity);
       });
-      if (warningTimer) clearTimeout(warningTimer);
-      if (logoutTimer) clearTimeout(logoutTimer);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+      if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
       if (throttleTimeout) clearTimeout(throttleTimeout);
     };
-  }, [user, resetTimers, warningTimer, logoutTimer]);
+  }, [user]); // FIXED: Only depend on user, not on resetTimers or timers
 
   // Format time display
   const formatTime = (seconds: number): string => {

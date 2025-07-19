@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { securityService } from "@/services/securityService";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,8 +20,11 @@ export const useSessionSecurity = ({
   const { toast } = useToast();
   const [sessionWarningShown, setSessionWarningShown] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
-  const [timeoutWarningTimer, setTimeoutWarningTimer] = useState<NodeJS.Timeout | null>(null);
-  const [logoutTimer, setLogoutTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  // Use refs to avoid dependency issues
+  const timeoutWarningTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const logoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const activityCountRef = useRef(0);
 
   // Enhanced device fingerprinting
   const generateDeviceFingerprint = useCallback(() => {
@@ -47,6 +50,7 @@ export const useSessionSecurity = ({
   // Enhanced logout with cleanup
   const performSecureLogout = useCallback(async () => {
     try {
+      console.log('🚪 SESSION SECURITY: Performing secure logout');
       await securityService.logSecurityEvent({
         action: 'automatic_session_timeout',
         user_id: user?.id,
@@ -57,20 +61,21 @@ export const useSessionSecurity = ({
         }
       });
       
-      // Clear all timers
-      if (timeoutWarningTimer) clearTimeout(timeoutWarningTimer);
-      if (logoutTimer) clearTimeout(logoutTimer);
+      // Clear all timers using refs
+      if (timeoutWarningTimerRef.current) clearTimeout(timeoutWarningTimerRef.current);
+      if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
       
       // Force logout
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
     }
-  }, [user?.id, lastActivity, timeoutWarningTimer, logoutTimer]);
+  }, [user?.id, lastActivity]);
 
   // Show session timeout warning
   const showSessionWarning = useCallback(() => {
     if (!sessionWarningShown) {
+      console.log('⚠️ SESSION SECURITY: Showing session warning');
       setSessionWarningShown(true);
       toast({
         title: "⚠️ Sessão expirando",
@@ -83,27 +88,31 @@ export const useSessionSecurity = ({
 
   // Reset activity timers
   const resetActivityTimers = useCallback(() => {
+    console.log('🔄 SESSION SECURITY: Resetting activity timers');
     const now = Date.now();
     setLastActivity(now);
     setSessionWarningShown(false);
     
-    // Clear existing timers
-    if (timeoutWarningTimer) clearTimeout(timeoutWarningTimer);
-    if (logoutTimer) clearTimeout(logoutTimer);
+    // Clear existing timers using refs
+    if (timeoutWarningTimerRef.current) clearTimeout(timeoutWarningTimerRef.current);
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
     
     // Set warning timer
     const warningTime = (timeoutMinutes - warningMinutes) * 60 * 1000;
     const newWarningTimer = setTimeout(showSessionWarning, warningTime);
-    setTimeoutWarningTimer(newWarningTimer);
+    timeoutWarningTimerRef.current = newWarningTimer;
     
     // Set logout timer
     const logoutTime = timeoutMinutes * 60 * 1000;
     const newLogoutTimer = setTimeout(performSecureLogout, logoutTime);
-    setLogoutTimer(newLogoutTimer);
-  }, [timeoutMinutes, warningMinutes, showSessionWarning, performSecureLogout, timeoutWarningTimer, logoutTimer]);
+    logoutTimerRef.current = newLogoutTimer;
+  }, [timeoutMinutes, warningMinutes, showSessionWarning, performSecureLogout]);
 
+  // Session start/end logging
   useEffect(() => {
     if (!enabled || !user) return;
+
+    console.log('🔍 SESSION SECURITY: Session started for user:', user.email);
 
     // Log session start
     securityService.logSecurityEvent({
@@ -119,6 +128,7 @@ export const useSessionSecurity = ({
 
     // Log session end on unmount
     return () => {
+      console.log('🔍 SESSION SECURITY: Session ended for user:', user.email);
       securityService.logSecurityEvent({
         action: 'session_ended',
         user_id: user.id,
@@ -127,11 +137,13 @@ export const useSessionSecurity = ({
     };
   }, [enabled, user, timeoutMinutes, warningMinutes, trackActivity]);
 
-  // Enhanced activity tracking with session management
+  // Enhanced activity tracking with session management - FIXED
   useEffect(() => {
     if (!enabled || !user || !trackActivity) return;
 
-    let activityCount = 0;
+    console.log('🖱️ SESSION SECURITY: Setting up activity tracking for user:', user.email);
+    
+    activityCountRef.current = 0;
     const deviceFingerprint = generateDeviceFingerprint();
 
     // Log session start with device fingerprint
@@ -147,17 +159,18 @@ export const useSessionSecurity = ({
     });
 
     const logActivity = () => {
-      activityCount++;
+      activityCountRef.current++;
       resetActivityTimers(); // Reset timers on any activity
       
       // Log activity every 50 interactions to avoid spam
-      if (activityCount % 50 === 0) {
+      if (activityCountRef.current % 50 === 0) {
+        console.log('📊 SESSION SECURITY: Activity count:', activityCountRef.current);
         securityService.logSecurityEvent({
           action: 'user_activity_tracked',
           user_id: user.id,
           success: true,
           metadata: {
-            activity_count: activityCount,
+            activity_count: activityCountRef.current,
             timestamp: new Date().toISOString(),
             device_fingerprint: deviceFingerprint
           }
@@ -175,15 +188,16 @@ export const useSessionSecurity = ({
     resetActivityTimers();
 
     return () => {
+      console.log('🧹 SESSION SECURITY: Cleaning up activity tracking');
       events.forEach(event => {
         document.removeEventListener(event, logActivity);
       });
       
-      // Clear timers on cleanup
-      if (timeoutWarningTimer) clearTimeout(timeoutWarningTimer);
-      if (logoutTimer) clearTimeout(logoutTimer);
+      // Clear timers on cleanup using refs
+      if (timeoutWarningTimerRef.current) clearTimeout(timeoutWarningTimerRef.current);
+      if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
     };
-  }, [enabled, user, trackActivity, generateDeviceFingerprint, resetActivityTimers, timeoutWarningTimer, logoutTimer, timeoutMinutes, warningMinutes]);
+  }, [enabled, user, trackActivity]); // FIXED: Removed problematic dependencies
 
   return {
     lastActivity,

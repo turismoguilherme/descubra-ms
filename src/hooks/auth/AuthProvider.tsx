@@ -77,7 +77,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      // Detectar tenant do path atual para manter contexto
+      const currentPath = window.location.pathname;
+      const pathSegments = currentPath.split('/').filter(Boolean);
+      const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
+      const isTenantPath = currentTenant && currentTenant.length === 2;
+      
+      console.log("🏛️ SIGNUP: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      
+      // Redirecionar mantendo contexto do tenant
+      const redirectUrl = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/`;
+      console.log("🔄 SIGNUP: Redirecionando para:", redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -138,10 +148,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: 'google' | 'facebook') => {
     try {
+      // Detectar tenant do path atual para manter contexto
+      const currentPath = window.location.pathname;
+      const pathSegments = currentPath.split('/').filter(Boolean);
+      const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
+      const isTenantPath = currentTenant && currentTenant.length === 2;
+      
+      console.log("🏛️ SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      
+      // Redirecionar mantendo contexto do tenant
+      const redirectPath = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/`;
+      console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectPath,
         },
       });
 

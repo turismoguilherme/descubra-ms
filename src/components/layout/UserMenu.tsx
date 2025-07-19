@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { User, LogOut, Settings, Shield, Users, BarChart3 } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,6 +18,14 @@ import { useSecureAuth } from "@/hooks/useSecureAuth";
 const UserMenu = () => {
   const { user } = useAuth();
   const { userRole, isManager, isAdmin, handleSecureLogout } = useSecureAuth();
+  const location = useLocation();
+  
+  // Detectar tenant do path atual
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
+  const isTenantPath = currentTenant && currentTenant.length === 2;
+  
+  console.log("🏛️ USERMENU: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
 
   if (!user) return null;
 
@@ -50,6 +58,10 @@ const UserMenu = () => {
       default:
         return '/profile';
     }
+  };
+  
+  const getPathWithTenant = (path: string) => {
+    return isTenantPath ? `/${currentTenant}${path}` : path;
   };
 
   return (
@@ -88,7 +100,7 @@ const UserMenu = () => {
         <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
         
         <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
-          <Link to="/profile" className="flex items-center">
+          <Link to={getPathWithTenant("/profile")} className="flex items-center">
             <User className="mr-2 h-4 w-4" />
             <span>Perfil</span>
           </Link>
@@ -96,7 +108,7 @@ const UserMenu = () => {
 
         {isManager && (
           <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Link to={getDashboardRoute()} className="flex items-center">
+            <Link to={getPathWithTenant(getDashboardRoute())} className="flex items-center">
               <BarChart3 className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </Link>
@@ -105,7 +117,7 @@ const UserMenu = () => {
 
         {isAdmin && (
           <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Link to="/technical-admin" className="flex items-center">
+            <Link to={getPathWithTenant("/technical-admin")} className="flex items-center">
               <Shield className="mr-2 h-4 w-4 text-red-500" />
               <span>Admin Técnico</span>
             </Link>

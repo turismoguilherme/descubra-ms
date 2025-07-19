@@ -13,6 +13,8 @@ import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
 import SecurityProvider from "@/components/security/SecurityProvider";
+import VLibrasWithPreferences from "@/components/accessibility/VLibrasWithPreferences";
+import AccessibilityButton from "@/components/layout/AccessibilityButton";
 
 // Critical components (no lazy loading)
 import FlowTripSaaS from "@/pages/FlowTripSaaS";
@@ -32,6 +34,7 @@ const BlogFlowTrip = lazy(() => import("@/pages/BlogFlowTrip"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const SuporteFlowTrip = lazy(() => import("@/pages/SuporteFlowTrip"));
 const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
+const TestDashboards = lazy(() => import("@/pages/TestDashboards"));
 const ContatoFlowTrip = lazy(() => import("@/pages/ContatoFlowTrip"));
 const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
 const RecursosWhiteLabel = lazy(() => import("@/pages/RecursosWhiteLabel"));
@@ -68,6 +71,10 @@ const GuataAI = lazy(() => import("@/pages/GuataAI"));
 const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
 const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPassport"));
 const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
+const Regions = lazy(() => import("@/pages/Regions"));
+const Resultados = lazy(() => import("@/pages/Resultados"));
+const CasesSucesso = lazy(() => import("@/pages/CasesSucesso"));
+const Personalizar = lazy(() => import("@/pages/Personalizar"));
 
 const queryClient = new QueryClient();
 
@@ -77,7 +84,27 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Componente de teste simples
+function TestComponent() {
+  console.log("🧪 TEST: Componente de teste sendo renderizado");
+  return (
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: '#f0f0f0', 
+      color: '#333',
+      fontFamily: 'Arial, sans-serif',
+      textAlign: 'center'
+    }}>
+      <h1>🚀 Aplicação Funcionando!</h1>
+      <p>Se você está vendo esta mensagem, o React está funcionando corretamente.</p>
+      <p>Verifique o console do navegador para ver os logs de debug.</p>
+    </div>
+  );
+}
+
 function App() {
+  console.log("🚀 APP: Componente App sendo renderizado");
+  
   return (
     <QueryClientProvider client={queryClient}>
       <SecurityHeaders />
@@ -97,6 +124,9 @@ function App() {
                   <ProfileCompletionChecker>
                     <div className="min-h-screen bg-background font-sans antialiased">
                     <Routes>
+                      {/* Rota de teste */}
+                      <Route path="/test" element={<TestComponent />} />
+                      
                       {/* FlowTrip SaaS Routes */}
                       <Route path="/" element={<FlowTripSaaS />} />
                       <Route path="/flowtrip" element={<FlowTripSaaS />} />
@@ -110,6 +140,7 @@ function App() {
                       <Route path="/documentacao" element={<Suspense fallback={<LoadingFallback />}><Documentacao /></Suspense>} />
                       <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteFlowTrip /></Suspense>} />
                       <Route path="/admin-portal" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
+                      <Route path="/test-dashboards" element={<Suspense fallback={<LoadingFallback />}><TestDashboards /></Suspense>} />
                       <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
                       <Route path="/master-dashboard" element={<FlowTripMasterDashboard />} />
                       
@@ -125,6 +156,7 @@ function App() {
                       <Route path="/ms/login" element={<Login />} />
                       <Route path="/ms/auth" element={<AuthPage />} />
                       <Route path="/ms/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
+                      <Route path="/ms/admin" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
                       <Route path="/ms/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
                       <Route path="/ms/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
                       <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
@@ -154,6 +186,13 @@ function App() {
                       <Route path="/ms/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
                       <Route path="/ms/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
                       <Route path="/ms/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
+                      <Route path="/ms/regioes" element={<Suspense fallback={<LoadingFallback />}><Regions /></Suspense>} />
+                      <Route path="/ms/test-dashboards" element={<Suspense fallback={<LoadingFallback />}><TestDashboards /></Suspense>} />
+                      
+                      {/* Páginas FlowTrip SaaS */}
+                      <Route path="/resultados" element={<Suspense fallback={<LoadingFallback />}><Resultados /></Suspense>} />
+                      <Route path="/cases-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasesSucesso /></Suspense>} />
+                      <Route path="/personalizar" element={<Suspense fallback={<LoadingFallback />}><Personalizar /></Suspense>} />
                       
                       {/* Legacy redirects - manter compatibilidade */}
                       <Route path="/welcome" element={<Navigate to="/ms/welcome" replace />} />
@@ -176,6 +215,8 @@ function App() {
                     </Routes>
                     </div>
                   </ProfileCompletionChecker>
+                  <VLibrasWithPreferences />
+                  <AccessibilityButton />
                 </BrandProvider>
               </BrowserRouter>
               </TooltipProvider>

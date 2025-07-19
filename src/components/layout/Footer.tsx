@@ -1,11 +1,20 @@
 
-import { Link } from "react-router-dom";
-import { ShieldCheck, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ShieldCheck, Facebook, Instagram, Twitter, Youtube, Settings } from "lucide-react";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
-
+import { useAuth } from "@/hooks/useAuth";
 
 const Footer = () => {
   const { getContentValue } = useInstitutionalContent();
+  const { user } = useAuth();
+  const location = useLocation();
+  
+  // Detectar tenant do path atual
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
+  const isTenantPath = currentTenant && currentTenant.length === 2;
+  
+  console.log("🏛️ FOOTER: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
 
   const description = getContentValue('footer_description');
   const facebookLink = getContentValue('footer_facebook_link');
@@ -14,6 +23,10 @@ const Footer = () => {
   const youtubeLink = getContentValue('footer_youtube_link');
   const contactEmail = getContentValue('footer_contact_email');
   const contactPhone = getContentValue('footer_contact_phone');
+  
+  const getPathWithTenant = (path: string) => {
+    return isTenantPath ? `/${currentTenant}${path}` : path;
+  };
 
   return (
     <footer className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white">
@@ -53,11 +66,11 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 text-white">Links Rápidos</h3>
             <ul className="space-y-3">
-              <li><Link to="/" className="text-gray-100 hover:text-white transition-colors">Início</Link></li>
-              <li><Link to="/destinos" className="text-gray-100 hover:text-white transition-colors">Destinos</Link></li>
-              <li><Link to="/eventos" className="text-gray-100 hover:text-white transition-colors">Eventos</Link></li>
-              <li><Link to="/parceiros" className="text-gray-100 hover:text-white transition-colors">Parceiros</Link></li>
-              <li><Link to="/passaporte" className="text-gray-100 hover:text-white transition-colors">Passaporte</Link></li>
+              <li><Link to={getPathWithTenant("/")} className="text-gray-100 hover:text-white transition-colors">Início</Link></li>
+              <li><Link to={getPathWithTenant("/destinos")} className="text-gray-100 hover:text-white transition-colors">Destinos</Link></li>
+              <li><Link to={getPathWithTenant("/eventos")} className="text-gray-100 hover:text-white transition-colors">Eventos</Link></li>
+              <li><Link to={getPathWithTenant("/parceiros")} className="text-gray-100 hover:text-white transition-colors">Parceiros</Link></li>
+              <li><Link to={getPathWithTenant("/passaporte")} className="text-gray-100 hover:text-white transition-colors">Passaporte</Link></li>
             </ul>
           </div>
           
@@ -65,14 +78,23 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 text-white">Mais</h3>
             <ul className="space-y-3">
-              <li><Link to="/guata" className="text-gray-100 hover:text-white transition-colors">Guatá</Link></li>
-              <li><Link to="/welcome" className="text-gray-100 hover:text-white transition-colors">Cadastre-se</Link></li>
+              <li><Link to={getPathWithTenant("/guata")} className="text-gray-100 hover:text-white transition-colors">Guatá</Link></li>
+              <li><Link to={getPathWithTenant("/welcome")} className="text-gray-100 hover:text-white transition-colors">Cadastre-se</Link></li>
               <li>
                 <Link to="/admin-login" className="text-gray-100 hover:text-white transition-colors flex items-center gap-1">
                   <ShieldCheck size={16} />
                   Área Restrita
                 </Link>
               </li>
+              {/* Master Dashboard - apenas para admins */}
+              {user && (
+                <li>
+                  <Link to="/master-dashboard" className="text-gray-100 hover:text-white transition-colors flex items-center gap-1">
+                    <Settings size={16} />
+                    Master Dashboard
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
