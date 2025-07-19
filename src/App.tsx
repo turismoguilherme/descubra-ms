@@ -23,6 +23,16 @@ import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
 import AuthPage from "@/pages/AuthPage";
 
+// FlowTrip SaaS Pages
+const Solucoes = lazy(() => import("@/pages/Solucoes"));
+const CasosSucesso = lazy(() => import("@/pages/CasosSucesso"));
+const Precos = lazy(() => import("@/pages/Precos"));
+const SobreFlowTrip = lazy(() => import("@/pages/SobreFlowTrip"));
+const BlogFlowTrip = lazy(() => import("@/pages/BlogFlowTrip"));
+const Documentacao = lazy(() => import("@/pages/Documentacao"));
+const SuporteFlowTrip = lazy(() => import("@/pages/SuporteFlowTrip"));
+const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
+
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
 const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
@@ -87,6 +97,14 @@ function App() {
                       <Route path="/" element={<FlowTripSaaS />} />
                       <Route path="/flowtrip" element={<FlowTripSaaS />} />
                       <Route path="/contato" element={<ContatoFlowTrip />} />
+                      <Route path="/solucoes" element={<Suspense fallback={<LoadingFallback />}><Solucoes /></Suspense>} />
+                      <Route path="/casos-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasosSucesso /></Suspense>} />
+                      <Route path="/precos" element={<Suspense fallback={<LoadingFallback />}><Precos /></Suspense>} />
+                      <Route path="/sobre-flowtrip" element={<Suspense fallback={<LoadingFallback />}><SobreFlowTrip /></Suspense>} />
+                      <Route path="/blog" element={<Suspense fallback={<LoadingFallback />}><BlogFlowTrip /></Suspense>} />
+                      <Route path="/documentacao" element={<Suspense fallback={<LoadingFallback />}><Documentacao /></Suspense>} />
+                      <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteFlowTrip /></Suspense>} />
+                      <Route path="/admin-portal" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
                       
                       {/* MS Routes */}
                       <Route path="/ms" element={<MSIndex />} />
