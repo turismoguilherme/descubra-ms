@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, 
   DollarSign, 
@@ -19,7 +22,10 @@ import {
   Brain,
   Headphones,
   Wrench,
-  FileText
+  FileText,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -66,53 +72,112 @@ const FlowTripMasterDashboard = () => {
     active_support_tickets: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogin, setShowLogin] = useState(true);
+  const [loginError, setLoginError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Credenciais do Master (em produção, isso deveria estar no backend)
+  const MASTER_EMAIL = 'master@flowtrip.com';
+  const MASTER_PASSWORD = 'FlowTripMaster2024!';
+
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  });
 
   useEffect(() => {
-    loadDashboardData();
+    // Verificar se já está autenticado
+    const checkAuth = localStorage.getItem('flowtrip_master_auth');
+    if (checkAuth === 'true') {
+      setIsAuthenticated(true);
+      setShowLogin(false);
+      loadDashboardData();
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    
+    if (loginData.email === MASTER_EMAIL && loginData.password === MASTER_PASSWORD) {
+      setIsAuthenticated(true);
+      setShowLogin(false);
+      localStorage.setItem('flowtrip_master_auth', 'true');
+      loadDashboardData();
+    } else {
+      setLoginError('Credenciais inválidas. Apenas o Master pode acessar este dashboard.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowLogin(true);
+    localStorage.removeItem('flowtrip_master_auth');
+  };
 
   const loadDashboardData = async () => {
     try {
-      // Carregar dados dos clientes
-      const { data: clientsData } = await supabase
-        .from('flowtrip_clients')
-        .select(`
-          id,
-          client_name,
-          status,
-          flowtrip_states(name),
-          flowtrip_subscriptions(monthly_fee, plan_type)
-        `);
+      setLoading(true);
+      
+      // Dados mockados para demonstração (em produção viriam do banco)
+      const mockClients: ClientData[] = [
+        {
+          id: '1',
+          client_name: 'Secretaria de Turismo MS',
+          state_name: 'Mato Grosso do Sul',
+          status: 'active',
+          monthly_fee: 10000,
+          users_count: 150,
+          last_activity: '2024-07-19T10:30:00Z',
+          subscription_plan: 'Premium'
+        },
+        {
+          id: '2',
+          client_name: 'Secretaria de Turismo MT',
+          state_name: 'Mato Grosso',
+          status: 'pending',
+          monthly_fee: 5000,
+          users_count: 0,
+          last_activity: '2024-07-18T15:45:00Z',
+          subscription_plan: 'Basic'
+        }
+      ];
 
-      // Carregar tickets de suporte
-      const { data: ticketsData } = await supabase
-        .from('flowtrip_support_tickets')
-        .select(`
-          id,
-          title,
-          priority,
-          status,
-          created_at,
-          flowtrip_clients(client_name)
-        `)
-        .eq('status', 'open');
+      const mockTickets: SupportTicket[] = [
+        {
+          id: '1',
+          client_name: 'Secretaria de Turismo MS',
+          title: 'Dúvida sobre configuração de eventos',
+          priority: 'medium',
+          status: 'open',
+          created_at: '2024-07-19T09:15:00Z'
+        },
+        {
+          id: '2',
+          client_name: 'Secretaria de Turismo MT',
+          title: 'Problema com upload de imagens',
+          priority: 'high',
+          status: 'open',
+          created_at: '2024-07-19T08:30:00Z'
+        }
+      ];
 
-      // Calcular métricas
-      const totalRevenue = clientsData?.reduce((sum, client) => {
-        return sum + (client.flowtrip_subscriptions?.[0]?.monthly_fee || 0);
-      }, 0) || 0;
+      const totalRevenue = mockClients.reduce((sum, client) => sum + client.monthly_fee, 0);
 
       setMetrics({
         total_revenue: totalRevenue,
-        active_clients: clientsData?.filter(c => c.status === 'active').length || 0,
-        total_users: 0, // Implementar contagem de usuários
+        active_clients: mockClients.filter(c => c.status === 'active').length,
+        total_users: mockClients.reduce((sum, client) => sum + client.users_count, 0),
         system_health: 'excellent',
         uptime_percentage: 99.9,
-        active_support_tickets: ticketsData?.length || 0
+        active_support_tickets: mockTickets.length
       });
 
-      setClients(clientsData || []);
-      setTickets(ticketsData || []);
+      setClients(mockClients);
+      setTickets(mockTickets);
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -121,25 +186,100 @@ const FlowTripMasterDashboard = () => {
   };
 
   const handleAIAction = async (action: string, data?: any) => {
-    // Simular ações da IA
     console.log(`IA executando ação: ${action}`, data);
     
-    // Aqui você implementaria as chamadas para a IA
+    // Simular ações da IA
     switch (action) {
       case 'respond_ticket':
-        // IA responde automaticamente ao ticket
+        alert('IA respondeu automaticamente ao ticket!');
         break;
       case 'resolve_issue':
-        // IA resolve problema técnico
+        alert('IA resolveu o problema técnico!');
         break;
       case 'generate_report':
-        // IA gera relatório
+        alert('IA gerou relatório mensal!');
         break;
       case 'optimize_system':
-        // IA otimiza sistema
+        alert('IA otimizou o sistema!');
         break;
     }
   };
+
+  // Tela de Login
+  if (showLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold">FlowTrip Master</CardTitle>
+            <CardDescription>
+              Acesso exclusivo ao Dashboard Master
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Master</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="master@flowtrip.com"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha Master</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              {loginError && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{loginError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button type="submit" className="w-full">
+                <Shield className="w-4 h-4 mr-2" />
+                Acessar Dashboard Master
+              </Button>
+            </form>
+            
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>Credenciais de demonstração:</p>
+              <p className="font-mono text-xs mt-1">
+                Email: master@flowtrip.com<br/>
+                Senha: FlowTripMaster2024!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -173,6 +313,10 @@ const FlowTripMasterDashboard = () => {
             <Zap className="w-4 h-4 mr-2" />
             IA Otimizar Sistema
           </Button>
+          <Button variant="outline" onClick={handleLogout}>
+            <Shield className="w-4 h-4 mr-2" />
+            Sair
+          </Button>
         </div>
       </div>
 
@@ -201,20 +345,20 @@ const FlowTripMasterDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{metrics.active_clients}</div>
             <p className="text-xs text-muted-foreground">
-              Estados contratantes
+              {metrics.total_users} usuários totais
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uptime</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Uptime do Sistema</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.uptime_percentage}%</div>
             <p className="text-xs text-muted-foreground">
-              Sistema estável
+              Status: {metrics.system_health}
             </p>
           </CardContent>
         </Card>
@@ -227,7 +371,7 @@ const FlowTripMasterDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{metrics.active_support_tickets}</div>
             <p className="text-xs text-muted-foreground">
-              Aguardando resolução
+              Aguardando resposta da IA
             </p>
           </CardContent>
         </Card>
@@ -235,95 +379,74 @@ const FlowTripMasterDashboard = () => {
 
       {/* Tabs Principais */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clients">Clientes</TabsTrigger>
-          <TabsTrigger value="support">Suporte IA</TabsTrigger>
-          <TabsTrigger value="system">Sistema</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="support">Suporte</TabsTrigger>
+          <TabsTrigger value="ai">IA Central</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Ações Rápidas da IA */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Brain className="w-5 h-5 mr-2" />
-                  Ações Rápidas da IA
+                  <Globe className="w-5 h-5 mr-2" />
+                  Estados Ativos
                 </CardTitle>
-                <CardDescription>
-                  Comandos para a IA gerenciar automaticamente
-                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleAIAction('respond_all_tickets')}
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  IA Responder Todos os Tickets
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleAIAction('generate_monthly_report')}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  IA Gerar Relatório Mensal
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleAIAction('optimize_performance')}
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  IA Otimizar Performance
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleAIAction('security_audit')}
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  IA Auditoria de Segurança
-                </Button>
+              <CardContent>
+                <div className="space-y-3">
+                  {clients.map((client) => (
+                    <div key={client.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{client.state_name}</p>
+                        <p className="text-sm text-gray-600">{client.client_name}</p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
+                          {client.status === 'active' ? 'Ativo' : 'Pendente'}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          R$ {client.monthly_fee.toLocaleString()}/mês
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Status do Sistema */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Activity className="w-5 h-5 mr-2" />
-                  Status do Sistema
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Performance do Sistema
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span>Servidor Principal</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    Online
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Banco de Dados</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    Online
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>IA Assistant</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    Ativo
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Backup Automático</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    Funcionando
-                  </Badge>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span>CPU</span>
+                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-600 h-2 rounded-full" style={{width: '25%'}}></div>
+                    </div>
+                    <span className="text-sm text-gray-600">25%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Memória</span>
+                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{width: '45%'}}></div>
+                    </div>
+                    <span className="text-sm text-gray-600">45%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Storage</span>
+                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div className="bg-yellow-600 h-2 rounded-full" style={{width: '60%'}}></div>
+                    </div>
+                    <span className="text-sm text-gray-600">60%</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -333,33 +456,31 @@ const FlowTripMasterDashboard = () => {
         <TabsContent value="clients" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Clientes Ativos</CardTitle>
+              <CardTitle>Gestão de Clientes</CardTitle>
               <CardDescription>
-                Estados contratantes da plataforma FlowTrip
+                Gerencie todos os estados contratantes
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {clients.map((client) => (
-                  <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-semibold">{client.client_name}</h3>
-                      <p className="text-sm text-gray-600">
-                        Plano: {client.flowtrip_subscriptions?.[0]?.plan_type || 'Básico'}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
-                        {client.status}
-                      </Badge>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleAIAction('client_analysis', client.id)}
-                      >
-                        <Brain className="w-4 h-4 mr-1" />
-                        IA Analisar
-                      </Button>
+                  <div key={client.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{client.state_name}</h3>
+                        <p className="text-sm text-gray-600">{client.client_name}</p>
+                        <p className="text-sm text-gray-500">
+                          Plano: {client.subscription_plan} | 
+                          Usuários: {client.users_count} |
+                          Última atividade: {new Date(client.last_activity).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">R$ {client.monthly_fee.toLocaleString()}/mês</p>
+                        <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
+                          {client.status === 'active' ? 'Ativo' : 'Pendente'}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -371,36 +492,41 @@ const FlowTripMasterDashboard = () => {
         <TabsContent value="support" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Suporte Automatizado por IA</CardTitle>
+              <CardTitle>Suporte e Tickets</CardTitle>
               <CardDescription>
-                Tickets sendo gerenciados automaticamente pela IA
+                Monitoramento de tickets e problemas
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {tickets.map((ticket) => (
-                  <div key={ticket.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-semibold">{ticket.title}</h3>
-                      <p className="text-sm text-gray-600">
-                        Cliente: {ticket.flowtrip_clients?.client_name}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={
-                        ticket.priority === 'high' ? 'destructive' : 
-                        ticket.priority === 'medium' ? 'default' : 'secondary'
-                      }>
-                        {ticket.priority}
-                      </Badge>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleAIAction('respond_ticket', ticket.id)}
-                      >
-                        <Brain className="w-4 h-4 mr-1" />
-                        IA Responder
-                      </Button>
+                  <div key={ticket.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{ticket.title}</h3>
+                        <p className="text-sm text-gray-600">{ticket.client_name}</p>
+                        <p className="text-sm text-gray-500">
+                          Criado em: {new Date(ticket.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={
+                          ticket.priority === 'high' ? 'destructive' : 
+                          ticket.priority === 'medium' ? 'default' : 'secondary'
+                        }>
+                          {ticket.priority === 'high' ? 'Alta' : 
+                           ticket.priority === 'medium' ? 'Média' : 'Baixa'}
+                        </Badge>
+                        <div className="mt-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleAIAction('respond_ticket', ticket.id)}
+                          >
+                            <Brain className="w-4 h-4 mr-1" />
+                            IA Responder
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -409,89 +535,47 @@ const FlowTripMasterDashboard = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="system" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monitoramento do Sistema</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>CPU</span>
-                    <span className="text-green-600">45%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Memória</span>
-                    <span className="text-yellow-600">78%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Disco</span>
-                    <span className="text-green-600">32%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Rede</span>
-                    <span className="text-green-600">12%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Ações da IA no Sistema</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleAIAction('backup_verification')}
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    IA Verificar Backups
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleAIAction('security_scan')}
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    IA Scan de Segurança
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleAIAction('performance_optimization')}
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    IA Otimizar Performance
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
+        <TabsContent value="ai" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Analytics da Plataforma</CardTitle>
+              <CardTitle>IA Superinteligente</CardTitle>
+              <CardDescription>
+                Controle das ações automáticas da IA
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">15.2k</div>
-                  <div className="text-sm text-gray-600">Usuários Ativos</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">98.5%</div>
-                  <div className="text-sm text-gray-600">Satisfação</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">2.3s</div>
-                  <div className="text-sm text-gray-600">Tempo de Resposta</div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleAIAction('generate_report')}
+                >
+                  <FileText className="w-6 h-6 mb-2" />
+                  Gerar Relatório Mensal
+                </Button>
+                
+                <Button 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleAIAction('resolve_issue')}
+                >
+                  <Wrench className="w-6 h-6 mb-2" />
+                  Resolver Problemas Técnicos
+                </Button>
+                
+                <Button 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleAIAction('optimize_system')}
+                >
+                  <Zap className="w-6 h-6 mb-2" />
+                  Otimizar Sistema
+                </Button>
+                
+                <Button 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleAIAction('analyze_clients')}
+                >
+                  <Brain className="w-6 h-6 mb-2" />
+                  Analisar Clientes
+                </Button>
               </div>
             </CardContent>
           </Card>

@@ -21,6 +21,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
 import AuthPage from "@/pages/AuthPage";
+import FlowTripMasterDashboard from "@/pages/FlowTripMasterDashboard";
 
 // FlowTrip SaaS Pages
 const Solucoes = lazy(() => import("@/pages/Solucoes"));
@@ -36,7 +37,6 @@ const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
 const RecursosWhiteLabel = lazy(() => import("@/pages/RecursosWhiteLabel"));
 const RecursosMultiTenant = lazy(() => import("@/pages/RecursosMultiTenant"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
-const FlowTripMasterDashboard = lazy(() => import("@/pages/FlowTripMasterDashboard"));
 
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
@@ -111,7 +111,7 @@ function App() {
                       <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteFlowTrip /></Suspense>} />
                       <Route path="/admin-portal" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
                       <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
-                      <Route path="/master-dashboard" element={<Suspense fallback={<LoadingFallback />}><FlowTripMasterDashboard /></Suspense>} />
+                      <Route path="/master-dashboard" element={<FlowTripMasterDashboard />} />
                       
                       {/* FlowTrip Resources Routes */}
                       <Route path="/recursos/analytics" element={<Suspense fallback={<LoadingFallback />}><RecursosAnalytics /></Suspense>} />

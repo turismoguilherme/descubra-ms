@@ -1,33 +1,56 @@
 import React from 'react';
-import UniversalLayout from '@/components/layout/UniversalLayout';
-import UniversalHero from '@/components/layout/UniversalHero';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe } from 'lucide-react';
+import SimpleNavbar from '@/components/layout/SimpleNavbar';
 
 const FlowTripSaaS = () => {
   return (
-    <UniversalLayout>
-      <UniversalHero />
+    <div className="min-h-screen bg-white">
+      <SimpleNavbar />
       
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Transforme seu Estado em Destino Inteligente
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
+            Plataforma SaaS completa para gestão turística governamental com IA, analytics e passaporte digital
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/contato">
+              <Button size="lg" className="bg-yellow-400 text-blue-900 hover:bg-yellow-300">
+                Agendar Demonstração
+              </Button>
+            </Link>
+            <Link to="/ms">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900">
+                Ver Case de Sucesso
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-16 bg-gray-50">
-        <div className="ms-container text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <div className="text-3xl font-bold text-ms-primary-blue">3</div>
+              <div className="text-3xl font-bold text-blue-600">3</div>
               <div className="text-gray-600">Estados Ativos</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-ms-primary-blue">100+</div>
+              <div className="text-3xl font-bold text-blue-600">100+</div>
               <div className="text-gray-600">Municípios</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-ms-primary-blue">500k+</div>
+              <div className="text-3xl font-bold text-blue-600">500k+</div>
               <div className="text-gray-600">Turistas Ativos</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-ms-primary-blue">15%</div>
+              <div className="text-3xl font-bold text-blue-600">15%</div>
               <div className="text-gray-600">Aumento Médio em Visitação</div>
             </div>
           </div>
@@ -36,7 +59,7 @@ const FlowTripSaaS = () => {
 
       {/* Como Funciona */}
       <section className="py-20">
-        <div className="ms-container">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Como o FlowTrip Funciona
@@ -48,7 +71,7 @@ const FlowTripSaaS = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-ms-primary-blue rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Map className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Portal Turístico</h3>
@@ -56,7 +79,7 @@ const FlowTripSaaS = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-ms-discovery-teal rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-teal-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Brain className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2">IA Conversacional</h3>
@@ -64,7 +87,7 @@ const FlowTripSaaS = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-ms-pantanal-green rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Passaporte Digital</h3>
@@ -72,7 +95,7 @@ const FlowTripSaaS = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-ms-cerrado-orange rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <BarChart3 className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Analytics & IA</h3>
@@ -83,11 +106,11 @@ const FlowTripSaaS = () => {
       </section>
 
       {/* Case de Sucesso MS */}
-      <section className="py-20 bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal">
-        <div className="ms-container">
+      <section className="py-20 bg-gradient-to-br from-blue-600 to-teal-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white">
-              <div className="inline-block bg-ms-secondary-yellow text-ms-primary-blue px-4 py-2 rounded-full font-semibold mb-4">
+              <div className="inline-block bg-yellow-400 text-blue-900 px-4 py-2 rounded-full font-semibold mb-4">
                 Case de Sucesso
               </div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
@@ -99,27 +122,27 @@ const FlowTripSaaS = () => {
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-ms-secondary-yellow rounded-full flex items-center justify-center mr-3">
-                    <ArrowRight className="w-4 h-4 text-ms-primary-blue" />
+                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                    <ArrowRight className="w-4 h-4 text-blue-900" />
                   </div>
                   <span>500k+ turistas utilizando passaporte digital</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-ms-secondary-yellow rounded-full flex items-center justify-center mr-3">
-                    <ArrowRight className="w-4 h-4 text-ms-primary-blue" />
+                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                    <ArrowRight className="w-4 h-4 text-blue-900" />
                   </div>
                   <span>15% aumento na permanência média</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-ms-secondary-yellow rounded-full flex items-center justify-center mr-3">
-                    <ArrowRight className="w-4 h-4 text-ms-primary-blue" />
+                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                    <ArrowRight className="w-4 h-4 text-blue-900" />
                   </div>
                   <span>100% dos municípios turísticos integrados</span>
                 </div>
               </div>
 
               <Link to="/ms">
-                <Button className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold px-8 py-3">
+                <Button className="bg-yellow-400 text-blue-900 hover:bg-yellow-300 font-semibold px-8 py-3">
                   Explorar Case Completo
                 </Button>
               </Link>
@@ -128,19 +151,19 @@ const FlowTripSaaS = () => {
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-ms-secondary-yellow">500k+</div>
+                  <div className="text-4xl font-bold text-yellow-400">500k+</div>
                   <div className="text-white/80">Usuários Ativos</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-ms-secondary-yellow">100%</div>
+                  <div className="text-4xl font-bold text-yellow-400">100%</div>
                   <div className="text-white/80">Municípios Integrados</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-ms-secondary-yellow">15%</div>
+                  <div className="text-4xl font-bold text-yellow-400">15%</div>
                   <div className="text-white/80">↑ Permanência</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-ms-secondary-yellow">4.8</div>
+                  <div className="text-4xl font-bold text-yellow-400">4.8</div>
                   <div className="text-white/80">★ Satisfação</div>
                 </div>
               </div>
@@ -151,7 +174,7 @@ const FlowTripSaaS = () => {
 
       {/* Funcionalidades */}
       <section className="py-20">
-        <div className="ms-container">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Funcionalidades Completas
@@ -162,8 +185,8 @@ const FlowTripSaaS = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-ms-primary-blue">
-              <Shield className="w-12 h-12 text-ms-primary-blue mb-4" />
+            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-blue-600">
+              <Shield className="w-12 h-12 text-blue-600 mb-4" />
               <h3 className="text-xl font-semibold mb-3">Gestão Governamental</h3>
               <ul className="space-y-2 text-gray-600">
                 <li>• Dashboard executivo</li>
@@ -173,8 +196,8 @@ const FlowTripSaaS = () => {
               </ul>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-ms-discovery-teal">
-              <Globe className="w-12 h-12 text-ms-discovery-teal mb-4" />
+            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-teal-600">
+              <Globe className="w-12 h-12 text-teal-600 mb-4" />
               <h3 className="text-xl font-semibold mb-3">Portal do Turista</h3>
               <ul className="space-y-2 text-gray-600">
                 <li>• Catálogo completo</li>
@@ -184,8 +207,8 @@ const FlowTripSaaS = () => {
               </ul>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-ms-pantanal-green">
-              <Brain className="w-12 h-12 text-ms-pantanal-green mb-4" />
+            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-green-600">
+              <Brain className="w-12 h-12 text-green-600 mb-4" />
               <h3 className="text-xl font-semibold mb-3">Inteligência Artificial</h3>
               <ul className="space-y-2 text-gray-600">
                 <li>• Chatbot especializado</li>
@@ -199,30 +222,36 @@ const FlowTripSaaS = () => {
       </section>
 
       {/* CTA Final */}
-      <section className="py-20 bg-gray-900">
-        <div className="ms-container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Pronto para Transformar seu Estado?
           </h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Agende uma demonstração personalizada e veja como o FlowTrip pode revolucionar o turismo do seu estado
+          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            Junte-se aos estados que já estão revolucionando o turismo com tecnologia de ponta
           </p>
-          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contato">
-              <Button className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold px-8 py-3">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
                 Agendar Demonstração
               </Button>
             </Link>
-            <Link to="/ms">
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3">
-                Ver Plataforma Funcionando
+            <Link to="/master-dashboard">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
+                Acessar Dashboard Master
               </Button>
             </Link>
           </div>
         </div>
       </section>
-    </UniversalLayout>
+
+      {/* Footer Simples */}
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p>&copy; 2024 FlowTrip. Todos os direitos reservados.</p>
+        </div>
+      </footer>
+    </div>
   );
 };
 
