@@ -1,170 +1,184 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useNavigate } from "react-router-dom";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Eye, EyeOff, LogIn } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import { useAuth } from "@/hooks/useAuth";
-import { useSecureAuth } from "@/hooks/useSecureAuth";
-
-const adminLoginSchema = z.object({
-  email: z.string().email({ message: "Email inválido" }),
-  password: z.string().min(1, { message: "A senha é obrigatória" }),
-});
-
-type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn, loading: authLoading } = useAuth();
-  const { isManager, userRole, getDashboardRoute, loading: secureAuthLoading } = useSecureAuth();
-  const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<AdminLoginFormValues>({
-    resolver: zodResolver(adminLoginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const onSubmit = async (data: AdminLoginFormValues) => {
-    console.log("🔐 Tentativa de login administrativo:", data.email);
-    
-    const { error } = await signIn(data.email, data.password);
-    
-    if (!error) {
-      console.log("✅ Login realizado, verificando permissões...");
-      
-      // Wait a moment for permissions to load
-      setTimeout(() => {
-        if (isManager) {
-          const dashboardRoute = getDashboardRoute();
-          toast({
-            title: "Acesso autorizado!",
-            description: `Bem-vindo(a) ao sistema. Role: ${userRole}`,
-            duration: 3000,
-          });
-          console.log("🔄 Redirecionando para:", dashboardRoute);
-          navigate(dashboardRoute);
-        } else {
-          toast({
-            title: "Acesso negado",
-            description: "Você não tem permissões administrativas. Entre em contato com o suporte.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          console.log("❌ Usuário sem permissões administrativas:", { userRole, isManager });
-        }
-      }, 1000);
-    } else {
-      console.error("❌ Erro no login:", error);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Credenciais inválidas. Verifique seu e-mail e senha.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Verificar se o usuário tem permissões administrativas
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (!userRole || !['admin', 'tech', 'diretor_estadual', 'gestor_igr', 'municipal_manager'].includes(userRole.role)) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Acesso negado",
+          description: "Você não possui permissões administrativas.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Redirecionando para o portal administrativo...",
+      });
+
+      // Redirecionar baseado no tipo de usuário
+      if (['admin', 'tech'].includes(userRole.role)) {
+        navigate('/admin-portal');
+      } else if (userRole.role === 'diretor_estadual') {
+        navigate('/ms/management');
+      } else if (userRole.role === 'gestor_igr') {
+        navigate('/ms/technical-admin');
+      } else if (userRole.role === 'municipal_manager') {
+        navigate('/ms/municipal-admin');
+      } else {
+        navigate('/ms/role-dashboard');
+      }
+
+    } catch (error) {
+      console.error('Erro no login:', error);
+      toast({
+        title: "Erro interno",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isLoading = authLoading || form.formState.isSubmitting || secureAuthLoading;
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow">
-        <div className="flex justify-center py-6 bg-white">
-          <img 
-            src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
-            alt="Descubra Mato Grosso do Sul" 
-            className="h-[60px] w-auto" 
-          />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/')}
+          className="text-white hover:bg-slate-800 mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar ao Site
+        </Button>
 
-        <div className="bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green py-12 px-4">
-          <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
-            <h1 className="text-2xl font-semibold text-ms-primary-blue mb-2 text-center">
-              Acesso Administrativo
-            </h1>
-            <p className="text-gray-600 text-center mb-6">
-              Painel de Gestão e Sistema de CATs
-            </p>
-
-            {/* Debug info - mostrar apenas em desenvolvimento */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
-                <p><strong>Debug:</strong></p>
-                <p>Role atual: {userRole || 'nenhuma'}</p>
-                <p>É manager: {isManager ? 'sim' : 'não'}</p>
-                <p>Carregando: {isLoading ? 'sim' : 'não'}</p>
-              </div>
-            )}
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-mail</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="Digite seu e-mail de gestor" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha</FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input 
-                            type={showPassword ? "text" : "password"} 
-                            placeholder="Digite sua senha" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <button
-                          type="button"
-                          className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="w-full bg-[#FFC107] text-black hover:bg-[#FFC107]/90"
-                >
-                  <LogIn size={20} className="mr-2" />
-                  {isLoading ? 'Verificando...' : 'Entrar'}
-                </Button>
-              </form>
-            </Form>
-
-            <div className="mt-4 text-center text-sm text-gray-600">
-              <p>Roles administrativas aceitas:</p>
-              <p className="text-xs">admin, tech, municipal, municipal_manager, gestor, atendente</p>
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 mx-auto">
+              <Shield className="h-8 w-8 text-blue-600" />
             </div>
-          </div>
+            <CardTitle className="text-2xl font-bold">Portal Administrativo</CardTitle>
+            <CardDescription>
+              Acesso restrito para administradores e gestores
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">E-mail</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@exemplo.gov.br"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Senha</label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading}
+              >
+                {isLoading ? "Autenticando..." : "Entrar"}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Esqueceu sua senha?{' '}
+                <button 
+                  onClick={() => navigate('/ms/password-reset')}
+                  className="text-blue-600 hover:underline"
+                >
+                  Recuperar acesso
+                </button>
+              </p>
+            </div>
+
+            <div className="mt-6 pt-6 border-t">
+              <div className="text-xs text-gray-500 space-y-1">
+                <p><strong>Perfis de Acesso:</strong></p>
+                <p>• Admin/Tech: Portal FlowTrip</p>
+                <p>• Diretor Estadual: Gestão Estadual</p>
+                <p>• Gestor IGR: Administração Técnica</p>
+                <p>• Gestor Municipal: Administração Municipal</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-400">
+            Protegido por criptografia de ponta e auditoria completa
+          </p>
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 };

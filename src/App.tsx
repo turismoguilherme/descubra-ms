@@ -17,7 +17,6 @@ import SecurityProvider from "@/components/security/SecurityProvider";
 // Critical components (no lazy loading)
 import FlowTripSaaS from "@/pages/FlowTripSaaS";
 import MSIndex from "@/pages/MSIndex";
-import ContatoFlowTrip from "@/pages/ContatoFlowTrip";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
@@ -32,6 +31,11 @@ const BlogFlowTrip = lazy(() => import("@/pages/BlogFlowTrip"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const SuporteFlowTrip = lazy(() => import("@/pages/SuporteFlowTrip"));
 const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
+const ContatoFlowTrip = lazy(() => import("@/pages/ContatoFlowTrip"));
+const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
+const RecursosWhiteLabel = lazy(() => import("@/pages/RecursosWhiteLabel"));
+const RecursosMultiTenant = lazy(() => import("@/pages/RecursosMultiTenant"));
+const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
 
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
@@ -40,7 +44,6 @@ const Management = lazy(() => import("@/pages/Management"));
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
 const Guata = lazy(() => import("@/pages/Guata"));
-const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
 const CATAttendant = lazy(() => import("@/pages/CATAttendant"));
 const MunicipalAdmin = lazy(() => import("@/pages/MunicipalAdmin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -96,7 +99,8 @@ function App() {
                       {/* FlowTrip SaaS Routes */}
                       <Route path="/" element={<FlowTripSaaS />} />
                       <Route path="/flowtrip" element={<FlowTripSaaS />} />
-                      <Route path="/contato" element={<ContatoFlowTrip />} />
+                      <Route path="/contato" element={<Suspense fallback={<LoadingFallback />}><ContatoFlowTrip /></Suspense>} />
+                      <Route path="/contato-flowtrip" element={<Suspense fallback={<LoadingFallback />}><ContatoFlowTrip /></Suspense>} />
                       <Route path="/solucoes" element={<Suspense fallback={<LoadingFallback />}><Solucoes /></Suspense>} />
                       <Route path="/casos-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasosSucesso /></Suspense>} />
                       <Route path="/precos" element={<Suspense fallback={<LoadingFallback />}><Precos /></Suspense>} />
@@ -105,6 +109,12 @@ function App() {
                       <Route path="/documentacao" element={<Suspense fallback={<LoadingFallback />}><Documentacao /></Suspense>} />
                       <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteFlowTrip /></Suspense>} />
                       <Route path="/admin-portal" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
+                      <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
+                      
+                      {/* FlowTrip Resources Routes */}
+                      <Route path="/recursos/analytics" element={<Suspense fallback={<LoadingFallback />}><RecursosAnalytics /></Suspense>} />
+                      <Route path="/recursos/white-label" element={<Suspense fallback={<LoadingFallback />}><RecursosWhiteLabel /></Suspense>} />
+                      <Route path="/recursos/multi-tenant" element={<Suspense fallback={<LoadingFallback />}><RecursosMultiTenant /></Suspense>} />
                       
                       {/* MS Routes */}
                       <Route path="/ms" element={<MSIndex />} />
@@ -119,7 +129,6 @@ function App() {
                       <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
                       <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
                       <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                      <Route path="/ms/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
                       <Route path="/ms/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
                       <Route path="/ms/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
                       <Route path="/ms/destinos" element={<Suspense fallback={<LoadingFallback />}><Destinos /></Suspense>} />

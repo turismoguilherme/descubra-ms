@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { ShieldCheck, Facebook, Instagram, Twitter, Youtube, Building, Users, ChartBar, Headphones } from "lucide-react";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
@@ -107,8 +108,8 @@ const UniversalFooter = () => {
 
   return (
     <footer className={`${isFlowTrip 
-      ? 'bg-gradient-to-r from-slate-900 to-slate-800' 
-      : 'bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal'} text-white`}>
+      ? 'bg-slate-900' 
+      : 'bg-gradient-to-r from-blue-900 to-blue-800'} text-white`}>
       <div className="ms-container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -117,7 +118,7 @@ const UniversalFooter = () => {
               <img 
                 src={config.logo.src} 
                 alt={config.logo.alt}
-                className="h-12 w-auto object-contain"
+                className="h-12 w-auto object-contain brightness-0 invert"
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
@@ -132,7 +133,7 @@ const UniversalFooter = () => {
                 {config.logo.fallback}
               </div>
             </div>
-            <p className="text-gray-100 mb-4 max-w-md text-sm">
+            <p className="text-gray-200 mb-4 max-w-md text-sm leading-relaxed">
               {contact.description}
             </p>
             <div className="flex space-x-4">
@@ -143,7 +144,7 @@ const UniversalFooter = () => {
                   target="_blank" 
                   rel="noopener noreferrer" 
                   aria-label={social.label}
-                  className="text-gray-100 hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-white/10"
                 >
                   <social.icon size={20} />
                 </a>
@@ -156,12 +157,12 @@ const UniversalFooter = () => {
             <h3 className="text-lg font-semibold mb-4 text-white">
               {isFlowTrip ? "Plataforma" : "Explore"}
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {links.primary.slice(0, 4).map((link) => (
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="text-gray-100 hover:text-white transition-colors text-sm"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 text-sm block py-1"
                   >
                     {link.label}
                   </Link>
@@ -169,29 +170,53 @@ const UniversalFooter = () => {
               ))}
             </ul>
           </div>
-          
-          {/* Contact */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">Contato</h3>
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-100">{contact.email}</p>
-              <p className="text-gray-100">{contact.phone}</p>
-              {isFlowTrip && (
-                <Link 
-                  to="/admin-login" 
-                  className="text-gray-100 hover:text-white transition-colors flex items-center gap-1"
-                >
-                  <ShieldCheck size={14} />
-                  Portal Cliente
-                </Link>
-              )}
+
+          {/* Resources (FlowTrip only) */}
+          {isFlowTrip && additionalSections.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-white">
+                {additionalSections[0].title}
+              </h3>
+              <ul className="space-y-3">
+                {additionalSections[0].items.map((item) => (
+                  <li key={item.to}>
+                    <Link 
+                      to={item.to} 
+                      className="text-gray-300 hover:text-white transition-colors duration-200 text-sm flex items-center gap-2 py-1"
+                    >
+                      {item.icon && <item.icon size={14} />}
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          )}
+          
+          {/* Contact (MS only when not showing resources) */}
+          {(!isFlowTrip || additionalSections.length === 0) && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-white">Contato</h3>
+              <div className="space-y-3 text-sm">
+                <p className="text-gray-300">{contact.email}</p>
+                <p className="text-gray-300">{contact.phone}</p>
+                {isFlowTrip && (
+                  <Link 
+                    to="/admin-login" 
+                    className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <ShieldCheck size={14} />
+                    Portal Cliente
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={`border-t ${isFlowTrip 
           ? 'border-slate-700' 
-          : 'border-ms-primary-blue/50'} mt-8 pt-6 text-center text-gray-100 text-xs`}>
+          : 'border-blue-700'} mt-8 pt-6 text-center text-gray-300 text-xs`}>
           <p>
             © {new Date().getFullYear()} {config.logo.alt}. Todos os direitos reservados.
           </p>
