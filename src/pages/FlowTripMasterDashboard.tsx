@@ -29,6 +29,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { DataIntegrationService } from '@/services/ai/dataIntegrationService'; // Importar serviço de integração de dados
+import { StrategicAnalysisAI } from '@/services/ai/strategicAnalysisAI'; // Importar serviço de análise estratégica
+import { StrategicAdvisorService } from '@/services/ai/strategicAdvisorService'; // Importar serviço de consultoria estratégica
+import { useToast } from '@/hooks/use-toast'; // Importar useToast
 
 interface ClientData {
   id: string;
@@ -76,6 +80,11 @@ const FlowTripMasterDashboard = () => {
   const [showLogin, setShowLogin] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<any>(null);
+  const [aiAdvisorResult, setAiAdvisorResult] = useState<any>(null);
+  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
+
   
   // Credenciais do Master (em produção, isso deveria estar no backend)
   const MASTER_EMAIL = 'master@flowtrip.com';
@@ -202,6 +211,60 @@ const FlowTripMasterDashboard = () => {
       case 'optimize_system':
         alert('IA otimizou o sistema!');
         break;
+    }
+  };
+
+  const { toast } = useToast(); // Usar o hook useToast
+
+  const handleGenerateFullAnalysis = async () => {
+    setIsGeneratingAnalysis(true);
+    setAiAnalysisResult(null);
+    setAiAdvisorResult(null);
+
+    try {
+      const dataIntegrationService = new DataIntegrationService();
+      const strategicAnalysisAI = new StrategicAnalysisAI();
+      const strategicAdvisorService = new StrategicAdvisorService();
+
+      toast({
+        title: "Coletando Dados",
+        description: "A IA está coletando dados da plataforma para análise...",
+        duration: 3000
+      });
+      const collectedData = await dataIntegrationService.collectTourismData();
+
+      toast({
+        title: "Gerando Análise Estratégica",
+        description: "A IA está processando os dados e gerando insights...",
+        duration: 3000
+      });
+      const analysisResult = await strategicAnalysisAI.analyzeData(collectedData);
+      setAiAnalysisResult(analysisResult);
+
+      toast({
+        title: "Gerando Plano de Ação",
+        description: "A IA está criando recomendações e um plano de ação...",
+        duration: 3000
+      });
+      const advisorResult = await strategicAdvisorService.analyzeAndAdvise(collectedData);
+      setAiAdvisorResult(advisorResult);
+
+      toast({
+        title: "Análise Concluída!",
+        description: "A análise completa da IA foi gerada com sucesso.",
+        duration: 5000
+      });
+
+    } catch (error) {
+      console.error("Erro ao gerar análise da IA:", error);
+      toast({
+        title: "Erro na Geração de Análise",
+        description: "Não foi possível gerar a análise completa da IA. Verifique o console para mais detalhes.",
+        variant: "destructive",
+        duration: 7000
+      });
+    } finally {
+      setIsGeneratingAnalysis(false);
     }
   };
 
@@ -576,7 +639,65 @@ const FlowTripMasterDashboard = () => {
                   <Brain className="w-6 h-6 mb-2" />
                   Analisar Clientes
                 </Button>
+                
+                <Button 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={handleGenerateFullAnalysis} 
+                  disabled={isGeneratingAnalysis}
+                >
+                  {isGeneratingAnalysis ? (
+                    <div className="flex flex-col items-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mb-2"></div>
+                      Gerando Análise...
+                    </div>
+                  ) : (
+                    <>
+                      <BarChart3 className="w-6 h-6 mb-2" />
+                      Gerar Análise Completa
+                    </>
+                  )}
+                </Button>
               </div>
+              
+              {aiAnalysisResult && (
+                <div className="mt-8 p-4 border rounded-lg bg-gray-50">
+                  <h3 className="text-lg font-semibold mb-4">Resultados da Análise Estratégica da IA</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-gray-700">Análise Principal:</h4>
+                      <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border mt-2">{JSON.stringify(aiAnalysisResult.analysis, null, 2)}</pre>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700">Recomendações da Análise:</h4>
+                      <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border mt-2">{JSON.stringify(aiAnalysisResult.recommendations, null, 2)}</pre>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700">Fonte de Dados:</h4>
+                      <p className="text-sm text-gray-600">Alumia: {aiAnalysisResult.dataSource.hasAlumia ? 'Sim' : 'Não'}, Comunidade: {aiAnalysisResult.dataSource.hasCommunity ? 'Sim' : 'Não'}, Econômicos: {aiAnalysisResult.dataSource.hasEconomic ? 'Sim' : 'Não'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {aiAdvisorResult && (
+                <div className="mt-8 p-4 border rounded-lg bg-gray-50">
+                  <h3 className="text-lg font-semibold mb-4">Plano de Ação e Aconselhamento da IA</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-gray-700">Insights:</h4>
+                      <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border mt-2">{JSON.stringify(aiAdvisorResult.insights, null, 2)}</pre>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700">Recomendações:</h4>
+                      <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border mt-2">{JSON.stringify(aiAdvisorResult.recommendations, null, 2)}</pre>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700">Plano de Ação Detalhado:</h4>
+                      <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border mt-2">{JSON.stringify(aiAdvisorResult.actionPlan, null, 2)}</pre>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

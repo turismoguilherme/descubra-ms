@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useAuth } from "@/hooks/useAuth";
 import { securityAuditService } from '@/services/securityAuditService';
-import { config } from '@/config/environment';
+import { ENV } from '@/config/environment';
 
 /**
  * Hook para monitoramento contínuo de segurança
@@ -15,16 +15,14 @@ export const useSecurityMonitoring = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // Verificar integridade da sessão quando a página volta ao foco
-        if (config.security.validation.sessionIntegrityCheck) {
-          const isValid = securityAuditService.validateSessionIntegrity();
-          if (!isValid && user) {
-            securityAuditService.reportSecurityViolation({
-              type: 'invalid_access',
-              severity: 'medium',
-              description: 'Session integrity check failed',
-              userId: user.id
-            });
-          }
+        const isValid = securityAuditService.validateSessionIntegrity();
+        if (!isValid && user) {
+          securityAuditService.reportSecurityViolation({
+            type: 'invalid_access',
+            severity: 'medium',
+            description: 'Session integrity check failed',
+            userId: user.id
+          });
         }
       }
     };
@@ -83,7 +81,7 @@ export const useSecurityMonitoring = () => {
 
       const monitorConsoleUsage = (method: string) => {
         consoleUsageCount++;
-        if (consoleUsageCount > 50) { // Muitos logs em 1 minuto
+        if (consoleUsageCount > ENV.RATE_LIMIT.REQUESTS_PER_MINUTE) {
           securityAuditService.reportSecurityViolation({
             type: 'suspicious_activity',
             severity: 'low',

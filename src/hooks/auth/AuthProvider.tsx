@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("🔄 AuthProvider: Buscando perfil para userId:", userId);
       // Buscar perfil do usuário
       const { data: profileData } = await supabase
         .from("user_profiles")
@@ -38,39 +39,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setUserProfile(profile);
+      console.log("✅ AuthProvider: Perfil do usuário definido como:", profile);
     } catch (error) {
-      console.error("Erro ao buscar perfil:", error);
+      console.error("❌ AuthProvider: Erro ao buscar perfil:", error);
     }
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => { // Adicionado 'async' aqui
+        console.log("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event, "Sessão:", session);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
+          console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
+          await fetchUserProfile(session.user.id); // Garante que o perfil é buscado e esperado aqui também
         } else {
+          console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
           setUserProfile(null);
         }
 
-        setLoading(false);
+        setLoading(false); // Agora, setLoading(false) é chamado após o perfil ser carregado em ambos os cenários.
+        console.log("🏁 AuthProvider: Carregamento finalizado. Loading:", false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
-      
-      setLoading(false);
-    });
+    // Remover o getSession inicial, pois o onAuthStateChange já cobre o carregamento inicial e subsequente.
+    // supabase.auth.getSession().then(async ({ data: { session } }) => {
+    //   setSession(session);
+    //   setUser(session?.user ?? null);
+    //   
+    //   if (session?.user) {
+    //     await fetchUserProfile(session.user.id);
+    //   }
+    //   
+    //   setLoading(false);
+    // });
 
     return () => subscription.unsubscribe();
   }, []);

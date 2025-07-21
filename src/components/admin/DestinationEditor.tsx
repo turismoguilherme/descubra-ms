@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { seoOptimizationService } from "@/services/ai/seo/seoOptimizationService"; // Importar o serviço de SEO
 
 interface Destination {
   id: string;
@@ -30,6 +31,12 @@ interface DestinationDetails {
   map_longitude: number;
   tourism_tags: string[];
   image_gallery: string[];
+}
+
+interface SeoSuggestions {
+  seoTitle: string;
+  metaDescription: string;
+  keywords: string[];
 }
 
 const DestinationEditor = () => {
@@ -52,6 +59,8 @@ const DestinationEditor = () => {
   const [saving, setSaving] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [newImage, setNewImage] = useState('');
+  const [seoSuggestions, setSeoSuggestions] = useState<SeoSuggestions | null>(null);
+  const [generatingSeo, setGeneratingSeo] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -193,6 +202,47 @@ const DestinationEditor = () => {
     }));
   };
 
+  const handleDeletePhoto = (imageToRemove: string) => {
+    setDetails(prev => ({
+      ...prev,
+      image_gallery: prev.image_gallery.filter(img => img !== imageToRemove)
+    }));
+  };
+
+  const handleGenerateSeo = async () => {
+    if (!destination || !destination.name) {
+      toast({
+        title: "Nome do Destino Necessário",
+        description: "Por favor, preencha o nome do destino antes de gerar sugestões de SEO.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingSeo(true);
+    setSeoSuggestions(null); // Limpar sugestões anteriores
+    try {
+      const suggestions = await seoOptimizationService.generateDestinationSeo(
+        destination.name,
+        destination.description || undefined
+      );
+      setSeoSuggestions(suggestions);
+      toast({
+        title: "Sugestões de SEO Geradas!",
+        description: "As sugestões de SEO foram geradas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar SEO:", error);
+      toast({
+        title: "Erro de IA",
+        description: "Não foi possível gerar sugestões de SEO. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingSeo(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -251,6 +301,43 @@ const DestinationEditor = () => {
                 placeholder="Descreva os pontos destacados do destino..."
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Otimização SEO com IA para Destinos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Otimização SEO com IA</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={handleGenerateSeo} disabled={generatingSeo || !destination || !destination.name}>
+              {generatingSeo ? "Gerando..." : "Gerar Sugestões de SEO"}
+            </Button>
+            {seoSuggestions && (
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>Título SEO (Meta Title)</Label>
+                  <Input value={seoSuggestions.seoTitle} readOnly />
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => navigator.clipboard.writeText(seoSuggestions.seoTitle)}>
+                    Copiar
+                  </Button>
+                </div>
+                <div>
+                  <Label>Meta Descrição (Meta Description)</Label>
+                  <Textarea value={seoSuggestions.metaDescription} readOnly rows={3} />
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => navigator.clipboard.writeText(seoSuggestions.metaDescription)}>
+                    Copiar
+                  </Button>
+                </div>
+                <div>
+                  <Label>Palavras-chave (Keywords)</Label>
+                  <Input value={seoSuggestions.keywords.join(', ')} readOnly />
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => navigator.clipboard.writeText(seoSuggestions.keywords.join(', '))}>
+                    Copiar
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

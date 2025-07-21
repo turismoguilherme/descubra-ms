@@ -5,8 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Camera, CheckCircle, Clock, Navigation } from "lucide-react";
 import { TouristRoute, RouteCheckpoint } from "@/types/passport";
-import { fetchRouteCheckpoints, createUserCheckin, calculateDistance } from "@/services/passport";
+import { fetchRouteCheckpoints, calculateDistance } from "@/services/passport";
+import { createUserCheckin as createUserCheckinService } from "@/services/passport/tourismPassportService"; // Importar a função original de checkin
 import { useToast } from "@/hooks/use-toast";
+import { offlineCacheService } from "@/services/offlineCacheService";
+import { createUserCheckin as createUserCheckinOnline, updateUserStampOnline, deleteUserStampOnline } from "@/services/passport/tourismPassportService"; // Para a sincronização, importar também updateUserStampOnline e deleteUserStampOnline
+import { Progress } from "@/components/ui/progress"; // Importar o componente Progress
+import ReviewSection from "@/components/common/ReviewSection"; // Importar o componente ReviewSection
+import PhotoUploadSection from "@/components/common/PhotoUploadSection"; // Importar o componente PhotoUploadSection
 
 interface RouteExecutionProps {
   route: TouristRoute;
@@ -23,6 +29,32 @@ const RouteExecution = ({ route, onComplete }: RouteExecutionProps) => {
   useEffect(() => {
     loadCheckpoints();
     getCurrentLocation();
+
+    // Listener para sincronização de carimbos offline
+    const handleOnline = async () => {
+      toast({
+        title: "Conexão Restabelecida",
+        description: "Tentando sincronizar check-ins pendentes...",
+      });
+      await offlineCacheService.syncOfflineStamps(createUserCheckinOnline, updateUserStampOnline, deleteUserStampOnline); // Passar deleteUserStampOnline
+      toast({
+        title: "Sincronização Concluída",
+        description: "Todos os check-ins offline foram sincronizados.",
+      });
+      // Opcional: Recarregar checkpoints para atualizar status de conclusão
+      loadCheckpoints();
+    };
+
+    window.addEventListener('online', handleOnline);
+
+    // Tenta sincronizar ao carregar, caso já esteja online e haja itens pendentes
+    if (offlineCacheService.isOnline()) {
+      handleOnline();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
   }, [route.id]);
 
   const loadCheckpoints = async () => {
@@ -99,7 +131,7 @@ const RouteExecution = ({ route, onComplete }: RouteExecutionProps) => {
     }
 
     try {
-      await createUserCheckin({
+      const checkinResult = await createUserCheckinService({ // Chamar a função do serviço
         user_id: "", // Will be set by RLS
         route_id: route.id,
         checkpoint_id: checkpoint.id,
@@ -114,6 +146,18 @@ const RouteExecution = ({ route, onComplete }: RouteExecutionProps) => {
         title: "Check-in realizado!",
         description: `Você fez check-in em ${checkpoint.name}`,
       });
+
+      // Exibir toasts para benefícios desbloqueados
+      if (checkinResult.newUnlockedBenefits && checkinResult.newUnlockedBenefits.length > 0) {
+        checkinResult.newUnlockedBenefits.forEach(benefit => {
+          toast({
+            title: "Novo Benefício Desbloqueado!",
+            description: `Parabéns! Você desbloqueou: ${benefit.name}`, 
+            variant: "default",
+            duration: 7000, // Tempo maior para benefícios
+          });
+        });
+      }
 
       // Check if all checkpoints are completed
       if (completedCheckpoints.size + 1 === checkpoints.length) {
@@ -194,6 +238,15 @@ const RouteExecution = ({ route, onComplete }: RouteExecutionProps) => {
             <p className="text-gray-600 mb-4">{route.description}</p>
           )}
           
+          {/* Barra de Progresso */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Progresso do Roteiro</h4>
+            <Progress value={(completedCheckpoints.size / checkpoints.length) * 100} className="w-full" />
+            <p className="text-sm text-gray-500 mt-1">
+              {completedCheckpoints.size} de {checkpoints.length} pontos concluídos
+            </p>
+          </div>
+
           {completedCheckpoints.size === checkpoints.length && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex items-center gap-2 text-green-800">
@@ -277,10 +330,20 @@ const RouteExecution = ({ route, onComplete }: RouteExecutionProps) => {
                   )}
                 </div>
               </div>
+              {/* Seção de Avaliações para o Checkpoint Individual */}
+              <ReviewSection targetId={checkpoint.id} targetType="checkpoint" />
+              {/* Seção de Fotos para o Checkpoint Individual */}
+              <PhotoUploadSection targetId={checkpoint.id} targetType="checkpoint" />
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Seção de Avaliações */}
+      <ReviewSection targetId={route.id} targetType="route" />
+
+      {/* Seção de Fotos da Rota */}
+      <PhotoUploadSection targetId={route.id} targetType="route" />
     </div>
   );
 };

@@ -108,6 +108,7 @@ export interface UserStamp {
   cultural_phrase?: string;
   created_at?: string;
   animal_id?: string;
+  sync_status?: 'pending_create' | 'synced' | 'pending_delete' | 'pending_update'; // Novo campo
 }
 
 export interface PantanalAnimal {
@@ -133,4 +134,15 @@ export interface UserPassportStats {
   total_stamps: number;
   total_routes_completed: number;
   total_benefits_earned: number;
+}
+
+export interface TourismReview {
+  id: string;
+  user_id: string;
+  route_id?: string;
+  checkpoint_id?: string;
+  rating: number; // 1 to 5
+  comment?: string;
+  created_at: string;
+  updated_at: string;
 }

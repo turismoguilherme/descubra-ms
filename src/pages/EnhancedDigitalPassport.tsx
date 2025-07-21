@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Trophy, Star, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { tourismPassportService } from "@/services/passport/tourismPassportService"; // Importar o serviço de passaporte
+import { UserStamp, UserPassportStats, PassportChallenge } from "@/types/passport"; // Importar o tipo UserStamp e UserPassportStats, PassportChallenge
+import ShareButtons from "@/components/common/ShareButtons"; // Importar o componente ShareButtons
 
 interface EnhancedTouristRoute {
   id: string;
@@ -23,12 +26,19 @@ const EnhancedDigitalPassport = () => {
   const { toast } = useToast();
   const [routes, setRoutes] = useState<EnhancedTouristRoute[]>([]);
   const [completedRoutes, setCompletedRoutes] = useState<string[]>([]);
+  const [userStamps, setUserStamps] = useState<UserStamp[]>([]); 
+  const [passportStats, setPassportStats] = useState<UserPassportStats | null>(null); // Novo estado para estatísticas do passaporte
+  const [availableChallenges, setAvailableChallenges] = useState<PassportChallenge[]>([]); // Novo estado para desafios
   const [loading, setLoading] = useState(true);
+  const [reportLoading, setReportLoading] = useState(false); // Estado para o loading do relatório de IA
 
   useEffect(() => {
     if (user) {
       fetchRoutes();
       fetchCompletedRoutes();
+      fetchUserStamps(); 
+      fetchPassportStats(); // Chamar a nova função para buscar estatísticas
+      fetchAvailableChallenges(); // Chamar a nova função para buscar desafios
     }
   }, [user]);
 
@@ -87,6 +97,21 @@ const EnhancedDigitalPassport = () => {
     }
   };
 
+  const fetchUserStamps = async () => {
+    if (!user) return;
+    try {
+      const stamps = await tourismPassportService.getUserStamps(user.id);
+      setUserStamps(stamps);
+    } catch (error) {
+      console.error("Error fetching user stamps:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar seus selos digitais.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const completeRoute = async (routeId: string, points: number) => {
     if (!user) return;
 
@@ -117,6 +142,60 @@ const EnhancedDigitalPassport = () => {
         description: "Não foi possível completar a rota",
         variant: "destructive",
       });
+    }
+  };
+
+  const fetchPassportStats = async () => {
+    if (!user) return;
+    try {
+      const stats = await tourismPassportService.getPassportStats(user.id);
+      setPassportStats(stats);
+    } catch (error) {
+      console.error("Error fetching passport stats:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as estatísticas do passaporte.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchAvailableChallenges = async () => {
+    if (!user) return;
+    try {
+      const challenges = await tourismPassportService.getAvailableChallenges(user.id);
+      setAvailableChallenges(challenges);
+    } catch (error) {
+      console.error("Error fetching available challenges:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os desafios.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    if (!user) return;
+    setReportLoading(true);
+    try {
+      const report = await tourismPassportService.generatePassportReport(user.id);
+      toast({
+        title: "Relatório Gerado!",
+        description: "Seu relatório personalizado de passaporte foi criado com sucesso.",
+      });
+      console.log("Relatório de IA:", report);
+      // Exibir o relatório de alguma forma (modal, nova página, download)
+      alert("Relatório de IA gerado! Verifique o console para os detalhes. (Implementação de exibição completa pendente)");
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o relatório de IA.",
+        variant: "destructive",
+      });
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -163,7 +242,155 @@ const EnhancedDigitalPassport = () => {
         <p className="text-gray-600">
           Complete rotas turísticas e ganhe selos digitais. Explore Mato Grosso do Sul de forma interativa!
         </p>
-      </div>
+
+        {/* Seção de Estatísticas do Passaporte */}
+        {passportStats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Nível</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold capitalize">{passportStats.level}</div>
+                <p className="text-xs text-muted-foreground">
+                  Próximo nível: <span className="font-semibold capitalize">{passportStats.progress_to_next_level.next_level}</span>
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Pontos</CardTitle>
+                <Star className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{passportStats.total_points} pts</div>
+                <p className="text-xs text-muted-foreground">
+                  Faltam {passportStats.progress_to_next_level.points_needed} pts para o próximo nível
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Checkpoints Concluídos</CardTitle>
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{passportStats.checkpoints_completed}</div>
+                <p className="text-xs text-muted-foreground">
+                  Você visitou {passportStats.cities_visited} cidades
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Benefícios Desbloqueados</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{passportStats.benefits_unlocked}</div>
+                <p className="text-xs text-muted-foreground">
+                  {passportStats.challenges_completed} desafios completados
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Botão para Gerar Relatório com IA */}
+        <div className="mb-8 text-center">
+          <Button onClick={handleGenerateReport} disabled={reportLoading}>
+            {reportLoading ? "Gerando Relatório..." : "Gerar Relatório de Progresso (IA)"}
+          </Button>
+        </div>
+
+        {/* Botão de Compartilhamento Geral do Passaporte */}
+        {passportStats && (
+          <div className="mb-8 text-center">
+            <ShareButtons
+              title={`Meu Passaporte Digital: Nível ${passportStats.level} em Mato Grosso do Sul!`}
+              text={`Acabei de atingir o nível ${passportStats.level} no Passaporte Digital de Turismo, com ${passportStats.total_points} pontos e ${passportStats.checkpoints_completed} checkpoints concluídos! Venha explorar MS comigo!`}
+              url={`${window.location.origin}/ms/passaporte`}
+            />
+          </div>
+        )}
+
+        {/* Seção de Desafios */}
+        <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Desafios</h2>
+        {availableChallenges.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg shadow-sm mb-8">
+            <p className="text-gray-600">Nenhum desafio disponível no momento. Continue explorando!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {availableChallenges.map((challenge) => (
+              <Card key={challenge.id}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex justify-between items-center">
+                    {challenge.name}
+                    {challenge.active ? (
+                      <Badge variant="default">Ativo</Badge>
+                    ) : (
+                      <Badge variant="outline">Inativo</Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 text-sm mb-2">{challenge.description}</p>
+                  <p className="text-sm font-semibold text-ms-primary-blue">Recompensa: {challenge.points_reward} pontos</p>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <p>Requisitos:</p>
+                    <ul>
+                      <li>{challenge.requirements.checkpoints_required} checkpoints</li>
+                      <li>{challenge.requirements.cities_required} cidades</li>
+                      {challenge.requirements.categories_required.length > 0 && (
+                        <li>Categorias: {challenge.requirements.categories_required.join(', ')}</li>
+                      )}
+                      {challenge.requirements.time_limit_days && (
+                        <li>Limite de tempo: {challenge.requirements.time_limit_days} dias</li>
+                      )}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+      {/* Seção de Carimbos do Usuário */}
+      <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Meus Selos Digitais</h2>
+      {userStamps.length === 0 ? (
+        <div className="text-center py-8 bg-gray-50 rounded-lg shadow-sm mb-8">
+          <p className="text-gray-600">Você ainda não ganhou nenhum selo. Comece a explorar as rotas!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+          {userStamps.map((stamp) => (
+            <Card key={stamp.id} className="text-center">
+              <CardContent className="p-4 flex flex-col items-center justify-center">
+                {stamp.stamp_icon_url ? (
+                  <img src={stamp.stamp_icon_url} alt={stamp.stamp_name} className="w-16 h-16 object-contain mb-2" />
+                ) : (
+                  <Trophy className="w-16 h-16 text-ms-primary-blue mb-2" />
+                )}
+                <h4 className="font-semibold text-sm">{stamp.stamp_name}</h4>
+                <p className="text-xs text-gray-500">{new Date(stamp.earned_at).toLocaleDateString()}</p>
+                {stamp.cultural_phrase && (
+                  <p className="text-xs text-blue-600 italic mt-1">"{stamp.cultural_phrase}"</p>
+                )}
+                {/* Botões de Compartilhamento para Selo Individual */}
+                <ShareButtons
+                  title={`Conquistei um selo em MS: ${stamp.stamp_name}!`}
+                  text={`Olha o selo que acabei de ganhar no Passaporte Digital de Turismo em Mato Grosso do Sul: ${stamp.stamp_name}! #DescubraMS #Flowtrip`}
+                  url={`${window.location.origin}/ms/passaporte`}
+                />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Explore Nossas Rotas</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {routes.map((route) => {

@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { ShieldCheck, Facebook, Instagram, Twitter, Youtube, Building, Users, ChartBar, Headphones } from "lucide-react";
+import { ShieldCheck, Facebook, Instagram, Twitter, Youtube, Building, Users, BarChart, Headphones } from "lucide-react";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
 import { useBrand } from "@/context/BrandContext";
 
@@ -90,7 +90,7 @@ const UniversalFooter = () => {
         {
           title: "Recursos",
           items: [
-            { to: "/recursos/analytics", label: "Analytics Avançado", icon: ChartBar },
+            { to: "/recursos/analytics", label: "Analytics Avançado", icon: BarChart },
             { to: "/recursos/white-label", label: "White Label", icon: Building },
             { to: "/recursos/multi-tenant", label: "Multi-tenant", icon: Users },
             { to: "/suporte", label: "Suporte 24/7", icon: Headphones }

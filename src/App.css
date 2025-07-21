@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Estilos para marcadores de checkpoint concluídos no Mapbox */
+.mapbox-marker-completed {
+  border: 3px solid #10B981; /* Borda verde para indicar concluído */
+  border-radius: 50%; /* Manter o formato circular */
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); /* Sombra suave para destaque */
+  transform: scale(1.2); /* Aumentar ligeiramente o tamanho */
+  transition: all 0.2s ease-in-out;
+}

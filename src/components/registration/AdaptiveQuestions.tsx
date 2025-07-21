@@ -28,12 +28,13 @@ export interface QuestionAnswers {
   // Informações adicionais
   additional_info: string;
   preferences: string[];
+  contribute_tourism: boolean; // Novo campo
 }
 
 interface Question {
   id: string;
   text: string;
-  type: 'radio' | 'checkbox' | 'text' | 'textarea';
+  type: 'radio' | 'checkbox' | 'text' | 'textarea' | 'boolean'; // Adicionado 'boolean'
   options?: string[];
   required: boolean;
   category: 'universal' | 'state_specific';
@@ -70,6 +71,14 @@ const UNIVERSAL_QUESTIONS: Question[] = [
     options: ['Lazer', 'Negócios', 'Visita a familiares', 'Estudos', 'Outro'],
     required: true,
     category: 'universal'
+  },
+  {
+    id: 'tourism_contribution_interest', // Nova pergunta
+    text: 'Você estaria interessado(a) em contribuir com o desenvolvimento do turismo em sua região?',
+    type: 'radio', // Usando radio para Sim/Não
+    options: ['Sim', 'Não'],
+    required: true,
+    category: 'universal'
   }
 ];
 
@@ -88,6 +97,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
     state_specific: {},
     additional_info: '',
     preferences: [],
+    contribute_tourism: false, // Valor inicial para o novo campo
     ...initialAnswers
   });
 
@@ -100,29 +110,42 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
       setLoading(true);
       
       const prompt = `
-        Gere 5 perguntas específicas para turistas visitando ${currentTenant.fullName}.
+        Gere 5 perguntas específicas para turistas e moradores visitando ${currentTenant.fullName}.
         As perguntas devem ser sobre:
-        - Experiências anteriores na região
-        - Interesses específicos do estado
-        - Preferências de atividades
-        - Conhecimento sobre atrações locais
+        - Experiências anteriores na região ou conhecimento de atrativos locais.
+        - Interesses específicos do estado (ex: ecoturismo, cultura, gastronomia, aventura, eventos).
+        - Preferências de atividades e duração da estadia.
+        - Percepções sobre a cidade (pontos fortes, pontos a melhorar, como ela é vista).
+        - Hábitos de consumo turístico (ex: preferência por restaurantes locais, hospedagem, transporte).
         
-        Retorne apenas as perguntas, uma por linha, sem numeração.
+        Para cada pergunta, sugira um tipo de resposta:
+        - 'radio' para opções de múltipla escolha (forneça 3-5 opções).
+        - 'checkbox' para múltiplas seleções (forneça 3-5 opções).
+        - 'textarea' para respostas abertas (não forneça opções).
+        
+        Retorne as perguntas no formato JSON, um array de objetos, onde cada objeto tem:
+        { "id": "[id_unico]", "text": "[pergunta]", "type": "[radio|checkbox|textarea]", "options": ["opcao1", "opcao2"] (se aplicável) }
+        
+        Exemplo de formato JSON:
+        [
+          { "id": "experiencia_anterior", "text": "Você já visitou esta região antes?", "type": "radio", "options": ["Sim", "Não", "Fazendo escala"] },
+          { "id": "interesses_especificos", "text": "Quais tipos de atividades turísticas você mais busca em suas viagens?", "type": "checkbox", "options": ["Ecoturismo e natureza", "Cultura e história", "Gastronomia local", "Aventura e esportes", "Eventos e festivais"] },
+          { "id": "percepcao_cidade", "text": "Na sua opinião, qual é o maior atrativo de Campo Grande (ou da sua cidade)?", "type": "textarea" }
+        ]
       `;
 
       const response = await geminiClient.generateContent(prompt);
-      const questions = response.split('\n').filter(q => q.trim()).slice(0, 5);
-      
-      setAiSuggestions(questions);
+      // Analisar a resposta JSON
+      const jsonResponse = JSON.parse(response);
+      setAiSuggestions(jsonResponse);
+
     } catch (error) {
       console.error('❌ Erro ao gerar perguntas com IA:', error);
-      // Fallback para perguntas padrão
+      // Fallback para perguntas padrão se houver erro ou a IA não retornar JSON válido
       setAiSuggestions([
-        'Você já visitou esta região antes?',
-        'Tem interesse em ecoturismo?',
-        'Prefere turismo urbano ou rural?',
-        'Tem interesse em gastronomia local?',
-        'Prefere atividades de aventura ou relaxamento?'
+        { id: 'default_exp', text: 'Você já visitou esta região antes?', type: 'radio', options: ['Sim', 'Não', 'Talvez'] },
+        { id: 'default_interesses', text: 'Quais seus principais interesses ao visitar esta região?', type: 'checkbox', options: ['Natureza', 'Cultura', 'Gastronomia'] },
+        { id: 'default_percepcao', text: 'Qual sua percepção sobre a infraestrutura turística local?', type: 'textarea' }
       ]);
     } finally {
       setLoading(false);
@@ -138,10 +161,10 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   const allQuestions = [
     ...UNIVERSAL_QUESTIONS,
     ...aiSuggestions.map((question, index) => ({
-      id: `state_question_${index}`,
-      text: question,
-      type: 'radio' as const,
-      options: ['Sim', 'Não', 'Talvez', 'Não sei'],
+      id: question.id || `ai_question_${index}`,
+      text: question.text,
+      type: question.type as 'radio' | 'checkbox' | 'text' | 'textarea',
+      options: question.options || (question.type === 'radio' ? ['Sim', 'Não', 'Talvez'] : undefined),
       required: false,
       category: 'state_specific' as const
     }))
@@ -153,7 +176,9 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   const handleAnswerChange = (questionId: string, value: string | string[]) => {
     setAnswers(prev => ({
       ...prev,
-      [questionId]: value
+      [questionId]: questionId === 'tourism_contribution_interest'
+        ? (value === 'Sim' ? true : false)
+        : value
     }));
   };
 

@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ENV } from "@/config/environment";
 
 interface GuataProfileProps {
   isConnected?: boolean;
@@ -15,8 +16,8 @@ const GuataProfile: React.FC<GuataProfileProps> = ({
     <div className="flex items-center space-x-3">
       <Avatar className="w-16 h-16 border-2 border-ms-primary-blue">
         <AvatarImage 
-          src="/lovable-uploads/0a95baed-e289-4cbf-968c-c046719edb73.png" 
-          alt="Guatá AI"
+          src={ENV.GUATA.AVATAR_URL}
+          alt="Guatá - Capivara Guia Turístico"
           className="object-cover"
         />
         <AvatarFallback className="bg-ms-primary-blue text-white font-bold text-lg">
@@ -24,8 +25,8 @@ const GuataProfile: React.FC<GuataProfileProps> = ({
         </AvatarFallback>
       </Avatar>
       <div>
-        <h1 className="text-2xl font-bold text-white">Guatá</h1>
-        <p className="text-gray-300">Seu guia de turismo inteligente</p>
+        <h1 className="text-2xl font-bold text-white">{ENV.GUATA.NAME}</h1>
+        <p className="text-gray-300">{ENV.GUATA.DESCRIPTION}</p>
         {connectionChecking && (
           <p className="text-xs text-yellow-500">Conectando...</p>
         )}

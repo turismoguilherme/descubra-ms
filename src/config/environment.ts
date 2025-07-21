@@ -1,87 +1,51 @@
-// Environment configuration for secure token management
-export const config = {
-  mapbox: {
-    // Get token from environment or localStorage as fallback
-    getToken: (): string => {
-      // In production, this would come from environment variables
-      // For now, we use localStorage but with proper validation
-      const token = localStorage.getItem('mapbox_token') || '';
-      
-      // Validate token format (Mapbox tokens start with 'pk.')
-      if (token && !token.startsWith('pk.')) {
-        console.warn('Invalid Mapbox token format detected');
-        return '';
-      }
-      
-      return token;
-    },
-    
-    setToken: (token: string): void => {
-      // Validate token before storing
-      if (!token.startsWith('pk.')) {
-        throw new Error('Invalid Mapbox token format. Token must start with "pk."');
-      }
-      
-      localStorage.setItem('mapbox_token', token);
-    },
-    
-    isValidToken: (token: string): boolean => {
-      return token.length > 0 && token.startsWith('pk.') && token.length > 50;
-    }
+// Configurações do ambiente
+export const ENV = {
+  // API Keys
+  GEMINI_API_KEY: 'AIzaSyCX7Cmid7hQDDucWtNoP5zJ4uDsDgmPJmw',
+  
+  // URLs base
+  BASE_URL: 'http://localhost:8081',
+  API_URL: 'http://localhost:8081/api',
+  
+  // Configurações do Supabase
+  SUPABASE_URL: 'https://your-project.supabase.co',
+  SUPABASE_ANON_KEY: 'your-anon-key',
+  
+  // Configurações da aplicação
+  APP_NAME: 'Descubra MS',
+  APP_VERSION: '1.0.0',
+  
+  // Configurações do tenant
+  DEFAULT_TENANT: 'ms',
+  
+  // Configurações do Guatá
+  GUATA: {
+    AVATAR_URL: '/guata-mascote.jpg',
+    NAME: 'Guatá',
+    DESCRIPTION: 'Seu guia de turismo inteligente',
+    DEFAULT_GREETING: 'Olá! Eu sou o Guatá, seu guia turístico virtual. Como posso ajudar você a descobrir o Mato Grosso do Sul hoje?'
   },
   
-  security: {
-    // Enhanced rate limiting configuration
-    rateLimits: {
-      login: { maxAttempts: 5, windowMinutes: 15, blockDurationMinutes: 45 },
-      registration: { maxAttempts: 3, windowMinutes: 60, blockDurationMinutes: 60 },
-      passwordReset: { maxAttempts: 3, windowMinutes: 60, blockDurationMinutes: 120 },
-      aiQueries: { maxAttempts: 50, windowMinutes: 60, blockDurationMinutes: 30 },
-      adminOperations: { maxAttempts: 3, windowMinutes: 30, blockDurationMinutes: 120 }
-    },
-    
-    // Session configuration
-    session: {
-      timeoutMinutes: 240, // 4 hours
-      refreshThresholdMinutes: 30, // Refresh token when 30min remaining
-      maxConcurrentSessions: 3 // Limit concurrent sessions per user
-    },
-    
-    // Security validation
-    validation: {
-      passwordMinLength: 8,
-      passwordRequireSpecialChars: true,
-      passwordRequireNumbers: true,
-      passwordRequireUppercase: true,
-      maxLoginAttempts: 5,
-      sessionIntegrityCheck: true
-    },
-    
-    // Enhanced Content Security Policy
-    csp: {
-      enabled: true,
-      reportOnly: false,
-      directives: [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "img-src 'self' data: https:",
-        "font-src 'self' data: https://fonts.gstatic.com",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-        "frame-ancestors 'none'",
-        "base-uri 'self'",
-        "form-action 'self'"
-      ]
-    },
-
-    // Advanced security features
-    advanced: {
-      enableIntegrityChecks: true,
-      enableSecurityHeaders: true,
-      enableAuditLogging: true,
-      enableSuspiciousActivityDetection: true,
-      blockSuspiciousIPs: false,
-      requireMFAForAdmins: false
-    }
+  // Configurações de cache
+  CACHE_DURATION: 60 * 60 * 1000, // 1 hora em milissegundos
+  
+  // Configurações de rate limiting
+  RATE_LIMIT: {
+    REQUESTS_PER_MINUTE: 15,
+    REQUESTS_PER_DAY: 1500
+  },
+  
+  // Configurações de timeout
+  REQUEST_TIMEOUT: 30000, // 30 segundos
+  
+  // Configurações de logging
+  LOG_LEVEL: 'info',
+  
+  // Feature flags
+  FEATURES: {
+    ENABLE_GEMINI: true,
+    ENABLE_VOICE: true,
+    ENABLE_ANALYTICS: true,
+    ENABLE_HEATMAP: true
   }
 };

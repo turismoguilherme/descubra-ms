@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { offlineCacheService } from "../offlineCacheService";
 
 export interface RouteCheckpoint {
   id: string;
@@ -66,52 +67,118 @@ export const fetchRouteById = async (routeId: string) => {
 };
 
 export const fetchRouteCheckpoints = async (routeId: string): Promise<RouteCheckpoint[]> => {
-  const { data, error } = await supabase
-    .from('route_checkpoints')
-    .select('*')
-    .eq('route_id', routeId)
-    .order('order_sequence', { ascending: true });
+  if (offlineCacheService.isOnline()) {
+    try {
+      const { data, error } = await supabase
+        .from('route_checkpoints')
+        .select('*')
+        .eq('route_id', routeId)
+        .order('order_sequence', { ascending: true });
 
-  if (error) throw error;
-  
-  // Map order_sequence to order_index for compatibility
-  return (data || []).map(checkpoint => ({
-    ...checkpoint,
-    order_index: checkpoint.order_sequence,
-    latitude: checkpoint.latitude || 0,
-    longitude: checkpoint.longitude || 0
-  }));
+      if (error) throw error;
+      
+      const checkpoints = (data || []).map(checkpoint => ({
+        ...checkpoint,
+        order_index: checkpoint.order_sequence,
+        latitude: checkpoint.latitude || 0,
+        longitude: checkpoint.longitude || 0
+      }));
+      
+      // Cachear a rota e seus checkpoints
+      const routeData = await fetchRouteById(routeId); // Supondo que fetchRouteById traga a rota completa
+      if (routeData) {
+        await offlineCacheService.cacheRoute(routeData, checkpoints);
+      }
+      
+      return checkpoints;
+    } catch (error) {
+      console.warn("Erro ao buscar checkpoints online, tentando offline:", error);
+      // Se falhar online, tenta buscar do cache
+      const { checkpoints } = await offlineCacheService.getCachedRoute(routeId);
+      return checkpoints;
+    }
+  } else {
+    // Se estiver offline, busca diretamente do cache
+    const { checkpoints } = await offlineCacheService.getCachedRoute(routeId);
+    return checkpoints;
+  }
 };
 
 export const createUserCheckin = async (checkinData: Omit<UserRouteCheckin, 'id' | 'created_at'>) => {
-  // Use passport_stamps instead of user_route_checkins
-  const { data, error } = await supabase
-    .from('passport_stamps')
-    .insert([{
+  if (offlineCacheService.isOnline()) {
+    try {
+      const { data, error } = await supabase
+        .from('passport_stamps')
+        .insert([{
+          user_id: checkinData.user_id,
+          route_id: checkinData.route_id,
+          checkpoint_id: checkinData.checkpoint_id,
+          latitude: checkinData.latitude,
+          longitude: checkinData.longitude,
+          stamp_type: 'route_checkin',
+          stamped_at: checkinData.checkin_at
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Retorna em formato esperado
+      return {
+        id: data.id,
+        user_id: data.user_id,
+        route_id: data.route_id || '',
+        checkpoint_id: data.checkpoint_id,
+        checkin_at: data.stamped_at || checkinData.checkin_at,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        created_at: data.stamped_at
+      };
+    } catch (error) {
+      console.warn("Erro ao criar checkin online, salvando offline:", error);
+      // Salva offline se houver erro ou estiver offline
+      const stamp: UserStamp = {
+        id: `offline-stamp-${Date.now()}`,
+        user_id: checkinData.user_id,
+        route_id: checkinData.route_id,
+        checkpoint_id: checkinData.checkpoint_id,
+        stamp_name: `Check-in em ${checkinData.checkpoint_id}`,
+        earned_at: new Date().toISOString(),
+        // Adicionar outros campos relevantes que possam ser necessários para sincronização
+        cultural_phrase: 'Check-in offline pendente',
+        completion_percentage: 0, // Placeholder
+        stamp_icon_url: '', // Placeholder
+      };
+      await offlineCacheService.addStampToCache(stamp);
+      // Retorna um objeto com uma ID temporária para a UI poder reagir
+      return {
+        ...checkinData, 
+        id: stamp.id,
+        created_at: stamp.earned_at
+      };
+    }
+  } else {
+    // Se estiver offline, salva diretamente no cache
+    const stamp: UserStamp = {
+      id: `offline-stamp-${Date.now()}`,
       user_id: checkinData.user_id,
       route_id: checkinData.route_id,
       checkpoint_id: checkinData.checkpoint_id,
-      latitude: checkinData.latitude,
-      longitude: checkinData.longitude,
-      stamp_type: 'route_checkin',
-      stamped_at: checkinData.checkin_at
-    }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  
-  // Return in expected format
-  return {
-    id: data.id,
-    user_id: data.user_id,
-    route_id: data.route_id || '',
-    checkpoint_id: data.checkpoint_id,
-    checkin_at: data.stamped_at || checkinData.checkin_at,
-    latitude: data.latitude,
-    longitude: data.longitude,
-    created_at: data.stamped_at
-  };
+      stamp_name: `Check-in em ${checkinData.checkpoint_id}`,
+      earned_at: new Date().toISOString(),
+      // Adicionar outros campos relevantes que possam ser necessários para sincronização
+      cultural_phrase: 'Check-in offline pendente',
+      completion_percentage: 0, // Placeholder
+      stamp_icon_url: '', // Placeholder
+    };
+    await offlineCacheService.addStampToCache(stamp);
+    // Retorna um objeto com uma ID temporária para a UI poder reagir
+    return {
+      ...checkinData, 
+      id: stamp.id,
+      created_at: stamp.earned_at
+    };
+  }
 };
 
 export const updateUserPassportStats = async (userId: string, points: number) => {

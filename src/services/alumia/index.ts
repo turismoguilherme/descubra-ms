@@ -8,6 +8,8 @@ import {
   AlumiaBooking, 
   AlumiaAnalytics 
 } from '../ai/types';
+import { supabase } from '@/integrations/supabase/client';
+import { TablesInsert } from '@/integrations/supabase/types';
 
 // Configuração da integração ALUMIA
 const ALUMIA_CONFIG = {
@@ -308,6 +310,12 @@ export class AlumiaService {
       // Sincronizar analytics
       const analytics = await this.getAnalytics();
       
+      // Salvar dados no Supabase
+      await this.saveDestinationsToSupabase(destinations);
+      await this.saveEventsToSupabase(events);
+      await this.saveBookingsToSupabase(bookings);
+      await this.saveAnalyticsToSupabase(analytics);
+
       const endTime = Date.now();
       const duration = endTime - startTime;
       
@@ -541,6 +549,141 @@ export class AlumiaService {
         }
       ]
     };
+  }
+
+  private async saveDestinationsToSupabase(destinations: AlumiaDestination[]): Promise<void> {
+    console.log(`💾 Salvando ${destinations.length} destinos da ALUMIA no Supabase...`);
+    const inserts = destinations.map(dest => ({
+      alumia_id: dest.id,
+      name: dest.name,
+      description: dest.description,
+      latitude: dest.location.latitude,
+      longitude: dest.location.longitude,
+      address: dest.location.address,
+      city: dest.location.city,
+      state: dest.location.state,
+      category: dest.category,
+      rating: dest.rating,
+      price: dest.price,
+      images: dest.images,
+      availability: dest.availability,
+      accessibility: dest.accessibility,
+      languages: dest.languages,
+      contact_phone: dest.contact.phone,
+      contact_email: dest.contact.email,
+      contact_website: dest.contact.website,
+      operating_hours_open: dest.operatingHours.open,
+      operating_hours_close: dest.operatingHours.close,
+      operating_hours_days: dest.operatingHours.days,
+      capacity_max: dest.capacity.max,
+      capacity_current: dest.capacity.current,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })) as TablesInsert<'alumia_destinations'>[];
+
+    // Use upsert para evitar duplicatas e atualizar se já existir
+    const { error } = await supabase
+      .from('alumia_destinations')
+      .upsert(inserts, { onConflict: 'alumia_id' });
+
+    if (error) {
+      console.error('❌ Erro ao salvar destinos ALUMIA no Supabase:', error);
+    } else {
+      console.log(`✅ Destinos ALUMIA salvos/atualizados no Supabase.`);
+    }
+  }
+
+  private async saveEventsToSupabase(events: AlumiaEvent[]): Promise<void> {
+    console.log(`💾 Salvando ${events.length} eventos da ALUMIA no Supabase...`);
+    const inserts = events.map(event => ({
+      alumia_id: event.id,
+      name: event.name,
+      description: event.description,
+      start_date: event.startDate,
+      end_date: event.endDate,
+      location: event.location,
+      category: event.category,
+      price: event.price,
+      capacity: event.capacity,
+      registered: event.registered,
+      status: event.status,
+      organizer: event.organizer,
+      contact_phone: event.contact.phone,
+      contact_email: event.contact.email,
+      images: event.images,
+      tags: event.tags,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })) as TablesInsert<'alumia_events'>[];
+
+    const { error } = await supabase
+      .from('alumia_events')
+      .upsert(inserts, { onConflict: 'alumia_id' });
+
+    if (error) {
+      console.error('❌ Erro ao salvar eventos ALUMIA no Supabase:', error);
+    } else {
+      console.log(`✅ Eventos ALUMIA salvos/atualizados no Supabase.`);
+    }
+  }
+
+  private async saveBookingsToSupabase(bookings: AlumiaBooking[]): Promise<void> {
+    console.log(`💾 Salvando ${bookings.length} reservas da ALUMIA no Supabase...`);
+    const inserts = bookings.map(booking => ({
+      alumia_id: booking.id,
+      tourist_id: booking.touristId,
+      service_type: booking.serviceType,
+      service_id: booking.serviceId,
+      date: booking.date,
+      time: booking.time,
+      people: booking.people,
+      total_price: booking.totalPrice,
+      status: booking.status,
+      payment_status: booking.paymentStatus,
+      special_requirements: booking.specialRequirements,
+      created_at: booking.createdAt,
+      updated_at: booking.updatedAt,
+    })) as TablesInsert<'alumia_bookings'>[];
+
+    const { error } = await supabase
+      .from('alumia_bookings')
+      .upsert(inserts, { onConflict: 'alumia_id' });
+
+    if (error) {
+      console.error('❌ Erro ao salvar reservas ALUMIA no Supabase:', error);
+    } else {
+      console.log(`✅ Reservas ALUMIA salvas/atualizadas no Supabase.`);
+    }
+  }
+
+  private async saveAnalyticsToSupabase(analytics: AlumiaAnalytics): Promise<void> {
+    console.log(`💾 Salvando analytics da ALUMIA no Supabase...`);
+    const insert: TablesInsert<'alumia_analytics_data'> = {
+      period: analytics.period,
+      total_visitors: analytics.totalVisitors,
+      total_bookings: analytics.totalBookings,
+      total_revenue: analytics.totalRevenue,
+      popular_destinations: analytics.popularDestinations,
+      popular_events: analytics.popularEvents,
+      visitor_demographics_by_country: analytics.visitorDemographics.byCountry,
+      visitor_demographics_by_age: analytics.visitorDemographics.byAge,
+      visitor_demographics_by_language: analytics.visitorDemographics.byLanguage,
+      booking_trends: analytics.bookingTrends,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Para analytics, podemos sempre inserir um novo registro com o período, ou atualizar um existente se for o caso de um período específico.
+    // Por simplicidade, vou inserir um novo registro para cada sincronização de analytics.
+    const { error } = await supabase
+      .from('alumia_analytics_data')
+      .insert([insert]);
+
+    if (error) {
+      console.error('❌ Erro ao salvar analytics ALUMIA no Supabase:', error);
+    } else {
+      console.log(`✅ Analytics ALUMIA salvo no Supabase.`);
+    }
   }
 }
 

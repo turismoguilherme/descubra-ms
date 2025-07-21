@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 export interface StateConfig {
   id: string;
@@ -12,64 +13,54 @@ export interface StateConfig {
   isActive: boolean;
 }
 
-export const useStateConfig = (stateCode?: string) => {
-  const [stateConfig, setStateConfig] = useState<StateConfig | null>(null);
+export const useStateConfig = () => {
+  const [stateConfig, setStateConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userProfile, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchStateConfig = async () => {
-      if (!stateCode) {
-        setStateConfig(null);
-        setLoading(false);
-        return;
-      }
+      if (authLoading) return; // Aguarda o userProfile carregar
+
+      setLoading(true);
+      setError(null);
+
+      console.log("🔍 useStateConfig: userProfile no momento da requisição:", userProfile);
+      
+      // O código 'MS' deve ser dinâmico ou vir de uma configuração de tenant.
+      // Por enquanto, vamos usar 'MS' como padrão de exemplo.
+      const stateCode = 'MS'; 
 
       try {
-        setLoading(true);
-        setError(null);
-
-        const { data, error: supabaseError } = await supabase
+        const { data, error: dbError } = await supabase
           .from('flowtrip_states')
           .select('*')
-          .eq('code', stateCode.toUpperCase())
+          .eq('code', stateCode)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
-        if (supabaseError) {
-          console.error('Erro ao buscar configuração do estado:', supabaseError);
-          setError(supabaseError.message);
-          setStateConfig(null);
+        console.log("✅ useStateConfig: Dados recebidos do Supabase para flowtrip_states:", data);
+        console.log("❌ useStateConfig: Erro recebido do Supabase para flowtrip_states:", dbError);
+
+        if (dbError) {
+          console.error("Erro ao buscar configuração do estado:", dbError);
+          setError(dbError.message);
         } else if (data) {
-          setStateConfig({
-            id: data.id,
-            code: data.code,
-            name: data.name,
-            logoUrl: data.logo_url,
-            primaryColor: data.primary_color,
-            secondaryColor: data.secondary_color,
-            accentColor: data.accent_color,
-            isActive: data.is_active
-          });
+          setStateConfig(data);
         } else {
-          setStateConfig(null);
+          setError("Configuração do estado não encontrada ou inativa.");
         }
-      } catch (err) {
-        console.error('Erro inesperado:', err);
-        setError('Erro inesperado ao carregar configuração');
-        setStateConfig(null);
+      } catch (err: any) {
+        console.error("Erro inesperado ao buscar configuração do estado:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchStateConfig();
-  }, [stateCode]);
+  }, [userProfile, authLoading]); // Adicionado userProfile e authLoading como dependências para re-executar quando mudam
 
-  return {
-    stateConfig,
-    loading,
-    error,
-    isValidState: !!stateConfig
-  };
+  return { stateConfig, loading, error };
 };

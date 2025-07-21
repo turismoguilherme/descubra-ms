@@ -23,6 +23,8 @@ import {
   Line,
 } from "recharts";
 
+import { tourismRAGService, RAGResponse } from '@/services/ai/tourismRAGService'; // Importar o serviço RAG
+
 type Message = {
   id: number;
   text: string;
@@ -34,73 +36,12 @@ type Message = {
   datasource?: string;
 };
 
-// Define a proper type for analytics responses
-type AnalyticsResponse = {
-  response: string;
-  chart?: 'bar' | 'line' | 'pie';
-  source: string;
-};
+// Removendo mock data e a lógica de busca baseada em palavras-chave
+// const analyticsResponses: Record<string, AnalyticsResponse> = { /* ... */ };
+// const generateChartData = (type: string): any[] => { /* ... */ };
+// const getKeywordForResponse = (query: string): string => { /* ... */ };
 
-// Mock data for AI responses with proper typing
-const analyticsResponses: Record<string, AnalyticsResponse> = {
-  "fluxo turístico": {
-    response: "O fluxo turístico em Mato Grosso do Sul aumentou 32% no primeiro semestre de 2025 em comparação com o mesmo período de 2024. Os principais destinos que impulsionaram esse crescimento foram:\n\n• Bonito: aumento de 45%\n• Pantanal: aumento de 38%\n• Corumbá: aumento de 29%\n• Campo Grande: aumento de 22%\n\nO turismo internacional também cresceu 18%, com destaque para visitantes da Argentina (27%), Paraguai (22%) e Estados Unidos (15%).",
-    chart: "bar",
-    source: "Observatório do Turismo de MS, 2025"
-  },
-  "santa catarina": {
-    response: "Santa Catarina tem implementado as seguintes estratégias para divulgação de seus destinos naturais:\n\n1. Marketing digital focado em micro-influenciadores especializados em ecoturismo e aventura\n\n2. Programa 'SC Naturalmente' que conecta operadoras de turismo internacionais diretamente com destinos catarinenses\n\n3. Participação em feiras internacionais de turismo sustentável na Europa e América do Norte\n\n4. Investimento em conteúdo audiovisual imersivo (realidade virtual) para apresentação em feiras\n\n5. Integração entre municípios para criação de rotas temáticas de natureza",
-    source: "Secretaria de Turismo de Santa Catarina, 2025"
-  },
-  "baixa temporada": {
-    response: "Com base nos dados de sazonalidade do Pantanal, sugiro estas campanhas para a baixa temporada:\n\n1. \"Pantanal Exclusivo\" - focada na experiência mais íntima e personalizada possível durante a baixa temporada (menos turistas, maior proximidade com a natureza)\n\n2. \"Fotógrafos do Pantanal\" - programa específico para entusiastas de fotografia, destacando a maior facilidade de avistamento de animais em certos períodos\n\n3. \"Tarifa Pantaneira\" - pacotes com desconto progressivo (quanto mais dias, maior o desconto) para estimular estadias mais longas\n\n4. \"Ciência no Pantanal\" - turismo científico em parceria com universidades e institutos de pesquisa durante períodos específicos",
-    source: "Análises comparativas com estratégias bem-sucedidas em destinos similares"
-  },
-  "origem turistas": {
-    response: "Análise da origem dos turistas em MS no último semestre:\n\nDomésticos:\n• São Paulo: 32%\n• Paraná: 17%\n• Minas Gerais: 12%\n• Rio de Janeiro: 9%\n• Santa Catarina: 7%\n• Outros estados: 23%\n\nInternacionais:\n• Argentina: 28%\n• Paraguai: 25%\n• EUA: 12%\n• Chile: 10%\n• Europa (principalmente Alemanha e França): 17%\n• Outros países: 8%",
-    chart: "pie",
-    source: "Sistema de Monitoramento Turístico de MS, 2025"
-  },
-  "perfil visitante": {
-    response: "Evolução do perfil do visitante de Bonito nos últimos 3 anos:\n\n• Idade média: diminuiu de 42 para 38 anos\n• Tempo médio de permanência: aumentou de 3,2 para 4,5 dias\n• Gastos médios diários: aumentaram de R$320 para R$480\n• Viagens em grupo: cresceram 25%\n• Busca por experiências sustentáveis: aumento de 65%\n• Uso do aplicativo durante a viagem: crescimento de 320%\n• Planejamento pelo app antes da viagem: aumento de 185%",
-    chart: "line",
-    source: "Dados consolidados do Observatório do Turismo e app MS, 2023-2025"
-  },
-  "tendências": {
-    response: "As principais tendências e oportunidades identificadas para o turismo em MS incluem:\n\n1. Turismo regenerativo: visitantes buscando destinos onde possam contribuir positivamente para a preservação (oportunidade para programas de compensação de carbono e atividades de conservação)\n\n2. Maior interesse por turismo rural e experiências autênticas com comunidades locais\n\n3. Crescimento do workation (trabalho + férias) exigindo melhor infraestrutura digital nos destinos\n\n4. Aumento na demanda por experiências gastronômicas com produtos locais e orgânicos\n\n5. Interesse crescente no turismo de observação de vida selvagem, especialmente para espécies emblemáticas como onças-pintadas",
-    source: "Cruzamento de dados de pesquisas de interesse no app e tendências globais"
-  }
-};
-
-// Mock data for charts
-const generateChartData = (type: string): any[] => {
-  if (type === "fluxo turístico") {
-    return [
-      { name: 'Bonito', valor: 45 },
-      { name: 'Pantanal', valor: 38 },
-      { name: 'Corumbá', valor: 29 },
-      { name: 'C. Grande', valor: 22 }
-    ];
-  } else if (type === "origem turistas") {
-    return [
-      { name: 'São Paulo', valor: 32 },
-      { name: 'Paraná', valor: 17 },
-      { name: 'Minas Gerais', valor: 12 },
-      { name: 'Rio de Janeiro', valor: 9 },
-      { name: 'Santa Catarina', valor: 7 },
-      { name: 'Outros', valor: 23 }
-    ];
-  } else if (type === "perfil visitante") {
-    return [
-      { name: '2023', idade: 42, permanencia: 3.2, gastos: 320 },
-      { name: '2024', idade: 40, permanencia: 3.8, gastos: 380 },
-      { name: '2025', idade: 38, permanencia: 4.5, gastos: 480 }
-    ];
-  }
-  return [];
-};
-
-// Colors for the charts
+// Colors for the charts (mantido para compatibilidade, mas pode ser removido se não houver gráficos)
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 interface AnalyticsAIProps {}
@@ -119,49 +60,23 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const findRelevantResponse = (query: string): {
-    text: string;
-    hasChart: boolean;
-    chartType?: 'bar' | 'line' | 'pie';
-    source: string;
-  } | null => {
-    const queryLower = query.toLowerCase();
-    
-    for (const [key, data] of Object.entries(analyticsResponses)) {
-      if (queryLower.includes(key)) {
-        return {
-          text: data.response,
-          hasChart: !!data.chart,
-          chartType: data.chart,
-          source: data.source
-        };
-      }
-    }
-    
-    // Fallback response when no specific match is found
-    if (queryLower.includes("turismo") || queryLower.includes("dados") || queryLower.includes("análise")) {
-      return {
-        text: "Para responder sua pergunta de forma mais precisa, precisaria de dados específicos sobre o tema. Posso ajudar com análises sobre fluxo turístico, perfil de visitantes, origens dos turistas, tendências ou comparativos com outros destinos. Poderia reformular sua pergunta com mais detalhes?",
-        hasChart: false,
-        source: "Analista IA"
-      };
-    }
-    
-    return null;
+  // Inicializar a base de conhecimento do RAG
+  useEffect(() => {
+    tourismRAGService.initializeKnowledgeBase();
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
     
-    // Add user message
+    // Adiciona a mensagem do usuário
     const userMessage: Message = {
       id: messages.length + 1,
       text: inputMessage,
@@ -172,49 +87,46 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
     setInputMessage("");
     setIsLoading(true);
     
-    // Find a response based on keywords
-    const response = findRelevantResponse(inputMessage);
-    
-    // Simulate AI response with a delay
-    setTimeout(() => {
-      if (response) {
-        const botMessage: Message = {
-          id: messages.length + 2,
-          text: response.text,
-          isBot: true,
-          hasChart: response.hasChart,
-          chartType: response.chartType,
-          chartData: response.hasChart ? generateChartData(getKeywordForResponse(inputMessage)) : undefined,
-          source: response.source
-        };
-        
-        setMessages(prevMessages => [...prevMessages, botMessage]);
-      } else {
-        // Generic response when no relevant information is found
-        const botMessage: Message = {
-          id: messages.length + 2,
-          text: "Não tenho dados específicos sobre esse tema. Posso ajudar com informações sobre fluxo turístico, perfil de visitantes, origens dos turistas, comparativos com outros destinos como Santa Catarina, ou estratégias para períodos como a baixa temporada.",
-          isBot: true,
-          source: "Analista IA"
-        };
-        
-        setMessages(prevMessages => [...prevMessages, botMessage]);
-      }
-      
-      setIsLoading(false);
-    }, 1500);
-  };
+    try {
+      // Chama o serviço RAG para gerar a resposta
+      const ragResponse: RAGResponse = await tourismRAGService.generateResponse({
+        question: userMessage.text,
+        context: {},
+        filters: {}
+      });
 
-  const getKeywordForResponse = (query: string): string => {
-    const queryLower = query.toLowerCase();
-    
-    for (const key of Object.keys(analyticsResponses)) {
-      if (queryLower.includes(key)) {
-        return key;
-      }
+      // Adiciona a resposta da IA
+      const botMessage: Message = {
+        id: messages.length + 2,
+        text: ragResponse.answer + (ragResponse.sources.length > 0 ? "\n\nFontes: " + ragResponse.sources.map(s => s.name).join(", ") : ""),
+        isBot: true,
+        // hasChart: ragResponse.chartData ? true : false, // Desabilitar gráficos por enquanto, RAG não retorna formatado
+        // chartType: ragResponse.chartType,
+        // chartData: ragResponse.chartData,
+        source: "IA Analítica (FlowTrip)"
+      };
+      
+      setMessages(prevMessages => [...prevMessages, botMessage]);
+    } catch (error) {
+      console.error("Erro ao processar mensagem pela IA Analítica:", error);
+      toast({
+        title: "Erro de IA",
+        description: "Não foi possível obter uma resposta da IA Analítica. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      // Adiciona uma mensagem de erro genérica
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: messages.length + 2,
+          text: "Desculpe, houve um erro ao processar sua solicitação. Por favor, tente novamente.",
+          isBot: true,
+          source: "Erro do Sistema"
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
     }
-    
-    return "";
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -225,6 +137,7 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
   };
   
   // Render different chart types based on the message type
+  // Mantido, mas não será acionado sem chartData vindo do RAG
   const renderChart = (message: Message) => {
     if (!message.hasChart || !message.chartData) return null;
     
@@ -347,11 +260,11 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
               >
                 <div className="whitespace-pre-line">{message.text}</div>
                 
-                {message.hasChart && renderChart(message)}
+                {/* removido message.hasChart && renderChart(message) por enquanto, RAG não retorna formatado */}
                 
                 {message.source && (
                   <div className="mt-2 flex items-center">
-                    {message.hasChart && message.chartType && getChartIcon(message.chartType)}
+                    {/* removido message.hasChart && message.chartType && getChartIcon(message.chartType) */}
                     <span className="text-xs text-gray-500">
                       Fonte: {message.source}
                     </span>
@@ -428,11 +341,11 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
             <div className="flex items-center">
               <Badge variant="secondary" className="text-xs">
                 <MessageCircle size={12} className="mr-1" />
-                Dados oficiais
+                Modo Analítico
               </Badge>
             </div>
             <p className="text-xs text-gray-500">
-              Dados atualizados até Maio/2025
+              Dados em tempo real via IA
             </p>
           </div>
         </div>

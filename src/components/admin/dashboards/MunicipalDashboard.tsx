@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Building2, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  TrendingUp, 
+import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import {
+  Building2,
+  MapPin,
+  Calendar,
+  Users,
+  TrendingUp,
   Plus,
   Edit,
   Eye,
@@ -21,6 +22,7 @@ import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 const MunicipalDashboard = () => {
   const { cityId, regionId, getDisplayName } = useRoleBasedAccess();
   const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate(); // Inicializar useNavigate
 
   const [municipalStats] = useState([
     {
@@ -173,7 +175,7 @@ const MunicipalDashboard = () => {
                 className="h-12 text-lg"
               />
             </div>
-            <Button className="h-12 px-6">
+            <Button className="h-12 px-6" onClick={() => navigate('/ms/admin/destination-editor')}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Destino
             </Button>
@@ -224,7 +226,7 @@ const MunicipalDashboard = () => {
                       <MapPin className="h-5 w-5 text-blue-600" />
                       Destinos Turísticos
                     </CardTitle>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => navigate('/ms/admin/destinations-management')}>
                       <Eye className="mr-2 h-4 w-4" />
                       Ver Todos
                     </Button>
@@ -247,7 +249,7 @@ const MunicipalDashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge 
+                          <Badge
                             variant={destination.status === 'active' ? 'default' : 'secondary'}
                           >
                             {destination.status === 'active' ? 'Ativo' : 'Manutenção'}
@@ -270,7 +272,7 @@ const MunicipalDashboard = () => {
                       <Calendar className="h-5 w-5 text-purple-600" />
                       Eventos Municipais
                     </CardTitle>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => navigate('/ms/admin/event-editor')}>
                       <Plus className="mr-2 h-4 w-4" />
                       Novo Evento
                     </Button>
@@ -294,7 +296,7 @@ const MunicipalDashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge 
+                          <Badge
                             variant={event.status === 'upcoming' ? 'default' : 'secondary'}
                           >
                             {event.status === 'upcoming' ? 'Próximo' : 'Planejamento'}
@@ -320,7 +322,24 @@ const MunicipalDashboard = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {quickActions.map((action, index) => (
-                      <Button key={index} variant="outline" className="w-full justify-start h-auto p-3">
+                      <Button 
+                        key={index} 
+                        variant="outline" 
+                        className="w-full justify-start h-auto p-3"
+                        onClick={() => {
+                          if (action.action === 'add-destination') {
+                            navigate('/ms/admin/destination-editor');
+                          } else if (action.action === 'create-event') {
+                            navigate('/ms/admin/event-editor');
+                          } else if (action.action === 'reports') {
+                            // navigate('/ms/admin/reports'); // Implementar rota de relatórios
+                            alert('Funcionalidade de Relatórios em desenvolvimento!');
+                          } else if (action.action === 'settings') {
+                            // navigate('/ms/admin/settings'); // Implementar rota de configurações
+                            alert('Funcionalidade de Configurações em desenvolvimento!');
+                          }
+                        }}
+                      >
                         {action.icon}
                         <div className="ml-3 text-left">
                           <p className="font-semibold">{action.name}</p>

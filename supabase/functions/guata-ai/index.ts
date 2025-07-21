@@ -28,9 +28,9 @@ serve(async (req) => {
       )
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured')
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyCX7Cmid7hQDDucWtNoP5zJ4uDsDgmPJmw'
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not configured')
     }
 
     // Construir contexto baseado na base de conhecimento
@@ -51,33 +51,35 @@ serve(async (req) => {
 
     console.log("System prompt gerado:", systemPrompt.substring(0, 200) + "...");
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Usar API Gemini em vez de OpenAI
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
+        contents: [{
+          parts: [{
+            text: `${systemPrompt}\n\nPergunta do usuário: ${prompt}`
+          }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 1000,
+          temperature: 0.7,
+        }
       }),
     })
 
     if (!response.ok) {
       const errorData = await response.text()
-      console.error('OpenAI API error:', errorData)
-      throw new Error(`OpenAI API error: ${response.status} ${errorData}`)
+      console.error('Gemini API error:', errorData)
+      throw new Error(`Gemini API error: ${response.status} ${errorData}`)
     }
 
     const data = await response.json()
-    console.log("Resposta da OpenAI recebida com sucesso")
+    console.log("Resposta da Gemini recebida com sucesso")
     
-    const aiResponse = data.choices[0].message.content
+    const aiResponse = data.candidates[0].content.parts[0].text
 
     return new Response(
       JSON.stringify({ response: aiResponse }),

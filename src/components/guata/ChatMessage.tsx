@@ -4,6 +4,8 @@ import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion } from "framer-motion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Importar Avatar
+import guataMascoteImage from "@/assets/guata-mascote.jpg"; // Importar imagem do mascote
 
 interface ChatMessageProps {
   message: AIMessage;
@@ -13,11 +15,26 @@ interface ChatMessageProps {
 const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   return (
     <motion.div 
-      className={`flex ${!message.isUser ? "justify-start" : "justify-end"}`}
+      className={cn(
+        "flex items-start gap-3", // Adicionar items-start e gap-3 para alinhar avatar e mensagem
+        !message.isUser ? "justify-start" : "justify-end"
+      )}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
+      {!message.isUser && ( // Renderizar avatar apenas para mensagens da IA
+        <Avatar className="w-8 h-8 flex-shrink-0">
+          <AvatarImage 
+            src={guataMascoteImage} 
+            alt="Guatá AI"
+            className="object-cover"
+          />
+          <AvatarFallback className="bg-ms-primary-blue text-white font-bold text-sm">
+            G
+          </AvatarFallback>
+        </Avatar>
+      )}
       <div 
         className={cn(
           "relative max-w-[80%] rounded-lg p-3 shadow-sm transition-all",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -11,12 +11,24 @@ const RestoredNavbar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
+  useEffect(() => {
+    console.log("🧭 NAVBAR: Componente RestoredNavbar montado");
+    console.log("🧭 NAVBAR: Usuário autenticado:", !!user);
+    console.log("🧭 NAVBAR: Localização atual:", location.pathname);
+    
+    return () => {
+      console.log("🧭 NAVBAR: Componente RestoredNavbar desmontado");
+    };
+  }, [user, location.pathname]);
+
   const isActivePath = (path: string) => {
     return location.pathname === path;
   };
 
   // Detectar se estamos no contexto FlowTrip (página principal) ou MS
   const isFlowTrip = !location.pathname.startsWith('/ms');
+
+  console.log("🧭 NAVBAR: Renderizando navbar, isFlowTrip:", isFlowTrip);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 relative z-50">
@@ -148,7 +160,10 @@ const RestoredNavbar = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setIsOpen(!isOpen)} 
+              onClick={() => {
+                console.log("🧭 NAVBAR: Alternando menu mobile");
+                setIsOpen(!isOpen);
+              }} 
               className="inline-flex items-center justify-center p-2"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -223,57 +238,45 @@ const RestoredNavbar = () => {
               {/* Menu autenticado mobile */}
               {user && (
                 <>
-                  <Link to="/ms/guata" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/ms/guata') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                  }`} onClick={() => setIsOpen(false)}>
-                    Guatá IA
-                  </Link>
-                  <Link to="/ms/passaporte" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/ms/passaporte') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                  }`} onClick={() => setIsOpen(false)}>
-                    Passaporte Digital
-                  </Link>
+                  <div className="border-t border-gray-200 pt-2 mt-2">
+                    <Link to="/ms/guata" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                      isActivePath('/ms/guata') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    }`} onClick={() => setIsOpen(false)}>
+                      Guatá IA
+                    </Link>
+                    <Link to="/ms/passaporte" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                      isActivePath('/ms/passaporte') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    }`} onClick={() => setIsOpen(false)}>
+                      Passaporte Digital
+                    </Link>
+                  </div>
                 </>
               )}
-
-              {/* Mobile Auth */}
-              <div className="pt-4 pb-3 border-t border-gray-200">
-                {user ? (
-                  <div className="px-3">
-                    <UserMenu />
-                  </div>
-                ) : (
-                  <div className="space-y-2 px-3">
-                    {isFlowTrip ? (
-                      <>
-                        <Link to="/contato" onClick={() => setIsOpen(false)}>
-                          <Button size="sm" className="w-full bg-blue-600 text-white hover:bg-blue-700">
-                            Agendar Demo
-                          </Button>
-                        </Link>
-                        <Link to="/ms" onClick={() => setIsOpen(false)}>
-                          <Button variant="outline" size="sm" className="w-full">
-                            Ver Case MS
-                          </Button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link to="/ms/login" onClick={() => setIsOpen(false)}>
-                          <Button variant="ghost" size="sm" className="w-full justify-start">
-                            Entrar
-                          </Button>
-                        </Link>
-                        <Link to="/ms/register" onClick={() => setIsOpen(false)}>
-                          <Button size="sm" className="w-full bg-yellow-400 text-blue-900 hover:bg-yellow-300 font-semibold">
-                            Cadastrar
-                          </Button>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+              
+              {/* CTA mobile */}
+              {!user && (
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  {isFlowTrip ? (
+                    <>
+                      <Link to="/contato" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
+                        Agendar Demo
+                      </Link>
+                      <Link to="/ms" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
+                        Ver Case MS
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/ms/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
+                        Entrar
+                      </Link>
+                      <Link to="/ms/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
+                        Cadastrar
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

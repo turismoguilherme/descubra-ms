@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, Copy, Trash2, Clock } from 'lucide-react';
-import { useCATAI } from '@/hooks/useCATAI';
+import { Loader2, MessageSquare, Copy, Trash2, Clock, Brain, Database, Globe, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { tourismRAGService, RAGQuery, RAGResponse } from '@/services/ai/tourismRAGService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CATAIInterfaceProps {
   attendantId: string;
@@ -25,37 +26,83 @@ const CATAIInterface = ({
   longitude 
 }: CATAIInterfaceProps) => {
   const [currentQuestion, setCurrentQuestion] = useState('');
-  const [currentResponse, setCurrentResponse] = useState('');
-  const { queries, loading, submitQuery, getUserQueries, submitFeedback } = useCATAI();
+  const [currentResponse, setCurrentResponse] = useState<RAGResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [knowledgeBaseStats, setKnowledgeBaseStats] = useState<any>(null);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadQueryHistory();
-  }, [attendantId]);
+    initializeSystem();
+  }, []);
 
-  const loadQueryHistory = async () => {
-    await getUserQueries(attendantId);
+  const initializeSystem = async () => {
+    try {
+      console.log('🚀 Inicializando sistema RAG para atendente...');
+      
+      // Inicializar base de conhecimento
+      await tourismRAGService.initializeKnowledgeBase();
+      
+      // Obter estatísticas
+      const stats = tourismRAGService.getKnowledgeBaseStats();
+      setKnowledgeBaseStats(stats);
+      setLastUpdate(stats.lastUpdate.toLocaleString('pt-BR'));
+      
+      console.log('✅ Sistema RAG inicializado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao inicializar sistema RAG:', error);
+      toast({
+        title: "Erro de Sistema",
+        description: "Não foi possível inicializar o assistente inteligente. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const submitQuestion = async () => {
     if (!currentQuestion.trim()) return;
 
+    setLoading(true);
     try {
-      const result = await submitQuery(
-        attendantId,
-        attendantName,
-        currentQuestion,
-        catLocation,
-        latitude,
-        longitude
-      );
+      console.log('🔍 Processando pergunta do turista:', currentQuestion);
 
-      if (result) {
-        setCurrentResponse(result.response);
-        setCurrentQuestion('');
-      }
+      // Construir query RAG
+      const query: RAGQuery = {
+        question: currentQuestion,
+        context: {
+          catLocation,
+          currentTime: new Date().toLocaleString('pt-BR'),
+          userPreferences: user?.preferences || []
+        },
+        filters: {
+          region: 'centro_oeste' // MS
+        }
+      };
+
+      // Gerar resposta usando RAG
+      const response = await tourismRAGService.generateResponse(query);
+      
+      setCurrentResponse(response);
+      setCurrentQuestion('');
+
+      console.log('✅ Resposta gerada com sucesso. Confiança:', response.confidence);
+
+      // Mostrar toast de sucesso
+      toast({
+        title: "Resposta Gerada",
+        description: `Confiança: ${Math.round(response.confidence * 100)}%`,
+      });
+
     } catch (error) {
-      console.error('Error submitting question:', error);
+      console.error('❌ Erro ao processar pergunta:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua pergunta. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,30 +119,115 @@ const CATAIInterface = ({
   };
 
   const clearCurrentResponse = () => {
-    setCurrentResponse('');
+    setCurrentResponse(null);
   };
 
-  const handleFeedback = async (queryId: string, isUseful: boolean) => {
-    await submitFeedback(queryId, isUseful);
+  const updateKnowledgeBase = async () => {
+    try {
+      setLoading(true);
+      await tourismRAGService.updateKnowledgeBase();
+      
+      const stats = tourismRAGService.getKnowledgeBaseStats();
+      setKnowledgeBaseStats(stats);
+      setLastUpdate(stats.lastUpdate.toLocaleString('pt-BR'));
+      
+      toast({
+        title: "Base Atualizada",
+        description: "Informações turísticas atualizadas com sucesso",
+      });
+    } catch (error) {
+      console.error('❌ Erro ao atualizar base:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a base de conhecimento",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'text-green-600 bg-green-100';
+    if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-100';
+    return 'text-red-600 bg-red-100';
+  };
+
+  const getSourceIcon = (source: string) => {
+    switch (source) {
+      case 'alumia': return <Database className="h-4 w-4" />;
+      case 'government': return <Globe className="h-4 w-4" />;
+      case 'social_media': return <TrendingUp className="h-4 w-4" />;
+      default: return <Database className="h-4 w-4" />;
+    }
   };
 
   return (
     <div className="space-y-6">
+      {/* Header com estatísticas */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Brain className="mr-2 h-5 w-5 text-blue-600" />
+              Assistente Inteligente CAT
+            </div>
+            <Badge variant="outline" className="text-xs">
+              RAG v2.0
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {knowledgeBaseStats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center">
+                <div className="font-semibold text-blue-600">{knowledgeBaseStats.totalItems}</div>
+                <div className="text-gray-600">Itens na Base</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-green-600">{knowledgeBaseStats.byType?.attraction || 0}</div>
+                <div className="text-gray-600">Atrações</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-purple-600">{knowledgeBaseStats.byType?.restaurant || 0}</div>
+                <div className="text-gray-600">Restaurantes</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-orange-600">{knowledgeBaseStats.byType?.hotel || 0}</div>
+                <div className="text-gray-600">Hotéis</div>
+              </div>
+            </div>
+          )}
+          <div className="mt-3 text-xs text-gray-500">
+            Última atualização: {lastUpdate}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={updateKnowledgeBase}
+              disabled={loading}
+              className="ml-2 h-6 px-2"
+            >
+              {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : '🔄'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Question Input */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <MessageSquare className="mr-2 h-5 w-5" />
-            Interface CAT AI
+            Pergunta do Turista
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Pergunta do Turista</label>
+            <label className="text-sm font-medium">Digite a pergunta do turista:</label>
             <Textarea
               value={currentQuestion}
               onChange={(e) => setCurrentQuestion(e.target.value)}
-              placeholder="Digite a pergunta do turista aqui..."
+              placeholder="Ex: Onde posso comer peixe típico do Pantanal? Quais são os horários do Parque das Nações? Como chegar ao Bonito?"
               className="min-h-[100px]"
             />
           </div>
@@ -108,10 +240,13 @@ const CATAIInterface = ({
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
+                Processando com IA...
               </>
             ) : (
-              'Enviar Pergunta'
+              <>
+                <Brain className="mr-2 h-4 w-4" />
+                Gerar Resposta Inteligente
+              </>
             )}
           </Button>
         </CardContent>
@@ -122,92 +257,116 @@ const CATAIInterface = ({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Resposta Atual</span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(currentResponse)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearCurrentResponse}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <span>Resposta para o Turista</span>
+              <div className="flex items-center gap-2">
+                <Badge className={getConfidenceColor(currentResponse.confidence)}>
+                  {Math.round(currentResponse.confidence * 100)}% confiança
+                </Badge>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(currentResponse.answer)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearCurrentResponse}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="whitespace-pre-wrap">{currentResponse}</p>
+          <CardContent className="space-y-4">
+            {/* Resposta principal */}
+            <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+              <p className="whitespace-pre-wrap text-gray-800">{currentResponse.answer}</p>
             </div>
+
+            {/* Fontes utilizadas */}
+            {currentResponse.sources.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-gray-700">Fontes consultadas:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {currentResponse.sources.map((source, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                      {getSourceIcon(source.source)}
+                      <span className="font-medium">{source.name}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {source.type}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sugestões */}
+            {currentResponse.suggestions.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-gray-700">Sugestões para o turista:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {currentResponse.suggestions.map((suggestion, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {suggestion}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Perguntas relacionadas */}
+            {currentResponse.related_questions.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-gray-700">Perguntas relacionadas:</h4>
+                <div className="space-y-1">
+                  {currentResponse.related_questions.map((question, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentQuestion(question)}
+                      className="block w-full text-left p-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Query History */}
+      {/* Informações do CAT */}
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Perguntas</CardTitle>
+          <CardTitle className="flex items-center">
+            <Clock className="mr-2 h-5 w-5" />
+            Informações do CAT
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {queries.length > 0 ? (
-            <div className="space-y-4">
-              {queries.slice(0, 10).map((query) => (
-                <div key={query.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="font-medium text-sm">{query.question}</p>
-                    <Badge variant="outline" className="text-xs">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {new Date(query.created_at).toLocaleDateString('pt-BR')}
-                    </Badge>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded p-3 mb-3">
-                    <p className="text-sm whitespace-pre-wrap">{query.response}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(query.response)}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Copiar
-                      </Button>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant={query.feedback_useful === true ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleFeedback(query.id, true)}
-                      >
-                        👍 Útil
-                      </Button>
-                      <Button
-                        variant={query.feedback_useful === false ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleFeedback(query.id, false)}
-                      >
-                        👎 Não útil
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Local:</span> {catLocation}
             </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">
-              Nenhuma pergunta encontrada
-            </p>
-          )}
+            <div>
+              <span className="font-medium">Atendente:</span> {attendantName}
+            </div>
+            {latitude && longitude && (
+              <>
+                <div>
+                  <span className="font-medium">Latitude:</span> {latitude.toFixed(6)}
+                </div>
+                <div>
+                  <span className="font-medium">Longitude:</span> {longitude.toFixed(6)}
+                </div>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

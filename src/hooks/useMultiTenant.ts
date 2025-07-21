@@ -1,78 +1,86 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-
-export interface TenantConfig {
-  id: string;
-  slug: string; // ms, mt, go, sp, etc.
-  name: string;
-  logo: string;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  isActive: boolean;
-}
+import { useLocation } from 'react-router-dom';
+import { useAuth } from './useAuth';
 
 export const useMultiTenant = () => {
   const location = useLocation();
-  const [currentTenant, setCurrentTenant] = useState<TenantConfig | null>(null);
+  const [currentTenant, setCurrentTenant] = useState<string | null>(null);
+  const [tenantConfig, setTenantConfig] = useState<any>(null); // Pode ser mais específico com um tipo
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userProfile, loading: authLoading } = useAuth(); // Usar o useAuth
 
   useEffect(() => {
-    const detectTenant = async () => {
-      setLoading(true);
-      
-      // Detectar tenant baseado na URL
-      const pathSegments = location.pathname.split('/').filter(Boolean);
-      const tenantSlug = pathSegments[0]; // primeiro segmento após a barra
+    const detectAndLoadTenant = async () => {
+      console.log("🔍 useMultiTenant: Início do detectAndLoadTenant. authLoading:", authLoading, "userProfile:", userProfile);
 
-      try {
-        if (tenantSlug && tenantSlug !== '' && !['admin', 'api'].includes(tenantSlug)) {
-          // Buscar configuração do tenant no banco
-          const { data: state } = await supabase
+      if (authLoading) {
+        console.log("🔍 useMultiTenant: authLoading é true, aguardando...");
+        return; // Aguarda o userProfile carregar
+      }
+
+      setLoading(true);
+      setError(null);
+
+      const pathSegments = location.pathname.split('/').filter(Boolean);
+      let detectedTenantCode: string | null = null;
+
+      if (pathSegments.length > 0) {
+        const possibleTenantCode = pathSegments[0];
+        // Uma heurística simples para códigos de tenant de 2 letras (ex: 'ms', 'mt')
+        if (possibleTenantCode.length === 2 && possibleTenantCode.match(/[a-z]{2}/)) {
+          detectedTenantCode = possibleTenantCode;
+        }
+      }
+
+      console.log("🔍 useMultiTenant: Tenant detectado do URL:", detectedTenantCode);
+      console.log("🔍 useMultiTenant: userProfile no momento da requisição:", userProfile);
+
+      if (detectedTenantCode) {
+        try {
+          const { data, error: dbError } = await supabase
             .from('flowtrip_states')
             .select('*')
-            .eq('code', tenantSlug.toUpperCase())
+            .eq('code', detectedTenantCode.toUpperCase())
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
-          if (state) {
-            setCurrentTenant({
-              id: state.id,
-              slug: state.code.toLowerCase(),
-              name: state.name,
-              logo: state.logo_url || '/placeholder.svg',
-              primaryColor: state.primary_color,
-              secondaryColor: state.secondary_color,
-              accentColor: state.accent_color,
-              isActive: state.is_active
-            });
+          console.log("✅ useMultiTenant: Dados recebidos do Supabase para flowtrip_states:", data);
+          console.log("❌ useMultiTenant: Erro recebido do Supabase para flowtrip_states:", dbError);
+
+          if (dbError) {
+            console.error("Erro ao buscar configuração do tenant:", dbError);
+            setError(dbError.message);
+          } else if (data) {
+            setTenantConfig(data);
+            setCurrentTenant(detectedTenantCode);
           } else {
-            setCurrentTenant(null);
+            setError(`Tenant '${detectedTenantCode}' não encontrado ou inativo.`);
           }
-        } else {
-          // Contexto FlowTrip principal
-          setCurrentTenant(null);
+        } catch (err: any) {
+          console.error("Erro inesperado ao buscar configuração do tenant:", err);
+          setError(err.message);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Erro ao detectar tenant:', error);
+      } else {
+        // Se não há tenant detectado, assume-se um modo padrão ou global.
+        // Você pode carregar uma configuração padrão aqui ou definir como nulo/vazio.
+        setTenantConfig(null);
         setCurrentTenant(null);
-      } finally {
         setLoading(false);
       }
     };
 
-    detectTenant();
-  }, [location.pathname]);
-
-  const isFlowTripMain = !currentTenant;
-  const isTenantContext = !!currentTenant;
+    detectAndLoadTenant();
+  }, [location.pathname, userProfile, authLoading]); // Adicionado userProfile e authLoading como dependências
 
   return {
     currentTenant,
-    isFlowTripMain,
-    isTenantContext,
+    tenantConfig,
     loading,
-    tenantSlug: currentTenant?.slug || null
+    error,
+    isMultiTenantMode: !!currentTenant,
   };
 };

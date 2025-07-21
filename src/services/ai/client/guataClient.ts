@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { KnowledgeItem } from "../knowledge/knowledgeTypes";
 import { GuataUserInfo, GuataResponse } from "../types/guataTypes";
+import { geminiClient } from "@/config/gemini";
 
 /**
  * Cliente para comunicação com a API do Guatá
@@ -9,7 +10,7 @@ export class GuataClient {
   private currentThreadId: string | null = null;
 
   /**
-   * Envia uma pergunta para a API Guatá via função Supabase
+   * Envia uma pergunta para a API Guatá usando Gemini
    */
   async sendQuery(
     prompt: string,
@@ -17,12 +18,11 @@ export class GuataClient {
     userInfo?: GuataUserInfo
   ): Promise<GuataResponse> {
     try {
-      console.log("Iniciando chamada para serviço do Guatá com prompt:", prompt);
-      console.log("ThreadId atual:", this.currentThreadId);
+      console.log("🦦 Guatá: Iniciando chamada com Gemini API");
       
-      // Preparar contexto da base de conhecimento se fornecida
+      // Preparar contexto da base de conhecimento
       let contextInfo = "";
-      if (knowledgeBase && knowledgeBase.length > 0) {
+      if (knowledgeBase?.length > 0) {
         contextInfo = knowledgeBase.map(item => `
 Título: ${item.title}
 Categoria: ${item.category}
@@ -50,44 +50,41 @@ ${userInfo.viajandoCom ? `Viajando com: ${userInfo.viajandoCom}` : ''}
 
       // Montar prompt completo
       const fullPrompt = `
+Você é o Guatá, o assistente virtual de turismo do Mato Grosso do Sul. Você é representado por uma capivara simpática usando chapéu de safari.
+
+Contexto sobre MS:
 ${contextInfo}
+
+Informações do usuário:
 ${userContext}
 
 Pergunta do usuário: ${prompt}
 
-Por favor, responda baseado nas informações fornecidas sobre turismo em Mato Grosso do Sul. Se não tiver informações específicas na base de conhecimento, indique isso claramente na resposta.`;
+Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS. Se não tiver informações específicas, seja honesto e sugira alternativas ou indique onde encontrar a informação.`;
 
-      console.log("Prompt completo preparado, enviando para a função Supabase...");
+      console.log("🦦 Guatá: Prompt preparado, chamando Gemini API...");
 
-      // Chamar a função Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('guata-ai', {
-        body: {
-          prompt: fullPrompt,
-          threadId: this.currentThreadId,
-          userInfo: userInfo
-        }
-      });
-
-      if (error) {
-        console.error("Erro na chamada da função Supabase:", error);
-        throw error;
+      // Usar Gemini API diretamente
+      const response = await geminiClient.generateContent(fullPrompt);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na Gemini API: ${response.error}`);
       }
 
-      console.log("Resposta recebida da função Supabase:", data);
+      console.log("🦦 Guatá: Resposta recebida com sucesso");
 
-      // Verificar se recebemos um threadId para futuras conversas
-      if (data?.threadId) {
-        this.currentThreadId = data.threadId;
-        console.log("ThreadId atualizado:", this.currentThreadId);
-      }
+      return {
+        resposta: response.text,
+        response: response.text,
+        threadId: this.currentThreadId
+      };
 
-      return data as GuataResponse;
     } catch (error) {
-      console.error("Erro no cliente Guatá:", error);
+      console.error("🦦 Guatá: Erro ao processar pergunta:", error);
       
       return {
-        resposta: "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
-        response: "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
+        resposta: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes. Se o problema persistir, você pode entrar em contato com nosso suporte.",
+        response: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes. Se o problema persistir, você pode entrar em contato com nosso suporte.",
         erro: error instanceof Error ? error.message : "Erro desconhecido"
       };
     }
@@ -98,7 +95,7 @@ Por favor, responda baseado nas informações fornecidas sobre turismo em Mato G
    */
   clearThread(): void {
     this.currentThreadId = null;
-    console.log("Thread limpo, nova conversa iniciada");
+    console.log("🦦 Guatá: Nova conversa iniciada");
   }
 
   /**
@@ -113,7 +110,7 @@ Por favor, responda baseado nas informações fornecidas sobre turismo em Mato G
    */
   setThreadId(threadId: string): void {
     this.currentThreadId = threadId;
-    console.log("Thread ID definido:", threadId);
+    console.log("🦦 Guatá: Thread ID definido:", threadId);
   }
 }
 

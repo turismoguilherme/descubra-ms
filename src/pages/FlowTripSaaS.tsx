@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe } from 'lucide-react';
 import RestoredNavbar from '@/components/layout/RestoredNavbar';
 
 const FlowTripSaaS = () => {
+  useEffect(() => {
+    console.log("🚀 FLOWTRIP: Componente FlowTripSaaS montado com sucesso");
+    
+    // Verificar se todos os elementos estão carregando
+    const checkElements = () => {
+      console.log("🔍 FLOWTRIP: Verificando elementos da página...");
+      
+      // Verificar se o DOM está pronto
+      if (document.readyState === 'complete') {
+        console.log("✅ FLOWTRIP: DOM completamente carregado");
+      } else {
+        console.log("⏳ FLOWTRIP: DOM ainda carregando...");
+      }
+      
+      // Verificar se o Tailwind está funcionando
+      const testElement = document.createElement('div');
+      testElement.className = 'bg-blue-600 text-white p-4';
+      testElement.style.position = 'absolute';
+      testElement.style.left = '-9999px';
+      testElement.textContent = 'Teste Tailwind';
+      document.body.appendChild(testElement);
+      
+      const computedStyle = window.getComputedStyle(testElement);
+      const hasTailwind = computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)';
+      
+      console.log("🎨 FLOWTRIP: Tailwind CSS funcionando:", hasTailwind);
+      
+      document.body.removeChild(testElement);
+    };
+    
+    // Executar verificação após um pequeno delay
+    setTimeout(checkElements, 100);
+    
+    return () => {
+      console.log("🧹 FLOWTRIP: Componente FlowTripSaaS desmontado");
+    };
+  }, []);
+
+  console.log("🎯 FLOWTRIP: Renderizando componente FlowTripSaaS");
+
   return (
     <div className="min-h-screen bg-white">
       <RestoredNavbar />
@@ -198,23 +238,23 @@ const FlowTripSaaS = () => {
 
             <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-teal-600">
               <Globe className="w-12 h-12 text-teal-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Portal do Turista</h3>
+              <h3 className="text-xl font-semibold mb-3">Multi-Tenant</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• Catálogo completo</li>
-                <li>• Busca inteligente</li>
-                <li>• Mapas interativos</li>
-                <li>• Reviews e ratings</li>
+                <li>• Isolamento por estado</li>
+                <li>• Configurações personalizadas</li>
+                <li>• Escalabilidade automática</li>
+                <li>• Backup independente</li>
               </ul>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-green-600">
-              <Brain className="w-12 h-12 text-green-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Inteligência Artificial</h3>
+              <BarChart3 className="w-12 h-12 text-green-600 mb-4" />
+              <h3 className="text-xl font-semibold mb-3">Analytics Avançado</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• Chatbot especializado</li>
-                <li>• Recomendações personalizadas</li>
-                <li>• Análise preditiva</li>
-                <li>• Insights automáticos</li>
+                <li>• IA preditiva</li>
+                <li>• Heatmaps de comportamento</li>
+                <li>• Relatórios em tempo real</li>
+                <li>• Exportação automática</li>
               </ul>
             </div>
           </div>
@@ -232,13 +272,13 @@ const FlowTripSaaS = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contato">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                Agendar Demonstração
+              <Button size="lg" className="bg-yellow-400 text-blue-900 hover:bg-yellow-300 font-semibold">
+                Agendar Demonstração Gratuita
               </Button>
             </Link>
-            <Link to="/master-dashboard">
+            <Link to="/ms">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
-                Acessar Dashboard Master
+                Ver Demonstração ao Vivo
               </Button>
             </Link>
           </div>

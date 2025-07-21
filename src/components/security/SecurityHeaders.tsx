@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { config } from '@/config/environment';
 
 /**
  * Componente para configurar cabeçalhos de segurança via meta tags
@@ -7,19 +6,21 @@ import { config } from '@/config/environment';
  */
 export const SecurityHeaders = () => {
   useEffect(() => {
-    // Configure enhanced Content Security Policy
-    if (config.security.csp.enabled) {
-      const cspContent = config.security.csp.directives
-        .filter(directive => !directive.startsWith("frame-ancestors"))
-        .join('; ');
-      const meta = document.createElement('meta');
-      meta.httpEquiv = 'Content-Security-Policy';
-      meta.content = cspContent;
-      document.head.appendChild(meta);
-    }
+    // Configurar CSP padrão
+    const cspDirectives = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "img-src 'self' data: https:",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ');
 
-    // Configure enhanced security headers
+    // Configurar meta tags de segurança
     const securityMetas = [
+      { httpEquiv: 'Content-Security-Policy', content: cspDirectives },
       { name: 'referrer', content: 'strict-origin-when-cross-origin' },
       { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
       { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
@@ -28,6 +29,7 @@ export const SecurityHeaders = () => {
       { name: 'viewport', content: 'width=device-width, initial-scale=1' }
     ];
 
+    // Adicionar meta tags
     securityMetas.forEach(({ name, httpEquiv, content }) => {
       const meta = document.createElement('meta');
       if (name) meta.name = name;
@@ -38,7 +40,6 @@ export const SecurityHeaders = () => {
 
     // Cleanup function
     return () => {
-      // Remove meta tags on unmount if needed
       const metas = document.querySelectorAll('meta[http-equiv="Content-Security-Policy"], meta[name="referrer"], meta[http-equiv="X-Content-Type-Options"], meta[http-equiv="X-XSS-Protection"], meta[http-equiv="Strict-Transport-Security"]');
       metas.forEach(meta => meta.remove());
     };

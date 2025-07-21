@@ -2,7 +2,7 @@
 import { KnowledgeItem } from "@/types/ai";
 import { guataClient } from "./client/guataClient";
 import { knowledgeService } from "./knowledge/knowledgeService";
-import { localProcessor } from "./processing/localProcessor";
+import { geminiClient } from "@/config/gemini";
 import { GuataResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
@@ -14,7 +14,7 @@ export class GuataService {
   private lastPrompt: string = "";
 
   /**
-   * Envia uma pergunta para a IA Delinha e retorna a resposta
+   * Envia uma pergunta para a IA Guatá e retorna a resposta
    */
   async askQuestion(
     prompt: string,
@@ -32,7 +32,7 @@ export class GuataService {
       
       // Se temos informações oficiais, adicioná-las à base de conhecimento
       if (officialInfo) {
-        console.log("Informações oficiais encontradas:", officialInfo.source);
+        console.log("🦦 Guatá: Informações oficiais encontradas:", officialInfo.source);
         relevantKnowledge.push({
           id: `official-${Date.now()}`,
           title: "Informação Oficial",
@@ -46,18 +46,39 @@ export class GuataService {
       // Chamar o cliente Guatá para obter a resposta da IA
       return await guataClient.sendQuery(prompt, relevantKnowledge, userInfo);
     } catch (error) {
-      console.error("Erro no serviço do Guatá:", error);
+      console.error("🦦 Guatá: Erro no serviço principal:", error);
       
-      // Usar processamento local como fallback
-      console.log("Usando processamento local de fallback após erro");
-      const fallbackResponse = localProcessor.processQuery(prompt, knowledgeBase, userInfo);
+      // Usar Gemini diretamente como fallback
+      console.log("🦦 Guatá: Usando Gemini como fallback após erro");
       
-      // Garantir compatibilidade com GuataResponse
-      return {
-        resposta: fallbackResponse.response || "Resposta não disponível",
-        response: fallbackResponse.response || "Resposta não disponível",
-        source: fallbackResponse.source
-      };
+      const fallbackPrompt = `
+Você é o Guatá, o assistente virtual de turismo do Mato Grosso do Sul, representado por uma capivara simpática usando chapéu de safari.
+
+Contexto disponível:
+${knowledgeBase?.map(item => `${item.title}: ${item.content}`).join('\n')}
+
+Informações do usuário:
+${userInfo ? JSON.stringify(userInfo, null, 2) : 'Não disponível'}
+
+Pergunta do usuário: ${prompt}
+
+Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS. Se não tiver informações específicas, seja honesto e sugira alternativas ou indique onde encontrar a informação.`;
+
+      try {
+        const geminiResponse = await geminiClient.generateContent(fallbackPrompt);
+        return {
+          resposta: geminiResponse,
+          response: geminiResponse,
+          source: 'gemini-fallback'
+        };
+      } catch (geminiError) {
+        console.error("🦦 Guatá: Erro no fallback Gemini:", geminiError);
+        return {
+          resposta: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
+          response: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
+          source: 'error'
+        };
+      }
     }
   }
 }

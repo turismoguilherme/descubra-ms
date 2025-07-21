@@ -480,6 +480,101 @@ export type Database = {
           },
         ]
       }
+      alumia_destinations: {
+        Row: {
+          id: string
+          alumia_id: string
+          name: string | null
+          description: string | null
+          latitude: number | null
+          longitude: number | null
+          address: string | null
+          city: string | null
+          state: string | null
+          category: string | null
+          rating: number | null
+          price: string | null
+          images: string[] | null
+          availability: boolean | null
+          accessibility: string[] | null
+          languages: string[] | null
+          contact_phone: string | null
+          contact_email: string | null
+          contact_website: string | null
+          operating_hours_open: string | null
+          operating_hours_close: string | null
+          operating_hours_days: string[] | null
+          capacity_max: number | null
+          capacity_current: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          alumia_id: string
+          name?: string | null
+          description?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          category?: string | null
+          rating?: number | null
+          price?: string | null
+          images?: string[] | null
+          availability?: boolean | null
+          accessibility?: string[] | null
+          languages?: string[] | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          contact_website?: string | null
+          operating_hours_open?: string | null
+          operating_hours_close?: string | null
+          operating_hours_days?: string[] | null
+          capacity_max?: number | null
+          capacity_current?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          alumia_id?: string
+          name?: string | null
+          description?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          category?: string | null
+          rating?: number | null
+          price?: string | null
+          images?: string[] | null
+          availability?: boolean | null
+          accessibility?: string[] | null
+          languages?: string[] | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          contact_website?: string | null
+          operating_hours_open?: string | null
+          operating_hours_close?: string | null
+          operating_hours_days?: string[] | null
+          capacity_max?: number | null
+          capacity_current?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumia_destinations_alumia_id_fkey"
+            columns: ["alumia_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       event_details: {
         Row: {
           auto_hide: boolean | null
@@ -621,6 +716,80 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      alumia_events: {
+        Row: {
+          id: string
+          alumia_id: string
+          name: string | null
+          description: string | null
+          start_date: string | null
+          end_date: string | null
+          location: string | null
+          category: string | null
+          price: number | null
+          capacity: number | null
+          registered: number | null
+          status: string | null
+          organizer: string | null
+          contact_phone: string | null
+          contact_email: string | null
+          images: string[] | null
+          tags: string[] | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          alumia_id: string
+          name?: string | null
+          description?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          location?: string | null
+          category?: string | null
+          price?: number | null
+          capacity?: number | null
+          registered?: number | null
+          status?: string | null
+          organizer?: string | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          images?: string[] | null
+          tags?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          alumia_id?: string
+          name?: string | null
+          description?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          location?: string | null
+          category?: string | null
+          price?: number | null
+          capacity?: number | null
+          registered?: number | null
+          status?: string | null
+          organizer?: string | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          images?: string[] | null
+          tags?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumia_events_alumia_id_fkey"
+            columns: ["alumia_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          }
         ]
       }
       flowtrip_clients: {
@@ -2075,6 +2244,312 @@ export type Database = {
             referencedRelation: "flowtrip_states"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      alumia_bookings: {
+        Row: {
+          id: string
+          alumia_id: string
+          tourist_id: string | null
+          service_type: string | null
+          service_id: string | null
+          date: string | null
+          time: string | null
+          people: number | null
+          total_price: number | null
+          status: string | null
+          payment_status: string | null
+          special_requirements: string[] | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          alumia_id: string
+          tourist_id?: string | null
+          service_type?: string | null
+          service_id?: string | null
+          date?: string | null
+          time?: string | null
+          people?: number | null
+          total_price?: number | null
+          status?: string | null
+          payment_status?: string | null
+          special_requirements?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          alumia_id?: string
+          tourist_id?: string | null
+          service_type?: string | null
+          service_id?: string | null
+          date?: string | null
+          time?: string | null
+          people?: number | null
+          total_price?: number | null
+          status?: string | null
+          payment_status?: string | null
+          special_requirements?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumia_bookings_tourist_id_fkey"
+            columns: ["tourist_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      alumia_analytics_data: {
+        Row: {
+          id: string
+          period: string | null
+          total_visitors: number | null
+          total_bookings: number | null
+          total_revenue: number | null
+          popular_destinations: Json | null
+          popular_events: Json | null
+          visitor_demographics_by_country: Json | null
+          visitor_demographics_by_age: Json | null
+          visitor_demographics_by_language: Json | null
+          booking_trends: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          period?: string | null
+          total_visitors?: number | null
+          total_bookings?: number | null
+          total_revenue?: number | null
+          popular_destinations?: Json | null
+          popular_events?: Json | null
+          visitor_demographics_by_country?: Json | null
+          visitor_demographics_by_age?: Json | null
+          visitor_demographics_by_language?: Json | null
+          booking_trends?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          period?: string | null
+          total_visitors?: number | null
+          total_bookings?: number | null
+          total_revenue?: number | null
+          popular_destinations?: Json | null
+          popular_events?: Json | null
+          visitor_demographics_by_country?: Json | null
+          visitor_demographics_by_age?: Json | null
+          visitor_demographics_by_language?: Json | null
+          booking_trends?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tourism_events_data: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          start_date: string
+          end_date: string | null
+          location: string | null
+          category: string | null
+          price: number | null
+          capacity: number | null
+          status: string | null
+          organizer: string | null
+          contact_info: string | null
+          images: string[] | null
+          tags: string[] | null
+          city_id: string | null
+          created_at: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          start_date: string
+          end_date?: string | null
+          location?: string | null
+          category?: string | null
+          price?: number | null
+          capacity?: number | null
+          status?: string | null
+          organizer?: string | null
+          contact_info?: string | null
+          images?: string[] | null
+          tags?: string[] | null
+          city_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          start_date?: string
+          end_date?: string | null
+          location?: string | null
+          category?: string | null
+          price?: number | null
+          capacity?: number | null
+          status?: string | null
+          organizer?: string | null
+          contact_info?: string | null
+          images?: string[] | null
+          tags?: string[] | null
+          city_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tourism_events_data_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tourism_destinations_data: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          latitude: number | null
+          longitude: number | null
+          address: string | null
+          city_id: string | null
+          category: string | null
+          rating: number | null
+          price_range: string | null
+          images: string[] | null
+          availability_info: string | null
+          accessibility_features: string[] | null
+          contact_phone: string | null
+          contact_email: string | null
+          website: string | null
+          opening_hours: string | null
+          capacity: number | null
+          created_at: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          address?: string | null
+          city_id?: string | null
+          category?: string | null
+          rating?: number | null
+          price_range?: string | null
+          images?: string[] | null
+          availability_info?: string | null
+          accessibility_features?: string[] | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          website?: string | null
+          opening_hours?: string | null
+          capacity?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          address?: string | null
+          city_id?: string | null
+          category?: string | null
+          rating?: number | null
+          price_range?: string | null
+          images?: string[] | null
+          availability_info?: string | null
+          accessibility_features?: string[] | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          website?: string | null
+          opening_hours?: string | null
+          capacity?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tourism_destinations_data_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tourism_feedback_data: {
+        Row: {
+          id: string
+          feedback_type: string | null
+          content: string
+          sentiment: string | null
+          city_id: string | null
+          user_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          feedback_type?: string | null
+          content: string
+          sentiment?: string | null
+          city_id?: string | null
+          user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          feedback_type?: string | null
+          content?: string
+          sentiment?: string | null
+          city_id?: string | null
+          user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tourism_feedback_data_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tourism_feedback_data_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
     }

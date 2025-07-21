@@ -100,6 +100,11 @@ const AdminDashboard = () => {
       link: "/ms/event-editor"
     },
     {
+      title: "Gerenciar Roteiros",
+      description: "Crie e edite roteiros turísticos",
+      link: "/ms/admin/routes-management"
+    },
+    {
       title: "Gerenciar Usuários",
       description: "Administre usuários e permissões",
       link: "/ms/management"

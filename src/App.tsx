@@ -13,8 +13,7 @@ import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
 import SecurityProvider from "@/components/security/SecurityProvider";
-import VLibrasWithPreferences from "@/components/accessibility/VLibrasWithPreferences";
-import AccessibilityButton from "@/components/layout/AccessibilityButton";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Critical components (no lazy loading)
 import FlowTripSaaS from "@/pages/FlowTripSaaS";
@@ -75,32 +74,12 @@ const Regions = lazy(() => import("@/pages/Regions"));
 const Resultados = lazy(() => import("@/pages/Resultados"));
 const CasesSucesso = lazy(() => import("@/pages/CasesSucesso"));
 const Personalizar = lazy(() => import("@/pages/Personalizar"));
+const TourismManagement = lazy(() => import("@/pages/TourismManagement"));
+const RoutesManagement = lazy(() => import("@/pages/RoutesManagement")); // Nova importação
+const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Nova importação
+const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Nova importação para Leaderboards
 
 const queryClient = new QueryClient();
-
-// Wrapper para monitoramento de segurança
-function SecurityWrapper({ children }: { children: React.ReactNode }) {
-  useSecurityMonitoring();
-  return <>{children}</>;
-}
-
-// Componente de teste simples
-function TestComponent() {
-  console.log("🧪 TEST: Componente de teste sendo renderizado");
-  return (
-    <div style={{ 
-      padding: '20px', 
-      backgroundColor: '#f0f0f0', 
-      color: '#333',
-      fontFamily: 'Arial, sans-serif',
-      textAlign: 'center'
-    }}>
-      <h1>🚀 Aplicação Funcionando!</h1>
-      <p>Se você está vendo esta mensagem, o React está funcionando corretamente.</p>
-      <p>Verifique o console do navegador para ver os logs de debug.</p>
-    </div>
-  );
-}
 
 function App() {
   console.log("🚀 APP: Componente App sendo renderizado");
@@ -116,16 +95,13 @@ function App() {
               sessionTimeoutMinutes={30}
               sessionWarningMinutes={5}
             >
-            <SecurityWrapper>
-              <TooltipProvider>
+            <TooltipProvider>
               <Toaster />
               <BrowserRouter>
                 <BrandProvider>
                   <ProfileCompletionChecker>
                     <div className="min-h-screen bg-background font-sans antialiased">
                     <Routes>
-                      {/* Rota de teste */}
-                      <Route path="/test" element={<TestComponent />} />
                       
                       {/* FlowTrip SaaS Routes */}
                       <Route path="/" element={<FlowTripSaaS />} />
@@ -158,13 +134,25 @@ function App() {
                       <Route path="/ms/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
                       <Route path="/ms/admin" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
                       <Route path="/ms/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
-                      <Route path="/ms/management" element={<Suspense fallback={<LoadingFallback />}><Management /></Suspense>} />
+                      <Route path="/ms/management" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin']}>
+                          <Management />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                       <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
                       <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
                       <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                      <Route path="/ms/cat-attendant" element={<Suspense fallback={<LoadingFallback />}><CATAttendant /></Suspense>} />
-                      <Route path="/ms/municipal-admin" element={<Suspense fallback={<LoadingFallback />}><MunicipalAdmin /></Suspense>} />
+                      <Route path="/ms/cat-attendant" element={
+                        <ProtectedRoute allowedRoles={['cat_attendant']} requireCity>
+                          <CATAttendant />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ms/municipal-admin" element={
+                        <ProtectedRoute allowedRoles={['city_admin']} requireCity>
+                          <MunicipalAdmin />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/ms/destinos" element={<Suspense fallback={<LoadingFallback />}><Destinos /></Suspense>} />
                       <Route path="/ms/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
                       <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
@@ -176,18 +164,57 @@ function App() {
                       <Route path="/ms/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
                       <Route path="/ms/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><BecomePartner /></Suspense>} />
                       <Route path="/ms/contribuir" element={<Suspense fallback={<LoadingFallback />}><Contribute /></Suspense>} />
-                      <Route path="/ms/colaborador" element={<Suspense fallback={<LoadingFallback />}><Colaborador /></Suspense>} />
+                      <Route path="/ms/collaborator" element={
+                        <ProtectedRoute allowedRoles={['collaborator']}>
+                          <Colaborador />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/ms/role-dashboard" element={<Suspense fallback={<LoadingFallback />}><RoleDashboard /></Suspense>} />
-                      <Route path="/ms/destination-editor" element={<Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>} />
-                      <Route path="/ms/event-editor" element={<Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>} />
+
+                      {/* Rotas de Administração de Conteúdo (Protegidas) */}
+                      <Route path="/ms/admin/destination-editor/:id?" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <Suspense fallback={<LoadingFallback />}><DestinationEditor /></Suspense>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ms/admin/event-editor/:id?" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <Suspense fallback={<LoadingFallback />}><EventEditor /></Suspense>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ms/admin/events-management" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>
+                        </ProtectedRoute>
+                      } />
+
+                      {/* Novas Rotas de Administração de Roteiros (Protegidas) */}
+                      <Route path="/ms/admin/routes-management" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <Suspense fallback={<LoadingFallback />}><RoutesManagement /></Suspense>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ms/admin/route-editor/:id?" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <Suspense fallback={<LoadingFallback />}><RouteEditorPage /></Suspense>
+                        </ProtectedRoute>
+                      } />
+
                       <Route path="/ms/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
                       <Route path="/ms/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
                       <Route path="/ms/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
                       <Route path="/ms/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
                       <Route path="/ms/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
-                      <Route path="/ms/events-management" element={<Suspense fallback={<LoadingFallback />}><EventsManagement /></Suspense>} />
+
+                      <Route path="/ms/leaderboards" element={<Suspense fallback={<LoadingFallback />}><LeaderboardsPage /></Suspense>} />
+
                       <Route path="/ms/regioes" element={<Suspense fallback={<LoadingFallback />}><Regions /></Suspense>} />
                       <Route path="/ms/test-dashboards" element={<Suspense fallback={<LoadingFallback />}><TestDashboards /></Suspense>} />
+                      <Route path="/ms/tourism-management" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <TourismManagement />
+                        </ProtectedRoute>
+                      } />
                       
                       {/* Páginas FlowTrip SaaS */}
                       <Route path="/resultados" element={<Suspense fallback={<LoadingFallback />}><Resultados /></Suspense>} />
@@ -215,12 +242,9 @@ function App() {
                     </Routes>
                     </div>
                   </ProfileCompletionChecker>
-                  <VLibrasWithPreferences />
-                  <AccessibilityButton />
                 </BrandProvider>
               </BrowserRouter>
               </TooltipProvider>
-            </SecurityWrapper>
             </SecurityProvider>
           </CSRFProvider>
         </AuthProvider>

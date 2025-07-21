@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { seoOptimizationService } from "@/services/ai/seo/seoOptimizationService"; // Importar o serviço de SEO
 
 interface Event {
-  id: string;
+  id: string; // Pode ser opcional para novos eventos
   name: string;
   description: string;
   location: string;
@@ -41,12 +42,26 @@ interface EventDetails {
   auto_hide: boolean;
 }
 
+interface SeoSuggestions {
+  seoTitle: string;
+  metaDescription: string;
+  keywords: string[];
+}
+
 const EventEditor = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>(); // O ID pode ser undefined para novos eventos
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<Event>({
+    id: '',
+    name: '',
+    description: '',
+    location: '',
+    start_date: '',
+    end_date: null,
+    image_url: null,
+  });
   const [details, setDetails] = useState<EventDetails>({
     id: '',
     event_id: '',
@@ -67,10 +82,15 @@ const EventEditor = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [seoSuggestions, setSeoSuggestions] = useState<SeoSuggestions | null>(null);
+  const [generatingSeo, setGeneratingSeo] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) return;
+      if (!id) { // Se não há ID, é um novo evento
+        setLoading(false);
+        return;
+      }
 
       try {
         // Buscar informações básicas do evento
@@ -132,8 +152,6 @@ const EventEditor = () => {
   }, [id, toast]);
 
   const handleSave = async () => {
-    if (!event || !id) return;
-
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -147,11 +165,37 @@ const EventEditor = () => {
         return;
       }
 
+      let currentEventId = id; // Usar o ID da URL se existir
+
+      if (!currentEventId) {
+        // Se não há ID na URL, é um novo evento - inserir na tabela 'events' primeiro
+        const { data: newEvent, error: newEventError } = await supabase
+          .from('events')
+          .insert({
+            name: event?.name || 'Novo Evento', // Usar um nome padrão se vazio
+            description: event?.description || '',
+            location: event?.location || '',
+            start_date: event?.start_date || new Date().toISOString(),
+            end_date: event?.end_date || null,
+            image_url: event?.image_url || null,
+            created_by: user.id,
+            updated_by: user.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (newEventError) throw newEventError;
+        currentEventId = newEvent.id; // Obter o ID do evento recém-criado
+      }
+
       // Atualizar ou inserir detalhes
       const { error } = await supabase
         .from('event_details')
         .upsert({
-          event_id: id,
+          id: details.id || undefined, // Garantir que o ID exista para upsert se for atualização, ou undefined para inserção
+          event_id: currentEventId,
           official_name: details.official_name,
           exact_location: details.exact_location,
           cover_image_url: details.cover_image_url,
@@ -174,10 +218,10 @@ const EventEditor = () => {
 
       toast({
         title: "Sucesso",
-        description: "Evento atualizado com sucesso!",
+        description: "Evento salvo com sucesso!",
       });
 
-      navigate(`/eventos/${id}`);
+      navigate(`/admin/event-editor/${currentEventId}`); // Redirecionar para o editor do evento salvo
     } catch (error) {
       console.error('Erro ao salvar:', error);
       toast({
@@ -190,6 +234,40 @@ const EventEditor = () => {
     }
   };
 
+  const handleGenerateSeo = async () => {
+    if (!event.name) {
+      toast({
+        title: "Nome do Evento Necessário",
+        description: "Por favor, preencha o nome do evento antes de gerar sugestões de SEO.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingSeo(true);
+    setSeoSuggestions(null); // Limpar sugestões anteriores
+    try {
+      const suggestions = await seoOptimizationService.generateEventSeo(
+        event.name,
+        event.description || undefined
+      );
+      setSeoSuggestions(suggestions);
+      toast({
+        title: "Sugestões de SEO Geradas!",
+        description: "As sugestões de SEO foram geradas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar SEO:", error);
+      toast({
+        title: "Erro de IA",
+        description: "Não foi possível gerar sugestões de SEO. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingSeo(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -198,16 +276,16 @@ const EventEditor = () => {
     );
   }
 
-  if (!event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Evento não encontrado</h1>
-          <Button onClick={() => navigate('/eventos')}>Voltar para Eventos</Button>
-        </div>
-      </div>
-    );
-  }
+  // if (!event && id) { // Removido, pois event inicializado com valores padrão
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <h1 className="text-2xl font-bold text-gray-800 mb-4">Evento não encontrado</h1>
+  //         <Button onClick={() => navigate('/eventos')}>Voltar para Eventos</Button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="ms-container py-8">
@@ -216,13 +294,13 @@ const EventEditor = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/eventos/${id}`)}
+            onClick={() => navigate('/admin/events-management')} // Ajustado para voltar à lista de gerenciamento
           >
             <ArrowLeft size={16} className="mr-2" />
-            Voltar
+            Voltar para Gerenciamento
           </Button>
           <h1 className="text-3xl font-bold text-ms-primary-blue">
-            Editar: {event.name}
+            {id ? `Editar: ${event.name}` : 'Novo Evento'} {/* Exibir título dinâmico */}
           </h1>
         </div>
         <Button onClick={handleSave} disabled={saving}>
@@ -238,6 +316,67 @@ const EventEditor = () => {
             <CardTitle>Informações Gerais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome do Evento</Label>
+              <Input
+                id="name"
+                value={event.name || ''}
+                onChange={(e) => setEvent(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nome do evento (ex: Festival de Inverno)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Descrição Curta</Label>
+              <Textarea
+                id="description"
+                value={event.description || ''}
+                onChange={(e) => setEvent(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+                placeholder="Uma breve descrição do evento..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="location">Localização (Cidade/Bairro)</Label>
+              <Input
+                id="location"
+                value={event.location || ''}
+                onChange={(e) => setEvent(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="Ex: Campo Grande, Centro"
+              />
+            </div>
+            <div>
+              <Label htmlFor="start_date">Data e Hora de Início</Label>
+              <Input
+                id="start_date"
+                type="datetime-local"
+                value={event.start_date ? new Date(event.start_date).toISOString().slice(0, 16) : ''}
+                onChange={(e) => setEvent(prev => ({ 
+                  ...prev, 
+                  start_date: e.target.value ? new Date(e.target.value).toISOString() : '' 
+                }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="end_date">Data e Hora de Término (opcional)</Label>
+              <Input
+                id="end_date"
+                type="datetime-local"
+                value={event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : ''}
+                onChange={(e) => setEvent(prev => ({ 
+                  ...prev, 
+                  end_date: e.target.value ? new Date(e.target.value).toISOString() : null 
+                }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="image_url">URL da Imagem de Lista</Label>
+              <Input
+                id="image_url"
+                value={event.image_url || ''}
+                onChange={(e) => setEvent(prev => ({ ...prev, image_url: e.target.value }))}
+                placeholder="URL da imagem para a lista de eventos"
+              />
+            </div>
             <div>
               <Label htmlFor="official_name">Nome Oficial</Label>
               <Input
@@ -295,7 +434,7 @@ const EventEditor = () => {
                 }))}
               />
               <p className="text-sm text-gray-500 mt-1">
-                Data em que o evento será automaticamente removido da plataforma
+                Data em que o evento será automaticamente removido da plataforma (se 'Ocultar automaticamente' estiver marcado)
               </p>
             </div>
             <div className="flex items-center space-x-2">
@@ -309,6 +448,43 @@ const EventEditor = () => {
           </CardContent>
         </Card>
 
+        {/* Otimização SEO com IA para Eventos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Otimização SEO com IA</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={handleGenerateSeo} disabled={generatingSeo || !event.name}>
+              {generatingSeo ? "Gerando..." : "Gerar Sugestões de SEO"}
+            </Button>
+            {seoSuggestions && (
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>Título SEO (Meta Title)</Label>
+                  <Input value={seoSuggestions.seoTitle} readOnly />
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => navigator.clipboard.writeText(seoSuggestions.seoTitle)}>
+                    Copiar
+                  </Button>
+                </div>
+                <div>
+                  <Label>Meta Descrição (Meta Description)</Label>
+                  <Textarea value={seoSuggestions.metaDescription} readOnly rows={3} />
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => navigator.clipboard.writeText(seoSuggestions.metaDescription)}>
+                    Copiar
+                  </Button>
+                </div>
+                <div>
+                  <Label>Palavras-chave (Keywords)</Label>
+                  <Input value={seoSuggestions.keywords.join(', ')} readOnly />
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => navigator.clipboard.writeText(seoSuggestions.keywords.join(', '))}>
+                    Copiar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Mídia */}
         <Card>
           <CardHeader>
@@ -316,12 +492,12 @@ const EventEditor = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="cover_image_url">Imagem de Capa</Label>
+              <Label htmlFor="cover_image_url">Imagem de Capa (Detalhes)</Label>
               <Input
                 id="cover_image_url"
                 value={details.cover_image_url || ''}
                 onChange={(e) => setDetails(prev => ({ ...prev, cover_image_url: e.target.value }))}
-                placeholder="URL da imagem de capa"
+                placeholder="URL da imagem de capa para a página de detalhes"
               />
             </div>
             <div>
@@ -343,13 +519,13 @@ const EventEditor = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="detailed_description">Descrição</Label>
+              <Label htmlFor="detailed_description">Descrição Completa</Label>
               <Textarea
                 id="detailed_description"
                 value={details.detailed_description || ''}
                 onChange={(e) => setDetails(prev => ({ ...prev, detailed_description: e.target.value || null }))}
                 rows={6}
-                placeholder="Descrição detalhada do evento..."
+                placeholder="Descrição completa e detalhada do evento..."
               />
             </div>
           </CardContent>
@@ -368,7 +544,7 @@ const EventEditor = () => {
                 value={details.schedule_info || ''}
                 onChange={(e) => setDetails(prev => ({ ...prev, schedule_info: e.target.value || null }))}
                 rows={3}
-                placeholder="Informações sobre horários e programação..."
+                placeholder="Informações sobre horários, atrações e programação diária..."
               />
             </div>
             <div>
@@ -377,7 +553,7 @@ const EventEditor = () => {
                 id="registration_link"
                 value={details.registration_link || ''}
                 onChange={(e) => setDetails(prev => ({ ...prev, registration_link: e.target.value || null }))}
-                placeholder="URL para inscrições"
+                placeholder="URL para inscrições ou compra de ingressos"
               />
             </div>
             <div>
@@ -387,13 +563,13 @@ const EventEditor = () => {
                 value={details.extra_info || ''}
                 onChange={(e) => setDetails(prev => ({ ...prev, extra_info: e.target.value || null }))}
                 rows={3}
-                placeholder="Outras informações relevantes..."
+                placeholder="Outras informações relevantes, como contato, requisitos especiais, etc."
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Localização */}
+        {/* Coordenadas do Mapa */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Coordenadas no Mapa</CardTitle>
@@ -401,23 +577,25 @@ const EventEditor = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="latitude">Latitude</Label>
+                <Label htmlFor="map_latitude">Latitude</Label>
                 <Input
-                  id="latitude"
+                  id="map_latitude"
                   type="number"
                   step="any"
                   value={details.map_latitude || ''}
                   onChange={(e) => setDetails(prev => ({ ...prev, map_latitude: parseFloat(e.target.value) || null }))}
+                  placeholder="Latitude do evento (ex: -20.45)"
                 />
               </div>
               <div>
-                <Label htmlFor="longitude">Longitude</Label>
+                <Label htmlFor="map_longitude">Longitude</Label>
                 <Input
-                  id="longitude"
+                  id="map_longitude"
                   type="number"
                   step="any"
                   value={details.map_longitude || ''}
                   onChange={(e) => setDetails(prev => ({ ...prev, map_longitude: parseFloat(e.target.value) || null }))}
+                  placeholder="Longitude do evento (ex: -54.65)"
                 />
               </div>
             </div>
