@@ -11,8 +11,8 @@ import { simulateLogin, clearTestData, getTestData } from '@/utils/testDashboard
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('atendente@ms.gov.br');
-  const [password, setPassword] = useState('atendente123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,36 +24,8 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      // Verificar se é um login de teste
-      const testEmails = [
-        'atendente@ms.gov.br',
-        'gestor.municipal@ms.gov.br',
-        'gestor.regional@ms.gov.br',
-        'diretor.estadual@ms.gov.br'
-      ];
-
-      if (testEmails.includes(email)) {
-        // Modo de teste - simular login
-        const roleMap: { [key: string]: string } = {
-          'atendente@ms.gov.br': 'atendente',
-          'gestor.municipal@ms.gov.br': 'gestor_municipal',
-          'gestor.regional@ms.gov.br': 'gestor_igr',
-          'diretor.estadual@ms.gov.br': 'diretor_estadual'
-        };
-
-        const role = roleMap[email];
-        if (role) {
-          simulateLogin(role as any);
-          setIsTestMode(true);
-          console.log(`🧪 Login de teste realizado: ${role}`);
-          navigate('/ms/admin');
-          return;
-        }
-      }
-
-      // Tentar login real com Supabase (se configurado)
-      // Aqui você pode adicionar a lógica real de autenticação
-      setError('Login real não configurado. Use os emails de teste.');
+      // TODO: Implementar autenticação real com Supabase
+      setError('Autenticação não implementada. Entre em contato com o administrador do sistema.');
       
     } catch (err) {
       console.error('Erro no login:', err);
@@ -200,57 +172,7 @@ const AdminLogin = () => {
             </div>
           </div>
 
-          {/* Botões de Teste Rápido */}
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-4">
-              🧪 Teste Rápido (Sem Banco):
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleTestLogin('atendente')}
-                className="text-xs"
-              >
-                Atendente
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleTestLogin('gestor_municipal')}
-                className="text-xs"
-              >
-                Municipal
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleTestLogin('gestor_igr')}
-                className="text-xs"
-              >
-                Regional
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleTestLogin('diretor_estadual')}
-                className="text-xs"
-              >
-                Estadual
-              </Button>
-            </div>
-            
-            {isTestMode && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearTest}
-                className="w-full mt-2 text-red-600 hover:text-red-700"
-              >
-                Limpar Dados de Teste
-              </Button>
-            )}
-          </div>
+          {/* Note: Bypass de teste removido por segurança */}
         </CardContent>
       </Card>
     </div>
