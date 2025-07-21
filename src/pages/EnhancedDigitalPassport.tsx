@@ -357,103 +357,104 @@ const EnhancedDigitalPassport = () => {
           </div>
         )}
 
-      {/* Seção de Carimbos do Usuário */}
-      <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Meus Selos Digitais</h2>
-      {userStamps.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg shadow-sm mb-8">
-          <p className="text-gray-600">Você ainda não ganhou nenhum selo. Comece a explorar as rotas!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-          {userStamps.map((stamp) => (
-            <Card key={stamp.id} className="text-center">
-              <CardContent className="p-4 flex flex-col items-center justify-center">
-                {stamp.stamp_icon_url ? (
-                  <img src={stamp.stamp_icon_url} alt={stamp.stamp_name} className="w-16 h-16 object-contain mb-2" />
-                ) : (
-                  <Trophy className="w-16 h-16 text-ms-primary-blue mb-2" />
-                )}
-                <h4 className="font-semibold text-sm">{stamp.stamp_name}</h4>
-                <p className="text-xs text-gray-500">{new Date(stamp.earned_at).toLocaleDateString()}</p>
-                {stamp.cultural_phrase && (
-                  <p className="text-xs text-blue-600 italic mt-1">"{stamp.cultural_phrase}"</p>
-                )}
-                {/* Botões de Compartilhamento para Selo Individual */}
-                <ShareButtons
-                  title={`Conquistei um selo em MS: ${stamp.stamp_name}!`}
-                  text={`Olha o selo que acabei de ganhar no Passaporte Digital de Turismo em Mato Grosso do Sul: ${stamp.stamp_name}! #DescubraMS #Flowtrip`}
-                  url={`${window.location.origin}/ms/passaporte`}
-                />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Explore Nossas Rotas</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {routes.map((route) => {
-          const isCompleted = completedRoutes.includes(route.id);
-          
-          return (
-            <Card key={route.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-lg">{route.name}</CardTitle>
-                  {isCompleted && (
-                    <Badge className="bg-green-100 text-green-800">
-                      <Trophy className="w-3 h-3 mr-1" />
-                      Completo
-                    </Badge>
+        {/* Seção de Carimbos do Usuário */}
+        <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Meus Selos Digitais</h2>
+        {userStamps.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg shadow-sm mb-8">
+            <p className="text-gray-600">Você ainda não ganhou nenhum selo. Comece a explorar as rotas!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+            {userStamps.map((stamp) => (
+              <Card key={stamp.id} className="text-center">
+                <CardContent className="p-4 flex flex-col items-center justify-center">
+                  {stamp.stamp_icon_url ? (
+                    <img src={stamp.stamp_icon_url} alt={stamp.stamp_name} className="w-16 h-16 object-contain mb-2" />
+                  ) : (
+                    <Trophy className="w-16 h-16 text-ms-primary-blue mb-2" />
                   )}
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant="outline" className={getDifficultyColor(route.difficulty_level)}>
-                    {getDifficultyLabel(route.difficulty_level)}
-                  </Badge>
-                  <Badge variant="outline">
-                    <Star className="w-3 h-3 mr-1" />
-                    {route.points} pts
-                  </Badge>
-                  <Badge variant="outline">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {route.checkpoints?.length || 0} pontos
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4 text-sm">
-                  {route.description}
-                </p>
-                <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                  <span>Duração: ~{route.estimated_duration} min</span>
-                </div>
-                {!isCompleted ? (
-                  <Button
-                    onClick={() => completeRoute(route.id, route.points)}
-                    className="w-full"
-                    size="sm"
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Completar Rota
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="w-full" size="sm" disabled>
-                    Rota Completada
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  <h4 className="font-semibold text-sm">{stamp.stamp_name}</h4>
+                  <p className="text-xs text-gray-500">{new Date(stamp.earned_at).toLocaleDateString()}</p>
+                  {stamp.cultural_phrase && (
+                    <p className="text-xs text-blue-600 italic mt-1">"{stamp.cultural_phrase}"</p>
+                  )}
+                  {/* Botões de Compartilhamento para Selo Individual */}
+                  <ShareButtons
+                    title={`Conquistei um selo em MS: ${stamp.stamp_name}!`}
+                    text={`Olha o selo que acabei de ganhar no Passaporte Digital de Turismo em Mato Grosso do Sul: ${stamp.stamp_name}! #DescubraMS #Flowtrip`}
+                    url={`${window.location.origin}/ms/passaporte`}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-      {routes.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600">Nenhuma rota disponível no momento.</p>
+        <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Explore Nossas Rotas</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {routes.map((route) => {
+            const isCompleted = completedRoutes.includes(route.id);
+            
+            return (
+              <Card key={route.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start mb-2">
+                    <CardTitle className="text-lg">{route.name}</CardTitle>
+                    {isCompleted && (
+                      <Badge className="bg-green-100 text-green-800">
+                        <Trophy className="w-3 h-3 mr-1" />
+                        Completo
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Badge variant="outline" className={getDifficultyColor(route.difficulty_level)}>
+                      {getDifficultyLabel(route.difficulty_level)}
+                    </Badge>
+                    <Badge variant="outline">
+                      <Star className="w-3 h-3 mr-1" />
+                      {route.points} pts
+                    </Badge>
+                    <Badge variant="outline">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {route.checkpoints?.length || 0} pontos
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4 text-sm">
+                    {route.description}
+                  </p>
+                  <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                    <span>Duração: ~{route.estimated_duration} min</span>
+                  </div>
+                  {!isCompleted ? (
+                    <Button
+                      onClick={() => completeRoute(route.id, route.points)}
+                      className="w-full"
+                      size="sm"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Completar Rota
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" size="sm" disabled>
+                      Rota Completada
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-      )}
+
+        {routes.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">Nenhuma rota disponível no momento.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
