@@ -45,19 +45,16 @@ const BrandContext = createContext<BrandContextType | undefined>(undefined);
 const flowTripConfig: BrandConfig = {
   brand: 'flowtrip',
   logo: {
-    src: '/lovable-uploads/flowtrip-logo.png',
+    src: '/flowtrip-logo-new.png', // Caminho para a nova logo do Flowtrip
     alt: 'FlowTrip',
     fallback: 'FlowTrip'
   },
   navigation: [
     { name: 'Soluções', path: '/solucoes' },
-    { name: 'Cases', path: '/cases' },
-    { name: 'Resultados', path: '/resultados' },
     { name: 'Preços', path: '/precos' },
     { name: 'Sobre', path: '/sobre-flowtrip' }
   ],
   authenticatedNavigation: [
-    { name: 'Dashboard', path: '/flowtrip/dashboard' },
     { name: 'Analytics', path: '/flowtrip/analytics' }
   ],
   cta: {
@@ -78,7 +75,7 @@ const flowTripConfig: BrandConfig = {
 const msConfig: BrandConfig = {
   brand: 'ms',
   logo: {
-    src: '/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png',
+    src: 'https://flowtrip.com.br/wp-content/uploads/2024/07/DescubraMS.png', // Usar a URL externa da logo do MS diretamente
     alt: 'Descubra Mato Grosso do Sul',
     fallback: 'Descubra MS'
   },
@@ -89,8 +86,14 @@ const msConfig: BrandConfig = {
     { name: 'Entrar', path: '/ms/login' }
   ],
   authenticatedNavigation: [
+    { name: 'Home', path: '/ms' }, // Adicionado link para a Home do tenant logado
     { name: 'Guatá IA', path: '/ms/guata' },
-    { name: 'Passaporte Digital', path: '/ms/passaporte' }
+    { name: 'Passaporte Digital', path: '/ms/passaporte' },
+    // { name: 'Destinos', path: '/ms/destinos' }, // Removido
+    // { name: 'Eventos', path: '/ms/eventos' }, // Removido
+    // { name: 'Roteiros', path: '/ms/roteiros' }, // Removido
+    // { name: 'Parceiros', path: '/ms/parceiros' }, // Removido
+    // { name: 'Sobre', path: '/ms/sobre' } // Removido
   ],
   cta: {
     primary: 'Cadastrar',
@@ -109,44 +112,66 @@ const msConfig: BrandConfig = {
 
 export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const { isFlowTripMain, currentTenant } = useMultiTenant();
+  const { isMultiTenantMode, currentTenant, tenantConfig, loading: tenantLoading, error: tenantError } = useMultiTenant(); // Adicionado tenantLoading e tenantError
   
   const config = useMemo(() => {
-    // Multi-tenant: detectar contexto baseado na URL e tenant
-    if (!isFlowTripMain && currentTenant) {
-      // Configuração dinâmica baseada no tenant (estado)
-      return {
-        ...msConfig,
+    console.log("🔍 BrandContext: Calculando config. isMultiTenantMode:", isMultiTenantMode, "currentTenant:", currentTenant, "tenantConfig:", tenantConfig, "tenantLoading:", tenantLoading);
+
+    let currentConfig: BrandConfig;
+
+    // Prioritize MS config if path starts with /ms or currentTenant is 'ms'
+    if (location.pathname.toLowerCase().startsWith('/ms') || currentTenant === 'ms') {
+      currentConfig = { ...msConfig }; // Start with msConfig
+      console.log("🔍 BrandContext: Path /ms ou currentTenant 'ms' detectado (case-insensitive), usando msConfig como base.");
+    } else {
+      currentConfig = { ...flowTripConfig }; // Default to flowtripConfig
+      console.log("🔍 BrandContext: Usando flowTripConfig como base.");
+    }
+
+    // If multi-tenant mode is active and tenant config is loaded, apply dynamic overrides
+    if (isMultiTenantMode && tenantConfig && !tenantLoading) {
+      console.log("✅ BrandContext: Modo Multi-tenant ATIVO, aplicando overrides do tenantConfig do Supabase.");
+      currentConfig = {
+        ...currentConfig, // Keep current base config properties
+        brand: 'ms', // Garante que o brand seja 'ms' para tenants
         logo: {
-          ...msConfig.logo,
-          src: currentTenant.logo,
-          alt: `Descubra ${currentTenant.name}`,
-          fallback: `Descubra ${currentTenant.slug.toUpperCase()}`
+          ...currentConfig.logo,
+          src: tenantConfig.logo_url || currentConfig.logo.src, // Prioritize Supabase URL
+          alt: tenantConfig.name || currentConfig.logo.alt,
+          fallback: (tenantConfig.code || currentConfig.brand).toUpperCase()
         },
         navigation: msConfig.navigation.map(nav => ({
           ...nav,
-          path: nav.path.replace('/ms', `/${currentTenant.slug}`)
+          path: nav.path.replace('/ms', `/${tenantConfig.code}`)
         })),
         authenticatedNavigation: msConfig.authenticatedNavigation.map(nav => ({
           ...nav,
-          path: nav.path.replace('/ms', `/${currentTenant.slug}`)
+          path: nav.path.replace('/ms', `/${tenantConfig.code}`)
         })),
+        cta: {
+          primary: tenantConfig.cta_primary || currentConfig.cta.primary,
+          secondary: tenantConfig.cta_secondary || currentConfig.cta.secondary,
+        },
         hero: {
-          ...msConfig.hero,
-          title: `Descubra ${currentTenant.name}`,
+          ...currentConfig.hero, // Use currentConfig's hero as base
+          title: tenantConfig.name || currentConfig.hero.title,
           buttons: {
-            ...msConfig.hero.buttons,
-            primary: { ...msConfig.hero.buttons.primary, path: `/${currentTenant.slug}/welcome` },
-            secondary: { ...msConfig.hero.buttons.secondary, path: `/${currentTenant.slug}/passaporte` },
-            tertiary: { ...msConfig.hero.buttons.tertiary, path: `/${currentTenant.slug}/guata` }
+            ...currentConfig.hero.buttons,
+            primary: { ...currentConfig.hero.buttons.primary, path: `/${tenantConfig.code}/welcome` },
+            secondary: { ...currentConfig.hero.buttons.secondary, path: `/${tenantConfig.code}/passaporte` },
+            tertiary: { ...currentConfig.hero.buttons.tertiary, path: `/${tenantConfig.code}/guata` }
           }
         }
       };
-    } else if (location.pathname.startsWith('/ms')) {
-      return msConfig;
+      console.log("Generated dynamicConfig:", currentConfig);
+    } else if (tenantLoading) {
+      console.log("🔍 BrandContext: Tenant ainda está carregando, usando a baseConfig atual.");
+      // If loading, currentConfig (msConfig or flowtripConfig) is already set as base.
+      // No change needed here, just log for clarity.
     }
-    return flowTripConfig;
-  }, [location.pathname, isFlowTripMain, currentTenant]);
+
+    return currentConfig;
+  }, [location.pathname, isMultiTenantMode, currentTenant, tenantConfig, tenantLoading]);
 
   const isFlowTrip = config.brand === 'flowtrip';
   const isMS = config.brand === 'ms';
