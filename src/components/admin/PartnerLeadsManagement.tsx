@@ -19,7 +19,7 @@ const PartnerLeadsManagement = () => {
   const handleUpdatePartnerStatus = async (partnerId: string, newStatus: string) => {
     const { error } = await supabase
       .from('institutional_partners')
-      .update({ status: newStatus, approved_at: newStatus === 'approved' ? new Date().toISOString() : null })
+      .update({ is_active: newStatus === 'approved' })
       .eq('id', partnerId);
 
     if (error) {

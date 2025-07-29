@@ -19,7 +19,7 @@ const defaultReward: Partial<Reward> = {
 };
 
 const RewardsManager: React.FC = () => {
-  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [rewards, setRewards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<Partial<Reward>>(defaultReward);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,7 +47,7 @@ const RewardsManager: React.FC = () => {
     }
   };
 
-  const handleEdit = (reward: Reward) => {
+  const handleEdit = (reward: any) => {
     setForm(reward);
     setEditingId(reward.id);
   };
@@ -76,13 +76,13 @@ const RewardsManager: React.FC = () => {
       };
 
       if (editingId) {
-        await rewardService.updateReward(editingId, rewardToSave as Reward);
+        await rewardService.updateReward(editingId, rewardToSave);
         toast({
           title: "Sucesso",
           description: "Recompensa atualizada com sucesso.",
         });
       } else {
-        await rewardService.createReward(rewardToSave as Reward);
+        await rewardService.createReward(rewardToSave);
         toast({
           title: "Sucesso",
           description: "Recompensa cadastrada com sucesso.",

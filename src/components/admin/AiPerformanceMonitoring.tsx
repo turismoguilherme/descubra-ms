@@ -52,7 +52,12 @@ const AiPerformanceMonitoring = () => {
         variant: "destructive",
       });
     } else {
-      setInsights(data || []);
+      setInsights((data || []).map(insight => ({
+        ...insight,
+        recommendations: typeof insight.recommendations === 'string' 
+          ? insight.recommendations 
+          : JSON.stringify(insight.recommendations)
+      })));
     }
     setLoading(false);
   };
@@ -66,24 +71,18 @@ const AiPerformanceMonitoring = () => {
     });
     try {
       // Chamar a Edge Function ai-optimizer
-      const response = await fetch(`${supabase.functions.url}/ai-optimizer`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}), // Não precisa de corpo, a função coleta seus próprios dados
+      const response = await supabase.functions.invoke('ai-optimizer', {
+        body: {}
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro desconhecido ao gerar insights.');
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro desconhecido ao gerar insights.');
       }
-
-      const data = await response.json();
+      const data = response.data;
       toast({
         title: "Insights Gerados!",
         description: "Novos insights de otimização da IA foram gerados com sucesso.",
-        variant: "success",
+        variant: "default",
       });
       console.log('Novos insights gerados:', data.optimization_insights);
       fetchInsights(); // Recarrega a lista para mostrar os novos insights

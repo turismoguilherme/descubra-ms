@@ -38,8 +38,13 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img 
+<<<<<<< HEAD
                 src={config.logo.src} 
                 alt={config.logo.alt}
+=======
+                src="/images/logo-descubra-ms-transparent.png" 
+                alt="Descubra Mato Grosso do Sul" 
+>>>>>>> 0c76a3e27b543bbeb67bdeedfab4d5b71bbc2fa3
                 className="h-14 w-auto object-contain"
                 loading="lazy"
               />
