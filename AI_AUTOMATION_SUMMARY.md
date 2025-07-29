@@ -77,6 +77,15 @@ A automação da IA foi dividida em fases, com as seguintes conclusões:
         *   Criação do componente `src/components/admin/AiPerformanceMonitoring.tsx` para exibir insights de performance da IA.
         *   Integração do `AiPerformanceMonitoring.tsx` dentro da aba "IA Central" do `FlowTripMasterDashboard.tsx`.
 
+### Correções e Ajustes Recentes - **CONCLUÍDA**
+
+*   **Objetivo:** Restaurar a exibição correta das logos na interface da plataforma.
+*   **Implementações:**
+    *   **Organização de Imagens:** As logos `flowtrip-logo-new.png` e `63490622-9b5f-483c-857e-2427e85a58a3.png` foram movidas do diretório `public/` para `public/images/`, renomeadas para `flowtrip-logo.png` e `logo-descubra-ms.png` respectivamente.
+    *   **Configuração do `BrandContext`:** O `BrandContext.tsx` foi atualizado para referenciar os novos caminhos das logos (`/images/flowtrip-logo.png` e `/images/logo-descubra-ms.png`), garantindo que a logo correta seja carregada com base no tenant.
+    *   **Atualização do Rodapé (`Footer.tsx`):** O componente `Footer.tsx` foi modificado para utilizar o `config.logo.src` e `config.logo.alt` do `BrandContext`, assegurando a exibição dinâmica da logo no rodapé.
+    *   **Resolução de Conflitos Git:** Conflitos de mesclagem relacionados às logos foram resolvidos, priorizando a logo local correta do 'Descubra MS' e removendo a versão indesejada do remoto.
+
 ## Status da Automação de E-mail, WhatsApp e Dúvidas de Clientes
 
 A automação da IA para responder a e-mails, WhatsApp e dúvidas de clientes **já foi implementada na camada de backend (Edge Functions) e na estrutura de banco de dados**, mas depende da integração completa da API Gemini e da lógica de orquestração para se tornar totalmente funcional com dados reais.

@@ -2,18 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useBrand } from '@/context/BrandContext'; // Importar useBrand
 
-interface FlowTripLogoProps {
-  isFlowTrip?: boolean;
-}
-
-const FlowTripLogo: React.FC<FlowTripLogoProps> = ({ isFlowTrip = true }) => {
+const FlowTripLogo: React.FC = () => {
   const { config } = useBrand(); // Usar o contexto da marca
   
   // Adicionado para depuração da logo
   console.log('🔍 FlowTripLogo: Configuração da logo recebida:', config.logo.src, config.logo.alt, config.logo.fallback);
 
   return (
-    <Link to={isFlowTrip ? "/" : `/${config.brand}`} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
+    <Link to="/" className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
       <div className="flex items-center">
         {/* Logo com fallback para texto */}
         <div className="flex items-center">

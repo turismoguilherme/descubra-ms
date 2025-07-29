@@ -75,7 +75,7 @@ const flowTripConfig: BrandConfig = {
 const msConfig: BrandConfig = {
   brand: 'ms',
   logo: {
-    src: '/images/logo-descubra-ms-transparent.png', // Usar a logo transparente do MS
+    src: '/images/logo-descubra-ms.png', // Caminho corrigido para a logo correta do MS
     alt: 'Descubra Mato Grosso do Sul',
     fallback: 'Descubra MS'
   },
@@ -120,9 +120,9 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let currentConfig: BrandConfig;
 
     // Prioritize MS config if path starts with /ms or currentTenant is 'ms'
-    if (location.pathname.toLowerCase().startsWith('/ms') || currentTenant === 'ms') {
+    if (location.pathname.toLowerCase().startsWith('/ms')) {
       currentConfig = { ...msConfig }; // Start with msConfig
-      console.log("🔍 BrandContext: Path /ms ou currentTenant 'ms' detectado (case-insensitive), usando msConfig como base.");
+      console.log("🔍 BrandContext: Path /ms detectado (case-insensitive), usando msConfig como base.");
     } else {
       currentConfig = { ...flowTripConfig }; // Default to flowtripConfig
       console.log("🔍 BrandContext: Usando flowTripConfig como base.");
