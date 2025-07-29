@@ -97,16 +97,21 @@ const PlatformConfigCenter = () => {
         secondary_color: data.secondary_color || '#3b82f6',
         accent_color: data.accent_color || '#10b981',
         is_active: data.is_active,
-        contact_email: data.contact_email || '',
-        contact_phone: data.contact_phone || '',
-        social_media: data.social_media || {},
-        features: data.features || {
+        contact_email: '',
+        contact_phone: '',
+        social_media: {
+          facebook: '',
+          instagram: '',
+          twitter: '',
+          youtube: ''
+        },
+        features: {
           ai_enabled: true,
           community_enabled: true,
           rewards_enabled: true,
           analytics_enabled: true
         },
-        seo: data.seo || {
+        seo: {
           meta_title: '',
           meta_description: '',
           keywords: ''

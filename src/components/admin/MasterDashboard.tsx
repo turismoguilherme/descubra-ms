@@ -78,13 +78,13 @@ const MasterDashboard = () => {
         .eq('is_active', true);
 
       const { data: checkInsData } = await supabase
-        .from('passport_checkpoints')
+        .from('cat_checkins')
         .select('id');
 
       const { data: eventsData } = await supabase
         .from('events')
         .select('id')
-        .eq('status', 'active');
+        .eq('is_visible', true);
 
       setMetrics({
         totalUsers: usersData?.length || 0,

@@ -64,7 +64,7 @@ const Navbar = () => {
             <div className="flex items-center">
               <img 
                 alt="Descubra Mato Grosso do Sul" 
-                src="/images/logo-descubra-ms.png" 
+                src="/images/logo-descubra-ms-transparent.png" 
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
                 loading="eager" 
               />
