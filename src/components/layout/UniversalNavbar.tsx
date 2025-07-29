@@ -28,16 +28,7 @@ const UniversalNavbar = () => {
                 src={config.logo.src}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
                 loading="eager" 
-                onError={(e) => {
-                  console.error('Logo failed to load');
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'block';
-                }} 
               />
-              <div className="text-2xl font-bold text-ms-primary-blue" style={{ display: 'none' }}>
-                {config.logo.fallback}
-              </div>
             </div>
           </Link>
 

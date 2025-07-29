@@ -36,23 +36,11 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img 
-                src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+                src="/images/logo-descubra-ms.png" 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-14 w-auto object-contain"
                 loading="lazy"
-                onError={(e) => {
-                  console.error('Footer logo failed to load');
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'block';
-                }}
               />
-              <div 
-                className="hidden text-2xl font-bold text-white"
-                style={{ display: 'none' }}
-              >
-                Descubra Mato Grosso do Sul
-              </div>
             </div>
             <p className="text-gray-100 mb-4 max-w-sm">
               {description || 'Descubra as maravilhas do Pantanal, Cerrado e muito mais. Sua jornada pelo coração da América do Sul começa aqui.'}

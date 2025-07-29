@@ -49,15 +49,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => { // Adicionado 'async' aqui
         console.log("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event, "Sessão:", session);
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
-          await fetchUserProfile(session.user.id); // Garante que o perfil é buscado e esperado aqui também
+        
+        // Verificar dados de teste se não houver sessão real
+        const testUserData = localStorage.getItem('test-user-data');
+        const testToken = localStorage.getItem('supabase.auth.token');
+        
+        if (!session && testUserData && testToken === 'test-token') {
+          // Usar dados de teste
+          console.log("🧪 AuthProvider: Usando dados de teste");
+          const testData = JSON.parse(testUserData);
+          
+          // Criar usuário simulado
+          const testUser = {
+            id: testData.id,
+            email: testData.email,
+            created_at: testData.created_at
+          } as User;
+          
+          // Criar perfil simulado
+          const testProfile: UserProfile = {
+            user_id: testData.id,
+            full_name: testData.name,
+            role: testData.role,
+            city_id: testData.role === 'gestor_municipal' ? 'campo-grande' : 
+                     testData.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
+            region_id: testData.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+          };
+          
+          setSession(null);
+          setUser(testUser);
+          setUserProfile(testProfile);
+          console.log("✅ AuthProvider: Perfil de teste definido:", testProfile);
         } else {
-          console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
-          setUserProfile(null);
+          // Usar dados reais do Supabase
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user) {
+            console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
+            await fetchUserProfile(session.user.id); // Garante que o perfil é buscado e esperado aqui também
+          } else {
+            console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
+            setUserProfile(null);
+          }
         }
 
         setLoading(false); // Agora, setLoading(false) é chamado após o perfil ser carregado em ambos os cenários.
@@ -76,6 +110,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     //   
     //   setLoading(false);
     // });
+
+    // Verificação inicial de dados de teste
+    const checkInitialTestData = () => {
+      const testUserData = localStorage.getItem('test-user-data');
+      const testToken = localStorage.getItem('supabase.auth.token');
+      
+      if (testUserData && testToken === 'test-token') {
+        console.log("🧪 AuthProvider: Dados de teste encontrados no carregamento inicial");
+        const testData = JSON.parse(testUserData);
+        
+        // Criar usuário simulado
+        const testUser = {
+          id: testData.id,
+          email: testData.email,
+          created_at: testData.created_at
+        } as User;
+        
+        // Criar perfil simulado
+        const testProfile: UserProfile = {
+          user_id: testData.id,
+          full_name: testData.name,
+          role: testData.role,
+          city_id: testData.role === 'gestor_municipal' ? 'campo-grande' : 
+                   testData.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
+          region_id: testData.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+        };
+        
+        setSession(null);
+        setUser(testUser);
+        setUserProfile(testProfile);
+        setLoading(false);
+        console.log("✅ AuthProvider: Perfil de teste carregado:", testProfile);
+      }
+    };
+    
+    // Verificar dados de teste se não há sessão ativa
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        checkInitialTestData();
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -129,6 +204,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
+      
+      console.log("🔍 AuthProvider (signIn): Dados de login:", data);
 
       if (error) throw error;
 
@@ -159,7 +236,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
       const isTenantPath = currentTenant && currentTenant.length === 2;
       
-      console.log("🏛️ SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      console.log("🏛️ SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "Current Path:", currentPath);
       
       // Redirecionar mantendo contexto do tenant
       const redirectPath = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/`;
@@ -171,6 +248,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           redirectTo: redirectPath,
         },
       });
+
+      console.log("🔍 AuthProvider (signInWithOAuth): Dados de login:", data);
 
       if (error) throw error;
       return { data, error: null };

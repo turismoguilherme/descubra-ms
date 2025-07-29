@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, ChartBar, BarChart3, PieChart, LineChart } from "lucide-react";
+import { MessageCircle, Send, BarChart, BarChart3, PieChart, LineChart } from "lucide-react"; // Alterado ChartBar para BarChart
 import { useToast } from "@/components/ui/use-toast";
 import {
   BarChart,
@@ -216,7 +216,7 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
       case 'line':
         return <LineChart size={16} className="mr-1" />;
       default:
-        return <ChartBar size={16} className="mr-1" />;
+        return <BarChart size={16} className="mr-1" />;
     }
   };
 
@@ -227,7 +227,7 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
           <Avatar className="h-10 w-10 border-2 border-white/30">
             <AvatarImage src="/icons/analytics-ai-logo.png" />
             <AvatarFallback className="bg-blue-700 text-white">
-              <ChartBar size={20} />
+              <BarChart size={20} />
             </AvatarFallback>
           </Avatar>
           <div>
@@ -238,7 +238,7 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
               </Badge>
             </CardTitle>
             <p className="text-sm text-white/80 flex items-center">
-              <ChartBar size={12} className="mr-1" /> Baseado em dados oficiais de turismo
+              <BarChart size={12} className="mr-1" /> Baseado em dados oficiais de turismo
             </p>
           </div>
         </div>

@@ -10,6 +10,7 @@ interface GuataChatProps {
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
   enviarMensagem: () => void;
+  onClearConversation: () => void;
   isGravandoAudio: boolean;
   toggleMicrofone: () => void;
   isLoading: boolean;
@@ -30,7 +31,8 @@ const GuataChat = ({
   isConnected,
   connectionChecking,
   handleKeyDown,
-  enviarFeedback
+  enviarFeedback,
+  onClearConversation
 }: GuataChatProps) => {
   return (
     <div className="bg-black bg-opacity-20 rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
@@ -54,6 +56,8 @@ const GuataChat = ({
         isGravandoAudio={isGravandoAudio}
         isLoading={isLoading}
         handleKeyDown={handleKeyDown}
+        onClearConversation={onClearConversation}
+        mensagens={mensagens}
       />
     </div>
   );

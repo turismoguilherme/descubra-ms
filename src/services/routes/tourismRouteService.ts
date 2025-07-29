@@ -86,6 +86,7 @@ export interface Route {
   name: string;
   description: string | null;
   image_url: string | null;
+  video_url?: string | null; // Adicionado: URL do vídeo do roteiro
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -185,6 +186,7 @@ class TourismRouteService {
         .order('name', { ascending: true }); // Ordenar por nome
 
       if (error) throw error;
+      console.log("🔍 tourismRouteService: Dados de rotas do Supabase:", data); // Adicionado log
       return data || [];
     } catch (error) {
       console.error('❌ Erro ao buscar roteiros (public.routes):', error);

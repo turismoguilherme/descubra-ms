@@ -23,14 +23,25 @@ import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome da empresa é obrigatório." }),
+  // Alterado: CNPJ como opcional
+  cnpj: z.string().optional(),
+  // Novo campo: Pessoa de Contato
+  contact_person: z.string().optional(),
   city: z.string().min(2, { message: "A cidade é obrigatória." }),
-  segment: z.string().min(2, { message: "O segmento é obrigatório." }),
+  // Alterado: Segmento agora é um Select
+  segment: z.enum(['hotelaria', 'restaurante', 'agencia_turismo', 'atrativo_turistico', 'servicos', 'comercio', 'eventos', 'outro'], {
+    errorMap: () => ({ message: "Por favor, selecione um segmento." }),
+  }),
   contact_email: z.string().email({ message: "Por favor, insira um email válido." }).optional().or(z.literal('')),
   contact_whatsapp: z.string().optional(),
   website_link: z.string().url({ message: "Por favor, insira um link válido." }).optional().or(z.literal('')),
   message: z.string().optional(),
   category: z.enum(['local', 'regional', 'estadual']),
   logo: z.any().refine((files) => files?.length >= 1, 'Logo é obrigatório.'),
+  // Novo campo: Interesse em Parceria
+  partnership_interest: z.enum(['destaque_plataforma', 'patrocinio_evento', 'conteudo_colaborativo', 'outro'], {
+    errorMap: () => ({ message: "Por favor, selecione seu interesse em parceria." }),
+  }),
 });
 
 export function PartnerForm() {
@@ -44,12 +55,15 @@ export function PartnerForm() {
     defaultValues: {
       name: "",
       city: "",
-      segment: "",
+      segment: "hotelaria", // Valor padrão para o novo Select
       contact_email: "",
       contact_whatsapp: "",
       website_link: "",
       message: "",
       category: 'local',
+      cnpj: "", // Novo campo
+      contact_person: "", // Novo campo
+      partnership_interest: "destaque_plataforma", // Novo campo
     },
   });
 
@@ -92,6 +106,10 @@ export function PartnerForm() {
       category: values.category,
       logo_url: logoUrl,
       status: 'pending',
+      // Novos campos
+      cnpj: values.cnpj || null,
+      contact_person: values.contact_person || null,
+      partnership_interest: values.partnership_interest,
     };
     
     submitRequest(partnerData, {
@@ -120,6 +138,19 @@ export function PartnerForm() {
                     <FormLabel className={labelStyles}>Nome da empresa</FormLabel>
                     <FormControl>
                         <Input placeholder="Nome da sua empresa" {...field} className={inputStyles} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="cnpj"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className={labelStyles}>CNPJ (Opcional)</FormLabel>
+                    <FormControl>
+                        <Input placeholder="00.000.000/0000-00" {...field} className={inputStyles} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -157,9 +188,23 @@ export function PartnerForm() {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel className={labelStyles}>Segmento</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Hotelaria, Restaurante, etc." {...field} className={inputStyles} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger className={inputStyles}>
+                            <SelectValue placeholder="Selecione o segmento" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="hotelaria">Hotelaria</SelectItem>
+                            <SelectItem value="restaurante">Restaurante</SelectItem>
+                            <SelectItem value="agencia_turismo">Agência de Turismo</SelectItem>
+                            <SelectItem value="atrativo_turistico">Atrativo Turístico</SelectItem>
+                            <SelectItem value="servicos">Serviços</SelectItem>
+                            <SelectItem value="comercio">Comércio</SelectItem>
+                            <SelectItem value="eventos">Eventos</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -188,6 +233,29 @@ export function PartnerForm() {
                 />
                  <FormField
                 control={form.control}
+                name="partnership_interest"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className={labelStyles}>Interesse em Parceria</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger className={inputStyles}>
+                            <SelectValue placeholder="Selecione o tipo de parceria" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="destaque_plataforma">Destaque na Plataforma</SelectItem>
+                            <SelectItem value="patrocinio_evento">Patrocínio de Evento</SelectItem>
+                            <SelectItem value="conteudo_colaborativo">Conteúdo Colaborativo</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                control={form.control}
                 name="website_link"
                 render={({ field }) => (
                     <FormItem>
@@ -205,6 +273,19 @@ export function PartnerForm() {
         <div className="space-y-4">
              <h3 className="text-lg font-medium text-white">Informações de Contato</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="contact_person"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className={labelStyles}>Pessoa de Contato (Opcional)</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Nome do contato" {...field} className={inputStyles} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
                 <FormField
                 control={form.control}
                 name="contact_email"

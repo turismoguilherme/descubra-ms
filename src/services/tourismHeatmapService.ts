@@ -109,32 +109,33 @@ class TourismHeatmapService {
         const peakHours = this.calculatePeakHours(groupMovements);
         const popularActivities = this.calculatePopularActivities(groupMovements);
 
+        // Calcular scores necessários uma única vez
+        const engagementScore = this.calculateEngagementScore(groupMovements);
+        const densityScore = Math.min(1, totalVisitors / 100);
+        const durationScore = Math.min(1, averageDuration / 120);
+
         // Calcular intensidade baseada no tipo de mapa
         let intensity = 0;
         let radius = 100; // raio padrão em metros
 
         switch (filters.type) {
           case 'density':
-            intensity = Math.min(1, totalVisitors / 100); // Normalizar por 100 visitantes
+            intensity = densityScore;
             radius = Math.max(50, Math.min(200, totalVisitors * 2));
             break;
           
           case 'duration':
-            intensity = Math.min(1, averageDuration / 120); // Normalizar por 2 horas
+            intensity = durationScore;
             radius = Math.max(50, Math.min(200, averageDuration));
             break;
           
           case 'engagement':
-            const engagementScore = this.calculateEngagementScore(groupMovements);
             intensity = engagementScore;
             radius = Math.max(50, Math.min(200, engagementScore * 150));
             break;
           
           default:
             // Mapa combinado
-            const densityScore = Math.min(1, totalVisitors / 100);
-            const durationScore = Math.min(1, averageDuration / 120);
-            const engagementScore = this.calculateEngagementScore(groupMovements);
             intensity = (densityScore + durationScore + engagementScore) / 3;
             radius = Math.max(50, Math.min(200, intensity * 150));
         }

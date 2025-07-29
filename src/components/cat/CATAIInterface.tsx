@@ -1,13 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, Copy, Trash2, Clock, Brain, Database, Globe, TrendingUp } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2, Copy, Heart, Clock, Bot, User, Send, Lightbulb, TrendingUp, MapPin, Utensils, Hotel, Car, Calendar, AlertTriangle, Star, Sparkles, Brain } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { tourismRAGService, RAGQuery, RAGResponse } from '@/services/ai/tourismRAGService';
+import { superTourismAI } from '@/services/ai/superTourismAI';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CATAIInterfaceProps {
@@ -18,6 +18,28 @@ interface CATAIInterfaceProps {
   longitude?: number;
 }
 
+interface QuickCategory {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  examples: string[];
+  color: string;
+  bgColor: string;
+}
+
+interface Message {
+  id: string;
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  category?: string;
+  confidence?: number;
+  sources?: any[];
+  suggestions?: string[];
+  response?: any;
+}
+
+// Componente principal com layout igual aos gestores - ATUALIZADO
 const CATAIInterface = ({ 
   attendantId, 
   attendantName, 
@@ -25,350 +47,483 @@ const CATAIInterface = ({
   latitude, 
   longitude 
 }: CATAIInterfaceProps) => {
-  const [currentQuestion, setCurrentQuestion] = useState('');
-  const [currentResponse, setCurrentResponse] = useState<RAGResponse | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [knowledgeBaseStats, setKnowledgeBaseStats] = useState<any>(null);
-  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const quickCategories: QuickCategory[] = [
+    {
+      id: 'pontos-turisticos',
+      name: 'Pontos Turísticos',
+      icon: <MapPin className="h-4 w-4" />,
+      examples: ['Gruta do Lago Azul', 'Aquário Natural', 'Rio Sucuri'],
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-500'
+    },
+    {
+      id: 'eventos',
+      name: 'Eventos',
+      icon: <Calendar className="h-4 w-4" />,
+      examples: ['Festival de Inverno', 'Shows hoje', 'Eventos em Bonito'],
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-500'
+    },
+    {
+      id: 'restaurantes',
+      name: 'Restaurantes',
+      icon: <Utensils className="h-4 w-4" />,
+      examples: ['Casa do João', 'Comida regional', 'Peixe pintado'],
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-500'
+    },
+    {
+      id: 'hoteis',
+      name: 'Hotéis',
+      icon: <Hotel className="h-4 w-4" />,
+      examples: ['Pousadas em Bonito', 'Hotel com piscina'],
+      color: 'text-green-600',
+      bgColor: 'bg-green-500'
+    },
+    {
+      id: 'transporte',
+      name: 'Transporte',
+      icon: <Car className="h-4 w-4" />,
+      examples: ['Como chegar', 'Ônibus Campo Grande'],
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-500'
+    },
+    {
+      id: 'emergencias',
+      name: 'Emergências',
+      icon: <AlertTriangle className="h-4 w-4" />,
+      examples: ['Hospital', 'Polícia', 'Emergência'],
+      color: 'text-red-600',
+      bgColor: 'bg-red-500'
+    }
+  ];
+
+  const suggestedQuestions = [
+    "Onde fica a Gruta do Lago Azul?",
+    "Quanto custa o Aquário Natural?",
+    "Melhor restaurante de peixe em Bonito?",
+    "Como chegar ao hospital?",
+    "Horário do ônibus para Campo Grande?"
+  ];
+
   useEffect(() => {
-    initializeSystem();
+    initializeAI();
+    loadUserData();
   }, []);
 
-  const initializeSystem = async () => {
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const initializeAI = async () => {
     try {
-      console.log('🚀 Inicializando sistema RAG para atendente...');
+      console.log('🚀 Inicializando Super IA Turística...');
+      await superTourismAI.initialize(catLocation, latitude, longitude);
       
-      // Inicializar base de conhecimento
-      await tourismRAGService.initializeKnowledgeBase();
+      const welcomeMessage: Message = {
+        id: 'welcome',
+        type: 'ai',
+        content: `🌟 **Olá, ${attendantName}!**\n\nSou sua assistente IA especializada em turismo de Mato Grosso do Sul. Estou aqui para te ajudar a responder qualquer pergunta dos turistas com informações precisas e atualizadas.\n\n💡 **Como posso ajudar:**\n• Informações sobre pontos turísticos\n• Preços e horários atualizados\n• Restaurantes e hotéis\n• Transporte e como chegar\n• Emergências e contatos importantes\n\nDigite sua pergunta ou escolha uma categoria abaixo! 👇`,
+        timestamp: new Date(),
+        confidence: 1.0
+      };
       
-      // Obter estatísticas
-      const stats = tourismRAGService.getKnowledgeBaseStats();
-      setKnowledgeBaseStats(stats);
-      setLastUpdate(stats.lastUpdate.toLocaleString('pt-BR'));
-      
-      console.log('✅ Sistema RAG inicializado com sucesso');
+      setMessages([welcomeMessage]);
+      console.log('✅ Super IA Turística inicializada');
     } catch (error) {
-      console.error('❌ Erro ao inicializar sistema RAG:', error);
-      toast({
-        title: "Erro de Sistema",
-        description: "Não foi possível inicializar o assistente inteligente. Tente novamente.",
-        variant: "destructive"
-      });
+      console.error('❌ Erro ao inicializar IA:', error);
     }
   };
 
-  const submitQuestion = async () => {
-    if (!currentQuestion.trim()) return;
+  const loadUserData = () => {
+    const savedFavorites = localStorage.getItem(`attendant_favorites_${attendantId}`);
+    const savedHistory = localStorage.getItem(`attendant_search_history_${attendantId}`);
+    
+    if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
+    if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
+  };
 
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || loading) return;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      type: 'user',
+      content: inputValue.trim(),
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const question = inputValue.trim();
+    setInputValue('');
     setLoading(true);
-    try {
-      console.log('🔍 Processando pergunta do turista:', currentQuestion);
 
-      // Construir query RAG
-      const query: RAGQuery = {
-        question: currentQuestion,
-        context: {
-          catLocation,
-          currentTime: new Date().toLocaleString('pt-BR'),
-          userPreferences: user?.preferences || []
-        },
-        filters: {
-          region: 'centro_oeste' // MS
-        }
+    try {
+      const response = await superTourismAI.askQuestion(question, {
+        location: catLocation,
+        attendantId,
+        isOffline: !navigator.onLine
+      });
+
+      const aiMessage: Message = {
+        id: `ai-${Date.now()}`,
+        type: 'ai',
+        content: response.answer,
+        timestamp: new Date(),
+        confidence: response.confidence,
+        sources: response.sources,
+        suggestions: response.suggestions,
+        response: response
       };
 
-      // Gerar resposta usando RAG
-      const response = await tourismRAGService.generateResponse(query);
+      setMessages(prev => [...prev, aiMessage]);
       
-      setCurrentResponse(response);
-      setCurrentQuestion('');
+      // Update search history
+      setSearchHistory(prev => {
+        const updated = [question, ...prev.filter(q => q !== question)].slice(0, 10);
+        localStorage.setItem(`attendant_search_history_${attendantId}`, JSON.stringify(updated));
+        return updated;
+      });
 
-      console.log('✅ Resposta gerada com sucesso. Confiança:', response.confidence);
-
-      // Mostrar toast de sucesso
       toast({
-        title: "Resposta Gerada",
+        title: "✅ Resposta gerada",
         description: `Confiança: ${Math.round(response.confidence * 100)}%`,
       });
 
     } catch (error) {
       console.error('❌ Erro ao processar pergunta:', error);
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        type: 'ai',
+        content: '😔 Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.',
+        timestamp: new Date(),
+        confidence: 0
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua pergunta. Tente novamente.",
+        description: "Não foi possível processar a pergunta. Tente novamente.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
+      inputRef.current?.focus();
     }
   };
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "Copiado!",
-        description: "Resposta copiada para a área de transferência",
-      });
-    } catch (error) {
-      console.error('Error copying to clipboard:', error);
-    }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "✅ Copiado",
+      description: "Texto copiado para a área de transferência",
+    });
   };
 
-  const clearCurrentResponse = () => {
-    setCurrentResponse(null);
+  const addToFavorites = (message: Message) => {
+    const updatedFavorites = [...favorites, { ...message, savedAt: new Date() }];
+    setFavorites(updatedFavorites);
+    localStorage.setItem(`attendant_favorites_${attendantId}`, JSON.stringify(updatedFavorites));
+    
+    toast({
+      title: "⭐ Adicionado aos favoritos",
+      description: "Resposta salva para uso futuro",
+    });
   };
 
-  const updateKnowledgeBase = async () => {
-    try {
-      setLoading(true);
-      await tourismRAGService.updateKnowledgeBase();
-      
-      const stats = tourismRAGService.getKnowledgeBaseStats();
-      setKnowledgeBaseStats(stats);
-      setLastUpdate(stats.lastUpdate.toLocaleString('pt-BR'));
-      
-      toast({
-        title: "Base Atualizada",
-        description: "Informações turísticas atualizadas com sucesso",
-      });
-    } catch (error) {
-      console.error('❌ Erro ao atualizar base:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a base de conhecimento",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const renderResponseCards = (response: any) => {
+    if (!response.sources || response.sources.length === 0) return null;
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600 bg-green-100';
-    if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
+    return (
+      <div className="mt-6 space-y-4">
+        <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-purple-500" />
+          Fontes de Informação
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {response.sources.slice(0, 4).map((source: any, index: number) => {
+            const icons = [MapPin, Utensils, Hotel, Car];
+            const Icon = icons[index % icons.length];
+            
+            const getCardClasses = (index: number) => {
+              const variants = [
+                'p-4 rounded-xl border-l-4 bg-gradient-to-r from-blue-50 to-white border-blue-400 shadow-sm hover:shadow-md transition-all duration-200',
+                'p-4 rounded-xl border-l-4 bg-gradient-to-r from-green-50 to-white border-green-400 shadow-sm hover:shadow-md transition-all duration-200',
+                'p-4 rounded-xl border-l-4 bg-gradient-to-r from-purple-50 to-white border-purple-400 shadow-sm hover:shadow-md transition-all duration-200',
+                'p-4 rounded-xl border-l-4 bg-gradient-to-r from-orange-50 to-white border-orange-400 shadow-sm hover:shadow-md transition-all duration-200'
+              ];
+              return variants[index % variants.length];
+            };
 
-  const getSourceIcon = (source: string) => {
-    switch (source) {
-      case 'alumia': return <Database className="h-4 w-4" />;
-      case 'government': return <Globe className="h-4 w-4" />;
-      case 'social_media': return <TrendingUp className="h-4 w-4" />;
-      default: return <Database className="h-4 w-4" />;
-    }
+            const getIconClasses = (index: number) => {
+              const variants = [
+                'w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0',
+                'w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0',
+                'w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0',
+                'w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0'
+              ];
+              return variants[index % variants.length];
+            };
+
+            const getIconColorClasses = (index: number) => {
+              const variants = [
+                'h-5 w-5 text-blue-600',
+                'h-5 w-5 text-green-600',
+                'h-5 w-5 text-purple-600',
+                'h-5 w-5 text-orange-600'
+              ];
+              return variants[index % variants.length];
+            };
+
+            const getBadgeClasses = (index: number) => {
+              const variants = [
+                'bg-blue-100 text-blue-700 text-xs',
+                'bg-green-100 text-green-700 text-xs',
+                'bg-purple-100 text-purple-700 text-xs',
+                'bg-orange-100 text-orange-700 text-xs'
+              ];
+              return variants[index % variants.length];
+            };
+            
+            return (
+              <div key={index} className={getCardClasses(index)}>
+                <div className="flex items-start gap-3">
+                  <div className={getIconClasses(index)}>
+                    <Icon className={getIconColorClasses(index)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-semibold text-gray-900 text-sm mb-1">{source.name}</h5>
+                    <p className="text-gray-600 text-xs leading-relaxed">{source.description}</p>
+                    {source.contact?.phone && (
+                      <div className="mt-2">
+                        <Badge variant="secondary" className={getBadgeClasses(index)}>
+                          {source.contact.phone}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header com estatísticas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Brain className="mr-2 h-5 w-5 text-blue-600" />
-              Assistente Inteligente CAT
-            </div>
-            <Badge variant="outline" className="text-xs">
-              RAG v2.0
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {knowledgeBaseStats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center">
-                <div className="font-semibold text-blue-600">{knowledgeBaseStats.totalItems}</div>
-                <div className="text-gray-600">Itens na Base</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-green-600">{knowledgeBaseStats.byType?.attraction || 0}</div>
-                <div className="text-gray-600">Atrações</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-purple-600">{knowledgeBaseStats.byType?.restaurant || 0}</div>
-                <div className="text-gray-600">Restaurantes</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-orange-600">{knowledgeBaseStats.byType?.hotel || 0}</div>
-                <div className="text-gray-600">Hotéis</div>
-              </div>
-            </div>
-          )}
-          <div className="mt-3 text-xs text-gray-500">
-            Última atualização: {lastUpdate}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={updateKnowledgeBase}
-              disabled={loading}
-              className="ml-2 h-6 px-2"
-            >
-              {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : '🔄'}
-            </Button>
+    <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col">
+      {/* Header */}
+      <div className="p-8 pb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200 rounded-t-xl">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <Brain className="h-8 w-8 text-white" />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-purple-500" />
+              IA Turística MS
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Assistente especializada para {attendantName} • {catLocation}
+            </p>
+            <div className="flex items-center gap-4 mt-2">
+              <Badge className="bg-green-100 text-green-700 border-green-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                Online
+              </Badge>
+              <Badge variant="outline" className="text-blue-700">
+                <Star className="h-3 w-3 mr-1" />
+                Dados em tempo real
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Question Input */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5" />
-            Pergunta do Turista
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Digite a pergunta do turista:</label>
-            <Textarea
-              value={currentQuestion}
-              onChange={(e) => setCurrentQuestion(e.target.value)}
-              placeholder="Ex: Onde posso comer peixe típico do Pantanal? Quais são os horários do Parque das Nações? Como chegar ao Bonito?"
-              className="min-h-[100px]"
-            />
+      {/* Messages Area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <ScrollArea className="flex-1 p-8">
+          <div className="space-y-6">
+            {messages.map((message) => (
+              <div key={message.id} className="flex items-start gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
+                  message.type === 'ai' 
+                    ? 'bg-gradient-to-br from-blue-500 to-purple-600' 
+                    : 'bg-gradient-to-br from-gray-500 to-gray-600'
+                }`}>
+                  {message.type === 'ai' ? (
+                    <Bot className="h-5 w-5 text-white" />
+                  ) : (
+                    <User className="h-5 w-5 text-white" />
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className={`p-4 rounded-2xl shadow-sm ${
+                    message.type === 'ai' 
+                      ? 'bg-white border border-gray-200 rounded-bl-none' 
+                      : 'bg-blue-500 text-white rounded-br-none'
+                  }`}>
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {message.content}
+                    </div>
+                    
+                    {message.type === 'ai' && message.confidence && (
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <Badge variant="secondary" className="text-xs">
+                          {Math.round(message.confidence * 100)}% confiança
+                        </Badge>
+                        {message.sources && message.sources.length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {message.sources.length} fonte(s)
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {message.type === 'ai' && message.response && renderResponseCards(message.response)}
+                  </div>
+                  
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className={`text-xs flex items-center gap-1 ${
+                      message.type === 'ai' ? 'text-gray-500' : 'text-blue-600'
+                    }`}>
+                      <Clock className="h-3 w-3" />
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    
+                    {message.type === 'ai' && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => copyToClipboard(message.content)}
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copiar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => addToFavorites(message)}
+                        >
+                          <Heart className="h-3 w-3 mr-1" />
+                          Favoritar
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Loading indicator */}
+            {loading && (
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <div className="bg-white border border-gray-200 p-4 rounded-2xl rounded-bl-none shadow-sm">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Analisando dados e gerando resposta...</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          
+          <div ref={messagesEndRef} />
+        </ScrollArea>
+      </div>
+
+      {/* Input Area */}
+      <div className="p-8 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+        {/* Suggested Questions */}
+        {messages.length <= 1 && (
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-yellow-500" />
+              Sugestões para começar:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {suggestedQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => setInputValue(question)}
+                  className="text-left p-3 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md group"
+                >
+                  <div className="flex items-start gap-3">
+                    <Lightbulb className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-700 group-hover:text-blue-700 leading-relaxed">{question}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Input Field */}
+        <div className="flex gap-4">
+          <div className="flex-1 relative">
+            <Input
+              ref={inputRef}
+              placeholder="Digite sua pergunta sobre turismo em MS..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              className="h-14 text-base pr-12 bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl shadow-sm"
+              disabled={loading}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          </div>
           <Button 
-            onClick={submitQuestion}
-            disabled={loading || !currentQuestion.trim()}
-            className="w-full"
+            onClick={handleSendMessage} 
+            className="h-14 px-8 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" 
+            disabled={loading || !inputValue.trim()}
           >
             {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando com IA...
-              </>
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <>
-                <Brain className="mr-2 h-4 w-4" />
-                Gerar Resposta Inteligente
-              </>
+              <Send className="h-5 w-5" />
             )}
+            <span className="ml-2 font-medium">
+              {loading ? 'Analisando...' : 'Enviar'}
+            </span>
           </Button>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Current Response */}
-      {currentResponse && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Resposta para o Turista</span>
-              <div className="flex items-center gap-2">
-                <Badge className={getConfidenceColor(currentResponse.confidence)}>
-                  {Math.round(currentResponse.confidence * 100)}% confiança
-                </Badge>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(currentResponse.answer)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearCurrentResponse}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Resposta principal */}
-            <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-              <p className="whitespace-pre-wrap text-gray-800">{currentResponse.answer}</p>
+        {/* Footer Info */}
+        <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>IA Online</span>
             </div>
-
-            {/* Fontes utilizadas */}
-            {currentResponse.sources.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm text-gray-700">Fontes consultadas:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {currentResponse.sources.map((source, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
-                      {getSourceIcon(source.source)}
-                      <span className="font-medium">{source.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {source.type}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sugestões */}
-            {currentResponse.suggestions.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm text-gray-700">Sugestões para o turista:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {currentResponse.suggestions.map((suggestion, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {suggestion}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Perguntas relacionadas */}
-            {currentResponse.related_questions.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm text-gray-700">Perguntas relacionadas:</h4>
-                <div className="space-y-1">
-                  {currentResponse.related_questions.map((question, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentQuestion(question)}
-                      className="block w-full text-left p-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    >
-                      {question}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Informações do CAT */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Clock className="mr-2 h-5 w-5" />
-            Informações do CAT
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium">Local:</span> {catLocation}
+            <div className="flex items-center gap-1">
+              <Star className="h-3 w-3" />
+              <span>Dados atualizados</span>
             </div>
-            <div>
-              <span className="font-medium">Atendente:</span> {attendantName}
-            </div>
-            {latitude && longitude && (
-              <>
-                <div>
-                  <span className="font-medium">Latitude:</span> {latitude.toFixed(6)}
-                </div>
-                <div>
-                  <span className="font-medium">Longitude:</span> {longitude.toFixed(6)}
-                </div>
-              </>
-            )}
           </div>
-        </CardContent>
-      </Card>
+          <span>Pressione Enter para enviar</span>
+        </div>
+      </div>
     </div>
   );
 };

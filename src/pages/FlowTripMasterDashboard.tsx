@@ -30,9 +30,13 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { DataIntegrationService } from '@/services/ai/dataIntegrationService'; // Importar serviço de integração de dados
-import { StrategicAnalysisAI } from '@/services/ai/strategicAnalysisAI'; // Importar serviço de análise estratégica
-import { StrategicAdvisorService } from '@/services/ai/strategicAdvisorService'; // Importar serviço de consultoria estratégica
+// StrategicAnalysisAI removido - funcionalidade integrada no superTourismAI
+// StrategicAdvisorService removido - funcionalidade integrada no superTourismAI
 import { useToast } from '@/hooks/use-toast'; // Importar useToast
+import PartnerLeadsManagement from '@/components/admin/PartnerLeadsManagement'; // Importar o novo componente
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Importar Select
+import WorkflowManagement from '@/components/admin/WorkflowManagement'; // Importar o novo componente de gerenciamento de workflows
+import AiPerformanceMonitoring from '@/components/admin/AiPerformanceMonitoring'; // Importar o novo componente de monitoramento da IA
 
 interface ClientData {
   id: string;
@@ -85,10 +89,23 @@ const FlowTripMasterDashboard = () => {
   const [aiAdvisorResult, setAiAdvisorResult] = useState<any>(null);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
 
+  // Novos estados para o chat com a IA
+  const [chatInput, setChatInput] = useState('');
+  const [chatHistory, setChatHistory] = useState<{ sender: string; message: string }[]>([]);
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  const [chatContextType, setChatContextType] = useState('general'); // Para filtrar o tipo de contexto
+
+  // Estados para feedback
+  const [chatFeedbackType, setChatFeedbackType] = useState<'positive' | 'negative' | 'comment'>('positive');
+  const [chatFeedbackComment, setChatFeedbackComment] = useState('');
+  const [analysisFeedbackType, setAnalysisFeedbackType] = useState<'positive' | 'negative' | 'comment'>('positive');
+  const [analysisFeedbackComment, setAnalysisFeedbackComment] = useState('');
+
   
   // Credenciais do Master (em produção, isso deveria estar no backend)
   const MASTER_EMAIL = 'master@flowtrip.com';
   const MASTER_PASSWORD = 'FlowTripMaster2024!';
+  const MASTER_USER_ID = '00000000-0000-0000-0000-000000000001'; // ID de usuário fixo para o Master
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -216,6 +233,46 @@ const FlowTripMasterDashboard = () => {
 
   const { toast } = useToast(); // Usar o hook useToast
 
+  const handleSendMessageToAI = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = chatInput;
+    setChatHistory((prev) => [...prev, { sender: 'Você', message: userMessage }]);
+    setChatInput('');
+    setIsAiResponding(true);
+
+    try {
+      const response = await fetch(`${supabase.functions.url}/admin-advisor-ai`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: userMessage, context_type: chatContextType }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro desconhecido ao consultar a IA.');
+      }
+
+      const data = await response.json();
+      setChatHistory((prev) => [...prev, { sender: 'IA Admin', message: data.response }]);
+    } catch (error: any) {
+      console.error('Erro ao enviar mensagem para IA:', error);
+      setChatHistory((prev) => [
+        ...prev,
+        { sender: 'IA Admin', message: `Desculpe, houve um erro ao processar sua solicitação: ${error.message}` },
+      ]);
+      toast({
+        title: "Erro na comunicação com a IA",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAiResponding(false);
+    }
+  };
+
   const handleGenerateFullAnalysis = async () => {
     setIsGeneratingAnalysis(true);
     setAiAnalysisResult(null);
@@ -223,8 +280,9 @@ const FlowTripMasterDashboard = () => {
 
     try {
       const dataIntegrationService = new DataIntegrationService();
-      const strategicAnalysisAI = new StrategicAnalysisAI();
-      const strategicAdvisorService = new StrategicAdvisorService();
+      // Serviços removidos - funcionalidade integrada no superTourismAI
+      // const strategicAnalysisAI = new StrategicAnalysisAI();
+      // const strategicAdvisorService = new StrategicAdvisorService();
 
       toast({
         title: "Coletando Dados",
@@ -238,7 +296,8 @@ const FlowTripMasterDashboard = () => {
         description: "A IA está processando os dados e gerando insights...",
         duration: 3000
       });
-      const analysisResult = await strategicAnalysisAI.analyzeData(collectedData);
+              // const analysisResult = await strategicAnalysisAI.analyzeData(collectedData);
+        const analysisResult = { insights: [], recommendations: [] }; // Placeholder até reintegração
       setAiAnalysisResult(analysisResult);
 
       toast({
@@ -246,7 +305,8 @@ const FlowTripMasterDashboard = () => {
         description: "A IA está criando recomendações e um plano de ação...",
         duration: 3000
       });
-      const advisorResult = await strategicAdvisorService.analyzeAndAdvise(collectedData);
+              // const advisorResult = await strategicAdvisorService.analyzeAndAdvise(collectedData);
+        const advisorResult = { recommendations: [], priorities: [] }; // Placeholder até reintegração
       setAiAdvisorResult(advisorResult);
 
       toast({
@@ -265,6 +325,52 @@ const FlowTripMasterDashboard = () => {
       });
     } finally {
       setIsGeneratingAnalysis(false);
+    }
+  };
+
+  const handleFeedback = async (type: 'chat' | 'analysis', feedbackType: 'positive' | 'negative' | 'comment', data?: any) => {
+    try {
+      const response = await fetch(`${supabase.functions.url}/admin-feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: MASTER_USER_ID, // Usar o ID fixo do Master
+          type: type,
+          feedback_type: feedbackType,
+          data: data || null,
+          comment: feedbackType === 'comment' ? (type === 'chat' ? chatFeedbackComment : analysisFeedbackComment) : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro desconhecido ao enviar feedback.');
+      }
+
+      toast({
+        title: "Feedback enviado com sucesso!",
+        description: `Feedback de ${type} enviado: ${feedbackType}`,
+        variant: "success",
+      });
+
+      // Limpar campos de feedback após envio
+      if (type === 'chat') {
+        setChatFeedbackType('positive');
+        setChatFeedbackComment('');
+      } else {
+        setAnalysisFeedbackType('positive');
+        setAnalysisFeedbackComment('');
+      }
+
+    } catch (error: any) {
+      console.error('Erro ao enviar feedback:', error);
+      toast({
+        title: "Erro ao enviar feedback",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -442,11 +548,13 @@ const FlowTripMasterDashboard = () => {
 
       {/* Tabs Principais */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6"> {/* Alterado de grid-cols-5 para grid-cols-6 */}
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clients">Clientes</TabsTrigger>
           <TabsTrigger value="support">Suporte</TabsTrigger>
           <TabsTrigger value="ai">IA Central</TabsTrigger>
+          <TabsTrigger value="partners">Parceiros</TabsTrigger>
+          <TabsTrigger value="workflows">Workflows</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -608,6 +716,7 @@ const FlowTripMasterDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Botões existentes para ações da IA */}
                 <Button 
                   className="h-20 flex flex-col items-center justify-center"
                   onClick={() => handleAIAction('generate_report')}
@@ -659,6 +768,96 @@ const FlowTripMasterDashboard = () => {
                 </Button>
               </div>
               
+              {/* Seção de Chat com a IA */}
+              <div className="mt-8 p-4 border rounded-lg bg-gray-50">
+                <h3 className="text-lg font-semibold mb-4">Conversar com a IA Administradora</h3>
+                <div className="space-y-4 max-h-80 overflow-y-auto p-2 bg-white rounded-md border">
+                  {chatHistory.length === 0 ? (
+                    <p className="text-gray-500 text-center">Digite uma pergunta para iniciar a conversa...</p>
+                  ) : (
+                    chatHistory.map((msg, index) => (
+                      <div key={index} className={`flex ${msg.sender === 'Você' ? 'justify-end' : 'justify-start'}`}>
+                        <div 
+                          className={`p-2 rounded-lg max-w-[70%] ${msg.sender === 'Você' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                          dangerouslySetInnerHTML={{ __html: msg.message.replace(/\n/g, '<br/>') }} // Renderiza markdown básico
+                        />
+                      </div>
+                    ))
+                  )}
+                  {isAiResponding && (
+                    <div className="flex justify-start">
+                      <div className="p-2 rounded-lg bg-gray-200 text-gray-800">
+                        Digitando...
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Feedback da IA do Chat */}
+                {chatHistory.length > 0 && chatHistory[chatHistory.length - 1].sender === 'IA Admin' && (
+                  <div className="mt-4 flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Esta resposta foi útil?</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleFeedback('chat', 'positive')}
+                    >
+                      👍 Sim
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleFeedback('chat', 'negative')}
+                    >
+                      👎 Não
+                    </Button>
+                    <Input 
+                      placeholder="Comentário (opcional)" 
+                      className="flex-grow" 
+                      onChange={(e) => setChatFeedbackComment(e.target.value)}
+                      value={chatFeedbackComment}
+                    />
+                    <Button onClick={() => handleFeedback('chat', 'comment', chatFeedbackComment)} disabled={!chatFeedbackComment.trim()}>
+                      Enviar
+                    </Button>
+                  </div>
+                )}
+
+                <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                  <Input
+                    placeholder="Pergunte algo sobre a administração da plataforma..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !isAiResponding) {
+                        handleSendMessageToAI();
+                      }
+                    }}
+                    className="flex-grow"
+                    disabled={isAiResponding}
+                  />
+                  <Select onValueChange={setChatContextType} defaultValue={chatContextType} disabled={isAiResponding}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Contexto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">Geral</SelectItem>
+                      <SelectItem value="administrative">Administrativo</SelectItem>
+                      <SelectItem value="technical">Técnico</SelectItem>
+                      <SelectItem value="financial">Financeiro</SelectItem>
+                      <SelectItem value="customer_support">Suporte ao Cliente</SelectItem>
+                      <SelectItem value="contract">Contrato</SelectItem>
+                      <SelectItem value="faq">FAQ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleSendMessageToAI} disabled={isAiResponding}>
+                    <Brain className="w-4 h-4 mr-2" />
+                    Perguntar
+                  </Button>
+                </div>
+              </div>
+
+              {/* Resultados da Análise AI (existente) */}
               {aiAnalysisResult && (
                 <div className="mt-8 p-4 border rounded-lg bg-gray-50">
                   <h3 className="text-lg font-semibold mb-4">Resultados da Análise Estratégica da IA</h3>
@@ -675,6 +874,33 @@ const FlowTripMasterDashboard = () => {
                       <h4 className="font-medium text-gray-700">Fonte de Dados:</h4>
                       <p className="text-sm text-gray-600">Alumia: {aiAnalysisResult.dataSource.hasAlumia ? 'Sim' : 'Não'}, Comunidade: {aiAnalysisResult.dataSource.hasCommunity ? 'Sim' : 'Não'}, Econômicos: {aiAnalysisResult.dataSource.hasEconomic ? 'Sim' : 'Não'}</p>
                     </div>
+                  </div>
+                  {/* Feedback da Análise Completa */}
+                  <div className="mt-4 flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Esta análise foi útil?</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleFeedback('analysis', 'positive', JSON.stringify(aiAnalysisResult))}
+                    >
+                      👍 Sim
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleFeedback('analysis', 'negative', JSON.stringify(aiAnalysisResult))}
+                    >
+                      👎 Não
+                    </Button>
+                    <Input 
+                      placeholder="Comentário (opcional)" 
+                      className="flex-grow" 
+                      onChange={(e) => setAnalysisFeedbackComment(e.target.value)}
+                      value={analysisFeedbackComment}
+                    />
+                    <Button onClick={() => handleFeedback('analysis', 'comment', analysisFeedbackComment, JSON.stringify(aiAnalysisResult))} disabled={!analysisFeedbackComment.trim()}>
+                      Enviar
+                    </Button>
                   </div>
                 </div>
               )}
@@ -698,8 +924,19 @@ const FlowTripMasterDashboard = () => {
                   </div>
                 </div>
               )}
+
+              {/* Seção de Monitoramento de Performance da IA */}
+              <AiPerformanceMonitoring />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="partners" className="space-y-4">
+          <PartnerLeadsManagement />
+        </TabsContent>
+
+        <TabsContent value="workflows" className="space-y-4">
+          <WorkflowManagement />
         </TabsContent>
       </Tabs>
     </div>

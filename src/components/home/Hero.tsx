@@ -2,17 +2,20 @@
 import { Link } from "react-router-dom";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBrand } from "@/context/BrandContext"; // Importar useBrand
 
 const Hero = () => {
-  const { getContentValue, isLoading } = useInstitutionalContent();
+  const { getContentValue, isLoading: isContentLoading } = useInstitutionalContent();
+  const { config, loading: brandLoading } = useBrand(); // Obter config e loading do BrandContext
 
-  const title = getContentValue('hero_title');
-  const subtitle = getContentValue('hero_subtitle');
-  const buttonRegister = getContentValue('hero_button_register');
-  const buttonPassport = getContentValue('hero_button_passport');
-  const buttonGuata = getContentValue('hero_button_guata') || getContentValue('hero_button_delinha');
+  // Usar os valores do BrandContext para o título e subtítulo
+  const title = config.hero.title;
+  const subtitle = config.hero.subtitle;
+  const buttonRegister = config.hero.buttons.primary.text; // Usar do BrandContext
+  const buttonPassport = config.hero.buttons.secondary.text; // Usar do BrandContext
+  const buttonGuata = config.hero.buttons.tertiary.text; // Usar do BrandContext
 
-  if (isLoading) {
+  if (isContentLoading || brandLoading) { // Condição de carregamento mais abrangente
     return (
         <div className="relative h-[70vh] bg-gray-200">
             <div className="relative h-full flex items-center justify-center">

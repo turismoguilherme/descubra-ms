@@ -1,24 +1,35 @@
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { UserRole, RoleBasedAccess, ROLE_CONFIG, RolePermissions } from '@/types/roles';
-import { getTestData, isTestMode } from '@/utils/testDashboards';
+// Utilities removidos - funcionalidade de teste não necessária em produção
 
 export const useRoleBasedAccess = (): RoleBasedAccess => {
   const { user, userProfile } = useAuth();
 
   const roleData = useMemo(() => {
     // Verificar se está em modo de teste
-    if (isTestMode()) {
-      const testData = getTestData();
+    // Verificar dados de teste no localStorage para desenvolvimento
+    const testUserData = localStorage.getItem('test-user-data');
+    const testToken = localStorage.getItem('supabase.auth.token');
+    
+    if (testUserData && testToken === 'test-token') {
+      const testData = JSON.parse(testUserData);
       if (testData) {
-        const role = testData.userProfile.role as UserRole;
+        const role = testData.role as UserRole;
         const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
+
+        const cityMapping = {
+          'atendente': 'campo-grande',
+          'gestor_municipal': 'campo-grande', 
+          'gestor_igr': 'dourados',
+          'diretor_estadual': 'campo-grande'
+        };
 
         return {
           userRole: role,
           permissions: config.permissions,
-          regionId: testData.userProfile.region_id || undefined,
-          cityId: testData.userProfile.city_id || undefined
+          regionId: role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
+          cityId: cityMapping[role] || 'campo-grande'
         };
       }
     }

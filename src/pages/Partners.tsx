@@ -6,10 +6,12 @@ import { PartnerCard } from "@/components/partners/PartnerCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Handshake } from "lucide-react";
+import { Users } from "lucide-react";
 
 const Partners = () => {
-    const { partners, isLoading } = usePartners();
+    const { partners, isLoading, error } = usePartners();
+
+    console.log("🔍 Partners Component: isLoading", isLoading, "partners.length", partners.length, "error", error);
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -39,7 +41,7 @@ const Partners = () => {
                         </div>
                     ) : (
                         <div className="text-center py-20 border-2 border-dashed rounded-lg bg-gray-50">
-                            <Handshake className="mx-auto h-12 w-12 text-gray-400" />
+                            <Users className="mx-auto h-12 w-12 text-gray-400" />
                             <h2 className="mt-4 text-xl font-semibold text-gray-800">Nenhum parceiro encontrado.</h2>
                             <p className="text-muted-foreground mt-2">Ainda não temos parceiros institucionais. Seja o primeiro a apoiar!</p>
                         </div>

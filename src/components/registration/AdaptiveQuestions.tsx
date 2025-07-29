@@ -138,7 +138,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
       // Analisar a resposta JSON
       const jsonResponse = JSON.parse(response);
       setAiSuggestions(jsonResponse);
-
+      
     } catch (error) {
       console.error('❌ Erro ao gerar perguntas com IA:', error);
       // Fallback para perguntas padrão se houver erro ou a IA não retornar JSON válido

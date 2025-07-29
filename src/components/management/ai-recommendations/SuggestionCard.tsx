@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChartBar, Users, MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Calendar, BarChart, Users, MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Suggestion } from "@/types/management";
 import { msRegions } from "../PerformanceDashboard";
 
@@ -16,7 +16,7 @@ const SuggestionCard = ({ suggestion, feedbackSent, onFeedback }: SuggestionCard
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'event': return <Calendar size={18} />;
-      case 'promotion': return <ChartBar size={18} />;
+      case 'promotion': return <BarChart size={18} />;
       case 'partnership': return <Users size={18} />;
       default: return <MessageCircle size={18} />;
     }

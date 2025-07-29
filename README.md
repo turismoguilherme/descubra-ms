@@ -1,73 +1,76 @@
-# Welcome to your Lovable project
+# 🚀 FlowTrip/Descubra MS - Plataforma de Turismo Inteligente
 
-## Project info
+Uma plataforma completa de turismo inteligente que combina tecnologia avançada, inteligência artificial e dados estratégicos para revolucionar o turismo em Mato Grosso do Sul.
 
-**URL**: https://lovable.dev/projects/2ba30f06-370d-414b-b6cf-0eb206bbc43d
+**Status:** ✅ **100% FUNCIONAL EM PRODUÇÃO**
 
-## How can I edit this code?
+## 📖 Documentação Principal
 
-There are several ways of editing your application.
+Para informações completas sobre a plataforma, consulte:
 
-**Use Lovable**
+📋 **[Documentação Consolidada](docs/FLOWTRIP_DOCUMENTACAO_CONSOLIDADA.md)** - Documento principal com todas as funcionalidades, arquitetura e histórico
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2ba30f06-370d-414b-b6cf-0eb206bbc43d) and start prompting.
+## 🎯 Funcionalidades Principais
 
-Changes made via Lovable will be committed automatically to this repo.
+- 🧠 **IA Consultora Estratégica (Guatá)** - Consultas em tempo real para gestores
+- 🗺️ **Mapas de Calor Turísticos** - Visualização de fluxos e engajamento
+- 🎮 **Passaporte Digital** - Gamificação e retenção de turistas
+- 👥 **Sistema de Comunidade** - Participação ativa dos moradores
+- 📊 **Dashboards Multi-hierárquicos** - Municipal, Regional e Estadual
+- 📈 **Infográficos Automatizados** - Relatórios visuais inteligentes
 
-**Use your preferred IDE**
+## 🚀 Tecnologias
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend:** React 18 + TypeScript + Tailwind CSS
+- **Backend:** Supabase (PostgreSQL + Edge Functions)
+- **IA:** Gemini AI para processamento avançado
+- **Maps:** Mapbox para geolocalização
+- **Hospedagem:** Vercel
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🏁 Quick Start
 
-Follow these steps:
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/descubra-ms.git
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Instale as dependências
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Configure as variáveis de ambiente
+cp .env.example .env.local
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 📁 Estrutura do Projeto
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/        # Componentes React
+├── services/          # Lógica de negócio e APIs
+├── pages/            # Páginas da aplicação
+├── hooks/            # Custom hooks
+├── types/            # Definições TypeScript
+└── utils/            # Utilitários
 
-**Use GitHub Codespaces**
+docs/                 # Documentação técnica
+supabase/            # Configurações do backend
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🤝 Contribuição
 
-## What technologies are used for this project?
+Para contribuir com o projeto:
 
-This project is built with:
+1. Fork o repositório
+2. Crie uma branch para sua feature
+3. Faça commit das suas alterações
+4. Abra um Pull Request
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📜 Licença
 
-## How can I deploy this project?
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-Simply open [Lovable](https://lovable.dev/projects/2ba30f06-370d-414b-b6cf-0eb206bbc43d) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Desenvolvido para revolucionar o turismo em Mato Grosso do Sul** 🌍

@@ -65,7 +65,7 @@ const FlowTripSaaS = () => {
               </Button>
             </Link>
             <Link to="/ms">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900">
+              <Button size="lg" variant="outline" className="border-white text-blue-900 hover:bg-white hover:text-blue-900">
                 Ver Case de Sucesso
               </Button>
             </Link>
@@ -277,7 +277,7 @@ const FlowTripSaaS = () => {
               </Button>
             </Link>
             <Link to="/ms">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
+              <Button size="lg" variant="outline" className="border-white text-blue-900 hover:bg-white hover:text-gray-900">
                 Ver Demonstração ao Vivo
               </Button>
             </Link>

@@ -4,9 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Trophy, Star, Camera } from "lucide-react";
+import { MapPin, Trophy, Star, Camera, Gift } from "lucide-react"; // Adicionado Gift icon
 import { useToast } from "@/hooks/use-toast";
 import { tourismPassportService } from "@/services/passport/tourismPassportService"; // Importar o serviço de passaporte
+import rewardService, { UserReward } from '@/services/rewardService'; // Importar rewardService e UserReward
 import { UserStamp, UserPassportStats, PassportChallenge } from "@/types/passport"; // Importar o tipo UserStamp e UserPassportStats, PassportChallenge
 import ShareButtons from "@/components/common/ShareButtons"; // Importar o componente ShareButtons
 
@@ -29,6 +30,7 @@ const EnhancedDigitalPassport = () => {
   const [userStamps, setUserStamps] = useState<UserStamp[]>([]); 
   const [passportStats, setPassportStats] = useState<UserPassportStats | null>(null); // Novo estado para estatísticas do passaporte
   const [availableChallenges, setAvailableChallenges] = useState<PassportChallenge[]>([]); // Novo estado para desafios
+  const [userRewards, setUserRewards] = useState<UserReward[]>([]); // Novo estado para recompensas do usuário
   const [loading, setLoading] = useState(true);
   const [reportLoading, setReportLoading] = useState(false); // Estado para o loading do relatório de IA
 
@@ -39,6 +41,7 @@ const EnhancedDigitalPassport = () => {
       fetchUserStamps(); 
       fetchPassportStats(); // Chamar a nova função para buscar estatísticas
       fetchAvailableChallenges(); // Chamar a nova função para buscar desafios
+      fetchUserRewards(); // Chamar a nova função para buscar recompensas
     }
   }, [user]);
 
@@ -170,6 +173,21 @@ const EnhancedDigitalPassport = () => {
       toast({
         title: "Erro",
         description: "Não foi possível carregar os desafios.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchUserRewards = async () => {
+    if (!user) return;
+    try {
+      const rewards = await rewardService.listUserRewards(user.id);
+      setUserRewards(rewards);
+    } catch (error) {
+      console.error("Error fetching user rewards:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar suas recompensas.",
         variant: "destructive",
       });
     }
@@ -312,6 +330,49 @@ const EnhancedDigitalPassport = () => {
               text={`Acabei de atingir o nível ${passportStats.level} no Passaporte Digital de Turismo, com ${passportStats.total_points} pontos e ${passportStats.checkpoints_completed} checkpoints concluídos! Venha explorar MS comigo!`}
               url={`${window.location.origin}/ms/passaporte`}
             />
+          </div>
+        )}
+
+        {/* Seção de Recompensas do Usuário */}
+        <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">Minhas Recompensas</h2>
+        {userRewards.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg shadow-sm mb-8">
+            <p className="text-gray-600">Você ainda não ganhou nenhuma recompensa. Continue explorando e completando desafios!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {userRewards.map((reward) => (
+              <Card key={reward.id}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex justify-between items-center">
+                    {reward.name}
+                    <Badge variant="secondary">{reward.type}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 text-sm mb-2">{reward.description}</p>
+                  <p className="text-xs text-gray-500">
+                    Recebido em: {new Date(reward.received_at).toLocaleDateString()}
+                  </p>
+                  {reward.reason && (
+                    <p className="text-xs text-gray-500 mt-1">Motivo: {reward.reason}</p>
+                  )}
+                  {/* Novos campos de resgate */}
+                  {reward.local_resgate && (
+                    <p className="text-xs text-gray-600 mt-1 flex items-center">
+                      <MapPin size={12} className="mr-1 text-ms-primary-blue" />
+                      Local de Resgate: {reward.local_resgate}
+                    </p>
+                  )}
+                  {reward.instrucoes_resgate && (
+                    <p className="text-xs text-gray-600 mt-1 flex items-center">
+                      <Gift size={12} className="mr-1 text-ms-primary-blue" />
+                      Instruções: {reward.instrucoes_resgate}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
 

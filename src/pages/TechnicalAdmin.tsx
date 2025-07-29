@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
-import { Shield, Database, Users, Settings, Activity, FileText, Handshake, RefreshCw } from "lucide-react";
+import { Shield, Database, Users, Settings, Activity, FileText, RefreshCw } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import DataDashboard from "@/components/admin/DataDashboard";
@@ -157,7 +157,7 @@ const TechnicalAdmin = () => {
                 Conteúdo
               </TabsTrigger>
               <TabsTrigger value="institutional" className="flex items-center">
-                <Handshake className="mr-2 h-4 w-4" />
+                {/* <Handshake className="mr-2 h-4 w-4" /> */}
                 Institucional
               </TabsTrigger>
             </TabsList>

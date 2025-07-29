@@ -108,7 +108,7 @@ const DigitalPassport = () => {
                     </div>
                     <h3 className="font-semibold">Colete & Ganhe</h3>
                     <p className="text-sm text-gray-600">
-                      Ganhe carimbos digitais, pon​tos e desbloqueie recompensas exclusivas
+                      Ganhe carimbos digitais, pon​os e desbloqueie recompensas exclusivas
                     </p>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ const DigitalPassport = () => {
 
             {/* Call to Action */}
             <div className="space-y-6">
-              <Link to="/enhanced-digital-passport">
+              <Link to="/ms/roteiros">
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
@@ -127,16 +127,7 @@ const DigitalPassport = () => {
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </Link>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/delinha">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4" />
-                    Falar com a Delinha
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            </div> {/* Fecha o div de Call to Action */}
 
             {/* Estatísticas */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">

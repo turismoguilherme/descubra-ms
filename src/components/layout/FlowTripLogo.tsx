@@ -1,32 +1,38 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useBrand } from '@/context/BrandContext'; // Importar useBrand
 
 interface FlowTripLogoProps {
   isFlowTrip?: boolean;
 }
 
 const FlowTripLogo: React.FC<FlowTripLogoProps> = ({ isFlowTrip = true }) => {
+  const { config } = useBrand(); // Usar o contexto da marca
+  
+  // Adicionado para depuração da logo
+  console.log('🔍 FlowTripLogo: Configuração da logo recebida:', config.logo.src, config.logo.alt, config.logo.fallback);
+
   return (
-    <Link to={isFlowTrip ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
+    <Link to={isFlowTrip ? "/" : `/${config.brand}`} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
       <div className="flex items-center">
         {/* Logo com fallback para texto */}
         <div className="flex items-center">
           <img 
-            alt="FlowTrip"
-            src="/flowtrip-logo.png"
+            alt={config.logo.alt}
+            src={config.logo.src}
             className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
             loading="eager" 
             onError={(e) => {
-              console.error('FlowTrip logo failed to load, showing text fallback');
+              console.error('FlowTrip logo failed to load, showing text fallback', e.currentTarget.src);
               e.currentTarget.style.display = 'none';
               const fallback = e.currentTarget.nextElementSibling as HTMLElement;
               if (fallback) fallback.style.display = 'flex';
             }} 
           />
-          {/* Fallback de texto */}
+          {/* Fallback de texto, visível apenas se a imagem falhar */}
           <div 
             className="text-2xl font-bold text-blue-600 hidden items-center"
-            style={{ display: 'none' }}
+            style={{ display: 'none' }} // Inicia escondido
           >
             <div className="flex items-center space-x-2">
               {/* Símbolo simplificado */}
@@ -37,7 +43,7 @@ const FlowTripLogo: React.FC<FlowTripLogoProps> = ({ isFlowTrip = true }) => {
                 <div className="w-4 h-4 bg-blue-400 rounded-full mr-1"></div>
                 <div className="w-3 h-3 bg-blue-300 rounded-full"></div>
               </div>
-              <span>FlowTrip</span>
+              <span>{config.logo.fallback}</span> {/* Usar o fallback do contexto */}
             </div>
           </div>
         </div>

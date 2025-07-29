@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,7 +32,7 @@ const BlogFlowTrip = lazy(() => import("@/pages/BlogFlowTrip"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const SuporteFlowTrip = lazy(() => import("@/pages/SuporteFlowTrip"));
 const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
-const TestDashboards = lazy(() => import("@/pages/TestDashboards"));
+// TestDashboards removido - não necessário em produção
 const ContatoFlowTrip = lazy(() => import("@/pages/ContatoFlowTrip"));
 const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
 const RecursosWhiteLabel = lazy(() => import("@/pages/RecursosWhiteLabel"));
@@ -47,7 +46,9 @@ const Management = lazy(() => import("@/pages/Management"));
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
 const Guata = lazy(() => import("@/pages/Guata"));
+const Delinha = lazy(() => import("@/pages/Delinha"));
 const CATAttendant = lazy(() => import("@/pages/CATAttendant"));
+const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
 const MunicipalAdmin = lazy(() => import("@/pages/MunicipalAdmin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Destinos = lazy(() => import("@/pages/Destinos"));
@@ -61,14 +62,14 @@ const BecomePartner = lazy(() => import("@/pages/BecomePartner"));
 const Contribute = lazy(() => import("@/pages/Contribute"));
 const Colaborador = lazy(() => import("@/pages/Colaborador"));
 const RoleDashboard = lazy(() => import("@/pages/RoleDashboard"));
+const CommunitySuggestionDetail = lazy(() => import("@/pages/CommunitySuggestionDetail")); // Nova importação
 const DestinationEditor = lazy(() => import("@/pages/DestinationEditor"));
 const EventEditor = lazy(() => import("@/pages/EventEditor"));
 const DestinoDetalhes = lazy(() => import("@/pages/DestinoDetalhes"));
 const EventoDetalhes = lazy(() => import("@/pages/EventoDetalhes"));
 const TourismData = lazy(() => import("@/pages/TourismData"));
-const GuataAI = lazy(() => import("@/pages/GuataAI"));
 const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
-const EnhancedDigitalPassport = lazy(() => import("@/pages/EnhancedDigitalPassport"));
+const EnhancedDigitalPassport = lazy(() => import("@/components/passport/EnhancedDigitalPassport"));
 const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
 const Regions = lazy(() => import("@/pages/Regions"));
 const Resultados = lazy(() => import("@/pages/Resultados"));
@@ -78,6 +79,8 @@ const TourismManagement = lazy(() => import("@/pages/TourismManagement"));
 const RoutesManagement = lazy(() => import("@/pages/RoutesManagement")); // Nova importação
 const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Nova importação
 const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Nova importação para Leaderboards
+const RewardsManagement = lazy(() => import("@/components/management/RewardsManager"));
+const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
 
 const queryClient = new QueryClient();
 
@@ -116,7 +119,7 @@ function App() {
                       <Route path="/documentacao" element={<Suspense fallback={<LoadingFallback />}><Documentacao /></Suspense>} />
                       <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteFlowTrip /></Suspense>} />
                       <Route path="/admin-portal" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
-                      <Route path="/test-dashboards" element={<Suspense fallback={<LoadingFallback />}><TestDashboards /></Suspense>} />
+                      {/* TestDashboards removido - não necessário em produção */}
                       <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
                       <Route path="/master-dashboard" element={<FlowTripMasterDashboard />} />
                       
@@ -142,10 +145,15 @@ function App() {
                       <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                       <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
                       <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                      <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                      <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
                       <Route path="/ms/cat-attendant" element={
                         <ProtectedRoute allowedRoles={['cat_attendant']} requireCity>
                           <CATAttendant />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ms/attendant-checkin" element={
+                        <ProtectedRoute allowedRoles={['atendente']} requireCity>
+                          <Suspense fallback={<LoadingFallback />}><AttendantCheckIn /></Suspense>
                         </ProtectedRoute>
                       } />
                       <Route path="/ms/municipal-admin" element={
@@ -158,12 +166,14 @@ function App() {
                       <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
                       <Route path="/ms/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
                       <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><Roteiros /></Suspense>} />
+                      <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsPage /></Suspense>} /> {/* Nova rota para detalhes do roteiro */}
                       <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
                       <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
                       <Route path="/ms/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
                       <Route path="/ms/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
                       <Route path="/ms/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><BecomePartner /></Suspense>} />
                       <Route path="/ms/contribuir" element={<Suspense fallback={<LoadingFallback />}><Contribute /></Suspense>} />
+                      <Route path="/ms/contribuir/:id" element={<Suspense fallback={<LoadingFallback />}><CommunitySuggestionDetail /></Suspense>} /> {/* Nova rota */}
                       <Route path="/ms/collaborator" element={
                         <ProtectedRoute allowedRoles={['collaborator']}>
                           <Colaborador />
@@ -201,15 +211,19 @@ function App() {
                       } />
 
                       <Route path="/ms/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
-                      <Route path="/ms/guata-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
-                      <Route path="/ms/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><GuataAI /></Suspense>} />
+                      <Route path="/ms/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
                       <Route path="/ms/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
-                      <Route path="/ms/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassport /></Suspense>} />
+                      <Route path="/ms/enhanced-passport" element={<Navigate to="/ms/passaporte" replace />} />
 
                       <Route path="/ms/leaderboards" element={<Suspense fallback={<LoadingFallback />}><LeaderboardsPage /></Suspense>} />
+                      <Route path="/ms/rewards-management" element={
+                        <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
+                          <Suspense fallback={<LoadingFallback />}><RewardsManagement /></Suspense>
+                        </ProtectedRoute>
+                      } />
 
                       <Route path="/ms/regioes" element={<Suspense fallback={<LoadingFallback />}><Regions /></Suspense>} />
-                      <Route path="/ms/test-dashboards" element={<Suspense fallback={<LoadingFallback />}><TestDashboards /></Suspense>} />
+                      {/* TestDashboards removido - não necessário em produção */}
                       <Route path="/ms/tourism-management" element={
                         <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
                           <TourismManagement />
@@ -234,6 +248,7 @@ function App() {
                       <Route path="/eventos" element={<Navigate to="/ms/eventos" replace />} />
                       <Route path="/eventos/:id" element={<Navigate to="/ms/eventos/:id" replace />} />
                       <Route path="/roteiros" element={<Navigate to="/ms/roteiros" replace />} />
+                      <Route path="/roteiros/:routeId" element={<Navigate to="/ms/roteiros/:routeId" replace />} /> {/* Nova rota para detalhes do roteiro */}
                       <Route path="/parceiros" element={<Navigate to="/ms/parceiros" replace />} />
                       <Route path="/sobre" element={<Navigate to="/ms/sobre" replace />} />
                       <Route path="/mapa" element={<Navigate to="/ms/mapa" replace />} />

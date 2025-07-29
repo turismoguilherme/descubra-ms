@@ -21,6 +21,7 @@ interface Event {
   end_date: string | null;
   visibility_end_date?: string | null;
   is_visible?: boolean;
+  is_active?: boolean; // Adicionado campo is_active
   auto_hide?: boolean;
   image_url: string | null;
   created_at: string;
@@ -88,10 +89,16 @@ const EventsList = () => {
     }
   };
 
-  const filteredEvents = events.filter(event => {
+  // Ordenar eventos: ativos primeiro, depois inativos
+  const orderedEvents = [...events].sort((a, b) => {
+    if ((a.is_active === false || a.is_active === undefined) && b.is_active) return 1;
+    if (a.is_active && (b.is_active === false || b.is_active === undefined)) return -1;
+    return 0;
+  });
+
+  const filteredEvents = orderedEvents.filter(event => {
     const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
     if (statusFilter === "all") return matchesSearch;
     if (statusFilter === "visible") return matchesSearch && event.is_visible !== false;
     if (statusFilter === "hidden") return matchesSearch && event.is_visible === false;
@@ -100,7 +107,8 @@ const EventsList = () => {
       const visibilityEnd = event.visibility_end_date ? new Date(event.visibility_end_date) : null;
       return matchesSearch && visibilityEnd && visibilityEnd < now;
     }
-    
+    if (statusFilter === "active") return matchesSearch && event.is_active !== false;
+    if (statusFilter === "inactive") return matchesSearch && event.is_active === false;
     return matchesSearch;
   });
 
@@ -109,7 +117,7 @@ const EventsList = () => {
     const startDate = new Date(event.start_date);
     const endDate = event.end_date ? new Date(event.end_date) : null;
     const visibilityEnd = event.visibility_end_date ? new Date(event.visibility_end_date) : null;
-
+    if (event.is_active === false) return { label: "Inativo", variant: "secondary" as const };
     if (event.is_visible === false) return { label: "Oculto", variant: "secondary" as const };
     if (visibilityEnd && visibilityEnd < now) return { label: "Expirado", variant: "destructive" as const };
     if (endDate && endDate < now) return { label: "Finalizado", variant: "outline" as const };
@@ -164,6 +172,8 @@ const EventsList = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Inativos</SelectItem>
                 <SelectItem value="visible">Visíveis</SelectItem>
                 <SelectItem value="hidden">Ocultos</SelectItem>
                 <SelectItem value="expired">Expirados</SelectItem>

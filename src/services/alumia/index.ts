@@ -13,8 +13,19 @@ import { TablesInsert } from '@/integrations/supabase/types';
 
 // Configuração da integração ALUMIA
 const ALUMIA_CONFIG = {
-  // URLs base (serão configuradas quando API estiver disponível)
-  BASE_URL: process.env.REACT_APP_ALUMIA_BASE_URL || 'https://api.alumia.com/v1',
+  // URLs base (atualizadas para a URL correta da Alumia)
+  BASE_URL: import.meta.env.VITE_ALUMIA_BASE_URL || 'https://api.alumia.com.br/v1',
+  API_KEY: import.meta.env.VITE_ALUMIA_API_KEY,
+  
+  // Headers padrão para autenticação
+  getHeaders: () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${ALUMIA_CONFIG.API_KEY}`,
+    'User-Agent': 'FlowTrip-IA-Consultora/1.0'
+  }),
+  
+  // Verificar se API está configurada
+  isConfigured: () => Boolean(ALUMIA_CONFIG.API_KEY),
   
   // Endpoints
   ENDPOINTS: {
@@ -23,7 +34,10 @@ const ALUMIA_CONFIG = {
     bookings: '/bookings',
     analytics: '/analytics',
     sync: '/sync',
-    health: '/health'
+    health: '/health',
+    regions: '/regions',
+    insights: '/insights/tourism',
+    benchmarking: '/benchmarking'
   },
   
   // Configurações de sincronização
@@ -52,15 +66,20 @@ export class AlumiaService {
   private lastSyncTime: string | null = null;
   private syncInterval: NodeJS.Timeout | null = null;
 
-  private constructor() {
+  constructor() {
     this.config = {
-      enabled: false, // Desabilitado até API estar disponível
-      apiKey: process.env.REACT_APP_ALUMIA_API_KEY,
+      enabled: ALUMIA_CONFIG.isConfigured(),
       baseUrl: ALUMIA_CONFIG.BASE_URL,
-      endpoints: ALUMIA_CONFIG.ENDPOINTS,
-      syncInterval: ALUMIA_CONFIG.SYNC.interval,
-      status: 'disconnected'
+      apiKey: ALUMIA_CONFIG.API_KEY,
+      syncInterval: ALUMIA_CONFIG.SYNC.interval
     };
+    
+    // Log do status da configuração
+    if (this.config.enabled) {
+      console.log('✅ Alumia: Configurada e pronta para uso');
+    } else {
+      console.log('⚠️ Alumia: Aguardando configuração da API_KEY');
+    }
   }
 
   static getInstance(): AlumiaService {
@@ -315,7 +334,7 @@ export class AlumiaService {
       await this.saveEventsToSupabase(events);
       await this.saveBookingsToSupabase(bookings);
       await this.saveAnalyticsToSupabase(analytics);
-
+      
       const endTime = Date.now();
       const duration = endTime - startTime;
       
@@ -684,6 +703,96 @@ export class AlumiaService {
     } else {
       console.log(`✅ Analytics ALUMIA salvo no Supabase.`);
     }
+  }
+
+  /**
+   * Método específico para obter insights turísticos para a IA Consultora
+   * Usado pelo AIConsultantService
+   */
+  async getTourismInsights(regionId?: string): Promise<any> {
+    console.log('🔍 Alumia: Buscando insights turísticos para região:', regionId);
+
+    if (!this.config.enabled) {
+      console.log('⚠️ Alumia: API não configurada, retornando dados simulados');
+      return this.generateMockTourismInsights(regionId);
+    }
+
+    try {
+      const cacheKey = `tourism_insights_${regionId || 'all'}`;
+      const cached = this.getCached(cacheKey);
+      
+      if (cached) {
+        console.log('📋 Alumia: Usando dados em cache');
+        return cached;
+      }
+
+      // Fazer chamada real para a API Alumia
+      const response = await fetch(
+        `${this.config.baseUrl}${ALUMIA_CONFIG.ENDPOINTS.insights}${regionId ? `?region=${regionId}` : ''}`,
+        {
+          method: 'GET',
+          headers: ALUMIA_CONFIG.getHeaders(),
+          signal: AbortSignal.timeout(ALUMIA_CONFIG.SYNC.timeout)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Alumia API Error: ${response.status} ${response.statusText}`);
+      }
+
+      const insights = await response.json();
+      
+      // Cache dos dados
+      this.setCache(cacheKey, insights, ALUMIA_CONFIG.CACHE.analytics);
+      
+      console.log('✅ Alumia: Insights obtidos com sucesso');
+      return insights;
+
+    } catch (error) {
+      console.error('❌ Erro ao buscar insights da Alumia:', error);
+      // Fallback para dados simulados
+      return this.generateMockTourismInsights(regionId);
+    }
+  }
+
+  /**
+   * Gera dados simulados para quando a API ainda não estiver configurada
+   */
+  private generateMockTourismInsights(regionId?: string): any {
+    const regionName = regionId === 'ms' ? 'Mato Grosso do Sul' : (regionId || 'Região não especificada');
+    
+    return {
+      region: regionName,
+      period: 'últimos_30_dias',
+      status: 'simulated_data',
+      insights: {
+        visitacao: {
+          total_visitantes: 15234,
+          crescimento_mensal: 18.5,
+          origem_principal: 'São Paulo (35%)',
+          pico_visitacao: 'Fins de semana'
+        },
+        destinos_populares: [
+          { nome: 'Pantanal Norte', visitantes: 4521, crescimento: 22 },
+          { nome: 'Bonito', visitantes: 3892, crescimento: 15 },
+          { nome: 'Aquário Natural', visitantes: 2103, crescimento: 8 }
+        ],
+        tendencias: [
+          'Crescimento no turismo de natureza (+25%)',
+          'Aumento de visitantes internacionais (+12%)',
+          'Preferência por experiências sustentáveis'
+        ],
+        benchmarking: {
+          posicao_ranking_nacional: 8,
+          comparacao_mes_anterior: '+2 posições',
+          pontos_fortes: ['Ecoturismo', 'Biodiversidade'],
+          areas_melhoria: ['Infraestrutura digital', 'Marketing']
+        },
+        nota_qualidade: 8.4,
+        fonte: 'Alumia - Dados Simulados (aguardando API)',
+        ultima_atualizacao: new Date().toISOString()
+      }
+    };
   }
 }
 

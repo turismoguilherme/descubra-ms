@@ -39,7 +39,7 @@ export class SecurityAuditService {
       };
 
       // Log no console para desenvolvimento
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('🔍 Security Event:', enhancedEvent);
       }
 

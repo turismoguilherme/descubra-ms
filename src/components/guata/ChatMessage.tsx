@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Importar Avatar
-import guataMascoteImage from "@/assets/guata-mascote.jpg"; // Importar imagem do mascote
 
 interface ChatMessageProps {
   message: AIMessage;
@@ -26,7 +25,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
       {!message.isUser && ( // Renderizar avatar apenas para mensagens da IA
         <Avatar className="w-8 h-8 flex-shrink-0">
           <AvatarImage 
-            src={guataMascoteImage} 
+            src="/guata-mascote.jpg" 
             alt="Guatá AI"
             className="object-cover"
           />
@@ -44,7 +43,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
               : message.isTyping
                 ? "bg-slate-800/60 text-gray-400"
                 : "bg-slate-800 text-gray-200" 
-            : "bg-ms-guavira-purple text-white hover:bg-ms-guavira-purple/90"
+            : "bg-blue-700 text-white hover:bg-blue-800"
         )}
       >
         {message.isTyping ? (

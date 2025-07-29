@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { MessageCircle, ThumbsUp, ThumbsDown, ChartBar, Calendar, Users, Send } from "lucide-react";
+import { MessageCircle, ThumbsUp, ThumbsDown, BarChart, Calendar, Users, Send } from "lucide-react";
 import { Suggestion } from "@/types/management";
 import { msRegions } from "./PerformanceDashboard";
 
@@ -161,7 +161,7 @@ const AIRecommendations = ({ region }: AIRecommendationsProps) => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'event': return <Calendar size={18} />;
-      case 'promotion': return <ChartBar size={18} />;
+      case 'promotion': return <BarChart size={18} />;
       case 'partnership': return <Users size={18} />;
       default: return <MessageCircle size={18} />;
     }

@@ -2,6 +2,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { geminiClient } from '@/config/gemini';
 import { UserStamp } from "@/types/passport"; // Importar o tipo UserStamp
 import { offlineCacheService } from "../offlineCacheService"; // Importar o serviço de cache offline
+import rewardService, { Reward } from '../rewardService'; // Importar o novo serviço de recompensas
+import { toast } from '@/hooks/use-toast'; // Importar useToast
 
 // Tipos para passaporte turístico
 export interface TourismPassport {
@@ -167,6 +169,10 @@ class TourismPassportService {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);
+      
+      // --- ATRIBUIÇÃO DE RECOMPENSAS CUSTOMIZADAS APÓS AÇÃO DO USUÁRIO ---
+      await this._checkAndAssignCustomRewards(userId, passport.total_visits + 1, newPoints); // Passa total_visits atualizado
+      // --- FIM DA ATRIBUIÇÃO ---
 
       console.log(`✅ Checkpoint registrado: ${checkpoint.name} (+${checkpoint.points_reward} pontos)`);
       return { checkpoint, newUnlockedBenefits };
@@ -212,6 +218,10 @@ class TourismPassportService {
             updated_at: new Date().toISOString()
           })
           .eq('user_id', checkinData.user_id);
+        
+        // --- ATRIBUIÇÃO DE RECOMPENSAS CUSTOMIZADAS APÓS AÇÃO DO USUÁRIO ---
+        await this._checkAndAssignCustomRewards(checkinData.user_id, (passport?.total_visits || 0) + 1, newPoints); // Passa total_visits atualizado
+        // --- FIM DA ATRIBUIÇÃO ---
 
         return {
           checkpoint: {
@@ -424,6 +434,10 @@ class TourismPassportService {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);
+      
+      // --- ATRIBUIÇÃO DE RECOMPENSAS CUSTOMIZADAS APÓS AÇÃO DO USUÁRIO ---
+      await this._checkAndAssignCustomRewards(userId, passport.total_visits, newPoints); // total_visits não muda aqui, mas os pontos sim.
+      // --- FIM DA ATRIBUIÇÃO ---
 
       console.log(`✅ Desafio completado: ${challenge.name} (+${challenge.points_reward} pontos)`);
     } catch (error) {
@@ -632,6 +646,49 @@ Responda em português brasileiro de forma motivacional e envolvente.
     } catch (error) {
       console.error('❌ Erro ao excluir carimbo do usuário online:', error);
       throw error;
+    }
+  }
+
+  private async _checkAndAssignCustomRewards(
+    userId: string,
+    totalVisits: number,
+    totalPoints: number
+  ): Promise<void> {
+    try {
+      const activeRewards = await rewardService.listRewards(true); // Buscar apenas recompensas ativas
+      
+      for (const reward of activeRewards) {
+        const hasReceived = await rewardService.hasUserReceivedReward(userId, reward.id);
+        if (!hasReceived) {
+          let eligible = false;
+          const criteria = reward.criteria; // Critérios definidos pelo gestor
+
+          if (criteria.type === 'checkin_count' && typeof criteria.count === 'number') {
+            if (totalVisits >= criteria.count) {
+              eligible = true;
+            }
+          } else if (criteria.type === 'points_milestone' && typeof criteria.points === 'number') {
+            if (totalPoints >= criteria.points) {
+              eligible = true;
+            }
+          }
+          // Adicionar outras lógicas de critério aqui (ex: route_completion, category_visits, etc.)
+
+          if (eligible) {
+            await rewardService.assignRewardToUser(userId, reward.id, `Critério: ${criteria.type} (${JSON.stringify(criteria)})` );
+            console.log(`🎉 Recompensa '${reward.name}' atribuída ao usuário ${userId}`);
+            
+            // Notificação Toast para o usuário
+            toast({
+              title: "Recompensa Desbloqueada! 🎉",
+              description: `Você ganhou a recompensa: ${reward.name}! ${reward.local_resgate ? `Resgate em: ${reward.local_resgate}` : ''}`,
+              duration: 5000,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erro ao verificar e atribuir recompensas customizadas:', error);
     }
   }
 }

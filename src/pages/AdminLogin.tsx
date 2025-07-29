@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { simulateLogin, clearTestData, getTestData } from '@/utils/testDashboards';
+import { ArrowLeft, Shield, Eye, EyeOff, AlertCircle, User, Building, Globe, Briefcase } from 'lucide-react';
+// Utilities removidos - funcionalidade de teste não necessária em produção
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isTestMode, setIsTestMode] = useState(false);
+  // Estado de teste removido - não necessário em produção
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +36,35 @@ const AdminLogin = () => {
   };
 
   const handleTestLogin = (role: string) => {
-    simulateLogin(role as any);
-    setIsTestMode(true);
+    // Sistema básico de teste para desenvolvimento local
+    const testUser = {
+      id: 'test-user-id',
+      email: 'test@admin.com',
+      role: role,
+      name: `Teste ${role}`,
+      created_at: new Date().toISOString()
+    };
+
+    // Salvar dados de teste no localStorage
+    localStorage.setItem('supabase.auth.token', 'test-token');
+    localStorage.setItem('test-user-data', JSON.stringify(testUser));
+    
     console.log(`🧪 Login de teste rápido: ${role}`);
-    navigate('/ms/admin');
+    
+    // Simular delay de autenticação
+    setTimeout(() => {
+      navigate('/ms/admin');
+    }, 500);
   };
 
   const handleClearTest = () => {
-    clearTestData();
-    setIsTestMode(false);
+    // Limpar dados de teste do localStorage
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('test-user-data');
     console.log('🧹 Dados de teste limpos');
+    
+    // Recarregar a página para aplicar as mudanças
+    window.location.reload();
   };
 
   return (
@@ -79,7 +98,7 @@ const AdminLogin = () => {
 
         <CardContent className="space-y-6">
           {/* Modo de Teste Ativo */}
-          {isTestMode && (
+                      {/* Modo de teste removido - área de teste não exibida em produção */ false && (
             <Alert className="bg-green-50 border-green-200">
               <AlertCircle className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
@@ -172,7 +191,56 @@ const AdminLogin = () => {
             </div>
           </div>
 
-          {/* Note: Bypass de teste removido por segurança */}
+          {/* Bypass de teste reativado para desenvolvimento e testes */}
+          <div className="border-t pt-6 mt-6 space-y-4">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">
+              Acesso Rápido (Apenas para Testes):
+            </h3>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              className="w-full justify-start"
+              onClick={() => handleTestLogin('atendente')}
+            >
+              <User className="mr-2 h-4 w-4" />
+              Entrar como Atendente
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              className="w-full justify-start"
+              onClick={() => handleTestLogin('gestor_municipal')}
+            >
+              <Building className="mr-2 h-4 w-4" />
+              Entrar como Gestor Municipal
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              className="w-full justify-start"
+              onClick={() => handleTestLogin('gestor_igr')}
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Entrar como Gestor Regional
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              className="w-full justify-start"
+              onClick={() => handleTestLogin('diretor_estadual')}
+            >
+              <Briefcase className="mr-2 h-4 w-4" />
+              Entrar como Diretor Estadual
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full justify-center text-red-600 hover:text-red-700"
+              onClick={handleClearTest}
+            >
+              Limpar Dados de Teste
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

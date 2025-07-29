@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Send, Mic, MicOff, Loader2 } from "lucide-react";
+import { Send, Mic, MicOff, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { AIMessage } from "@/types/ai";
 
 interface ChatInputProps {
   inputMensagem: string;
@@ -13,6 +14,8 @@ interface ChatInputProps {
   isGravandoAudio: boolean;
   isLoading: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
+  onClearConversation: () => void;
+  mensagens: AIMessage[];
 }
 
 const ChatInput = ({
@@ -22,7 +25,9 @@ const ChatInput = ({
   toggleMicrofone,
   isGravandoAudio,
   isLoading,
-  handleKeyDown
+  handleKeyDown,
+  onClearConversation,
+  mensagens
 }: ChatInputProps) => {
   return (
     <div className="border-t p-4 border-white/20">
@@ -90,6 +95,17 @@ const ChatInput = ({
             </span>
           ) : "Converse com o Guatá sobre destinos, eventos ou atrações"}
         </p>
+        {mensagens.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearConversation}
+            className="flex items-center space-x-2 text-gray-300 hover:bg-white/10 hover:text-white"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Limpar Conversa</span>
+          </Button>
+        )}
       </div>
     </div>
   );

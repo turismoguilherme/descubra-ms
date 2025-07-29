@@ -75,7 +75,7 @@ const flowTripConfig: BrandConfig = {
 const msConfig: BrandConfig = {
   brand: 'ms',
   logo: {
-    src: 'https://flowtrip.com.br/wp-content/uploads/2024/07/DescubraMS.png', // Usar a URL externa da logo do MS diretamente
+    src: '/images/logo-descubra-ms.png', // Usar a logo local do MS
     alt: 'Descubra Mato Grosso do Sul',
     fallback: 'Descubra MS'
   },

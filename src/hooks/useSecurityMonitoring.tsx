@@ -69,7 +69,7 @@ export const useSecurityMonitoring = () => {
 
   // Monitorar tentativas de console access em produção
   const monitorConsoleAccess = useCallback(() => {
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       const originalLog = console.log;
       const originalError = console.error;
       const originalWarn = console.warn;
@@ -118,7 +118,7 @@ export const useSecurityMonitoring = () => {
 
   // Detectar tentativas de DevTools
   const monitorDevTools = useCallback(() => {
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       let devtools = { open: false };
       
       setInterval(() => {

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,47 +7,71 @@ import { Input } from '@/components/ui/input';
 import { BarChart3, Users, MapPin, Calendar, TrendingUp, Settings, Bell, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
-import { getTestData, isTestMode } from '@/utils/testDashboards';
+// Utilities removidos - funcionalidade de teste não necessária em produção
 import AtendenteDashboard from '@/components/admin/dashboards/AtendenteDashboard';
 import MunicipalDashboard from '@/components/admin/dashboards/MunicipalDashboard';
 import RegionalDashboard from '@/components/admin/dashboards/RegionalDashboard';
 import EstadualDashboard from '@/components/admin/dashboards/EstadualDashboard';
+import CommunityModerationTrigger from '@/components/admin/community-moderation/CommunityModerationTrigger';
+import MasterDashboard from '@/components/admin/MasterDashboard';
+import AttendantManager from '@/components/admin/AttendantManager';
+import PlatformConfigCenter from '@/components/admin/PlatformConfigCenter';
+import AdminUserManagement from '@/components/admin/AdminUserManagement';
+import SecurityDashboard from '@/components/admin/SecurityDashboard';
 
 const AdminPortal = () => {
+  console.log('🚀 AdminPortal: Componente iniciando...');
+  
   const { userRole, getDashboardComponent } = useRoleBasedAccess();
 
-  // Debug logs
-  console.log('🔍 AdminPortal Debug:');
+  // Debug logs mais detalhados
+  console.log('🔍 AdminPortal Debug Detalhado:');
   console.log('userRole:', userRole);
-  console.log('isTestMode:', isTestMode());
-  console.log('testData:', getTestData());
+  console.log('userRole type:', typeof userRole);
+  
+  // Verificar se é usuário de teste
+  const testToken = localStorage.getItem('supabase.auth.token');
+  const isTestUser = testToken === 'test-token';
+  console.log('isTestUser:', isTestUser);
+  
   console.log('getDashboardComponent:', getDashboardComponent());
+  console.log('getDashboardComponent type:', typeof getDashboardComponent);
 
   // Renderizar dashboard específico baseado no role
   const renderDashboard = () => {
     console.log('🎯 Renderizando dashboard para role:', userRole);
     
-    switch (userRole) {
-      case 'atendente':
-        console.log('✅ Renderizando AtendenteDashboard');
-        return <AtendenteDashboard />;
-      case 'gestor_municipal':
-        console.log('✅ Renderizando MunicipalDashboard');
-        return <MunicipalDashboard />;
-      case 'gestor_igr':
-        console.log('✅ Renderizando RegionalDashboard');
-        return <RegionalDashboard />;
-      case 'diretor_estadual':
-        console.log('✅ Renderizando EstadualDashboard');
-        return <EstadualDashboard />;
-      case 'admin':
-        console.log('✅ Renderizando AdminDashboard');
-        return <AdminDashboard />;
-      default:
-        console.log('⚠️ Role não reconhecido, usando DefaultDashboard');
-        return <DefaultDashboard />;
+    try {
+      switch (userRole) {
+        case 'atendente':
+          console.log('✅ Renderizando AtendenteDashboard');
+          return <AtendenteDashboard />;
+        case 'gestor_municipal':
+          console.log('✅ Renderizando MunicipalDashboard');
+          return <MunicipalDashboard />;
+        case 'gestor_igr':
+          console.log('✅ Renderizando RegionalDashboard');
+          return <RegionalDashboard />;
+        case 'diretor_estadual':
+          console.log('✅ Renderizando EstadualDashboard');
+          return <EstadualDashboard />;
+        case 'admin':
+          console.log('✅ Renderizando MasterDashboard (novo)');
+          return <MasterDashboard />;
+        case 'tech':
+          console.log('✅ Renderizando AdminDashboard');
+          return <AdminDashboard />;
+        default:
+          console.log('⚠️ Role não reconhecido:', userRole, 'usando DefaultDashboard');
+          return <DefaultDashboard />;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao renderizar dashboard:', error);
+      return <ErrorDashboard error={error} />;
     }
   };
+
+  console.log('🏁 AdminPortal: Renderizando componente...');
 
   return (
     <UniversalLayout>
@@ -55,279 +80,99 @@ const AdminPortal = () => {
   );
 };
 
-// Dashboard padrão para admin (mantém o design original)
+// AdminDashboard component para usuários admin/tech
 const AdminDashboard = () => {
-  const stats = [
-    {
-      icon: <Users className="h-6 w-6 text-primary" />,
-      title: "Usuários Ativos",
-      value: "15.234",
-      change: "+12%",
-      trend: "up"
-    },
-    {
-      icon: <MapPin className="h-6 w-6 text-primary" />,
-      title: "Destinos Cadastrados",
-      value: "89",
-      change: "+3",
-      trend: "up"
-    },
-    {
-      icon: <Calendar className="h-6 w-6 text-primary" />,
-      title: "Eventos Ativos",
-      value: "24",
-      change: "+8",
-      trend: "up"
-    },
-    {
-      icon: <BarChart3 className="h-6 w-6 text-primary" />,
-      title: "Check-ins Hoje",
-      value: "456",
-      change: "+28%",
-      trend: "up"
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: "Adicionar Destino",
-      description: "Cadastre um novo destino turístico",
-      link: "/ms/destination-editor"
-    },
-    {
-      title: "Criar Evento",
-      description: "Promova um novo evento",
-      link: "/ms/event-editor"
-    },
-    {
-      title: "Gerenciar Roteiros",
-      description: "Crie e edite roteiros turísticos",
-      link: "/ms/admin/routes-management"
-    },
-    {
-      title: "Gerenciar Usuários",
-      description: "Administre usuários e permissões",
-      link: "/ms/management"
-    },
-    {
-      title: "Relatórios",
-      description: "Visualize analytics detalhados",
-      link: "/ms/tourism-data"
-    }
-  ];
-
-  const recentActivity = [
-    {
-      user: "Maria Silva",
-      action: "cadastrou novo destino",
-      target: "Pantanal Sul",
-      time: "há 2 horas"
-    },
-    {
-      user: "João Santos",
-      action: "criou evento",
-      target: "Festival de Inverno 2024",
-      time: "há 4 horas"
-    },
-    {
-      user: "Ana Costa",
-      action: "atualizou informações",
-      target: "Bonito - MS",
-      time: "há 6 horas"
-    },
-    {
-      user: "Carlos Lima",
-      action: "aprovou parceiro",
-      target: "Eco Turismo MS",
-      time: "há 1 dia"
-    }
-  ];
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <UniversalLayout>
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <section className="bg-gradient-to-r from-primary to-primary-foreground text-white py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Settings className="h-8 w-8 text-purple-600" />
               <div>
-                <h1 className="text-3xl font-bold mb-2">
-                  Painel Administrativo
-                </h1>
-                <p className="text-white/90">
-                  Bem-vindo ao centro de controle do Descubra MS
+                <h1 className="text-3xl font-bold">Painel Administrativo</h1>
+                <p className="text-muted-foreground">
+                  Gestão avançada da plataforma FlowTrip
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button variant="secondary" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar Dados
-                </Button>
-                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configurações
-                </Button>
-              </div>
             </div>
           </div>
-        </section>
 
-        {/* Stats Overview */}
-        <section className="py-8 bg-background">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <Card key={index} className="border-border">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-foreground">{stat.value}</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {stat.change}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-primary/10 rounded-lg">
-                        {stat.icon}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          {/* Navigation Tabs */}
+          <div className="border-b">
+            <nav className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'dashboard'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4 inline mr-2" />
+                Dashboard
+              </button>
+              <button
+                onClick={() => setActiveTab('attendants')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'attendants'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Users className="h-4 w-4 inline mr-2" />
+                Atendentes
+              </button>
+              <button
+                onClick={() => setActiveTab('config')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'config'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Settings className="h-4 w-4 inline mr-2" />
+                Configurações
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'users'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Users className="h-4 w-4 inline mr-2" />
+                Usuários
+              </button>
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'security'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Bell className="h-4 w-4 inline mr-2" />
+                Segurança
+              </button>
+            </nav>
           </div>
-        </section>
 
-        {/* Main Content */}
-        <section className="py-8 bg-background">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Quick Actions */}
-              <div className="lg:col-span-2">
-                <Card className="border-border">
-                  <CardHeader>
-                    <CardTitle>Ações Rápidas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {quickActions.map((action, index) => (
-                        <Card key={index} className="border-border hover:shadow-md transition-shadow cursor-pointer">
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
-                            <p className="text-sm text-muted-foreground mb-3">{action.description}</p>
-                            <Button size="sm" variant="outline" asChild>
-                              <Link to={action.link}>Acessar</Link>
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Charts Section */}
-                <Card className="border-border mt-6">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <TrendingUp className="mr-2 h-5 w-5" />
-                      Analytics de Visitação
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">Gráfico de visitação será exibido aqui</p>
-                        <Button variant="outline" size="sm" className="mt-4" asChild>
-                          <Link to="/ms/tourism-data">Ver Relatório Completo</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Recent Activity */}
-                <Card className="border-border">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Bell className="mr-2 h-5 w-5" />
-                      Atividade Recente
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentActivity.map((activity, index) => (
-                        <div key={index} className="border-b border-border pb-3 last:border-b-0">
-                          <p className="text-sm text-foreground">
-                            <span className="font-medium">{activity.user}</span>{' '}
-                            {activity.action}{' '}
-                            <span className="font-medium">{activity.target}</span>
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Search */}
-                <Card className="border-border">
-                  <CardHeader>
-                    <CardTitle>Busca Rápida</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Input placeholder="Buscar destinos, eventos, usuários..." className="mb-4" />
-                    <div className="space-y-2">
-                      <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <Link to="/ms/destinos">Ver Destinos</Link>
-                      </Button>
-                      <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <Link to="/ms/eventos">Ver Eventos</Link>
-                      </Button>
-                      <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <Link to="/ms/management">Ver Usuários</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* System Status */}
-                <Card className="border-border">
-                  <CardHeader>
-                    <CardTitle>Status do Sistema</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">API Status</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">Online</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Database</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">Healthy</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">CDN</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Backup</span>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">Running</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+          {/* Content */}
+          <div className="mt-6">
+            {activeTab === 'dashboard' && <MasterDashboard />}
+            {activeTab === 'attendants' && <AttendantManager />}
+            {activeTab === 'config' && <PlatformConfigCenter />}
+            {activeTab === 'users' && <AdminUserManagement />}
+            {activeTab === 'security' && <SecurityDashboard />}
           </div>
-        </section>
+        </div>
       </div>
-    </UniversalLayout>
+    </div>
   );
 };
 
@@ -357,6 +202,42 @@ const DefaultDashboard = () => {
                 Esta área é restrita a usuários com permissões administrativas específicas.
               </p>
               <Button asChild>
+                <Link to="/">Voltar ao Início</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// Componente de erro para capturar problemas
+const ErrorDashboard = ({ error }: { error: any }) => {
+  return (
+    <div className="min-h-screen bg-background">
+      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-2">
+              Erro no Dashboard
+            </h1>
+            <p className="text-red-100">
+              Ocorreu um erro ao carregar o dashboard administrativo.
+            </p>
+          </div>
+        </div>
+      </section>
+      
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-semibold mb-4">Detalhes do Erro</h2>
+              <pre className="bg-gray-100 p-4 rounded-lg text-sm overflow-auto">
+                {error?.message || error?.toString() || 'Erro desconhecido'}
+              </pre>
+              <Button asChild className="mt-4">
                 <Link to="/">Voltar ao Início</Link>
               </Button>
             </CardContent>

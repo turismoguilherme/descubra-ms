@@ -432,72 +432,72 @@ const FileManager = ({ cityId }: FileManagerProps) => {
 
       {/* Upload de Arquivos */}
       {entryType === 'file' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Upload className="mr-2 h-5 w-5" />
-              Enviar Novo Arquivo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleFileUpload} className="space-y-4">
-              <div>
-                <Label htmlFor="file">Arquivo</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  onChange={(e) => setUploadForm({
-                    ...uploadForm,
-                    file: e.target.files?.[0] || null
-                  })}
-                  required
-                />
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Upload className="mr-2 h-5 w-5" />
+            Enviar Novo Arquivo
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleFileUpload} className="space-y-4">
+            <div>
+              <Label htmlFor="file">Arquivo</Label>
+              <Input
+                id="file"
+                type="file"
+                onChange={(e) => setUploadForm({
+                  ...uploadForm,
+                  file: e.target.files?.[0] || null
+                })}
+                required
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="category">Categoria</Label>
-                <Select 
-                  value={uploadForm.category} 
-                  onValueChange={(value) => setUploadForm({...uploadForm, category: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="geral">Geral</SelectItem>
-                    <SelectItem value="turismo">Turismo</SelectItem>
-                    <SelectItem value="eventos">Eventos</SelectItem>
-                    <SelectItem value="administrativo">Administrativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <Select 
+                value={uploadForm.category} 
+                onValueChange={(value) => setUploadForm({...uploadForm, category: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geral">Geral</SelectItem>
+                  <SelectItem value="turismo">Turismo</SelectItem>
+                  <SelectItem value="eventos">Eventos</SelectItem>
+                  <SelectItem value="administrativo">Administrativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div>
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={uploadForm.description}
-                  onChange={(e) => setUploadForm({...uploadForm, description: e.target.value})}
-                  placeholder="Descreva o arquivo..."
-                />
-              </div>
+            <div>
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                value={uploadForm.description}
+                onChange={(e) => setUploadForm({...uploadForm, description: e.target.value})}
+                placeholder="Descreva o arquivo..."
+              />
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isPublic"
-                  checked={uploadForm.isPublic}
-                  onChange={(e) => setUploadForm({...uploadForm, isPublic: e.target.checked})}
-                />
-                <Label htmlFor="isPublic">Tornar público</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isPublic"
+                checked={uploadForm.isPublic}
+                onChange={(e) => setUploadForm({...uploadForm, isPublic: e.target.checked})}
+              />
+              <Label htmlFor="isPublic">Tornar público</Label>
+            </div>
 
-              <Button type="submit" disabled={uploading || !uploadForm.file}>
-                {uploading ? "Enviando..." : "Enviar Arquivo"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <Button type="submit" disabled={uploading || !uploadForm.file}>
+              {uploading ? "Enviando..." : "Enviar Arquivo"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
       )}
 
       {/* Formulário de Novo Evento */}

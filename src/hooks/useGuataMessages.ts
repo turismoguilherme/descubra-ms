@@ -6,7 +6,7 @@ const STORAGE_KEY = "guata_chat_history";
 
 const DEFAULT_WELCOME_MESSAGE: AIMessage = {
   id: 1,
-  text: "Olá! Você está pronto para explorar o coração do Brasil? Eu sou o Guatá, e serei o seu guia pessoal nessa aventura pelo Mato Grosso do Sul. Como uma capivara nascida e criada aqui, conheço cada segredo e cada maravilha deste lugar. Mas você sabe de onde vem o meu nome? \"Guatá\" é uma palavra de origem Tupi-Guarani que significa \"aquele que caminha\" ou \"o passeador\". Não poderia haver nome melhor, pois a minha paixão é exatamente essa: caminhar com você pelas trilhas, navegar pelos rios e te mostrar a beleza da nossa natureza e cultura. Prepare-se para passear ao meu lado e descobrir um Mato Grosso do Sul que vai ficar para sempre na sua memória!",
+  text: "Olá! Eu sou o Guatá, seu guia pessoal para as maravilhas do Mato Grosso do Sul! 🌟 Prepare-se para uma jornada incrível onde, juntos, vamos desvendar os segredos da nossa natureza exuberante e da rica cultura local. Curioso para saber o que o MS tem a oferecer? Vamos conversar!",
   isUser: false,
   timestamp: new Date()
 };

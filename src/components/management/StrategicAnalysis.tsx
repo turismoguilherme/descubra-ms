@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { StrategicAnalysisAI } from '@/services/ai/strategicAnalysisAI';
+// StrategicAnalysisAI removido - funcionalidade integrada no superTourismAI
 
 interface StrategicAnalysisProps {
   onAnalysisUpdate?: (analysis: any) => void;
@@ -11,7 +11,7 @@ interface StrategicAnalysisProps {
 export function StrategicAnalysis({ onAnalysisUpdate }: StrategicAnalysisProps) {
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const analysisService = new StrategicAnalysisAI();
+  // const analysisService = new StrategicAnalysisAI(); // Serviço removido - funcionalidade integrada no superTourismAI
 
   useEffect(() => {
     loadAnalysis();
@@ -26,7 +26,8 @@ export function StrategicAnalysis({ onAnalysisUpdate }: StrategicAnalysisProps) 
   const loadAnalysis = async () => {
     try {
       setLoading(true);
-      const result = await analysisService.analyzeData();
+      // const result = await analysisService.analyzeData(); // Serviço removido
+      const result = { insights: [], recommendations: [], metrics: {} }; // Placeholder
       setAnalysis(result);
     } catch (error) {
       console.error('Erro ao carregar análise:', error);

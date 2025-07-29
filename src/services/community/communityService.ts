@@ -1,179 +1,262 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Contribution, ContributionType } from '@/types/community';
+import { TablesInsert } from '@/integrations/supabase/types';
+import { CommunitySuggestion, CommunityVote, CommunityComment, CommunityModerationLog } from '@/types/community-contributions';
 
 export class CommunityService {
-  async getContributions(filters: {
-    type?: ContributionType;
-    status?: string;
-    sort?: 'recent' | 'popular' | 'featured';
-    limit?: number;
-  }) {
+
+  // --- Sugestões da Comunidade ---
+  async createSuggestion(suggestion: Omit<CommunitySuggestion, 'id' | 'created_at' | 'updated_at' | 'votes_count' | 'comments_count' | 'status'>): Promise<CommunitySuggestion> {
     try {
-      let query = supabase
-        .from('contributions')
-        .select(`
-          *,
-          author:profiles(
-            id,
-            name,
-            avatar_url,
-            level
-          )
-        `);
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
 
-      // Aplicar filtros
-      if (filters.type) {
-        query = query.eq('type', filters.type);
-      }
+      const { data, error } = await supabase
+        .from('community_suggestions')
+        .insert({
+          ...suggestion,
+          user_id: user.user.id,
+          status: 'pending', // Sugestão inicia como pendente de moderação
+          votes_count: 0,
+          comments_count: 0,
+        } as TablesInsert<'community_suggestions'>)
+        .select()
+        .single();
 
-      if (filters.status) {
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar sugestão:', error);
+      throw error;
+    }
+  }
+
+  async getSuggestions(filters?: { status?: string; userId?: string; sortBy?: 'votes' | 'recent'; limit?: number }): Promise<CommunitySuggestion[]> {
+    try {
+      let query = supabase.from('community_suggestions').select('*');
+
+      if (filters?.status) {
         query = query.eq('status', filters.status);
       }
-
-      // Ordenação
-      switch (filters.sort) {
-        case 'recent':
-          query = query.order('created_at', { ascending: false });
-          break;
-        case 'popular':
-          query = query.order('likes', { ascending: false });
-          break;
-        case 'featured':
-          query = query.eq('status', 'featured').order('created_at', { ascending: false });
-          break;
+      if (filters?.userId) {
+        query = query.eq('user_id', filters.userId);
       }
 
-      if (filters.limit) {
+      if (filters?.sortBy === 'votes') {
+        query = query.order('votes_count', { ascending: false });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      if (filters?.limit) {
         query = query.limit(filters.limit);
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
-
       return data;
     } catch (error) {
-      console.error('Erro ao buscar contribuições:', error);
+      console.error('Erro ao buscar sugestões:', error);
       throw error;
     }
   }
 
-  async createContribution(contribution: Omit<Contribution, 'id' | 'author' | 'timestamp' | 'likes'>) {
+  async getSuggestionById(id: string): Promise<CommunitySuggestion | null> {
     try {
-      const { data: profile } = await supabase.auth.getUser();
-      
-      if (!profile.user) throw new Error('Usuário não autenticado');
+      const { data, error } = await supabase.from('community_suggestions').select('*').eq('id', id).single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao buscar sugestão por ID:', error);
+      throw error;
+    }
+  }
+
+  async updateSuggestionStatus(suggestionId: string, status: 'approved' | 'rejected' | 'implemented', reason?: string): Promise<CommunitySuggestion> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
 
       const { data, error } = await supabase
-        .from('contributions')
-        .insert({
-          ...contribution,
-          author_id: profile.user.id,
-          status: 'pending',
-          likes: 0
-        })
+        .from('community_suggestions')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', suggestionId)
         .select()
         .single();
 
       if (error) throw error;
 
-      return data;
-    } catch (error) {
-      console.error('Erro ao criar contribuição:', error);
-      throw error;
-    }
-  }
+      await this.logModeration(suggestionId, user.user.id, status, reason);
 
-  async likeContribution(contributionId: string) {
-    try {
-      const { data: profile } = await supabase.auth.getUser();
-      
-      if (!profile.user) throw new Error('Usuário não autenticado');
-
-      // Verificar se já curtiu
-      const { data: existingLike } = await supabase
-        .from('contribution_likes')
-        .select()
-        .match({
-          contribution_id: contributionId,
-          user_id: profile.user.id
-        })
-        .single();
-
-      if (existingLike) {
-        // Remover curtida
-        await supabase
-          .from('contribution_likes')
-          .delete()
-          .match({
-            contribution_id: contributionId,
-            user_id: profile.user.id
-          });
-
-        // Atualizar contador
-        await supabase.rpc('decrement_contribution_likes', {
-          contribution_id: contributionId
-        });
-      } else {
-        // Adicionar curtida
-        await supabase
-          .from('contribution_likes')
-          .insert({
-            contribution_id: contributionId,
-            user_id: profile.user.id
-          });
-
-        // Atualizar contador
-        await supabase.rpc('increment_contribution_likes', {
-          contribution_id: contributionId
-        });
+      // 🧠 INTEGRAÇÃO COM GUATÁ: Se aprovada, adicionar à base de conhecimento
+      if (status === 'approved') {
+        await this.integrateWithGuataKnowledge(data);
       }
 
-      return !existingLike;
+      return data;
     } catch (error) {
-      console.error('Erro ao curtir contribuição:', error);
+      console.error('Erro ao atualizar status da sugestão:', error);
       throw error;
     }
   }
 
-  async getUserContributions(userId: string) {
+  /**
+   * 🤖 Integra sugestão aprovada com a base de conhecimento do Guatá
+   */
+  private async integrateWithGuataKnowledge(suggestion: CommunitySuggestion) {
+    try {
+      // Importação dinâmica para evitar dependências circulares
+      const { superTourismAI } = await import('@/services/ai/superTourismAI');
+      
+      // Adicionar à base de conhecimento do Guatá
+      await superTourismAI.addCommunityKnowledge(suggestion);
+      
+      console.log(`✨ Sugestão "${suggestion.title}" integrada com sucesso ao Guatá IA`);
+      
+      // Log para auditoria
+      await this.logModeration(
+        suggestion.id, 
+        'system', 
+        'knowledge_integrated', 
+        `Sugestão automaticamente adicionada à base de conhecimento do Guatá para recomendações aos turistas`
+      );
+      
+    } catch (error) {
+      console.warn('⚠️ Erro ao integrar com Guatá, mas sugestão foi aprovada:', error);
+      // Não falha o processo principal se a integração der erro
+    }
+  }
+
+  // --- Votos da Comunidade ---
+  async toggleVote(suggestionId: string): Promise<boolean> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
+      const existingVote = await supabase
+        .from('community_votes')
+        .select('id')
+        .eq('suggestion_id', suggestionId)
+        .eq('user_id', user.user.id)
+        .maybeSingle();
+
+      let isVoting = false;
+
+      if (existingVote.data) {
+        // Remover voto
+        await supabase.from('community_votes').delete().eq('id', existingVote.data.id);
+        isVoting = false;
+      } else {
+        // Adicionar voto
+        await supabase.from('community_votes').insert({ suggestion_id: suggestionId, user_id: user.user.id });
+        isVoting = true;
+      }
+
+      // Atualizar contagem de votos na sugestão (usando RLS policies ou triggers)
+      // Por enquanto, faremos via RPC se disponível, ou confiaremos no Supabase para gerenciar
+      await supabase.rpc('update_suggestion_votes_count', { p_suggestion_id: suggestionId });
+
+      return isVoting;
+    } catch (error) {
+      console.error('Erro ao votar na sugestão:', error);
+      throw error;
+    }
+  }
+
+  async hasUserVoted(suggestionId: string, userId: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
-        .from('contributions')
-        .select(`
-          *,
-          author:profiles(
-            id,
-            name,
-            avatar_url,
-            level
-          )
-        `)
-        .eq('author_id', userId)
-        .order('created_at', { ascending: false });
+        .from('community_votes')
+        .select('id')
+        .eq('suggestion_id', suggestionId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error('Erro ao verificar voto do usuário:', error);
+      throw error;
+    }
+  }
+
+  // --- Comentários da Comunidade ---
+  async addComment(suggestionId: string, commentText: string): Promise<CommunityComment> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('community_comments')
+        .insert({
+          suggestion_id: suggestionId,
+          user_id: user.user.id,
+          comment: commentText,
+        } as TablesInsert<'community_comments'>)
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Atualizar contagem de comentários na sugestão
+      await supabase.rpc('increment_suggestion_comments_count', { p_suggestion_id: suggestionId });
+
       return data;
     } catch (error) {
-      console.error('Erro ao buscar contribuições do usuário:', error);
+      console.error('Erro ao adicionar comentário:', error);
       throw error;
     }
   }
 
-  async getContributionStats(userId: string) {
+  async getCommentsBySuggestionId(suggestionId: string): Promise<CommunityComment[]> {
     try {
       const { data, error } = await supabase
-        .rpc('get_user_contribution_stats', {
-          user_id: userId
-        });
-
+        .from('community_comments')
+        .select('*')
+        .eq('suggestion_id', suggestionId)
+        .order('created_at', { ascending: true });
       if (error) throw error;
-
       return data;
     } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
+      console.error('Erro ao buscar comentários:', error);
       throw error;
     }
   }
-} 
+
+  // --- Moderação da Comunidade ---
+  async logModeration(suggestionId: string, moderatorId: string, action: string, reason?: string): Promise<CommunityModerationLog> {
+    try {
+      const { data, error } = await supabase
+        .from('community_moderation_log')
+        .insert({
+          suggestion_id: suggestionId,
+          moderator_id: moderatorId,
+          action,
+          reason,
+        } as TablesInsert<'community_moderation_log'>)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao logar moderação:', error);
+      throw error;
+    }
+  }
+
+  async getModerationLogBySuggestionId(suggestionId: string): Promise<CommunityModerationLog[]> {
+    try {
+      const { data, error } = await supabase
+        .from('community_moderation_log')
+        .select('*')
+        .eq('suggestion_id', suggestionId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao buscar log de moderação:', error);
+      throw error;
+    }
+  }
+}
+
+export const communityService = new CommunityService(); 

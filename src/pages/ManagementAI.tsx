@@ -4,7 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bot, ChartBar, MessageCircle } from "lucide-react";
+import { Bot, BarChart, MessageCircle } from "lucide-react";
 import CATSupportAI from "@/components/ai/CATSupportAI";
 import AnalyticsAI from "@/components/ai/AnalyticsAI";
 
@@ -163,7 +163,7 @@ const ManagementAI = () => {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="flex items-center text-lg">
-                          <ChartBar className="h-5 w-5 mr-2 text-green-600" />
+                          <BarChart className="h-5 w-5 mr-2 text-green-600" />
                           IA para Gestores - Analista Inteligente de Planejamento
                         </CardTitle>
                         <p className="text-sm text-gray-500 mt-1">Exclusivo para gestores de turismo</p>

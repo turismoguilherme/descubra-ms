@@ -8,8 +8,8 @@ export const ENV = {
   API_URL: 'http://localhost:8081/api',
   
   // Configurações do Supabase
-  SUPABASE_URL: 'https://your-project.supabase.co',
-  SUPABASE_ANON_KEY: 'your-anon-key',
+  SUPABASE_URL: 'https://hvtrpkbjgbuypkskqcqm.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q',
   
   // Configurações da aplicação
   APP_NAME: 'Descubra MS',

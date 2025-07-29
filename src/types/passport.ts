@@ -101,6 +101,7 @@ export interface UserStamp {
   route_id?: string;
   city_id?: string;
   region_id?: string;
+  checkpoint_id?: string; // Adicionado: ID do checkpoint, se for um selo de check-in
   stamp_name: string;
   stamp_icon_url?: string;
   earned_at: string;
@@ -108,6 +109,8 @@ export interface UserStamp {
   cultural_phrase?: string;
   created_at?: string;
   animal_id?: string;
+  latitude?: number; // Adicionado: Latitude para selos de check-in offline
+  longitude?: number; // Adicionado: Longitude para selos de check-in offline
   sync_status?: 'pending_create' | 'synced' | 'pending_delete' | 'pending_update'; // Novo campo
 }
 

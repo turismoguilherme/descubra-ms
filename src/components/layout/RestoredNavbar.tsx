@@ -123,9 +123,9 @@ const RestoredNavbar = () => {
             ) : (
               <>
                 {isFlowTrip ? (
-                  // CTA FlowTrip
+                  // CTA FlowTrip (Removido Agendar Demo e Ver Case MS do menu)
                   <>
-                    <Link to="/contato">
+                    {/* <Link to="/contato">
                       <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
                         Agendar Demo
                       </Button>
@@ -134,7 +134,7 @@ const RestoredNavbar = () => {
                       <Button variant="outline" size="sm">
                         Ver Case MS
                       </Button>
-                    </Link>
+                    </Link> */}
                   </>
                 ) : (
                   // CTA MS
@@ -257,13 +257,14 @@ const RestoredNavbar = () => {
               {!user && (
                 <div className="border-t border-gray-200 pt-2 mt-2">
                   {isFlowTrip ? (
+                    // CTA mobile FlowTrip (Removido Agendar Demo e Ver Case MS do menu mobile)
                     <>
-                      <Link to="/contato" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
+                      {/* <Link to="/contato" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
                         Agendar Demo
                       </Link>
                       <Link to="/ms" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
                         Ver Case MS
-                      </Link>
+                      </Link> */}
                     </>
                   ) : (
                     <>

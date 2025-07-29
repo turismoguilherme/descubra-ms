@@ -13,10 +13,10 @@ export const useMultiTenant = () => {
 
   useEffect(() => {
     const detectAndLoadTenant = async () => {
-      console.log("🔍 useMultiTenant: Início do detectAndLoadTenant. authLoading:", authLoading, "userProfile:", userProfile);
+      console.log("🔍 useMultiTenant: Início do detectAndLoadTenant. authLoading:", authLoading, "userProfile:", userProfile, "current location.pathname:", location.pathname);
 
       if (authLoading) {
-        console.log("🔍 useMultiTenant: authLoading é true, aguardando...");
+        console.log("🔍 useMultiTenant: authLoading é true, aguardando userProfile carregar. authLoading:", authLoading, "userProfile:", userProfile);
         return; // Aguarda o userProfile carregar
       }
 
@@ -29,8 +29,10 @@ export const useMultiTenant = () => {
       if (pathSegments.length > 0) {
         const possibleTenantCode = pathSegments[0];
         // Uma heurística simples para códigos de tenant de 2 letras (ex: 'ms', 'mt')
-        if (possibleTenantCode.length === 2 && possibleTenantCode.match(/[a-z]{2}/)) {
-          detectedTenantCode = possibleTenantCode;
+        // Modificado para verificar explicitamente os tenants conhecidos em minúsculas.
+        const knownTenants = ['ms', 'mt', 'rj', 'sp', 'pr', 'sc', 'rs', 'es', 'mg', 'ba', 'ce', 'pe', 'am', 'pa', 'df', 'go', 'to', 'ap', 'rr', 'ro', 'ac', 'ma', 'pi', 'rn', 'pb', 'se', 'al']; // Adicione mais conforme necessário
+        if (knownTenants.includes(possibleTenantCode.toLowerCase())) {
+          detectedTenantCode = possibleTenantCode.toLowerCase();
         }
       }
 
@@ -39,6 +41,7 @@ export const useMultiTenant = () => {
 
       if (detectedTenantCode) {
         try {
+          console.log("🔍 useMultiTenant: Buscando tenant no Supabase com código:", detectedTenantCode.toUpperCase());
           const { data, error: dbError } = await supabase
             .from('flowtrip_states')
             .select('*')
@@ -50,26 +53,33 @@ export const useMultiTenant = () => {
           console.log("❌ useMultiTenant: Erro recebido do Supabase para flowtrip_states:", dbError);
 
           if (dbError) {
-            console.error("Erro ao buscar configuração do tenant:", dbError);
+            console.error("❌ useMultiTenant: Erro ao buscar configuração do tenant:", dbError);
             setError(dbError.message);
           } else if (data) {
             setTenantConfig(data);
             setCurrentTenant(detectedTenantCode);
+            console.log("✅ useMultiTenant: Tenant configurado:", data);
+            console.log("🔍 useMultiTenant: tenantConfig.logo_url:", data.logo_url);
+            console.log("🔍 useMultiTenant: tenantConfig.name:", data.name);
           } else {
+            console.warn("⚠️ useMultiTenant: Tenant não encontrado ou inativo no DB.");
             setError(`Tenant '${detectedTenantCode}' não encontrado ou inativo.`);
           }
         } catch (err: any) {
-          console.error("Erro inesperado ao buscar configuração do tenant:", err);
+          console.error("❌ useMultiTenant: Erro inesperado ao buscar configuração do tenant:", err);
           setError(err.message);
         } finally {
           setLoading(false);
+          console.log("🏁 useMultiTenant: Finalizado carregamento de tenant. Loading:", false, "Tenant Config:", tenantConfig);
         }
       } else {
         // Se não há tenant detectado, assume-se um modo padrão ou global.
         // Você pode carregar uma configuração padrão aqui ou definir como nulo/vazio.
+        console.log("🔍 useMultiTenant: Nenhum tenant detectado na URL. Definindo como padrão/global.");
         setTenantConfig(null);
         setCurrentTenant(null);
         setLoading(false);
+        console.log("🏁 useMultiTenant: Finalizado carregamento de tenant. Loading:", false, "Tenant Config:", null);
       }
     };
 

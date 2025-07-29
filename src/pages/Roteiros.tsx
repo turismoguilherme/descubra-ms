@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast"; // Adicionar useToast
 import { useAuth } from "@/hooks/useAuth"; // Importar useAuth
 import { UserStamp } from "@/types/passport"; // Importar UserStamp
 import { tourismPassportService } from "@/services/passport/tourismPassportService"; // Importar tourismPassportService
-import ShareButtons from "@/components/ShareButtons"; // Importar ShareButtons
+// import ShareButtons from "@/components/ShareButtons"; // Remover importação de ShareButtons
 
 const Roteiros = () => {
   const navigate = useNavigate();
@@ -26,10 +26,13 @@ const Roteiros = () => {
   // TODO: Carregar o Mapbox Token de uma configuração segura (ex: .env ou Supabase config)
   // Por enquanto, usaremos um placeholder. Em produção, ele viria de um config/environment file.
   useEffect(() => {
-    const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || process.env.VITE_MAPBOX_ACCESS_TOKEN;
+    console.log("🔍 Roteiros: Componente montado. Verificando Mapbox Token...");
+    const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     if (token) {
       setMapboxToken(token);
+      console.log("✅ Roteiros: Mapbox Token carregado.");
     } else {
+      console.warn("⚠️ Roteiros: Mapbox Token NÃO configurado. O mapa pode não carregar.");
       toast({
         title: "Erro de Configuração",
         description: "Token do Mapbox não configurado. O mapa pode não carregar.",
@@ -41,9 +44,11 @@ const Roteiros = () => {
   useEffect(() => {
     const fetchRoutesAndCheckpoints = async () => {
       setIsLoading(true);
+      console.log("🔍 Roteiros: Iniciando fetchRoutesAndCheckpoints...");
       try {
         const fetchedRoutes = await tourismRouteService.getRoutes(); // Buscar rotas ativas
         setRoutes(fetchedRoutes);
+        console.log("✅ Roteiros: Rotas carregadas:", fetchedRoutes);
 
         // Buscar todos os checkpoints (para todas as rotas)
         // Isso pode ser otimizado se a API permitir buscar checkpoints por lista de route_ids
@@ -51,6 +56,7 @@ const Roteiros = () => {
           fetchedRoutes.map(route => tourismRouteService.getCheckpointsByRouteId(route.id))
         );
         setCheckpoints(allCheckpoints.flat());
+        console.log("✅ Roteiros: Checkpoints carregados:", allCheckpoints.flat());
 
         if (user) {
           const stamps = await tourismPassportService.getUserStamps(user.id);
@@ -58,10 +64,11 @@ const Roteiros = () => {
             .filter(stamp => stamp.checkpoint_id !== null)
             .map(stamp => stamp.checkpoint_id as string);
           setCompletedCheckpointIds(completedIds);
+          console.log("✅ Roteiros: IDs de checkpoints concluídos carregados:", completedIds);
         }
 
       } catch (error) {
-        console.error("Erro ao carregar roteiros e checkpoints:", error);
+        console.error("❌ Roteiros: Erro ao carregar roteiros e checkpoints:", error);
         toast({
           title: "Erro",
           description: "Não foi possível carregar os roteiros e pontos de interesse.",
@@ -69,12 +76,14 @@ const Roteiros = () => {
         });
       } finally {
         setIsLoading(false);
+        console.log("🏁 Roteiros: Carregamento de roteiros e checkpoints finalizado. isLoading:", false);
       }
     };
 
     fetchRoutesAndCheckpoints();
   }, [toast, user]); // Adicionar user como dependência
 
+  console.log("🔍 Roteiros: Renderizando com state - isLoading:", isLoading, "routes.length:", routes.length, "checkpoints.length:", checkpoints.length, "mapboxToken:", !!mapboxToken);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -164,17 +173,17 @@ const Roteiros = () => {
 
                         <Button
                           className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-                          onClick={() => navigate(`/ms/passaporte/${route.id}`)} // Link para a execução do passaporte
+                          onClick={() => navigate(`/ms/roteiros/${route.id}`)} // Alterado para navegar para a nova página de detalhes
                         >
                           Ver detalhes
                         </Button>
 
                         {/* Adicionar botões de compartilhamento social */}
-                        <ShareButtons 
+                        {/* <ShareButtons 
                           title={`Explore o roteiro: ${route.name}!`}
                           text={`Confira este roteiro incrível em Mato Grosso do Sul: ${route.name}.`}
                           url={`${window.location.origin}/ms/passaporte/${route.id}`}
-                        />
+                        /> */}
                       </div>
                     </div>
                   ))}
