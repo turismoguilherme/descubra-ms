@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { ReportGenerationService } from '@/services/reports/reportGenerationService';
 
-export function TourismManagement() {
+function TourismManagement() {
   const [analysis, setAnalysis] = useState<any>(null);
   const reportService = new ReportGenerationService();
 
@@ -72,4 +72,6 @@ export function TourismManagement() {
       </Tabs>
     </div>
   );
-} 
+}
+
+export default TourismManagement;
