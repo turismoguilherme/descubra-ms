@@ -27,8 +27,20 @@ const UniversalNavbar = () => {
                 alt={config.logo.alt}
                 src={config.logo.src}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                loading="eager" 
+                loading="eager"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'block';
+                }}
               />
+              <span 
+                className="hidden text-lg font-bold text-ms-primary-blue"
+                style={{ display: 'none' }}
+              >
+                {isFlowTrip ? "FlowTrip" : "Descubra Mato Grosso do Sul"}
+              </span>
             </div>
           </Link>
 
