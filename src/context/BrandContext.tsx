@@ -45,7 +45,7 @@ const BrandContext = createContext<BrandContextType | undefined>(undefined);
 const flowTripConfig: BrandConfig = {
   brand: 'flowtrip',
   logo: {
-    src: '/flowtrip-logo-new.png', // Caminho para a nova logo do Flowtrip
+    src: '/images/flowtrip-logo.png', // Caminho para a nova logo do Flowtrip
     alt: 'FlowTrip',
     fallback: 'FlowTrip'
   },
@@ -136,7 +136,7 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         brand: 'ms', // Garante que o brand seja 'ms' para tenants
         logo: {
           ...currentConfig.logo,
-          src: tenantConfig.logo_url || currentConfig.logo.src, // Prioritize Supabase URL
+          src: msConfig.logo.src, // Explicitamente usa a logo local do MS
           alt: tenantConfig.name || currentConfig.logo.alt,
           fallback: (tenantConfig.code || currentConfig.brand).toUpperCase()
         },

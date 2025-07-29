@@ -3,11 +3,13 @@ import { Link, useLocation } from "react-router-dom";
 import { ShieldCheck, Facebook, Instagram, Twitter, Youtube, Settings } from "lucide-react";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrand } from '@/context/BrandContext'; // Importar useBrand
 
 const Footer = () => {
   const { getContentValue } = useInstitutionalContent();
   const { user } = useAuth();
   const location = useLocation();
+  const { config } = useBrand(); // Usar o contexto da marca
   
   // Detectar tenant do path atual
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -36,8 +38,8 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <img 
-                src="/images/logo-descubra-ms.png" 
-                alt="Descubra Mato Grosso do Sul" 
+                src={config.logo.src} 
+                alt={config.logo.alt}
                 className="h-14 w-auto object-contain"
                 loading="lazy"
               />
