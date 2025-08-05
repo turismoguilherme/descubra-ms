@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { KnowledgeItem } from "../knowledge/knowledgeTypes";
 import { GuataUserInfo, GuataResponse } from "../types/guataTypes";
-import { geminiClient } from "@/config/gemini";
+import { geminiClient, generateContent } from "@/config/gemini";
 import { searchMSKnowledge } from "../knowledge/msKnowledgeBase";
 import { addPersonalityToPrompt, detectContext, detectLanguage } from "../personality/guataPersonality";
 import { webSearchService } from "../search/webSearchService";
@@ -438,10 +438,16 @@ IMPORTANTE:
       console.log("🦦 Guatá: Prompt preparado, chamando Gemini API...");
 
       // Usar Gemini API diretamente
-      const response = await geminiClient.generateContent(fullPrompt);
+      const response = await generateContent(fullPrompt);
       
       if (!response.ok) {
-        throw new Error(`Erro na Gemini API: ${response.error}`);
+        // Se a API falhou, usar sistema de fallback inteligente
+        console.log("⚠️ Guatá: API falhou, usando fallback inteligente");
+        const fallbackResponse = this.generateFallbackResponse(prompt);
+        return {
+          resposta: fallbackResponse,
+          response: fallbackResponse
+        };
       }
 
       console.log("🦦 Guatá: Resposta recebida com sucesso");
@@ -507,6 +513,33 @@ IMPORTANTE:
       .replace(/\*\*/g, '') // Remove marcadores **
       .replace(/\n{3,}/g, '\n\n') // Remove excesso de quebras de linha
       .trim();
+  }
+
+  /**
+   * Gera resposta de fallback quando a API falha
+   */
+  private generateFallbackResponse(prompt: string): string {
+    const lowerPrompt = prompt.toLowerCase();
+    
+    // Respostas específicas para perguntas comuns
+    if (lowerPrompt.includes('campo grande') || lowerPrompt.includes('capital')) {
+      return `Campo Grande é a capital de Mato Grosso do Sul e tem muito a oferecer! A cidade é conhecida por suas áreas verdes, como o Parque das Nações Indígenas, que é perfeito para caminhadas e contato com a natureza. O centro histórico tem prédios interessantes e a gastronomia local é incrível, com pratos típicos como o sobá. Para quem gosta de cultura, há museus e centros culturais. A cidade tem uma vibe tranquila mas moderna, ideal para quem quer conhecer o MS!`;
+    }
+    
+    if (lowerPrompt.includes('comida') || lowerPrompt.includes('gastronomia') || lowerPrompt.includes('culinária')) {
+      return `A gastronomia de Mato Grosso do Sul é uma experiência incrível! A região tem uma mistura interessante de sabores, com influências da culinária japonesa (como o sobá em Campo Grande) e pratos típicos regionais. Você encontra desde restaurantes tradicionais até opções mais modernas. A Feira Central de Campo Grande é um lugar imperdível para experimentar a culinária local!`;
+    }
+    
+    if (lowerPrompt.includes('hotel') || lowerPrompt.includes('hospedagem')) {
+      return `Em Campo Grande você encontra boas opções de hospedagem! A maioria dos hotéis fica no centro ou próximo ao centro da cidade, o que facilita o acesso aos principais pontos turísticos. Há opções para todos os bolsos, desde hotéis mais simples até os mais luxuosos. A região central é a mais prática para turistas.`;
+    }
+    
+    if (lowerPrompt.includes('passeio') || lowerPrompt.includes('atração') || lowerPrompt.includes('fazer')) {
+      return `Campo Grande tem várias atrações interessantes! O Parque das Nações Indígenas é um dos principais pontos, perfeito para caminhadas e contato com a natureza. O centro histórico tem prédios bonitos para fotografar. Para quem gosta de cultura, há museus interessantes. E não pode faltar experimentar a gastronomia local!`;
+    }
+    
+    // Resposta genérica mas útil
+    return `Posso te ajudar com informações sobre Mato Grosso do Sul! O que você gostaria de saber especificamente sobre turismo, gastronomia, hospedagem ou atrações?`;
   }
 
   /**
