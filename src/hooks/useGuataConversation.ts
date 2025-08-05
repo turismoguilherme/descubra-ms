@@ -38,21 +38,23 @@ export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
       
       setMensagens(prev => [...prev, mensagemDigitando]);
       
-      // Chamar o serviço da API Guatá
-      const resposta = await guataService.askQuestion(
+      // Chamar o serviço da API Guatá (Guatá Inteligente)
+      const resposta = await guataService.askQuestionSmart(
         novaMensagemUsuario.text,
-        knowledgeBase,
-        usuarioInfo
+        usuarioInfo?.nome || 'Usuário',
+        `session-${Date.now()}`,
+        'turismo',
+        'Mato Grosso do Sul'
       );
       
-      console.log("Resposta recebida do Guatá:", resposta);
+      console.log("Resposta recebida do Guatá Inteligente:", resposta);
       
       // Remover mensagem de digitando
       setMensagens(prev => prev.filter(msg => !msg.isTyping));
       
       const novaMensagemBot: AIMessage = {
         id: Date.now() + 1,
-        text: resposta.response,
+        text: resposta.answer,
         isUser: false,
         timestamp: new Date()
       };

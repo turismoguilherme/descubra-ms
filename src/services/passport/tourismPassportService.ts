@@ -482,6 +482,10 @@ Responda em português brasileiro de forma motivacional e envolvente.
 `;
 
       const report = await geminiClient.generateContent(prompt);
+      
+      if (!report.ok) {
+        throw new Error(`Erro na geração do relatório: ${report.error}`);
+      }
       return report;
     } catch (error) {
       console.error('❌ Erro ao gerar relatório:', error);

@@ -81,6 +81,14 @@ const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Nova i
 const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Nova importação para Leaderboards
 const RewardsManagement = lazy(() => import("@/components/management/RewardsManager"));
 const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
+const GuataTest = lazy(() => import("@/pages/test/GuataTest")); // Nova importação para teste do Guatá
+const EmergencyTest = lazy(() => import("@/pages/test/EmergencyTest")); // Nova importação para teste de emergência
+const ItineraryTest = lazy(() => import("@/pages/test/ItineraryTest")); // Nova importação para teste de roteiros
+const MLTest = lazy(() => import("@/pages/test/MLTest")); // Nova importação para teste de ML
+const GuataLite = lazy(() => import("@/pages/GuataLite")); // Versão Lite para TCC
+const TCCReport = lazy(() => import("@/pages/TCCReport")); // Relatório para TCC
+const GuataReliabilityDashboard = lazy(() => import("@/pages/GuataReliabilityDashboard")); // Painel de Confiabilidade
+const DynamicSearchTest = lazy(() => import("@/pages/DynamicSearchTest")); // Teste de busca dinâmica
 
 const queryClient = new QueryClient();
 
@@ -145,6 +153,14 @@ function App() {
                       <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                       <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
                       <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
+                      <Route path="/ms/guata-test" element={<Suspense fallback={<LoadingFallback />}><GuataTest /></Suspense>} />
+                      <Route path="/ms/emergency-test" element={<Suspense fallback={<LoadingFallback />}><EmergencyTest /></Suspense>} />
+                      <Route path="/ms/itinerary-test" element={<Suspense fallback={<LoadingFallback />}><ItineraryTest /></Suspense>} />
+                      <Route path="/ms/ml-test" element={<Suspense fallback={<LoadingFallback />}><MLTest /></Suspense>} />
+                      <Route path="/ms/dynamic-search-test" element={<Suspense fallback={<LoadingFallback />}><DynamicSearchTest /></Suspense>} />
+                      <Route path="/chatguata" element={<Suspense fallback={<LoadingFallback />}><GuataLite /></Suspense>} />
+                      <Route path="/tcc-report" element={<Suspense fallback={<LoadingFallback />}><TCCReport /></Suspense>} />
+                      <Route path="/guata-reliability" element={<Suspense fallback={<LoadingFallback />}><GuataReliabilityDashboard /></Suspense>} />
                       <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
                       <Route path="/ms/cat-attendant" element={
                         <ProtectedRoute allowedRoles={['cat_attendant']} requireCity>

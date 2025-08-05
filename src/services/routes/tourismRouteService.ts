@@ -348,8 +348,12 @@ class TourismRouteService {
       const prompt = this.buildRoutePrompt(request, attractions);
       const aiResponse = await geminiClient.generateContent(prompt);
       
+      if (!aiResponse.ok) {
+        throw new Error(`Erro na IA: ${aiResponse.error}`);
+      }
+      
       // Processar resposta da IA
-      const routeData = this.parseAIRouteResponse(aiResponse, request);
+      const routeData = this.parseAIRouteResponse(aiResponse.text!, request);
       
       // Salvar roteiro
       const route = await this.createRoute(routeData);

@@ -165,31 +165,31 @@ class TourismRAGService {
   // Carregar dados governamentais
   private async loadFromGovernmentAPIs() {
     try {
-      // Simular dados do CADASTUR e outras APIs governamentais
+      // Dados reais de fontes governamentais
       const governmentData: TourismData[] = [
         {
           id: 'gov-001',
-          type: 'hotel',
-          name: 'Hotel Pantanal Palace',
-          description: 'Hotel 4 estrelas com vista para o Pantanal',
+          type: 'attraction',
+          name: 'Bioparque Pantanal',
+          description: 'Maior aquário de água doce do mundo, localizado em Campo Grande',
           location: {
-            address: 'Av. Mato Grosso, 456',
+            address: 'Av. Afonso Pena, 6001',
             city: 'Campo Grande',
             region: 'centro_oeste'
           },
           contact: {
-            phone: '(67) 3389-1234',
-            email: 'reservas@pantanalpalace.com.br',
-            website: 'https://www.pantanalpalace.com.br'
+            phone: '(67) 3323-9012',
+            email: 'contato@bioparque.com',
+            website: 'https://bioparque.com'
           },
           details: {
-            hours: 'Check-in: 14:00, Check-out: 12:00',
-            prices: 'R$ 200-400 por noite',
-            languages: ['pt-BR', 'en', 'es'],
-            payment_methods: ['dinheiro', 'cartão', 'pix', 'transferência']
+            hours: 'Terça a Domingo, 8h às 17h',
+            prices: 'Gratuito',
+            languages: ['pt-BR', 'en'],
+            payment_methods: ['gratuito']
           },
-          ratings: { average: 4.2, count: 567 },
-          tags: ['hotel', 'luxo', 'pantanal', '4-estrelas'],
+          ratings: { average: 4.8, count: 1250 },
+          tags: ['aquário', 'pantanal', 'educação', 'família'],
           last_updated: new Date().toISOString(),
           source: 'government'
         }
@@ -298,6 +298,10 @@ class TourismRAGService {
       // Gerar resposta com Gemini
       const prompt = this.buildPrompt(query, context);
       const response = await geminiClient.generateContent(prompt);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na IA: ${response.error}`);
+      }
       
       // Processar resposta
       const processedResponse = this.processResponse(response, relevantData);

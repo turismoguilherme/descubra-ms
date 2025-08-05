@@ -54,7 +54,12 @@ Keywords: [palavra-chave1], [palavra-chave2], [palavra-chave3], ...
   async generateRouteSeo(name: string, description?: string): Promise<SeoSuggestions> {
     const prompt = await this.generateSeoPrompt({ name, description, type: 'route' });
     const rawResponse = await geminiClient.generateContent(prompt);
-    return this.parseSeoResponse(rawResponse);
+    
+    if (!rawResponse.ok) {
+      throw new Error(`Erro na geração de SEO: ${rawResponse.error}`);
+    }
+    
+    return this.parseSeoResponse(rawResponse.text!);
   }
 
   /**
@@ -66,7 +71,12 @@ Keywords: [palavra-chave1], [palavra-chave2], [palavra-chave3], ...
   async generateDestinationSeo(name: string, description?: string): Promise<SeoSuggestions> {
     const prompt = await this.generateSeoPrompt({ name, description, type: 'destination' });
     const rawResponse = await geminiClient.generateContent(prompt);
-    return this.parseSeoResponse(rawResponse);
+    
+    if (!rawResponse.ok) {
+      throw new Error(`Erro na geração de SEO: ${rawResponse.error}`);
+    }
+    
+    return this.parseSeoResponse(rawResponse.text!);
   }
 
   /**
@@ -78,7 +88,12 @@ Keywords: [palavra-chave1], [palavra-chave2], [palavra-chave3], ...
   async generateEventSeo(name: string, description?: string): Promise<SeoSuggestions> {
     const prompt = await this.generateSeoPrompt({ name, description, type: 'event' });
     const rawResponse = await geminiClient.generateContent(prompt);
-    return this.parseSeoResponse(rawResponse);
+    
+    if (!rawResponse.ok) {
+      throw new Error(`Erro na geração de SEO: ${rawResponse.error}`);
+    }
+    
+    return this.parseSeoResponse(rawResponse.text!);
   }
 
   // Futuramente, se houver, pode-se adicionar um método para notícias (articles/news)

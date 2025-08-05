@@ -96,15 +96,24 @@ const ChatInput = ({
           ) : "Converse com o Guatá sobre destinos, eventos ou atrações"}
         </p>
         {mensagens.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClearConversation}
-            className="flex items-center space-x-2 text-gray-300 hover:bg-white/10 hover:text-white"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
           >
-            <Trash2 className="w-4 h-4" />
-            <span>Limpar Conversa</span>
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                console.log("🧹 Botão limpar conversa clicado");
+                onClearConversation();
+              }}
+              className="flex items-center space-x-2 text-gray-300 hover:bg-red-500/20 hover:text-red-300 transition-all duration-300"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Limpar Conversa</span>
+            </Button>
+          </motion.div>
         )}
       </div>
     </div>

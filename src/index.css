@@ -4,6 +4,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations for the new layout */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Custom shadow for hover effects */
+.hover\:shadow-3xl:hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
 /* Descubra MS - Nova identidade visual baseada na logo */
 :root {
   --background: 0 0% 100%;

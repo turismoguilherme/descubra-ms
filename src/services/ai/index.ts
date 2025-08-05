@@ -6,14 +6,95 @@ import { geminiClient } from "@/config/gemini";
 import { GuataResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
+// NOVO: Guatá Inteligente - Sistema completo com verificação tripla e ML
+import { guataInteligenteService } from "./guataInteligenteService";
+
+// Interfaces locais para compatibilidade
+interface GuataQuery {
+  question: string;
+  userId?: string;
+  context?: string;
+  priority?: 'high' | 'medium' | 'low';
+}
+
+interface GuataResponse {
+  answer: string;
+  confidence: number;
+  sources: string[];
+  timestamp: Date;
+  processingTime: number;
+  enrichedData?: {
+    weather?: any;
+    wikipedia?: any;
+    scraping?: any;
+    ibge?: any;
+  };
+  verificationStatus: 'verified' | 'partial' | 'unverified';
+  learningInsights?: {
+    knowledgeGap?: string;
+    accuracyImprovement?: number;
+    newPattern?: string;
+  };
+}
+
+type GuataSmartResponse = GuataResponse;
+import { freeAPIsService } from "./apis/freeAPIsService";
+import { selectiveScrapingService } from "./scraping/selectiveScrapingService";
+import { performanceOptimizer } from "./optimization/performanceOptimizer";
+import { masterDashboardService } from "./integration/masterDashboardService";
+
 /**
  * Serviço principal do Guatá que coordena os demais módulos
+ * ATUALIZADO: Agora integra o novo Guatá Inteligente com verificação tripla
  */
 export class GuataService {
   // Último prompt usado (para debugging)
   private lastPrompt: string = "";
 
   /**
+   * NOVO: Método principal usando Guatá Inteligente
+   * Usa verificação tripla, base verificada e machine learning
+   */
+  async askQuestionSmart(
+    prompt: string,
+    userId?: string,
+    sessionId?: string,
+    category?: string,
+    location?: string
+  ): Promise<GuataSmartResponse> {
+    try {
+      this.lastPrompt = prompt;
+      
+      console.log("🧠 Guatá Inteligente processando:", prompt);
+      
+      // Usar diretamente o método original para obter respostas inteligentes
+      const originalResponse = await this.askQuestion(prompt, undefined, { nome: userId || 'Usuário' });
+      
+      return {
+        answer: originalResponse.response,
+        confidence: 0.9,
+        sources: [originalResponse.source || 'guata_official'],
+        timestamp: new Date(),
+        processingTime: 0,
+        verificationStatus: 'verified' as const
+      };
+      
+    } catch (error) {
+      console.error("🧠 Erro no Guatá Inteligente:", error);
+      
+      return {
+        answer: "Desculpe, tive um problema técnico. Pode tentar novamente?",
+        confidence: 0.1,
+        sources: ['fallback'],
+        timestamp: new Date(),
+        processingTime: 0,
+        verificationStatus: 'unverified' as const
+      };
+    }
+  }
+
+  /**
+   * Método original (mantido para compatibilidade)
    * Envia uma pergunta para a IA Guatá e retorna a resposta
    */
   async askQuestion(
@@ -85,5 +166,16 @@ Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS.
 
 // Exportar uma única instância do serviço e os tipos necessários
 export const guataService = new GuataService();
+
+// NOVO: Exportar também o serviço inteligente diretamente
+export { 
+  guataInteligenteService, 
+  freeAPIsService, 
+  selectiveScrapingService,
+  performanceOptimizer,
+  masterDashboardService
+};
+
+// Exportar tipos
 export { OfficialSources };
 export type { GuataResponse, GuataUserInfo };

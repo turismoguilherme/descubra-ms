@@ -1,14 +1,15 @@
 // Configuração da API Gemini
+
 export const GEMINI_CONFIG = {
-  apiKey: 'AIzaSyCX7Cmid7hQDDucWtNoP5zJ4uDsDgmPJmw',
-  baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY || '', // Lê a chave do .env
+  baseUrl: 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent',
   rateLimit: {
     requestsPerMinute: 15,
     requestsPerDay: 1500
   },
   models: {
-    geminiPro: 'gemini-pro',
-    geminiProVision: 'gemini-pro-vision'
+    geminiPro: 'gemini-1.5-pro',
+    geminiProVision: 'gemini-1.5-pro'
   }
 };
 
@@ -24,6 +25,7 @@ export class GeminiClient {
   constructor() {
     this.apiKey = GEMINI_CONFIG.apiKey;
     this.baseUrl = GEMINI_CONFIG.baseUrl;
+    console.log("Guatá Config: Chave da API Gemini carregada: ", this.apiKey ? "[CHAVE CARREGADA]" : "[VAZIA]", " Primeiros 5 caracteres: ", this.apiKey.substring(0, 5)); // NOVO LOG
   }
 
   private checkRateLimit(): boolean {
@@ -54,12 +56,28 @@ export class GeminiClient {
     return true;
   }
 
-  async generateContent(prompt: string): Promise<string> {
+  async generateContent(prompt: string): Promise<{ok: boolean, text?: string, error?: string}> {
+    console.log("🔍 Gemini: Iniciando generateContent com prompt:", prompt.substring(0, 100) + "...");
+    
+    if (!this.apiKey) {
+      console.error("❌ Gemini: API Key está vazia!");
+      return {
+        ok: false,
+        error: "API Key não configurada"
+      };
+    }
+
     if (!this.checkRateLimit()) {
-      throw new Error('Rate limit exceeded. Please try again later.');
+      return {
+        ok: false,
+        error: 'Rate limit exceeded. Please try again later.'
+      };
     }
 
     try {
+      console.log("🔍 Gemini: Fazendo requisição para:", this.baseUrl);
+      console.log("🔍 Gemini: API Key (primeiros 10 chars):", this.apiKey.substring(0, 10) + "...");
+      
       const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
@@ -74,21 +92,38 @@ export class GeminiClient {
         })
       });
 
+      console.log("🔍 Gemini: Status da resposta:", response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("❌ Gemini: Erro na resposta:", response.status, errorText);
+        return {
+          ok: false,
+          error: `Gemini API error: ${response.status} ${response.statusText}`
+        };
       }
 
       const data = await response.json();
+      console.log("🔍 Gemini: Resposta recebida:", data);
       
       // Update rate limiting counters
       this.requestCount++;
       this.dailyRequestCount++;
       this.lastRequestTime = Date.now();
 
-      return data.candidates[0].content.parts[0].text;
+      const text = data.candidates[0].content.parts[0].text;
+      console.log("✅ Gemini: Texto extraído com sucesso:", text.substring(0, 100) + "...");
+      
+      return {
+        ok: true,
+        text: text
+      };
     } catch (error) {
       console.error('❌ Gemini API Error:', error);
-      throw error;
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      };
     }
   }
 

@@ -64,20 +64,30 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
             
             {!message.isUser && !message.error && (
               <div className="mt-2 flex justify-end gap-1">
-                <button 
-                  onClick={() => enviarFeedback(true)}
-                  className="text-gray-400 hover:text-green-400 transition-colors text-xs p-1 rounded-full hover:bg-white/10 flex items-center"
+                <motion.button 
+                  onClick={() => {
+                    console.log("👍 Botão positivo clicado");
+                    enviarFeedback(true);
+                  }}
+                  className="text-gray-400 hover:text-green-400 transition-all text-xs p-1 rounded-full hover:bg-green-500/20 flex items-center group"
                   aria-label="Útil"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <ThumbsUp size={14} />
-                </button>
-                <button 
-                  onClick={() => enviarFeedback(false)}
-                  className="text-gray-400 hover:text-red-400 transition-colors text-xs p-1 rounded-full hover:bg-white/10 flex items-center"
+                  <ThumbsUp size={14} className="group-hover:animate-pulse" />
+                </motion.button>
+                <motion.button 
+                  onClick={() => {
+                    console.log("👎 Botão negativo clicado");
+                    enviarFeedback(false);
+                  }}
+                  className="text-gray-400 hover:text-red-400 transition-all text-xs p-1 rounded-full hover:bg-red-500/20 flex items-center group"
                   aria-label="Não útil"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <ThumbsDown size={14} />
-                </button>
+                  <ThumbsDown size={14} className="group-hover:animate-pulse" />
+                </motion.button>
               </div>
             )}
           </>

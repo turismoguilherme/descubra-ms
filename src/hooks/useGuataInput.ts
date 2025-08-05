@@ -16,8 +16,9 @@ export const useGuataInput = () => {
   const toggleMicrofone = () => {
     if (!isGravandoAudio) {
       toast({
-        title: "Gravação de voz",
-        description: "Esta funcionalidade será implementada em uma próxima atualização.",
+        title: "🎤 Gravação de voz",
+        description: "Esta funcionalidade será implementada em uma próxima atualização. Por enquanto, use o teclado para conversar com o Guatá!",
+        duration: 4000,
       });
     }
     setIsGravandoAudio(!isGravandoAudio);

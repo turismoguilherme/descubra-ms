@@ -1,0 +1,228 @@
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import GuataHeader from "@/components/guata/GuataHeader";
+import GuataChat from "@/components/guata/GuataChat";
+import { useGuataConnection } from "@/hooks/useGuataConnection";
+import { useGuataConversation } from "@/hooks/useGuataConversation";
+import { useGuataInput } from "@/hooks/useGuataInput";
+import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
+import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/guataKnowledgeBase";
+import { tccAnalyticsService } from '@/services/analytics/tccAnalytics';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { MapPin, Star, Users, Globe, MessageCircle } from "lucide-react";
+
+const GuataLite = () => {
+  const { toast } = useToast();
+  const { isConnected, connectionChecking } = useGuataConnection();
+  const [showWelcome, setShowWelcome] = useState(true);
+  
+  // Carrega a base de conhecimento e informações do usuário (igual ao Guatá original)
+  const knowledgeBase = getInitialKnowledgeBase();
+  const usuarioInfo = getDefaultUserInfo();
+  
+  const {
+    mensagens,
+    isLoading,
+    enviarMensagem: enviarMensagemBase,
+    handleLimparConversa,
+    enviarFeedback
+  } = useGuataConversation(knowledgeBase, usuarioInfo);
+  
+  const { 
+    inputMensagem, 
+    setInputMensagem, 
+    isGravandoAudio, 
+    toggleMicrofone,
+    handleKeyDown: handleKeyDownBase
+  } = useGuataInput();
+
+  // Iniciar sessão ao carregar a página
+  useEffect(() => {
+    tccAnalyticsService.startSession();
+  }, []);
+
+  // Finalizar sessão ao sair da página
+  useEffect(() => {
+    return () => {
+      tccAnalyticsService.endSession();
+    };
+  }, []);
+
+  const enviarMensagem = () => {
+    if (!inputMensagem.trim()) return;
+    
+    // Registrar interação para analytics
+    tccAnalyticsService.recordInteraction('message', { message: inputMensagem });
+    
+    enviarMensagemBase(inputMensagem);
+    setInputMensagem("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    handleKeyDownBase(e, enviarMensagem);
+  };
+
+  // Enviar feedback com analytics
+  const handleFeedback = (positivo: boolean) => {
+    tccAnalyticsService.recordInteraction('feedback', { positive: positivo });
+    enviarFeedback(positivo);
+  };
+
+  // Limpar conversa com analytics
+  const handleClearConversation = () => {
+    tccAnalyticsService.recordInteraction('clear');
+    handleLimparConversa();
+  };
+
+  // Sugestão clicada com analytics
+  const handleSuggestionClick = (pergunta: string) => {
+    tccAnalyticsService.recordInteraction('suggestion_click', { suggestion: pergunta });
+    setInputMensagem(pergunta);
+    enviarMensagemBase(pergunta);
+  };
+
+  // Iniciar conversa
+  const handleStartConversation = () => {
+    tccAnalyticsService.recordInteraction('page_view', { action: 'start_conversation' });
+    setShowWelcome(false);
+  };
+
+  // Tela inicial - Novo design
+  if (showWelcome) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-green-700 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-green-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        </div>
+
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full mb-6 border border-white/30 overflow-hidden">
+                <img 
+                  src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+                  alt="Guatá" 
+                  className="w-16 h-16 object-contain"
+                />
+              </div>
+              <h1 className="text-5xl font-bold text-white mb-2 tracking-tight">
+                Guatá
+              </h1>
+              <p className="text-xl text-blue-100 font-medium">
+                Seu Guia de Turismo para Mato Grosso do Sul
+              </p>
+            </div>
+
+            {/* Main Card */}
+            <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+              <CardContent className="p-8">
+                {/* Welcome Message */}
+                <div className="text-center mb-8">
+                  <div className="flex items-center justify-center mb-4">
+                    <MessageCircle className="w-8 h-8 text-blue-200 mr-3" />
+                    <h2 className="text-2xl font-semibold text-white">
+                      Olá! Como posso ajudar?
+                    </h2>
+                  </div>
+                  <p className="text-blue-100 text-lg leading-relaxed">
+                    Sou seu assistente virtual especializado em turismo. 
+                    Posso fornecer informações sobre atrações, hotéis, roteiros e muito mais!
+                  </p>
+                </div>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="flex flex-col items-center text-center p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                    <MapPin className="w-8 h-8 text-blue-200 mb-3" />
+                    <span className="text-white font-medium">Atrações Turísticas</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                    <Star className="w-8 h-8 text-yellow-200 mb-3" />
+                    <span className="text-white font-medium">Roteiros Personalizados</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                    <Users className="w-8 h-8 text-green-200 mb-3" />
+                    <span className="text-white font-medium">Reservas e Agendamentos</span>
+                  </div>
+                </div>
+
+                {/* Language Info */}
+                <div className="flex items-center justify-center mb-6">
+                  <Globe className="w-5 h-5 text-blue-200 mr-2" />
+                  <span className="text-blue-100 text-sm">
+                    Disponível em português, inglês e espanhol
+                  </span>
+                </div>
+
+                {/* Start Button */}
+                <div className="text-center">
+                  <Button
+                    onClick={handleStartConversation}
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-12 py-6 text-xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 rounded-2xl border-0"
+                  >
+                    <MessageCircle className="w-6 h-6 mr-3" />
+                    INICIAR CONVERSA
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Footer */}
+            <div className="text-center mt-8">
+              <p className="text-blue-200 text-sm opacity-80">
+                Toque para começar sua experiência turística
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Chat principal
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green">
+      <main className="flex-grow py-8">
+        <div className="ms-container max-w-4xl mx-auto">
+          <GuataHeader 
+            onClearConversation={handleClearConversation}
+            mensagens={mensagens}
+          />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <div className="lg:col-span-2">
+              <GuataChat
+                mensagens={mensagens}
+                inputMensagem={inputMensagem}
+                setInputMensagem={setInputMensagem}
+                enviarMensagem={enviarMensagem}
+                onClearConversation={handleClearConversation}
+                isGravandoAudio={isGravandoAudio}
+                toggleMicrofone={toggleMicrofone}
+                isLoading={isLoading}
+                isConnected={isConnected}
+                connectionChecking={connectionChecking}
+                handleKeyDown={handleKeyDown}
+                enviarFeedback={handleFeedback}
+              />
+            </div>
+            
+            <div>
+              <SuggestionQuestions 
+                onSuggestionClick={handleSuggestionClick}
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default GuataLite; 

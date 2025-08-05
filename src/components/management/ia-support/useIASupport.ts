@@ -38,20 +38,13 @@ export const useIASupport = () => {
     setIsLoading(true);
     
     try {
-      // Usar o serviço da Delinha para obter resposta baseada em fontes oficiais
-      const response = await guataService.askQuestion(
+      // Usar o serviço do Guatá Inteligente para obter resposta baseada em fontes oficiais
+      const response = await guataService.askQuestionSmart(
         iaQuery,
-        [
-          {
-            id: "support-base",
-            title: "Informações para Suporte",
-            content: "Esta é uma consulta de um atendente do CAT buscando informações oficiais para auxiliar um turista.",
-            category: "suporte",
-            source: "Sistema de Suporte CAT",
-            lastUpdated: new Date().toISOString()
-          }
-        ],
-        { origem: "CAT - Sistema de Atendimento" }
+        "CAT-Suporte",
+        `session-${Date.now()}`,
+        'suporte',
+        'Mato Grosso do Sul'
       );
       
       setConversations(prev => 
@@ -59,8 +52,8 @@ export const useIASupport = () => {
           item.id === queryId 
             ? { 
                 ...item, 
-                response: response.response, 
-                source: response.source || "Dados oficiais de turismo",
+                response: response.answer, 
+                source: response.sources.join(', ') || "Dados oficiais de turismo",
                 isLoading: false 
               } 
             : item

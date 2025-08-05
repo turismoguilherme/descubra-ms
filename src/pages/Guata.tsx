@@ -87,6 +87,7 @@ const Guata = () => {
                 inputMensagem={inputMensagem}
                 setInputMensagem={setInputMensagem}
                 enviarMensagem={enviarMensagem}
+                onClearConversation={handleLimparConversa}
                 isGravandoAudio={isGravandoAudio}
                 toggleMicrofone={toggleMicrofone}
                 isLoading={isLoading}

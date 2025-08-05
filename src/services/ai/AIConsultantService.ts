@@ -110,6 +110,10 @@ class AIConsultantService {
       let aiResponse: string;
       if (this.model) {
         const result = await this.model.generateContent(prompt);
+      
+      if (!result.ok) {
+        throw new Error(`Erro na consultoria IA: ${result.error}`);
+      }
         aiResponse = result.response.text();
       } else {
         aiResponse = this.generateSimulatedResponse(query, tourismData);

@@ -1,0 +1,250 @@
+import { supabase } from "@/integrations/supabase/client";
+import { KnowledgeItem } from "../knowledge/knowledgeTypes";
+import { GuataUserInfo, GuataResponse } from "../types/guataTypes";
+import { geminiClient } from "@/config/gemini";
+import { searchMSKnowledge, MSKnowledgeItem } from "../knowledge/msKnowledgeBase";
+import { addPersonalityToPrompt, detectContext } from "../personality/guataPersonality";
+import { webSearchService } from "../search/webSearchService";
+import { socialMediaService } from "../social/socialMediaService";
+
+/**
+ * Cliente para comunicação com a API do Guatá
+ */
+export class GuataClient {
+  private currentThreadId: string | null = null;
+  private currentConversation: {
+    introduced: boolean;
+    context: string;
+    messages: { role: 'user' | 'assistant', content: string }[];
+  } = {
+    introduced: false,
+    context: '',
+    messages: []
+  };
+
+  /**
+   * Envia uma pergunta para a API Guatá usando Gemini
+   */
+  async sendQuery(
+    prompt: string,
+    knowledgeBase?: KnowledgeItem[],
+    userInfo?: GuataUserInfo
+  ): Promise<GuataResponse> {
+    try {
+      console.log("🦦 Guatá: Iniciando chamada com Gemini API");
+      
+      // Preparar contexto da base de conhecimento
+      let contextInfo = "";
+      if (knowledgeBase?.length > 0) {
+        contextInfo = knowledgeBase.map(item => `
+Título: ${item.title}
+Categoria: ${item.category}
+Conteúdo: ${item.content}
+${item.source ? `Fonte: ${item.source}` : ''}
+---`).join('\n');
+      }
+
+      // Preparar informações do usuário
+      let userContext = "";
+      if (userInfo) {
+        userContext = `
+Informações do usuário:
+${userInfo.nome ? `Nome: ${userInfo.nome}` : ''}
+${userInfo.localizacao ? `Localização: ${userInfo.localizacao}` : ''}
+${userInfo.interesses ? `Interesses: ${userInfo.interesses.join(', ')}` : ''}
+${userInfo.tipoViagem ? `Tipo de viagem: ${userInfo.tipoViagem}` : ''}
+${userInfo.duracao ? `Duração: ${userInfo.duracao}` : ''}
+${userInfo.orcamento ? `Orçamento: ${userInfo.orcamento}` : ''}
+${userInfo.acessibilidade ? `Acessibilidade: ${userInfo.acessibilidade}` : ''}
+${userInfo.idade ? `Idade: ${userInfo.idade}` : ''}
+${userInfo.viajandoCom ? `Viajando com: ${userInfo.viajandoCom}` : ''}
+---`;
+      }
+
+      // Buscar informações específicas de MS
+      const context = detectContext(prompt);
+      const msKnowledge = searchMSKnowledge(prompt, context as any);
+      
+      let msContextInfo = "";
+      if (msKnowledge.length > 0) {
+        msContextInfo = `
+INFORMAÇÕES ESPECÍFICAS DE MS (VERIFICADAS E ATUALIZADAS):
+${msKnowledge.map(item => `
+${item.category.toUpperCase()}: ${item.name}
+Localização: ${item.location}
+Descrição: ${item.description}
+${item.contact ? `Contato: ${item.contact}` : ''}
+${item.website ? `Website: ${item.website}` : ''}
+${item.tripAdvisorRating ? `TripAdvisor: ${item.tripAdvisorRating}/5` : item.rating ? `Avaliação: ${item.rating}/5` : ''}
+${item.priceRange ? `Faixa de preço: ${item.priceRange}` : ''}
+${item.specialties ? `Especialidades: ${item.specialties.join(', ')}` : ''}
+${item.isPartner ? '⭐ PARCEIRO DA PLATAFORMA' : ''}
+${item.cadasturCode ? `Cadastur: ${item.cadasturCode}` : ''}
+---`).join('\n')}`;
+      }
+
+      // Buscar informações atualizadas da web
+      let webContextInfo = "";
+      try {
+        const webResults = await webSearchService.search(prompt);
+        if (webResults.length > 0) {
+          webContextInfo = `
+INFORMAÇÕES ATUALIZADAS DA WEB (FONTES CONFIÁVEIS):
+${webResults.slice(0, 3).map(result => `
+FONTE: ${result.source?.name || 'Web'}
+TÍTULO: ${result.title}
+CONTEÚDO: ${result.content}
+CONFIANÇA: ${Math.round(result.confidence * 100)}%
+CATEGORIA: ${result.category}
+---`).join('\n')}`;
+        }
+      } catch (error) {
+        console.log('⚠️ Erro na busca web:', error);
+      }
+
+      // Buscar informações de redes sociais
+      let socialContextInfo = "";
+      try {
+        const socialResults = await socialMediaService.getRecentPosts(prompt);
+        if (socialResults.length > 0) {
+          socialContextInfo = `
+INFORMAÇÕES DE REDES SOCIAIS OFICIAIS:
+${socialResults.slice(0, 2).map(result => `
+REDE SOCIAL: ${result.source?.name || 'Instagram'}
+TÍTULO: ${result.title}
+CONTEÚDO: ${result.content}
+TIPO: ${result.category}
+---`).join('\n')}`;
+        }
+      } catch (error) {
+        console.log('⚠️ Erro na busca de redes sociais:', error);
+      }
+
+      // Preparar contexto mantendo histórico
+      let contextInfo = "";
+      
+      // Adicionar apresentação apenas na primeira mensagem
+      if (!this.currentConversation.introduced) {
+        contextInfo += `Você é o Guatá, guia especializado em Mato Grosso do Sul. Mantenha suas respostas naturais e evite repetir sua apresentação.`;
+        this.currentConversation.introduced = true;
+      } else {
+        contextInfo += `Continue a conversa naturalmente, sem se reapresentar.`;
+      }
+
+      // Adicionar histórico da conversa
+      if (this.currentConversation.messages.length > 0) {
+        contextInfo += "\n\nHistórico da conversa:\n" + 
+          this.currentConversation.messages.map(m => 
+            `${m.role === 'user' ? 'Visitante' : 'Guatá'}: ${m.content}`
+          ).join('\n');
+      }
+
+      // Montar prompt completo com personalidade
+      const basePrompt = `
+Contexto sobre MS:
+${contextInfo}
+
+${msContextInfo}
+
+${webContextInfo}
+
+${socialContextInfo}
+
+Informações do usuário:
+${userContext}
+
+Pergunta do usuário: ${prompt}
+
+IMPORTANTE: 
+- Use apenas informações verificadas e atualizadas
+- Se mencionar atrações ou serviços, confirme se ainda existem
+- Priorize fontes oficiais e confiáveis
+- Se não tiver certeza sobre algo, seja honesto e sugira verificar diretamente
+- Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS
+- Se não tiver informações específicas, seja honesto e sugira alternativas ou indique onde encontrar a informação.`;
+
+      const fullPrompt = addPersonalityToPrompt(basePrompt);
+
+      console.log("🦦 Guatá: Prompt preparado, chamando Gemini API...");
+
+      // Usar Gemini API diretamente
+      const response = await geminiClient.generateContent(fullPrompt);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na Gemini API: ${response.error}`);
+      }
+
+      console.log("🦦 Guatá: Resposta recebida com sucesso");
+
+      // Limpar formatação da resposta
+      const cleanedResponse = this.cleanResponse(response.text);
+
+      // Salvar mensagem no histórico
+      this.currentConversation.messages.push(
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: cleanedResponse }
+      );
+
+      // Limitar tamanho do histórico
+      if (this.currentConversation.messages.length > 10) {
+        this.currentConversation.messages = this.currentConversation.messages.slice(-10);
+      }
+
+      return {
+        resposta: cleanedResponse,
+        response: cleanedResponse
+      };
+
+    } catch (error) {
+      console.error("🦦 Guatá: Erro ao processar pergunta:", error);
+      
+      return {
+        resposta: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes. Se o problema persistir, você pode entrar em contato com nosso suporte.",
+        response: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes. Se o problema persistir, você pode entrar em contato com nosso suporte.",
+        erro: error instanceof Error ? error.message : "Erro desconhecido"
+      };
+    }
+  }
+
+  /**
+   * Limpa formatação da resposta removendo marcadores ** e excesso de quebras
+   */
+  private cleanResponse(text: string): string {
+    return text
+      .replace(/\*\*/g, '') // Remove marcadores **
+      .replace(/\n{3,}/g, '\n\n') // Remove excesso de quebras de linha
+      .trim();
+  }
+
+  /**
+   * Limpa o thread ID atual, iniciando uma nova conversa
+   */
+  clearThread(): void {
+    this.currentThreadId = null;
+    // Resetar conversa também
+    this.currentConversation = {
+      introduced: false,
+      context: '',
+      messages: []
+    };
+    console.log("🦦 Guatá: Nova conversa iniciada");
+  }
+
+  /**
+   * Obtém o thread ID atual
+   */
+  getCurrentThreadId(): string | null {
+    return this.currentThreadId;
+  }
+
+  /**
+   * Define um thread ID específico
+   */
+  setThreadId(threadId: string): void {
+    this.currentThreadId = threadId;
+    console.log("🦦 Guatá: Thread ID definido:", threadId);
+  }
+}
+
+// Instância singleton do cliente
+export const guataClient = new GuataClient();
