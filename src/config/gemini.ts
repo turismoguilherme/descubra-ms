@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Cache para reduzir chamadas à API
 const responseCache = new Map<string, { response: string; timestamp: number }>();

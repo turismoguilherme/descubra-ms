@@ -1,5 +1,5 @@
 import { ValidatedSearchResult } from '../search/webSearchTypes';
-import { geminiClient } from '@/config/gemini';
+import { generateContent } from '@/config/gemini';
 
 interface SocialMediaPost {
   id: string;
@@ -106,7 +106,7 @@ export class SocialMediaService {
         }
       `;
 
-      const response = await geminiClient.generateContent(prompt);
+      const response = await generateContent(prompt);
       
       if (!response.ok) {
         console.log('❌ Erro na validação de post:', response.error);
@@ -131,7 +131,6 @@ export class SocialMediaService {
         console.error('❌ JSON recebido:', jsonText);
         return false;
       }
-      return validation.isValid && validation.isRelevant && validation.confidence > 0.6;
     } catch (error) {
       console.error('❌ Erro na validação de conteúdo:', error);
       return false;
@@ -165,7 +164,7 @@ export class SocialMediaService {
         - "geral" (se não se encaixar nas outras categorias)
       `;
 
-      const response = await geminiClient.generateContent(prompt);
+      const response = await generateContent(prompt);
       
       if (!response.ok) {
         return 'geral';

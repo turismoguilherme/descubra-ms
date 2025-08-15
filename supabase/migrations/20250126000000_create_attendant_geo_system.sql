@@ -61,7 +61,23 @@ CREATE INDEX idx_attendant_allowed_locations_active ON attendant_allowed_locatio
 
 CREATE INDEX idx_attendant_checkins_attendant ON attendant_checkins(attendant_id);
 CREATE INDEX idx_attendant_checkins_location ON attendant_checkins(location_id);
-CREATE INDEX idx_attendant_checkins_date ON attendant_checkins(DATE(checkin_time));
+-- Substitui índice em expressão por coluna + trigger para compatibilidade
+ALTER TABLE attendant_checkins ADD COLUMN IF NOT EXISTS checkin_date DATE;
+CREATE OR REPLACE FUNCTION set_checkin_date()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.checkin_time IS NOT NULL THEN
+    NEW.checkin_date := (NEW.checkin_time AT TIME ZONE 'UTC')::date;
+  ELSE
+    NEW.checkin_date := NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_set_checkin_date ON attendant_checkins;
+CREATE TRIGGER trg_set_checkin_date BEFORE INSERT OR UPDATE ON attendant_checkins
+FOR EACH ROW EXECUTE FUNCTION set_checkin_date();
+CREATE INDEX IF NOT EXISTS idx_attendant_checkins_date ON attendant_checkins(checkin_date);
 CREATE INDEX idx_attendant_checkins_client ON attendant_checkins(client_slug);
 CREATE INDEX idx_attendant_checkins_valid ON attendant_checkins(is_valid);
 

@@ -100,73 +100,17 @@ ALTER TABLE ai_consultant_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_proactive_insights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_consultant_feedback ENABLE ROW LEVEL SECURITY;
 
--- Políticas de segurança para ai_consultant_logs
+-- Políticas de segurança para ai_consultant_logs (compatíveis com qualquer schema)
 CREATE POLICY "Usuários podem ver seus próprios logs" ON ai_consultant_logs
   FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Usuários podem criar seus próprios logs" ON ai_consultant_logs
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Gestores podem ver logs de sua região" ON ai_consultant_logs
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role IN ('gestor_municipal', 'gestor_igr', 'diretor_estadual', 'admin')
-      AND (
-        up.city_id::text = (context->>'cityId') OR 
-        up.region_id::text = (context->>'regionId') OR
-        up.role IN ('diretor_estadual', 'admin')
-      )
-    )
-  );
-
--- Políticas para ai_consultant_config
-CREATE POLICY "Gestores podem gerenciar config de sua região" ON ai_consultant_config
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role IN ('gestor_municipal', 'gestor_igr', 'diretor_estadual', 'admin')
-      AND (
-        up.city_id = ai_consultant_config.city_id OR 
-        up.region_id = ai_consultant_config.region_id OR
-        up.role IN ('diretor_estadual', 'admin')
-      )
-    )
-  );
-
--- Políticas para ai_proactive_insights
-CREATE POLICY "Gestores podem ver insights de sua região" ON ai_proactive_insights
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role IN ('gestor_municipal', 'gestor_igr', 'diretor_estadual', 'admin')
-      AND (
-        up.city_id = ai_proactive_insights.city_id OR 
-        up.region_id = ai_proactive_insights.region_id OR
-        up.role IN ('diretor_estadual', 'admin')
-      )
-    )
-  );
-
+-- Políticas simplificadas e seguras para tabelas auxiliares
+-- (políticas baseadas em perfis/roles serão adicionadas em migração posterior, compatível com o schema atual)
 CREATE POLICY "Sistema pode criar insights" ON ai_proactive_insights
   FOR INSERT WITH CHECK (true); -- Permitir inserção via service_role
-
-CREATE POLICY "Gestores podem atualizar insights de sua região" ON ai_proactive_insights
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role IN ('gestor_municipal', 'gestor_igr', 'diretor_estadual', 'admin')
-      AND (
-        up.city_id = ai_proactive_insights.city_id OR 
-        up.region_id = ai_proactive_insights.region_id OR
-        up.role IN ('diretor_estadual', 'admin')
-      )
-    )
-  );
 
 -- Políticas para ai_consultant_feedback
 CREATE POLICY "Usuários podem criar feedback para seus logs" ON ai_consultant_feedback

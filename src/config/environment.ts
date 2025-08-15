@@ -46,6 +46,16 @@ export const ENV = {
     ENABLE_GEMINI: true,
     ENABLE_VOICE: true,
     ENABLE_ANALYTICS: true,
-    ENABLE_HEATMAP: true
+    ENABLE_HEATMAP: true,
+    ENABLE_RAG: true,
+    ENABLE_PSE: false
+  },
+
+  RAG: {
+    DEFAULT_STATE: 'MS',
+    TOP_K: 8,
+    CONFIDENCE_THRESHOLD: 0.75,
+    MAX_LATENCY_MS: 2500,
+    EMBEDDING_DIM: 384
   }
 };

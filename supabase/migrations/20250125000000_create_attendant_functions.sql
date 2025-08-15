@@ -1,9 +1,12 @@
 -- Função para criar atendente de forma simplificada
+DROP FUNCTION IF EXISTS create_attendant_user(TEXT, TEXT, TEXT, UUID, BOOLEAN);
+DROP FUNCTION IF EXISTS create_attendant_user(TEXT, TEXT, UUID, TEXT, BOOLEAN);
+DROP FUNCTION IF EXISTS get_users_with_details();
 CREATE OR REPLACE FUNCTION create_attendant_user(
   user_email TEXT,
   user_name TEXT,
-  user_phone TEXT DEFAULT NULL,
   user_city_id UUID,
+  user_phone TEXT DEFAULT NULL,
   send_invite BOOLEAN DEFAULT true
 ) 
 RETURNS JSON 
@@ -141,63 +144,5 @@ BEGIN
 END;
 $$;
 
--- Garantir permissões RLS
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
-
--- Política para que gestores vejam atendentes de sua região/cidade
-CREATE POLICY "Gestores podem ver atendentes de sua região" ON user_profiles
-  FOR SELECT 
-  USING (
-    auth.uid() IN (
-      SELECT id FROM user_profiles 
-      WHERE role IN ('admin', 'tech', 'diretor_estadual')
-    ) OR
-    (
-      auth.uid() IN (
-        SELECT id FROM user_profiles 
-        WHERE role IN ('gestor_igr', 'gestor_municipal')
-      ) AND
-      city_id IN (
-        SELECT id FROM cities 
-        WHERE region_id = (
-          SELECT c.region_id FROM user_profiles up
-          JOIN cities c ON up.city_id = c.id
-          WHERE up.id = auth.uid()
-        )
-      )
-    )
-  );
-
--- Política para criação de atendentes
-CREATE POLICY "Gestores podem criar atendentes" ON user_profiles
-  FOR INSERT 
-  WITH CHECK (
-    auth.uid() IN (
-      SELECT id FROM user_profiles 
-      WHERE role IN ('admin', 'tech', 'diretor_estadual', 'gestor_igr', 'gestor_municipal')
-    )
-  );
-
--- Política para atualização de atendentes
-CREATE POLICY "Gestores podem atualizar atendentes" ON user_profiles
-  FOR UPDATE 
-  USING (
-    auth.uid() IN (
-      SELECT id FROM user_profiles 
-      WHERE role IN ('admin', 'tech', 'diretor_estadual')
-    ) OR
-    (
-      auth.uid() IN (
-        SELECT id FROM user_profiles 
-        WHERE role IN ('gestor_igr', 'gestor_municipal')
-      ) AND
-      city_id IN (
-        SELECT id FROM cities 
-        WHERE region_id = (
-          SELECT c.region_id FROM user_profiles up
-          JOIN cities c ON up.city_id = c.id
-          WHERE up.id = auth.uid()
-        )
-      )
-    )
-  ); 
+-- Habilitar RLS (políticas serão tratadas em migração separada, compatível com schema atual)
+ALTER TABLE IF EXISTS user_profiles ENABLE ROW LEVEL SECURITY; 
