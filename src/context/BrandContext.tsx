@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useMultiTenant } from '@/hooks/useMultiTenant';
 
-export type BrandType = 'flowtrip' | 'ms';
+export type BrandType = 'overflow-one' | 'ms';
 
 interface BrandConfig {
   brand: BrandType;
@@ -36,26 +36,26 @@ interface BrandConfig {
 
 interface BrandContextType {
   config: BrandConfig;
-  isFlowTrip: boolean;
+  isOverflowOne: boolean;
   isMS: boolean;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
 
-const flowTripConfig: BrandConfig = {
-  brand: 'flowtrip',
+const overflowOneConfig: BrandConfig = {
+  brand: 'overflow-one',
   logo: {
-    src: '/images/flowtrip-logo.png', // Caminho para a nova logo do Flowtrip
-    alt: 'FlowTrip',
-    fallback: 'FlowTrip'
+    src: '/images/overflow-one-logo.png', // Caminho para a nova logo do OverFlow One
+    alt: 'OverFlow One',
+    fallback: 'OverFlow One'
   },
   navigation: [
     { name: 'Soluções', path: '/solucoes' },
     { name: 'Preços', path: '/precos' },
-    { name: 'Sobre', path: '/sobre-flowtrip' }
+    { name: 'Sobre', path: '/sobre-overflow-one' }
   ],
   authenticatedNavigation: [
-    { name: 'Analytics', path: '/flowtrip/analytics' }
+    { name: 'Analytics', path: '/overflow-one/analytics' }
   ],
   cta: {
     primary: 'Agendar Demo',
@@ -124,8 +124,8 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       currentConfig = { ...msConfig }; // Start with msConfig
       console.log("🔍 BrandContext: Path /ms detectado (case-insensitive), usando msConfig como base.");
     } else {
-      currentConfig = { ...flowTripConfig }; // Default to flowtripConfig
-      console.log("🔍 BrandContext: Usando flowTripConfig como base.");
+      currentConfig = { ...overflowOneConfig }; // Default to overflowOneConfig
+      console.log("🔍 BrandContext: Usando overflowOneConfig como base.");
     }
 
     // If multi-tenant mode is active and tenant config is loaded, apply dynamic overrides
@@ -173,12 +173,12 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return currentConfig;
   }, [location.pathname, isMultiTenantMode, currentTenant, tenantConfig, tenantLoading]);
 
-  const isFlowTrip = config.brand === 'flowtrip';
+      const isOverflowOne = config.brand === 'overflow-one';
   const isMS = config.brand === 'ms';
 
   const value = {
     config,
-    isFlowTrip,
+    isOverflowOne,
     isMS
   };
 

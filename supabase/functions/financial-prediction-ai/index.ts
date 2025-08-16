@@ -74,7 +74,7 @@ serve(async (req) => {
 
     // 2. Preparar o prompt para a IA (passando os dados coletados)
     const prompt = `
-      Analise os seguintes dados de performance, financeiros e de uso da plataforma FlowTrip para o período '${period}'.
+      Analise os seguintes dados de performance, financeiros e de uso da plataforma OverFlow One para o período '${period}'.
       O foco principal da análise é: '${metric_focus || 'geral'}'.
 
       Métricas de Performance da Plataforma:

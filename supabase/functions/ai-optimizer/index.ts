@@ -32,7 +32,7 @@ serve(async (req) => {
     if (feedbackError) throw feedbackError;
 
     // 2. Preparar um prompt para a IA (Gemini)
-    let prompt = `Analise os seguintes dados de feedback de usuários sobre a performance da IA da plataforma FlowTrip:
+    let prompt = `Analise os seguintes dados de feedback de usuários sobre a performance da IA da plataforma OverFlow One:
 
 Dados de Feedback Recentes:
 ${JSON.stringify(recentFeedback, null, 2)}

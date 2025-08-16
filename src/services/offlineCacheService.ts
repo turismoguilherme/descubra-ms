@@ -7,7 +7,7 @@ interface OfflineStore {
   user_stamps: UserStamp[];
 }
 
-const DB_NAME = 'flowtrip-offline-db';
+const DB_NAME = 'overflow-one-offline-db';
 const DB_VERSION = 1;
 
 class OfflineCacheService {

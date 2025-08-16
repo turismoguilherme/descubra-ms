@@ -4,7 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 // Assumindo que você terá as variáveis de ambiente para SendGrid
 const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY');
-const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'no-reply@flowtrip.com';
+const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'no-reply@overflow-one.com';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

@@ -19,7 +19,7 @@ export interface AIConfig {
   escalationThreshold: number;
 }
 
-class FlowTripAIService {
+class OverFlowOneAIService {
   private config: AIConfig = {
     personality: 'professional',
     responseStyle: 'friendly',
@@ -224,7 +224,7 @@ Enquanto isso, posso sugerir algumas ações que podem ajudar:
 Fico à disposição para qualquer dúvida adicional! 😊
 
 Atenciosamente,
-Equipe FlowTrip`,
+Equipe OverFlow One`,
 
       medium: `Oi ${clientName}! 😊
 
@@ -240,7 +240,7 @@ Vou resolver isso o mais rápido possível e te manter informado!
 Qualquer dúvida, é só falar! 👍
 
 Abraços,
-Equipe FlowTrip`,
+Equipe OverFlow One`,
 
       low: `Oi ${clientName}! 😄
 
@@ -251,7 +251,7 @@ Tudo bem? Vi sua mensagem e já estou cuidando disso para você!
 Se precisar de mais alguma coisa, é só chamar! Estou sempre por aqui para ajudar.
 
 Beijos,
-Equipe FlowTrip`
+Equipe OverFlow One`
     };
 
     return responses[priority] || responses.medium;
@@ -344,7 +344,7 @@ Equipe FlowTrip`
       return sum + (client.monthly_fee || 0);
     }, 0) || 0;
 
-    return `# Relatório ${type.charAt(0).toUpperCase() + type.slice(1)} - FlowTrip
+    return `# Relatório ${type.charAt(0).toUpperCase() + type.slice(1)} - OverFlow One
 
 ## Resumo Executivo
 - **Receita Total**: R$ ${totalRevenue.toLocaleString()}
@@ -352,7 +352,7 @@ Equipe FlowTrip`
 - **Métricas Coletadas**: ${data.metrics?.length || 0}
 
 ## Análise da IA
-Este relatório foi gerado automaticamente pela IA da FlowTrip, garantindo precisão e insights valiosos para o crescimento do negócio.
+Este relatório foi gerado automaticamente pela IA da OverFlow One, garantindo precisão e insights valiosos para o crescimento do negócio.
 
 ## Recomendações
 1. Continuar foco na expansão para novos estados
@@ -361,7 +361,7 @@ Este relatório foi gerado automaticamente pela IA da FlowTrip, garantindo preci
 4. Implementar analytics preditivos
 
 ---
-*Gerado automaticamente pela IA FlowTrip em ${new Date().toLocaleDateString()}*`;
+*Gerado automaticamente pela IA OverFlow One em ${new Date().toLocaleDateString()}*`;
   }
 
   private async checkPerformance(): Promise<any> {
@@ -431,4 +431,4 @@ Este relatório foi gerado automaticamente pela IA da FlowTrip, garantindo preci
   }
 }
 
-export const flowTripAI = new FlowTripAIService(); 
+export const overflowOneAI = new OverFlowOneAIService(); 

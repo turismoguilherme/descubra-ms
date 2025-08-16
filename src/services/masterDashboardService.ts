@@ -34,7 +34,7 @@ export interface PlatformUpdate {
 }
 
 class MasterDashboardService {
-  private readonly masterEndpoint = import.meta.env.VITE_MASTER_DASHBOARD_ENDPOINT || 'https://api.flowtrip.com/master';
+  private readonly masterEndpoint = import.meta.env.VITE_MASTER_DASHBOARD_ENDPOINT || 'https://api.overflow-one.com/master';
   private readonly apiKey = import.meta.env.VITE_MASTER_API_KEY || 'test-key';
 
   // Enviar relatório periódico para o dashboard master

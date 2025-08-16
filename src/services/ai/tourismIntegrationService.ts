@@ -13,11 +13,11 @@ export class TourismIntegrationService {
       // Dados da Alumia
       const alumiaData = await this.getAlumiaData();
       
-      // Dados próprios da FlowTrip
-      const flowTripData = await this.getFlowTripData();
+          // Dados próprios da OverFlow One
+    const overflowOneData = await this.getOverflowOneData();
       
       // Integração e enriquecimento
-      const enrichedData = this.enrichData(alumiaData, flowTripData);
+      const enrichedData = this.enrichData(alumiaData, overflowOneData);
 
       return {
         // Perfil do visitante
@@ -25,8 +25,8 @@ export class TourismIntegrationService {
           // Dados demográficos (Alumia)
           demographics: alumiaData.demographics,
           
-          // Preferências e interesses (FlowTrip)
-          preferences: flowTripData.preferences,
+          // Preferências e interesses (OverFlow One)
+          preferences: overflowOneData.preferences,
           
           // Comportamento (Combinado)
           behavior: enrichedData.behavior
@@ -37,8 +37,8 @@ export class TourismIntegrationService {
           // Gastos e receitas (Alumia)
           spending: alumiaData.spending,
           
-          // Oportunidades (FlowTrip)
-          opportunities: flowTripData.opportunities,
+          // Oportunidades (OverFlow One)
+          opportunities: overflowOneData.opportunities,
           
           // Previsões (Combinado)
           forecasts: enrichedData.forecasts
@@ -49,11 +49,11 @@ export class TourismIntegrationService {
           // Satisfação (Alumia)
           satisfaction: alumiaData.satisfaction,
           
-          // Interações (FlowTrip)
-          interactions: flowTripData.interactions,
+          // Interações (OverFlow One)
+          interactions: overflowOneData.interactions,
           
-          // Recomendações (FlowTrip)
-          recommendations: flowTripData.recommendations
+          // Recomendações (OverFlow One)
+          recommendations: overflowOneData.recommendations
         },
 
         // Desenvolvimento local
@@ -61,8 +61,8 @@ export class TourismIntegrationService {
           // Indicadores (Alumia)
           indicators: alumiaData.indicators,
           
-          // Oportunidades (FlowTrip)
-          opportunities: flowTripData.localOpportunities,
+          // Oportunidades (OverFlow One)
+          opportunities: overflowOneData.localOpportunities,
           
           // Impacto social (Combinado)
           socialImpact: enrichedData.socialImpact
@@ -83,7 +83,7 @@ export class TourismIntegrationService {
     }
   }
 
-  private async getFlowTripData() {
+  private async getOverflowOneData() {
     try {
       // Coleta dados próprios
       const [
@@ -108,7 +108,7 @@ export class TourismIntegrationService {
         localOpportunities
       };
     } catch (error) {
-      console.error('Erro ao obter dados da FlowTrip:', error);
+      console.error('Erro ao obter dados da OverFlow One:', error);
       throw error;
     }
   }

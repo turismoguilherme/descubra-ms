@@ -52,7 +52,7 @@ serve(async (req) => {
 
     // 3. Preparar o prompt para a IA
     const prompt = `
-      Analise os seguintes dados de métricas de performance e logs de segurança da plataforma FlowTrip para detectar anomalias, padrões incomuns ou potenciais problemas.
+      Analise os seguintes dados de métricas de performance e logs de segurança da plataforma OverFlow One para detectar anomalias, padrões incomuns ou potenciais problemas.
 
       Métricas de Performance Recentes (últimos 7 dias):
       ${JSON.stringify(recentMetrics, null, 2)}
@@ -102,8 +102,8 @@ serve(async (req) => {
 
     // 6. Enviar alerta crítico se a IA sugerir
     if (parsedAiResponse.critical_alert_needed === 'SIM') {
-      const adminEmail = 'admin@flowtrip.com'; // Definir email do admin
-      const subject = 'ALERTA CRÍTICO: Anomalia Detectada na Plataforma FlowTrip!';
+        const adminEmail = 'admin@overflow-one.com'; // Definir email do admin
+  const subject = 'ALERTA CRÍTICO: Anomalia Detectada na Plataforma OverFlow One!';
       const body = `Detalhes da Anomalia:\n${parsedAiResponse.analise_anomalias}\n\nAções Sugeridas:\n${parsedAiResponse.acoes_sugeridas}\n\nRecomendações Proativas:\n${parsedAiResponse.recomendacoes_proativas}\n\nPor favor, investigue imediatamente.`;
       
       // Chamar a Edge Function de envio de e-mail (ou um NotificationService se disponível no backend)

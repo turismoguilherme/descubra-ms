@@ -47,7 +47,7 @@ const MS_CONFIG: TenantConfig = {
   name: 'MS',
   slug: 'ms',
   fullName: 'Mato Grosso do Sul',
-  logo: '/flowtrip-logo.png',
+      logo: '/overflow-one-logo.png',
   primaryColor: '#1e40af', // MS Blue
   secondaryColor: '#0d9488', // MS Teal
   accentColor: '#ea580c', // MS Orange

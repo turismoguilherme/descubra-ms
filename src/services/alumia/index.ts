@@ -21,7 +21,7 @@ const ALUMIA_CONFIG = {
   getHeaders: () => ({
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${ALUMIA_CONFIG.API_KEY}`,
-    'User-Agent': 'FlowTrip-IA-Consultora/1.0'
+    'User-Agent': 'OverFlow-One-IA-Consultora/1.0'
   }),
   
   // Verificar se API está configurada

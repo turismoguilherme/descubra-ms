@@ -28,7 +28,7 @@ export class ReportGenerationService {
     
     // Cabeçalho
     doc.setFontSize(20);
-    doc.text('FlowTrip - Análise Estratégica', pageWidth / 2, 20, { align: 'center' });
+    doc.text('OverFlow One - Análise Estratégica', pageWidth / 2, 20, { align: 'center' });
     
     doc.setFontSize(14);
     doc.text(options.title, pageWidth / 2, 30, { align: 'center' });

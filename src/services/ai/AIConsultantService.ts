@@ -427,7 +427,7 @@ ${data.alumiaData ? '- Dados externos (Alumia): Disponíveis' : '- Dados externo
         insights: ['Análise baseada nos dados disponíveis'],
         recommendations: ['Continuar monitorando métricas principais'],
         confidence: 0.7,
-        sources: ['Dados FlowTrip'],
+        sources: ['Dados OverFlow One'],
         charts: this.generateRelevantCharts(data, [])
       };
     }
@@ -518,7 +518,7 @@ ${data.alumiaData ? '- Dados externos (Alumia): Disponíveis' : '- Dados externo
         'Monitorar tendências sazonais para otimizar recursos'
       ],
       confidence: 0.75,
-      sources: ['Dados FlowTrip', 'Análise de padrões']
+              sources: ['Dados OverFlow One', 'Análise de padrões']
     });
   }
 
