@@ -79,7 +79,7 @@ A primeira plataforma que resolve simultaneamente os problemas operacionais reai
 
 **Engajamento Comunitário:** Número de moradores locais participando do planejamento participativo, contribuições recebidas, atrações descobertas por residentes.
 
-**Monetização de Parcerias:** Receita gerada através das parcerias comerciais "Tent Descubra MS" e marketplace FlowTrip comercial.
+**Monetização de Parcerias:** Receita gerada através das parcerias comerciais "Tent Descubra MS" e marketplace OverFlow One comercial.
 
 ### Canais
 
@@ -117,11 +117,11 @@ A primeira plataforma que resolve simultaneamente os problemas operacionais reai
 
 **Parcerias Comerciais "Tent Descubra MS":** Empresas pagam para participar do programa oficial de parceiros, aparecendo em seções premium e tendo destaque nos roteiros e recompensas.
 
-**Marketplace FlowTrip Comercial:** Taxas de publicidade e destaque para empresas de turismo que querem visibilidade na expansão da plataforma para outros estados.
+**Marketplace OverFlow One Comercial:** Taxas de publicidade e destaque para empresas de turismo que querem visibilidade na expansão da plataforma para outros estados.
 
 **Comissões do Passaporte Digital:** Percentual sobre transações geradas através das recompensas (cashback, descontos) resgatadas por turistas em estabelecimentos parceiros.
 
-**Licenciamento SaaS:** Venda da tecnologia FlowTrip para outros estados brasileiros, adaptada às suas necessidades específicas, modelo de franquia tecnológica.
+**Licenciamento SaaS:** Venda da tecnologia OverFlow One para outros estados brasileiros, adaptada às suas necessidades específicas, modelo de franquia tecnológica.
 
 **Consultoria Estratégica:** Serviços especializados em transformação digital do turismo, implementação de IA, análise de dados ALUMIA e controle operacional de CATs.
 

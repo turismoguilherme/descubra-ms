@@ -1,16 +1,16 @@
-# 📚 FlowTrip: Plataforma de Gestão Turística Inteligente e o Case Descubra MS
+# 📚 OverFlow One: Plataforma de Gestão Turística Inteligente e o Case Descubra MS
 
 ## 🎯 Visão Geral do Projeto
 
-A **FlowTrip** é uma empresa SaaS (Software as a Service) especializada em fornecer soluções tecnológicas avançadas para gestão turística governamental. Nossa plataforma integra tecnologias de IA, análise de dados e gamificação para transformar estados e municípios em destinos turísticos inteligentes.
+A **OverFlow One** é uma empresa SaaS (Software as a Service) especializada em fornecer soluções tecnológicas avançadas para gestão turística governamental. Nossa plataforma integra tecnologias de IA, análise de dados e gamificação para transformar estados e municípios em destinos turísticos inteligentes.
 
-O **Descubra MS** é uma implementação personalizada da plataforma FlowTrip para o estado do Mato Grosso do Sul, demonstrando o potencial completo de nossas soluções e servindo como um caso de sucesso exemplar.
+O **Descubra MS** é uma implementação personalizada da plataforma OverFlow One para o estado do Mato Grosso do Sul, demonstrando o potencial completo de nossas soluções e servindo como um caso de sucesso exemplar.
 
 ## 🏗️ Arquitetura da Plataforma
 
 A plataforma opera em dois modos principais com suporte a **multi-tenancy** para múltiplos estados brasileiros:
 
-### FlowTrip SaaS (Página Principal - `/`)
+### OverFlow One SaaS (Página Principal - `/`)
 - **Propósito**: Landing page comercial para venda da solução SaaS.
 - **Público**: Gestores estaduais de turismo, tomadores de decisão.
 - **Funcionalidades**: Apresentação da solução, cases de sucesso (MS como referência), recursos, funcionalidades, preços, planos e contato para demonstração.

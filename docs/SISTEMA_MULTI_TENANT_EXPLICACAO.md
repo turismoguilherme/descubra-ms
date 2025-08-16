@@ -1,17 +1,17 @@
-# Sistema Multi-Tenant FlowTrip - Como Funciona
+# Sistema Multi-Tenant OverFlow One - Como Funciona
 
 ## 🎯 **Visão Geral**
 
-Quando outro estado contrata a plataforma FlowTrip, ele recebe uma **implementação personalizada** da solução, mantendo a mesma qualidade e funcionalidades do Mato Grosso do Sul, mas com sua própria identidade visual e configurações.
+Quando outro estado contrata a plataforma OverFlow One, ele recebe uma **implementação personalizada** da solução, mantendo a mesma qualidade e funcionalidades do Mato Grosso do Sul, mas com sua própria identidade visual e configurações.
 
 ## 🏗️ **Como Funciona na Prática**
 
 ### **1. Processo de Contratação**
 
 #### **Antes da Contratação**:
-1. **Demonstração**: Estado visita `/` (FlowTrip SaaS) e vê o case de sucesso do MS
+1. **Demonstração**: Estado visita `/` (OverFlow One SaaS) e vê o case de sucesso do MS
 2. **Proposta**: Recebe proposta personalizada com planos e preços
-3. **Contrato**: Assina contrato com FlowTrip
+3. **Contrato**: Assina contrato com OverFlow One
 
 #### **Após a Contratação**:
 1. **Setup Inicial**: IA configura automaticamente o novo estado
@@ -21,7 +21,7 @@ Quando outro estado contrata a plataforma FlowTrip, ele recebe uma **implementa�
 
 ### **2. Estrutura de URLs**
 
-#### **FlowTrip SaaS** (Comercial):
+#### **OverFlow One SaaS** (Comercial):
 - `/` - Landing page comercial
 - `/solucoes` - Funcionalidades
 - `/casos-sucesso` - Cases de sucesso
@@ -99,9 +99,9 @@ const stateConfig = {
 
 ### **Tabelas Multi-Tenant**:
 
-#### **1. flowtrip_states** (Estados)
+#### **1. overflow_one_states** (Estados)
 ```sql
-CREATE TABLE flowtrip_states (
+CREATE TABLE overflow_one_states (
   id UUID PRIMARY KEY,
   code VARCHAR(2) UNIQUE, -- 'MS', 'MT', 'GO'
   name VARCHAR(100), -- 'Mato Grosso do Sul'
@@ -113,11 +113,11 @@ CREATE TABLE flowtrip_states (
 );
 ```
 
-#### **2. flowtrip_clients** (Clientes/Estados)
+#### **2. overflow_one_clients** (Clientes/Estados)
 ```sql
-CREATE TABLE flowtrip_clients (
+CREATE TABLE overflow_one_clients (
   id UUID PRIMARY KEY,
-  state_id UUID REFERENCES flowtrip_states(id),
+  state_id UUID REFERENCES overflow_one_states(id),
   client_name VARCHAR(100), -- 'Secretaria de Turismo MS'
   contact_name VARCHAR(100),
   contact_email TEXT,
@@ -125,11 +125,11 @@ CREATE TABLE flowtrip_clients (
 );
 ```
 
-#### **3. flowtrip_subscriptions** (Assinaturas)
+#### **3. overflow_one_subscriptions** (Assinaturas)
 ```sql
-CREATE TABLE flowtrip_subscriptions (
+CREATE TABLE overflow_one_subscriptions (
   id UUID PRIMARY KEY,
-  client_id UUID REFERENCES flowtrip_clients(id),
+  client_id UUID REFERENCES overflow_one_clients(id),
   plan_type VARCHAR(20), -- 'basic', 'premium', 'enterprise'
   monthly_fee NUMERIC,
   max_users INTEGER,
@@ -236,7 +236,7 @@ Não se preocupe, vou te ajudar com isso!
 
 O Pantanal é realmente incrível, né? Temos várias opções para você explorar..."
 
-- Equipe FlowTrip
+- Equipe OverFlow One
 ```
 
 #### **Características**:
@@ -335,7 +335,7 @@ O Pantanal é realmente incrível, né? Temos várias opções para você explor
 
 ## 🎯 **Vantagens do Sistema Multi-Tenant**
 
-### **Para Você (FlowTrip)**:
+### **Para Você (OverFlow One)**:
 - ✅ **Escalabilidade**: Pode vender para qualquer estado
 - ✅ **Eficiência**: Uma base de código para todos
 - ✅ **Receita**: Múltiplas fontes de receita
@@ -385,7 +385,7 @@ O Pantanal é realmente incrível, né? Temos várias opções para você explor
 
 ## 💡 **Conclusão**
 
-O sistema multi-tenant da FlowTrip é **revolucionário** porque:
+O sistema multi-tenant da OverFlow One é **revolucionário** porque:
 
 1. **Escala Nacionalmente**: Pode vender para qualquer estado
 2. **Mantém Qualidade**: Mesma qualidade do MS para todos

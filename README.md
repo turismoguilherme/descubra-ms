@@ -1,4 +1,4 @@
-# 🚀 FlowTrip/Descubra MS - Plataforma de Turismo Inteligente
+# 🚀 OverFlow One/Descubra MS - Plataforma de Turismo Inteligente
 
 Uma plataforma completa de turismo inteligente que combina tecnologia avançada, inteligência artificial e dados estratégicos para revolucionar o turismo em Mato Grosso do Sul.
 
@@ -8,7 +8,7 @@ Uma plataforma completa de turismo inteligente que combina tecnologia avançada,
 
 Para informações completas sobre a plataforma, consulte:
 
-📋 **[Documentação Consolidada](docs/FLOWTRIP_DOCUMENTACAO_CONSOLIDADA.md)** - Documento principal com todas as funcionalidades, arquitetura e histórico
+📋 **[Documentação Consolidada](docs/OVERFLOW_ONE_DOCUMENTACAO_CONSOLIDADA.md)** - Documento principal com todas as funcionalidades, arquitetura e histórico
 
 ## 🎯 Funcionalidades Principais
 
@@ -73,4 +73,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
-**Desenvolvido para revolucionar o turismo em Mato Grosso do Sul** 🌍
+**Desenvolvido pela OverFlow One para revolucionar o turismo em Mato Grosso do Sul** 🌍
