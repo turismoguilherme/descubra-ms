@@ -8,17 +8,11 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Detectar ambiente e configurar URLs de redirect
-const isProduction = window.location.hostname === 'flow-trip.vercel.app';
-const baseUrl = isProduction ? 'https://flow-trip.vercel.app' : window.location.origin;
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    redirectTo: `${baseUrl}/ms/welcome`
+    detectSessionInUrl: true
   }
 });
