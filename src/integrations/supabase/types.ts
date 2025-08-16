@@ -2757,6 +2757,10 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      can_access_document: {
+        Args: { p_document_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       cleanup_old_ai_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2946,6 +2950,14 @@ export type Database = {
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: string
+      }
+      log_document_access: {
+        Args: {
+          p_access_type: string
+          p_document_id: string
+          p_user_id?: string
+        }
+        Returns: undefined
       }
       log_enhanced_security_event: {
         Args: {
