@@ -6,16 +6,18 @@ import { useEffect } from 'react';
  */
 export const SecurityHeaders = () => {
   useEffect(() => {
-    // Configurar CSP padrão
+    // Configurar CSP padrão com segurança aprimorada
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "img-src 'self' data: https: https://flowtrip.com.br",
+      "script-src 'self' https://cdn.gpteng.co", // Removido 'unsafe-inline' e 'unsafe-eval' por segurança
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Mantido 'unsafe-inline' apenas para styles
+      "img-src 'self' data: https://flowtrip.com.br https://*.supabase.co https://images.unsplash.com https://cdn.pixabay.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.sympla.com.br",
       "base-uri 'self'",
-      "form-action 'self'"
+      "form-action 'self'",
+      "frame-ancestors 'none'", // Previne clickjacking
+      "object-src 'none'" // Bloqueia plugins perigosos
     ].join('; ');
 
     // Configurar meta tags de segurança

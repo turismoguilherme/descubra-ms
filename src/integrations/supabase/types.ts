@@ -2972,6 +2972,14 @@ export type Database = {
         Args: { p_email: string; p_role: string }
         Returns: boolean
       }
+      secure_ai_consultant_operation: {
+        Args: {
+          p_config_id?: string
+          p_operation_type: string
+          p_user_id?: string
+        }
+        Returns: boolean
+      }
       secure_update_user_role: {
         Args: {
           new_role: string

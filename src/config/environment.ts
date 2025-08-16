@@ -1,7 +1,7 @@
 // Configurações do ambiente
 export const ENV = {
-  // API Keys
-  GEMINI_API_KEY: 'AIzaSyCX7Cmid7hQDDucWtNoP5zJ4uDsDgmPJmw',
+  // API Keys - SECURITY: API keys should be stored in environment variables or Supabase secrets
+  GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
   
   // URLs base
   BASE_URL: 'http://localhost:8081',
