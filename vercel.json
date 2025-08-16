@@ -1,8 +1,24 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/((?!api|_next|_static|favicon.ico|.*\\.).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/auth/callback",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/",
+      "permanent": false
     }
   ],
   "headers": [

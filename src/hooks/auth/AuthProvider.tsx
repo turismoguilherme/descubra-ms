@@ -238,8 +238,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("🏛️ SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "Current Path:", currentPath);
       
-      // Redirecionar mantendo contexto do tenant
-      const redirectPath = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/`;
+      // Redirecionar mantendo contexto do tenant e usando URL específica para produção
+      const isProduction = window.location.hostname === 'flow-trip.vercel.app';
+      const baseUrl = isProduction ? 'https://flow-trip.vercel.app' : window.location.origin;
+      const redirectPath = isTenantPath ? `${baseUrl}/${currentTenant}` : `${baseUrl}/auth/callback`;
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
