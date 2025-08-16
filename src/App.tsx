@@ -159,6 +159,7 @@ function App() {
                       <Route path="/ms/ml-test" element={<Suspense fallback={<LoadingFallback />}><MLTest /></Suspense>} />
                       <Route path="/ms/dynamic-search-test" element={<Suspense fallback={<LoadingFallback />}><DynamicSearchTest /></Suspense>} />
                       <Route path="/chatguata" element={<Suspense fallback={<LoadingFallback />}><GuataLite /></Suspense>} />
+                      <Route path="/ms/chatguata" element={<Navigate to="/chatguata" replace />} />
                       <Route path="/tcc-report" element={<Suspense fallback={<LoadingFallback />}><TCCReport /></Suspense>} />
                       <Route path="/guata-reliability" element={<Suspense fallback={<LoadingFallback />}><GuataReliabilityDashboard /></Suspense>} />
                       <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
