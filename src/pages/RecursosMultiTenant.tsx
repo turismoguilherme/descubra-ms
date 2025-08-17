@@ -35,7 +35,7 @@ const RecursosMultiTenant = () => {
                 <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Globe className="h-8 w-8 text-indigo-600" />
                 </div>
-                <h3 className="font-semibold mb-2">FlowTrip Core</h3>
+                <h3 className="font-semibold mb-2">OverFlow One Core</h3>
                 <p className="text-sm text-gray-600">
                   Plataforma central que gerencia todos os estados clientes
                 </p>
@@ -187,7 +187,7 @@ const RecursosMultiTenant = () => {
                 </ul>
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-4">Para a FlowTrip</h3>
+                <h3 className="text-xl font-semibold mb-4">Para a OverFlow One</h3>
                 <ul className="space-y-2">
                   <li>• Economia de recursos</li>
                   <li>• Deploy centralizado</li>

@@ -14,7 +14,7 @@ const CasesSucesso: React.FC = () => {
     {
       id: 1,
       title: 'Mato Grosso do Sul - Transformação Digital',
-      description: 'Implementação completa da plataforma FlowTrip resultou em aumento de 60% no turismo regional',
+              description: 'Implementação completa da plataforma OverFlow One resultou em aumento de 60% no turismo regional',
       metrics: {
         turismo: '+60%',
         satisfacao: '4.9/5',
@@ -75,7 +75,7 @@ const CasesSucesso: React.FC = () => {
                 Casos de Sucesso
               </h1>
               <p className="text-gray-600">
-                Histórico de implementações bem-sucedidas da FlowTrip
+                Histórico de implementações bem-sucedidas da OverFlow One
               </p>
             </div>
           </div>
@@ -170,7 +170,7 @@ const CasesSucesso: React.FC = () => {
                 Quer ser o próximo caso de sucesso?
               </h2>
               <p className="mb-6 opacity-90">
-                Transforme sua região turística com a tecnologia da FlowTrip
+                Transforme sua região turística com a tecnologia da OverFlow One
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 

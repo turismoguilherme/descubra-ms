@@ -184,7 +184,7 @@ const AdminLogin = () => {
               Perfis de Acesso:
             </h3>
             <div className="space-y-2 text-xs text-gray-600">
-              <div>• Admin/Tech: Portal FlowTrip</div>
+              <div>• Admin/Tech: Portal OverFlow One</div>
               <div>• Diretor Estadual: Gestão Estadual</div>
               <div>• Gestor IGR: Administração Técnica</div>
               <div>• Gestor Municipal: Administração Municipal</div>

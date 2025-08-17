@@ -263,7 +263,7 @@ const Solucoes = () => {
               Pronto para Transformar o Turismo do Seu Estado?
             </h2>
             <p className="text-xl mb-8 text-white/90">
-              Junte-se aos estados que já estão revolucionando o turismo com a FlowTrip
+              Junte-se aos estados que já estão revolucionando o turismo com a OverFlow One
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" asChild>

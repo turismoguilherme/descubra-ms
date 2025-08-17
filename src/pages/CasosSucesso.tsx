@@ -31,7 +31,7 @@ const CasosSucesso = () => {
       "Sistema de gestão completo para municípios"
     ],
     testimonial: {
-      text: "A FlowTrip transformou completamente nossa estratégia de turismo digital. O engajamento dos visitantes aumentou significativamente com o sistema de gamificação.",
+              text: "A OverFlow One transformou completamente nossa estratégia de turismo digital. O engajamento dos visitantes aumentou significativamente com o sistema de gamificação.",
       author: "Secretaria de Turismo - MS",
       role: "Gestão Estadual de Turismo"
     }
@@ -95,7 +95,7 @@ const CasosSucesso = () => {
             <span className="block text-yellow-400">Sucesso</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
-            Veja como estados e regiões já estão transformando o turismo com a FlowTrip
+            Veja como estados e regiões já estão transformando o turismo com a OverFlow One
           </p>
           <Button size="lg" className="bg-yellow-400 text-blue-900 hover:bg-yellow-300">
             <Link to="/contato">Seja o Próximo Caso de Sucesso</Link>
@@ -216,7 +216,7 @@ const CasosSucesso = () => {
               Próximos Casos de Sucesso
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Estados que estão em processo de implementação da FlowTrip
+              Estados que estão em processo de implementação da OverFlow One
             </p>
           </div>
 
@@ -275,7 +275,7 @@ const CasosSucesso = () => {
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>&copy; 2024 FlowTrip. Todos os direitos reservados.</p>
+          <p>&copy; 2024 OverFlow One. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

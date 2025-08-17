@@ -67,7 +67,7 @@ interface SystemMetrics {
   active_support_tickets: number;
 }
 
-const FlowTripMasterDashboard = () => {
+const OverFlowOneMasterDashboard = () => {
   const { user } = useAuth();
   const [clients, setClients] = useState<ClientData[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -103,8 +103,8 @@ const FlowTripMasterDashboard = () => {
 
   
   // Credenciais do Master (em produção, isso deveria estar no backend)
-  const MASTER_EMAIL = 'master@flowtrip.com';
-  const MASTER_PASSWORD = 'FlowTripMaster2024!';
+  const MASTER_EMAIL = 'master@overflow-one.com';
+  const MASTER_PASSWORD = 'OverFlowOneMaster2024!';
   const MASTER_USER_ID = '00000000-0000-0000-0000-000000000001'; // ID de usuário fixo para o Master
 
   const [loginData, setLoginData] = useState({
@@ -114,7 +114,7 @@ const FlowTripMasterDashboard = () => {
 
   useEffect(() => {
     // Verificar se já está autenticado
-    const checkAuth = localStorage.getItem('flowtrip_master_auth');
+    const checkAuth = localStorage.getItem('overflow_one_master_auth');
     if (checkAuth === 'true') {
       setIsAuthenticated(true);
       setShowLogin(false);
@@ -131,7 +131,7 @@ const FlowTripMasterDashboard = () => {
     if (loginData.email === MASTER_EMAIL && loginData.password === MASTER_PASSWORD) {
       setIsAuthenticated(true);
       setShowLogin(false);
-      localStorage.setItem('flowtrip_master_auth', 'true');
+              localStorage.setItem('overflow_one_master_auth', 'true');
       loadDashboardData();
     } else {
       setLoginError('Credenciais inválidas. Apenas o Master pode acessar este dashboard.');
@@ -141,7 +141,7 @@ const FlowTripMasterDashboard = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setShowLogin(true);
-    localStorage.removeItem('flowtrip_master_auth');
+            localStorage.removeItem('overflow_one_master_auth');
   };
 
   const loadDashboardData = async () => {
@@ -383,7 +383,7 @@ const FlowTripMasterDashboard = () => {
             <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold">FlowTrip Master</CardTitle>
+            <CardTitle className="text-2xl font-bold">OverFlow One Master</CardTitle>
             <CardDescription>
               Acesso exclusivo ao Dashboard Master
             </CardDescription>
@@ -395,7 +395,7 @@ const FlowTripMasterDashboard = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="master@flowtrip.com"
+                  placeholder="master@overflow-one.com"
                   value={loginData.email}
                   onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                   required
@@ -440,8 +440,8 @@ const FlowTripMasterDashboard = () => {
             <div className="mt-4 text-center text-sm text-gray-600">
               <p>Credenciais de demonstração:</p>
               <p className="font-mono text-xs mt-1">
-                Email: master@flowtrip.com<br/>
-                Senha: FlowTripMaster2024!
+                                  Email: master@overflow-one.com<br/>
+                  Senha: OverFlowOneMaster2024!
               </p>
             </div>
           </CardContent>
@@ -470,7 +470,7 @@ const FlowTripMasterDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">FlowTrip Master Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">OverFlow One Master Dashboard</h1>
           <p className="text-gray-600">Controle total da plataforma SaaS</p>
         </div>
         <div className="flex items-center space-x-2">
@@ -943,4 +943,4 @@ const FlowTripMasterDashboard = () => {
   );
 };
 
-export default FlowTripMasterDashboard; 
+export default OverFlowOneMasterDashboard; 

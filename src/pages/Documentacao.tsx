@@ -84,10 +84,10 @@ const Documentacao = () => {
     }
   ];
 
-  const codeExample = `// Exemplo de uso da API FlowTrip
-import { FlowTripAPI } from '@flowtrip/sdk';
+  const codeExample = `// Exemplo de uso da API OverFlow One
+import { OverFlowOneAPI } from '@overflow-one/sdk';
 
-const api = new FlowTripAPI({
+const api = new OverFlowOneAPI({
   apiKey: 'sua-api-key',
   environment: 'production'
 });
@@ -121,7 +121,7 @@ const checkin = await api.passport.checkin({
                 </Badge>
                 <h1 className="text-4xl md:text-6xl font-bold mb-6">
                   Documentação
-                  <span className="block text-accent">FlowTrip API</span>
+                  <span className="block text-accent">OverFlow One API</span>
                 </h1>
                 <p className="text-xl text-white/90 mb-8">
                   Integre facilmente nossa plataforma com sua aplicação. 
@@ -208,7 +208,7 @@ const checkin = await api.passport.checkin({
                   <div className="flex items-center space-x-3">
                     <Badge variant="outline">Base URL</Badge>
                     <code className="text-sm bg-muted px-2 py-1 rounded">
-                      https://api.flowtrip.com/v1
+                      https://api.overflow-one.com/v1
                     </code>
                   </div>
                   <div className="flex items-center space-x-3">

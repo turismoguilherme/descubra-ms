@@ -2,11 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useBrand } from '@/context/BrandContext'; // Importar useBrand
 
-const FlowTripLogo: React.FC = () => {
+const OverFlowOneLogo: React.FC = () => {
   const { config } = useBrand(); // Usar o contexto da marca
   
   // Adicionado para depuração da logo
-  console.log('🔍 FlowTripLogo: Configuração da logo recebida:', config.logo.src, config.logo.alt, config.logo.fallback);
+  console.log('🔍 OverFlowOneLogo: Configuração da logo recebida:', config.logo.src, config.logo.alt, config.logo.fallback);
 
   return (
     <Link to="/" className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
@@ -19,7 +19,7 @@ const FlowTripLogo: React.FC = () => {
             className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
             loading="eager" 
             onError={(e) => {
-              console.error('FlowTrip logo failed to load, showing text fallback', e.currentTarget.src);
+              console.error('OverFlow One logo failed to load, showing text fallback', e.currentTarget.src);
               e.currentTarget.style.display = 'none';
               const fallback = e.currentTarget.nextElementSibling as HTMLElement;
               if (fallback) fallback.style.display = 'flex';
@@ -48,4 +48,4 @@ const FlowTripLogo: React.FC = () => {
   );
 };
 
-export default FlowTripLogo; 
+export default OverFlowOneLogo; 

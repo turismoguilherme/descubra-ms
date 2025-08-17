@@ -442,7 +442,7 @@ const EnhancedDigitalPassport = () => {
                   {/* Botões de Compartilhamento para Selo Individual */}
                   <ShareButtons
                     title={`Conquistei um selo em MS: ${stamp.stamp_name}!`}
-                    text={`Olha o selo que acabei de ganhar no Passaporte Digital de Turismo em Mato Grosso do Sul: ${stamp.stamp_name}! #DescubraMS #Flowtrip`}
+                    text={`Olha o selo que acabei de ganhar no Passaporte Digital de Turismo em Mato Grosso do Sul: ${stamp.stamp_name}! #DescubraMS #OverFlowOne`}
                     url={`${window.location.origin}/ms/passaporte`}
                   />
                 </CardContent>

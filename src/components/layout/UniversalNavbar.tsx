@@ -9,7 +9,7 @@ import UserMenu from "./UserMenu";
 const UniversalNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const { config, isFlowTrip } = useBrand();
+  const { config, isOverflowOne } = useBrand();
   const location = useLocation();
 
   const isActivePath = (path: string) => {
@@ -21,7 +21,7 @@ const UniversalNavbar = () => {
       <div className="ms-container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={isFlowTrip ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
+          <Link to={isOverflowOne ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img 
                 alt={config.logo.alt}
@@ -39,7 +39,7 @@ const UniversalNavbar = () => {
                 className="hidden text-lg font-bold text-ms-primary-blue"
                 style={{ display: 'none' }}
               >
-                {isFlowTrip ? "FlowTrip" : "Descubra Mato Grosso do Sul"}
+                {isOverflowOne ? "OverFlow One" : "Descubra Mato Grosso do Sul"}
               </span>
             </div>
           </Link>
@@ -81,7 +81,7 @@ const UniversalNavbar = () => {
               <UserMenu />
             ) : (
               <>
-                {isFlowTrip ? (
+                {isOverflowOne ? (
                   <>
                     <Link to="/contato">
                       <Button size="sm" className="bg-ms-primary-blue text-white hover:bg-ms-primary-blue/90">
@@ -167,7 +167,7 @@ const UniversalNavbar = () => {
                   </div>
                 ) : (
                   <div className="space-y-2 px-3">
-                    {isFlowTrip ? (
+                    {isOverflowOne ? (
                       <>
                         <Link to="/contato" onClick={() => setIsOpen(false)}>
                           <Button size="sm" className="w-full bg-ms-primary-blue text-white hover:bg-ms-primary-blue/90">

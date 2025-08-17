@@ -103,7 +103,7 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
         // hasChart: ragResponse.chartData ? true : false, // Desabilitar gráficos por enquanto, RAG não retorna formatado
         // chartType: ragResponse.chartType,
         // chartData: ragResponse.chartData,
-        source: "IA Analítica (FlowTrip)"
+        source: "IA Analítica (OverFlow One)"
       };
       
       setMessages(prevMessages => [...prevMessages, botMessage]);

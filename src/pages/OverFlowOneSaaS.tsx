@@ -4,19 +4,19 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe } from 'lucide-react';
 import RestoredNavbar from '@/components/layout/RestoredNavbar';
 
-const FlowTripSaaS = () => {
+const OverFlowOneSaaS = () => {
   useEffect(() => {
-    console.log("🚀 FLOWTRIP: Componente FlowTripSaaS montado com sucesso");
+    console.log("🚀 OVERFLOW ONE: Componente OverFlowOneSaaS montado com sucesso");
     
     // Verificar se todos os elementos estão carregando
     const checkElements = () => {
-      console.log("🔍 FLOWTRIP: Verificando elementos da página...");
+      console.log("🔍 OVERFLOW ONE: Verificando elementos da página...");
       
       // Verificar se o DOM está pronto
       if (document.readyState === 'complete') {
-        console.log("✅ FLOWTRIP: DOM completamente carregado");
+        console.log("✅ OVERFLOW ONE: DOM completamente carregado");
       } else {
-        console.log("⏳ FLOWTRIP: DOM ainda carregando...");
+                  console.log("⏳ OVERFLOW ONE: DOM ainda carregando...");
       }
       
       // Verificar se o Tailwind está funcionando
@@ -30,7 +30,7 @@ const FlowTripSaaS = () => {
       const computedStyle = window.getComputedStyle(testElement);
       const hasTailwind = computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)';
       
-      console.log("🎨 FLOWTRIP: Tailwind CSS funcionando:", hasTailwind);
+              console.log("🎨 OVERFLOW ONE: Tailwind CSS funcionando:", hasTailwind);
       
       document.body.removeChild(testElement);
     };
@@ -39,11 +39,11 @@ const FlowTripSaaS = () => {
     setTimeout(checkElements, 100);
     
     return () => {
-      console.log("🧹 FLOWTRIP: Componente FlowTripSaaS desmontado");
+      console.log("🧹 OVERFLOW ONE: Componente OverFlowOneSaaS desmontado");
     };
   }, []);
 
-  console.log("🎯 FLOWTRIP: Renderizando componente FlowTripSaaS");
+      console.log("🎯 OVERFLOW ONE: Renderizando componente OverFlowOneSaaS");
 
   return (
     <div className="min-h-screen bg-white">
@@ -102,7 +102,7 @@ const FlowTripSaaS = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Como o FlowTrip Funciona
+              Como o OverFlow One Funciona
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Plataforma completa que transforma dados em insights e turistas em embaixadores do seu estado
@@ -157,7 +157,7 @@ const FlowTripSaaS = () => {
                 Mato Grosso do Sul: Referência Nacional
               </h2>
               <p className="text-xl mb-8 opacity-90">
-                Em 18 meses, MS se tornou o estado mais inovador do turismo brasileiro com a plataforma FlowTrip
+                Em 18 meses, MS se tornou o estado mais inovador do turismo brasileiro com a plataforma OverFlow One
               </p>
               
               <div className="space-y-4 mb-8">
@@ -288,11 +288,11 @@ const FlowTripSaaS = () => {
       {/* Footer Simples */}
       <footer className="bg-gray-800 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>&copy; 2024 FlowTrip. Todos os direitos reservados.</p>
+          <p>&copy; 2024 OverFlow One. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
   );
 };
 
-export default FlowTripSaaS;
+export default OverFlowOneSaaS;

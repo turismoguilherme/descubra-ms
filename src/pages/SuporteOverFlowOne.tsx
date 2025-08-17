@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Headphones, MessageCircle, Clock, CheckCircle, AlertCircle, Book, Mail, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const SuporteFlowTrip = () => {
+const SuporteOverFlowOne = () => {
   const supportChannels = [
     {
       icon: <MessageCircle className="h-8 w-8 text-primary" />,
@@ -59,7 +59,7 @@ const SuporteFlowTrip = () => {
       questions: [
         {
           question: "A plataforma está fora do ar?",
-          answer: "Verifique nosso status em status.flowtrip.com para atualizações em tempo real."
+          answer: "Verifique nosso status em status.overflow-one.com para atualizações em tempo real."
         },
         {
           question: "Como reportar um bug?",
@@ -381,4 +381,4 @@ const SuporteFlowTrip = () => {
   );
 };
 
-export default SuporteFlowTrip;
+export default SuporteOverFlowOne;

@@ -15,25 +15,25 @@ import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Critical components (no lazy loading)
-import FlowTripSaaS from "@/pages/FlowTripSaaS";
+import OverFlowOneSaaS from "@/pages/OverFlowOneSaaS";
 import MSIndex from "@/pages/MSIndex";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
 import AuthPage from "@/pages/AuthPage";
-import FlowTripMasterDashboard from "@/pages/FlowTripMasterDashboard";
+import OverFlowOneMasterDashboard from "@/pages/OverFlowOneMasterDashboard";
 
-// FlowTrip SaaS Pages
+// OverFlow One SaaS Pages
 const Solucoes = lazy(() => import("@/pages/Solucoes"));
 const CasosSucesso = lazy(() => import("@/pages/CasosSucesso"));
 const Precos = lazy(() => import("@/pages/Precos"));
-const SobreFlowTrip = lazy(() => import("@/pages/SobreFlowTrip"));
-const BlogFlowTrip = lazy(() => import("@/pages/BlogFlowTrip"));
+const SobreOverFlowOne = lazy(() => import("@/pages/SobreOverFlowOne"));
+const BlogOverFlowOne = lazy(() => import("@/pages/BlogOverFlowOne"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
-const SuporteFlowTrip = lazy(() => import("@/pages/SuporteFlowTrip"));
+const SuporteOverFlowOne = lazy(() => import("@/pages/SuporteOverFlowOne"));
 const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
 // TestDashboards removido - não necessário em produção
-const ContatoFlowTrip = lazy(() => import("@/pages/ContatoFlowTrip"));
+const ContatoOverFlowOne = lazy(() => import("@/pages/ContatoOverFlowOne"));
 const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
 const RecursosWhiteLabel = lazy(() => import("@/pages/RecursosWhiteLabel"));
 const RecursosMultiTenant = lazy(() => import("@/pages/RecursosMultiTenant"));
@@ -114,24 +114,24 @@ function App() {
                     <div className="min-h-screen bg-background font-sans antialiased">
                     <Routes>
                       
-                      {/* FlowTrip SaaS Routes */}
-                      <Route path="/" element={<FlowTripSaaS />} />
-                      <Route path="/flowtrip" element={<FlowTripSaaS />} />
-                      <Route path="/contato" element={<Suspense fallback={<LoadingFallback />}><ContatoFlowTrip /></Suspense>} />
-                      <Route path="/contato-flowtrip" element={<Suspense fallback={<LoadingFallback />}><ContatoFlowTrip /></Suspense>} />
+                      {/* OverFlow One SaaS Routes */}
+                      <Route path="/" element={<OverFlowOneSaaS />} />
+                      <Route path="/overflow-one" element={<OverFlowOneSaaS />} />
+                      <Route path="/contato" element={<Suspense fallback={<LoadingFallback />}><ContatoOverFlowOne /></Suspense>} />
+                      <Route path="/contato-overflow-one" element={<Suspense fallback={<LoadingFallback />}><ContatoOverFlowOne /></Suspense>} />
                       <Route path="/solucoes" element={<Suspense fallback={<LoadingFallback />}><Solucoes /></Suspense>} />
                       <Route path="/casos-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasosSucesso /></Suspense>} />
                       <Route path="/precos" element={<Suspense fallback={<LoadingFallback />}><Precos /></Suspense>} />
-                      <Route path="/sobre-flowtrip" element={<Suspense fallback={<LoadingFallback />}><SobreFlowTrip /></Suspense>} />
-                      <Route path="/blog" element={<Suspense fallback={<LoadingFallback />}><BlogFlowTrip /></Suspense>} />
+                      <Route path="/sobre-overflow-one" element={<Suspense fallback={<LoadingFallback />}><SobreOverFlowOne /></Suspense>} />
+                      <Route path="/blog" element={<Suspense fallback={<LoadingFallback />}><BlogOverFlowOne /></Suspense>} />
                       <Route path="/documentacao" element={<Suspense fallback={<LoadingFallback />}><Documentacao /></Suspense>} />
-                      <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteFlowTrip /></Suspense>} />
+                      <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteOverFlowOne /></Suspense>} />
                       <Route path="/admin-portal" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
                       {/* TestDashboards removido - não necessário em produção */}
                       <Route path="/admin-login" element={<Suspense fallback={<LoadingFallback />}><AdminLogin /></Suspense>} />
-                      <Route path="/master-dashboard" element={<FlowTripMasterDashboard />} />
+                      <Route path="/master-dashboard" element={<OverFlowOneMasterDashboard />} />
                       
-                      {/* FlowTrip Resources Routes */}
+                      {/* OverFlow One Resources Routes */}
                       <Route path="/recursos/analytics" element={<Suspense fallback={<LoadingFallback />}><RecursosAnalytics /></Suspense>} />
                       <Route path="/recursos/white-label" element={<Suspense fallback={<LoadingFallback />}><RecursosWhiteLabel /></Suspense>} />
                       <Route path="/recursos/multi-tenant" element={<Suspense fallback={<LoadingFallback />}><RecursosMultiTenant /></Suspense>} />
@@ -248,7 +248,7 @@ function App() {
                         </ProtectedRoute>
                       } />
                       
-                      {/* Páginas FlowTrip SaaS */}
+                      {/* Páginas OverFlow One SaaS */}
                       <Route path="/resultados" element={<Suspense fallback={<LoadingFallback />}><Resultados /></Suspense>} />
                       <Route path="/cases-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasesSucesso /></Suspense>} />
                       <Route path="/personalizar" element={<Suspense fallback={<LoadingFallback />}><Personalizar /></Suspense>} />

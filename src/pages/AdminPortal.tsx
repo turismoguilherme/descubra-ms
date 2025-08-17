@@ -95,7 +95,7 @@ const AdminDashboard = () => {
               <div>
                 <h1 className="text-3xl font-bold">Painel Administrativo</h1>
                 <p className="text-muted-foreground">
-                  Gestão avançada da plataforma FlowTrip
+                  Gestão avançada da plataforma OverFlow One
                 </p>
               </div>
             </div>

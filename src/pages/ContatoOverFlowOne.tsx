@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
-const ContatoFlowTrip = () => {
+const ContatoOverFlowOne = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -178,7 +178,7 @@ const ContatoFlowTrip = () => {
                     <Mail className="h-5 w-5 text-blue-600" />
                     <div>
                       <p className="font-medium">E-mail</p>
-                      <p className="text-gray-600">contato@flowtrip.com.br</p>
+                      <p className="text-gray-600">contato@overflow-one.com.br</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ const ContatoFlowTrip = () => {
               {/* Quick Benefits */}
               <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
                 <CardHeader>
-                  <CardTitle>Por que Escolher FlowTrip?</CardTitle>
+                  <CardTitle>Por que Escolher OverFlow One?</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -242,4 +242,4 @@ const ContatoFlowTrip = () => {
   );
 };
 
-export default ContatoFlowTrip;
+export default ContatoOverFlowOne;

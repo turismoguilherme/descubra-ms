@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Target, Award, Rocket, Heart, Globe, Code, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const SobreFlowTrip = () => {
+const SobreOverFlowOne = () => {
   const values = [
     {
       icon: <Rocket className="h-8 w-8 text-primary" />,
@@ -59,7 +59,7 @@ const SobreFlowTrip = () => {
   const milestones = [
     {
       year: "2023",
-      title: "Fundação da FlowTrip",
+              title: "Fundação da OverFlow One",
       description: "Nascemos com a visão de revolucionar o turismo digital no Brasil"
     },
     {
@@ -95,7 +95,7 @@ const SobreFlowTrip = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <Badge className="mb-4 bg-white/20 text-white" variant="secondary">
-                  Sobre a FlowTrip
+                  Sobre a OverFlow One
                 </Badge>
                 <h1 className="text-4xl md:text-6xl font-bold mb-6">
                   Transformando o
@@ -356,4 +356,4 @@ const SobreFlowTrip = () => {
   );
 };
 
-export default SobreFlowTrip;
+export default SobreOverFlowOne;

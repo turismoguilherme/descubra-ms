@@ -43,14 +43,14 @@ export const useMultiTenant = () => {
         try {
           console.log("🔍 useMultiTenant: Buscando tenant no Supabase com código:", detectedTenantCode.toUpperCase());
           const { data, error: dbError } = await supabase
-            .from('flowtrip_states')
+            .from('overflow_one_states')
             .select('*')
             .eq('code', detectedTenantCode.toUpperCase())
             .eq('is_active', true)
             .maybeSingle();
 
-          console.log("✅ useMultiTenant: Dados recebidos do Supabase para flowtrip_states:", data);
-          console.log("❌ useMultiTenant: Erro recebido do Supabase para flowtrip_states:", dbError);
+                  console.log("✅ useMultiTenant: Dados recebidos do Supabase para overflow_one_states:", data);
+        console.log("❌ useMultiTenant: Erro recebido do Supabase para overflow_one_states:", dbError);
 
           if (dbError) {
             console.error("❌ useMultiTenant: Erro ao buscar configuração do tenant:", dbError);

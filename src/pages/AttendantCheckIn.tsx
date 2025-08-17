@@ -109,7 +109,7 @@ const AttendantCheckIn: React.FC = () => {
               Em caso de problemas, entre em contato com seu gestor municipal
             </p>
             <p className="mt-1">
-              FlowTrip - Sistema de Gestão Turística
+              OverFlow One - Sistema de Gestão Turística
             </p>
           </div>
         </div>

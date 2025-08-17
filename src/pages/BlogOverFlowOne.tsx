@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar, User, ArrowRight, TrendingUp, Smartphone, Brain, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const BlogFlowTrip = () => {
+const BlogOverFlowOne = () => {
   const featuredPost = {
     title: "O Futuro do Turismo Digital: IA e Experiências Personalizadas",
     excerpt: "Como a inteligência artificial está revolucionando a forma como turistas descobrem e interagem com destinos, criando experiências únicas e memoráveis.",
-    author: "Equipe FlowTrip",
+          author: "Equipe OverFlow One",
     date: "15 de Janeiro, 2024",
     readTime: "8 min",
     category: "Tecnologia",
@@ -109,7 +109,7 @@ const BlogFlowTrip = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Blog
-              <span className="block text-accent">FlowTrip</span>
+              <span className="block text-accent">OverFlow One</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
               Insights, tendências e inovações no mundo do turismo digital
@@ -236,7 +236,7 @@ const BlogFlowTrip = () => {
                 <Card className="border-border">
                   <CardContent className="p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-3">
-                      Newsletter FlowTrip
+                      Newsletter OverFlow One
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Receba insights semanais sobre turismo digital diretamente no seu email
@@ -291,8 +291,8 @@ const BlogFlowTrip = () => {
                       e profissionais do setor.
                     </p>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to="/sobre-flowtrip">
-                        Conheça a FlowTrip
+                              <Link to="/sobre-overflow-one">
+        Conheça a OverFlow One
                       </Link>
                     </Button>
                   </CardContent>
@@ -326,4 +326,4 @@ const BlogFlowTrip = () => {
   );
 };
 
-export default BlogFlowTrip;
+export default BlogOverFlowOne;
