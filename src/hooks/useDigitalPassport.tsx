@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { achievementService } from "@/services/achievementService";
 
 export interface UserProgress {
   id: string;
@@ -145,6 +146,18 @@ export const useDigitalPassport = () => {
         proofPhotoUrl = uploadData.path;
       }
 
+      // Get route details for points calculation
+      const { data: routeData } = await supabase
+        .from('routes')
+        .select('difficulty')
+        .eq('id', routeId)
+        .single();
+
+      // Calculate points based on difficulty
+      let pointsEarned = 10; // Default
+      if (routeData?.difficulty === 'medio') pointsEarned = 20;
+      if (routeData?.difficulty === 'dificil') pointsEarned = 35;
+
       // Create a passport stamp for the route completion
       const stampData = {
         user_id: user.id,
@@ -161,9 +174,28 @@ export const useDigitalPassport = () => {
 
       if (stampError) throw stampError;
 
+      // Update user points using the function
+      await supabase.rpc('update_user_points', {
+        p_user_id: user.id,
+        p_state_id: 'ms-pantanal', // Default state
+        p_points: pointsEarned
+      });
+
+      // Check for new achievements
+      const newAchievements = await achievementService.checkAndUnlockAchievements(user.id);
+      
+      // Show achievement notifications
+      newAchievements.forEach((achievement) => {
+        toast({
+          title: "🎉 Nova Conquista!",
+          description: `${achievement.achievement?.icon} ${achievement.achievement?.name}`,
+          duration: 5000,
+        });
+      });
+
       toast({
         title: "Parabéns!",
-        description: "Roteiro concluído com sucesso! Você ganhou um novo selo digital.",
+        description: `Roteiro concluído! Você ganhou ${pointsEarned} pontos e um novo selo digital.`,
       });
 
       fetchUserData(); // Refresh data

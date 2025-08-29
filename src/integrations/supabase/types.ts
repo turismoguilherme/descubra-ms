@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          criteria: Json
+          description: string
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points_reward: number | null
+          rarity: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          criteria?: Json
+          description: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points_reward?: number | null
+          rarity?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          criteria?: Json
+          description?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points_reward?: number | null
+          rarity?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ai_consultant_config: {
         Row: {
           city_id: string | null
@@ -2756,6 +2798,10 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      calculate_user_level: {
+        Args: { points: number }
+        Returns: Json
       }
       can_access_document: {
         Args: { p_document_id: string; p_user_id?: string }
