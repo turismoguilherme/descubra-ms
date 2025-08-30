@@ -1,7 +1,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const RouteForm: React.FC = () => {
+interface RouteFormProps {
+  route?: any;
+  userRegion: string;
+  onSave: (routeData: any) => Promise<void>;
+  onCancel: () => void;
+}
+
+const RouteForm: React.FC<RouteFormProps> = ({ route, userRegion, onSave, onCancel }) => {
   return (
     <Card>
       <CardHeader>
@@ -9,6 +16,7 @@ const RouteForm: React.FC = () => {
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground">Formulário de criação de rotas em desenvolvimento.</p>
+        <p className="text-sm text-muted-foreground">Região: {userRegion}</p>
       </CardContent>
     </Card>
   );

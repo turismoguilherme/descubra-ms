@@ -183,7 +183,7 @@ class TourismPassportService {
   }
 
   // Criar check-in do usuário (adaptado para offline)
-  async createUserCheckin(checkinData: Omit<UserRouteCheckin, 'id' | 'created_at'>): Promise<{ checkpoint: PassportCheckpoint; newUnlockedBenefits: PassportBenefit[] }> {
+  async createUserCheckin(checkinData: any): Promise<{ checkpoint: PassportCheckpoint; newUnlockedBenefits: PassportBenefit[] }> {
     if (offlineCacheService.isOnline()) {
       try {
         const { data, error } = await supabase
@@ -698,4 +698,9 @@ Responda em português brasileiro de forma motivacional e envolvente.
 }
 
 // Instância singleton
-export const tourismPassportService = new TourismPassportService(); 
+export const tourismPassportService = new TourismPassportService();
+
+// Export individual functions for backward compatibility
+export const createUserCheckin = tourismPassportService.createUserCheckin.bind(tourismPassportService);
+export const updateUserStampOnline = tourismPassportService.updateUserStampOnline.bind(tourismPassportService);
+export const deleteUserStampOnline = tourismPassportService.deleteUserStampOnline.bind(tourismPassportService);

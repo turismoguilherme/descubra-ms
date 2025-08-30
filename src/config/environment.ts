@@ -1,13 +1,16 @@
 // Configurações do ambiente
 export const config = {
   mapbox: {
-    accessToken: 'pk.eyJ1IjoidGVzdCIsImEiOiJjbGQxMjM0NTYifQ.dummyToken'
+    accessToken: 'pk.eyJ1IjoidGVzdCIsImEiOiJjbGQxMjM0NTYifQ.dummyToken',
+    getToken: () => 'pk.eyJ1IjoidGVzdCIsImEiOiJjbGQxMjM0NTYifQ.dummyToken',
+    setToken: () => {},
+    isValidToken: () => true
   }
 };
 
 export const ENV = {
-  // API Keys - SECURITY: API keys should be stored in environment variables or Supabase secrets
-  GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
+  // API Keys - SECURITY: Gemini API key now stored in Supabase secrets
+  GEMINI_API_KEY: '', // Will be fetched from Supabase secrets in edge functions
   
   // URLs base
   BASE_URL: 'http://localhost:8081',
