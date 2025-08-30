@@ -1560,6 +1560,51 @@ export type Database = {
           },
         ]
       }
+      guata_feedback: {
+        Row: {
+          answer: string | null
+          correction: string | null
+          created_at: string
+          domain: string | null
+          id: string
+          meta: Json | null
+          positive: boolean
+          question: string
+          session_id: string | null
+          source_title: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          correction?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          meta?: Json | null
+          positive: boolean
+          question: string
+          session_id?: string | null
+          source_title?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          answer?: string | null
+          correction?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          meta?: Json | null
+          positive?: boolean
+          question?: string
+          session_id?: string | null
+          source_title?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       institutional_content: {
         Row: {
           content_key: string
