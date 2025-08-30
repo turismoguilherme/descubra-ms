@@ -1,216 +1,112 @@
-import React, { useEffect, useState } from 'react';
-import rewardService, { Reward } from '@/services/rewardService';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { Gift, Plus, Edit, Trash2 } from 'lucide-react';
+import { Reward } from '@/types/rewards';
 
-const defaultReward: Partial<Reward> = {
-  name: '',
-  description: '',
-  type: 'badge',
-  criteria: {},
-  local_resgate: '',
-  instrucoes_resgate: '',
-  active: true,
-};
-
-const RewardsManager: React.FC = () => {
-  const [rewards, setRewards] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState<Partial<Reward>>(defaultReward);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    loadRewards();
-  }, []);
-
-  const loadRewards = async () => {
-    setLoading(true);
-    try {
-      const data = await rewardService.listRewards(false);
-      setRewards(data);
-    } catch (e) {
-      console.error('Erro ao carregar recompensas:', e);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as recompensas.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+const RewardsManagerSimple = () => {
+  const [rewards] = useState<Reward[]>([
+    {
+      id: '1',
+      name: 'Primeira Visita',
+      description: 'Recompensa por completar sua primeira rota',
+      points: 100,
+      type: 'badge',
+      category: 'achievement',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Explorador MS',
+      description: 'Desconto de 10% em hotéis parceiros',
+      points: 500,
+      type: 'discount',
+      category: 'travel',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
-  };
+  ]);
 
-  const handleEdit = (reward: any) => {
-    setForm(reward);
-    setEditingId(reward.id);
-  };
-
-  const handleCancel = () => {
-    setForm(defaultReward);
-    setEditingId(null);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSwitch = (checked: boolean) => {
-    setForm({ ...form, active: checked });
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const rewardToSave: Partial<Reward> = {
-        ...form,
-        criteria: typeof form.criteria === 'string' ? JSON.parse(form.criteria) : form.criteria,
-        type: form.type || 'badge',
-        active: form.active !== false,
-      };
-
-      if (editingId) {
-        await rewardService.updateReward(editingId, rewardToSave);
-        toast({
-          title: "Sucesso",
-          description: "Recompensa atualizada com sucesso.",
-        });
-      } else {
-        await rewardService.createReward(rewardToSave);
-        toast({
-          title: "Sucesso",
-          description: "Recompensa cadastrada com sucesso.",
-        });
-      }
-      await loadRewards();
-      handleCancel();
-    } catch (e: any) {
-      console.error('Erro ao salvar recompensa:', e);
-      toast({
-        title: "Erro",
-        description: `Não foi possível salvar a recompensa. ${e.message || 'Verifique os dados.'}`, // Melhorar mensagem de erro
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
+  const getTypeColor = (type: Reward['type']) => {
+    switch (type) {
+      case 'badge': return 'bg-blue-100 text-blue-800';
+      case 'discount': return 'bg-green-100 text-green-800';
+      case 'access': return 'bg-purple-100 text-purple-800';
+      case 'item': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? 'Editar Recompensa' : 'Nova Recompensa'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <Input
-              name="name"
-              placeholder="Nome da recompensa"
-              value={form.name || ''}
-              onChange={handleChange}
-              required
-            />
-            <Textarea
-              name="description"
-              placeholder="Descrição"
-              value={form.description || ''}
-              onChange={handleChange}
-            />
-            <Input
-              name="type"
-              placeholder="Tipo (badge, desconto, brinde, etc.)"
-              value={form.type || ''}
-              onChange={handleChange}
-            />
-            <Input
-              name="criteria"
-              placeholder="Critérios (JSON)"
-              value={typeof form.criteria === 'string' ? form.criteria : JSON.stringify(form.criteria || {})}
-              onChange={e => setForm({ ...form, criteria: e.target.value })}
-            />
-            <Input
-              name="local_resgate"
-              placeholder="Local de Resgate (Endereço, Parceiro, etc.)"
-              value={form.local_resgate || ''}
-              onChange={handleChange}
-            />
-            <Textarea
-              name="instrucoes_resgate"
-              placeholder="Instruções de Resgate (Ex: Apresente o QR code no balcão X)"
-              value={form.instrucoes_resgate || ''}
-              onChange={handleChange}
-            />
-            <div className="flex items-center gap-2">
-              <Switch checked={form.active !== false} onCheckedChange={handleSwitch} />
-              <span>{form.active !== false ? 'Ativa' : 'Inativa'}</span>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={saving}>
-                {editingId ? 'Salvar Alterações' : 'Cadastrar'}
-              </Button>
-              {editingId && (
-                <Button variant="outline" onClick={handleCancel}>
-                  Cancelar
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Gerenciar Recompensas</h2>
+          <p className="text-muted-foreground">
+            Configure as recompensas disponíveis no sistema
+          </p>
+        </div>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Recompensa
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {rewards.map((reward) => (
+          <Card key={reward.id}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{reward.name}</CardTitle>
+                <Gift className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {reward.description}
+              </p>
+              
+              <div className="flex items-center justify-between">
+                <Badge className={getTypeColor(reward.type)}>
+                  {reward.type}
+                </Badge>
+                <span className="text-sm font-medium">
+                  {reward.points} pts
+                </span>
+              </div>
+
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Edit className="h-3 w-3 mr-1" />
+                  Editar
                 </Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Excluir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Recompensas Cadastradas</CardTitle>
+          <CardTitle>Sistema de Recompensas</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div>Carregando...</div>
-          ) : (
-            <div className="space-y-4">
-              {rewards.length === 0 && <div>Nenhuma recompensa cadastrada ainda.</div>}
-              {rewards.map(reward => (
-                <div key={reward.id} className="flex items-center gap-4 border-b py-2">
-                  <div className="flex-1">
-                    <div className="font-bold">{reward.name}</div>
-                    <div className="text-sm text-gray-600">{reward.description}</div>
-                    <div className="flex gap-2 mt-1">
-                      <Badge variant="outline">{reward.type}</Badge>
-                      <Badge variant={reward.active ? 'default' : 'secondary'}>
-                        {reward.active ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      Critérios: {typeof reward.criteria === 'string' ? reward.criteria : JSON.stringify(reward.criteria)}
-                    </div>
-                    {reward.local_resgate && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Local de Resgate: {reward.local_resgate}
-                      </div>
-                    )}
-                    {reward.instrucoes_resgate && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Instruções: {reward.instrucoes_resgate}
-                      </div>
-                    )}
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(reward)}>
-                    Editar
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-muted-foreground">
+            O sistema completo de gerenciamento de recompensas está sendo implementado.
+            As recompensas exibidas são exemplos para demonstração.
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 };
 
-export default RewardsManager; 
+export default RewardsManagerSimple;
