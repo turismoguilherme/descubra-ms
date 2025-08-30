@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Share2, Facebook, Twitter, Whatsapp } from 'lucide-react';
+import { Share2, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ShareButtonsProps {
@@ -62,7 +62,7 @@ const ShareButtons = ({ title, text, url }: ShareButtonsProps) => {
       ) : (
         <div className="flex items-center gap-2">
           <Button onClick={shareToWhatsapp} size="icon" variant="outline">
-            <Whatsapp className="w-4 h-4 text-green-500" />
+            <MessageCircle className="w-4 h-4 text-green-500" />
           </Button>
           <Button onClick={shareToFacebook} size="icon" variant="outline">
             <Facebook className="w-4 h-4 text-blue-600" />

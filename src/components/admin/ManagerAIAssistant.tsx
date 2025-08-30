@@ -204,7 +204,10 @@ INSTRUÇÕES:
 Responda em português brasileiro de forma estruturada e acionável.
 `;
 
-    return await geminiClient.generateContent(prompt);
+    const model = geminiClient.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
   };
 
   const formatTimestamp = (date: Date): string => {

@@ -183,14 +183,14 @@ const CATManagement = ({ userRole, userRegion }: CATManagementProps) => {
       email: cat.contact?.email || '',
       manager_name: cat.contact?.manager_name || '',
       services: cat.services,
-      hours: cat.hours || {
-        monday: '08:00-17:00',
-        tuesday: '08:00-17:00',
-        wednesday: '08:00-17:00',
-        thursday: '08:00-17:00',
-        friday: '08:00-17:00',
-        saturday: '08:00-12:00',
-        sunday: 'Fechado'
+      hours: {
+        monday: cat.hours?.monday || '08:00-17:00',
+        tuesday: cat.hours?.tuesday || '08:00-17:00',
+        wednesday: cat.hours?.wednesday || '08:00-17:00',
+        thursday: cat.hours?.thursday || '08:00-17:00',
+        friday: cat.hours?.friday || '08:00-17:00',
+        saturday: cat.hours?.saturday || '08:00-12:00',
+        sunday: cat.hours?.sunday || 'Fechado'
       }
     });
     setIsDialogOpen(true);
