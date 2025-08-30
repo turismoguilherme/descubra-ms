@@ -96,7 +96,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
     try {
       const response = await aiConsultantService.processQuery({
-        query: inputValue.trim(),
+        question: inputValue.trim(),
         context: {
           userRole,
           cityId,

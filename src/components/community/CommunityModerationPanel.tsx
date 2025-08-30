@@ -37,7 +37,7 @@ const CommunityModerationPanel: React.FC = () => {
   const handleModerate = async (suggestionId: string, status: CommunitySuggestion['status']) => {
     setLoading(true);
     try {
-      await communityService.updateSuggestionStatus(suggestionId, status, `Sugestão ${status} pelo painel de moderação.`);
+      await communityService.updateSuggestionStatus(suggestionId, status as any, `Sugestão ${status} pelo painel de moderação.`);
       toast({
         title: "Sucesso",
         description: `Sugestão ${status} com sucesso.`,

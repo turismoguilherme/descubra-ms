@@ -28,7 +28,7 @@ interface ReportGeneratorProps {
 
 const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => {
   const { toast } = useToast();
-  const { user, cityId, regionId } = useRoleBasedAccess();
+  const { cityId, regionId } = useRoleBasedAccess();
   
   const [config, setConfig] = useState<ReportConfig>({
     type: 'monthly',
@@ -45,9 +45,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
       end: new Date().toISOString().split('T')[0]
     },
     recipient: {
-      name: user?.user_metadata?.full_name || 'Gestor',
-      role: user?.user_metadata?.role || 'Gestor Municipal',
-      email: user?.email || '',
+      name: 'Gestor',
+      role: 'Gestor Municipal',
+      email: '',
       cityId,
       regionId
     }

@@ -1,4 +1,10 @@
 // Configurações do ambiente
+export const config = {
+  mapbox: {
+    accessToken: 'pk.eyJ1IjoidGVzdCIsImEiOiJjbGQxMjM0NTYifQ.dummyToken'
+  }
+};
+
 export const ENV = {
   // API Keys - SECURITY: API keys should be stored in environment variables or Supabase secrets
   GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',

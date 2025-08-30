@@ -70,14 +70,14 @@ export function ProtectedRoute({
 
     case 'cat_attendant':
       // Verificar se tem CAT associado
-      if (!userProfile.cat_id) {
+      if (!(userProfile as any).cat_id) {
         return <Navigate to="/ms/select-cat" replace />;
       }
       break;
 
     case 'collaborator':
       // Verificar se tem permissões necessárias
-      if (!userProfile.permissions?.length) {
+      if (!(userProfile as any).permissions?.length) {
         return <Navigate to="/ms/pending-approval" replace />;
       }
       break;
