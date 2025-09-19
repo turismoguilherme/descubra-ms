@@ -7,7 +7,7 @@ import { Navigate } from 'react-router-dom';
 
 const AttendantCheckIn: React.FC = () => {
   const { user, loading } = useAuth();
-  const { userRole, hasAccess } = useRoleBasedAccess();
+  const { userRole } = useRoleBasedAccess();
 
   if (loading) {
     return (
@@ -20,7 +20,7 @@ const AttendantCheckIn: React.FC = () => {
     );
   }
 
-  if (!user || !hasAccess(['atendente'])) {
+  if (!user || userRole !== 'atendente') {
     return <Navigate to="/login" replace />;
   }
 
@@ -34,7 +34,7 @@ const AttendantCheckIn: React.FC = () => {
               Sistema de Ponto
             </h1>
             <p className="text-gray-600 text-lg">
-              Olá, <span className="font-semibold text-blue-600">{user.name}</span>! 
+              Olá, <span className="font-semibold text-blue-600">{user?.email}</span>! 
               Faça seu check-in por geolocalização
             </p>
           </div>

@@ -82,7 +82,7 @@ const CommunitySuggestionDetail: React.FC = () => {
       toast({
         title: "Atenção",
         description: "Você precisa estar logado e digitar um comentário.",
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }

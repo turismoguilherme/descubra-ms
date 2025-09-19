@@ -43,7 +43,9 @@ const Regions: React.FC = () => {
         Responda em português brasileiro de forma clara e objetiva.
       `;
 
-      const insights = await geminiClient.generateContent(prompt);
+      const model = geminiClient.getGenerativeModel({ model: "gemini-pro" });
+      const response = await model.generateContent(prompt);
+      const insights = response.response.text();
       setAiInsights(insights);
     } catch (error) {
       console.error('❌ Erro ao gerar insights:', error);

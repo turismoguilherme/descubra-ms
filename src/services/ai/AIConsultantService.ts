@@ -137,8 +137,7 @@ class AIConsultantService {
       // Notificar master dashboard sobre erro
       await masterDashboardService.sendAlert({
         type: 'system',
-        severity: 'medium',
-        title: 'Erro na IA Consultora',
+        severity: 'warning',
         message: `Falha ao processar consulta: ${error}`,
         source: 'ai_consultant'
       });

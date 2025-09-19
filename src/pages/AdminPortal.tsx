@@ -58,7 +58,7 @@ const AdminPortal = () => {
         case 'admin':
           console.log('✅ Renderizando MasterDashboard (novo)');
           return <MasterDashboard />;
-        case 'tech':
+        case 'admin':
           console.log('✅ Renderizando AdminDashboard');
           return <AdminDashboard />;
         default:

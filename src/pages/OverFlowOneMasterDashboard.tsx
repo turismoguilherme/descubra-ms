@@ -352,7 +352,7 @@ const OverFlowOneMasterDashboard = () => {
       toast({
         title: "Feedback enviado com sucesso!",
         description: `Feedback de ${type} enviado: ${feedbackType}`,
-        variant: "success",
+        variant: "default",
       });
 
       // Limpar campos de feedback após envio
