@@ -102,7 +102,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   });
 
   const [loading, setLoading] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<Array<{id: string; text: string; type: string; options?: string[]}>>([]);
 
   // Gerar perguntas específicas do estado usando IA
   const generateStateSpecificQuestions = async () => {
@@ -134,19 +134,22 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
         ]
       `;
 
-      const response = await geminiClient.generateContent(prompt);
+      const model = geminiClient.getGenerativeModel({ model: "gemini-pro" });
+      const response = await model.generateContent(prompt);
+      const responseText = response.response.text();
       // Analisar a resposta JSON
-      const jsonResponse = JSON.parse(response);
+      const jsonResponse = JSON.parse(responseText);
       setAiSuggestions(jsonResponse);
       
     } catch (error) {
       console.error('❌ Erro ao gerar perguntas com IA:', error);
       // Fallback para perguntas padrão se houver erro ou a IA não retornar JSON válido
-      setAiSuggestions([
+      const fallbackQuestions: Array<{id: string; text: string; type: string; options?: string[]}> = [
         { id: 'default_exp', text: 'Você já visitou esta região antes?', type: 'radio', options: ['Sim', 'Não', 'Talvez'] },
         { id: 'default_interesses', text: 'Quais seus principais interesses ao visitar esta região?', type: 'checkbox', options: ['Natureza', 'Cultura', 'Gastronomia'] },
         { id: 'default_percepcao', text: 'Qual sua percepção sobre a infraestrutura turística local?', type: 'textarea' }
-      ]);
+      ];
+      setAiSuggestions(fallbackQuestions);
     } finally {
       setLoading(false);
     }
@@ -217,7 +220,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
         ? answers[currentQuestion.id as keyof QuestionAnswers]
         : answers.state_specific[currentQuestion.id];
       
-      return answer && (typeof answer === 'string' ? answer.trim() !== '' : answer.length > 0);
+      return answer && (typeof answer === 'string' ? answer.trim() !== '' : Array.isArray(answer) ? answer.length > 0 : true);
     }
     
     return true;

@@ -40,7 +40,17 @@ export const useRegions = (): UseRegionsReturn => {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       
       // Fallback para dados locais
-      setRegions(MS_REGIONS as TourismRegion[]);
+      const fallbackRegions = MS_REGIONS.map(region => ({
+        id: region.slug,
+        name: region.name,
+        slug: region.slug,
+        description: region.description,
+        cities: region.cities,
+        coordinates: region.coordinates,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+      setRegions(fallbackRegions);
     } finally {
       setLoading(false);
       // console.log('🏁 DEBUG: fetchRegions finalizado');

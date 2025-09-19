@@ -100,13 +100,7 @@ export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
         id: Date.now() + 1,
         text: respostaTexto,
         isUser: false,
-        timestamp: new Date(),
-        metadata: ENV.FEATURES.ENABLE_RAG && ragData ? {
-          rag: true,
-          confidence: ragData.confidence,
-          sources: ragData.sources,
-          total_sources: ragData.total_sources
-        } : undefined
+        timestamp: new Date()
       };
       
       setMensagens(prev => [...prev, novaMensagemBot]);

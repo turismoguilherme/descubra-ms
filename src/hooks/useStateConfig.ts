@@ -34,14 +34,14 @@ export const useStateConfig = () => {
 
       try {
         const { data, error: dbError } = await supabase
-          .from('overflow_one_states')
+          .from('states')
           .select('*')
           .eq('code', stateCode)
           .eq('is_active', true)
           .maybeSingle();
 
-              console.log("✅ useStateConfig: Dados recebidos do Supabase para overflow_one_states:", data);
-      console.log("❌ useStateConfig: Erro recebido do Supabase para overflow_one_states:", dbError);
+              console.log("✅ useStateConfig: Dados recebidos do Supabase para states:", data);
+      console.log("❌ useStateConfig: Erro recebido do Supabase para states:", dbError);
 
         if (dbError) {
           console.error("Erro ao buscar configuração do estado:", dbError);
