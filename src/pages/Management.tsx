@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Shield, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ImprovedAdminDashboard from "@/components/admin/ImprovedAdminDashboard";
 
 const Management = () => {
   // O estado da região selecionada ainda é local da página
@@ -140,7 +141,7 @@ const Management = () => {
             </TabsContent>
 
             <TabsContent value="management">
-              <DashboardTabs region={selectedRegion} />
+              <ImprovedAdminDashboard />
             </TabsContent>
           </Tabs>
         </div>

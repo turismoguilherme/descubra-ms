@@ -11,22 +11,29 @@ export const achievementService = {
       .order('rarity');
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      rarity: item.rarity as 'common' | 'rare' | 'epic' | 'legendary'
+    })) as Achievement[];
   },
 
   // Buscar conquistas do usuário
   async getUserAchievements(userId: string): Promise<UserAchievement[]> {
     const { data, error } = await supabase
       .from('user_achievements')
-      .select(`
-        *,
-        achievement:achievements(*)
-      `)
+      .select('*')
       .eq('user_id', userId)
-      .order('earned_at', { ascending: false });
+      .order('unlocked_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      achievement_id: item.id,
+      earned_at: item.unlocked_at || new Date().toISOString(),
+      progress: 100,
+      user_id: item.user_id,
+      id: item.id,
+      achievement: null // Simplificado por enquanto
+    })) as unknown as UserAchievement[];
   },
 
   // Calcular nível do usuário baseado em pontos
@@ -34,7 +41,7 @@ export const achievementService = {
     const { data, error } = await supabase.rpc('calculate_user_level', { points });
     
     if (error) throw error;
-    return data as UserLevel;
+    return (data as unknown) as UserLevel;
   },
 
   // Buscar estatísticas completas do usuário
@@ -123,8 +130,12 @@ export const achievementService = {
           .from('user_achievements')
           .insert({
             user_id: userId,
-            achievement_id: achievement.id,
-            earned_at: new Date().toISOString()
+            achievement_name: achievement.name,
+            achievement_type: achievement.category,
+            achievement_description: achievement.description,
+            points_awarded: achievement.points_reward,
+            unlocked_at: new Date().toISOString(),
+            state_id: 'ms-pantanal'
           })
           .select(`
             *,
@@ -133,7 +144,15 @@ export const achievementService = {
           .single();
 
         if (!error && data) {
-          newAchievements.push(data);
+          const userAchievement: UserAchievement = {
+            achievement_id: achievement.id,
+            earned_at: data.unlocked_at || new Date().toISOString(),
+            progress: 100,
+            user_id: userId,
+            id: data.id,
+            achievement: achievement
+          };
+          newAchievements.push(userAchievement);
         }
       }
     }

@@ -242,20 +242,15 @@ const OverFlowOneMasterDashboard = () => {
     setIsAiResponding(true);
 
     try {
-      const response = await fetch(`${supabase.functions.url}/admin-advisor-ai`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: userMessage, context_type: chatContextType }),
+      const response = await supabase.functions.invoke('admin-advisor-ai', {
+        body: { query: userMessage, context_type: chatContextType }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro desconhecido ao consultar a IA.');
+      if (response.error) {
+        throw new Error(response.error || 'Erro desconhecido ao consultar a IA.');
       }
 
-      const data = await response.json();
+      const data = response.data;
       setChatHistory((prev) => [...prev, { sender: 'IA Admin', message: data.response }]);
     } catch (error: any) {
       console.error('Erro ao enviar mensagem para IA:', error);
@@ -330,23 +325,18 @@ const OverFlowOneMasterDashboard = () => {
 
   const handleFeedback = async (type: 'chat' | 'analysis', feedbackType: 'positive' | 'negative' | 'comment', data?: any) => {
     try {
-      const response = await fetch(`${supabase.functions.url}/admin-feedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await supabase.functions.invoke('admin-feedback', {
+        body: {
           user_id: MASTER_USER_ID, // Usar o ID fixo do Master
           type: type,
           feedback_type: feedbackType,
           data: data || null,
           comment: feedbackType === 'comment' ? (type === 'chat' ? chatFeedbackComment : analysisFeedbackComment) : null,
-        }),
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro desconhecido ao enviar feedback.');
+      if (response.error) {
+        throw new Error(response.error || 'Erro desconhecido ao enviar feedback.');
       }
 
       toast({
@@ -898,7 +888,7 @@ const OverFlowOneMasterDashboard = () => {
                       onChange={(e) => setAnalysisFeedbackComment(e.target.value)}
                       value={analysisFeedbackComment}
                     />
-                    <Button onClick={() => handleFeedback('analysis', 'comment', analysisFeedbackComment, JSON.stringify(aiAnalysisResult))} disabled={!analysisFeedbackComment.trim()}>
+                    <Button onClick={() => handleFeedback('analysis', 'comment', analysisFeedbackComment)} disabled={!analysisFeedbackComment.trim()}>
                       Enviar
                     </Button>
                   </div>

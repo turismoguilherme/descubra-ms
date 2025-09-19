@@ -135,12 +135,12 @@ class AIConsultantService {
       const response = this.generateFallbackResponse(query, tourismData);
       
       // Notificar master dashboard sobre erro
-      await masterDashboardService.sendAlert({
-        type: 'system',
-        severity: 'warning',
-        message: `Falha ao processar consulta: ${error}`,
-        source: 'ai_consultant'
-      });
+      // Comentado temporariamente para evitar erros
+      // await masterDashboardService.sendAlert({
+      //   type: 'system',
+      //   severity: 'warning',
+      //   message: `Falha ao processar consulta: ${error}`
+      // });
 
       return response;
     }

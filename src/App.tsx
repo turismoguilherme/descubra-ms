@@ -69,7 +69,7 @@ const DestinoDetalhes = lazy(() => import("@/pages/DestinoDetalhes"));
 const EventoDetalhes = lazy(() => import("@/pages/EventoDetalhes"));
 const TourismData = lazy(() => import("@/pages/TourismData"));
 const ManagementAI = lazy(() => import("@/pages/ManagementAI"));
-const EnhancedDigitalPassport = lazy(() => import("@/components/passport/EnhancedDigitalPassport"));
+const EnhancedDigitalPassportPage = lazy(() => import("@/pages/EnhancedDigitalPassportPage"));
 const EventsManagement = lazy(() => import("@/pages/EventsManagement"));
 const Regions = lazy(() => import("@/pages/Regions"));
 const Resultados = lazy(() => import("@/pages/Resultados"));
@@ -231,7 +231,8 @@ function App() {
                       <Route path="/ms/tourism-data" element={<Suspense fallback={<LoadingFallback />}><TourismData /></Suspense>} />
                       <Route path="/ms/delinha-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
                       <Route path="/ms/management-ai" element={<Suspense fallback={<LoadingFallback />}><ManagementAI /></Suspense>} />
-                      <Route path="/ms/enhanced-passport" element={<Navigate to="/ms/passaporte" replace />} />
+                      <Route path="/ms/enhanced-passport" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassportPage /></Suspense>} />
+                      <Route path="/passport/enhanced" element={<Suspense fallback={<LoadingFallback />}><EnhancedDigitalPassportPage /></Suspense>} />
 
                       <Route path="/ms/leaderboards" element={<Suspense fallback={<LoadingFallback />}><LeaderboardsPage /></Suspense>} />
                       <Route path="/ms/rewards-management" element={

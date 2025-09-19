@@ -127,7 +127,7 @@ const DigitalPassport = () => {
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </Link>
-              <Link to="/passport/enhanced">
+              <Link to="/ms/enhanced-passport">
                 <Button 
                   variant="outline" 
                   size="lg" 

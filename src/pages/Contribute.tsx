@@ -29,7 +29,7 @@ const Contribute = () => {
           </p>
           
           {/* Formulário de Nova Sugestão */}
-          <CommunitySuggestionForm onSuggestionCreated={handleSuggestionCreated} />
+          <CommunitySuggestionForm />
 
           <div className="flex justify-center my-8">
             <hr className="border-t-2 border-ms-primary-blue w-24" />
@@ -39,7 +39,7 @@ const Contribute = () => {
           <h2 className="text-3xl font-bold text-center text-ms-primary-blue mb-8">
             O que a Comunidade Sugeriu
           </h2>
-          <CommunitySuggestionsList ref={listRef} defaultStatusFilter="all" defaultSortBy="recent" />
+          <CommunitySuggestionsList />
         </div>
       </main>
       <Footer />

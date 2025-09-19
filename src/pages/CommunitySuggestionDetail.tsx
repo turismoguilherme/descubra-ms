@@ -183,7 +183,7 @@ const CommunitySuggestionDetail: React.FC = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleVote}
-                  className={`flex items-center gap-1 ${suggestion.hasVoted ? 'text-ms-primary-blue' : 'text-gray-500'}`}
+                  className="flex items-center gap-1 text-gray-500 hover:text-ms-primary-blue"
                   disabled={!user} // Desabilitar se não estiver logado
                 >
                   <ThumbsUp size={20} />
