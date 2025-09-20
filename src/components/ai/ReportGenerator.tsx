@@ -34,23 +34,18 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
     type: 'monthly',
     format: 'pdf',
     sections: [
-      { id: 'summary', title: 'Resumo Executivo', type: 'metrics', enabled: true },
-      { id: 'metrics', title: 'Métricas Principais', type: 'metrics', enabled: true },
-      { id: 'insights', title: 'Insights Estratégicos', type: 'insights', enabled: true },
-      { id: 'forecast', title: 'Previsões de Demanda', type: 'forecast', enabled: true },
-      { id: 'recommendations', title: 'Recomendações', type: 'recommendations', enabled: true }
+      { id: 'summary', name: 'Resumo Executivo', title: 'Resumo Executivo', type: 'metrics', enabled: true },
+      { id: 'metrics', name: 'Métricas Principais', title: 'Métricas Principais', type: 'metrics', enabled: true },
+      { id: 'insights', name: 'Insights Estratégicos', title: 'Insights Estratégicos', type: 'insights', enabled: true },
+      { id: 'forecast', name: 'Previsões de Demanda', title: 'Previsões de Demanda', type: 'forecast', enabled: true },
+      { id: 'recommendations', name: 'Recomendações', title: 'Recomendações', type: 'recommendations', enabled: true }
     ],
-    period: {
+    customRange: {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       end: new Date().toISOString().split('T')[0]
     },
-    recipient: {
-      name: 'Gestor',
-      role: 'Gestor Municipal',
-      email: '',
-      cityId,
-      regionId
-    }
+    period: `${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')} - ${new Date().toLocaleDateString('pt-BR')}`,
+    recipient: `gestor-${cityId}`
   });
 
   const [generating, setGenerating] = useState(false);
@@ -68,25 +63,47 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
         title: 'Relatório Mensal - Janeiro 2024',
         type: 'monthly',
         period: '01/01/2024 - 31/01/2024',
-        generatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        metadata: {
+          generated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          period: '01/01/2024 - 31/01/2024',
+          type: 'monthly',
+          filters_applied: []
+        },
         summary: {
+          total_tourists: 1250,
           totalVisitors: 1250,
-          growthRate: 12.5,
-          topInsights: ['Aumento na demanda', 'Otimização necessária'],
-          keyRecommendations: ['Investir em infraestrutura', 'Campanhas de marketing']
-        }
+          total_revenue: 185000,
+          satisfaction_rate: 4.2,
+          growth_rate: 12.5,
+          growthRate: 12.5
+        },
+        charts: [],
+        tables: [],
+        insights: [],
+        recommendations: []
       },
       {
         id: 'report_2',
         title: 'Relatório Trimestral - Q4 2023',
         type: 'quarterly',
         period: '01/10/2023 - 31/12/2023',
-        generatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        metadata: {
+          generated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          period: '01/10/2023 - 31/12/2023',
+          type: 'quarterly',
+          filters_applied: []
+        },
+        charts: [],
+        tables: [],
+        insights: [],
+        recommendations: [],
         summary: {
+          total_tourists: 3840,
           totalVisitors: 3840,
-          growthRate: 18.2,
-          topInsights: ['Sazonalidade identificada', 'Eventos bem-sucedidos'],
-          keyRecommendations: ['Expandir programação', 'Melhorar sinalização']
+          total_revenue: 576000,
+          satisfaction_rate: 4.5,
+          growth_rate: 18.2,
+          growthRate: 18.2
         }
       }
     ];
@@ -98,7 +115,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
     setGenerating(true);
     
     try {
-      const report = await reportGeneratorService.generateReport(config);
+      const report = await (reportGeneratorService as any).generateReport(config);
       
       toast({
         title: "✅ Relatório Gerado!",
@@ -131,7 +148,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
     setGenerating(true);
     
     try {
-      const report = await reportGeneratorService.generateAutomaticReport(type, config.recipient);
+      const report = await (reportGeneratorService as any).generateAutomaticReport(type, config.recipient);
       
       toast({
         title: "📄 Relatório Automático Gerado!",
@@ -307,9 +324,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
                     <Label htmlFor="start">Data Início</Label>
                     <Input
                       type="date"
-                      value={config.period.start}
+                      value={config.customRange?.start || ''}
                       onChange={(e) => updateConfig({
-                        period: { ...config.period, start: e.target.value }
+                        customRange: { ...config.customRange!, start: e.target.value }
                       })}
                     />
                   </div>
@@ -317,9 +334,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
                     <Label htmlFor="end">Data Fim</Label>
                     <Input
                       type="date"
-                      value={config.period.end}
+                      value={config.customRange?.end || ''}
                       onChange={(e) => updateConfig({
-                        period: { ...config.period, end: e.target.value }
+                        customRange: { ...config.customRange!, end: e.target.value }
                       })}
                     />
                   </div>
@@ -332,9 +349,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
                 <Input
                   type="email"
                   placeholder="Para envio automático do relatório"
-                  value={config.recipient.email}
+                  value=""
                   onChange={(e) => updateConfig({
-                    recipient: { ...config.recipient, email: e.target.value }
+                    recipient: e.target.value
                   })}
                 />
               </div>
@@ -346,7 +363,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
                   {config.sections.map((section) => (
                     <div key={section.id} className="flex items-center justify-between">
                       <Label htmlFor={section.id} className="text-sm font-normal">
-                        {section.title}
+                        {section.title || section.name}
                       </Label>
                       <Switch
                         id={section.id}

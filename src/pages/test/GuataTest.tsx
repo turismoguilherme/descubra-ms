@@ -25,7 +25,7 @@ const GuataTest: React.FC = () => {
       console.log('🔍 Iniciando busca para:', query);
       const searchResults = await webSearchService.search(query);
       console.log('📦 Resultados encontrados:', searchResults);
-      setResults(searchResults);
+      setResults(searchResults as ValidatedSearchResult[]);
     } catch (err) {
       console.error('❌ Erro na busca:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');

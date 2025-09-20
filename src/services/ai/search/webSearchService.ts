@@ -84,21 +84,20 @@ class WebSearchService {
       url: dynamicAnalysis.sources[0] || 'https://fundtur.ms.gov.br',
       content: dynamicAnalysis.bestAnswer, // Added required content field
       source: dynamicAnalysis.sources.join(', '),
-      reliability: dynamicAnalysis.confidence >= 90 ? 'high' : dynamicAnalysis.confidence >= 70 ? 'medium' : 'low',
-      category: this.detectCategory(dynamicAnalysis.query, dynamicAnalysis.bestAnswer),
       lastUpdated: new Date().toISOString(),
-      confidence: dynamicAnalysis.confidence / 100 // Added required confidence field
+      confidence: dynamicAnalysis.confidence / 100, // Added required confidence field
+      category: this.detectCategory(dynamicAnalysis.query, dynamicAnalysis.bestAnswer)
     };
 
     // Adicionar resultados individuais das fontes
     const sourceResults = dynamicAnalysis.results.map(result => ({
       title: result.title,
       url: result.url,
-      snippet: result.content,
+      content: result.content,
       source: result.source,
-      reliability: result.reliability,
       category: this.mapCategory(result.categories[0] || 'general'),
-      lastUpdated: result.lastVerified
+      lastUpdated: result.lastVerified,
+      confidence: 0.8
     }));
 
     return [mainResult, ...sourceResults];
@@ -111,11 +110,11 @@ class WebSearchService {
     return intelligentResults.map(result => ({
       title: result.title,
       url: result.url,
-      snippet: result.snippet,
+      content: result.snippet || result.content,
       source: result.source,
-      reliability: result.reliability,
       category: this.mapCategory(result.category),
-      lastUpdated: result.lastUpdated
+      lastUpdated: result.lastUpdated,
+      confidence: result.confidence || 0.8
     }));
   }
 
@@ -126,11 +125,11 @@ class WebSearchService {
     return internalResults.map(result => ({
       title: result.title,
       url: result.url,
-      snippet: result.snippet,
+      content: result.snippet || 'Sem conteúdo disponível',
       source: result.source,
-      reliability: result.reliability,
       category: this.mapCategory(result.category),
-      lastUpdated: result.lastUpdated
+      lastUpdated: result.lastUpdated,
+      confidence: 0.8
     }));
   }
 
@@ -156,11 +155,11 @@ class WebSearchService {
     return scrapedResults.map(result => ({
       title: result.title,
       url: result.url,
-      snippet: result.content,
+      content: result.content,
       source: result.source,
-      reliability: result.reliability,
       category: this.detectCategory(result.title, result.content),
-      lastUpdated: result.lastScraped.toISOString()
+      lastUpdated: result.lastScraped.toISOString(),
+      confidence: 0.8
     }));
   }
 

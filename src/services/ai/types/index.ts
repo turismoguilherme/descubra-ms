@@ -33,7 +33,6 @@ export interface WebSearchResult {
   content: string;
   snippet?: string;
   source: string;
-  reliability: 'low' | 'medium' | 'high';
   category: string; // Made required to match ValidatedSearchResult
   lastUpdated: string;
   confidence: number;

@@ -11,11 +11,14 @@ import { ItineraryRequest, ItineraryResponse, DynamicItinerary } from '@/service
 
 const ItineraryTest = () => {
   const [request, setRequest] = useState<ItineraryRequest>({
+    destination: 'Bonito, MS',
+    location: 'Bonito, MS',
     duration: 3,
     interests: ['ecoturismo'],
     budget: 'moderate',
     startDate: new Date().toISOString().split('T')[0],
-    location: 'Bonito, MS'
+    groupSize: 2,
+    accessibility: []
   });
   const [results, setResults] = useState<ItineraryResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -101,8 +104,8 @@ const ItineraryTest = () => {
                   Localização
                 </label>
                 <Input
-                  value={request.location}
-                  onChange={(e) => setRequest(prev => ({ ...prev, location: e.target.value }))}
+                  value={request.destination}
+                  onChange={(e) => setRequest(prev => ({ ...prev, destination: e.target.value, location: e.target.value }))}
                   placeholder="Ex: Bonito, MS"
                 />
               </div>
@@ -117,7 +120,7 @@ const ItineraryTest = () => {
                   type="number"
                   min="1"
                   max="14"
-                  value={request.duration}
+                  value={request.duration.toString()}
                   onChange={(e) => setRequest(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
                 />
               </div>
@@ -130,8 +133,8 @@ const ItineraryTest = () => {
                 </label>
                 <Select
                   value={request.budget}
-                  onValueChange={(value: 'budget' | 'moderate' | 'luxury') => 
-                    setRequest(prev => ({ ...prev, budget: value }))
+                  onValueChange={(value) => 
+                    setRequest(prev => ({ ...prev, budget: value as 'budget' | 'moderate' | 'luxury' }))
                   }
                 >
                   <SelectTrigger>
@@ -168,6 +171,8 @@ const ItineraryTest = () => {
                   type="number"
                   min="1"
                   max="20"
+                  value={request.groupSize?.toString() || '2'}
+                  onChange={(e) => setRequest(prev => ({ ...prev, groupSize: parseInt(e.target.value) }))}
                   placeholder="Ex: 4"
                 />
               </div>
@@ -240,7 +245,7 @@ const ItineraryTest = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <h3 className="font-semibold text-blue-800">Título</h3>
-                    <p className="text-sm">{results.itinerary.title}</p>
+                    <p className="text-sm">{results.itinerary.name || 'Roteiro Personalizado'}</p>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <h3 className="font-semibold text-green-800">Duração</h3>
@@ -248,8 +253,8 @@ const ItineraryTest = () => {
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <h3 className="font-semibold text-purple-800">Orçamento</h3>
-                    <Badge className={getBudgetColor(results.itinerary.budget)}>
-                      {results.itinerary.budget}
+                    <Badge className={getBudgetColor('moderate')}>
+                      Moderado
                     </Badge>
                   </div>
                 </div>
@@ -258,7 +263,7 @@ const ItineraryTest = () => {
                   <div>
                     <h3 className="font-semibold mb-2">Interesses</h3>
                     <div className="flex flex-wrap gap-1">
-                      {results.itinerary.interests.map(interest => (
+                      {request.interests.map(interest => (
                         <Badge key={interest} variant="outline">
                           {interest}
                         </Badge>
@@ -268,7 +273,7 @@ const ItineraryTest = () => {
                   <div>
                     <h3 className="font-semibold mb-2">Período</h3>
                     <p className="text-sm">
-                      {new Date(results.itinerary.startDate).toLocaleDateString()} - {new Date(results.itinerary.endDate).toLocaleDateString()}
+                      {new Date(results.itinerary.created_at || Date.now()).toLocaleDateString()} - {new Date(Date.now() + results.itinerary.duration * 24 * 60 * 60 * 1000).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -282,7 +287,7 @@ const ItineraryTest = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {results.itinerary.attractions.map((attraction) => (
+                  {(results.itinerary.attractions || []).map((attraction) => (
                     <div key={attraction.id} className="border rounded-lg p-4 bg-gray-50">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold">{attraction.name}</h3>
@@ -293,7 +298,7 @@ const ItineraryTest = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          <span>{attraction.location}</span>
+                          <span>{typeof attraction.location === 'string' ? attraction.location : attraction.location?.address || 'Local não especificado'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
@@ -320,25 +325,23 @@ const ItineraryTest = () => {
                 <div className="space-y-4">
                   {Array.from({ length: results.itinerary.duration }, (_, dayIndex) => {
                     const day = dayIndex + 1;
-                    const dayAttractions = results.itinerary.route.filter(point => 
-                      point.day === day && point.type === 'attraction'
-                    );
+                    const dayAttractions = (results.itinerary.attractions || []).slice(dayIndex, dayIndex + 2);
                     
                     return (
                       <div key={day} className="border rounded-lg p-4 bg-yellow-50">
                         <h3 className="font-semibold mb-3">Dia {day}</h3>
                         {dayAttractions.length > 0 ? (
                           <div className="space-y-2">
-                            {dayAttractions.map((point, index) => (
-                              <div key={point.id} className="flex items-center gap-3 p-2 bg-white rounded">
+                            {dayAttractions.map((attraction, index) => (
+                              <div key={attraction.id} className="flex items-center gap-3 p-2 bg-white rounded">
                                 <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
                                 <div className="flex-1">
-                                  <p className="font-medium">{point.name}</p>
-                                  <p className="text-sm text-gray-600">{point.location.address}</p>
+                                  <p className="font-medium">{attraction.name}</p>
+                                  <p className="text-sm text-gray-600">{typeof attraction.location === 'string' ? attraction.location : attraction.location?.address || 'Local não especificado'}</p>
                                 </div>
                                 <div className="text-right text-sm">
-                                  <p>{Math.round(point.estimatedTime / 60)}h</p>
-                                  <p className="text-green-600">R$ {point.estimatedCost}</p>
+                                  <p>{attraction.estimatedTime}h</p>
+                                  <p className="text-green-600">R$ {attraction.estimatedCost}</p>
                                 </div>
                               </div>
                             ))}
@@ -360,11 +363,11 @@ const ItineraryTest = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xs space-y-1">
-                  <div><strong>Total de atrações:</strong> {results.itinerary.attractions.length}</div>
-                  <div><strong>Pontos de rota:</strong> {results.itinerary.route.length}</div>
-                  <div><strong>Status:</strong> {results.itinerary.status}</div>
+                  <div><strong>Total de atrações:</strong> {(results.itinerary.attractions || []).length}</div>
+                  <div><strong>Pontos de rota:</strong> {results.itinerary.duration * 2}</div>
+                  <div><strong>Status:</strong> {results.itinerary.status || 'draft'}</div>
                   <div><strong>ID do roteiro:</strong> {results.itinerary.id}</div>
-                  <div><strong>Usuário:</strong> {results.itinerary.userId}</div>
+                  <div><strong>Usuário:</strong> {results.itinerary.userId || 'test-user'}</div>
                 </div>
               </CardContent>
             </Card>

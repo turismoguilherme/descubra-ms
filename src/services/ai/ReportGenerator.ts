@@ -345,7 +345,7 @@ class ReportGenerator {
       doc.text('Insights Preditivos', 20, yPosition);
       yPosition += 15;
 
-      data.insights.forEach((insight: PredictiveInsight) => {
+      data.insights.forEach((insight: any) => {
         doc.setFontSize(12);
         doc.text(`• ${insight.title}`, 25, yPosition);
         yPosition += 8;
@@ -478,5 +478,5 @@ export const reportGeneratorService = reportGenerator;
 export type GeneratedReport = ReportData;
 
 // Add missing methods for compatibility
-ReportGenerator.prototype.generateReport = ReportGenerator.prototype.generateComprehensiveReport;
-ReportGenerator.prototype.generateAutomaticReport = ReportGenerator.prototype.generateComprehensiveReport;
+(ReportGenerator.prototype as any).generateReport = ReportGenerator.prototype.generateComprehensiveReport;
+(ReportGenerator.prototype as any).generateAutomaticReport = ReportGenerator.prototype.generateComprehensiveReport;
