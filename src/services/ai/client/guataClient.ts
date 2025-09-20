@@ -10,6 +10,7 @@ import { socialMediaService } from "../social/socialMediaService";
 import { reservationService } from "@/services/reservations/reservationService";
 import { emergencyService } from "@/services/emergency/emergencyService";
 import { itineraryService } from "@/services/itineraries/itineraryService";
+import { ItineraryRequest } from "@/services/itineraries/itineraryTypes";
 import { mlService } from "@/services/ml/mlService";
 import { informationVerificationService } from "../verification/informationVerificationService";
 
@@ -272,12 +273,15 @@ ${safetyRecommendations.join('\n')}
           const budget = this.extractBudget(prompt);
 
           if (interests.length > 0 && location) {
-            const itineraryRequest = {
+            const itineraryRequest: ItineraryRequest = {
+              destination: location,
+              location: location,
               duration: duration || 3,
               interests: interests,
               budget: budget || 'moderate',
               startDate: new Date().toISOString(),
-              location: location
+              groupSize: 2, // Default value
+              accessibility: [] // Default value
             };
 
             const itineraryResponse = await itineraryService.generateItinerary(itineraryRequest);

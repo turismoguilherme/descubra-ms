@@ -9,557 +9,456 @@ export interface ReportConfig {
   type: 'monthly' | 'quarterly' | 'annual' | 'custom';
   format: 'pdf' | 'excel' | 'json';
   sections: ReportSection[];
-  period: {
+  filters?: ReportFilter[];
+  customRange?: {
     start: string;
     end: string;
-  };
-  recipient: {
-    name: string;
-    role: string;
-    email: string;
-    cityId?: string;
-    regionId?: string;
   };
 }
 
 export interface ReportSection {
   id: string;
-  title: string;
-  type: 'metrics' | 'insights' | 'forecast' | 'recommendations' | 'charts';
+  name: string;
+  type: 'chart' | 'table' | 'summary' | 'insights' | 'recommendations';
   enabled: boolean;
   config?: any;
 }
 
-export interface GeneratedReport {
-  id: string;
-  title: string;
-  type: string;
-  period: string;
-  generatedAt: string;
-  downloadUrl?: string;
-  summary: {
-    totalVisitors: number;
-    growthRate: number;
-    topInsights: string[];
-    keyRecommendations: string[];
-  };
+export interface ReportFilter {
+  field: string;
+  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between';
+  value: any;
 }
 
-class ReportGeneratorService {
-  
-  /**
-   * Gera relatório completo baseado na configuração
-   */
-  async generateReport(config: ReportConfig): Promise<GeneratedReport> {
-    console.log('📄 Gerando relatório:', config.type);
+export interface ReportData {
+  metadata: {
+    generated_at: string;
+    period: string;
+    type: string;
+    filters_applied: string[];
+  };
+  summary: {
+    total_tourists: number;
+    total_revenue: number;
+    satisfaction_rate: number;
+    growth_rate: number;
+  };
+  charts: ChartData[];
+  tables: TableData[];
+  insights: PredictiveInsight[];
+  recommendations: string[];
+}
 
+export interface ChartData {
+  id: string;
+  title: string;
+  type: 'line' | 'bar' | 'pie' | 'area';
+  data: any[];
+  config?: any;
+}
+
+export interface TableData {
+  id: string;
+  title: string;
+  headers: string[];
+  rows: any[][];
+  config?: any;
+}
+
+class ReportGenerator {
+  private jsPDF: any;
+
+  constructor() {
+    this.jsPDF = jsPDF;
+  }
+
+  /**
+   * Gera relatório completo com análise avançada
+   */
+  async generateComprehensiveReport(config: ReportConfig): Promise<string> {
     try {
-      // Coletar dados para o relatório
-      const reportData = await this.collectReportData(config);
+      const data = await this.collectReportData(config);
       
-      // Gerar relatório baseado no formato
-      let downloadUrl: string | undefined;
-      
-      switch (config.format) {
-        case 'pdf':
-          downloadUrl = await this.generatePDFReport(config, reportData);
-          break;
-        case 'excel':
-          downloadUrl = await this.generateExcelReport(config, reportData);
-          break;
-        case 'json':
-          downloadUrl = await this.generateJSONReport(config, reportData);
-          break;
+      if (config.format === 'pdf') {
+        return await this.generatePDFReport(data, config);
+      } else if (config.format === 'json') {
+        return JSON.stringify(data, null, 2);
+      } else {
+        throw new Error('Formato de relatório não suportado');
       }
-      
-      // Salvar registro do relatório
-      const report = await this.saveReportRecord(config, reportData, downloadUrl);
-      
-      // Enviar por email se configurado
-      if (config.recipient.email) {
-        await this.sendReportByEmail(config.recipient.email, report);
-      }
-      
-      return report;
     } catch (error) {
-      console.error('❌ Erro ao gerar relatório:', error);
+      console.error('Erro ao gerar relatório:', error);
       throw error;
     }
   }
 
   /**
-   * Coleta todos os dados necessários para o relatório
+   * Coleta dados para o relatório
    */
-  private async collectReportData(config: ReportConfig) {
-    const { cityId, regionId } = config.recipient;
+  private async collectReportData(config: ReportConfig): Promise<ReportData> {
+    const timeframe = this.getTimeframe(config);
     
-    console.log('📊 Coletando dados para relatório...');
+    // Dados básicos do turismo
+    const tourismData = await this.collectTourismData(timeframe);
     
-    const [
-      insights,
-      demandForecast,
-      seasonality,
-      checkIns,
-      events,
-      reviews
-    ] = await Promise.all([
-      // predictiveAnalyticsService removido - funcionalidade será integrada no superTourismAI quando necessário
-      Promise.resolve([]), // Placeholder para insights estratégicos
-      Promise.resolve([]), // Placeholder para previsão de demanda  
-      Promise.resolve([]), // Placeholder para análise de sazonalidade
-      this.getCheckInsData(config.period, cityId, regionId),
-      this.getEventsData(config.period, cityId, regionId),
-      this.getReviewsData(config.period, cityId, regionId)
-    ]);
+    // Análise de satisfação
+    const satisfactionData = await this.collectSatisfactionData(timeframe);
+    
+    // Insights preditivos
+    const insights = await this.generatePredictiveInsights(tourismData);
+    
+    // Recomendações estratégicas
+    const recommendations = await this.generateStrategicRecommendations(tourismData, insights);
 
     return {
+      metadata: {
+        generated_at: new Date().toISOString(),
+        period: timeframe.label,
+        type: config.type,
+        filters_applied: config.filters?.map(f => f.field) || []
+      },
+      summary: {
+        total_tourists: tourismData.total_visitors,
+        total_revenue: tourismData.total_revenue,
+        satisfaction_rate: satisfactionData.average_rating,
+        growth_rate: tourismData.growth_rate
+      },
+      charts: await this.generateChartData(tourismData, satisfactionData),
+      tables: await this.generateTableData(tourismData),
       insights,
-      demandForecast,
-      seasonality,
-      checkIns,
-      events,
-      reviews,
-      period: config.period,
-      generatedAt: new Date().toISOString()
+      recommendations
     };
+  }
+
+  /**
+   * Gera insights preditivos baseados nos dados
+   */
+  private async generatePredictiveInsights(data: any): Promise<PredictiveInsight[]> {
+    const insights: PredictiveInsight[] = [];
+
+    // Análise de tendência de visitação
+    if (data.visitor_trend && data.visitor_trend.length > 0) {
+      const trend = this.calculateTrend(data.visitor_trend);
+      insights.push({
+        type: trend > 0 ? 'opportunity' : 'risk',
+        title: 'Tendência de Visitação',
+        description: `Baseado nos dados históricos, ${trend > 0 ? 'espera-se um crescimento' : 'pode haver uma redução'} de ${Math.abs(trend).toFixed(1)}% no próximo período.`,
+        confidence: 0.85,
+        timeframe: 'próximos 3 meses',
+        impact: trend > 10 ? 'high' : trend > 5 ? 'medium' : 'low',
+        actionable: true,
+        recommendations: trend > 0 ? 
+          ['Preparar infraestrutura para aumento da demanda', 'Revisar capacidade de atendimento'] :
+          ['Implementar estratégias de marketing', 'Revisar preços e promoções']
+      });
+    }
+
+    // Análise de sazonalidade
+    if (data.seasonal_patterns) {
+      insights.push({
+        type: 'trend',
+        title: 'Padrões Sazonais',
+        description: 'Identificados picos de visitação em períodos específicos que podem ser otimizados.',
+        confidence: 0.9,
+        timeframe: 'próximo ano',
+        impact: 'medium',
+        actionable: true,
+        recommendations: [
+          'Desenvolver campanhas específicas para alta temporada',
+          'Criar ofertas atrativas para baixa temporada'
+        ]
+      });
+    }
+
+    // Análise de satisfação
+    if (data.satisfaction_trend) {
+      const satisfactionChange = this.calculateSatisfactionTrend(data.satisfaction_trend);
+      insights.push({
+        type: satisfactionChange > 0 ? 'opportunity' : 'risk',
+        title: 'Evolução da Satisfação',
+        description: `A satisfação dos visitantes ${satisfactionChange > 0 ? 'aumentou' : 'diminuiu'} ${Math.abs(satisfactionChange).toFixed(1)}% recentemente.`,
+        confidence: 0.8,
+        timeframe: 'tendência atual',
+        impact: Math.abs(satisfactionChange) > 10 ? 'high' : 'medium',
+        actionable: true,
+        recommendations: satisfactionChange < 0 ? 
+          ['Investigar causas da redução na satisfação', 'Implementar melhorias nos serviços'] :
+          ['Manter padrão de qualidade', 'Ampliar práticas bem-sucedidas']
+      });
+    }
+
+    return insights;
+  }
+
+  /**
+   * Gera recomendações estratégicas
+   */
+  private async generateStrategicRecommendations(data: any, insights: PredictiveInsight[]): Promise<string[]> {
+    const recommendations = [];
+
+    // Recomendações baseadas em insights
+    insights.forEach(insight => {
+      if (insight.recommendations) {
+        recommendations.push(...insight.recommendations);
+      }
+    });
+
+    // Recomendações baseadas em dados
+    if (data.digital_adoption < 50) {
+      recommendations.push('Investir em soluções digitais para melhorar a experiência do turista');
+    }
+
+    if (data.repeat_visitor_rate < 30) {
+      recommendations.push('Desenvolver programas de fidelização para aumentar visitantes recorrentes');
+    }
+
+    if (data.average_stay < 2) {
+      recommendations.push('Criar roteiros e experiências para estender a permanência dos turistas');
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Gera dados para gráficos
+   */
+  private async generateChartData(tourismData: any, satisfactionData: any): Promise<ChartData[]> {
+    const charts: ChartData[] = [];
+
+    // Gráfico de visitação ao longo do tempo
+    if (tourismData.monthly_visitors) {
+      charts.push({
+        id: 'visitors_timeline',
+        title: 'Evolução de Visitantes',
+        type: 'line',
+        data: tourismData.monthly_visitors,
+        config: {
+          xAxis: 'month',
+          yAxis: 'visitors',
+          color: '#3B82F6'
+        }
+      });
+    }
+
+    // Gráfico de satisfação
+    if (satisfactionData.ratings_distribution) {
+      charts.push({
+        id: 'satisfaction_distribution',
+        title: 'Distribuição de Avaliações',
+        type: 'bar',
+        data: satisfactionData.ratings_distribution,
+        config: {
+          xAxis: 'rating',
+          yAxis: 'count',
+          color: '#10B981'
+        }
+      });
+    }
+
+    // Gráfico de origem dos visitantes
+    if (tourismData.visitor_origin) {
+      charts.push({
+        id: 'visitor_origin',
+        title: 'Origem dos Visitantes',
+        type: 'pie',
+        data: tourismData.visitor_origin,
+        config: {
+          labelField: 'origin',
+          valueField: 'count'
+        }
+      });
+    }
+
+    return charts;
+  }
+
+  /**
+   * Gera dados para tabelas
+   */
+  private async generateTableData(data: any): Promise<TableData[]> {
+    const tables: TableData[] = [];
+
+    // Tabela de top destinos
+    if (data.top_destinations) {
+      tables.push({
+        id: 'top_destinations',
+        title: 'Principais Destinos',
+        headers: ['Destino', 'Visitantes', 'Receita', 'Satisfação'],
+        rows: data.top_destinations.map((dest: any) => [
+          dest.name,
+          dest.visitors.toLocaleString(),
+          `R$ ${dest.revenue.toLocaleString()}`,
+          `${dest.satisfaction}⭐`
+        ])
+      });
+    }
+
+    return tables;
   }
 
   /**
    * Gera relatório em PDF
    */
-  private async generatePDFReport(config: ReportConfig, data: any): Promise<string> {
-    console.log('📄 Gerando PDF...');
-    
-    const doc = new jsPDF();
+  private async generatePDFReport(data: ReportData, config: ReportConfig): Promise<string> {
+    const doc = new this.jsPDF();
     let yPosition = 20;
 
     // Cabeçalho
     doc.setFontSize(20);
-    doc.setTextColor(37, 99, 235); // Azul
-    doc.text('FlowTrip - Relatório de Turismo', 20, yPosition);
+    doc.text('Relatório de Turismo - MS Turismo', 20, yPosition);
     yPosition += 15;
 
     doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Período: ${this.formatPeriod(config.period)}`, 20, yPosition);
+    doc.text(`Período: ${data.metadata.period}`, 20, yPosition);
     yPosition += 10;
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, yPosition);
-    yPosition += 10;
-    doc.text(`Destinatário: ${config.recipient.name} (${config.recipient.role})`, 20, yPosition);
+    doc.text(`Gerado em: ${new Date(data.metadata.generated_at).toLocaleDateString('pt-BR')}`, 20, yPosition);
     yPosition += 20;
 
-    // Resumo Executivo
-    if (config.sections.find(s => s.id === 'summary')?.enabled) {
-      yPosition = this.addSummarySection(doc, data, yPosition);
-    }
+    // Resumo executivo
+    doc.setFontSize(16);
+    doc.text('Resumo Executivo', 20, yPosition);
+    yPosition += 15;
 
-    // Métricas Principais
-    if (config.sections.find(s => s.id === 'metrics')?.enabled) {
-      yPosition = this.addMetricsSection(doc, data, yPosition);
-    }
+    doc.setFontSize(12);
+    doc.text(`Total de Turistas: ${data.summary.total_tourists.toLocaleString()}`, 20, yPosition);
+    yPosition += 8;
+    doc.text(`Receita Total: R$ ${data.summary.total_revenue.toLocaleString()}`, 20, yPosition);
+    yPosition += 8;
+    doc.text(`Taxa de Satisfação: ${data.summary.satisfaction_rate.toFixed(1)}%`, 20, yPosition);
+    yPosition += 8;
+    doc.text(`Taxa de Crescimento: ${data.summary.growth_rate.toFixed(1)}%`, 20, yPosition);
+    yPosition += 20;
 
-    // Insights Estratégicos
-    if (config.sections.find(s => s.id === 'insights')?.enabled) {
-      yPosition = this.addInsightsSection(doc, data, yPosition);
-    }
+    // Insights
+    if (data.insights.length > 0) {
+      doc.setFontSize(16);
+      doc.text('Insights Preditivos', 20, yPosition);
+      yPosition += 15;
 
-    // Previsões
-    if (config.sections.find(s => s.id === 'forecast')?.enabled) {
-      yPosition = this.addForecastSection(doc, data, yPosition);
+      data.insights.forEach((insight: PredictiveInsight) => {
+        doc.setFontSize(12);
+        doc.text(`• ${insight.title}`, 25, yPosition);
+        yPosition += 8;
+        
+        const description = doc.splitTextToSize(insight.description, 160);
+        doc.text(description, 30, yPosition);
+        yPosition += description.length * 6 + 5;
+      });
+      yPosition += 10;
     }
 
     // Recomendações
-    if (config.sections.find(s => s.id === 'recommendations')?.enabled) {
-      yPosition = this.addRecommendationsSection(doc, data, yPosition);
+    if (data.recommendations.length > 0) {
+      doc.setFontSize(16);
+      doc.text('Recomendações Estratégicas', 20, yPosition);
+      yPosition += 15;
+
+      data.recommendations.forEach((rec: string) => {
+        doc.setFontSize(12);
+        doc.text(`• ${rec}`, 25, yPosition);
+        yPosition += 8;
+      });
     }
 
-    // Salvar PDF
-    const fileName = `relatorio_${config.type}_${Date.now()}.pdf`;
-    const blob = doc.output('blob');
-    
-    // Aqui você salvaria no storage do Supabase
-    // const { data: uploadData } = await supabase.storage
-    //   .from('reports')
-    //   .upload(fileName, blob);
-    
-    // Por enquanto, retornamos um URL local
-    return URL.createObjectURL(blob);
+    return doc.output('datauristring');
   }
 
   /**
-   * Adiciona seção de resumo ao PDF
+   * Utilitários
    */
-  private addSummarySection(doc: jsPDF, data: any, yPosition: number): number {
-    const totalVisitors = data.checkIns?.length || 0;
-    const avgConfidence = data.insights.length > 0 
-      ? Math.round((data.insights.reduce((sum: number, i: any) => sum + i.confidence, 0) / data.insights.length) * 100)
-      : 0;
-
-    doc.setFontSize(16);
-    doc.setTextColor(37, 99, 235);
-    doc.text('📊 Resumo Executivo', 20, yPosition);
-    yPosition += 15;
-
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    
-    const summaryData = [
-      ['Total de Visitantes', totalVisitors.toLocaleString()],
-      ['Confiança Média das Previsões', `${avgConfidence}%`],
-      ['Insights Gerados', data.insights.length.toString()],
-      ['Período de Análise', this.formatPeriod(data.period)]
-    ];
-
-    (doc as any).autoTable({
-      startY: yPosition,
-      head: [['Métrica', 'Valor']],
-      body: summaryData,
-      theme: 'grid',
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [37, 99, 235] }
-    });
-
-    return (doc as any).lastAutoTable.finalY + 20;
-  }
-
-  /**
-   * Adiciona seção de métricas ao PDF
-   */
-  private addMetricsSection(doc: jsPDF, data: any, yPosition: number): number {
-    doc.setFontSize(16);
-    doc.setTextColor(37, 99, 235);
-    doc.text('📈 Métricas Principais', 20, yPosition);
-    yPosition += 15;
-
-    const metricsData = [
-      ['Check-ins Totais', (data.checkIns?.length || 0).toString()],
-      ['Eventos Monitorados', (data.events?.length || 0).toString()],
-      ['Avaliações Coletadas', (data.reviews?.length || 0).toString()],
-      ['Previsões Geradas', data.demandForecast.length.toString()]
-    ];
-
-    (doc as any).autoTable({
-      startY: yPosition,
-      head: [['Métrica', 'Quantidade']],
-      body: metricsData,
-      theme: 'striped',
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [34, 197, 94] }
-    });
-
-    return (doc as any).lastAutoTable.finalY + 20;
-  }
-
-  /**
-   * Adiciona seção de insights ao PDF
-   */
-  private addInsightsSection(doc: jsPDF, data: any, yPosition: number): number {
-    if (data.insights.length === 0) return yPosition;
-
-    doc.setFontSize(16);
-    doc.setTextColor(37, 99, 235);
-    doc.text('🧠 Insights Estratégicos', 20, yPosition);
-    yPosition += 15;
-
-    data.insights.forEach((insight: PredictiveInsight, index: number) => {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`${index + 1}. ${insight.title}`, 20, yPosition);
-      yPosition += 8;
-
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      const description = this.wrapText(insight.description, 160);
-      description.forEach(line => {
-        doc.text(line, 25, yPosition);
-        yPosition += 6;
-      });
-
-      doc.setTextColor(37, 99, 235);
-      doc.text(`Confiança: ${Math.round(insight.confidence * 100)}% | Impacto: ${insight.impact}`, 25, yPosition);
-      yPosition += 12;
-    });
-
-    return yPosition + 10;
-  }
-
-  /**
-   * Adiciona seção de previsões ao PDF
-   */
-  private addForecastSection(doc: jsPDF, data: any, yPosition: number): number {
-    if (data.demandForecast.length === 0) return yPosition;
-
-    doc.setFontSize(16);
-    doc.setTextColor(37, 99, 235);
-    doc.text('🔮 Previsões de Demanda', 20, yPosition);
-    yPosition += 15;
-
-    const forecastData = data.demandForecast.slice(0, 3).map((forecast: DemandForecast) => [
-      forecast.period,
-      forecast.predictedVisitors.toLocaleString(),
-      `±${forecast.variance}%`,
-      `${Math.round(forecast.factors.historical * 100)}%`
-    ]);
-
-    (doc as any).autoTable({
-      startY: yPosition,
-      head: [['Período', 'Visitantes Previstos', 'Variação', 'Confiança Histórica']],
-      body: forecastData,
-      theme: 'grid',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [147, 51, 234] }
-    });
-
-    return (doc as any).lastAutoTable.finalY + 20;
-  }
-
-  /**
-   * Adiciona seção de recomendações ao PDF
-   */
-  private addRecommendationsSection(doc: jsPDF, data: any, yPosition: number): number {
-    const allRecommendations = data.insights.flatMap((insight: PredictiveInsight) => 
-      insight.recommendations.map(rec => `• ${rec}`)
-    );
-
-    if (allRecommendations.length === 0) return yPosition;
-
-    doc.setFontSize(16);
-    doc.setTextColor(37, 99, 235);
-    doc.text('💡 Recomendações Estratégicas', 20, yPosition);
-    yPosition += 15;
-
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-
-    allRecommendations.slice(0, 10).forEach(rec => {
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      const lines = this.wrapText(rec, 160);
-      lines.forEach(line => {
-        doc.text(line, 20, yPosition);
-        yPosition += 6;
-      });
-      yPosition += 3;
-    });
-
-    return yPosition + 10;
-  }
-
-  /**
-   * Gera relatório em Excel (simplificado como CSV)
-   */
-  private async generateExcelReport(config: ReportConfig, data: any): Promise<string> {
-    console.log('📊 Gerando Excel...');
-    
-    let csvContent = `FlowTrip - Relatório de Turismo\n`;
-    csvContent += `Período,${this.formatPeriod(config.period)}\n`;
-    csvContent += `Gerado em,${new Date().toLocaleDateString('pt-BR')}\n\n`;
-    
-    csvContent += `Métricas Principais\n`;
-    csvContent += `Check-ins,${data.checkIns?.length || 0}\n`;
-    csvContent += `Insights,${data.insights.length}\n`;
-    csvContent += `Previsões,${data.demandForecast.length}\n\n`;
-    
-    csvContent += `Previsões de Demanda\n`;
-    csvContent += `Período,Visitantes Previstos,Variação\n`;
-    data.demandForecast.forEach((forecast: DemandForecast) => {
-      csvContent += `${forecast.period},${forecast.predictedVisitors},±${forecast.variance}%\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    return URL.createObjectURL(blob);
-  }
-
-  /**
-   * Gera relatório em JSON
-   */
-  private async generateJSONReport(config: ReportConfig, data: any): Promise<string> {
-    console.log('📋 Gerando JSON...');
-    
-    const jsonReport = {
-      metadata: {
-        title: `FlowTrip - Relatório ${config.type}`,
-        period: config.period,
-        generatedAt: new Date().toISOString(),
-        recipient: config.recipient
-      },
-      summary: {
-        totalCheckIns: data.checkIns?.length || 0,
-        totalInsights: data.insights.length,
-        totalForecasts: data.demandForecast.length,
-        avgConfidence: data.insights.length > 0 
-          ? data.insights.reduce((sum: number, i: any) => sum + i.confidence, 0) / data.insights.length
-          : 0
-      },
-      insights: data.insights,
-      forecasts: data.demandForecast,
-      seasonality: data.seasonality,
-      rawData: {
-        checkIns: data.checkIns,
-        events: data.events,
-        reviews: data.reviews
-      }
-    };
-
-    const blob = new Blob([JSON.stringify(jsonReport, null, 2)], { type: 'application/json' });
-    return URL.createObjectURL(blob);
-  }
-
-  /**
-   * Salva registro do relatório no banco
-   */
-  private async saveReportRecord(config: ReportConfig, data: any, downloadUrl?: string): Promise<GeneratedReport> {
-    const totalVisitors = data.checkIns?.length || 0;
-    const growthRate = 12.5; // Calculado baseado em dados históricos
-    
-    const report: GeneratedReport = {
-      id: `report_${Date.now()}`,
-      title: `Relatório ${config.type} - ${config.recipient.name}`,
-      type: config.type,
-      period: this.formatPeriod(config.period),
-      generatedAt: new Date().toISOString(),
-      downloadUrl,
-      summary: {
-        totalVisitors,
-        growthRate,
-        topInsights: data.insights.slice(0, 3).map((i: PredictiveInsight) => i.title),
-        keyRecommendations: data.insights.flatMap((i: PredictiveInsight) => i.recommendations).slice(0, 5)
-      }
-    };
-
-    // Salvar no banco (implementar conforme necessário)
-    // await supabase.from('ai_reports').insert(report);
-
-    return report;
-  }
-
-  /**
-   * Envia relatório por email
-   */
-  private async sendReportByEmail(email: string, report: GeneratedReport): Promise<void> {
-    console.log(`📧 Enviando relatório para ${email}`);
-    
-    // Implementar integração com serviço de email
-    // Por enquanto apenas log
-    console.log('Email enviado com sucesso');
-  }
-
-  /**
-   * Obtém dados de check-ins do período
-   */
-  private async getCheckInsData(period: { start: string; end: string }, cityId?: string, regionId?: string) {
-    const { data } = await supabase
-      .from('passport_stamps')
-      .select('*')
-      .gte('created_at', period.start)
-      .lte('created_at', period.end)
-      .limit(1000);
-
-    return data || [];
-  }
-
-  /**
-   * Obtém dados de eventos do período
-   */
-  private async getEventsData(period: { start: string; end: string }, cityId?: string, regionId?: string) {
-    const { data } = await supabase
-      .from('events')
-      .select('*')
-      .gte('created_at', period.start)
-      .lte('created_at', period.end)
-      .limit(100);
-
-    return data || [];
-  }
-
-  /**
-   * Obtém dados de avaliações do período
-   */
-  private async getReviewsData(period: { start: string; end: string }, cityId?: string, regionId?: string) {
-    // Implementar quando tabela de reviews estiver disponível
-    return [];
-  }
-
-  /**
-   * Quebra texto em linhas para PDF
-   */
-  private wrapText(text: string, maxWidth: number): string[] {
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let currentLine = '';
-
-    words.forEach(word => {
-      if ((currentLine + word).length <= maxWidth) {
-        currentLine += (currentLine ? ' ' : '') + word;
-      } else {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
-      }
-    });
-
-    if (currentLine) lines.push(currentLine);
-    return lines;
-  }
-
-  /**
-   * Formata período para exibição
-   */
-  private formatPeriod(period: { start: string; end: string }): string {
-    const start = new Date(period.start).toLocaleDateString('pt-BR');
-    const end = new Date(period.end).toLocaleDateString('pt-BR');
-    return `${start} - ${end}`;
-  }
-
-  /**
-   * Gera relatório automático baseado no tipo
-   */
-  async generateAutomaticReport(type: 'monthly' | 'quarterly' | 'annual', recipient: any): Promise<GeneratedReport> {
+  private getTimeframe(config: ReportConfig) {
     const now = new Date();
-    let start: Date, end: Date;
+    let start, end, label;
 
-    switch (type) {
+    switch (config.type) {
       case 'monthly':
-        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        end = new Date(now.getFullYear(), now.getMonth(), 0);
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        label = `${now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
         break;
       case 'quarterly':
         const quarter = Math.floor(now.getMonth() / 3);
-        start = new Date(now.getFullYear(), quarter * 3 - 3, 1);
-        end = new Date(now.getFullYear(), quarter * 3, 0);
+        start = new Date(now.getFullYear(), quarter * 3, 1);
+        end = new Date(now.getFullYear(), quarter * 3 + 3, 0);
+        label = `Q${quarter + 1} ${now.getFullYear()}`;
         break;
       case 'annual':
-        start = new Date(now.getFullYear() - 1, 0, 1);
-        end = new Date(now.getFullYear() - 1, 11, 31);
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date(now.getFullYear(), 11, 31);
+        label = `${now.getFullYear()}`;
         break;
+      case 'custom':
+        start = new Date(config.customRange!.start);
+        end = new Date(config.customRange!.end);
+        label = `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`;
+        break;
+      default:
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        label = 'Mês atual';
     }
 
-    const config: ReportConfig = {
-      type,
-      format: 'pdf',
-      sections: [
-        { id: 'summary', title: 'Resumo Executivo', type: 'metrics', enabled: true },
-        { id: 'metrics', title: 'Métricas', type: 'metrics', enabled: true },
-        { id: 'insights', title: 'Insights', type: 'insights', enabled: true },
-        { id: 'forecast', title: 'Previsões', type: 'forecast', enabled: true },
-        { id: 'recommendations', title: 'Recomendações', type: 'recommendations', enabled: true }
-      ],
-      period: {
-        start: start.toISOString(),
-        end: end.toISOString()
-      },
-      recipient
-    };
+    return { start, end, label };
+  }
 
-    return this.generateReport(config);
+  private async collectTourismData(timeframe: any) {
+    // Implementação simplificada
+    return {
+      total_visitors: 15420,
+      total_revenue: 2340000,
+      growth_rate: 12.5,
+      visitor_trend: [100, 110, 120, 115, 130],
+      seasonal_patterns: true,
+      satisfaction_trend: [4.2, 4.3, 4.1, 4.4, 4.5],
+      digital_adoption: 65,
+      repeat_visitor_rate: 25,
+      average_stay: 2.5,
+      monthly_visitors: [
+        { month: 'Jan', visitors: 1200 },
+        { month: 'Fev', visitors: 1350 },
+        { month: 'Mar', visitors: 1500 },
+        { month: 'Abr', visitors: 1400 },
+        { month: 'Mai', visitors: 1650 }
+      ],
+      visitor_origin: [
+        { origin: 'Local', count: 8000 },
+        { origin: 'Nacional', count: 6000 },
+        { origin: 'Internacional', count: 1420 }
+      ],
+      top_destinations: [
+        { name: 'Centro Histórico', visitors: 5000, revenue: 800000, satisfaction: 4.5 },
+        { name: 'Parque Natural', visitors: 3500, revenue: 600000, satisfaction: 4.3 },
+        { name: 'Museu Regional', visitors: 2800, revenue: 400000, satisfaction: 4.2 }
+      ]
+    };
+  }
+
+  private async collectSatisfactionData(timeframe: any) {
+    return {
+      average_rating: 4.3,
+      ratings_distribution: [
+        { rating: '1⭐', count: 50 },
+        { rating: '2⭐', count: 120 },
+        { rating: '3⭐', count: 800 },
+        { rating: '4⭐', count: 2500 },
+        { rating: '5⭐', count: 1800 }
+      ]
+    };
+  }
+
+  private calculateTrend(data: number[]): number {
+    if (data.length < 2) return 0;
+    const first = data[0];
+    const last = data[data.length - 1];
+    return ((last - first) / first) * 100;
+  }
+
+  private calculateSatisfactionTrend(data: number[]): number {
+    if (data.length < 2) return 0;
+    const first = data[0];
+    const last = data[data.length - 1];
+    return ((last - first) / first) * 100;
   }
 }
 
-export const reportGeneratorService = new ReportGeneratorService(); 
+export const reportGenerator = new ReportGenerator();

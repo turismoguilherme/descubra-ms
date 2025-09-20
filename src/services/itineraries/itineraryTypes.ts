@@ -14,11 +14,17 @@ export interface ItineraryPoint {
   cost?: number;
   rating?: number;
   order: number;
+  // Additional compatibility properties
+  priority?: string;
+  estimatedTime?: number;
+  estimatedCost?: number;
+  day?: number;
 }
 
 export interface Itinerary {
   id: string;
   name: string;
+  title?: string; // For compatibility
   description: string;
   duration: number; // days
   points: ItineraryPoint[];
@@ -27,13 +33,22 @@ export interface Itinerary {
   category: string[];
   created_at: string;
   updated_at: string;
+  // Additional compatibility properties
+  budget?: number;
+  interests?: string[];
+  startDate?: string;
+  endDate?: string;
+  attractions?: ItineraryPoint[];
+  route?: ItineraryPoint[];
+  status?: string;
+  userId?: string;
 }
 
 export interface ItineraryRequest {
   destination: string;
   location?: string; // For compatibility
   duration: number;
-  budget: number;
+  budget: number | string; // Allow both number and string for compatibility
   interests: string[];
   groupSize: number;
   accessibility: string[];

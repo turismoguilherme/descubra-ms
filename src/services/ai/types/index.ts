@@ -34,13 +34,13 @@ export interface WebSearchResult {
   snippet?: string;
   source: string;
   reliability: 'low' | 'medium' | 'high';
-  category: string;
+  category: string; // Made required to match ValidatedSearchResult
   lastUpdated: string;
   confidence: number;
 }
 
 export interface ValidatedSearchResult extends WebSearchResult {
-  category: string;
+  category: string; // This is already included in WebSearchResult now
 }
 
 // Verification result types
