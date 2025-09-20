@@ -82,11 +82,12 @@ class WebSearchService {
     const mainResult: WebSearchResult = {
       title: `Resposta para: ${dynamicAnalysis.query}`,
       url: dynamicAnalysis.sources[0] || 'https://fundtur.ms.gov.br',
-      snippet: dynamicAnalysis.bestAnswer,
+      content: dynamicAnalysis.bestAnswer, // Added required content field
       source: dynamicAnalysis.sources.join(', '),
       reliability: dynamicAnalysis.confidence >= 90 ? 'high' : dynamicAnalysis.confidence >= 70 ? 'medium' : 'low',
       category: this.detectCategory(dynamicAnalysis.query, dynamicAnalysis.bestAnswer),
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      confidence: dynamicAnalysis.confidence / 100 // Added required confidence field
     };
 
     // Adicionar resultados individuais das fontes

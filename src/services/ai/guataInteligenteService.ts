@@ -48,9 +48,9 @@ class GuataInteligenteService {
       const originalResponse = await guataService.askQuestion(query.question);
       
       return {
-        answer: originalResponse.resposta || originalResponse.response || 'Resposta não disponível',
+        answer: (originalResponse as any).resposta || (originalResponse as any).response || 'Resposta não disponível',
         confidence: 0.9,
-        sources: originalResponse.fontesUtilizadas || ['guata_official'],
+        sources: (originalResponse as any).fontesUtilizadas || ['guata_official'],
         timestamp: new Date(),
         processingTime: Date.now() - startTime,
         verificationStatus: 'verified'
