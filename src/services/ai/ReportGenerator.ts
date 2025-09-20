@@ -3,6 +3,7 @@ import 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
 // PredictiveAnalytics removido - funcionalidade integrada no superTourismAI
 import { aiConsultantService } from './AIConsultantService';
+import { PredictiveInsight, DemandForecast } from './types';
 
 export interface ReportConfig {
   type: 'monthly' | 'quarterly' | 'annual' | 'custom';

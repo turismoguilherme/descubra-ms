@@ -88,6 +88,9 @@ export interface Route {
   image_url: string | null;
   video_url?: string | null; // Adicionado: URL do vídeo do roteiro
   is_active: boolean;
+  difficulty_level?: 'facil' | 'medio' | 'dificil';
+  estimated_duration?: number;
+  points?: number;
   created_at: string;
   updated_at: string;
   created_by: string;

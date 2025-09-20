@@ -43,13 +43,14 @@ class GuataInteligenteService {
 
     try {
       // Usar o sistema original do Guatá para obter respostas inteligentes
-      const guataService = new (await import('./index')).GuataService();
+      const { GuataService } = await import('./index');
+      const guataService = new GuataService();
       const originalResponse = await guataService.askQuestion(query.question);
       
       return {
-        answer: originalResponse.response,
+        answer: originalResponse.resposta || originalResponse.response || 'Resposta não disponível',
         confidence: 0.9,
-        sources: [originalResponse.source || 'guata_official'],
+        sources: originalResponse.fontesUtilizadas || ['guata_official'],
         timestamp: new Date(),
         processingTime: Date.now() - startTime,
         verificationStatus: 'verified'
@@ -121,4 +122,5 @@ class GuataInteligenteService {
 const guataInteligenteService = new GuataInteligenteService();
 
 // Exportações
-export { GuataQuery, GuataResponse, GuataInteligenteService, guataInteligenteService }; 
+export type { GuataQuery, GuataResponse };
+export { GuataInteligenteService, guataInteligenteService };

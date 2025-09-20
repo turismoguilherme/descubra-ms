@@ -3,7 +3,7 @@ import { KnowledgeItem } from "@/types/ai";
 import { guataClient } from "./client/guataClient";
 import { knowledgeService } from "./knowledge/knowledgeService";
 import { geminiClient } from "@/config/gemini";
-import { GuataResponse, GuataUserInfo } from "./types/guataTypes";
+import { GuataResponse as GuataTypesResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
 // NOVO: Guatá Inteligente - Sistema completo com verificação tripla e ML
@@ -146,19 +146,21 @@ Pergunta do usuário: ${prompt}
 Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS. Se não tiver informações específicas, seja honesto e sugira alternativas ou indique onde encontrar a informação.`;
 
       try {
-        const geminiResponse = await geminiClient.generateContent(fallbackPrompt);
+        const model = geminiClient.getGenerativeModel({ model: "gemini-pro" });
+        const result = await model.generateContent(fallbackPrompt);
+        const geminiResponse = result.response.text();
         return {
           resposta: geminiResponse,
           response: geminiResponse,
-          source: 'gemini-fallback'
-        };
+          fontesUtilizadas: ['gemini-fallback']
+        } as GuataTypesResponse;
       } catch (geminiError) {
         console.error("🦦 Guatá: Erro no fallback Gemini:", geminiError);
         return {
           resposta: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
           response: "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
-          source: 'error'
-        };
+          fontesUtilizadas: ['error']
+        } as GuataTypesResponse;
       }
     }
   }

@@ -22,11 +22,12 @@ interface Event {
   };
   start_date: string;
   end_date?: string;
-  image_url: string;
+  image_url?: string; // Made optional to match AutoEvent
   source: string; // Adicionado para exibir a fonte do evento
   external_url?: string; // Adicionado para permitir o link externo
   is_active?: boolean; // Adicionado para eventos de banco de dados
   is_visible?: boolean; // Adicionado para eventos de banco de dados (de event_details)
+  active?: boolean; // Added for AutoEvent compatibility
 }
 
 const Eventos = () => {
@@ -94,7 +95,8 @@ const Eventos = () => {
         // Filtrar eventos ativos e visíveis, e ordenar por data
         const activeAndVisibleEvents = combinedEvents.filter(event => 
           new Date(event.end_date || event.start_date) >= new Date() && // Continua filtrando pela data
-          event.is_visible !== false
+          (('is_visible' in event) ? event.is_visible !== false : true) && 
+          (('active' in event) ? event.active !== false : true)
         );
         activeAndVisibleEvents.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
 

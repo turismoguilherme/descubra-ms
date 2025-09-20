@@ -31,6 +31,7 @@ export interface TCCInteraction {
 export interface TCCAnalytics {
   sessions: TCCSession[];
   totalSessions: number;
+  totalMessages: number;
   averageSessionTime: number;
   averageMessagesPerSession: number;
   satisfactionRate: number;

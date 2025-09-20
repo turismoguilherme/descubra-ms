@@ -35,6 +35,7 @@ export interface CheckIn {
 export interface Event {
   id: string;
   name: string;
+  start_date?: string; // For compatibility
   date: string;
   attendees_count: number;
   satisfaction_rating?: number;
@@ -221,7 +222,14 @@ class AIConsultantService {
         .gte('start_date', this.getTimeframeDate(context.timeframe))
         .limit(100);
 
-      if (events) data.events = events;
+      if (events) {
+        data.events = events.map(event => ({
+          ...event,
+          date: event.start_date || event.name, // Fallback for missing date
+          attendees_count: 0, // Default value
+          category: 'general' // Default category
+        }));
+      }
 
       // Simplified reviews context
       data.reviews = [];
