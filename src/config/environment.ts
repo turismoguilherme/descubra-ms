@@ -9,8 +9,8 @@ export const config = {
 };
 
 export const ENV = {
-  // API Keys - SECURITY: Gemini API key now stored in Supabase secrets
-  GEMINI_API_KEY: '', // Will be fetched from Supabase secrets in edge functions
+  // API Keys - SECURITY: All API keys moved to secure edge functions
+  // No API keys stored in frontend for security
   
   // URLs base
   BASE_URL: 'http://localhost:8081',

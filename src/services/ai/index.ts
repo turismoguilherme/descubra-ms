@@ -71,12 +71,12 @@ export class GuataService {
       const originalResponse = await this.askQuestion(prompt, undefined, { nome: userId || 'Usuário' });
       
       return {
-        answer: originalResponse.response,
+        answer: originalResponse.answer || "Resposta não disponível",
         confidence: 0.9,
-        sources: [originalResponse.source || 'guata_official'],
-        timestamp: new Date(),
+        sources: originalResponse.sources || ['guata_official'],
+        timestamp: new Date().toISOString(),
         processingTime: 0,
-        verificationStatus: 'verified' as const
+        metadata: originalResponse.metadata || {}
       };
       
     } catch (error) {
