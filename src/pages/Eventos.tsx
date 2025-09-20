@@ -84,8 +84,8 @@ const Eventos = () => {
           image_url: me.image_url,
           source: "Manual",
           external_url: null, // Eventos manuais podem não ter URL externa
-          is_active: me.is_active,
-          is_visible: me.event_details ? me.event_details.is_visible : true // Assumir true se não houver detalhes
+          is_active: true,
+          is_visible: true
         }));
 
         // Combinar eventos automáticos e manuais
@@ -94,8 +94,7 @@ const Eventos = () => {
         // Filtrar eventos ativos e visíveis, e ordenar por data
         const activeAndVisibleEvents = combinedEvents.filter(event => 
           new Date(event.end_date || event.start_date) >= new Date() && // Continua filtrando pela data
-          (event.is_active === undefined || event.is_active === true) && // Verifica is_active se existir
-          (event.is_visible === undefined || event.is_visible === true)   // Verifica is_visible se existir
+          event.is_visible !== false
         );
         activeAndVisibleEvents.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
 

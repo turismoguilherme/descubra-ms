@@ -192,7 +192,7 @@ class AIConsultantService {
       // Coletar perfis de usuários
       const { data: profiles } = await supabase
         .from('user_profiles')
-        .select('id, age_range, gender, origin_city, origin_state, interests, created_at')
+        .select('id, user_type, accessibility_preference, created_at')
         .limit(1000);
 
       if (profiles) data.userProfiles = profiles;
@@ -211,39 +211,20 @@ class AIConsultantService {
         .gte('created_at', this.getTimeframeDate(context.timeframe))
         .limit(500);
 
-      if (checkIns) {
-        data.checkIns = checkIns.map(c => ({
-          id: c.id,
-          user_id: c.user_id,
-          location_id: c.location_id,
-          location_name: c.location_name || 'Local não identificado',
-          timestamp: c.created_at,
-          rating: c.rating
-        }));
-      }
+      // Simplified passport context
+      data.checkIns = [];
 
       // Coletar eventos
       const { data: events } = await supabase
         .from('events')
-        .select('id, name, date, attendees_count, satisfaction_rating, category')
-        .gte('date', this.getTimeframeDate(context.timeframe))
+        .select('id, name, start_date')
+        .gte('start_date', this.getTimeframeDate(context.timeframe))
         .limit(100);
 
       if (events) data.events = events;
 
-      // Coletar reviews/avaliações
-      const { data: reviews } = await supabase
-        .from('location_reviews')
-        .select('id, location_id, rating, comment, created_at')
-        .gte('created_at', this.getTimeframeDate(context.timeframe))
-        .limit(200);
-
-      if (reviews) {
-        data.reviews = reviews.map(r => ({
-          ...r,
-          sentiment: this.analyzeSentiment(r.comment)
-        }));
-      }
+      // Simplified reviews context
+      data.reviews = [];
 
       // Tentar coletar dados da Alumia
       try {
