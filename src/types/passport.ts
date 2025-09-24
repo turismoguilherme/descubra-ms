@@ -31,6 +31,7 @@ export interface RouteCheckpoint {
   latitude: number;
   longitude: number;
   order_index: number;
+  order_sequence?: number; // Backward compatibility
   required_time_minutes?: number;
   promotional_text?: string;
   validation_radius_meters?: number;
@@ -38,6 +39,9 @@ export interface RouteCheckpoint {
   updated_at: string;
   image_url?: string;
   video_url?: string;
+  is_active: boolean;
+  requires_photo?: boolean;
+  points_reward?: number;
 }
 
 export interface CheckpointCreateData {

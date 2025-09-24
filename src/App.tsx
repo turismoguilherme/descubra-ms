@@ -183,8 +183,9 @@ function App() {
                       <Route path="/ms/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
                       <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
                       <Route path="/ms/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
-                      <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><Roteiros /></Suspense>} />
-                      <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsPage /></Suspense>} /> {/* Nova rota para detalhes do roteiro */}
+                      <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><RoteirosMS /></Suspense>} />
+                      <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsMS /></Suspense>} />
+                      <Route path="/ms/passaporte/:routeId" element={<Suspense fallback={<LoadingFallback />}><PassaporteRouteMS /></Suspense>} />
                       <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
                       <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
                       <Route path="/ms/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
