@@ -31,7 +31,7 @@ const SobreOverFlowOne = lazy(() => import("@/pages/SobreOverFlowOne"));
 const BlogOverFlowOne = lazy(() => import("@/pages/BlogOverFlowOne"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const SuporteOverFlowOne = lazy(() => import("@/pages/SuporteOverFlowOne"));
-const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
+// const AdminPortal = lazy(() => import("@/pages/AdminPortal")); // Disabled
 // TestDashboards removido - não necessário em produção
 const ContatoOverFlowOne = lazy(() => import("@/pages/ContatoOverFlowOne"));
 const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
@@ -45,7 +45,7 @@ const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
 const Management = lazy(() => import("@/pages/Management"));
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
-const Guata = lazy(() => import("@/pages/Guata"));
+// const Guata = lazy(() => import("@/pages/Guata")); // Disabled
 const Delinha = lazy(() => import("@/pages/Delinha"));
 // const CATAttendant = lazy(() => import("@/pages/CATAttendant")); // Disabled
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
@@ -60,6 +60,10 @@ const Mapa = lazy(() => import("@/pages/Mapa"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const BecomePartner = lazy(() => import("@/pages/BecomePartner"));
 const Contribute = lazy(() => import("@/pages/Contribute"));
+// MS Route components
+const RoteirosMS = lazy(() => import("./pages/ms/RoteirosMS"));
+const RouteDetailsMS = lazy(() => import("./pages/ms/RouteDetailsMS"));
+const PassaporteRouteMS = lazy(() => import("./pages/ms/PassaporteRouteMS"));
 const Colaborador = lazy(() => import("@/pages/Colaborador"));
 const RoleDashboard = lazy(() => import("@/pages/RoleDashboard"));
 const CommunitySuggestionDetail = lazy(() => import("@/pages/CommunitySuggestionDetail")); // Nova importação
@@ -81,11 +85,11 @@ const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Nova i
 const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Nova importação para Leaderboards
 const RewardsManagement = lazy(() => import("@/components/management/RewardsManager"));
 const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
-const GuataTest = lazy(() => import("@/pages/test/GuataTest")); // Nova importação para teste do Guatá
+// const GuataTest = lazy(() => import("@/pages/test/GuataTest")); // Disabled
 const EmergencyTest = lazy(() => import("@/pages/test/EmergencyTest")); // Nova importação para teste de emergência
 // const ItineraryTest = lazy(() => import("@/pages/test/ItineraryTest")); // Disabled due to build errors
 const MLTest = lazy(() => import("@/pages/test/MLTest")); // Nova importação para teste de ML
-const GuataLite = lazy(() => import("@/pages/GuataLite")); // Versão Lite para TCC
+// const GuataLite = lazy(() => import("@/pages/GuataLite")); // Disabled
 const TCCReport = lazy(() => import("@/pages/TCCReport")); // Relatório para TCC
 const GuataReliabilityDashboard = lazy(() => import("@/pages/GuataReliabilityDashboard")); // Painel de Confiabilidade
 const DynamicSearchTest = lazy(() => import("@/pages/DynamicSearchTest")); // Teste de busca dinâmica
@@ -152,8 +156,8 @@ function App() {
                       } />
                       <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                       <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
-                      <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                      <Route path="/ms/guata-test" element={<Suspense fallback={<LoadingFallback />}><GuataTest /></Suspense>} />
+                      {/* <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} /> */}
+                      {/* <Route path="/ms/guata-test" element={<Suspense fallback={<LoadingFallback />}><GuataTest /></Suspense>} /> */}
                       <Route path="/ms/emergency-test" element={<Suspense fallback={<LoadingFallback />}><EmergencyTest /></Suspense>} />
                       {/* <Route path="/ms/itinerary-test" element={<Suspense fallback={<LoadingFallback />}><ItineraryTest /></Suspense>} /> */}
                       <Route path="/ms/ml-test" element={<Suspense fallback={<LoadingFallback />}><MLTest /></Suspense>} />
@@ -164,11 +168,11 @@ function App() {
                       <Route path="/tcc-report" element={<Suspense fallback={<LoadingFallback />}><TCCReport /></Suspense>} />
                       <Route path="/guata-reliability" element={<Suspense fallback={<LoadingFallback />}><GuataReliabilityDashboard /></Suspense>} />
                       <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
-                      <Route path="/ms/cat-attendant" element={
+                      {/* <Route path="/ms/cat-attendant" element={
                         <ProtectedRoute allowedRoles={['cat_attendant']} requireCity>
                           <CATAttendant />
                         </ProtectedRoute>
-                      } />
+                      } /> */}
                       <Route path="/ms/attendant-checkin" element={
                         <ProtectedRoute allowedRoles={['atendente']} requireCity>
                           <Suspense fallback={<LoadingFallback />}><AttendantCheckIn /></Suspense>
