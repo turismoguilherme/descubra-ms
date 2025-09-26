@@ -80,11 +80,11 @@ const Resultados = lazy(() => import("@/pages/Resultados"));
 const CasesSucesso = lazy(() => import("@/pages/CasesSucesso"));
 const Personalizar = lazy(() => import("@/pages/Personalizar"));
 const TourismManagement = lazy(() => import("@/pages/TourismManagement"));
-const RoutesManagement = lazy(() => import("@/pages/RoutesManagement")); // Nova importação
+// const RoutesManagement = lazy(() => import("@/pages/RoutesManagement")); // Disabled
 // const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Disabled
 // const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Disabled
 const RewardsManagement = lazy(() => import("@/components/management/RewardsManager"));
-const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
+// const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Disabled
 // const GuataTest = lazy(() => import("@/pages/test/GuataTest")); // Disabled
 const EmergencyTest = lazy(() => import("@/pages/test/EmergencyTest")); // Nova importação para teste de emergência
 // const ItineraryTest = lazy(() => import("@/pages/test/ItineraryTest")); // Disabled due to build errors
@@ -222,11 +222,11 @@ function App() {
                       } />
 
                       {/* Novas Rotas de Administração de Roteiros (Protegidas) */}
-                      <Route path="/ms/admin/routes-management" element={
+                      {/* <Route path="/ms/admin/routes-management" element={
                         <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
                           <Suspense fallback={<LoadingFallback />}><RoutesManagement /></Suspense>
                         </ProtectedRoute>
-                      } />
+                      } /> */}
                       {/* <Route path="/ms/admin/route-editor/:id?" element={
                         <ProtectedRoute allowedRoles={['master_admin', 'state_admin', 'city_admin', 'gestor_municipal']}>
                           <Suspense fallback={<LoadingFallback />}><RouteEditorPage /></Suspense>
