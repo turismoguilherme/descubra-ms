@@ -47,7 +47,7 @@ const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
 const Guata = lazy(() => import("@/pages/Guata"));
 const Delinha = lazy(() => import("@/pages/Delinha"));
-const CATAttendant = lazy(() => import("@/pages/CATAttendant"));
+// const CATAttendant = lazy(() => import("@/pages/CATAttendant")); // Disabled
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
 const MunicipalAdmin = lazy(() => import("@/pages/MunicipalAdmin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -83,7 +83,7 @@ const RewardsManagement = lazy(() => import("@/components/management/RewardsMana
 const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
 const GuataTest = lazy(() => import("@/pages/test/GuataTest")); // Nova importação para teste do Guatá
 const EmergencyTest = lazy(() => import("@/pages/test/EmergencyTest")); // Nova importação para teste de emergência
-const ItineraryTest = lazy(() => import("@/pages/test/ItineraryTest")); // Nova importação para teste de roteiros
+// const ItineraryTest = lazy(() => import("@/pages/test/ItineraryTest")); // Disabled due to build errors
 const MLTest = lazy(() => import("@/pages/test/MLTest")); // Nova importação para teste de ML
 const GuataLite = lazy(() => import("@/pages/GuataLite")); // Versão Lite para TCC
 const TCCReport = lazy(() => import("@/pages/TCCReport")); // Relatório para TCC
@@ -155,7 +155,7 @@ function App() {
                       <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
                       <Route path="/ms/guata-test" element={<Suspense fallback={<LoadingFallback />}><GuataTest /></Suspense>} />
                       <Route path="/ms/emergency-test" element={<Suspense fallback={<LoadingFallback />}><EmergencyTest /></Suspense>} />
-                      <Route path="/ms/itinerary-test" element={<Suspense fallback={<LoadingFallback />}><ItineraryTest /></Suspense>} />
+                      {/* <Route path="/ms/itinerary-test" element={<Suspense fallback={<LoadingFallback />}><ItineraryTest /></Suspense>} /> */}
                       <Route path="/ms/ml-test" element={<Suspense fallback={<LoadingFallback />}><MLTest /></Suspense>} />
                       <Route path="/ms/dynamic-search-test" element={<Suspense fallback={<LoadingFallback />}><DynamicSearchTest /></Suspense>} />
                       <Route path="/chatguata" element={<Suspense fallback={<LoadingFallback />}><GuataLite /></Suspense>} />

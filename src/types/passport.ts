@@ -35,11 +35,11 @@ export interface RouteCheckpoint {
   required_time_minutes?: number;
   promotional_text?: string;
   validation_radius_meters?: number;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   image_url?: string;
   video_url?: string;
-  is_active: boolean;
+  is_active?: boolean;
   requires_photo?: boolean;
   points_reward?: number;
 }
