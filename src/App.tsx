@@ -31,7 +31,7 @@ const SobreOverFlowOne = lazy(() => import("@/pages/SobreOverFlowOne"));
 const BlogOverFlowOne = lazy(() => import("@/pages/BlogOverFlowOne"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const SuporteOverFlowOne = lazy(() => import("@/pages/SuporteOverFlowOne"));
-// const AdminPortal = lazy(() => import("@/pages/AdminPortal")); // Disabled
+const AdminPortal = lazy(() => import("@/pages/AdminPortal"));
 // TestDashboards removido - não necessário em produção
 const ContatoOverFlowOne = lazy(() => import("@/pages/ContatoOverFlowOne"));
 const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
@@ -61,9 +61,9 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const BecomePartner = lazy(() => import("@/pages/BecomePartner"));
 const Contribute = lazy(() => import("@/pages/Contribute"));
 // MS Route components
-// const RoteirosMS = lazy(() => import("./pages/ms/RoteirosMS")); // Disabled
-// const RouteDetailsMS = lazy(() => import("./pages/ms/RouteDetailsMS")); // Disabled
-// const PassaporteRouteMS = lazy(() => import("./pages/ms/PassaporteRouteMS")); // Disabled
+const RoteirosMS = lazy(() => import("./pages/ms/RoteirosMS"));
+const RouteDetailsMS = lazy(() => import("./pages/ms/RouteDetailsMS"));
+const PassaporteRouteMS = lazy(() => import("./pages/ms/PassaporteRouteMS"));
 const Colaborador = lazy(() => import("@/pages/Colaborador"));
 // const RoleDashboard = lazy(() => import("@/pages/RoleDashboard")); // Disabled
 // const CommunitySuggestionDetail = lazy(() => import("@/pages/CommunitySuggestionDetail")); // Disabled
@@ -147,7 +147,7 @@ function App() {
                       <Route path="/ms/login" element={<Login />} />
                       <Route path="/ms/auth" element={<AuthPage />} />
                       <Route path="/ms/password-reset" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
-                      {/* <Route path="/ms/admin" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} /> */}
+                      <Route path="/ms/admin" element={<Suspense fallback={<LoadingFallback />}><AdminPortal /></Suspense>} />
                       <Route path="/ms/admin-seed" element={<Suspense fallback={<LoadingFallback />}><AdminSeedForm /></Suspense>} />
                       {/* <Route path="/ms/management" element={
                         <ProtectedRoute allowedRoles={['master_admin', 'state_admin']}>
@@ -187,9 +187,9 @@ function App() {
                       <Route path="/ms/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
                       {/* <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} /> */}
                       <Route path="/ms/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
-                      {/* <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><RoteirosMS /></Suspense>} /> */}
-                      {/* <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsMS /></Suspense>} /> */}
-                      {/* <Route path="/ms/passaporte/:routeId" element={<Suspense fallback={<LoadingFallback />}><PassaporteRouteMS /></Suspense>} /> */}
+                      <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><RoteirosMS /></Suspense>} />
+                      <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsMS /></Suspense>} />
+                      <Route path="/ms/passaporte/:routeId" element={<Suspense fallback={<LoadingFallback />}><PassaporteRouteMS /></Suspense>} />
                       <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
                       <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
                       <Route path="/ms/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
