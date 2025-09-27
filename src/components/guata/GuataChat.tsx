@@ -45,15 +45,17 @@ const GuataChat = ({
       
       <ChatMessages 
         messages={mensagens} 
-        enviarFeedback={enviarFeedback} 
+        enviarFeedback={(positivo) => {
+          try { enviarFeedback(positivo) } catch {}
+        }} 
       />
       
       <ChatInput
         inputMensagem={inputMensagem}
         setInputMensagem={setInputMensagem}
         enviarMensagem={enviarMensagem}
-        toggleMicrofone={toggleMicrofone}
         isGravandoAudio={isGravandoAudio}
+        toggleMicrofone={toggleMicrofone}
         isLoading={isLoading}
         handleKeyDown={handleKeyDown}
         onClearConversation={onClearConversation}

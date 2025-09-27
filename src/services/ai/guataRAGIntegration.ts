@@ -1,8 +1,7 @@
-// Integração RAG com Guatá - Conecta o sistema RAG ao Guatá existente
-// Mantém compatibilidade total com o sistema atual
+// Integração RAG com Guatá - Fallback para o sistema consciente
+// Mantém compatibilidade com RAG quando o sistema principal falha
 
 import { ragService } from './ragService';
-import { GuataService } from './index';
 
 interface GuataRAGResponse {
   answer: string;
@@ -19,15 +18,10 @@ interface GuataRAGResponse {
 }
 
 export class GuataRAGIntegration {
-  private guataService: GuataService;
   private ragEnabled: boolean = true;
 
-  constructor() {
-    this.guataService = new GuataService();
-  }
-
   /**
-   * Processa pergunta usando RAG + Guatá como fallback
+   * Processa pergunta usando RAG como fallback
    */
   async askQuestionWithRAG(
     question: string,
@@ -39,7 +33,7 @@ export class GuataRAGIntegration {
     const startTime = Date.now();
 
     try {
-      // 1. Tentar RAG primeiro
+      // 1. Tentar RAG
       if (this.ragEnabled) {
         console.log('🔍 RAG: Processando pergunta:', question);
         
@@ -63,18 +57,12 @@ export class GuataRAGIntegration {
         }
       }
 
-      // 2. Fallback para Guatá original
-      console.log('🔄 RAG: Usando fallback para Guatá original');
+      // 2. Fallback de emergência
+      console.log('🔄 RAG: Usando resposta de emergência');
       
-      const originalResponse = await this.guataService.askQuestion(
-        question,
-        undefined,
-        { nome: userId || 'Usuário' }
-      );
-
       return {
-        answer: originalResponse.response,
-        confidence: 0.7,
+        answer: "Desculpe, não consegui encontrar informações específicas sobre isso. Pode tentar reformular a pergunta?",
+        confidence: 0.3,
         processingTime: Date.now() - startTime,
         ragEnabled: false,
         fallbackUsed: true
@@ -103,50 +91,26 @@ export class GuataRAGIntegration {
   }
 
   /**
-   * Health check completo
+   * Health check do RAG
    */
   async healthCheck(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy';
-    components: {
-      rag: boolean;
-      guata: boolean;
-      supabase: boolean;
-      gemini: boolean;
-    };
-    metrics: {
-      ragEnabled: boolean;
-      averageResponseTime: number;
-    };
+    ragEnabled: boolean;
+    averageResponseTime: number;
   }> {
     try {
       const ragHealth = await ragService.healthCheck();
       
       return {
-        status: ragHealth.status === 'healthy' ? 'healthy' : 'degraded',
-        components: {
-          rag: ragHealth.status === 'healthy',
-          guata: true, // Assumindo que está funcionando
-          supabase: ragHealth.components.supabase,
-          gemini: ragHealth.components.gemini
-        },
-        metrics: {
-          ragEnabled: this.ragEnabled,
-          averageResponseTime: ragHealth.metrics.averageResponseTime
-        }
+        status: ragHealth.status,
+        ragEnabled: this.ragEnabled,
+        averageResponseTime: ragHealth.metrics.averageResponseTime
       };
     } catch (error) {
       return {
         status: 'unhealthy',
-        components: {
-          rag: false,
-          guata: false,
-          supabase: false,
-          gemini: false
-        },
-        metrics: {
-          ragEnabled: this.ragEnabled,
-          averageResponseTime: 0
-        }
+        ragEnabled: this.ragEnabled,
+        averageResponseTime: 0
       };
     }
   }

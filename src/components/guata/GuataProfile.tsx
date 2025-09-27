@@ -31,8 +31,8 @@ const GuataProfile: React.FC<GuataProfileProps> = ({
           <p className="text-xs text-yellow-500">Conectando...</p>
         )}
         {!connectionChecking && (
-          <p className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
-            {isConnected ? 'Conectada' : 'Desconectada'}
+          <p className={`text-xs ${isConnected ? 'text-green-400' : 'text-orange-400'}`}>
+            {isConnected ? 'Conectada' : '🌐 Modo offline (DNS)'}
           </p>
         )}
       </div>

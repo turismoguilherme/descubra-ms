@@ -13,6 +13,8 @@ import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import RouteLogger from "@/components/common/RouteLogger";
+import ParamRedirect from "@/components/common/ParamRedirect";
 
 // Critical components (no lazy loading)
 import OverFlowOneSaaS from "@/pages/OverFlowOneSaaS";
@@ -28,6 +30,8 @@ const Solucoes = lazy(() => import("@/pages/Solucoes"));
 const CasosSucesso = lazy(() => import("@/pages/CasosSucesso"));
 const Precos = lazy(() => import("@/pages/Precos"));
 const SobreOverFlowOne = lazy(() => import("@/pages/SobreOverFlowOne"));
+const ParceirosComerciais = lazy(() => import("@/pages/ParceirosComerciais"));
+const ServicosStakeholders = lazy(() => import("@/pages/ServicosStakeholders"));
 const BlogOverFlowOne = lazy(() => import("@/pages/BlogOverFlowOne"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const SuporteOverFlowOne = lazy(() => import("@/pages/SuporteOverFlowOne"));
@@ -81,14 +85,10 @@ const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Nova i
 const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Nova importação para Leaderboards
 const RewardsManagement = lazy(() => import("@/components/management/RewardsManager"));
 const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
-const GuataTest = lazy(() => import("@/pages/test/GuataTest")); // Nova importação para teste do Guatá
-const EmergencyTest = lazy(() => import("@/pages/test/EmergencyTest")); // Nova importação para teste de emergência
-const ItineraryTest = lazy(() => import("@/pages/test/ItineraryTest")); // Nova importação para teste de roteiros
-const MLTest = lazy(() => import("@/pages/test/MLTest")); // Nova importação para teste de ML
-const GuataLite = lazy(() => import("@/pages/GuataLite")); // Versão Lite para TCC
-const TCCReport = lazy(() => import("@/pages/TCCReport")); // Relatório para TCC
-const GuataReliabilityDashboard = lazy(() => import("@/pages/GuataReliabilityDashboard")); // Painel de Confiabilidade
-const DynamicSearchTest = lazy(() => import("@/pages/DynamicSearchTest")); // Teste de busca dinâmica
+// Páginas de teste removidas - funcionalidades integradas no sistema principal
+const GuataHumanInterface = lazy(() => import("@/components/guata/GuataHumanInterface")); // Sistema Guatá Human
+const GuataPublic = lazy(() => import("@/pages/GuataPublic")); // Guatá sem autenticação
+// Páginas de teste removidas - funcionalidades integradas no sistema principal
 
 const queryClient = new QueryClient();
 
@@ -109,6 +109,7 @@ function App() {
             <TooltipProvider>
               <Toaster />
               <BrowserRouter>
+                <RouteLogger />
                 <BrandProvider>
                   <ProfileCompletionChecker>
                     <div className="min-h-screen bg-background font-sans antialiased">
@@ -122,7 +123,10 @@ function App() {
                       <Route path="/solucoes" element={<Suspense fallback={<LoadingFallback />}><Solucoes /></Suspense>} />
                       <Route path="/casos-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasosSucesso /></Suspense>} />
                       <Route path="/precos" element={<Suspense fallback={<LoadingFallback />}><Precos /></Suspense>} />
+                      <Route path="/parceiros-comerciais" element={<Suspense fallback={<LoadingFallback />}><ParceirosComerciais /></Suspense>} />
+                      <Route path="/servicos" element={<Suspense fallback={<LoadingFallback />}><ServicosStakeholders /></Suspense>} />
                       <Route path="/sobre-overflow-one" element={<Suspense fallback={<LoadingFallback />}><SobreOverFlowOne /></Suspense>} />
+                      <Route path="/sobre-flowtrip" element={<Navigate to="/sobre-overflow-one" replace />} />
                       <Route path="/blog" element={<Suspense fallback={<LoadingFallback />}><BlogOverFlowOne /></Suspense>} />
                       <Route path="/documentacao" element={<Suspense fallback={<LoadingFallback />}><Documentacao /></Suspense>} />
                       <Route path="/suporte" element={<Suspense fallback={<LoadingFallback />}><SuporteOverFlowOne /></Suspense>} />
@@ -153,16 +157,11 @@ function App() {
                       <Route path="/ms/technical-admin" element={<Suspense fallback={<LoadingFallback />}><TechnicalAdmin /></Suspense>} />
                       <Route path="/ms/passaporte" element={<Suspense fallback={<LoadingFallback />}><DigitalPassport /></Suspense>} />
                       <Route path="/ms/guata" element={<Suspense fallback={<LoadingFallback />}><Guata /></Suspense>} />
-                      <Route path="/ms/guata-test" element={<Suspense fallback={<LoadingFallback />}><GuataTest /></Suspense>} />
-                      <Route path="/ms/emergency-test" element={<Suspense fallback={<LoadingFallback />}><EmergencyTest /></Suspense>} />
-                      <Route path="/ms/itinerary-test" element={<Suspense fallback={<LoadingFallback />}><ItineraryTest /></Suspense>} />
-                      <Route path="/ms/ml-test" element={<Suspense fallback={<LoadingFallback />}><MLTest /></Suspense>} />
-                      <Route path="/ms/dynamic-search-test" element={<Suspense fallback={<LoadingFallback />}><DynamicSearchTest /></Suspense>} />
-                      <Route path="/chatguata" element={<Suspense fallback={<LoadingFallback />}><GuataLite /></Suspense>} />
-                      <Route path="/ms/chatguata" element={<Navigate to="/chatguata" replace />} />
+                      {/* Rotas de teste removidas - funcionalidades integradas no sistema principal */}
+                              <Route path="/chatguata" element={<Suspense fallback={<LoadingFallback />}><GuataPublic /></Suspense>} />
+        <Route path="/ms/chatguata" element={<Navigate to="/chatguata" replace />} />
                       <Route path="/auth/callback" element={<Navigate to="/ms/welcome" replace />} />
-                      <Route path="/tcc-report" element={<Suspense fallback={<LoadingFallback />}><TCCReport /></Suspense>} />
-                      <Route path="/guata-reliability" element={<Suspense fallback={<LoadingFallback />}><GuataReliabilityDashboard /></Suspense>} />
+                      {/* Páginas de teste removidas - funcionalidades integradas no sistema principal */}
                       <Route path="/ms/delinha" element={<Suspense fallback={<LoadingFallback />}><Delinha /></Suspense>} />
                       <Route path="/ms/cat-attendant" element={
                         <ProtectedRoute allowedRoles={['cat_attendant']} requireCity>

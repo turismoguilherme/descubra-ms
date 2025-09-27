@@ -17,90 +17,265 @@ class WebSearchService {
    * Buscar informações na web
    */
   async search(query: string, category?: string): Promise<WebSearchResult[]> {
-    console.log('🔍 Web Search: Iniciando busca:', query);
+    console.log('🔍 Web Search: Iniciando busca REAL:', query);
 
     try {
-      // 1. Usar busca dinâmica inteligente (como o Gemini)
-      const dynamicAnalysis = await dynamicWebSearchService.search(query);
+      // 🎯 FORÇAR BUSCA REAL SEMPRE
+      console.log('🚀 Forçando busca real na web...');
       
-      if (dynamicAnalysis.confidence > 70) {
-        console.log(`✅ Web Search: Análise dinâmica encontrada (${dynamicAnalysis.confidence}% confiança)`);
-        return this.convertDynamicResults(dynamicAnalysis);
+      // 1. Tentar busca direta em sites oficiais
+      const officialResults = await this.searchOfficialSitesDirect(query);
+      if (officialResults.length > 0) {
+        console.log(`✅ Encontrados ${officialResults.length} resultados oficiais`);
+        return officialResults;
       }
-
-      // 2. Usar sistema de busca inteligente (reutilizável)
-      const intelligentResults = await intelligentSearchEngine.search({
-        query,
-        category: category as any,
-        limit: 10,
-        region: 'MS' // Para Descubra MS
-      });
       
-      if (intelligentResults.length > 0) {
-        console.log(`✅ Web Search: Encontrados ${intelligentResults.length} resultados inteligentes`);
-        return this.convertIntelligentResults(intelligentResults);
+      // 2. Tentar busca em sites de notícias
+      const newsResults = await this.searchNewsSitesDirect(query);
+      if (newsResults.length > 0) {
+        console.log(`✅ Encontrados ${newsResults.length} resultados de notícias`);
+        return newsResults;
       }
-
-      // 3. Fallback para busca interna
-      if (this.useInternalSearch) {
-        const internalResults = await internalSearchService.search({
-          query,
-          category: category as any,
-          limit: 10
-        });
-        
-        if (internalResults.length > 0) {
-          console.log(`✅ Web Search: Encontrados ${internalResults.length} resultados internos`);
-          return this.convertInternalResults(internalResults);
-        }
+      
+      // 3. Tentar busca em sites comerciais
+      const commercialResults = await this.searchCommercialSitesDirect(query);
+      if (commercialResults.length > 0) {
+        console.log(`✅ Encontrados ${commercialResults.length} resultados comerciais`);
+        return commercialResults;
       }
-
-      // 4. Fallback para busca externa (se configurada)
-      if (this.useRealAPIs) {
-        const externalResults = await this.performExternalSearch(query, category);
-        if (externalResults.length > 0) {
-          console.log(`✅ Web Search: Encontrados ${externalResults.length} resultados externos`);
-          return externalResults;
-        }
-      }
-
-      // 5. Fallback para busca simulada
-      console.log('⚠️ Web Search: Usando busca simulada como fallback');
-      return this.generateMockResults(query, category);
+      
+      // 4. Se nada funcionar, retornar vazio (sem dados simulados)
+      console.log('⚠️ Nenhuma busca real funcionou, retornando vazio');
+      return [];
 
     } catch (error) {
-      console.log('❌ Web Search: Erro na busca, usando fallback:', error);
-      return this.generateMockResults(query, category);
+      console.log('❌ Erro na busca web:', error);
+      return [];
     }
   }
 
   /**
-   * Converter resultados dinâmicos para formato padrão
+   * BUSCA DIRETA em sites oficiais
    */
-  private convertDynamicResults(dynamicAnalysis: SearchAnalysis): WebSearchResult[] {
-    // Criar um resultado principal com a melhor resposta
-    const mainResult: WebSearchResult = {
-      title: `Resposta para: ${dynamicAnalysis.query}`,
-      url: dynamicAnalysis.sources[0] || 'https://fundtur.ms.gov.br',
-      snippet: dynamicAnalysis.bestAnswer,
-      source: dynamicAnalysis.sources.join(', '),
-      reliability: dynamicAnalysis.confidence >= 90 ? 'high' : dynamicAnalysis.confidence >= 70 ? 'medium' : 'low',
-      category: this.detectCategory(dynamicAnalysis.query, dynamicAnalysis.bestAnswer),
-      lastUpdated: new Date().toISOString()
-    };
+  private async searchOfficialSitesDirect(query: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+    
+    // Sites oficiais de MS para busca direta
+    const officialSites = [
+      'https://turismo.ms.gov.br',
+      'https://fundtur.ms.gov.br', 
+      'https://campogrande.ms.gov.br',
+      'https://bonito.ms.gov.br',
+      'https://corumba.ms.gov.br'
+    ];
+    
+    for (const site of officialSites.slice(0, 3)) {
+      try {
+        const siteResult = await this.fetchSiteContent(site, query);
+        if (siteResult) {
+          results.push(siteResult);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar em ${site}:`, error);
+      }
+    }
+    
+    return results;
+  }
 
-    // Adicionar resultados individuais das fontes
-    const sourceResults = dynamicAnalysis.results.map(result => ({
-      title: result.title,
-      url: result.url,
-      snippet: result.content,
-      source: result.source,
-      reliability: result.reliability,
-      category: this.mapCategory(result.categories[0] || 'general'),
-      lastUpdated: result.lastVerified
-    }));
+  /**
+   * BUSCA DIRETA em sites de notícias
+   */
+  private async searchNewsSitesDirect(query: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+    
+    // Sites de notícias de MS
+    const newsSites = [
+      'https://correiodoestado.com.br',
+      'https://campograndenews.com.br',
+      'https://midiamax.uol.com.br'
+    ];
+    
+    for (const site of newsSites.slice(0, 2)) {
+      try {
+        const siteResult = await this.fetchSiteContent(site, query);
+        if (siteResult) {
+          results.push(siteResult);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar em ${site}:`, error);
+      }
+    }
+    
+    return results;
+  }
 
-    return [mainResult, ...sourceResults];
+  /**
+   * BUSCA DIRETA em sites comerciais
+   */
+  private async searchCommercialSitesDirect(query: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+    
+    // Sites comerciais relevantes
+    const commercialSites = [
+      'https://booking.com',
+      'https://tripadvisor.com.br',
+      'https://google.com/maps'
+    ];
+    
+    for (const site of commercialSites.slice(0, 2)) {
+      try {
+        const siteResult = await this.fetchSiteContent(site, query);
+        if (siteResult) {
+          results.push(siteResult);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar em ${site}:`, error);
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * FETCH direto do conteúdo de um site
+   */
+  private async fetchSiteContent(site: string, query: string): Promise<WebSearchResult | null> {
+    try {
+      // Usar fetch com timeout para evitar travamento
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(site, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) return null;
+      
+      const html = await response.text();
+      
+      // Extrair informações básicas do HTML
+      const title = this.extractTitle(html);
+      const content = this.extractContent(html, query);
+      
+      if (title && content) {
+        return {
+          title: title,
+          url: site,
+          source: this.extractDomain(site),
+          content: content,
+          lastUpdated: new Date().toISOString(),
+          confidence: 70
+        };
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.warn(`⚠️ Erro ao fazer fetch de ${site}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * EXTRAIR título do HTML
+   */
+  private extractTitle(html: string): string | null {
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return titleMatch ? titleMatch[1].trim() : null;
+  }
+
+  /**
+   * EXTRAIR conteúdo relevante do HTML
+   */
+  private extractContent(html: string, query: string): string | null {
+    // Remover tags HTML
+    const cleanHtml = html.replace(/<[^>]*>/g, ' ');
+    
+    // Buscar por palavras-chave da query
+    const keywords = query.toLowerCase().split(' ');
+    const sentences = cleanHtml.split(/[.!?]+/);
+    
+    // Encontrar frases que contenham palavras-chave
+    const relevantSentences = sentences.filter(sentence => 
+      keywords.some(keyword => sentence.toLowerCase().includes(keyword))
+    );
+    
+    if (relevantSentences.length > 0) {
+      return relevantSentences.slice(0, 3).join('. ').trim();
+    }
+    
+    // Se não encontrar frases relevantes, pegar o início do texto
+    return cleanHtml.substring(0, 200).trim();
+  }
+
+  /**
+   * EXTRAIR domínio de uma URL
+   */
+  private extractDomain(url: string): string {
+    try {
+      const domain = new URL(url).hostname;
+      return domain.replace('www.', '');
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  /**
+   * Realizar busca real no Google (mantido para compatibilidade)
+   */
+  private async performGoogleSearch(query: string): Promise<WebSearchResult[]> {
+    try {
+      // Usar Google Custom Search API se disponível
+      const apiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
+      const searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+      
+      if (!apiKey || !searchEngineId) {
+        console.warn('⚠️ Google Search API não configurada');
+        return [];
+      }
+
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query + ' Mato Grosso do Sul turismo')}&num=5`;
+      
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      if (data.items && data.items.length > 0) {
+        return data.items.map((item: any) => ({
+          title: item.title,
+          url: item.link,
+          content: item.snippet,
+          source: item.displayLink,
+          lastUpdated: new Date().toISOString(),
+          confidence: 85
+        }));
+      }
+
+      return [];
+    } catch (error) {
+      console.error('❌ Erro na busca Google:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Converter resultados dinâmicos (mantido para compatibilidade)
+   */
+  private convertDynamicResults(analysis: SearchAnalysis): WebSearchResult[] {
+    return [{
+      title: analysis.summary,
+      url: 'dynamic-search',
+      content: analysis.details,
+      source: 'intelligent-search',
+      lastUpdated: new Date().toISOString(),
+      confidence: analysis.confidence
+    }];
   }
 
   /**

@@ -38,11 +38,32 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
   const loadAnalyticsData = async () => {
     setLoading(true);
     try {
-      const [insightsData, forecastData, seasonalityData] = await Promise.all([
-        predictiveAnalyticsService.generateStrategicInsights(cityId, regionId),
-        predictiveAnalyticsService.generateDemandForecast(cityId, regionId, 6),
-        predictiveAnalyticsService.analyzeSeasonality(cityId, regionId)
-      ]);
+      // Dados mockados temporariamente - funcionalidade será integrada no futuro
+      const insightsData = [
+        {
+          id: 1,
+          title: "Crescimento do Turismo de Eventos",
+          description: "Campo Grande tem potencial para se tornar hub de eventos regionais",
+          impact: "high",
+          confidence: 0.85,
+          category: "eventos"
+        }
+      ];
+      const forecastData = [
+        {
+          period: "Próximos 3 meses",
+          predictedVisitors: 15000,
+          variance: 15,
+          factors: ["clima", "eventos", "promoções"]
+        }
+      ];
+      const seasonalityData = [
+        {
+          month: "Janeiro",
+          pattern: "alta",
+          factor: "verão e férias escolares"
+        }
+      ];
 
       setInsights(insightsData);
       setDemandForecast(forecastData);

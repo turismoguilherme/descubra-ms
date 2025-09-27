@@ -47,6 +47,16 @@ const RestoredNavbar = () => {
                 }`}>
                   Soluções
                 </Link>
+                <Link to="/servicos" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/servicos') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                }`}>
+                  Serviços
+                </Link>
+                <Link to="/parceiros-comerciais" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/parceiros-comerciais') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                }`}>
+                  Parceiros
+                </Link>
                 <Link to="/casos-sucesso" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
                   isActivePath('/casos-sucesso') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
@@ -57,8 +67,8 @@ const RestoredNavbar = () => {
                 }`}>
                   Preços
                 </Link>
-                <Link to="/sobre-flowtrip" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/sobre-flowtrip') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/sobre-overflow-one" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/sobre-overflow-one') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Sobre
                 </Link>
@@ -183,6 +193,16 @@ const RestoredNavbar = () => {
                   }`} onClick={() => setIsOpen(false)}>
                     Soluções
                   </Link>
+                  <Link to="/servicos" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/servicos') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  }`} onClick={() => setIsOpen(false)}>
+                    Serviços
+                  </Link>
+                  <Link to="/parceiros-comerciais" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/parceiros-comerciais') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  }`} onClick={() => setIsOpen(false)}>
+                    Parceiros
+                  </Link>
                   <Link to="/casos-sucesso" className={`block px-3 py-2 text-base font-medium transition-colors ${
                     isActivePath('/casos-sucesso') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
@@ -193,8 +213,8 @@ const RestoredNavbar = () => {
                   }`} onClick={() => setIsOpen(false)}>
                     Preços
                   </Link>
-                  <Link to="/sobre-flowtrip" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/sobre-flowtrip') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  <Link to="/sobre-overflow-one" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/sobre-overflow-one') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Sobre
                   </Link>

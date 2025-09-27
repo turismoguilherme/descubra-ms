@@ -23,7 +23,7 @@ import {
   Line,
 } from "recharts";
 
-import { tourismRAGService, RAGResponse } from '@/services/ai/tourismRAGService'; // Importar o serviço RAG
+import { guataConsciousService } from '@/services/ai/guataConsciousService';
 
 type Message = {
   id: number;
@@ -64,10 +64,7 @@ const AnalyticsAI: React.FC<AnalyticsAIProps> = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Inicializar a base de conhecimento do RAG
-  useEffect(() => {
-    tourismRAGService.initializeKnowledgeBase();
-  }, []);
+  // Sistema de IA integrado - não necessita inicialização separada
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

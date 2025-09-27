@@ -13,10 +13,11 @@ export const useMapboxMap = ({ mapboxToken, center = [-55.0000, -20.5000], zoom 
   const map = useRef<mapboxgl.Map | null>(null);
 
   useEffect(() => {
+    console.log("🧭 useMapboxMap: effect", { hasContainer: Boolean(mapContainer.current), hasMap: Boolean(map.current), hasToken: Boolean(mapboxToken) });
     if (!mapContainer.current || map.current || !mapboxToken) return;
     
     try {
-      console.log("Inicializando mapa...");
+      console.log("🗺️ useMapboxMap: initializing map");
       mapboxgl.accessToken = mapboxToken;
       
       map.current = new mapboxgl.Map({
@@ -46,21 +47,26 @@ export const useMapboxMap = ({ mapboxToken, center = [-55.0000, -20.5000], zoom 
       }), 'bottom-left');
       
       map.current.on('error', (e) => {
-        console.error("Mapbox error:", e);
+        console.error("❌ useMapboxMap: map error", e);
       });
       
       map.current.on('load', () => {
-        console.log("Mapa carregado com sucesso");
+        console.log("✅ useMapboxMap: map loaded");
       });
       
     } catch (error) {
-      console.error("Map initialization error:", error);
+      console.error("❌ useMapboxMap: initialization error", error);
     }
     
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      try {
+        if (map.current) {
+          console.log("🧹 useMapboxMap: removing map instance");
+          map.current.remove();
+          map.current = null;
+        }
+      } catch (e) {
+        console.error("❌ useMapboxMap: cleanup error", e);
       }
     };
   }, [mapboxToken, center, zoom]);

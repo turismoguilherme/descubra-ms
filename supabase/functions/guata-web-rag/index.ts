@@ -1,6 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Limites (plano gratuito)
+const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get('RATE_LIMIT_PER_MIN') ?? '8')
+const DAILY_BUDGET_CALLS = parseInt(Deno.env.get('DAILY_BUDGET_CALLS') ?? '200')
+
+// Memória local (edge) – suficiente para conter picos
+const minuteWindow: Map<string, { count: number; ts: number }> = new Map()
+const dailyWindow: Map<string, { count: number; day: string }> = new Map()
+
+function checkRateLimit(key: string): { ok: boolean; reason?: string } {
+  const now = Date.now()
+  const minuteKey = key
+  const currentMinute = Math.floor(now / 60000)
+
+  const m = minuteWindow.get(minuteKey)
+  if (!m || m.ts !== currentMinute) {
+    minuteWindow.set(minuteKey, { count: 1, ts: currentMinute })
+  } else {
+    m.count += 1
+    if (m.count > RATE_LIMIT_PER_MIN) return { ok: false, reason: 'RATE_MIN' }
+  }
+
+  const dayStr = new Date().toISOString().slice(0, 10)
+  const d = dailyWindow.get(key)
+  if (!d || d.day !== dayStr) {
+    dailyWindow.set(key, { count: 1, day: dayStr })
+  } else {
+    d.count += 1
+    if (d.count > DAILY_BUDGET_CALLS) return { ok: false, reason: 'RATE_DAY' }
+  }
+
+  return { ok: true }
+}
+
 interface RAGQuery {
   question: string
   state_code?: string
@@ -48,8 +81,9 @@ const corsHeaders = {
 }
 
 // Cache simples em memória para Edge Function
-const responseCache = new Map<string, any>();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hora
+const responseCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const DEFAULT_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (eventos)
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -57,7 +91,18 @@ serve(async (req) => {
   }
 
   try {
-    const { question, state_code = 'MS', user_id, session_id, location } = await req.json() as RAGQuery
+    const body = await req.json() as RAGQuery
+    const ip = req.headers.get('x-forwarded-for') || 'ip-unknown'
+    const userKey = body.user_id || body.session_id || ip
+    const rl = checkRateLimit(userKey)
+    if (!rl.ok) {
+      const msg = rl.reason === 'RATE_MIN'
+        ? 'Muitas requisições em um minuto. Aguarde alguns segundos.'
+        : 'Limite diário atingido. Tente novamente amanhã.'
+      return new Response(JSON.stringify({ error: msg }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    const { question, state_code = 'MS', user_id, session_id, location } = body
     
     console.log(`🔍 RAG Query iniciada: "${question}" for state: ${state_code}`)
     console.log(`👤 User ID: ${user_id}`)
@@ -69,7 +114,7 @@ serve(async (req) => {
     const cacheKey = `${question.toLowerCase().trim()}:${state_code}:${user_id || 'anonymous'}`
     const cachedResponse = responseCache.get(cacheKey)
     
-    if (cachedResponse && (Date.now() - cachedResponse.timestamp) < CACHE_TTL) {
+    if (cachedResponse && (Date.now() - cachedResponse.timestamp) < cachedResponse.ttl) {
       console.log('🔄 Resposta encontrada em cache!')
       return new Response(
         JSON.stringify({
@@ -113,12 +158,21 @@ serve(async (req) => {
     
     // 6. Build context for Gemini
     console.log('\n📝 === CONSTRUINDO CONTEXTO PARA GEMINI ===')
-    const context = buildContext(rankedResults.slice(0, 5))
+    const topResults = rankedResults.slice(0, 8)
+const context = buildContext(topResults)
     console.log(`📝 Contexto length: ${context.length} caracteres`)
     
-    // 7. Generate response with Gemini
+// 6.1 Se a pergunta for de eventos, tentar parser rápido por regex
+let quickAgenda: string | null = null
+if (/evento|agenda|programa[çc][aã]o|show|shows/i.test(question)) {
+  // janela dinâmica: padrão 30 dias
+  const windowDays = /hoje|amanh[ãa]|fim de semana/i.test(question) ? 3 : 30
+  quickAgenda = tryParseEvents(topResults, windowDays)
+}
+    
+// 7. Generate response with Gemini (ou usar agenda rápida quando fizer sentido)
     console.log('\n🤖 === GERANDO RESPOSTA COM GEMINI ===')
-    const response = await generateResponse(question, context, rankedResults)
+const response = quickAgenda ? `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?` : await generateResponse(question, context, topResults)
     console.log(`🤖 Resposta gerada: ${response.substring(0, 100)}...`)
     
     // 8. Aplicar aprendizado contínuo
@@ -136,6 +190,7 @@ serve(async (req) => {
       answer: response,
       sources: rankedResults.slice(0, 3).map(r => ({
         title: r.title,
+        snippet: r.snippet,
         link: r.link,
         source: r.source
       })),
@@ -145,10 +200,13 @@ serve(async (req) => {
       processing_time_ms: Date.now() - Date.now() // Simulado
     }
     
+    const ttl = learningData.query_type === 'event' ? EVENT_CACHE_TTL : DEFAULT_CACHE_TTL
+    
     // Cache da resposta
     responseCache.set(cacheKey, {
       data: finalResponse,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      ttl
     })
     
     // Limpar cache antigo se necessário
@@ -296,19 +354,17 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
   )
   
   try {
-    // Busca FTS mais inteligente
+    // Busca FTS com boost para MS/CG (sem filtro rígido)
     const searchTerms = question.toLowerCase().split(/\s+/).filter(term => term.length > 2).slice(0, 3)
-    let query = supabase
+    let baseQuery = supabase
       .from('document_chunks')
-      .select('content, metadata, document_id')
-      .eq('state_code', state_code)
+      .select('content, metadata, document_id, state_code')
     
     let results: any[] = []
     
-    // Tentar FTS primeiro
     if (searchTerms.length > 0) {
       try {
-        const { data: ftsData, error: ftsError } = await query.textSearch('content', searchTerms[0]).limit(10)
+        const { data: ftsData, error: ftsError } = await baseQuery.textSearch('content', searchTerms[0]).limit(20)
         if (!ftsError && ftsData) {
           results = ftsData
         }
@@ -322,9 +378,8 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
       console.log('FTS sem resultados, fazendo busca simples...')
       const { data: simpleData, error: simpleError } = await supabase
         .from('document_chunks')
-        .select('content, metadata, document_id')
-        .eq('state_code', state_code)
-        .limit(10)
+        .select('content, metadata, document_id, state_code')
+        .limit(20)
       
       if (!simpleError && simpleData) {
         // Filtrar por relevância simples
@@ -336,11 +391,10 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
     }
     
     if (results.length === 0) {
-      console.log('Nenhum resultado encontrado, retornando todos os chunks disponíveis')
+      console.log('Nenhum resultado encontrado, retornando alguns chunks disponíveis (sem filtro rígido)')
       const { data: allData, error: allError } = await supabase
         .from('document_chunks')
-        .select('content, metadata, document_id')
-        .eq('state_code', state_code)
+        .select('content, metadata, document_id, state_code')
         .limit(5)
       
       if (!allError && allData) {
@@ -353,7 +407,7 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
       snippet: chunk.content.substring(0, 200) + '...',
       link: chunk.metadata?.url || '#',
       source: 'fts' as const,
-      confidence: 0.8
+      confidence: 0.8 + (chunk.state_code === state_code ? 0.1 : 0) // boost para MS/CG
     }))
   } catch (error) {
     console.error('FTS Search error:', error)
@@ -366,119 +420,60 @@ async function performPSESearch(question: string, state_code: string): Promise<S
   const pseApiKey = Deno.env.get('PSE_API_KEY')
   const pseCx = Deno.env.get('PSE_CX')
   
-  console.log(`🌐 PSE API Key: ${pseApiKey ? '✅ Configurada' : '❌ Não configurada'}`)
-  console.log(`🌐 PSE CX: ${pseCx ? '✅ Configurado' : '❌ Não configurado'}`)
+  if (!pseApiKey) console.warn('⚠️ PSE_API_KEY não configurada em guata-web-rag.');
+  if (!pseCx) console.warn('⚠️ PSE_CX não configurada em guata-web-rag.');
   
   if (!pseApiKey || !pseCx) {
-    console.log('🌐 PSE não configurado, fazendo busca web alternativa...')
-    
-    // Busca web alternativa usando Google Custom Search básico
-    try {
-      // Termos de busca inteligentes
-      const searchTerms = [
-        `${question} ${state_code} site:ms.gov.br`,
-        `${question} ${state_code} site:turismo.ms.gov.br`,
-        `${question} ${state_code} site:bonito-ms.com.br`,
-        `${question} ${state_code} turismo oficial`
-      ]
-      
-      console.log('🌐 Termos de busca:', searchTerms)
-      
-      // Simular resultados web inteligentes baseados na pergunta
-      const webResults: SearchResult[] = []
-      
-      // Analisar a pergunta e gerar resultados relevantes
-      const questionLower = question.toLowerCase()
-      
-      if (questionLower.includes('hotel') || questionLower.includes('hospedagem')) {
-        webResults.push({
-          title: 'Hotéis em Campo Grande - Turismo MS',
-          snippet: 'Encontre os melhores hotéis e pousadas em Campo Grande, com opções para todos os orçamentos.',
-          link: 'https://turismo.ms.gov.br/hoteis-campo-grande',
-          source: 'pse' as const,
-          confidence: 0.8
-        })
-      }
-      
-      if (questionLower.includes('restaurante') || questionLower.includes('comida') || questionLower.includes('gastronomia')) {
-        webResults.push({
-          title: 'Gastronomia de Campo Grande - Guia Oficial',
-          snippet: 'Descubra os sabores únicos da capital sul-mato-grossense, com pratos típicos e restaurantes renomados.',
-          link: 'https://turismo.ms.gov.br/gastronomia-campo-grande',
-          source: 'pse' as const,
-          confidence: 0.8
-        })
-      }
-      
-      if (questionLower.includes('fazer') || questionLower.includes('atrativo') || questionLower.includes('turismo')) {
-        webResults.push({
-          title: 'O que fazer em Campo Grande - Atrativos Turísticos',
-          snippet: 'Principais pontos turísticos, museus, parques e atividades culturais da capital de MS.',
-          link: 'https://turismo.ms.gov.br/atrativos-campo-grande',
-          source: 'pse' as const,
-          confidence: 0.9
-        })
-      }
-      
-      if (questionLower.includes('pantanal')) {
-        webResults.push({
-          title: 'Pantanal - Portal Oficial do Turismo MS',
-          snippet: 'O Pantanal é a maior planície alagável do mundo, patrimônio da humanidade e destino único para ecoturismo.',
-          link: 'https://turismo.ms.gov.br/pantanal',
-          source: 'pse' as const,
-          confidence: 0.95
-        })
-      }
-      
-      if (questionLower.includes('bonito')) {
-        webResults.push({
-          title: 'Bonito MS - Ecoturismo e Aventura',
-          snippet: 'Bonito oferece experiências únicas com águas cristalinas, cavernas e rica biodiversidade.',
-          link: 'https://bonito-ms.com.br',
-          source: 'pse' as const,
-          confidence: 0.95
-        })
-      }
-      
-      console.log(`🌐 Resultados web simulados: ${webResults.length}`)
-      return webResults
-      
-    } catch (error) {
-      console.error('🌐 Erro na busca web alternativa:', error)
+    console.log('🌐 PSE não configurado. Para garantir veracidade, não serão simulados resultados. Retornando vazio.')
       return []
-    }
   }
   
-  // Busca PSE original (quando configurado)
+  // Multi-query expansion com datas e fontes prioritárias
   try {
-    const query = `${question} ${state_code} turismo site:ms.gov.br OR site:turismo.ms.gov.br`
-    console.log(`🌐 Query PSE: ${query}`)
-    
-    const url = `https://www.googleapis.com/customsearch/v1?key=${pseApiKey}&cx=${pseCx}&q=${encodeURIComponent(query)}&num=5`
-    console.log(`🌐 URL PSE: ${url}`)
-    
-    const response = await fetch(url)
-    console.log(`🌐 PSE Response status: ${response.status}`)
-    
-    const data = await response.json()
-    console.log(`🌐 PSE Response data:`, JSON.stringify(data, null, 2))
-    
-    if (!data.items) {
-      console.log('🌐 PSE: Nenhum item retornado')
-      return []
+    const now = new Date()
+    const dd = String(now.getDate()).padStart(2, '0')
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const yyyy = now.getFullYear()
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro']
+    const mesExtenso = meses[now.getMonth()]
+
+    const variants = buildQueryVariants(question)
+
+const queries = [
+  // prioritárias por fonte
+  `${variants[0]} site:campogrande.ms.gov.br OR site:turismo.ms.gov.br OR site:ms.gov.br`,
+  `${variants[0]} site:sympla.com.br OR site:eventbrite.com.br`,
+  `${variants[0]} site:campograndenews.com.br OR site:correiodoestado.com.br OR site:midiamax.com.br`,
+  // variantes abertas
+  ...variants.slice(0, 3)
+]
+
+const limitedQueries = queries.slice(0, 6)
+
+    const fetchQuery = async (q: string) => {
+      try {
+        const url = `https://www.googleapis.com/customsearch/v1?key=${pseApiKey}&cx=${pseCx}&q=${encodeURIComponent(q)}&num=5`;
+        const response = await fetch(url)
+        if (!response.ok) return [] as SearchResult[]
+        const data = await response.json()
+        const results = (data.items || []).map((item: any) => ({
+              title: item.title,
+              snippet: item.snippet,
+              link: item.link,
+              source: 'pse' as const,
+          confidence: 0.6
+        })) as SearchResult[]
+        return results
+      } catch (e) {
+        console.log('🌐 Erro em query PSE:', e)
+        return [] as SearchResult[]
+      }
     }
-    
-    const results = data.items.map((item: any) => ({
-      title: item.title,
-      snippet: item.snippet,
-      link: item.link,
-      source: 'pse' as const,
-      confidence: 0.7
-    }))
-    
-    console.log(`🌐 PSE: ${results.length} resultados processados`)
-    return results
-    
+
+    const resultsArrays = await Promise.all(limitedQueries.map(fetchQuery))
+    const flat = resultsArrays.flat()
+    console.log(`🌐 PSE multi-query total: ${flat.length}`)
+    return flat
   } catch (error) {
     console.error('🌐 PSE Search error:', error)
     return []
@@ -572,26 +567,86 @@ async function getPlaceData(query: string, state_code: string): Promise<PlaceDat
   }
 }
 
+async function getNearbyHotelsAtCGR(): Promise<PlaceData[]> {
+  const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY')
+  if (!apiKey) return []
+  // Coordenadas aproximadas do Aeroporto Internacional de Campo Grande (CGR)
+  const lat = -20.4689
+  const lon = -54.6726
+  const radius = 3000 // 3 km
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&type=lodging&key=${apiKey}&language=pt-BR`
+    console.log('🔍 Places Nearby (CGR):', url.replace(apiKey, 'API_KEY_HIDDEN'))
+    const response = await fetch(url)
+    const data = await response.json()
+    let results = Array.isArray(data.results) ? data.results : []
+
+    // Fallback: se Nearby não retornar, tentar Text Search focado
+    if (!results || results.length === 0) {
+      const q = 'hoteis perto do Aeroporto Internacional de Campo Grande'
+      const textUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&type=lodging&key=${apiKey}&language=pt-BR&region=br`
+      console.log('🔎 Places TextSearch fallback (CGR):', textUrl.replace(apiKey, 'API_KEY_HIDDEN'))
+      const tr = await fetch(textUrl)
+      const tj = await tr.json()
+      results = Array.isArray(tj.results) ? tj.results : []
+    }
+
+    if (!results || results.length === 0) return []
+
+    return results.slice(0, 5).map((p: any) => ({
+      name: p.name,
+      address: p.vicinity || p.formatted_address || '',
+      rating: p.rating,
+      opening_hours: p.opening_hours?.open_now ? 'Aberto agora' : 'Horário não disponível'
+    }))
+  } catch (e) {
+    console.error('❌ Places Nearby CGR error:', e)
+    return []
+  }
+}
+
 function rankResults(results: SearchResult[], question: string): SearchResult[] {
-  return results.sort((a, b) => {
-    // Boost official sources
+  // Boost/penalidades com base em feedback histórico (placeholder)
+  const domainScore: Record<string, number> = {}
+
+  const weightDomain = (url: string): number => {
+    try {
+      const host = new URL(url).hostname
+      if (host.endsWith('.ms.gov.br') || host.includes('campogrande.ms.gov.br') || host.includes('turismo.ms.gov.br')) return 0.6 // Prefeitura/SECTUR
+      if (host.includes('sympla.com.br') || host.includes('eventbrite.com.br')) return 0.4 // Sympla/Eventbrite
+      if (host.includes('campograndenews.com.br') || host.includes('midiamax.com.br') || host.includes('correiodoestado.com.br')) return 0.25 // jornais locais
+      return 0.1 // blogs/portais
+    } catch { return 0 }
+  }
+
+  return results
+    // deduplicar por link
+    .filter((r, i, arr) => arr.findIndex(x => x.link === r.link) === i)
+    .sort((a, b) => {
     let scoreA = a.confidence
     let scoreB = b.confidence
     
-    // Boost para embeddings (mais inteligente)
-    if (a.source === 'embedding') scoreA += 0.3
-    if (b.source === 'embedding') scoreB += 0.3
-    
-    if (a.source === 'fts') scoreA += 0.2
+      // prioridade por domínio
+      scoreA += weightDomain(a.link)
+      scoreB += weightDomain(b.link)
+
+      // fonte local/fts/api
+      if (a.source === 'embedding') scoreA += 0.2
+      if (b.source === 'embedding') scoreB += 0.2
+      if (a.source === 'fts') scoreA += 0.15
     if (a.source === 'api') scoreA += 0.1
     
-    if (a.link.includes('.gov.br')) scoreA += 0.3
-    if (a.link.includes('turismo.ms.gov.br')) scoreA += 0.4
-    
-    // Relevance boost based on question keywords
-    const questionLower = question.toLowerCase()
-    if (a.title.toLowerCase().includes(questionLower.split(' ')[0])) scoreA += 0.2
-    if (a.snippet.toLowerCase().includes(questionLower.split(' ')[0])) scoreA += 0.1
+      // feedback histórico
+      try {
+        const domainA = new URL(a.link).hostname; const domainB = new URL(b.link).hostname
+        scoreA += domainScore[domainA] || 0
+        scoreB += domainScore[domainB] || 0
+      } catch {}
+
+      // leve match com a pergunta
+      const first = question.toLowerCase().split(' ')[0]
+      if (a.title.toLowerCase().includes(first)) scoreA += 0.1
+      if (a.snippet.toLowerCase().includes(first)) scoreA += 0.05
     
     return scoreB - scoreA
   })
@@ -599,7 +654,7 @@ function rankResults(results: SearchResult[], question: string): SearchResult[] 
 
 function buildContext(results: SearchResult[]): string {
   if (results.length === 0) {
-    return "Não foi possível encontrar informações atualizadas sobre esta pergunta."
+    return "NO_CONTEXT" // força política no-source na geração
   }
   
   return results.map(r => 
@@ -608,26 +663,16 @@ function buildContext(results: SearchResult[]): string {
 }
 
 async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<string> {
-  if (sources.length === 0) {
-    return "Desculpe, não consegui encontrar informações confiáveis e atualizadas sobre esta pergunta. Recomendo consultar diretamente as fontes oficiais como turismo.ms.gov.br ou entrar em contato com a Secretaria de Turismo."
+  // Política no-source: se não houver fonte oficial recente OU consenso >=2, cai no fallback narrativo
+  const hasOfficial = sources.some(s => s.link.includes('.ms.gov.br') || s.link.includes('turismo.ms.gov.br') || s.link.includes('campogrande.ms.gov.br'))
+  const distinctDomains = new Set(sources.map(s => { try { return new URL(s.link).hostname } catch { return s.link } }))
+  const hasConsensus = distinctDomains.size >= 2
+
+  if (!hasOfficial && !hasConsensus) {
+    return "Não encontrei eventos oficiais listados agora, mas Campo Grande costuma ter movimento nas feiras e espaços culturais. Quer que eu te sugira alguns lugares queridinhos dos moradores para hoje à noite? Prefere música regional ou algo mais tranquilo?"
   }
   
-  const prompt = `Você é o Guatá, assistente de turismo do Mato Grosso do Sul. 
-  
-Pergunta do turista: "${question}"
-
-Baseado nas seguintes fontes confiáveis e atualizadas:
-
-${context}
-
-Responda de forma:
-- Honesta e precisa
-- Com linguagem amigável e turística
-- Sem inventar informações
-- Se não tiver dados suficientes, sugira fontes oficiais
-- Mantenha o tom característico do Guatá
-
-Resposta:`
+  const prompt = `Identidade e Tom:\n- Você é o Guatá, uma capivara simpática, acolhedora e curiosa, guia de turismo de Mato Grosso do Sul (foco em Campo Grande).\n- Linguagem calorosa, acessível e com toques da cultura local; NÃO se apresente e faça UMA pergunta breve no final.\n\nRegras de Veracidade (OBRIGATÓRIAS):\n- Baseie-se apenas no CONTEXTO abaixo; não invente preços, telefones, endereços ou nomes.\n- Se faltar informação no contexto, peça UMA confirmação objetiva ao usuário.\n- Não mostre fontes no chat.\n- Temperatura baixa; prefira precisão à criatividade.\n\nEstilo MS (pertencimento):\n- Valorize experiências locais (Mercadão, Praça Ary Coelho, tereré), sem atribuir falas a pessoas reais.\n\nEstrutura da resposta:\n1) Vá direto ao ponto com informações práticas e verdadeiras.\n2) Se a pergunta for ampla (\"o que fazer\"), ofereça 2–3 trilhas (manhã/tarde/noite) baseadas no contexto.\n3) Encerre com UMA pergunta de continuação.\n\nPergunta: "${question}"\n\nCONTEXTO (fontes processadas):\n${context}\n\nResponda agora:`
 
   try {
     console.log('🔑 Gemini API Key:', Deno.env.get('GEMINI_API_KEY') ? '✅ Configurada' : '❌ Não configurada')
@@ -646,7 +691,7 @@ Resposta:`
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.7,
+        temperature: 0.25,
         maxOutputTokens: 500
       }
     }
@@ -699,6 +744,54 @@ function calculateConfidence(results: SearchResult[]): number {
   const officialBonus = results.some(r => r.link.includes('.gov.br')) ? 0.2 : 0
   
   return Math.min(0.95, avgConfidence + sourceBonus + embeddingBonus + officialBonus)
+}
+
+function tryParseEvents(results: SearchResult[], windowDays: number = 30): string | null {
+  // Extrai possíveis "Titulo – data – local" de snippets
+  const events: { title: string; date?: string; place?: string }[] = []
+  const dateRx = /\b(\d{1,2}\s+de\s+[a-zç]+|\d{1,2}\/\d{1,2}\/\d{2,4}|hoje|amanhã|fim de semana|próximo fim de semana)\b/i
+  const sepRx = /\s[-–—]\s/
+
+  for (const r of results) {
+    const text = `${r.title} — ${r.snippet}`
+    const parts = text.split(sepRx)
+    if (parts.length >= 2) {
+      const title = parts[0].trim()
+      const right = parts.slice(1).join(' - ')
+      const dateMatch = right.match(dateRx)?.[0]
+      const placeMatch = right.replace(dateRx, '').split(/\s-\s|\s\|\s|\.\s/).map(s => s.trim()).find(s => s.length > 3)
+      events.push({ title, date: dateMatch || undefined, place: placeMatch || undefined })
+    }
+  }
+
+  const unique = events.filter((e, i, arr) => arr.findIndex(x => x.title.toLowerCase() === e.title.toLowerCase()) === i)
+  if (unique.length === 0) return null
+
+  // Filtrar por janela de frescor (default 30 dias)
+  const now = new Date()
+  const toDate = (raw?: string): Date | null => {
+    if (!raw) return null
+    const lower = raw.toLowerCase()
+    if (lower.includes('hoje')) return now
+    if (lower.includes('amanhã')) { const d = new Date(now); d.setDate(d.getDate()+1); return d }
+    if (lower.includes('fim de semana')) {
+      const d = new Date(now); const day = d.getDay(); const diff = (6 - day + 7) % 7; d.setDate(d.getDate()+diff); return d
+    }
+    if (lower.includes('próximo fim de semana')) { const d = new Date(now); const day = d.getDay(); const diff = (6 - day + 7) % 7 + 7; d.setDate(d.getDate()+diff); return d }
+    // formatos dd/mm/yyyy ou dd/mm/yy
+    const m1 = raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/)
+    if (m1) { const [_, dd, mm, yyyy] = m1; const year = parseInt(yyyy.length===2?('20'+yyyy):yyyy); return new Date(year, parseInt(mm)-1, parseInt(dd)) }
+    // formato "d de mês"
+    const m2 = raw.match(/(\d{1,2})\s+de\s+([a-zç]+)/i)
+    if (m2) { const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro']; const idx = meses.indexOf(m2[2].toLowerCase()); if (idx>=0){ return new Date(now.getFullYear(), idx, parseInt(m2[1])) }}
+    return null
+  }
+
+  const fresh = unique.filter(e => { const d = toDate(e.date); if (!d) return false; const diff = (d.getTime()-now.getTime())/(1000*60*60*24); return diff>=0 && diff<=windowDays })
+  if (fresh.length === 0) return null
+
+  const lines = fresh.slice(0, 5).map(e => `• ${e.title}${e.date ? ` – ${e.date}` : ''}${e.place ? ` – ${e.place}` : ''}`)
+  return `Agenda sugerida (próximos ${windowDays} dias):\n${lines.join('\n')}`
 }
 
 async function logRAGInteraction(question: string, response: string, sources: SearchResult[], user_id?: string, state_code?: string, learningData?: LearningData) {
@@ -905,4 +998,56 @@ async function saveLearningData(data: {
   } catch (error) {
     console.error('❌ Erro ao salvar dados de aprendizado:', error)
   }
+}
+
+function normalizeText(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function buildQueryVariants(question: string): string[] {
+  const now = new Date()
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const yyyy = now.getFullYear()
+  const meses = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro']
+  const mesExtenso = meses[now.getMonth()]
+
+  const base = question.trim()
+  const baseNorm = normalizeText(base)
+
+  const synonyms: Record<string, string[]> = {
+    'bioparque pantanal': ['aquario do pantanal', 'aquario pantanal', 'bioparque de campo grande'],
+    'morada dos bais': ['morada dos bais campo grande', 'morada dos bais ms'],
+    'parque das nacoes indigenas': ['museu das culturas dom bosco', 'museu dom bosco', 'mcdb campo grande', 'parque das nações indígenas campo grande', 'parque das nacoes indigenas campo grande'],
+    'mis ms': ['museu da imagem e do som de mato grosso do sul', 'museu da imagem e do som ms', 'mis campo grande', 'museu imagem som campo grande']
+  }
+
+  const extra: string[] = []
+  for (const key of Object.keys(synonyms)) {
+    if (baseNorm.includes(key)) extra.push(...synonyms[key])
+  }
+
+  const variants: string[] = [
+    base,
+    `${base} Campo Grande Mato Grosso do Sul`,
+    `${base} Campo Grande ${dd}/${mm}/${yyyy}`,
+    `${base} Campo Grande ${mesExtenso} ${yyyy}`,
+    // globais sem restrição
+    `${base}`,
+    // utilitárias
+    `${base} endereço`,
+    `${base} localização`,
+    `${base} como chegar`,
+    `${base} horário`,
+    // sinônimos
+    ...extra.map(s => `${s} Campo Grande MS`)
+  ]
+
+  // dedup
+  return variants.filter((q, i, arr) => arr.findIndex(x => normalizeText(x) === normalizeText(q)) === i)
 }

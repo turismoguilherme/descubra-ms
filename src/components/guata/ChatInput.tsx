@@ -14,7 +14,7 @@ interface ChatInputProps {
   isGravandoAudio: boolean;
   isLoading: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
-  onClearConversation: () => void;
+  onClearConversation?: () => void; // Tornar opcional para fallback
   mensagens: AIMessage[];
 }
 
@@ -26,7 +26,7 @@ const ChatInput = ({
   isGravandoAudio,
   isLoading,
   handleKeyDown,
-  onClearConversation,
+  onClearConversation = () => {}, // Definir valor padrão
   mensagens
 }: ChatInputProps) => {
   return (
@@ -105,7 +105,6 @@ const ChatInput = ({
               variant="ghost"
               size="sm"
               onClick={() => {
-                console.log("🧹 Botão limpar conversa clicado");
                 onClearConversation();
               }}
               className="flex items-center space-x-2 text-gray-300 hover:bg-red-500/20 hover:text-red-300 transition-all duration-300"

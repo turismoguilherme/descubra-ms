@@ -6,8 +6,8 @@ import { geminiClient } from "@/config/gemini";
 import { GuataResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
-// NOVO: Guatá Inteligente - Sistema completo com verificação tripla e ML
-import { guataInteligenteService } from "./guataInteligenteService";
+// NOVO: Guatá Consciente - Sistema principal
+import { guataConsciousService } from "./guataConsciousService";
 
 // Interfaces locais para compatibilidade
 interface GuataQuery {
@@ -38,21 +38,17 @@ interface GuataResponse {
 }
 
 type GuataSmartResponse = GuataResponse;
-import { freeAPIsService } from "./apis/freeAPIsService";
-import { selectiveScrapingService } from "./scraping/selectiveScrapingService";
-import { performanceOptimizer } from "./optimization/performanceOptimizer";
-import { masterDashboardService } from "./integration/masterDashboardService";
 
 /**
  * Serviço principal do Guatá que coordena os demais módulos
- * ATUALIZADO: Agora integra o novo Guatá Inteligente com verificação tripla
+ * ATUALIZADO: Agora integra o novo Guatá Consciente com verificação tripla
  */
 export class GuataService {
   // Último prompt usado (para debugging)
   private lastPrompt: string = "";
 
   /**
-   * NOVO: Método principal usando Guatá Inteligente
+   * NOVO: Método principal usando Guatá Consciente
    * Usa verificação tripla, base verificada e machine learning
    */
   async askQuestionSmart(
@@ -65,22 +61,28 @@ export class GuataService {
     try {
       this.lastPrompt = prompt;
       
-      console.log("🧠 Guatá Inteligente processando:", prompt);
+      console.log("🧠 Guatá Consciente processando:", prompt);
       
-      // Usar diretamente o método original para obter respostas inteligentes
-      const originalResponse = await this.askQuestion(prompt, undefined, { nome: userId || 'Usuário' });
+      // Usar o novo serviço consciente
+      const consciousResponse = await guataConsciousService.processQuestion({
+        question: prompt,
+        userId: userId || 'Usuário',
+        sessionId: sessionId || `session-${Date.now()}`,
+        context: category || 'turismo',
+        userLocation: location || 'Mato Grosso do Sul'
+      });
       
       return {
-        answer: originalResponse.response,
-        confidence: 0.9,
-        sources: [originalResponse.source || 'guata_official'],
+        answer: consciousResponse.answer,
+        confidence: consciousResponse.confidence,
+        sources: consciousResponse.sources.map(s => s.title),
         timestamp: new Date(),
-        processingTime: 0,
-        verificationStatus: 'verified' as const
+        processingTime: consciousResponse.metadata.processingTime,
+        verificationStatus: consciousResponse.metadata.verificationStatus
       };
       
     } catch (error) {
-      console.error("🧠 Erro no Guatá Inteligente:", error);
+      console.error("🧠 Erro no Guatá Consciente:", error);
       
       return {
         answer: "Desculpe, tive um problema técnico. Pode tentar novamente?",
@@ -105,27 +107,21 @@ export class GuataService {
     try {
       this.lastPrompt = prompt;
       
-      // Filtrar a base de conhecimento para itens relevantes
-      let relevantKnowledge: KnowledgeItem[] = knowledgeService.filterRelevantKnowledge(prompt, knowledgeBase);
+      // Usar o novo serviço consciente como padrão
+      const consciousResponse = await guataConsciousService.processQuestion({
+        question: prompt,
+        userId: userInfo?.nome || 'Usuário',
+        sessionId: `session-${Date.now()}`,
+        context: 'turismo',
+        userLocation: userInfo?.localizacao || 'Mato Grosso do Sul'
+      });
       
-      // Buscar informações adicionais de fontes oficiais
-      const officialInfo = await knowledgeService.fetchOfficialInformation(prompt);
+      return {
+        resposta: consciousResponse.answer,
+        response: consciousResponse.answer,
+        source: 'guata-conscious'
+      };
       
-      // Se temos informações oficiais, adicioná-las à base de conhecimento
-      if (officialInfo) {
-        console.log("🦦 Guatá: Informações oficiais encontradas:", officialInfo.source);
-        relevantKnowledge.push({
-          id: `official-${Date.now()}`,
-          title: "Informação Oficial",
-          content: officialInfo.content,
-          category: "oficial",
-          source: officialInfo.source,
-          lastUpdated: new Date().toISOString()
-        });
-      }
-      
-      // Chamar o cliente Guatá para obter a resposta da IA
-      return await guataClient.sendQuery(prompt, relevantKnowledge, userInfo);
     } catch (error) {
       console.error("🦦 Guatá: Erro no serviço principal:", error);
       
@@ -167,14 +163,8 @@ Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS.
 // Exportar uma única instância do serviço e os tipos necessários
 export const guataService = new GuataService();
 
-// NOVO: Exportar também o serviço inteligente diretamente
-export { 
-  guataInteligenteService, 
-  freeAPIsService, 
-  selectiveScrapingService,
-  performanceOptimizer,
-  masterDashboardService
-};
+// NOVO: Exportar o serviço consciente diretamente
+export { guataConsciousService };
 
 // Exportar tipos
 export { OfficialSources };

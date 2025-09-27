@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIMessage } from "@/types/ai";
 
 interface GuataHeaderProps {
@@ -10,9 +9,19 @@ interface GuataHeaderProps {
 }
 
 const GuataHeader: React.FC<GuataHeaderProps> = ({ onClearConversation, mensagens }) => {
-  console.log('🔍 GuataHeader: Componente renderizado.', { mensagensLength: mensagens.length });
   return (
-    <div className="p-6 mb-6 text-white">
+    <div className="flex justify-end items-center p-4 mb-4 text-white">
+      {mensagens.length > 0 && (
+        <Button
+          onClick={onClearConversation}
+          variant="outline"
+          size="sm"
+          className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Limpar Conversa
+        </Button>
+      )}
     </div>
   );
 };

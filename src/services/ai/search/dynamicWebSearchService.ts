@@ -161,6 +161,25 @@ class DynamicWebSearchService {
         }
       },
       
+      // Informações específicas sobre Campo Grande
+      campoGrande: {
+        'cidade-morena': {
+          title: 'Campo Grande - Cidade Morena',
+          content: 'Campo Grande é conhecida como "Cidade Morena" devido à cor avermelhada do solo local, rico em óxido de ferro. Esta característica geológica dá à cidade uma tonalidade única, especialmente visível nas ruas de terra e construções antigas. O apelido foi popularizado pelo poeta Manoel de Barros e se tornou símbolo da identidade da capital sul-mato-grossense.',
+          confidence: 95
+        },
+        'geral': {
+          title: 'Campo Grande - Capital de Mato Grosso do Sul',
+          content: 'Campo Grande é a capital de Mato Grosso do Sul, fundada em 1899. Conhecida como "Cidade Morena" devido ao solo avermelhado. Principais atrações: Parque das Nações Indígenas, Museu das Culturas Dom Bosco, Feira Central, gastronomia local (sobá). Clima tropical com duas estações bem definidas.',
+          confidence: 95
+        },
+        'turismo': {
+          title: 'Turismo em Campo Grande',
+          content: 'Principais pontos turísticos: Parque das Nações Indígenas (maior parque urbano), Museu das Culturas Dom Bosco, Feira Central (gastronomia), Morada dos Baís (centro histórico), Horto Florestal. Gastronomia: sobá, tereré, pequi, carne de jacaré.',
+          confidence: 95
+        }
+      },
+      
       // Transporte (dados reais)
       transporte: {
         'terminal': {
@@ -187,6 +206,19 @@ class DynamicWebSearchService {
     
     if (lowerQuery.includes('pantanal')) {
       results.push(this.createRealDataResult(realData.atracoes.pantanal, 'pantanal.ms.gov.br'));
+    }
+    
+    // Perguntas específicas sobre Campo Grande
+    if (lowerQuery.includes('campo grande') && (lowerQuery.includes('morena') || lowerQuery.includes('cidade morena') || lowerQuery.includes('por que') || lowerQuery.includes('chamada'))) {
+      results.push(this.createRealDataResult(realData.campoGrande['cidade-morena'], 'campogrande.ms.gov.br'));
+    }
+    
+    if (lowerQuery.includes('campo grande') && (lowerQuery.includes('turismo') || lowerQuery.includes('atração') || lowerQuery.includes('fazer') || lowerQuery.includes('visitar'))) {
+      results.push(this.createRealDataResult(realData.campoGrande.turismo, 'campogrande.ms.gov.br'));
+    }
+    
+    if (lowerQuery.includes('campo grande') && !results.some(r => r.title.includes('Campo Grande'))) {
+      results.push(this.createRealDataResult(realData.campoGrande.geral, 'campogrande.ms.gov.br'));
     }
     
     if (lowerQuery.includes('terminal') || lowerQuery.includes('rodoviário') || lowerQuery.includes('ônibus')) {

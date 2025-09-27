@@ -40,7 +40,8 @@ const UniversalFooter = () => {
           { to: "/ms/destinos", label: "Destinos" },
           { to: "/ms/eventos", label: "Eventos" },
           { to: "/ms/parceiros", label: "Parceiros" },
-          { to: "/ms/passaporte", label: "Passaporte" }
+          { to: "/ms/passaporte", label: "Passaporte" },
+          { to: "/admin-login", label: "Área Adm" }
         ],
         secondary: [
           { to: "/ms/guata", label: "Guatá" },
@@ -158,7 +159,7 @@ const UniversalFooter = () => {
               {isFlowTrip ? "Plataforma" : "Explore"}
             </h3>
             <ul className="space-y-3">
-              {links.primary.slice(0, 4).map((link) => (
+              {links.primary.map((link) => (
                 <li key={link.to}>
                   <Link 
                     to={link.to} 

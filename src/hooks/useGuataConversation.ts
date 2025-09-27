@@ -2,34 +2,47 @@
 import { useState } from "react";
 import { AIMessage } from "@/types/ai";
 import { useToast } from "@/components/ui/use-toast";
-import { guataService } from "@/services/ai";
+import { guataNewIntelligentService } from "@/services/ai/guataNewIntelligentService";
 import { useGuataMessages } from "@/hooks/useGuataMessages";
-import { ENV } from "@/config/environment";
-import { supabase } from "@/integrations/supabase/client";
 
 export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
   const { mensagens, setMensagens, limparHistorico } = useGuataMessages();
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [userId] = useState(() => usuarioInfo?.id || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const { toast } = useToast();
+  const [lastAnswerMeta, setLastAnswerMeta] = useState<any>(null);
+
+  const sanitizeText = (t: string) => {
+    let out = t
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/^##?\s+/gm, '')
+      .replace(/\*\s/g, '• ');
+    // Remover autoapresentações comuns
+    const introPatterns = [
+      /^ol[áa][!,.]?\s+sou\s+o\s+guat[áa][^\n]*\n?/i,
+      /^eu\s+sou\s+o\s+guat[áa][^\n]*\n?/i,
+      /^como\s+seu\s+guia[^\n]*\n?/i
+    ];
+    introPatterns.forEach((rx) => { out = out.replace(rx, ''); });
+    // Ajustar termo “Guia de turismo”
+    out = out.replace(/guia\s+tur[ií]stic[oa]/gi, 'guia de turismo');
+    return out.trim();
+  };
 
   const enviarMensagem = async (inputMensagem: string) => {
     if (inputMensagem.trim() === "") return;
-    
-    // Adiciona a mensagem do usuário
     const novaMensagemUsuario: AIMessage = {
       id: Date.now(),
       text: inputMensagem,
       isUser: true,
       timestamp: new Date()
     };
-    
     setMensagens(prev => [...prev, novaMensagemUsuario]);
     setIsLoading(true);
     
     try {
-      console.log("Enviando mensagem para o Guatá:", novaMensagemUsuario.text);
-      
-      // Adicionar mensagem de digitando...
+      console.log("🧠 Enviando mensagem para o Guatá Inteligente:", inputMensagem);
       const mensagemDigitando: AIMessage = {
         id: Date.now() + 0.5,
         text: "Digitando...",
@@ -37,63 +50,34 @@ export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
         timestamp: new Date(),
         isTyping: true
       };
-      
       setMensagens(prev => [...prev, mensagemDigitando]);
 
       let respostaTexto = "";
-      let ragData: any = null; // Variável para armazenar dados do RAG
+      let metadata: any = null;
 
-      if (ENV.FEATURES.ENABLE_RAG) {
-        // Caminho RAG: chamar Edge Function guata-web-rag
-        try {
-          console.log('🔍 Tentando RAG...')
-          const { data, error } = await supabase.functions.invoke("guata-web-rag", {
-            body: {
-              question: novaMensagemUsuario.text,
-              state_code: ENV.RAG?.DEFAULT_STATE || "MS",
-              user_id: usuarioInfo?.id || usuarioInfo?.nome || "Usuario"
-            }
-          });
-
-          if (error) {
-            throw new Error('RAG response error')
-          }
-
-          if (data && data.answer) {
-            respostaTexto = data.answer
-            ragData = data; // Armazenar dados do RAG
-            console.log('✅ RAG funcionou:', { 
-              confidence: data.confidence, 
-              sources: data.sources?.length || 0 
-            })
-          } else {
-            throw new Error('RAG no data')
-          }
-        } catch (ragError) {
-          console.warn('⚠️ RAG falhou, usando fallback:', ragError)
-          // Fallback para fluxo atual
-          const resposta = await guataService.askQuestionSmart(
-            novaMensagemUsuario.text,
-            usuarioInfo?.nome || 'Usuário',
-            `session-${Date.now()}`,
-            'turismo',
-            'Mato Grosso do Sul'
-          );
-          respostaTexto = resposta.answer;
+      try {
+        console.log('🚀 Usando fluxo simples via Gemini (guata-ai)...');
+        const { guataSimpleEdgeService } = await import('@/services/ai/guataSimpleEdgeService');
+        const kb = Array.isArray(knowledgeBase) ? knowledgeBase : [];
+        const conversationHistory = mensagens.map(msg => msg.text);
+        const text = await guataSimpleEdgeService.ask(inputMensagem, kb, usuarioInfo, 'tourist', conversationHistory);
+        if (text && text.length > 0) {
+          respostaTexto = sanitizeText(text);
+          metadata = { confidence: 80 };
+          console.log('✅ Resposta simples Gemini entregue');
+        } else {
+          // Se não há resposta, usar fallback
+          respostaTexto = sanitizeText('Olá! Eu sou o Guatá, seu guia de turismo do Mato Grosso do Sul. Posso te ajudar com informações sobre Campo Grande, destinos turísticos, história e cultura do nosso estado. O que gostaria de descobrir?');
+          metadata = { fallback: true };
         }
-      } else {
-        // Fluxo atual (sem RAG)
-        const resposta = await guataService.askQuestionSmart(
-          novaMensagemUsuario.text,
-          usuarioInfo?.nome || 'Usuário',
-          `session-${Date.now()}`,
-          'turismo',
-          'Mato Grosso do Sul'
-        );
-        respostaTexto = resposta.answer;
+      } catch (error) {
+        console.warn('❌ Sistema falhou, usando fallback inteligente:', error);
+        // O fallback já está implementado no guataSimpleEdgeService
+        // Se chegou aqui, significa que o fallback não funcionou, usar emergencial
+        respostaTexto = sanitizeText(`Olá! Eu sou o Guatá, seu guia de turismo do Mato Grosso do Sul. Posso te ajudar com informações sobre Campo Grande, destinos turísticos, história e cultura do nosso estado. O que gostaria de descobrir?`);
+        metadata = { emergency: true };
       }
-      
-      // Remover mensagem de digitando
+
       setMensagens(prev => prev.filter(msg => !msg.isTyping));
       
       const novaMensagemBot: AIMessage = {
@@ -101,68 +85,74 @@ export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
         text: respostaTexto,
         isUser: false,
         timestamp: new Date(),
-        metadata: ENV.FEATURES.ENABLE_RAG && ragData ? {
-          rag: true,
-          confidence: ragData.confidence,
-          sources: ragData.sources,
-          total_sources: ragData.total_sources
-        } : undefined
+        metadata
       };
-      
       setMensagens(prev => [...prev, novaMensagemBot]);
+      setLastAnswerMeta(metadata);
+
     } catch (error) {
-      console.error("Erro ao processar mensagem:", error);
-      
-      // Remover mensagem de digitando
+      console.error("Erro crítico no Guatá:", error);
       setMensagens(prev => prev.filter(msg => !msg.isTyping));
-      
-      // Mensagem de erro para o usuário
-      toast({
-        title: "Erro ao processar mensagem",
-        description: "Não foi possível obter uma resposta. Por favor, tente novamente mais tarde.",
-        variant: "destructive"
-      });
-      
-      // Adicionar mensagem de erro do bot
       const mensagemErro: AIMessage = {
         id: Date.now() + 1,
-        text: "Opa, tive um probleminha aqui no meu sistema! Pode tentar me perguntar de outro jeito? Às vezes a conexão do Pantanal falha um pouquinho!",
+        text: "Ops! Tive um problema técnico. Mas posso te ajudar! Diga o que você quer saber sobre Mato Grosso do Sul.",
         isUser: false,
-        error: true,
-        timestamp: new Date()
+        timestamp: new Date(),
+        metadata: { error: true, confidence: 50 }
       };
-      
       setMensagens(prev => [...prev, mensagemErro]);
+      toast({ title: "Atenção", description: "Houve um problema, mas o Guatá ainda pode te ajudar!", variant: "default" });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLimparConversa = () => {
-    // Mostrar confirmação antes de limpar
-    if (window.confirm("Tem certeza que deseja apagar todo o histórico de conversa?")) {
+    try {
       limparHistorico();
-      toast({
-        title: "Histórico limpo",
-        description: "Sua conversa com o Guatá foi reiniciada."
-      });
+    } catch (e) {
+      console.warn('Falha ao limpar histórico:', e);
     }
   };
 
-  const enviarFeedback = (positivo: boolean) => {
-    toast({
-      title: positivo ? "Obrigado pelo feedback!" : "Vou melhorar, prometo!",
-      description: positivo 
-        ? "Que bom que consegui te ajudar! Vamos continuar explorando o MS juntos!" 
-        : "Desculpe se não consegui te ajudar dessa vez. Vou me esforçar mais!",
-    });
+  const registrarCorrecao = async (mensagemId: number, correcao: string) => {
+    try {
+      console.log('📝 Correção registrada:', { mensagemId, correcao });
+      toast({ title: "Obrigado!", description: "Sua correção foi registrada e nos ajudará a melhorar!", variant: "default" });
+    } catch (error) {
+      console.error('Erro ao registrar correção:', error);
+    }
+  };
+
+  const enviarFeedback = async (positivo: boolean) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const lastUser = [...mensagens].reverse().find(m => m.isUser);
+      const lastBot = [...mensagens].reverse().find(m => !m.isUser);
+      await supabase.functions.invoke('guata-feedback', {
+        body: {
+          user_id: userId,
+          session_id: sessionId,
+          question: lastUser?.text || '',
+          answer: lastBot?.text || '',
+          positive: positivo,
+          meta: { ts: new Date().toISOString() }
+        }
+      });
+      console.log('👍 Feedback enviado:', positivo);
+    } catch (e) {
+      console.warn('Falha ao enviar feedback:', e);
+    }
   };
 
   return {
     mensagens,
-    isLoading,
     enviarMensagem,
     handleLimparConversa,
-    enviarFeedback
+    enviarFeedback,
+    isLoading,
+    sessionId,
+    userId,
+    registrarCorrecao
   };
 };

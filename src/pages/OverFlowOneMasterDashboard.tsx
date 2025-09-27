@@ -37,6 +37,10 @@ import PartnerLeadsManagement from '@/components/admin/PartnerLeadsManagement'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Importar Select
 import WorkflowManagement from '@/components/admin/WorkflowManagement'; // Importar o novo componente de gerenciamento de workflows
 import AiPerformanceMonitoring from '@/components/admin/AiPerformanceMonitoring'; // Importar o novo componente de monitoramento da IA
+import OverflowStudio from '@/components/admin/studio/OverflowStudio';
+import { ENV } from '@/config/environment';
+import StripeSubscriptionManager from '@/components/admin/StripeSubscriptionManager'; // Importar gestão de assinaturas Stripe
+import HubSpotLeadManager from '@/components/admin/HubSpotLeadManager'; // Importar gestão de leads HubSpot
 
 interface ClientData {
   id: string;
@@ -548,13 +552,18 @@ const OverFlowOneMasterDashboard = () => {
 
       {/* Tabs Principais */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6"> {/* Alterado de grid-cols-5 para grid-cols-6 */}
+        <TabsList className="grid w-full grid-cols-9"> {/* +1 para Studio */}
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clients">Clientes</TabsTrigger>
           <TabsTrigger value="support">Suporte</TabsTrigger>
           <TabsTrigger value="ai">IA Central</TabsTrigger>
           <TabsTrigger value="partners">Parceiros</TabsTrigger>
           <TabsTrigger value="workflows">Workflows</TabsTrigger>
+          <TabsTrigger value="stripe">Stripe</TabsTrigger>
+          <TabsTrigger value="hubspot">HubSpot</TabsTrigger>
+          {ENV.FEATURES.STUDIO_ENABLED && (
+            <TabsTrigger value="studio">Studio</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -937,6 +946,21 @@ const OverFlowOneMasterDashboard = () => {
 
         <TabsContent value="workflows" className="space-y-4">
           <WorkflowManagement />
+        </TabsContent>
+
+        {/* Overflow Studio (condicional por flags) */}
+        {ENV.FEATURES.STUDIO_ENABLED && (
+          <TabsContent value="studio" className="space-y-4">
+            <OverflowStudio />
+          </TabsContent>
+        )}
+
+        <TabsContent value="stripe" className="space-y-4">
+          <StripeSubscriptionManager />
+        </TabsContent>
+
+        <TabsContent value="hubspot" className="space-y-4">
+          <HubSpotLeadManager />
         </TabsContent>
       </Tabs>
     </div>

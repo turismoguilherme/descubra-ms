@@ -13,7 +13,7 @@ export const SecurityHeaders = () => {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Mantido 'unsafe-inline' apenas para styles
       "img-src 'self' data: https://flowtrip.com.br https://*.supabase.co https://images.unsplash.com https://cdn.pixabay.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.sympla.com.br",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.sympla.com.br https://maps.googleapis.com https://*.googleapis.com",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'", // Previne clickjacking
