@@ -52,8 +52,8 @@ const RestoredNavbar = () => {
                 }`}>
                   Serviços
                 </Link>
-                <Link to="/parceiros-comerciais" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/parceiros-comerciais') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/parceiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/parceiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Parceiros
                 </Link>

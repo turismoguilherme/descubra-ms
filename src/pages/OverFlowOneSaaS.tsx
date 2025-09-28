@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe } from 'lucide-react';
 import RestoredNavbar from '@/components/layout/RestoredNavbar';
@@ -257,6 +258,56 @@ const OverFlowOneSaaS = () => {
                 <li>• Exportação automática</li>
               </ul>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Acesso Administrativo */}
+      <section className="py-16 bg-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Acesso Administrativo
+            </h2>
+            <p className="text-xl text-gray-600">
+              Gerencie sua plataforma com ferramentas administrativas completas
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Shield className="w-6 h-6 text-blue-600 mr-2" />
+                  Login Administrativo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  Acesse o painel administrativo para gerenciar usuários, conteúdo e configurações da plataforma.
+                </p>
+                <Link to="/admin-login">
+                  <Button className="w-full">Acessar Admin</Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <BarChart3 className="w-6 h-6 text-green-600 mr-2" />
+                  Master Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  Dashboard completo com métricas, relatórios e ferramentas de gestão avançada.
+                </p>
+                <Link to="/master-dashboard">
+                  <Button className="w-full" variant="outline">Ver Dashboard</Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

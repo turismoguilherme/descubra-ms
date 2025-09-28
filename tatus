@@ -1,0 +1,10 @@
+[33m7971694[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32msafe-pre-merge-keep-admin[m[33m)[m merge: integração com repositório remoto
+[33m38ba523[m feat: atualização da logo Descubra MS e correções de navegação
+[33mfd1e954[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Implement next phases of commercial features
+[33mab7e394[m Implement Phase 1
+[33mc45c9a0[m[33m ([m[1;32mbackup/pre-remote-update-3477[m[33m)[m apply: pos-merge preservando Admin/Chatbo
+[33me7a123e[m merge: remoto preservando Admin e Chatbot
+[33m25c9a9f[m Implement plan to fix routing
+[33mcb99eff[m Fix: Resolve ReferenceError for AdminPortal and DestinationEditor
+[33m135c451[m Fix build errors in App.tsx
+[33m8b2dae2[m Fix: Resolve build errors

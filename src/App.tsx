@@ -124,6 +124,7 @@ function App() {
                       <Route path="/casos-sucesso" element={<Suspense fallback={<LoadingFallback />}><CasosSucesso /></Suspense>} />
                       <Route path="/precos" element={<Suspense fallback={<LoadingFallback />}><Precos /></Suspense>} />
                       <Route path="/parceiros-comerciais" element={<Suspense fallback={<LoadingFallback />}><ParceirosComerciais /></Suspense>} />
+                      <Route path="/parceiros" element={<Suspense fallback={<LoadingFallback />}><ParceirosComerciais /></Suspense>} />
                       <Route path="/servicos" element={<Suspense fallback={<LoadingFallback />}><ServicosStakeholders /></Suspense>} />
                       <Route path="/sobre-overflow-one" element={<Suspense fallback={<LoadingFallback />}><SobreOverFlowOne /></Suspense>} />
                       <Route path="/sobre-flowtrip" element={<Navigate to="/sobre-overflow-one" replace />} />
