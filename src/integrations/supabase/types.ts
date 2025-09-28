@@ -683,6 +683,227 @@ export type Database = {
         }
         Relationships: []
       }
+      commercial_partner_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_type: string
+          metric_value: number
+          partner_id: string
+          recorded_at: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          metric_value?: number
+          partner_id: string
+          recorded_at?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number
+          partner_id?: string
+          recorded_at?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partner_metrics_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_partners: {
+        Row: {
+          address: string | null
+          approved_at: string | null
+          approved_by: string | null
+          business_type: string
+          city: string | null
+          cnpj: string
+          company_name: string
+          company_size: string
+          contact_email: string
+          contact_person: string
+          contact_phone: string | null
+          contact_whatsapp: string | null
+          conversion_rate: number | null
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          featured: boolean | null
+          gallery_images: string[] | null
+          id: string
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          monthly_fee: number | null
+          operating_hours: Json | null
+          price_range: string | null
+          seasonal_info: Json | null
+          services_offered: string[] | null
+          state: string | null
+          status: string
+          subscription_end_date: string | null
+          subscription_plan: string
+          subscription_start_date: string | null
+          subscription_status: string
+          target_audience: string[] | null
+          total_clicks: number | null
+          total_views: number | null
+          trade_name: string | null
+          updated_at: string
+          verified: boolean | null
+          website_url: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          business_type: string
+          city?: string | null
+          cnpj: string
+          company_name: string
+          company_size?: string
+          contact_email: string
+          contact_person: string
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
+          conversion_rate?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          featured?: boolean | null
+          gallery_images?: string[] | null
+          id?: string
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          monthly_fee?: number | null
+          operating_hours?: Json | null
+          price_range?: string | null
+          seasonal_info?: Json | null
+          services_offered?: string[] | null
+          state?: string | null
+          status?: string
+          subscription_end_date?: string | null
+          subscription_plan?: string
+          subscription_start_date?: string | null
+          subscription_status?: string
+          target_audience?: string[] | null
+          total_clicks?: number | null
+          total_views?: number | null
+          trade_name?: string | null
+          updated_at?: string
+          verified?: boolean | null
+          website_url?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          business_type?: string
+          city?: string | null
+          cnpj?: string
+          company_name?: string
+          company_size?: string
+          contact_email?: string
+          contact_person?: string
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
+          conversion_rate?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          featured?: boolean | null
+          gallery_images?: string[] | null
+          id?: string
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          monthly_fee?: number | null
+          operating_hours?: Json | null
+          price_range?: string | null
+          seasonal_info?: Json | null
+          services_offered?: string[] | null
+          state?: string | null
+          status?: string
+          subscription_end_date?: string | null
+          subscription_plan?: string
+          subscription_start_date?: string | null
+          subscription_status?: string
+          target_audience?: string[] | null
+          total_clicks?: number | null
+          total_views?: number | null
+          trade_name?: string | null
+          updated_at?: string
+          verified?: boolean | null
+          website_url?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      commercial_subscription_plans: {
+        Row: {
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean | null
+          limits: Json
+          monthly_price: number
+          plan_name: string
+          plan_type: string
+          sort_order: number | null
+          updated_at: string
+          yearly_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          limits?: Json
+          monthly_price?: number
+          plan_name: string
+          plan_type: string
+          sort_order?: number | null
+          updated_at?: string
+          yearly_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          limits?: Json
+          monthly_price?: number
+          plan_name?: string
+          plan_type?: string
+          sort_order?: number | null
+          updated_at?: string
+          yearly_price?: number | null
+        }
+        Relationships: []
+      }
       communication_logs: {
         Row: {
           ai_generated_response: boolean | null

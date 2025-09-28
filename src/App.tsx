@@ -93,6 +93,7 @@ const MLTest = lazy(() => import("@/pages/test/MLTest")); // Nova importação p
 // const TCCReport = lazy(() => import("@/pages/TCCReport")); // Disabled
 const GuataReliabilityDashboard = lazy(() => import("@/pages/GuataReliabilityDashboard")); // Painel de Confiabilidade
 const DynamicSearchTest = lazy(() => import("@/pages/DynamicSearchTest")); // Teste de busca dinâmica
+const CommercialPartnersPortal = lazy(() => import("@/pages/CommercialPartnersPortal"));
 
 const queryClient = new QueryClient();
 
@@ -190,8 +191,9 @@ function App() {
                       <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><RoteirosMS /></Suspense>} />
                       <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsMS /></Suspense>} />
                       <Route path="/ms/passaporte/:routeId" element={<Suspense fallback={<LoadingFallback />}><PassaporteRouteMS /></Suspense>} />
-                      <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
-                      <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
+                       <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
+                       <Route path="/ms/parceiros-comerciais" element={<Suspense fallback={<LoadingFallback />}><CommercialPartnersPortal /></Suspense>} />
+                       <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
                       <Route path="/ms/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
                       <Route path="/ms/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
                       <Route path="/ms/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><BecomePartner /></Suspense>} />
