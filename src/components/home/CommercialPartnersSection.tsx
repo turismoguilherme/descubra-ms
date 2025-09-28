@@ -106,8 +106,8 @@ const CommercialPartnersSection = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full">
-                  <Link to="/ms/parceiros-comerciais?tab=join">
-                    Seja um Parceiro
+                  <Link to="/ms/comercial-dashboard">
+                    Dashboard Comercial
                   </Link>
                 </Button>
               </div>
