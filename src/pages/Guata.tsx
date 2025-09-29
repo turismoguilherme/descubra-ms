@@ -8,7 +8,7 @@ import Footer from "@/components/layout/Footer";
 import GuataHeader from "@/components/guata/GuataHeader";
 import GuataChat from "@/components/guata/GuataChat";
 import { useGuataConnection } from "@/hooks/useGuataConnection";
-import { useGuataConversation } from "@/hooks/useGuataConversation";
+// import { useGuataConversation } from "@/hooks/useGuataConversation"; // Disabled
 import { useGuataInput } from "@/hooks/useGuataInput";
 import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
 import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/guataKnowledgeBase";

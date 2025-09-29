@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -125,10 +124,6 @@ const EventosMS = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Helmet>
-          <title>Eventos - Descubra Mato Grosso do Sul</title>
-          <meta name="description" content="Descubra os melhores eventos de Mato Grosso do Sul" />
-        </Helmet>
         
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-8">
@@ -142,10 +137,6 @@ const EventosMS = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Helmet>
-        <title>Eventos - Descubra Mato Grosso do Sul</title>
-        <meta name="description" content="Descubra os melhores eventos de Mato Grosso do Sul" />
-      </Helmet>
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}

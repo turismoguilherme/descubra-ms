@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,11 +76,6 @@ const RoteirosMS = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Roteiros Turísticos - Descubra Mato Grosso do Sul</title>
-        <meta name="description" content="Explore roteiros únicos em Mato Grosso do Sul. Descubra a natureza exuberante, cultura pantaneira e aventuras inesquecíveis através do nosso passaporte digital gamificado." />
-        <meta name="keywords" content="roteiros turísticos, Mato Grosso do Sul, Pantanal, passaporte digital, turismo, aventura" />
-      </Helmet>
       
       <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-secondary-teal to-ms-accent-orange">
         {/* Header Section */}
