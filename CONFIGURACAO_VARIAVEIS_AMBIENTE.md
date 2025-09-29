@@ -60,3 +60,4 @@ curl -X POST https://hvtrpkbjgbuypkskqcqm.supabase.co/functions/v1/guata-ai \
 
 Deve retornar: `{"response": "pong"}`
 
+

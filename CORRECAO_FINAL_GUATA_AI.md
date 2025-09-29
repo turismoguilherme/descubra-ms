@@ -90,3 +90,4 @@ catch (error) {
 
 Agora os usuários recebem respostas amigáveis e informativas, mesmo quando há problemas de conectividade com a API. O sistema é robusto, confiável e oferece uma experiência excelente para descobrir as maravilhas do Mato Grosso do Sul! 🎉
 
+

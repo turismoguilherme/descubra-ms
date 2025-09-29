@@ -9,3 +9,4 @@ if %errorlevel% equ 0 (
     echo Build falhou!
 )
 pause
+

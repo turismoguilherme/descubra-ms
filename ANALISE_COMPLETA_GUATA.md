@@ -149,3 +149,4 @@ Após analisar toda a documentação, configurações e discussões, entendi com
 
 **Este é o Guatá que deveria existir - um verdadeiro guia de turismo inteligente para Mato Grosso do Sul!** 🎉
 
+

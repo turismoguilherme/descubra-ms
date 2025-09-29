@@ -82,3 +82,4 @@ A nova logo melhora significativamente a identidade visual da plataforma, combin
 **Status:** ✅ Pronto para revisão e merge
 **Branch:** `feature/overflow-one-partners-safe`
 **Tipo:** Enhancement (Melhoria visual)
+
