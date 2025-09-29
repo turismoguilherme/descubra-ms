@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building, Users, TrendingUp, Star, MapPin, Phone, Mail, Globe } from "lucide-react";
-import { useCommercialPartners } from "@/hooks/useCommercialPartners";
+import { useSecureCommercialPartners } from "@/hooks/useSecureCommercialPartners";
 import { CommercialPartnerForm } from "@/components/commercial/CommercialPartnerForm";
 import { CommercialPartnerDashboard } from "@/components/commercial/CommercialPartnerDashboard";
 
@@ -16,7 +16,7 @@ const CommercialPartnersPortal = () => {
   const [cityFilter, setCityFilter] = useState("");
   const [activeTab, setActiveTab] = useState("explore");
 
-  const { partners, isLoading } = useCommercialPartners({
+  const { partners, isLoading } = useSecureCommercialPartners({
     business_type: businessTypeFilter || undefined,
     city: cityFilter || undefined,
     status: 'approved'
