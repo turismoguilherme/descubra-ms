@@ -49,7 +49,7 @@ const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
 // const Management = lazy(() => import("@/pages/Management")); // Disabled
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
-const Guata = lazy(() => import("@/pages/GuataPublic")); // Usando GuataPublic em vez de Guata desabilitado
+const Guata = lazy(() => import("@/pages/Guata")); // Guata original restaurado
 const Delinha = lazy(() => import("@/pages/Delinha"));
 // const CATAttendant = lazy(() => import("@/pages/CATAttendant")); // Disabled
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
