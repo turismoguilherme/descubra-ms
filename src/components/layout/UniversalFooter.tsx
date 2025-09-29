@@ -88,116 +88,87 @@ const UniversalFooter = () => {
     );
   }
 
-  // Footer original para Descubra MS
+  // Footer original para Descubra MS - baseado na imagem
   return (
-    <footer className="bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green text-white">
-      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Sobre MS Turismo */}
-          <div className="md:col-span-2">
-            <div className="flex items-center mb-6">
-              <img 
-                src="/images/logo-descubra-ms-v2.png" 
-                alt="Descubra Mato Grosso do Sul" 
-                className="h-12 w-auto mr-4"
-                loading="lazy"
-              />
-              <h3 className="text-2xl font-bold">Descubra MS</h3>
+    <footer className="bg-blue-900 text-white">
+      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Coluna Esquerda - Logo e Descrição */}
+          <div>
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                <span className="text-blue-900 font-bold text-sm">MS</span>
+              </div>
+              <h3 className="text-lg font-bold">DESCUBRA MATO GROSSO DO SUL</h3>
             </div>
-            <p className="text-gray-100 text-lg mb-6 leading-relaxed">
-              Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade 
-              no coração da América do Sul. Descubra Mato Grosso do Sul!
+            <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+              Descubra as maravilhas do Pantanal, Cerrado e muito mais. 
+              Sua jornada pelo coração da América do Sul começa aqui.
             </p>
-            <div className="flex items-center text-gray-100">
-              <Heart className="h-5 w-5 mr-2 text-red-400" />
-              <span className="text-sm">Feito com amor para o turismo sul-mato-grossense</span>
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-300 hover:text-white">
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white">
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </a>
             </div>
           </div>
 
-          {/* Links Rápidos */}
+          {/* Coluna Meio - Explore */}
           <div>
-            <h3 className="text-xl font-semibold mb-6">Explore</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="text-lg font-semibold mb-4">Explore</h3>
+            <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/ms/destinos" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" />
+                <Link to="/ms" className="text-gray-300 hover:text-white transition-colors">
+                  Início
+                </Link>
+              </li>
+              <li>
+                <Link to="/ms/destinos" className="text-gray-300 hover:text-white transition-colors">
                   Destinos
                 </Link>
               </li>
               <li>
-                <Link to="/ms/roteiros" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors flex items-center">
-                  <Globe className="h-4 w-4 mr-2" />
-                  Roteiros
-                </Link>
-              </li>
-              <li>
-                <Link to="/ms/eventos" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors flex items-center">
-                  <Heart className="h-4 w-4 mr-2" />
+                <Link to="/ms/eventos" className="text-gray-300 hover:text-white transition-colors">
                   Eventos
                 </Link>
               </li>
               <li>
-                <Link to="/ms/parceiros" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors flex items-center">
-                  <Heart className="h-4 w-4 mr-2" />
+                <Link to="/ms/parceiros" className="text-gray-300 hover:text-white transition-colors">
                   Parceiros
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contato */}
+          {/* Coluna Direita - Contato */}
           <div>
-            <h3 className="text-xl font-semibold mb-6">Contato</h3>
-            <ul className="space-y-4 text-sm">
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-ms-secondary-yellow mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="text-gray-100 block">Campo Grande, MS</span>
-                  <span className="text-gray-200 text-xs">Capital do Estado</span>
-                </div>
+            <h3 className="text-lg font-semibold mb-4">Contato</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="text-gray-300">
+                contato@descubramsconline.com.br
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-ms-secondary-yellow flex-shrink-0" />
-                <span className="text-gray-100">(67) 3318-5000</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-ms-secondary-yellow flex-shrink-0" />
-                <span className="text-gray-100">contato@ms.gov.br</span>
+              <li className="text-gray-300">
+                (67) 3318-7600
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Redes Sociais */}
-        <div className="mt-12 pt-8 border-t border-white/20">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex space-x-6 mb-4 md:mb-0">
-              <a href="#" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors">
-                <Facebook className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors">
-                <Instagram className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-gray-100 hover:text-ms-secondary-yellow transition-colors">
-                <Twitter className="h-6 w-6" />
-              </a>
-            </div>
-            <div className="flex space-x-6 text-sm">
-              <a href="/privacidade" className="text-gray-200 hover:text-ms-secondary-yellow transition-colors">
-                Política de Privacidade
-              </a>
-              <a href="/termos" className="text-gray-200 hover:text-ms-secondary-yellow transition-colors">
-                Termos de Uso
-              </a>
-            </div>
-          </div>
-          
-          <div className="mt-6 text-center">
-            <p className="text-gray-200 text-sm">
-              © 2024 Governo de Mato Grosso do Sul. Todos os direitos reservados.
-            </p>
-            <p className="text-gray-300 text-xs mt-2">
-              Desenvolvido com tecnologia OverFlow One
+        {/* Linha separadora e Copyright */}
+        <div className="mt-8 pt-4 border-t border-blue-800">
+          <div className="text-center">
+            <p className="text-gray-300 text-sm">
+              © 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.
             </p>
           </div>
         </div>

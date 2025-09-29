@@ -56,7 +56,7 @@ const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
 const MunicipalAdmin = lazy(() => import("@/pages/MunicipalAdmin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Destinos = lazy(() => import("@/pages/Destinos"));
-// const Eventos = lazy(() => import("@/pages/Eventos")); // Disabled
+const Eventos = lazy(() => import("@/pages/ms/EventosMS")); // Nova página de eventos
 // const Roteiros = lazy(() => import("@/pages/Roteiros")); // Disabled
 const Partners = lazy(() => import("@/pages/Partners"));
 const Sobre = lazy(() => import("@/pages/Sobre"));
@@ -197,7 +197,7 @@ function App() {
                       } />
                       <Route path="/ms/destinos" element={<Suspense fallback={<LoadingFallback />}><Destinos /></Suspense>} />
                       <Route path="/ms/destinos/:id" element={<Suspense fallback={<LoadingFallback />}><DestinoDetalhes /></Suspense>} />
-                      {/* <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} /> */}
+                      <Route path="/ms/eventos" element={<Suspense fallback={<LoadingFallback />}><Eventos /></Suspense>} />
                       <Route path="/ms/eventos/:id" element={<Suspense fallback={<LoadingFallback />}><EventoDetalhes /></Suspense>} />
                       <Route path="/ms/roteiros" element={<Suspense fallback={<LoadingFallback />}><RoteirosMS /></Suspense>} />
                       <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsMS /></Suspense>} />
@@ -282,9 +282,9 @@ function App() {
                       <Route path="/delinha" element={<Navigate to="/ms/delinha" replace />} />
                       <Route path="/destinos" element={<Navigate to="/ms/destinos" replace />} />
                       <Route path="/destinos/:id" element={<Navigate to="/ms/destinos/:id" replace />} />
-                      {/* <Route path="/eventos" element={<Navigate to="/ms/eventos" replace />} /> */}
+                      <Route path="/eventos" element={<Navigate to="/ms/eventos" replace />} />
                       <Route path="/eventos/:id" element={<Navigate to="/ms/eventos/:id" replace />} />
-                      {/* <Route path="/roteiros" element={<Navigate to="/ms/roteiros" replace />} /> */}
+                      <Route path="/roteiros" element={<Navigate to="/ms/roteiros" replace />} />
                       <Route path="/roteiros/:routeId" element={<Navigate to="/ms/roteiros/:routeId" replace />} /> {/* Nova rota para detalhes do roteiro */}
                       <Route path="/parceiros" element={<Navigate to="/ms/parceiros" replace />} />
                       <Route path="/sobre" element={<Navigate to="/ms/sobre" replace />} />
