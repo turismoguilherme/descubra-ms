@@ -31,7 +31,15 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
         '/password-reset', 
         '/admin-seed',
         '/admin-login',
-        '/auth'
+        '/auth',
+        '/destinos',
+        '/eventos',
+        '/roteiros',
+        '/parceiros',
+        '/sobre',
+        '/mapa',
+        '/guata',
+        '/passaporte'
       ];
 
       // Verificar se é uma rota permitida (com ou sem tenant)
