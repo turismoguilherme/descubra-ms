@@ -3073,6 +3073,10 @@ export type Database = {
         Args: { p_document_id: string; p_user_id?: string }
         Returns: boolean
       }
+      check_partner_registration_rate_limit: {
+        Args: { user_id_input: string }
+        Returns: boolean
+      }
       cleanup_old_ai_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3271,6 +3275,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_enhanced_admin_operation: {
+        Args: {
+          operation_details?: Json
+          operation_type: string
+          target_record_id?: string
+          target_table?: string
+        }
+        Returns: undefined
+      }
       log_enhanced_security_event: {
         Args: {
           event_action: string
@@ -3327,6 +3340,10 @@ export type Database = {
       update_user_points: {
         Args: { p_points: number; p_state_id: string; p_user_id: string }
         Returns: undefined
+      }
+      validate_cnpj: {
+        Args: { cnpj_input: string }
+        Returns: boolean
       }
       validate_password_reset_token: {
         Args: { token_hash: string; user_email: string }
