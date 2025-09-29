@@ -49,7 +49,7 @@ const AdminSeedForm = lazy(() => import("@/components/auth/AdminSeedForm"));
 // const Management = lazy(() => import("@/pages/Management")); // Disabled
 const TechnicalAdmin = lazy(() => import("@/pages/TechnicalAdmin"));
 const DigitalPassport = lazy(() => import("@/pages/DigitalPassport"));
-// const Guata = lazy(() => import("@/pages/Guata")); // Disabled
+const Guata = lazy(() => import("@/pages/GuataPublic")); // Usando GuataPublic em vez de Guata desabilitado
 const Delinha = lazy(() => import("@/pages/Delinha"));
 // const CATAttendant = lazy(() => import("@/pages/CATAttendant")); // Disabled
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
@@ -88,7 +88,7 @@ const TourismManagement = lazy(() => import("@/pages/TourismManagement"));
 // const RouteEditorPage = lazy(() => import("@/pages/RouteEditorPage")); // Disabled
 // const LeaderboardsPage = lazy(() => import("@/pages/LeaderboardsPage")); // Disabled
 const RewardsManagement = lazy(() => import("@/components/management/RewardsManager"));
-const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Nova importação para detalhes do roteiro
+// const RouteDetailsPage = lazy(() => import("@/pages/RouteDetailsPage")); // Disabled
 const GuataHumanInterface = lazy(() => import("@/components/guata/GuataHumanInterface")); // Sistema Guatá Human
 const GuataPublic = lazy(() => import("@/pages/GuataPublic")); // Guatá sem autenticação
 const EmergencyTest = lazy(() => import("@/pages/test/EmergencyTest")); // Nova importação para teste de emergência
