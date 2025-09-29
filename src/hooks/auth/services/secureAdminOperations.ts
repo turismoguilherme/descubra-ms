@@ -4,31 +4,53 @@ import { showToast } from "../authToast";
 
 export const validateAdminOperation = async (operationType: string): Promise<boolean> => {
   try {
-    // Check if user has admin role using existing function
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      await supabase.rpc('log_security_event', {
+        event_action: `admin_validation_${operationType}_no_user`,
+        event_success: false,
+        event_error_message: 'No authenticated user',
+      });
+      return false;
+    }
+
+    // Check if user has admin role using the fixed function
     const { data: userRole, error } = await supabase.rpc('get_user_role', { 
-      check_user_id: (await supabase.auth.getUser()).data.user?.id 
+      check_user_id: user.id 
     });
 
     if (error) {
       console.error("Admin validation error:", error);
       await supabase.rpc('log_security_event', {
         event_action: `admin_validation_${operationType}`,
+        event_user_id: user.id,
         event_success: false,
         event_error_message: error.message,
       });
       return false;
     }
 
-    // Incluir municipal_manager na validação
-    const isAuthorized = ['admin', 'tech', 'municipal', 'municipal_manager', 'gestor'].includes(userRole);
+    // Enhanced role validation including municipal_manager
+    const authorizedRoles = ['admin', 'tech', 'municipal', 'municipal_manager', 'gestor'];
+    const isAuthorized = authorizedRoles.includes(userRole);
     
-    await supabase.rpc('log_security_event', {
-      event_action: `admin_validation_${operationType}`,
-      event_user_id: (await supabase.auth.getUser()).data.user?.id,
-      event_success: isAuthorized,
+    // Enhanced audit logging
+    await supabase.rpc('log_enhanced_admin_operation', {
+      operation_type: operationType,
+      target_table: null,
+      target_record_id: null,
+      operation_details: {
+        user_role: userRole,
+        authorized: isAuthorized,
+        timestamp: new Date().toISOString()
+      }
     });
 
-    console.log("🔍 Validação admin:", { userRole, isAuthorized, operationType });
+    // Only log validation details in development
+    if (import.meta.env.DEV) {
+      console.log("🔍 Validação admin:", { userRole, isAuthorized, operationType });
+    }
 
     return isAuthorized;
   } catch (error: any) {
@@ -37,7 +59,6 @@ export const validateAdminOperation = async (operationType: string): Promise<boo
       event_action: `admin_validation_exception_${operationType}`,
       event_success: false,
       event_error_message: error.message,
-      
     });
     return false;
   }

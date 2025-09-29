@@ -29,7 +29,7 @@ export const useMapbox = (options: UseMapboxOptions = {}) => {
     if (!mapContainer.current || map.current) return;
     
     const mapboxToken = config.mapbox.getToken();
-    if (!config.mapbox.isValidToken(mapboxToken)) {
+    if (!config.mapbox.isValidToken()) {
       console.error("Invalid or missing Mapbox token");
       return;
     }

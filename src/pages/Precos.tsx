@@ -200,7 +200,7 @@ const Precos = () => {
                       size="lg"
                       asChild
                     >
-                      <Link to="/contato">{plan.cta}</Link>
+                      <Link to={plan.name === "Enterprise" ? "/contato" : "/parceiros-comerciais"}>{plan.cta}</Link>
                     </Button>
 
                     <div className="space-y-4">

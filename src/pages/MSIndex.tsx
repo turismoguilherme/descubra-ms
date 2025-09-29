@@ -6,6 +6,7 @@ import DestaquesSection from "@/components/home/DestaquesSection";
 import ExperienceSection from "@/components/home/ExperienceSection";
 import CatsSection from "@/components/home/CatsSection";
 import TourismStatsSection from "@/components/home/TourismStatsSection";
+import CommercialPartnersSection from "@/components/home/CommercialPartnersSection";
 import { useTourismData } from "@/hooks/useTourismData";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -56,6 +57,7 @@ const MSIndex = () => {
       <TourismStatsSection data={tourismData} />
       <DestaquesSection />
       <ExperienceSection />
+      {/* CommercialPartnersSection removida - agora é exclusiva do OverFlow One */}
       <CatsSection />
     </UniversalLayout>
   );

@@ -1,109 +1,135 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { rewardService } from '@/services/rewards/rewardService'; // Corrigido o caminho
-import { tourismPassportService } from '@/services/passport/tourismPassportService'; // Adicionado
-import { Reward, UserReward } from '@/types/rewards';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, MapPin, FileText } from 'lucide-react'; // Alterado ReceiptText para FileText
+import { useAuth } from '@/hooks/useAuth';
+import { useGameification } from '@/hooks/useGameification';
+import { Sparkles, MapPin, FileText } from 'lucide-react';
+import LevelProgressCard from './LevelProgressCard';
+import AchievementCard from './AchievementCard';
+import StatsOverview from './StatsOverview';
+import { Badge } from '@/components/ui/badge';
+import { achievementService } from '@/services/achievementService';
 
 const EnhancedDigitalPassport: React.FC = () => {
-  const { user, loading: userLoading } = useAuth();
-  const { toast } = useToast();
-  const [userRewards, setUserRewards] = useState<UserReward[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalPoints, setTotalPoints] = useState(0); // Exemplo de um campo de pontos
-
-  useEffect(() => {
-    console.log("🔍 EnhancedDigitalPassport: User data on effect trigger:", user, "User loading:", userLoading);
-    if (user && !userLoading) {
-      fetchUserRewards();
-      // TODO: Buscar total de pontos do usuário e nível (assumindo que existam na user_profiles ou user_levels)
-      // setTotalPoints(user.total_points || 0);
-      console.log("🔍 EnhancedDigitalPassport: Fetching user rewards...");
-    }
-  }, [user, userLoading]);
-
-  const fetchUserRewards = async () => {
-    setLoading(true);
-    try {
-      const rewards = await rewardService.getUserRewards(user!.id);
-      setUserRewards(rewards);
-      console.log("✅ EnhancedDigitalPassport: User rewards loaded:", rewards);
-    } catch (error) {
-      console.error('❌ EnhancedDigitalPassport: Erro ao carregar recompensas do usuário:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar suas recompensas.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (userLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando passaporte...</div>;
-  }
+  const { user } = useAuth();
+  const { stats, loading } = useGameification();
 
   if (!user) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Faça login para ver seu passaporte.</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Faça login para ver seu passaporte digital.
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p>Carregando seu passaporte digital...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Erro ao carregar dados do passaporte.
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-4 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          🛂 Meu Passaporte Digital
+        </h1>
+        <p className="text-muted-foreground">
+          Acompanhe seu progresso explorando Mato Grosso do Sul
+        </p>
+      </div>
+
+      {/* Stats Overview */}
+      <StatsOverview stats={stats} />
+
+      {/* Level Progress */}
+      <LevelProgressCard 
+        currentPoints={stats.totalPoints}
+        level={stats.level}
+        className="max-w-2xl mx-auto"
+      />
+
+      <Separator />
+
+      {/* Achievements Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Meu Passaporte Digital</CardTitle>
-          <p className="text-gray-600">Seu progresso e recompensas no Descubra MS.</p>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            Conquistas Desbloqueadas
+            <Badge variant="secondary" className="ml-auto">
+              {stats.achievements.length}
+            </Badge>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold">Pontos Totais: {totalPoints}</h3>
-            {/* Exemplo de barra de progresso para o próximo nível/milestone */}
-            <Progress value={(totalPoints / 1000) * 100} className="w-full" />
-            <p className="text-sm text-gray-500 mt-1">Faltam {1000 - totalPoints} pontos para o próximo nível!</p>
-          </div>
-          
-          <Separator className="my-4" />
-
-          <h2 className="text-xl font-bold mb-4">Minhas Recompensas Desbloqueadas</h2>
-          {loading ? (
-            <div className="text-center py-8">Carregando recompensas...</div>
-          ) : userRewards.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Você ainda não desbloqueou nenhuma recompensa. Explore e divirta-se!
+          {stats.achievements.length === 0 ? (
+            <div className="text-center py-12 space-y-3">
+              <div className="text-6xl">🎯</div>
+              <h3 className="text-lg font-semibold">Comece sua jornada!</h3>
+              <p className="text-muted-foreground">
+                Complete roteiros e visite pontos turísticos para desbloquear suas primeiras conquistas.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userRewards.map((userReward) => (
-                <Card key={userReward.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2"><Sparkles size={20} />{userReward.reward?.name || 'Recompensa Desconhecida'}</CardTitle>
-                      <Badge variant="secondary">{userReward.reward?.type || 'Geral'}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700 text-sm mb-2">{userReward.reward?.description || 'Sem descrição.'}</p>
-                    {userReward.reward?.local_resgate && (
-                      <div className="flex items-center text-sm text-gray-600 mb-1">
-                        <MapPin size={14} className="mr-1" />
-                        <span className="font-semibold">Local de Resgate:</span> {userReward.reward.local_resgate}
-                      </div>
-                    )}
-                    {userReward.reward?.instrucoes_resgate && (
-                      <div className="flex items-start text-sm text-gray-600">
-                        <FileText size={14} className="mr-1 mt-1" /> {/* Alterado ReceiptText para FileText */}
-                        <span className="font-semibold">Instruções:</span> {userReward.reward.instrucoes_resgate}
-                      </div>
-                    )}
-                    <p className="text-xs text-gray-500 mt-2">Recebido em: {new Date(userReward.received_at).toLocaleDateString()}</p>
-                  </CardContent>
-                </Card>
+              {stats.achievements.map((userAchievement) => (
+                <AchievementCard
+                  key={userAchievement.id}
+                  achievement={userAchievement.achievement!}
+                  userAchievement={userAchievement}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Activity Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-6 w-6 text-primary" />
+            Atividade Recente
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.achievements.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhuma atividade recente. Comece explorando!
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stats.achievements.slice(0, 5).map((achievement) => (
+                <div 
+                  key={achievement.id}
+                  className="flex items-center gap-4 p-3 rounded-lg border bg-muted/20"
+                >
+                  <div className="text-2xl">{achievement.achievement?.icon}</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold">{achievement.achievement?.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Desbloqueado em {new Date(achievement.earned_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <Badge variant="outline">
+                    +{achievement.achievement?.points_reward} pontos
+                  </Badge>
+                </div>
               ))}
             </div>
           )}

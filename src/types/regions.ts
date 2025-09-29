@@ -146,4 +146,5 @@ export interface UseRegionsReturn {
   getRegionBySlug: (slug: string) => TourismRegion | undefined;
   getRegionsByCity: (city: string) => TourismRegion[];
   getRegionsByType: (type: MSRegion['tourism_type']) => MSRegion[];
-} 
+  refreshRegions: () => void;
+}

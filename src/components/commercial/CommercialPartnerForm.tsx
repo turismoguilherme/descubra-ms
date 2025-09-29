@@ -1,333 +1,406 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useCommercialPartners, NewCommercialPartner } from '@/hooks/useCommercialPartners';
-import { Building, Mail, Phone, Globe, MapPin, Briefcase, Users, CreditCard } from 'lucide-react';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useCommercialPartners, type NewCommercialPartner } from "@/hooks/useCommercialPartners";
+import { Building, Mail, Phone, Globe, MapPin } from "lucide-react";
 
-const formSchema = z.object({
-  company_name: z.string().min(2, 'Nome da empresa deve ter pelo menos 2 caracteres'),
-  contact_email: z.string().email('Email inválido'),
-  contact_phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
-  business_type: z.string().min(1, 'Tipo de negócio é obrigatório'),
-  description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
-  website: z.string().url('URL inválida').optional().or(z.literal('')),
-  city: z.string().min(2, 'Cidade é obrigatória'),
-  state: z.string().min(2, 'Estado é obrigatório'),
-  services: z.string().min(5, 'Serviços devem ter pelo menos 5 caracteres'),
-  target_audience: z.string().min(5, 'Público-alvo deve ter pelo menos 5 caracteres'),
+const commercialPartnerSchema = z.object({
+  company_name: z.string().min(2, "Nome da empresa é obrigatório"),
+  trade_name: z.string().optional(),
+  cnpj: z.string().min(14, "CNPJ deve ter 14 dígitos"),
+  business_type: z.enum(['hotel', 'pousada', 'resort', 'agencia_turismo', 'restaurante', 'atrativo_turistico', 'transporte', 'guia_turismo', 'artesanato', 'evento', 'outro']),
+  company_size: z.enum(['micro', 'small', 'medium', 'large']),
+  contact_person: z.string().min(2, "Nome do contato é obrigatório"),
+  contact_email: z.string().email("Email inválido"),
+  contact_phone: z.string().optional(),
+  contact_whatsapp: z.string().optional(),
+  website_url: z.string().url().optional().or(z.literal("")),
+  description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres").optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zip_code: z.string().optional(),
+  services_offered: z.array(z.string()).optional(),
+  target_audience: z.array(z.string()).optional(),
+  price_range: z.enum(['budget', 'mid_range', 'luxury', 'ultra_luxury']).optional(),
   subscription_plan: z.enum(['basic', 'premium', 'enterprise']),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof commercialPartnerSchema>;
 
-const CommercialPartnerForm: React.FC = () => {
-  const { createPartner } = useCommercialPartners();
+export const CommercialPartnerForm = () => {
+  const { submitRequest, isSubmitting } = useCommercialPartners();
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedAudience, setSelectedAudience] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setValue,
-    watch,
+    reset,
   } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(commercialPartnerSchema),
     defaultValues: {
       subscription_plan: 'basic',
-    },
+      company_size: 'small',
+    }
   });
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      const newPartner: NewCommercialPartner = {
-        ...data,
-        website: data.website || undefined,
-      };
+  const businessTypes = [
+    { value: 'hotel', label: 'Hotel' },
+    { value: 'pousada', label: 'Pousada' },
+    { value: 'resort', label: 'Resort' },
+    { value: 'agencia_turismo', label: 'Agência de Turismo' },
+    { value: 'restaurante', label: 'Restaurante' },
+    { value: 'atrativo_turistico', label: 'Atrativo Turístico' },
+    { value: 'transporte', label: 'Transporte' },
+    { value: 'guia_turismo', label: 'Guia de Turismo' },
+    { value: 'artesanato', label: 'Artesanato' },
+    { value: 'evento', label: 'Evento' },
+    { value: 'outro', label: 'Outro' }
+  ];
 
-      await createPartner.mutateAsync(newPartner);
-      toast.success('Solicitação de parceria enviada com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao enviar solicitação. Tente novamente.');
-      console.error('Erro ao criar parceiro:', error);
+  const companySizes = [
+    { value: 'micro', label: 'Microempresa' },
+    { value: 'small', label: 'Pequena Empresa' },
+    { value: 'medium', label: 'Média Empresa' },
+    { value: 'large', label: 'Grande Empresa' }
+  ];
+
+  const servicesOptions = [
+    'Hospedagem', 'Alimentação', 'Transporte', 'Passeios', 'Eventos',
+    'Consultoria', 'Marketing', 'Fotografia', 'Guias', 'Equipamentos'
+  ];
+
+  const audienceOptions = [
+    'Turistas Nacionais', 'Turistas Internacionais', 'Famílias',
+    'Casais', 'Grupos', 'Corporativo', 'Aventura', 'Ecoturismo',
+    'Turismo Rural', 'Terceira Idade'
+  ];
+
+  const onSubmit = async (data: FormData) => {
+    const formData: NewCommercialPartner = {
+      company_name: data.company_name!,
+      trade_name: data.trade_name,
+      cnpj: data.cnpj!,
+      business_type: data.business_type!,
+      company_size: data.company_size!,
+      contact_person: data.contact_person!,
+      contact_email: data.contact_email!,
+      contact_phone: data.contact_phone,
+      contact_whatsapp: data.contact_whatsapp,
+      website_url: data.website_url,
+      description: data.description,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      zip_code: data.zip_code,
+      services_offered: selectedServices.length > 0 ? selectedServices : undefined,
+      target_audience: selectedAudience.length > 0 ? selectedAudience : undefined,
+      price_range: data.price_range,
+      subscription_plan: data.subscription_plan!,
+    };
+    
+    submitRequest(formData);
+    reset();
+    setSelectedServices([]);
+    setSelectedAudience([]);
+  };
+
+  const handleServiceChange = (service: string, checked: boolean) => {
+    if (checked) {
+      setSelectedServices([...selectedServices, service]);
+    } else {
+      setSelectedServices(selectedServices.filter(s => s !== service));
     }
   };
 
-  const businessTypes = [
-    'Tecnologia',
-    'Consultoria',
-    'Marketing',
-    'Design',
-    'Desenvolvimento',
-    'Infraestrutura',
-    'Segurança',
-    'Analytics',
-    'Comunicação',
-    'Outros',
-  ];
-
-  const states = [
-    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-    'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-    'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-  ];
+  const handleAudienceChange = (audience: string, checked: boolean) => {
+    if (checked) {
+      setSelectedAudience([...selectedAudience, audience]);
+    } else {
+      setSelectedAudience(selectedAudience.filter(a => a !== audience));
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-2xl">
-            <Building className="w-6 h-6 mr-2 text-blue-600" />
-            Torne-se um Parceiro Comercial
-          </CardTitle>
-          <p className="text-gray-600">
-            Preencha o formulário abaixo para se candidatar a ser um parceiro comercial da OverFlow One.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Informações da Empresa */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                Informações da Empresa
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="company_name">Nome da Empresa *</Label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      id="company_name"
-                      {...register('company_name')}
-                      className="pl-10"
-                      placeholder="Digite o nome da empresa"
-                    />
-                  </div>
-                  {errors.company_name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.company_name.message}</p>
-                  )}
-                </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Building className="h-5 w-5" />
+          Cadastro de Parceiro Comercial
+        </CardTitle>
+        <p className="text-muted-foreground">
+          Preencha os dados da sua empresa para se tornar um parceiro
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Informações da Empresa */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="company_name">Nome da Empresa *</Label>
+              <Input
+                id="company_name"
+                {...register("company_name")}
+                placeholder="Digite o nome da empresa"
+              />
+              {errors.company_name && (
+                <p className="text-sm text-destructive">{errors.company_name.message}</p>
+              )}
+            </div>
 
-                <div>
-                  <Label htmlFor="business_type">Tipo de Negócio *</Label>
-                  <Select onValueChange={(value) => setValue('business_type', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo de negócio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {businessTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.business_type && (
-                    <p className="text-red-500 text-sm mt-1">{errors.business_type.message}</p>
-                  )}
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="trade_name">Nome Fantasia</Label>
+              <Input
+                id="trade_name"
+                {...register("trade_name")}
+                placeholder="Nome fantasia (opcional)"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="description">Descrição da Empresa *</Label>
-                <Textarea
-                  id="description"
-                  {...register('description')}
-                  placeholder="Descreva sua empresa, produtos e serviços oferecidos"
-                  rows={4}
+            <div className="space-y-2">
+              <Label htmlFor="cnpj">CNPJ *</Label>
+              <Input
+                id="cnpj"
+                {...register("cnpj")}
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+              />
+              {errors.cnpj && (
+                <p className="text-sm text-destructive">{errors.cnpj.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="business_type">Tipo de Negócio *</Label>
+              <Select onValueChange={(value) => setValue("business_type", value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {businessTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.business_type && (
+                <p className="text-sm text-destructive">{errors.business_type.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="company_size">Porte da Empresa *</Label>
+              <Select onValueChange={(value) => setValue("company_size", value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o porte" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companySizes.map((size) => (
+                    <SelectItem key={size.value} value={size.value}>
+                      {size.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Informações de Contato */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Informações de Contato
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact_person">Pessoa de Contato *</Label>
+                <Input
+                  id="contact_person"
+                  {...register("contact_person")}
+                  placeholder="Nome da pessoa responsável"
                 />
-                {errors.description && (
-                  <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+                {errors.contact_person && (
+                  <p className="text-sm text-destructive">{errors.contact_person.message}</p>
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="website">Website (opcional)</Label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="website"
-                    {...register('website')}
-                    className="pl-10"
-                    placeholder="https://www.exemplo.com"
+              <div className="space-y-2">
+                <Label htmlFor="contact_email">Email *</Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  {...register("contact_email")}
+                  placeholder="email@empresa.com"
+                />
+                {errors.contact_email && (
+                  <p className="text-sm text-destructive">{errors.contact_email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contact_phone">Telefone</Label>
+                <Input
+                  id="contact_phone"
+                  {...register("contact_phone")}
+                  placeholder="(00) 0000-0000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contact_whatsapp">WhatsApp</Label>
+                <Input
+                  id="contact_whatsapp"
+                  {...register("contact_whatsapp")}
+                  placeholder="(00) 90000-0000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="website_url">Website</Label>
+                <Input
+                  id="website_url"
+                  {...register("website_url")}
+                  placeholder="https://www.empresa.com"
+                />
+                {errors.website_url && (
+                  <p className="text-sm text-destructive">{errors.website_url.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Localização */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Localização
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="address">Endereço</Label>
+                <Input
+                  id="address"
+                  {...register("address")}
+                  placeholder="Rua, número, bairro"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  {...register("city")}
+                  placeholder="Nome da cidade"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado</Label>
+                <Input
+                  id="state"
+                  {...register("state")}
+                  placeholder="UF"
+                  maxLength={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="zip_code">CEP</Label>
+                <Input
+                  id="zip_code"
+                  {...register("zip_code")}
+                  placeholder="00000-000"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Descrição */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição da Empresa</Label>
+            <Textarea
+              id="description"
+              {...register("description")}
+              placeholder="Descreva sua empresa, seus serviços e diferenciais..."
+              rows={4}
+            />
+            {errors.description && (
+              <p className="text-sm text-destructive">{errors.description.message}</p>
+            )}
+          </div>
+
+          {/* Serviços Oferecidos */}
+          <div className="space-y-4">
+            <Label>Serviços Oferecidos</Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {servicesOptions.map((service) => (
+                <div key={service} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`service-${service}`}
+                    checked={selectedServices.includes(service)}
+                    onCheckedChange={(checked) => handleServiceChange(service, checked as boolean)}
                   />
+                  <Label htmlFor={`service-${service}`} className="text-sm">
+                    {service}
+                  </Label>
                 </div>
-                {errors.website && (
-                  <p className="text-red-500 text-sm mt-1">{errors.website.message}</p>
-                )}
-              </div>
+              ))}
             </div>
+          </div>
 
-            {/* Informações de Contato */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                Informações de Contato
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contact_email">Email de Contato *</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      id="contact_email"
-                      type="email"
-                      {...register('contact_email')}
-                      className="pl-10"
-                      placeholder="contato@empresa.com"
-                    />
-                  </div>
-                  {errors.contact_email && (
-                    <p className="text-red-500 text-sm mt-1">{errors.contact_email.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="contact_phone">Telefone *</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      id="contact_phone"
-                      {...register('contact_phone')}
-                      className="pl-10"
-                      placeholder="(67) 99999-9999"
-                    />
-                  </div>
-                  {errors.contact_phone && (
-                    <p className="text-red-500 text-sm mt-1">{errors.contact_phone.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="city">Cidade *</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      id="city"
-                      {...register('city')}
-                      className="pl-10"
-                      placeholder="Digite a cidade"
-                    />
-                  </div>
-                  {errors.city && (
-                    <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="state">Estado *</Label>
-                  <Select onValueChange={(value) => setValue('state', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.state && (
-                    <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Informações Comerciais */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                Informações Comerciais
-              </h3>
-              
-              <div>
-                <Label htmlFor="services">Serviços Oferecidos *</Label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="services"
-                    {...register('services')}
-                    className="pl-10"
-                    placeholder="Descreva os serviços que sua empresa oferece"
+          {/* Público-Alvo */}
+          <div className="space-y-4">
+            <Label>Público-Alvo</Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {audienceOptions.map((audience) => (
+                <div key={audience} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`audience-${audience}`}
+                    checked={selectedAudience.includes(audience)}
+                    onCheckedChange={(checked) => handleAudienceChange(audience, checked as boolean)}
                   />
+                  <Label htmlFor={`audience-${audience}`} className="text-sm">
+                    {audience}
+                  </Label>
                 </div>
-                {errors.services && (
-                  <p className="text-red-500 text-sm mt-1">{errors.services.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="target_audience">Público-Alvo *</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="target_audience"
-                    {...register('target_audience')}
-                    className="pl-10"
-                    placeholder="Descreva seu público-alvo"
-                  />
-                </div>
-                {errors.target_audience && (
-                  <p className="text-red-500 text-sm mt-1">{errors.target_audience.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="subscription_plan">Plano de Assinatura *</Label>
-                <Select onValueChange={(value) => setValue('subscription_plan', value as 'basic' | 'premium' | 'enterprise')}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o plano" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">
-                      <div className="flex items-center">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Básico - R$ 99/mês
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="premium">
-                      <div className="flex items-center">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Premium - R$ 299/mês
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="enterprise">
-                      <div className="flex items-center">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Enterprise - R$ 999/mês
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.subscription_plan && (
-                  <p className="text-red-500 text-sm mt-1">{errors.subscription_plan.message}</p>
-                )}
-              </div>
+              ))}
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-4 pt-6">
-              <Button type="button" variant="outline">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Enviando...' : 'Enviar Solicitação'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          {/* Plano de Assinatura */}
+          <div className="space-y-2">
+            <Label htmlFor="subscription_plan">Plano de Assinatura *</Label>
+            <Select onValueChange={(value) => setValue("subscription_plan", value as any)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o plano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="basic">Básico - R$ 49,90/mês</SelectItem>
+                <SelectItem value="premium">Premium - R$ 99,90/mês</SelectItem>
+                <SelectItem value="enterprise">Enterprise - R$ 199,90/mês</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
-
-export default CommercialPartnerForm;

@@ -26,7 +26,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { masterDashboardService } from '@/services/masterDashboardService';
+import { getMasterConfig, updateMasterConfig } from '@/services/masterDashboardService';
 
 interface PlatformConfig {
   id: string;
@@ -173,18 +173,10 @@ const PlatformConfigCenter = () => {
 
       if (error) throw error;
 
-      // Notificar o Master Dashboard sobre a atualização
-      await masterDashboardService.notifyPlatformUpdate({
+      // Notificar sobre a atualização
+      console.log('Configurações atualizadas:', {
         update_type: 'config',
-        description: 'Configurações da plataforma atualizadas',
-        data: {
-          updated_fields: ['branding', 'features', 'contact', 'seo'],
-          features_status: config.features,
-          contact_info: {
-            email: config.contact_email,
-            phone: config.contact_phone
-          }
-        }
+        description: 'Configurações da plataforma atualizadas'
       });
 
       toast({
@@ -195,14 +187,8 @@ const PlatformConfigCenter = () => {
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
       
-      // Enviar alerta de erro para o Master Dashboard
-      await masterDashboardService.sendAlert({
-        severity: 'error',
-        type: 'system',
-        message: 'Falha ao atualizar configurações da plataforma',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
-        timestamp: new Date().toISOString()
-      });
+      // Log do erro
+      console.error('Falha ao atualizar configurações:', error);
 
       toast({
         title: "Erro",

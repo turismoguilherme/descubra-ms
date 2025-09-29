@@ -1,124 +1,120 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BarChart3, 
-  Users, 
-  Eye, 
-  MousePointer, 
-  TrendingUp, 
-  Calendar,
-  MapPin,
-  Globe,
-  Phone,
-  Mail,
-  Edit,
-  Settings
-} from 'lucide-react';
-import { useCommercialPartners } from '@/hooks/useCommercialPartners';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, PieChart, Pie, Cell
+} from 'recharts';
+import { 
+  TrendingUp, Users, Eye, MousePointer, Calendar, 
+  Settings, Upload, Edit, Star, CheckCircle 
+} from "lucide-react";
+import { useCommercialPartners } from "@/hooks/useCommercialPartners";
 
-const CommercialPartnerDashboard: React.FC = () => {
+export const CommercialPartnerDashboard = () => {
   const { partners, isLoading } = useCommercialPartners();
-
+  
   // Mock data para demonstração
-  const mockMetrics = {
-    totalViews: 1247,
-    totalClicks: 89,
-    conversionRate: 7.1,
-    totalLeads: 23,
-    monthlyGrowth: 12.5,
+  const metricsData = [
+    { name: 'Jan', views: 120, clicks: 24, conversions: 3 },
+    { name: 'Fev', views: 150, clicks: 32, conversions: 5 },
+    { name: 'Mar', views: 180, clicks: 45, conversions: 8 },
+    { name: 'Abr', views: 200, clicks: 38, conversions: 6 },
+    { name: 'Mai', views: 250, clicks: 55, conversions: 12 },
+    { name: 'Jun', views: 300, clicks: 70, conversions: 15 },
+  ];
+
+  const trafficSources = [
+    { name: 'Busca Orgânica', value: 40, color: '#8884d8' },
+    { name: 'Redes Sociais', value: 30, color: '#82ca9d' },
+    { name: 'Links Diretos', value: 20, color: '#ffc658' },
+    { name: 'Campanhas', value: 10, color: '#ff7300' },
+  ];
+
+  // Simular dados do parceiro atual (primeiro parceiro para demo)
+  const currentPartner = partners[0] || {
+    company_name: "Minha Empresa",
+    subscription_plan: "premium",
+    total_views: 1200,
+    total_clicks: 280,
+    conversion_rate: 8.5,
+    status: "approved",
+    verified: true,
+    featured: false
   };
 
-  const mockChartData = [
-    { month: 'Jan', views: 400, clicks: 24, leads: 4 },
-    { month: 'Fev', views: 300, clicks: 13, leads: 2 },
-    { month: 'Mar', views: 500, clicks: 35, leads: 7 },
-    { month: 'Abr', views: 450, clicks: 28, leads: 5 },
-    { month: 'Mai', views: 600, clicks: 42, leads: 8 },
-    { month: 'Jun', views: 550, clicks: 38, leads: 6 },
-  ];
-
-  const mockTrafficSources = [
-    { source: 'Portal Principal', visitors: 45, percentage: 45 },
-    { source: 'Google Search', visitors: 30, percentage: 30 },
-    { source: 'Redes Sociais', visitors: 15, percentage: 15 },
-    { source: 'Referências', visitors: 10, percentage: 10 },
-  ];
+  const planFeatures = {
+    basic: { photos: 5, featured_days: 0, analytics: 'Básico' },
+    premium: { photos: 20, featured_days: 10, analytics: 'Avançado' },
+    enterprise: { photos: -1, featured_days: 30, analytics: 'Completo' }
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando dashboard...</p>
-        </div>
+        <p>Carregando dashboard...</p>
       </div>
     );
   }
 
-  // Simular dados do parceiro logado (em produção viria da autenticação)
-  const currentPartner = partners[0] || {
-    id: '1',
-    company_name: 'Empresa Exemplo',
-    business_type: 'Tecnologia',
-    subscription_plan: 'premium',
-    status: 'approved',
-    city: 'Campo Grande',
-    state: 'MS',
-    contact_email: 'contato@exemplo.com',
-    contact_phone: '(67) 99999-9999',
-    website: 'https://exemplo.com',
-  };
-
-  const getPlanBadgeColor = (plan: string) => {
-    switch (plan) {
-      case 'basic': return 'bg-green-100 text-green-800';
-      case 'premium': return 'bg-blue-100 text-blue-800';
-      case 'enterprise': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard do Parceiro</h1>
-          <p className="text-gray-600 mt-2">
-            Bem-vindo, {currentPartner.company_name}
-          </p>
-        </div>
-        <div className="flex space-x-3">
-          <Button variant="outline">
-            <Edit className="w-4 h-4 mr-2" />
-            Editar Perfil
-          </Button>
-          <Button>
-            <Settings className="w-4 h-4 mr-2" />
-            Configurações
-          </Button>
-        </div>
-      </div>
-
-      {/* Status e Plano */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Status da Conta</p>
-                <Badge className={`mt-2 ${currentPartner.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                  {currentPartner.status === 'approved' ? 'Aprovado' : 'Pendente'}
+    <div className="space-y-6">
+      {/* Header com informações principais */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl">{currentPartner.company_name}</CardTitle>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge 
+                  variant={currentPartner.subscription_plan === 'enterprise' ? 'default' : 'secondary'}
+                >
+                  {currentPartner.subscription_plan}
                 </Badge>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+                {currentPartner.verified && (
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Verificado
+                  </Badge>
+                )}
+                {currentPartner.featured && (
+                  <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                    <Star className="h-3 w-3 mr-1" />
+                    Destaque
+                  </Badge>
+                )}
               </div>
             </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-1" />
+                Editar Perfil
+              </Button>
+              <Button variant="outline" size="sm">
+                <Upload className="h-4 w-4 mr-1" />
+                Upload Fotos
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Métricas principais */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Visualizações</p>
+                <p className="text-2xl font-bold">{currentPartner.total_views?.toLocaleString()}</p>
+              </div>
+              <Eye className="h-8 w-8 text-blue-500" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              +12% em relação ao mês anterior
+            </p>
           </CardContent>
         </Card>
 
@@ -126,15 +122,14 @@ const CommercialPartnerDashboard: React.FC = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Plano Atual</p>
-                <Badge className={`mt-2 ${getPlanBadgeColor(currentPartner.subscription_plan)}`}>
-                  {currentPartner.subscription_plan.toUpperCase()}
-                </Badge>
+                <p className="text-sm font-medium text-muted-foreground">Cliques</p>
+                <p className="text-2xl font-bold">{currentPartner.total_clicks?.toLocaleString()}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-blue-600" />
-              </div>
+              <MousePointer className="h-8 w-8 text-green-500" />
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              +8% em relação ao mês anterior
+            </p>
           </CardContent>
         </Card>
 
@@ -142,123 +137,57 @@ const CommercialPartnerDashboard: React.FC = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Próxima Cobrança</p>
-                <p className="text-lg font-semibold text-gray-900">15/11/2024</p>
+                <p className="text-sm font-medium text-muted-foreground">Taxa de Conversão</p>
+                <p className="text-2xl font-bold">{currentPartner.conversion_rate}%</p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-purple-600" />
-              </div>
+              <TrendingUp className="h-8 w-8 text-purple-500" />
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              +2.1% em relação ao mês anterior
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Leads Gerados</p>
+                <p className="text-2xl font-bold">24</p>
+              </div>
+              <Users className="h-8 w-8 text-orange-500" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              +15% em relação ao mês anterior
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                <Eye className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Visualizações</p>
-                <p className="text-2xl font-bold text-gray-900">{mockMetrics.totalViews.toLocaleString()}</p>
-                <p className="text-sm text-green-600">+{mockMetrics.monthlyGrowth}% vs mês anterior</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                <MousePointer className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Cliques</p>
-                <p className="text-2xl font-bold text-gray-900">{mockMetrics.totalClicks}</p>
-                <p className="text-sm text-gray-500">{mockMetrics.conversionRate}% taxa de conversão</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Leads Gerados</p>
-                <p className="text-2xl font-bold text-gray-900">{mockMetrics.totalLeads}</p>
-                <p className="text-sm text-gray-500">Este mês</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
-                <TrendingUp className="w-6 h-6 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Crescimento</p>
-                <p className="text-2xl font-bold text-gray-900">+{mockMetrics.monthlyGrowth}%</p>
-                <p className="text-sm text-green-600">vs mês anterior</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráficos e Análises */}
-      <Tabs defaultValue="performance" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="traffic">Tráfego</TabsTrigger>
-          <TabsTrigger value="profile">Perfil</TabsTrigger>
+      {/* Abas com detalhes */}
+      <Tabs defaultValue="analytics" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="content">Conteúdo</TabsTrigger>
+          <TabsTrigger value="plan">Meu Plano</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="performance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance ao Longo do Tempo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mockChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="views" stroke="#3B82F6" strokeWidth={2} />
-                  <Line type="monotone" dataKey="clicks" stroke="#10B981" strokeWidth={2} />
-                  <Line type="monotone" dataKey="leads" stroke="#8B5CF6" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="traffic" className="space-y-6">
+        <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Fontes de Tráfego</CardTitle>
+                <CardTitle>Visualizações e Cliques</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={mockTrafficSources}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={metricsData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="source" />
+                    <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="visitors" fill="#3B82F6" />
+                    <Bar dataKey="views" fill="#8884d8" name="Visualizações" />
+                    <Bar dataKey="clicks" fill="#82ca9d" name="Cliques" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -266,83 +195,135 @@ const CommercialPartnerDashboard: React.FC = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Distribuição de Visitantes</CardTitle>
+                <CardTitle>Fontes de Tráfego</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockTrafficSources.map((source, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{source.source}</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${source.percentage}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-gray-600">{source.percentage}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={trafficSources}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {trafficSources.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Conversões ao Longo do Tempo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={metricsData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="conversions" 
+                      stroke="#ff7300" 
+                      strokeWidth={2}
+                      name="Conversões"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="content">
           <Card>
             <CardHeader>
-              <CardTitle>Informações da Empresa</CardTitle>
+              <CardTitle>Gerenciar Conteúdo</CardTitle>
+              <p className="text-muted-foreground">
+                Gerencie fotos, descrições e informações da sua empresa
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Building className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">{currentPartner.company_name}</p>
-                      <p className="text-sm text-gray-600">{currentPartner.business_type}</p>
-                    </div>
+            <CardContent>
+              <div className="space-y-4">
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Adicionar Fotos
+                </Button>
+                <Button variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Descrição
+                </Button>
+                <Button variant="outline">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Atualizar Horários
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="plan">
+          <Card>
+            <CardHeader>
+              <CardTitle>Plano Atual: {currentPartner.subscription_plan}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 border rounded-lg">
+                    <h3 className="font-semibold">Fotos</h3>
+                    <p className="text-2xl font-bold">
+                      {planFeatures[currentPartner.subscription_plan as keyof typeof planFeatures]?.photos === -1 
+                        ? "Ilimitadas" 
+                        : planFeatures[currentPartner.subscription_plan as keyof typeof planFeatures]?.photos}
+                    </p>
                   </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">{currentPartner.city}, {currentPartner.state}</p>
-                    </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <h3 className="font-semibold">Destaque/mês</h3>
+                    <p className="text-2xl font-bold">
+                      {planFeatures[currentPartner.subscription_plan as keyof typeof planFeatures]?.featured_days} dias
+                    </p>
                   </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">{currentPartner.contact_email}</p>
-                    </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <h3 className="font-semibold">Analytics</h3>
+                    <p className="text-2xl font-bold">
+                      {planFeatures[currentPartner.subscription_plan as keyof typeof planFeatures]?.analytics}
+                    </p>
                   </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">{currentPartner.contact_phone}</p>
-                    </div>
-                  </div>
-                  
-                  {currentPartner.website && (
-                    <div className="flex items-center space-x-3">
-                      <Globe className="w-5 h-5 text-gray-400" />
-                      <div>
-                        <a 
-                          href={currentPartner.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="font-medium text-blue-600 hover:underline"
-                        >
-                          {currentPartner.website}
-                        </a>
-                      </div>
-                    </div>
-                  )}
                 </div>
+                <div className="flex gap-2">
+                  <Button>Upgrade do Plano</Button>
+                  <Button variant="outline">Histórico de Pagamentos</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações da Conta</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Button>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurações Gerais
+                </Button>
+                <Button variant="outline">Alterar Senha</Button>
+                <Button variant="outline">Notificações</Button>
+                <Button variant="destructive">Cancelar Conta</Button>
               </div>
             </CardContent>
           </Card>
@@ -351,5 +332,3 @@ const CommercialPartnerDashboard: React.FC = () => {
     </div>
   );
 };
-
-export default CommercialPartnerDashboard;

@@ -43,14 +43,14 @@ export const useMultiTenant = () => {
         try {
           console.log("🔍 useMultiTenant: Buscando tenant no Supabase com código:", detectedTenantCode.toUpperCase());
           const { data, error: dbError } = await supabase
-            .from('overflow_one_states')
+            .from('states')
             .select('*')
             .eq('code', detectedTenantCode.toUpperCase())
             .eq('is_active', true)
             .maybeSingle();
 
-                  console.log("✅ useMultiTenant: Dados recebidos do Supabase para overflow_one_states:", data);
-        console.log("❌ useMultiTenant: Erro recebido do Supabase para overflow_one_states:", dbError);
+                  console.log("✅ useMultiTenant: Dados recebidos do Supabase para states:", data);
+        console.log("❌ useMultiTenant: Erro recebido do Supabase para states:", dbError);
 
           if (dbError) {
             console.error("❌ useMultiTenant: Erro ao buscar configuração do tenant:", dbError);
@@ -59,8 +59,8 @@ export const useMultiTenant = () => {
             setTenantConfig(data);
             setCurrentTenant(detectedTenantCode);
             console.log("✅ useMultiTenant: Tenant configurado:", data);
-            console.log("🔍 useMultiTenant: tenantConfig.logo_url:", data.logo_url);
-            console.log("🔍 useMultiTenant: tenantConfig.name:", data.name);
+            console.log("🔍 useMultiTenant: tenantConfig.logo_url:", (data as any).logo_url);
+            console.log("🔍 useMultiTenant: tenantConfig.name:", (data as any).name);
           } else {
             console.warn("⚠️ useMultiTenant: Tenant não encontrado ou inativo no DB.");
             setError(`Tenant '${detectedTenantCode}' não encontrado ou inativo.`);

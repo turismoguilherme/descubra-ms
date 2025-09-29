@@ -312,7 +312,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                         <MapPin className="h-8 w-8 text-white" />
                       </div>
                       <h3 className="font-semibold text-gray-800">
-                        {selectedLocation.name || 'Local Selecionado'}
+                        {'address' in selectedLocation ? (selectedLocation.address || 'Local Selecionado') : 'Local Selecionado'}
                       </h3>
                       <p className="text-sm text-gray-600 mt-1">
                         {selectedLocation.address}
@@ -346,7 +346,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 <CardContent className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-gray-700">Nome:</label>
-                    <p className="text-sm">{selectedLocation.name || 'Local personalizado'}</p>
+                    <p className="text-sm">{'address' in selectedLocation ? (selectedLocation.address || 'Local personalizado') : 'Local personalizado'}</p>
                   </div>
                   
                   <div>

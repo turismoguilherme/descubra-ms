@@ -53,9 +53,9 @@ export const RegionsOverview: React.FC<RegionsOverviewProps> = ({
     return matchesType && matchesSeason;
   });
 
-  const handleRegionClick = (region: MSRegion) => {
+  const handleRegionClick = (region: any) => {
     if (onRegionSelect) {
-      onRegionSelect(region);
+      onRegionSelect(region as MSRegion);
     }
   };
 
@@ -186,7 +186,7 @@ export const RegionsOverview: React.FC<RegionsOverviewProps> = ({
           <Card 
             key={region.slug} 
             className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => handleRegionClick(region)}
+            onClick={() => handleRegionClick(region as MSRegion)}
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -249,7 +249,7 @@ export const RegionsOverview: React.FC<RegionsOverviewProps> = ({
                 className="w-full mt-4"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleRegionClick(region);
+                  handleRegionClick(region as MSRegion);
                 }}
               >
                 Ver Detalhes

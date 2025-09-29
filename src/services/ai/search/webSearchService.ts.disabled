@@ -1,0 +1,570 @@
+import { geminiClient } from '@/config/gemini';
+import { realWebSearchService, WebSearchResult } from './realWebSearch';
+import { internalSearchService, InternalSearchResult } from './internalSearchService';
+import { webScrapingService, ScrapedResult } from './webScrapingService';
+import { intelligentSearchEngine, SearchQuery } from './intelligentSearchEngine';
+import { dynamicWebSearchService, SearchAnalysis } from './dynamicWebSearchService';
+
+/**
+ * Serviço de busca web inteligente
+ * Combina busca interna gratuita com APIs externas quando necessário
+ */
+class WebSearchService {
+  private useInternalSearch = true; // Priorizar busca interna gratuita
+  private useRealAPIs = false; // Usar APIs externas apenas se necessário
+
+  /**
+   * Buscar informações na web
+   */
+  async search(query: string, category?: string): Promise<WebSearchResult[]> {
+    console.log('🔍 Web Search: Iniciando busca REAL:', query);
+
+    try {
+      // 🎯 FORÇAR BUSCA REAL SEMPRE
+      console.log('🚀 Forçando busca real na web...');
+      
+      // 1. Tentar busca direta em sites oficiais
+      const officialResults = await this.searchOfficialSitesDirect(query);
+      if (officialResults.length > 0) {
+        console.log(`✅ Encontrados ${officialResults.length} resultados oficiais`);
+        return officialResults;
+      }
+      
+      // 2. Tentar busca em sites de notícias
+      const newsResults = await this.searchNewsSitesDirect(query);
+      if (newsResults.length > 0) {
+        console.log(`✅ Encontrados ${newsResults.length} resultados de notícias`);
+        return newsResults;
+      }
+      
+      // 3. Tentar busca em sites comerciais
+      const commercialResults = await this.searchCommercialSitesDirect(query);
+      if (commercialResults.length > 0) {
+        console.log(`✅ Encontrados ${commercialResults.length} resultados comerciais`);
+        return commercialResults;
+      }
+      
+      // 4. Se nada funcionar, retornar vazio (sem dados simulados)
+      console.log('⚠️ Nenhuma busca real funcionou, retornando vazio');
+      return [];
+
+    } catch (error) {
+      console.log('❌ Erro na busca web:', error);
+      return [];
+    }
+  }
+
+  /**
+   * BUSCA DIRETA em sites oficiais
+   */
+<<<<<<< HEAD:src/services/ai/search/webSearchService.ts
+  private async searchOfficialSitesDirect(query: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+    
+    // Sites oficiais de MS para busca direta
+    const officialSites = [
+      'https://turismo.ms.gov.br',
+      'https://fundtur.ms.gov.br', 
+      'https://campogrande.ms.gov.br',
+      'https://bonito.ms.gov.br',
+      'https://corumba.ms.gov.br'
+    ];
+    
+    for (const site of officialSites.slice(0, 3)) {
+      try {
+        const siteResult = await this.fetchSiteContent(site, query);
+        if (siteResult) {
+          results.push(siteResult);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar em ${site}:`, error);
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * BUSCA DIRETA em sites de notícias
+   */
+  private async searchNewsSitesDirect(query: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+    
+    // Sites de notícias de MS
+    const newsSites = [
+      'https://correiodoestado.com.br',
+      'https://campograndenews.com.br',
+      'https://midiamax.uol.com.br'
+    ];
+    
+    for (const site of newsSites.slice(0, 2)) {
+      try {
+        const siteResult = await this.fetchSiteContent(site, query);
+        if (siteResult) {
+          results.push(siteResult);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar em ${site}:`, error);
+      }
+    }
+    
+    return results;
+  }
+=======
+  private convertDynamicResults(dynamicAnalysis: SearchAnalysis): WebSearchResult[] {
+    // Criar um resultado principal com a melhor resposta
+    const mainResult: WebSearchResult = {
+      title: `Resposta para: ${dynamicAnalysis.query}`,
+      url: dynamicAnalysis.sources[0] || 'https://fundtur.ms.gov.br',
+      content: dynamicAnalysis.bestAnswer, // Added required content field
+      source: dynamicAnalysis.sources.join(', '),
+      lastUpdated: new Date().toISOString(),
+      confidence: dynamicAnalysis.confidence / 100, // Added required confidence field
+      category: this.detectCategory(dynamicAnalysis.query, dynamicAnalysis.bestAnswer)
+    };
+
+    // Adicionar resultados individuais das fontes
+    const sourceResults = dynamicAnalysis.results.map(result => ({
+      title: result.title,
+      url: result.url,
+      content: result.content,
+      source: result.source,
+      category: this.mapCategory(result.categories[0] || 'general'),
+      lastUpdated: result.lastVerified,
+      confidence: 0.8
+    }));
+>>>>>>> origin/main:src/services/ai/search/webSearchService.ts.disabled
+
+  /**
+   * BUSCA DIRETA em sites comerciais
+   */
+  private async searchCommercialSitesDirect(query: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+    
+    // Sites comerciais relevantes
+    const commercialSites = [
+      'https://booking.com',
+      'https://tripadvisor.com.br',
+      'https://google.com/maps'
+    ];
+    
+    for (const site of commercialSites.slice(0, 2)) {
+      try {
+        const siteResult = await this.fetchSiteContent(site, query);
+        if (siteResult) {
+          results.push(siteResult);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar em ${site}:`, error);
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * FETCH direto do conteúdo de um site
+   */
+  private async fetchSiteContent(site: string, query: string): Promise<WebSearchResult | null> {
+    try {
+      // Usar fetch com timeout para evitar travamento
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(site, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) return null;
+      
+      const html = await response.text();
+      
+      // Extrair informações básicas do HTML
+      const title = this.extractTitle(html);
+      const content = this.extractContent(html, query);
+      
+      if (title && content) {
+        return {
+          title: title,
+          url: site,
+          source: this.extractDomain(site),
+          content: content,
+          lastUpdated: new Date().toISOString(),
+          confidence: 70
+        };
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.warn(`⚠️ Erro ao fazer fetch de ${site}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * EXTRAIR título do HTML
+   */
+  private extractTitle(html: string): string | null {
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return titleMatch ? titleMatch[1].trim() : null;
+  }
+
+  /**
+   * EXTRAIR conteúdo relevante do HTML
+   */
+  private extractContent(html: string, query: string): string | null {
+    // Remover tags HTML
+    const cleanHtml = html.replace(/<[^>]*>/g, ' ');
+    
+    // Buscar por palavras-chave da query
+    const keywords = query.toLowerCase().split(' ');
+    const sentences = cleanHtml.split(/[.!?]+/);
+    
+    // Encontrar frases que contenham palavras-chave
+    const relevantSentences = sentences.filter(sentence => 
+      keywords.some(keyword => sentence.toLowerCase().includes(keyword))
+    );
+    
+    if (relevantSentences.length > 0) {
+      return relevantSentences.slice(0, 3).join('. ').trim();
+    }
+    
+    // Se não encontrar frases relevantes, pegar o início do texto
+    return cleanHtml.substring(0, 200).trim();
+  }
+
+  /**
+   * EXTRAIR domínio de uma URL
+   */
+  private extractDomain(url: string): string {
+    try {
+      const domain = new URL(url).hostname;
+      return domain.replace('www.', '');
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  /**
+   * Realizar busca real no Google (mantido para compatibilidade)
+   */
+  private async performGoogleSearch(query: string): Promise<WebSearchResult[]> {
+    try {
+      // Usar Google Custom Search API se disponível
+      const apiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
+      const searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+      
+      if (!apiKey || !searchEngineId) {
+        console.warn('⚠️ Google Search API não configurada');
+        return [];
+      }
+
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query + ' Mato Grosso do Sul turismo')}&num=5`;
+      
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      if (data.items && data.items.length > 0) {
+        return data.items.map((item: any) => ({
+          title: item.title,
+          url: item.link,
+          content: item.snippet,
+          source: item.displayLink,
+          lastUpdated: new Date().toISOString(),
+          confidence: 85
+        }));
+      }
+
+      return [];
+    } catch (error) {
+      console.error('❌ Erro na busca Google:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Converter resultados dinâmicos (mantido para compatibilidade)
+   */
+  private convertDynamicResults(analysis: SearchAnalysis): WebSearchResult[] {
+    return [{
+      title: analysis.summary,
+      url: 'dynamic-search',
+      content: analysis.details,
+      source: 'intelligent-search',
+      lastUpdated: new Date().toISOString(),
+      confidence: analysis.confidence
+    }];
+  }
+
+  /**
+   * Converter resultados inteligentes para formato padrão
+   */
+  private convertIntelligentResults(intelligentResults: any[]): WebSearchResult[] {
+    return intelligentResults.map(result => ({
+      title: result.title,
+      url: result.url,
+      content: result.snippet || result.content,
+      source: result.source,
+      category: this.mapCategory(result.category),
+      lastUpdated: result.lastUpdated,
+      confidence: result.confidence || 0.8
+    }));
+  }
+
+  /**
+   * Converter resultados internos para formato padrão
+   */
+  private convertInternalResults(internalResults: InternalSearchResult[]): WebSearchResult[] {
+    return internalResults.map(result => ({
+      title: result.title,
+      url: result.url,
+      content: result.snippet || 'Sem conteúdo disponível',
+      source: result.source,
+      category: this.mapCategory(result.category),
+      lastUpdated: result.lastUpdated,
+      confidence: 0.8
+    }));
+  }
+
+  /**
+   * Mapear categorias internas para padrão
+   */
+  private mapCategory(internalCategory: string): string {
+    const categoryMap: Record<string, string> = {
+      'hotel': 'hotel',
+      'restaurant': 'restaurant',
+      'attraction': 'attraction',
+      'agency': 'agency',
+      'general': 'general'
+    };
+    
+    return categoryMap[internalCategory] || 'general';
+  }
+
+  /**
+   * Converter resultados de scraping para formato padrão
+   */
+  private convertScrapedResults(scrapedResults: ScrapedResult[]): WebSearchResult[] {
+    return scrapedResults.map(result => ({
+      title: result.title,
+      url: result.url,
+      content: result.content,
+      source: result.source,
+      category: this.detectCategory(result.title, result.content),
+      lastUpdated: result.lastScraped.toISOString(),
+      confidence: 0.8
+    }));
+  }
+
+  /**
+   * Realizar busca externa (quando necessário)
+   */
+  private async performExternalSearch(query: string, category?: string): Promise<WebSearchResult[]> {
+    const results: WebSearchResult[] = [];
+
+    try {
+      // 2. Buscar em sites oficiais via web scraping (gratuito)
+      const scrapedResults = await webScrapingService.scrapeOfficialSites(query);
+      if (scrapedResults.length > 0) {
+        console.log(`✅ Web Search: Encontrados ${scrapedResults.length} resultados via scraping`);
+        results.push(...this.convertScrapedResults(scrapedResults));
+      }
+
+      return results;
+    } catch (error) {
+      console.log('⚠️ Web Search: Erro na busca externa:', error);
+      return results;
+    }
+  }
+
+  /**
+   * Detectar categoria baseada no conteúdo
+   */
+  private detectCategory(title: string, snippet: string): string {
+    const content = `${title} ${snippet}`.toLowerCase();
+    
+    if (content.includes('hotel') || content.includes('hospedagem') || content.includes('pousada')) {
+      return 'hotel';
+    }
+    
+    if (content.includes('restaurante') || content.includes('comida') || content.includes('gastronomia')) {
+      return 'restaurant';
+    }
+    
+    if (content.includes('turismo') || content.includes('passeio') || content.includes('atração')) {
+      return 'attraction';
+    }
+    
+    return 'general';
+  }
+
+  /**
+   * Gerar resultados simulados (fallback)
+   */
+  private generateMockResults(query: string, category?: string): WebSearchResult[] {
+    const lowerQuery = query.toLowerCase();
+    
+    // Informações gerais sobre MS (sempre confiáveis)
+    if (lowerQuery.includes('mato grosso do sul') || lowerQuery.includes('ms')) {
+      return [
+        {
+          title: 'Mato Grosso do Sul - Portal Oficial',
+          url: 'https://www.ms.gov.br',
+          snippet: 'Informações oficiais sobre o estado de Mato Grosso do Sul, incluindo turismo, economia e serviços.',
+          source: 'ms.gov.br',
+          reliability: 'high',
+          category: 'general',
+          lastUpdated: new Date().toISOString()
+        }
+      ];
+    }
+
+    // Bioparque Pantanal (informação real)
+    if (lowerQuery.includes('bioparque') || lowerQuery.includes('pantanal')) {
+      return [
+        {
+          title: 'Bioparque Pantanal - Maior Aquário de Água Doce do Mundo',
+          url: 'https://bioparque.com',
+          snippet: 'O Bioparque Pantanal é o maior aquário de água doce do mundo, localizado em Campo Grande, MS.',
+          source: 'bioparque.com',
+          reliability: 'high',
+          category: 'attraction',
+          lastUpdated: new Date().toISOString()
+        }
+      ];
+    }
+
+    // Bonito (informação real)
+    if (lowerQuery.includes('bonito')) {
+      return [
+        {
+          title: 'Bonito - Capital do Ecoturismo',
+          url: 'https://bonito.ms.gov.br',
+          snippet: 'Bonito é conhecida como a capital do ecoturismo, com grutas, cachoeiras e rios de águas cristalinas.',
+          source: 'bonito.ms.gov.br',
+          reliability: 'high',
+          category: 'attraction',
+          lastUpdated: new Date().toISOString()
+        }
+      ];
+    }
+
+    // Para outras consultas, direcionar para fontes oficiais
+    return [
+      {
+        title: 'Fundtur-MS - Fundação de Turismo de MS',
+        url: 'https://fundtur.ms.gov.br',
+        snippet: 'Para informações específicas sobre turismo em Mato Grosso do Sul, consulte o site oficial da Fundtur-MS.',
+        source: 'fundtur.ms.gov.br',
+        reliability: 'high',
+        category: 'general',
+        lastUpdated: new Date().toISOString()
+      }
+    ];
+  }
+
+  /**
+   * Verificar se uma informação específica existe
+   */
+  async verifySpecificInfo(info: string, location?: string): Promise<{
+    exists: boolean;
+    sources: string[];
+    confidence: number;
+    details?: string;
+  }> {
+    try {
+      // Usar busca interna gratuita
+      const verification = await internalSearchService.verifyInformation(info, location);
+      
+      if (verification.exists) {
+        return {
+          exists: true,
+          sources: verification.sources,
+          confidence: verification.confidence,
+          details: verification.details
+        };
+      }
+
+      // Se não encontrou, retornar resultado negativo
+      return {
+        exists: false,
+        sources: [],
+        confidence: 0,
+        details: 'Informação não encontrada em fontes confiáveis'
+      };
+
+    } catch (error) {
+      console.log('⚠️ Web Search: Erro na verificação:', error);
+      return {
+        exists: false,
+        sources: [],
+        confidence: 0,
+        details: 'Erro na verificação'
+      };
+    }
+  }
+
+  /**
+   * Buscar hotéis específicos
+   */
+  async searchHotels(location: string): Promise<WebSearchResult[]> {
+    return this.search(`hotéis ${location}`, 'hotel');
+  }
+
+  /**
+   * Buscar restaurantes específicos
+   */
+  async searchRestaurants(location: string): Promise<WebSearchResult[]> {
+    return this.search(`restaurantes ${location}`, 'restaurant');
+  }
+
+  /**
+   * Buscar atrações turísticas
+   */
+  async searchAttractions(location: string): Promise<WebSearchResult[]> {
+    return this.search(`atrações turísticas ${location}`, 'attraction');
+  }
+
+  /**
+   * Adicionar nova informação à base interna
+   */
+  addToKnowledgeBase(item: InternalSearchResult): void {
+    internalSearchService.addToKnowledgeBase(item);
+  }
+
+  /**
+   * Obter estatísticas da base interna
+   */
+  getKnowledgeBaseStats() {
+    return internalSearchService.getKnowledgeBaseStats();
+  }
+
+  /**
+   * Limpar cache do sistema
+   */
+  async clearCache(): Promise<void> {
+    try {
+      // Limpar cache do sistema dinâmico
+      dynamicWebSearchService.clearCache();
+      
+      // Limpar cache do sistema inteligente
+      intelligentSearchEngine.clearCache();
+      
+      // Limpar cache interno
+      internalSearchService.clearCache();
+      
+      console.log('🧹 Cache limpo com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao limpar cache:', error);
+    }
+  }
+}
+
+export const webSearchService = new WebSearchService();

@@ -169,7 +169,7 @@ const MunicipalAdmin = () => {
 
             <TabsContent value="files">
               {/* Assumindo que FileManager também precisará do cityId */}
-              <FileManager cityId={cityId} />
+              <FileManager />
             </TabsContent>
 
             <TabsContent value="surveys">

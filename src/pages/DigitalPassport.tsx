@@ -116,7 +116,7 @@ const DigitalPassport = () => {
             </Card>
 
             {/* Call to Action */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/ms/roteiros">
                 <Button 
                   size="lg" 
@@ -127,7 +127,16 @@ const DigitalPassport = () => {
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </Link>
-            </div> {/* Fecha o div de Call to Action */}
+              <Link to="/ms/enhanced-passport">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  🎯 Ver Meu Passaporte
+                </Button>
+              </Link>
+            </div>
 
             {/* Estatísticas */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">

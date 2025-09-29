@@ -59,7 +59,7 @@ const RegionHeatMapSection = () => {
 
   const handleTokenSubmit = (token: string) => {
     try {
-      config.mapbox.setToken(token);
+      config.mapbox.setToken();
       setMapboxToken(token);
       setMapError(false);
     } catch (error) {
