@@ -1,0 +1,159 @@
+warning: in the working copy of 'src/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/layout/UniversalLayout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/layout/UniversalNavbar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/context/BrandContext.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/MSIndex.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tatus', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/App.tsx b/src/App.tsx[m
+[1mindex cc38eb3..9d07299 100644[m
+[1m--- a/src/App.tsx[m
+[1m+++ b/src/App.tsx[m
+[36m@@ -96,24 +96,24 @@[m [mfunction App() {[m
+   console.log("🚀 APP: Componente App sendo renderizado");[m
+   [m
+   return ([m
+[31m-    <QueryClientProvider client={queryClient}>[m
+[31m-      <SecurityHeaders />[m
+[31m-      <TourismDataProvider>[m
+[31m-        <AuthProvider>[m
+[31m-          <CSRFProvider>[m
+[31m-            <SecurityProvider[m
+[31m-              enableSessionTimeout={true}[m
+[31m-              sessionTimeoutMinutes={30}[m
+[31m-              sessionWarningMinutes={5}[m
+[31m-            >[m
+[31m-            <TooltipProvider>[m
+[31m-              <Toaster />[m
+[31m-              <BrowserRouter>[m
+[31m-                <RouteLogger />[m
+[31m-                <BrandProvider>[m
+[31m-                  <ProfileCompletionChecker>[m
+[31m-                    <div className="min-h-screen bg-background font-sans antialiased">[m
+[31m-                    <Routes>[m
+[32m+[m[32m      <QueryClientProvider client={queryClient}>[m
+[32m+[m[32m        <SecurityHeaders />[m
+[32m+[m[32m        <TourismDataProvider>[m
+[32m+[m[32m          <AuthProvider>[m
+[32m+[m[32m            <CSRFProvider>[m
+[32m+[m[32m              <SecurityProvider[m
+[32m+[m[32m                enableSessionTimeout={true}[m
+[32m+[m[32m                sessionTimeoutMinutes={30}[m
+[32m+[m[32m                sessionWarningMinutes={5}[m
+[32m+[m[32m              >[m
+[32m+[m[32m              <TooltipProvider>[m
+[32m+[m[32m                <Toaster />[m
+[32m+[m[32m                <BrowserRouter>[m
+[32m+[m[32m                  <RouteLogger />[m
+[32m+[m[32m                  <BrandProvider>[m
+[32m+[m[32m                    <ProfileCompletionChecker>[m
+[32m+[m[32m                      <div className="min-h-screen bg-background font-sans antialiased">[m
+[32m+[m[32m                      <Routes>[m
+                       [m
+                       {/* OverFlow One SaaS Routes */}[m
+                       <Route path="/" element={<OverFlowOneSaaS />} />[m
+[1mdiff --git a/src/components/commercial/CommercialPartnerDashboard.tsx b/src/components/commercial/CommercialPartnerDashboard.tsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..10638df[m
+[1m--- /dev/null[m
+[1m+++ b/src/components/commercial/CommercialPartnerDashboard.tsx[m
+[36m@@ -0,0 +1,355 @@[m
+[32m+[m[32mimport React from 'react';[m
+[32m+[m[32mimport { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';[m
+[32m+[m[32mimport { Badge } from '@/components/ui/badge';[m
+[32m+[m[32mimport { Button } from '@/components/ui/button';[m
+[32m+[m[32mimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';[m
+[32m+[m[32mimport {[m[41m [m
+[32m+[m[32m  BarChart3,[m[41m [m
+[32m+[m[32m  Users,[m[41m [m
+[32m+[m[32m  Eye,[m[41m [m
+[32m+[m[32m  MousePointer,[m[41m [m
+[32m+[m[32m  TrendingUp,[m[41m [m
+[32m+[m[32m  Calendar,[m
+[32m+[m[32m  MapPin,[m
+[32m+[m[32m  Globe,[m
+[32m+[m[32m  Phone,[m
+[32m+[m[32m  Mail,[m
+[32m+[m[32m  Edit,[m
+[32m+[m[32m  Settings[m
+[32m+[m[32m} from 'lucide-react';[m
+[32m+[m[32mimport { useCommercialPartners } from '@/hooks/useCommercialPartners';[m
+[32m+[m[32mimport { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';[m
+[32m+[m
+[32m+[m[32mconst CommercialPartnerDashboard: React.FC = () => {[m
+[32m+[m[32m  const { partners, isLoading } = useCommercialPartners();[m
+[32m+[m
+[32m+[m[32m  // Mock data para demonstração[m
+[32m+[m[32m  const mockMetrics = {[m
+[32m+[m[32m    totalViews: 1247,[m
+[32m+[m[32m    totalClicks: 89,[m
+[32m+[m[32m    conversionRate: 7.1,[m
+[32m+[m[32m    totalLeads: 23,[m
+[32m+[m[32m    monthlyGrowth: 12.5,[m
+[32m+[m[32m  };[m
+[32m+[m
+[32m+[m[32m  const mockChartData = [[m
+[32m+[m[32m    { month: 'Jan', views: 400, clicks: 24, leads: 4 },[m
+[32m+[m[32m    { month: 'Fev', views: 300, clicks: 13, leads: 2 },[m
+[32m+[m[32m    { month: 'Mar', views: 500, clicks: 35, leads: 7 },[m
+[32m+[m[32m    { month: 'Abr', views: 450, clicks: 28, leads: 5 },[m
+[32m+[m[32m    { month: 'Mai', views: 600, clicks: 42, leads: 8 },[m
+[32m+[m[32m    { month: 'Jun', views: 550, clicks: 38, leads: 6 },[m
+[32m+[m[32m  ];[m
+[32m+[m
+[32m+[m[32m  const mockTrafficSources = [[m
+[32m+[m[32m    { source: 'Portal Principal', visitors: 45, percentage: 45 },[m
+[32m+[m[32m    { source: 'Google Search', visitors: 30, percentage: 30 },[m
+[32m+[m[32m    { source: 'Redes Sociais', visitors: 15, percentage: 15 },[m
+[32m+[m[32m    { source: 'Referências', visitors: 10, percentage: 10 },[m
+[32m+[m[32m  ];[m
+[32m+[m
+[32m+[m[32m  if (isLoading) {[m
+[32m+[m[32m    return ([m
+[32m+[m[32m      <div className="flex items-center justify-center h-64">[m
+[32m+[m[32m        <div className="text-center">[m
+[32m+[m[32m          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>[m
+[32m+[m[32m          <p className="mt-4 text-gray-600">Carregando dashboard...</p>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    );[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Simular dados do parceiro logado (em produção viria da autenticação)[m
+[32m+[m[32m  const currentPartner = partners[0] || {[m
+[32m+[m[32m    id: '1',[m
+[32m+[m[32m    company_name: 'Empresa Exemplo',[m
+[32m+[m[32m    business_type: 'Tecnologia',[m
+[32m+[m[32m    subscription_plan: 'premium',[m
+[32m+[m[32m    status: 'approved',[m
+[32m+[m[32m    city: 'Campo Grande',[m
+[32m+[m[32m    state: 'MS',[m
+[32m+[m[32m    contact_email: 'contato@exemplo.com',[m
+[32m+[m[32m    contact_phone: '(67) 99999-9999',[m
+[32m+[m[32m    website: 'https://exemplo.com',[m
+[32m+[m[32m  };[m
+[32m+[m
+[32m+[m[32m  const getPlanBadgeColor = (plan: string) => {[m
+[32m+[m[32m    switch (plan) {[m
+[32m+[m[32m      case 'basic': return 'bg-green-100 text-green-800';[m
+[32m+[m[32m      case 'premium': return 'bg-blue-100 text-blue-800';[m
+[32m+[m[32m      case 'enterprise': return 'bg-purple-100 text-purple-800';[m
+[32m+[m[32m      default: return 'bg-gray-100 text-gray-800';[m
+[32m+[m[32m    }[m
+[32m+[m[32m  };[m
+[32m+[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <div className="max-w-7xl mx-auto p-6 space-y-6">[m
+[32m+[m[32m      {/* Header */}[m
+[32m+[m[32m      <div className="flex justify-between items-start">[m
+[32m+[m[32m        <div>[m
+[32m+[m[32m          <h1 className="text-3xl font-bold text-gray-900">Dashboard do Parceiro</h1>[m
+[32m+[m[32m          <p className="text-gray-600 mt-2">[m
+[32m+[m[32m            Bem-vindo, {currentPartner.company_name}[m
+[32m+[m[32m          </p>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m        <div className="flex space-x-3">[m
+[32m+[m[32m          <Button variant="outline">[m
+[32m+[m[32m            <Edit className="w-4 h-4 mr-2" />[m
+[32m+[m[32m            Editar Perfil[m
+[32m+[m[32m          </Button>
