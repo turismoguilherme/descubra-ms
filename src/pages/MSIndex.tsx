@@ -57,7 +57,7 @@ const MSIndex = () => {
       <TourismStatsSection data={tourismData} />
       <DestaquesSection />
       <ExperienceSection />
-      <CommercialPartnersSection />
+      {/* CommercialPartnersSection removida - agora é exclusiva do OverFlow One */}
       <CatsSection />
     </UniversalLayout>
   );

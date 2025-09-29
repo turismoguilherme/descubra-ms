@@ -1,63 +1,63 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, TrendingUp, Users, Star } from "lucide-react";
+import { Building, TrendingUp, Users, Star, Brain, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const CommercialPartnersSection = () => {
+const CommercialSection = () => {
   return (
     <section className="py-16 bg-gradient-to-br from-background via-muted/30 to-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-foreground mb-4">
-            Portal de Parceiros Comerciais
+            Soluções Comerciais para Empresas de Turismo
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Conecte sua empresa ao ecossistema de turismo do Mato Grosso do Sul. 
-            Faça parte da maior plataforma de turismo do estado.
+            Potencialize seu negócio turístico com nossas ferramentas avançadas de Business Intelligence, 
+            IA Guilherme e marketplace de dados.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
-              <Building className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <CardTitle>Empresas do Trade</CardTitle>
+              <Brain className="h-12 w-12 mx-auto mb-4 text-primary" />
+              <CardTitle>IA Guilherme</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Hotéis, pousadas, agências, restaurantes e atrativos turísticos
+                Assistente virtual inteligente para atendimento e recomendações personalizadas
               </p>
-              <div className="text-2xl font-bold text-primary">150+</div>
-              <p className="text-sm text-muted-foreground">Parceiros ativos</p>
+              <div className="text-2xl font-bold text-primary">24/7</div>
+              <p className="text-sm text-muted-foreground">Disponibilidade</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <BarChart3 className="h-12 w-12 mx-auto mb-4 text-primary" />
+              <CardTitle>Business Intelligence</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Análises avançadas e insights para otimizar seu negócio
+              </p>
+              <div className="text-2xl font-bold text-primary">Real-time</div>
+              <p className="text-sm text-muted-foreground">Analytics</p>
             </CardContent>
           </Card>
 
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <TrendingUp className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <CardTitle>Business Intelligence</CardTitle>
+              <CardTitle>Marketplace de Dados</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Ferramentas de análise e relatórios personalizados
+                Acesse dados exclusivos do mercado turístico
               </p>
-              <div className="text-2xl font-bold text-primary">24/7</div>
-              <p className="text-sm text-muted-foreground">Analytics disponíveis</p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <Users className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <CardTitle>Alcance Expandido</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Conecte-se com milhares de turistas
-              </p>
-              <div className="text-2xl font-bold text-primary">10k+</div>
-              <p className="text-sm text-muted-foreground">Usuários mensais</p>
+              <div className="text-2xl font-bold text-primary">Premium</div>
+              <p className="text-sm text-muted-foreground">Dados certificados</p>
             </CardContent>
           </Card>
         </div>
@@ -66,28 +66,28 @@ const CommercialPartnersSection = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <h3 className="text-2xl font-bold mb-4">
-                Transforme seu negócio com dados inteligentes
+                Transforme dados em crescimento
               </h3>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-500" />
-                  <span>Diagnósticos empresariais personalizados</span>
+                  <span>Diagnósticos empresariais automatizados</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-500" />
-                  <span>Inventários turísticos digitais</span>
+                  <span>Análise preditiva de demanda</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-500" />
-                  <span>Análise de perfil do turista</span>
+                  <span>Perfil detalhado do turista</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-500" />
-                  <span>Relatórios de tendências de consumo</span>
+                  <span>Otimização de preços dinâmica</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-500" />
-                  <span>Assistente virtual IA Guilherme</span>
+                  <span>Integração com sistemas existentes</span>
                 </li>
               </ul>
             </div>
@@ -102,12 +102,12 @@ const CommercialPartnersSection = () => {
               <div className="space-y-4">
                 <Button asChild size="lg" className="w-full">
                   <Link to="/parceiros-comerciais">
-                    Explorar Portal
+                    Explorar Soluções
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full">
-                  <Link to="/comercial-dashboard">
-                    Dashboard Comercial
+                  <Link to="/precos">
+                    Ver Todos os Planos
                   </Link>
                 </Button>
               </div>
@@ -123,4 +123,4 @@ const CommercialPartnersSection = () => {
   );
 };
 
-export default CommercialPartnersSection;
+export default CommercialSection;

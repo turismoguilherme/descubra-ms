@@ -142,6 +142,12 @@ function App() {
                       <Route path="/recursos/white-label" element={<Suspense fallback={<LoadingFallback />}><RecursosWhiteLabel /></Suspense>} />
                       <Route path="/recursos/multi-tenant" element={<Suspense fallback={<LoadingFallback />}><RecursosMultiTenant /></Suspense>} />
                       
+                      {/* Rotas Comerciais OverFlow One */}
+                      <Route path="/parceiros-comerciais" element={<Suspense fallback={<LoadingFallback />}><CommercialPartnersPortal /></Suspense>} />
+                      <Route path="/comercial-dashboard" element={<Suspense fallback={<LoadingFallback />}><CommercialDashboard /></Suspense>} />
+                      <Route path="/comercial-login" element={<Suspense fallback={<LoadingFallback />}><Login /></Suspense>} />
+                      <Route path="/comercial-register" element={<Suspense fallback={<LoadingFallback />}><Register /></Suspense>} />
+                      
                       {/* MS Routes */}
                       <Route path="/ms" element={<MSIndex />} />
                       <Route path="/ms/welcome" element={<Welcome />} />
@@ -193,8 +199,7 @@ function App() {
                       <Route path="/ms/roteiros/:routeId" element={<Suspense fallback={<LoadingFallback />}><RouteDetailsMS /></Suspense>} />
                       <Route path="/ms/passaporte/:routeId" element={<Suspense fallback={<LoadingFallback />}><PassaporteRouteMS /></Suspense>} />
                        <Route path="/ms/parceiros" element={<Suspense fallback={<LoadingFallback />}><Partners /></Suspense>} />
-                        <Route path="/ms/parceiros-comerciais" element={<Suspense fallback={<LoadingFallback />}><CommercialPartnersPortal /></Suspense>} />
-                        <Route path="/ms/comercial-dashboard" element={<Suspense fallback={<LoadingFallback />}><CommercialDashboard /></Suspense>} />
+                        {/* Rotas comerciais movidas para OverFlow One */}
                        <Route path="/ms/sobre" element={<Suspense fallback={<LoadingFallback />}><Sobre /></Suspense>} />
                       <Route path="/ms/mapa" element={<Suspense fallback={<LoadingFallback />}><Mapa /></Suspense>} />
                       <Route path="/ms/profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
