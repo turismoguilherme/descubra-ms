@@ -4,8 +4,6 @@ import { Send, Mic, MicOff, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { AIMessage } from "@/types/ai";
-
 interface ChatInputProps {
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
@@ -14,8 +12,8 @@ interface ChatInputProps {
   isGravandoAudio: boolean;
   isLoading: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
-  onClearConversation: () => void;
-  mensagens: AIMessage[];
+  onClearConversation?: () => void; // Tornar opcional para fallback
+  mensagens: any[];
 }
 
 const ChatInput = ({
@@ -26,7 +24,7 @@ const ChatInput = ({
   isGravandoAudio,
   isLoading,
   handleKeyDown,
-  onClearConversation,
+  onClearConversation = () => {}, // Definir valor padrão
   mensagens
 }: ChatInputProps) => {
   return (
@@ -105,7 +103,6 @@ const ChatInput = ({
               variant="ghost"
               size="sm"
               onClick={() => {
-                console.log("🧹 Botão limpar conversa clicado");
                 onClearConversation();
               }}
               className="flex items-center space-x-2 text-gray-300 hover:bg-red-500/20 hover:text-red-300 transition-all duration-300"

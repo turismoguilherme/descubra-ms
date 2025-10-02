@@ -1,12 +1,11 @@
 
 import React from "react";
-import { AIMessage } from "@/types/ai";
 import GuataProfile from "./GuataProfile";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
 interface GuataChatProps {
-  mensagens: AIMessage[];
+  mensagens: any[];
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
   enviarMensagem: () => void;
@@ -45,15 +44,17 @@ const GuataChat = ({
       
       <ChatMessages 
         messages={mensagens} 
-        enviarFeedback={enviarFeedback} 
+        enviarFeedback={(positivo) => {
+          try { enviarFeedback(positivo) } catch {}
+        }} 
       />
       
       <ChatInput
         inputMensagem={inputMensagem}
         setInputMensagem={setInputMensagem}
         enviarMensagem={enviarMensagem}
-        toggleMicrofone={toggleMicrofone}
         isGravandoAudio={isGravandoAudio}
+        toggleMicrofone={toggleMicrofone}
         isLoading={isLoading}
         handleKeyDown={handleKeyDown}
         onClearConversation={onClearConversation}

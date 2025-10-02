@@ -1,11 +1,10 @@
 
 import React, { useRef, useEffect } from "react";
-import { AIMessage } from "@/types/ai";
 import ChatMessage from "./ChatMessage";
 import { AnimatePresence } from "framer-motion";
 
 interface ChatMessagesProps {
-  messages: AIMessage[];
+  messages: any[];
   enviarFeedback: (positivo: boolean) => void;
 }
 

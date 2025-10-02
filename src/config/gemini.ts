@@ -2,7 +2,7 @@
 
 // Cache para reduzir chamadas à API
 const responseCache = new Map<string, { response: string; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const CACHE_DURATION = 0; // 0 = cache desabilitado para respostas sempre reais
 
 // Contador de requests para monitoramento
 let requestCount = 0;
@@ -10,10 +10,18 @@ const REQUEST_LIMIT_PER_MINUTE = 10; // Reduzido de 15 para 10 para margem de se
 
 export const geminiClient = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-export async function generateContent(prompt: string): Promise<{ text: string; ok: boolean; error?: string }> {
+export async function generateContent(
+  systemPrompt: string, 
+  userPrompt?: string
+): Promise<{ text: string; ok: boolean; error?: string }> {
   try {
+    // Combinar system prompt com user prompt se fornecido
+    const fullPrompt = userPrompt 
+      ? `${systemPrompt}\n\n${userPrompt}`
+      : systemPrompt;
+    
     // Verificar cache primeiro
-    const cacheKey = prompt.substring(0, 100); // Primeiros 100 caracteres como chave
+    const cacheKey = fullPrompt.substring(0, 100); // Primeiros 100 caracteres como chave
     const cached = responseCache.get(cacheKey);
     
     if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
@@ -28,10 +36,10 @@ export async function generateContent(prompt: string): Promise<{ text: string; o
       requestCount = 0;
     }
 
-    console.log('Gemini: Iniciando generateContent com prompt:', prompt.substring(0, 200) + '...');
+    console.log('Gemini: Iniciando generateContent com system prompt:', systemPrompt.substring(0, 100) + '...');
     
     const model = geminiClient.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
     
@@ -50,7 +58,7 @@ export async function generateContent(prompt: string): Promise<{ text: string; o
     
     // Se for rate limit, tentar usar cache mesmo que expirado
     if (error.message?.includes('rate limit')) {
-      const cacheKey = prompt.substring(0, 100);
+      const cacheKey = fullPrompt.substring(0, 100);
       const cached = responseCache.get(cacheKey);
       
       if (cached) {
@@ -80,4 +88,9 @@ export function getGeminiStats(): { cacheSize: number; requestCount: number } {
     cacheSize: responseCache.size,
     requestCount
   };
+}
+
+// Função de compatibilidade para chamadas antigas
+export async function generateContentLegacy(prompt: string): Promise<{ text: string; ok: boolean; error?: string }> {
+  return generateContent(prompt);
 } 

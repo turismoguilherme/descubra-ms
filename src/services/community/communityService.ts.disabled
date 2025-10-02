@@ -101,23 +101,18 @@ export class CommunityService {
 
   /**
    * 🤖 Integra sugestão aprovada com a base de conhecimento do Guatá
+   * SIMPLIFICADO: Apenas log, a integração é feita diretamente no guataConsciousService
    */
   private async integrateWithGuataKnowledge(suggestion: CommunitySuggestion) {
     try {
-      // Importação dinâmica para evitar dependências circulares
-      const { superTourismAI } = await import('@/services/ai/superTourismAI');
-      
-      // Adicionar à base de conhecimento do Guatá
-      await superTourismAI.addCommunityKnowledge(suggestion);
-      
-      console.log(`✨ Sugestão "${suggestion.title}" integrada com sucesso ao Guatá IA`);
+      console.log(`✨ Sugestão "${suggestion.title}" aprovada e disponível para consulta`);
       
       // Log para auditoria
       await this.logModeration(
         suggestion.id, 
         'system', 
         'knowledge_integrated', 
-        `Sugestão automaticamente adicionada à base de conhecimento do Guatá para recomendações aos turistas`
+        `Sugestão aprovada e disponível para recomendações aos turistas via CommunityService`
       );
       
     } catch (error) {

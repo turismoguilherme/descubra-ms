@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,11 +52,11 @@ const PartnersManager = () => {
       // Map database fields to Partner interface
       const mappedPartners = (data || []).map(item => ({
         ...item,
-        category: (item.partner_type || 'local') as 'local' | 'regional' | 'estadual',
-        city: '', // Default empty city
-        segment: '', // Default empty segment
-        tier: '', // Default empty tier
-        status: 'approved' as string // Default status
+        category: (item.partner_type || item.category || 'local') as 'local' | 'regional' | 'estadual',
+        city: item.city || '',
+        segment: item.segment || '',
+        tier: item.tier || '',
+        status: item.status || 'pending'
       }));
       setPartners(mappedPartners);
     } catch (error) {
@@ -96,6 +95,29 @@ const PartnersManager = () => {
       toast({
         title: "Erro",
         description: "Erro ao atualizar status do parceiro",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updatePartnerTier = async (partnerId: string, newTier: string) => {
+    try {
+      const { error } = await supabase
+        .from('institutional_partners')
+        .update({ tier: newTier })
+        .eq('id', partnerId);
+
+      if (error) throw error;
+      await fetchPartners();
+      toast({
+        title: "Tier atualizado",
+        description: `Tier definido para ${newTier || 'nenhum'}.`,
+      });
+    } catch (error) {
+      console.error('Error updating partner tier:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar tier do parceiro",
         variant: "destructive",
       });
     }
@@ -153,6 +175,7 @@ const PartnersManager = () => {
     { header: 'Cidade', dataKey: 'city' },
     { header: 'Segmento', dataKey: 'segment' },
     { header: 'Categoria', dataKey: 'category' },
+    { header: 'Tier', dataKey: 'tier' },
     { header: 'Status', dataKey: 'status' },
     { header: 'Data de Criação', dataKey: 'created_at' },
   ];
@@ -206,6 +229,7 @@ const PartnersManager = () => {
                   <TableHead>Nome</TableHead>
                   <TableHead>Cidade</TableHead>
                   <TableHead>Segmento</TableHead>
+                  <TableHead>Tier</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -214,13 +238,13 @@ const PartnersManager = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
+                    <TableCell colSpan={7} className="text-center py-6">
                       Carregando parceiros...
                     </TableCell>
                   </TableRow>
                 ) : filteredPartners.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-6 text-gray-500">
                       Nenhum parceiro encontrado
                     </TableCell>
                   </TableRow>
@@ -230,6 +254,20 @@ const PartnersManager = () => {
                       <TableCell className="font-medium">{partner.name}</TableCell>
                       <TableCell>{partner.city}</TableCell>
                       <TableCell>{partner.segment}</TableCell>
+                      <TableCell className="min-w-[180px]">
+                        <Select value={partner.tier || ''} onValueChange={(v) => updatePartnerTier(partner.id, v)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sem tier" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                            <SelectItem value="">Sem tier</SelectItem>
+                            <SelectItem value="bronze">Bronze</SelectItem>
+                            <SelectItem value="prata">Prata</SelectItem>
+                            <SelectItem value="ouro">Ouro</SelectItem>
+                            <SelectItem value="destaque">Destaque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
                       <TableCell>{getStatusBadge(partner.status)}</TableCell>
                       <TableCell>
                         {new Date(partner.created_at).toLocaleDateString('pt-BR')}
@@ -246,7 +284,6 @@ const PartnersManager = () => {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          
                           {partner.status === 'pending' && (
                             <>
                               <Button
@@ -267,7 +304,6 @@ const PartnersManager = () => {
                               </Button>
                             </>
                           )}
-                          
                           <Button
                             variant="ghost"
                             size="sm"
@@ -295,7 +331,6 @@ const PartnersManager = () => {
               Informações completas da solicitação de parceria
             </DialogDescription>
           </DialogHeader>
-          
           {selectedPartner && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -316,7 +351,6 @@ const PartnersManager = () => {
                   <div className="mt-1">{getStatusBadge(selectedPartner.status)}</div>
                 </div>
               </div>
-              
               {selectedPartner.website_link && (
                 <div>
                   <Label className="text-sm font-medium">Website</Label>
@@ -327,21 +361,18 @@ const PartnersManager = () => {
                   </p>
                 </div>
               )}
-              
               {selectedPartner.contact_email && (
                 <div>
                   <Label className="text-sm font-medium">E-mail</Label>
                   <p className="text-sm text-gray-700">{selectedPartner.contact_email}</p>
                 </div>
               )}
-              
               {selectedPartner.contact_whatsapp && (
                 <div>
                   <Label className="text-sm font-medium">WhatsApp</Label>
                   <p className="text-sm text-gray-700">{selectedPartner.contact_whatsapp}</p>
                 </div>
               )}
-              
               {selectedPartner.message && (
                 <div>
                   <Label className="text-sm font-medium">Mensagem</Label>

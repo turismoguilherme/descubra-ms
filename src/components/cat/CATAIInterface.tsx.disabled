@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Copy, Heart, Clock, Bot, User, Send, Lightbulb, TrendingUp, MapPin, Utensils, Hotel, Car, Calendar, AlertTriangle, Star, Sparkles, Brain } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { superTourismAI } from '@/services/ai/superTourismAI';
+import { guataConsciousService } from '@/services/ai/guataConsciousService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CATAIInterfaceProps {
@@ -127,19 +127,18 @@ const CATAIInterface = ({
 
   const initializeAI = async () => {
     try {
-      console.log('🚀 Inicializando Super IA Turística...');
-      await superTourismAI.initialize(catLocation, latitude, longitude);
+      console.log('🚀 Inicializando Guatá IA...');
       
       const welcomeMessage: Message = {
         id: 'welcome',
         type: 'ai',
-        content: `🌟 **Olá, ${attendantName}!**\n\nSou sua assistente IA especializada em turismo de Mato Grosso do Sul. Estou aqui para te ajudar a responder qualquer pergunta dos turistas com informações precisas e atualizadas.\n\n💡 **Como posso ajudar:**\n• Informações sobre pontos turísticos\n• Preços e horários atualizados\n• Restaurantes e hotéis\n• Transporte e como chegar\n• Emergências e contatos importantes\n\nDigite sua pergunta ou escolha uma categoria abaixo! 👇`,
+        content: `🌟 **Olá, ${attendantName}!**\n\nSou o **Guatá**, seu assistente IA especializado em turismo de Mato Grosso do Sul. Estou aqui para te ajudar a responder qualquer pergunta dos turistas com informações **verdadeiras e atualizadas**.\n\n💡 **Como posso ajudar:**\n• Informações sobre pontos turísticos (busca web + dados verificados)\n• Preços e horários atualizados\n• Restaurantes e hotéis\n• Transporte e como chegar\n• Parceiros da plataforma\n• Sugestões da comunidade\n• Emergências e contatos importantes\n\nDigite sua pergunta ou escolha uma categoria abaixo! 👇`,
         timestamp: new Date(),
         confidence: 1.0
       };
       
       setMessages([welcomeMessage]);
-      console.log('✅ Super IA Turística inicializada');
+      console.log('✅ Guatá IA inicializado com busca web ilimitada');
     } catch (error) {
       console.error('❌ Erro ao inicializar IA:', error);
     }
@@ -169,10 +168,12 @@ const CATAIInterface = ({
     setLoading(true);
 
     try {
-      const response = await superTourismAI.askQuestion(question, {
-        location: catLocation,
-        attendantId,
-        isOffline: !navigator.onLine
+      const response = await guataConsciousService.processQuestion({
+        question: question,
+        userId: attendantId,
+        sessionId: `cat-session-${attendantId}`,
+        context: 'cat-interface',
+        userLocation: catLocation
       });
 
       const aiMessage: Message = {
@@ -182,7 +183,7 @@ const CATAIInterface = ({
         timestamp: new Date(),
         confidence: response.confidence,
         sources: response.sources,
-        suggestions: response.suggestions,
+        suggestions: [], // guataConsciousService não retorna suggestions
         response: response
       };
 

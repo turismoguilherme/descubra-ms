@@ -1,15 +1,28 @@
 
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { usePartners } from "@/hooks/usePartners";
 import { PartnerCard } from "@/components/partners/PartnerCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { Users } from "lucide-react";
 
 const Partners = () => {
-    const { partners, isLoading, error } = usePartners();
+    const { partners, isLoading, error } = usePartners('approved');
+    const [search, setSearch] = useState('');
+    const [category, setCategory] = useState<'all' | 'local' | 'regional' | 'estadual'>('all');
+
+    const filtered = partners.filter(p => {
+        const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+                            (p.city || '').toLowerCase().includes(search.toLowerCase()) ||
+                            (p.segment || '').toLowerCase().includes(search.toLowerCase());
+        const matchCat = category === 'all' || p.category === category;
+        return matchSearch && matchCat;
+    });
 
     console.log("🔍 Partners Component: isLoading", isLoading, "partners.length", partners.length, "error", error);
 
@@ -27,15 +40,29 @@ const Partners = () => {
                 </div>
 
                 <div className="ms-container py-12">
+                    <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <Input placeholder="Buscar por nome, cidade ou segmento..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                        <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+                            <SelectTrigger className="w-full md:w-[220px]">
+                                <SelectValue placeholder="Categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas as categorias</SelectItem>
+                                <SelectItem value="local">Local</SelectItem>
+                                <SelectItem value="regional">Regional</SelectItem>
+                                <SelectItem value="estadual">Estadual</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                     {isLoading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {Array.from({ length: 8 }).map((_, i) => (
                                 <Skeleton key={i} className="h-60 w-full" />
                             ))}
                         </div>
-                    ) : partners.length > 0 ? (
+                    ) : filtered.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {partners.map(partner => (
+                            {filtered.map(partner => (
                                 <PartnerCard key={partner.id} partner={partner} />
                             ))}
                         </div>
@@ -43,7 +70,7 @@ const Partners = () => {
                         <div className="text-center py-20 border-2 border-dashed rounded-lg bg-gray-50">
                             <Users className="mx-auto h-12 w-12 text-gray-400" />
                             <h2 className="mt-4 text-xl font-semibold text-gray-800">Nenhum parceiro encontrado.</h2>
-                            <p className="text-muted-foreground mt-2">Ainda não temos parceiros institucionais. Seja o primeiro a apoiar!</p>
+                            <p className="text-muted-foreground mt-2">Tente alterar os filtros ou a busca.</p>
                         </div>
                     )}
                 </div>

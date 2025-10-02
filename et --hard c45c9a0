@@ -1,0 +1,20 @@
+[33mf07be14[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/overflow-one-partners-safe[m[33m)[m feat: implementar sistema completo de parceiros comerciais
+[33ma5766a4[m feat: implementar portal de parceiros comerciais para OverFlow One
+[33mc45c9a0[m[33m ([m[1;32msafe-pre-merge-keep-admin[m[33m, [m[1;32mbackup/pre-remote-update-3477[m[33m)[m apply: pos-merge preservando Admin/Chatbo
+[33me7a123e[m merge: remoto preservando Admin e Chatbot
+[33md502d89[m fix: corrige importações do componente logo após renomeação para OverFlow One
+[33mfcfffe9[m feat: migração completa de FlowTrip para OverFlow One - logos, componentes e páginas atualizadas
+[33mea7e064[m refactor: atualiza todas as referências de FlowTrip para OverFlow One no código fonte
+[33mcae713d[m refactor: renomeia FlowTrip para OverFlow One em toda a plataforma
+[33m000aeb0[m Fix RLS for documents
+[33m7c9cc93[m Fix database function security
+[33m7da55a4[m Fix RLS policies
+[33m66e2a49[m Fix RLS policies and API key exposure
+[33md8f8253[m fix: configuração específica OAuth para Vercel - URLs de callback e redirects
+[33med20ae7[m fix: simplifica vercel.json e supabase client para resolver 404 definitivamente
+[33mb290679[m fix: configurações robustas Vercel - OAuth redirects, SPA routing e página 404
+[33m12a33d2[m fix: adiciona rota alternativa /ms/chatguata e build validado
+[33m9fcc84e[m fix: configuração robusta do Vercel para resolver erro 404 definitivamente
+[33m965dbab[m feat: atualiza serviços RAG e dashboard de qualidade
+[33m402c92f[m merge: integra alterações remotas com implementação RAG local
+[33m2442579[m fix: adiciona vercel.json para resolver roteamento SPA e erro 404

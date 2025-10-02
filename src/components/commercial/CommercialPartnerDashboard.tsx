@@ -332,3 +332,5 @@ export const CommercialPartnerDashboard = () => {
     </div>
   );
 };
+
+export default CommercialPartnerDashboard;

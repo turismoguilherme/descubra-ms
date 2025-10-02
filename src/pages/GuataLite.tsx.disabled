@@ -105,7 +105,7 @@ const GuataLite = () => {
             <div className="text-center mb-12">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full mb-6 border border-white/30 overflow-hidden">
                 <img 
-                  src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+                  src="/images/logo-descubra-ms-v2.png" 
                   alt="Guatá" 
                   className="w-16 h-16 object-contain"
                 />

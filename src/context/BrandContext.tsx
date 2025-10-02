@@ -1,24 +1,21 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useMultiTenant } from '@/hooks/useMultiTenant';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import { useMultiTenant } from '../hooks/useMultiTenant';
 
-export type BrandType = 'overflow-one' | 'ms';
-
-interface BrandConfig {
-  brand: BrandType;
+export interface BrandConfig {
+  brand: 'ms' | 'overflow-one';
   logo: {
     src: string;
     alt: string;
     fallback: string;
   };
-  navigation: {
+  navigation: Array<{
     name: string;
     path: string;
-  }[];
-  authenticatedNavigation: {
+  }>;
+  authenticatedNavigation: Array<{
     name: string;
     path: string;
-  }[];
+  }>;
   cta: {
     primary: string;
     secondary: string;
@@ -34,49 +31,46 @@ interface BrandConfig {
   };
 }
 
-interface BrandContextType {
-  config: BrandConfig;
-  isOverflowOne: boolean;
-  isMS: boolean;
-}
-
-const BrandContext = createContext<BrandContextType | undefined>(undefined);
-
+// Configuração para Overflow One
 const overflowOneConfig: BrandConfig = {
   brand: 'overflow-one',
   logo: {
-    src: '/images/overflow-one-logo.png', // Caminho para a nova logo do OverFlow One
-    alt: 'OverFlow One',
-    fallback: 'OverFlow One'
+    src: '/images/logo-overflow-one.png',
+    alt: 'Overflow One - Plataforma de Turismo',
+    fallback: 'Overflow One'
   },
   navigation: [
-    { name: 'Soluções', path: '/solucoes' },
-    { name: 'Preços', path: '/precos' },
-    { name: 'Sobre', path: '/sobre-overflow-one' }
+    { name: 'Destinos', path: '/destinos' },
+    { name: 'Eventos', path: '/eventos' },
+    { name: 'Parceiros', path: '/parceiros' },
+    { name: 'Entrar', path: '/login' }
   ],
   authenticatedNavigation: [
-    { name: 'Analytics', path: '/overflow-one/analytics' }
+    { name: 'Home', path: '/' },
+    { name: 'Guatá IA', path: '/guata' },
+    { name: 'Passaporte Digital', path: '/passaporte' },
   ],
   cta: {
-    primary: 'Agendar Demo',
-    secondary: 'Ver Case MS'
+    primary: 'Cadastrar',
+    secondary: 'Entrar'
   },
   hero: {
-    title: 'Transforme seu Estado em Destino Inteligente',
-    subtitle: 'Plataforma SaaS completa para gestão turística governamental com IA, analytics e passaporte digital',
+    title: 'Overflow One',
+    subtitle: 'Sua plataforma completa de turismo e descoberta',
     buttons: {
-      primary: { text: 'Agendar Demonstração', path: '/contato' },
-      secondary: { text: 'Ver Case de Sucesso', path: '/ms' },
-      tertiary: { text: 'Conhecer Funcionalidades', path: '/solucoes' }
+      primary: { text: 'Começar Agora', path: '/welcome' },
+      secondary: { text: 'Passaporte Digital', path: '/passaporte' },
+      tertiary: { text: 'Converse com o Guatá', path: '/guata' }
     }
   }
 };
 
+// Configuração para Descubra MS
 const msConfig: BrandConfig = {
   brand: 'ms',
   logo: {
-    src: '/images/logo-descubra-ms.png', // Caminho corrigido para a logo correta do MS
-    alt: 'Descubra Mato Grosso do Sul',
+    src: '/images/logo-descubra-ms.png?v=3', // Logo atualizada do Descubra MS
+    alt: 'Descubra Mato Grosso do Sul - Plataforma de Turismo',
     fallback: 'Descubra MS'
   },
   navigation: [
@@ -89,11 +83,6 @@ const msConfig: BrandConfig = {
     { name: 'Home', path: '/ms' }, // Adicionado link para a Home do tenant logado
     { name: 'Guatá IA', path: '/ms/guata' },
     { name: 'Passaporte Digital', path: '/ms/passaporte' },
-    // { name: 'Destinos', path: '/ms/destinos' }, // Removido
-    // { name: 'Eventos', path: '/ms/eventos' }, // Removido
-    // { name: 'Roteiros', path: '/ms/roteiros' }, // Removido
-    // { name: 'Parceiros', path: '/ms/parceiros' }, // Removido
-    // { name: 'Sobre', path: '/ms/sobre' } // Removido
   ],
   cta: {
     primary: 'Cadastrar',
@@ -110,89 +99,95 @@ const msConfig: BrandConfig = {
   }
 };
 
-export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const location = useLocation();
-  const { isMultiTenantMode, currentTenant, tenantConfig, loading: tenantLoading, error: tenantError } = useMultiTenant(); // Adicionado tenantLoading e tenantError
-  
-  const config = useMemo(() => {
-    console.log("🔍 BrandContext: Calculando config. isMultiTenantMode:", isMultiTenantMode, "currentTenant:", currentTenant, "tenantConfig:", tenantConfig, "tenantLoading:", tenantLoading);
+interface BrandContextType {
+  config: BrandConfig;
+  isOverflowOne: boolean;
+  isMS: boolean;
+}
 
-    let currentConfig: BrandConfig;
+const BrandContext = createContext<BrandContextType | undefined>(undefined);
 
-    // Prioritize MS config if path starts with /ms or currentTenant is 'ms'
-    if (location.pathname.toLowerCase().startsWith('/ms')) {
-      currentConfig = { ...msConfig }; // Start with msConfig
-      console.log("🔍 BrandContext: Path /ms detectado (case-insensitive), usando msConfig como base.");
-    } else {
-      currentConfig = { ...overflowOneConfig }; // Default to overflowOneConfig
-      console.log("🔍 BrandContext: Usando overflowOneConfig como base.");
+interface BrandProviderProps {
+  children: ReactNode;
+}
+
+export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
+  const { currentTenant, tenantConfig, tenantLoading } = useMultiTenant();
+
+  // Função para detectar o tenant baseado no path atual
+  const detectTenantFromPath = (): 'ms' | 'overflow-one' => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/ms')) {
+        return 'ms';
+      }
     }
-
-    // If multi-tenant mode is active and tenant config is loaded, apply dynamic overrides
-    if (isMultiTenantMode && tenantConfig && !tenantLoading) {
-      console.log("✅ BrandContext: Modo Multi-tenant ATIVO, aplicando overrides do tenantConfig do Supabase.");
-      currentConfig = {
-        ...currentConfig, // Keep current base config properties
-        brand: 'ms', // Garante que o brand seja 'ms' para tenants
-        logo: {
-          ...currentConfig.logo,
-          src: msConfig.logo.src, // Explicitamente usa a logo local do MS
-          alt: tenantConfig.name || currentConfig.logo.alt,
-          fallback: (tenantConfig.code || currentConfig.brand).toUpperCase()
-        },
-        navigation: msConfig.navigation.map(nav => ({
-          ...nav,
-          path: nav.path.replace('/ms', `/${tenantConfig.code}`)
-        })),
-        authenticatedNavigation: msConfig.authenticatedNavigation.map(nav => ({
-          ...nav,
-          path: nav.path.replace('/ms', `/${tenantConfig.code}`)
-        })),
-        cta: {
-          primary: tenantConfig.cta_primary || currentConfig.cta.primary,
-          secondary: tenantConfig.cta_secondary || currentConfig.cta.secondary,
-        },
-        hero: {
-          ...currentConfig.hero, // Use currentConfig's hero as base
-          title: tenantConfig.name || currentConfig.hero.title,
-          buttons: {
-            ...currentConfig.hero.buttons,
-            primary: { ...currentConfig.hero.buttons.primary, path: `/${tenantConfig.code}/welcome` },
-            secondary: { ...currentConfig.hero.buttons.secondary, path: `/${tenantConfig.code}/passaporte` },
-            tertiary: { ...currentConfig.hero.buttons.tertiary, path: `/${tenantConfig.code}/guata` }
-          }
-        }
-      };
-      console.log("Generated dynamicConfig:", currentConfig);
-    } else if (tenantLoading) {
-      console.log("🔍 BrandContext: Tenant ainda está carregando, usando a baseConfig atual.");
-      // If loading, currentConfig (msConfig or flowtripConfig) is already set as base.
-      // No change needed here, just log for clarity.
-    }
-
-    return currentConfig;
-  }, [location.pathname, isMultiTenantMode, currentTenant, tenantConfig, tenantLoading]);
-
-      const isOverflowOne = config.brand === 'overflow-one';
-  const isMS = config.brand === 'ms';
-
-  const value = {
-    config,
-    isOverflowOne,
-    isMS
+    return 'overflow-one';
   };
 
+  // Determinar configuração baseada no tenant com useMemo para otimização
+  const config = useMemo((): BrandConfig => {
+    console.log("🔍 BrandContext: Calculando config.", {
+      isMultiTenantMode: !!currentTenant,
+      currentTenant,
+      tenantConfig,
+      tenantLoading
+    });
+
+    // Se estamos no modo multi-tenant e temos um tenant carregado
+    if (currentTenant && tenantConfig && !tenantLoading) {
+      console.log("✅ BrandContext: Modo Multi-tenant ATIVO, aplicando overrides do tenantConfig do Supabase.");
+      
+      // Usar a configuração base do MS e aplicar overrides do Supabase
+      const baseConfig = msConfig;
+      
+      const dynamicConfig: BrandConfig = {
+        ...baseConfig,
+        logo: {
+          ...baseConfig.logo,
+          src: tenantConfig.logo_url || baseConfig.logo.src,
+          alt: `${tenantConfig.name} - Plataforma de Turismo`,
+          fallback: tenantConfig.name || baseConfig.logo.fallback
+        },
+        hero: {
+          ...baseConfig.hero,
+          title: tenantConfig.name || baseConfig.hero.title,
+          subtitle: tenantConfig.description || baseConfig.hero.subtitle
+        }
+      };
+
+      console.log("Generated dynamicConfig:", dynamicConfig);
+      return dynamicConfig;
+    }
+
+    // Detectar tenant do path se não estivermos no modo multi-tenant
+    const detectedTenant = detectTenantFromPath();
+    console.log("🔍 BrandContext: Path detectado (case-insensitive), usando msConfig como base.");
+    
+    if (detectedTenant === 'ms') {
+      return msConfig;
+    }
+
+    // Fallback para Overflow One
+    console.log("🔍 BrandContext: Tenant ainda está carregando, usando a baseConfig atual.");
+    return overflowOneConfig;
+  }, [currentTenant, tenantConfig, tenantLoading]);
+  const isOverflowOne = config.brand === 'overflow-one';
+  const isMS = config.brand === 'ms';
+
   return (
-    <BrandContext.Provider value={value}>
+    <BrandContext.Provider value={{ config, isOverflowOne, isMS }}>
       {children}
     </BrandContext.Provider>
   );
 };
 
-export const useBrand = () => {
+export const useBrand = (): BrandContextType => {
   const context = useContext(BrandContext);
   if (context === undefined) {
     throw new Error('useBrand must be used within a BrandProvider');
   }
   return context;
 };
+
+export default BrandContext;

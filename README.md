@@ -13,11 +13,23 @@ Para informações completas sobre a plataforma, consulte:
 ## 🎯 Funcionalidades Principais
 
 - 🧠 **IA Consultora Estratégica (Guatá)** - Consultas em tempo real para gestores
+- 🤖 **Chatbot Inteligente** - Guia turístico com respostas contextuais e precisas
 - 🗺️ **Mapas de Calor Turísticos** - Visualização de fluxos e engajamento
 - 🎮 **Passaporte Digital** - Gamificação e retenção de turistas
 - 👥 **Sistema de Comunidade** - Participação ativa dos moradores
 - 📊 **Dashboards Multi-hierárquicos** - Municipal, Regional e Estadual
 - 📈 **Infográficos Automatizados** - Relatórios visuais inteligentes
+
+## 🆕 Melhorias Recentes (Setembro 2025)
+
+### 🤖 Guatá - Chatbot Inteligente Aprimorado
+- ✅ **Respostas Contextuais**: Estrutura inteligente por tipo de pergunta
+- ✅ **Validação Geográfica**: Verificação de existência via Google Places API
+- ✅ **Informações Precisas**: Eliminação de dados inventados (ex: "Rio Taquari")
+- ✅ **Perguntas Inteligentes**: Baseadas no histórico da conversa
+- ✅ **Priorização de APIs**: Dados reais vs. simulados
+
+📋 **[Documentação das Melhorias](docs/MELHORIAS_GUATA_INTELIGENCIA.md)**
 
 ## 🚀 Tecnologias
 

@@ -13,8 +13,8 @@ export const ENV = {
   // No API keys stored in frontend for security
   
   // URLs base
-  BASE_URL: 'http://localhost:8081',
-  API_URL: 'http://localhost:8081/api',
+  BASE_URL: 'http://localhost:8080',
+  API_URL: 'http://localhost:8080/api',
   
   // Configurações do Supabase
   SUPABASE_URL: 'https://hvtrpkbjgbuypkskqcqm.supabase.co',
@@ -57,7 +57,18 @@ export const ENV = {
     ENABLE_ANALYTICS: true,
     ENABLE_HEATMAP: true,
     ENABLE_RAG: true,
-    ENABLE_PSE: false
+    ENABLE_PSE: false,
+
+    // Overflow Studio flags
+    STUDIO_ENABLED: true,
+    STUDIO_INVENTORY_V1: true,
+    STUDIO_SITE_V1: true,
+    STUDIO_TEMPLATES_ALL: true,
+    STUDIO_AI_COPILOT_V1: true,
+
+    // Commercial integrations
+    CRM_HUBSPOT_ENABLED: false,
+    BILLING_STRIPE_ENABLED: false
   },
 
   RAG: {

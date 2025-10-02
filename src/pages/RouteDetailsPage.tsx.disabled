@@ -17,19 +17,22 @@ const RouteDetailsPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("🔎 RouteDetailsPage: params", { routeId });
     if (routeId) {
       const fetchRouteDetails = async () => {
         setIsLoading(true);
         setError(null);
         try {
+          console.log("🔄 RouteDetailsPage: fetching route", routeId);
           const fetchedRoute = await tourismRouteService.getRouteById(routeId);
+          console.log("✅ RouteDetailsPage: fetched route", fetchedRoute?.id);
           if (fetchedRoute) {
             setRoute(fetchedRoute);
           } else {
             setError("Roteiro não encontrado.");
           }
         } catch (err) {
-          console.error("Erro ao carregar detalhes do roteiro:", err);
+          console.error("❌ RouteDetailsPage: error fetching route:", err);
           setError("Erro ao carregar detalhes do roteiro. Tente novamente mais tarde.");
           toast({
             title: "Erro",
@@ -77,8 +80,6 @@ const RouteDetailsPage = () => {
       <main className="flex-grow py-8">
         <div className="ms-container">
           <h1 className="text-4xl font-bold text-ms-primary-blue mb-6 text-center">{route.name}</h1>
-          
-          {/* Seção de Imagem / Galeria */}
           {route.image_url && (
             <div className="w-full max-h-96 overflow-hidden rounded-lg shadow-lg mb-8">
               <img
@@ -89,7 +90,6 @@ const RouteDetailsPage = () => {
             </div>
           )}
 
-          {/* Descrição */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Sobre o Roteiro</CardTitle>
@@ -101,15 +101,14 @@ const RouteDetailsPage = () => {
             </CardContent>
           </Card>
 
-          {/* Informações Adicionais (Dificuldade, Duração, Pontos) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Dificuldade</CardTitle>
               </CardHeader>
               <CardContent>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(route.difficulty_level)}`}>
-                  {getDifficultyLabel(route.difficulty_level)}
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor((route as any).difficulty_level)}`}>
+                  {getDifficultyLabel((route as any).difficulty_level)}
                 </span>
               </CardContent>
             </Card>
@@ -118,7 +117,7 @@ const RouteDetailsPage = () => {
                 <CardTitle className="text-sm font-medium">Duração Estimada</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">{route.estimated_duration} min</p>
+                <p className="text-2xl font-bold">{(route as any).estimated_duration} min</p>
               </CardContent>
             </Card>
             <Card>
@@ -126,12 +125,11 @@ const RouteDetailsPage = () => {
                 <CardTitle className="text-sm font-medium">Pontos de Recompensa</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">{route.points || 0} pts</p>
+                <p className="text-2xl font-bold">{(route as any).points || 0} pts</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Seção de Vídeos (placeholder) */}
           {route.video_url && (
             <Card className="mb-8">
               <CardHeader>
@@ -139,14 +137,12 @@ const RouteDetailsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="aspect-video w-full bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-                  {/* Aqui você pode integrar um player de vídeo, por exemplo, um iframe do YouTube */}
                   <p>Vídeo: {route.video_url} (Player placeholder)</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Botão Começar Minha Jornada */}
           <div className="text-center mt-12 mb-8">
             <Button 
               size="lg" 

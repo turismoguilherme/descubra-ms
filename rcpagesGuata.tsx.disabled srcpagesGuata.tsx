@@ -1,0 +1,10 @@
+[33ma86a234[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/overflow-one-partners-safe[m[33m, [m[1;31morigin/feature/overflow-one-partners-safe[m[33m)[m fix: Corrigir problemas de navegação e CSP
+[33m1627771[m fix: Corrigir rodapé MS e páginas de eventos/roteiros
+[33mfa9c350[m feat: Restaurar rodapé original do Descubra MS e otimizar carregamento
+[33m262c18c[m fix: Corrigir importações desabilitadas no App.tsx
+[33m699ba1d[m feat: Merge com branch main - Integração de funcionalidades comerciais e melhorias de segurança
+[33mbfd31ef[m feat: Atualizações locais antes do merge com main - Documentação e melhorias
+[33mc3f9555[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Refactor: Improve security and organization
+[33m7a57a28[m Refactor commercial partner routes
+[33m96907c2[m Refactor: Reorganize commercial and admin functionalities
+[33m3bd8998[m feat: Atualização completa da plataforma - Logo, documentação e correções de layout
