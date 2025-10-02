@@ -58,6 +58,9 @@ export async function generateContent(
     
     // Se for rate limit, tentar usar cache mesmo que expirado
     if (error.message?.includes('rate limit')) {
+      const fullPrompt = userPrompt 
+        ? `${systemPrompt}\n\n${userPrompt}`
+        : systemPrompt;
       const cacheKey = fullPrompt.substring(0, 100);
       const cached = responseCache.get(cacheKey);
       

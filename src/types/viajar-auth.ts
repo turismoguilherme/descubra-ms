@@ -4,6 +4,7 @@ export interface ViaJARUserProfile {
   user_id: string;
   company_name: string;
   contact_person: string;
+  name?: string;
   user_type: UserType;
   role: 'admin' | 'manager' | 'user';
   subscription_plan: 'basic' | 'premium' | 'enterprise';

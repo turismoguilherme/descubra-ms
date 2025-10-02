@@ -112,7 +112,7 @@ interface BrandProviderProps {
 }
 
 export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
-  const { currentTenant, tenantConfig, tenantLoading } = useMultiTenant();
+  const { currentTenant, tenantConfig, loading: tenantLoading } = useMultiTenant();
 
   // Função para detectar o tenant baseado no path atual
   const detectTenantFromPath = (): 'ms' | 'overflow-one' => {

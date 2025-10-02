@@ -17,11 +17,11 @@ export const formSchema = z.object({
   email: z.string().email({
     message: "Email inválido",
   }),
-  role: z.string({
-    required_error: "Por favor selecione uma função",
+  role: z.string().min(1, {
+    message: "Por favor selecione uma função",
   }),
-  region: z.string({
-    required_error: "Por favor selecione uma região",
+  region: z.string().min(1, {
+    message: "Por favor selecione uma região",
   }),
   password: z.string().min(8, {
     message: "Senha deve ter pelo menos 8 caracteres",

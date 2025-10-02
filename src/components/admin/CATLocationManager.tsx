@@ -73,8 +73,8 @@ const catFormSchema = z.object({
     message: "Cidade deve ter pelo menos 2 caracteres",
   }),
   regiao: z.string({
-    required_error: "Por favor selecione uma região",
-  }),
+    // Validação de região obrigatória
+  }).min(1, { message: "Por favor selecione uma região" }),
   latitude: z.string().refine(val => !isNaN(Number(val)), {
     message: "Latitude deve ser um número",
   }),

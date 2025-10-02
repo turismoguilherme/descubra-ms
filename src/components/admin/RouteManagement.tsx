@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Eye, Edit, Trash2, Users, MapPin, Award, Download } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Users, MapPin, Award, Download, Star } from "lucide-react";
 
 interface RouteManagementProps {
   userRegion?: string;

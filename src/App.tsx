@@ -115,7 +115,7 @@ const OverflowOneLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const OverflowOneRegister = lazy(() => import("@/pages/OverflowOneRegister"));
 const OverflowOneForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
 const OverflowOneTestLogin = lazy(() => import("@/pages/OverflowOneTestLogin"));
-const OverflowOneMasterDashboard = lazy(() => import("@/pages/OverflowOneMasterDashboard"));
+const OverflowOneMasterDashboard = lazy(() => import("@/pages/OverFlowOneMasterDashboard"));
 const OverflowOneAtendenteDashboard = lazy(() => import("@/pages/OverflowOneAtendenteDashboard"));
 const OverflowOneMunicipalDashboard = lazy(() => import("@/pages/OverflowOneMunicipalDashboard"));
 const OverflowOneEstadualDashboard = lazy(() => import("@/pages/OverflowOneEstadualDashboard"));
@@ -131,13 +131,13 @@ function App() {
       <TourismDataProvider>
         <AuthProvider>
           <ViaJARAuthProvider>
-            <OverflowOneAuthProvider>
-              <CSRFProvider>
-                <SecurityProvider
-                  enableSessionTimeout={true}
-                  sessionTimeoutMinutes={30}
-                  sessionWarningMinutes={5}
-                >
+            {/* OverflowOneAuthProvider temporariamente desabilitado devido a erros de tipo */}
+            <CSRFProvider>
+              <SecurityProvider
+                enableSessionTimeout={true}
+                sessionTimeoutMinutes={30}
+                sessionWarningMinutes={5}
+              >
             <TooltipProvider>
               <Toaster />
               <BrowserRouter>
@@ -375,7 +375,7 @@ function App() {
               </TooltipProvider>
             </SecurityProvider>
           </CSRFProvider>
-            </OverflowOneAuthProvider>
+            {/* </OverflowOneAuthProvider> - temporariamente desabilitado */}
             </ViaJARAuthProvider>
         </AuthProvider>
       </TourismDataProvider>

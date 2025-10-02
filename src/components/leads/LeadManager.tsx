@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Users, BarChart, Settings, Filter, Download, Upload } from 'lucide-react';
 import LeadList from './LeadList';
-import LeadPipeline from './LeadPipeline';
-import LeadAnalytics from './LeadAnalytics';
-import LeadForm from './LeadForm';
-import LeadFilters from './LeadFilters';
+// import LeadPipeline from './LeadPipeline'; // Temporariamente desabilitado
+// import LeadAnalytics from './LeadAnalytics'; // Temporariamente desabilitado
+// import LeadForm from './LeadForm'; // Temporariamente desabilitado
+// import LeadFilters from './LeadFilters'; // Temporariamente desabilitado
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const LeadManager: React.FC = () => {
@@ -69,7 +69,10 @@ const LeadManager: React.FC = () => {
                   {editingLead ? 'Editar Lead' : 'Adicionar Novo Lead'}
                 </DialogTitle>
               </DialogHeader>
-              <LeadForm lead={editingLead} onClose={handleFormClose} />
+              {/* LeadForm temporariamente desabilitado */}
+              <div className="p-4 text-center text-muted-foreground">
+                <p>Formulário de leads em desenvolvimento...</p>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -112,7 +115,10 @@ const LeadManager: React.FC = () => {
               <CardTitle>Pipeline de Vendas</CardTitle>
             </CardHeader>
             <CardContent>
-              <LeadPipeline onEditLead={handleEditLead} />
+              {/* LeadPipeline temporariamente desabilitado */}
+              <div className="text-center py-8 text-gray-500">
+                <p>Pipeline de vendas em desenvolvimento...</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -123,7 +129,10 @@ const LeadManager: React.FC = () => {
               <CardTitle>Analytics e Relatórios</CardTitle>
             </CardHeader>
             <CardContent>
-              <LeadAnalytics />
+              {/* LeadAnalytics temporariamente desabilitado */}
+              <div className="text-center py-8 text-gray-500">
+                <p>Analytics em desenvolvimento...</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -149,7 +158,10 @@ const LeadManager: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Filtros de Leads</DialogTitle>
           </DialogHeader>
-          <LeadFilters onClose={() => setIsFiltersOpen(false)} />
+          {/* LeadFilters temporariamente desabilitado */}
+          <div className="p-4 text-center text-muted-foreground">
+            <p>Filtros em desenvolvimento...</p>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

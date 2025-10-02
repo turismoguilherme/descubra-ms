@@ -16,7 +16,8 @@ import {
   Building,
   MoreVertical,
   Search,
-  Filter
+  Filter,
+  Users
 } from 'lucide-react';
 import { leadService } from '@/services/leads/leadService';
 import { Lead, LeadFilter } from '@/types/leads';

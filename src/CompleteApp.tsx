@@ -19,7 +19,7 @@ import Welcome from "@/pages/Welcome";
 const Guata = React.lazy(() => import("@/pages/Guata"));
 const GuataPublic = React.lazy(() => import("@/pages/GuataPublic"));
 const Destinos = React.lazy(() => import("@/pages/Destinos"));
-const Eventos = React.lazy(() => import("@/pages/Eventos"));
+// const Eventos = React.lazy(() => import("@/pages/Eventos")); // Temporariamente desabilitado
 const RoteirosMS = React.lazy(() => import("@/pages/ms/RoteirosMS"));
 const Mapa = React.lazy(() => import("@/pages/Mapa"));
 const Sobre = React.lazy(() => import("@/pages/Sobre"));
@@ -86,11 +86,13 @@ const CompleteApp = () => {
                           <Destinos />
                         </React.Suspense>
                       } />
+                      {/* Eventos temporariamente desabilitado
                       <Route path="/ms/eventos" element={
                         <React.Suspense fallback={<LoadingFallback />}>
                           <Eventos />
                         </React.Suspense>
                       } />
+                      */}
                       <Route path="/ms/roteiros" element={
                         <React.Suspense fallback={<LoadingFallback />}>
                           <RoteirosMS />
