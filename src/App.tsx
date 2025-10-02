@@ -13,8 +13,16 @@ import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import SecurityProvider from "@/components/security/SecurityProvider";
 
-// Critical components
+// ViaJAR SaaS Pages
 import ViaJARSaaS from "@/pages/ViaJARSaaS";
+import Solucoes from "@/pages/Solucoes";
+import CasosSucesso from "@/pages/CasosSucesso";
+import Precos from "@/pages/Precos";
+import ParaGovernos from "@/pages/ParaGovernos";
+import Sobre from "@/pages/Sobre";
+import Contato from "@/pages/Contato";
+
+// State Pages
 import MSIndex from "@/pages/MSIndex";
 
 const queryClient = new QueryClient();
@@ -44,9 +52,16 @@ function App() {
                             {/* ViaJAR SaaS Routes */}
                             <Route path="/" element={<ViaJARSaaS />} />
                             <Route path="/viajar" element={<ViaJARSaaS />} />
+                            <Route path="/solucoes" element={<Solucoes />} />
+                            <Route path="/casos-sucesso" element={<CasosSucesso />} />
+                            <Route path="/precos" element={<Precos />} />
+                            <Route path="/governos" element={<ParaGovernos />} />
+                            <Route path="/sobre" element={<Sobre />} />
+                            <Route path="/contato" element={<Contato />} />
                             
                             {/* MS Routes */}
                             <Route path="/ms" element={<MSIndex />} />
+                            <Route path="/ms/*" element={<MSIndex />} />
                             
                             {/* Fallback */}
                             <Route path="*" element={<ViaJARSaaS />} />

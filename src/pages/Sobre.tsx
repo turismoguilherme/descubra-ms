@@ -1,157 +1,79 @@
-
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import { Info, LogIn } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Target, Eye, Award, Users } from 'lucide-react';
+import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
+import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 const Sobre = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow">
-        <div className="bg-gradient-to-r from-ms-terra-brown to-ms-cerrado-orange py-16">
-          <div className="ms-container text-center">
-            <Info size={48} className="text-white mx-auto mb-4" />
-            <h1 className="text-4xl font-bold text-white mb-6">Sobre o Projeto</h1>
-            <p className="text-white/90 text-xl max-w-2xl mx-auto">
-              Conheça mais sobre o aplicativo "Descubra Mato Grosso do Sul" e sua missão
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
+      <ViaJARNavbar />
+      
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white py-20">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Sobre a ViaJAR
+            </h1>
+            <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+              Transformando o turismo brasileiro com tecnologia e inovação
             </p>
           </div>
         </div>
+      </section>
 
-        <div className="ms-container py-12">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-md p-8 mb-10">
-              <h2 className="text-2xl font-bold text-ms-pantanal-green mb-4">Nossa Missão</h2>
-              <p className="text-gray-600 mb-6">
-                O aplicativo "Descubra Mato Grosso do Sul" nasceu com o objetivo de ser uma 
-                ferramenta digital completa para turistas que visitam o estado, ajudando-os 
-                a explorar destinos, conhecer a cultura local e planejar suas viagens de 
-                forma personalizada e acessível.
-              </p>
-              <p className="text-gray-600">
-                Desenvolvido pela Fundtur-MS, este projeto visa promover o turismo sustentável 
-                e inclusivo, valorizando a identidade sul-mato-grossense e proporcionando uma 
-                experiência interativa para os visitantes através de tecnologias inovadoras.
+      {/* Mission & Vision */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-8 rounded-2xl border border-blue-100">
+              <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-6">
+                <Target className="h-7 w-7 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Nossa Missão</h2>
+              <p className="text-gray-600 text-lg">
+                Democratizar o acesso à tecnologia de ponta para o setor turístico, 
+                permitindo que governos e empresas de qualquer tamanho possam oferecer 
+                experiências excepcionais aos turistas.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold text-ms-pantanal-green mb-4">Para Turistas</h3>
-                <ul className="space-y-3 text-gray-600">
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Experiência interativa e personalizada</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Roteiros adaptados aos seus interesses</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Assistência virtual através da Delinha</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Informações culturais e históricas</span>
-                  </li>
-                </ul>
+            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-8 rounded-2xl border border-cyan-100">
+              <div className="w-14 h-14 bg-gradient-to-r from-cyan-600 to-blue-500 rounded-xl flex items-center justify-center mb-6">
+                <Eye className="h-7 w-7 text-white" />
               </div>
-
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold text-ms-pantanal-green mb-4">Para CATs</h3>
-                <ul className="space-y-3 text-gray-600">
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Suporte ao atendimento através de IA</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Gestão de horários e atendimentos</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Ferramenta de auxílio para informações turísticas</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-ms-cerrado-orange font-bold mr-2">•</span>
-                    <span>Integração com sistema de gestão</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-8 mb-10">
-              <h2 className="text-2xl font-bold text-ms-pantanal-green mb-4">Acessibilidade</h2>
-              <p className="text-gray-600 mb-4">
-                O aplicativo foi desenvolvido com foco na acessibilidade, garantindo que todos 
-                possam desfrutar dos recursos oferecidos:
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Nossa Visão</h2>
+              <p className="text-gray-600 text-lg">
+                Ser a plataforma líder em gestão inteligente de turismo no Brasil, 
+                conectando destinos, turistas e gestores através de tecnologia inovadora 
+                e inteligência artificial.
               </p>
-              <ul className="space-y-3 text-gray-600">
-                <li className="flex items-start">
-                  <span className="text-ms-guavira-purple font-bold mr-2">•</span>
-                  <span>Opções de áudio para pessoas com deficiência visual</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-ms-guavira-purple font-bold mr-2">•</span>
-                  <span>Recursos de tradução para múltiplos idiomas</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-ms-guavira-purple font-bold mr-2">•</span>
-                  <span>Interface intuitiva e de fácil navegação</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-ms-guavira-purple font-bold mr-2">•</span>
-                  <span>Conteúdo adaptado para diferentes necessidades</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-8">
-              <h2 className="text-2xl font-bold text-ms-pantanal-green mb-4">Contato</h2>
-              <p className="text-gray-600 mb-6">
-                Para mais informações, sugestões ou parcerias, entre em contato conosco:
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-600 mb-8">
-                <div>
-                  <h4 className="font-semibold mb-2">Fundtur-MS</h4>
-                  <p>Av. Afonso Pena, 7000<br />Campo Grande, MS</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Contato</h4>
-                  <p>contato@descubramsconline.com.br<br />Tel: (67) 3318-7600</p>
-                </div>
-              </div>
-              
-              {/* Área de acesso para gestores e atendentes */}
-              <div className="mt-8 border-t pt-6">
-                <h4 className="font-semibold mb-4 flex items-center">
-                  <LogIn size={18} className="mr-2 text-ms-primary-blue" />
-                  Acesso para Gestores e Atendentes
-                </h4>
-                <p className="text-gray-600 mb-4">
-                  Se você é gestor regional ou atendente de CAT, faça login em sua conta para acessar
-                  o painel de gestão e sistema dos CATs:
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Button 
-                    asChild 
-                    className="bg-[#003087] hover:bg-[#003087]/90"
-                  >
-                    <Link to="/admin-login">
-                      <LogIn size={16} className="mr-2" />
-                      Acessar Sistema
-                    </Link>
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-      </main>
-      <Footer />
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 bg-gradient-to-r from-blue-900 to-cyan-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Quer fazer parte dessa história?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            Entre em contato e descubra como podemos transformar o turismo na sua região.
+          </p>
+          <Link to="/contato">
+            <Button size="lg" className="bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 text-lg">
+              Falar Conosco
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      <ViaJARFooter />
     </div>
   );
 };
