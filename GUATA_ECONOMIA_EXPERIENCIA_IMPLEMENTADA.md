@@ -125,3 +125,13 @@ Agora entendi! O Guatá deve ser **super inteligente** usando as APIs para respo
 **O Guatá agora encena experiências em vez de apenas fornecer informações!** 🎭✨
 
 
+
+
+
+
+
+
+
+
+
+

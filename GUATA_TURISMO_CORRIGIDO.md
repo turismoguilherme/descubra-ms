@@ -98,3 +98,13 @@ Você estava certo! Eu não havia entendido o objetivo do chatbot. O Guatá deve
 **O Guatá agora entende seu propósito: ser o melhor guia de turismo do Mato Grosso do Sul!** 🎉
 
 
+
+
+
+
+
+
+
+
+
+

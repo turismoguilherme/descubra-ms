@@ -94,3 +94,13 @@ Agora o Guatá tem a personalidade autêntica que você descreveu! Ele é uma ca
 **O Guatá agora representa verdadeiramente o Mato Grosso do Sul com a voz da população local!** 🎉
 
 
+
+
+
+
+
+
+
+
+
+

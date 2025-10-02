@@ -15,7 +15,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   const isGuata = !message.isUser;
   return (
     <motion.div 
-      className={cn("flex items-start gap-3", isGuata ? "justify-start" : "justify-end")}
+      className={cn("flex items-start gap-3 mb-4", isGuata ? "justify-start" : "justify-end")}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -28,13 +28,13 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
       )}
       <div 
         className={cn(
-          "relative max-w-[80%] rounded-lg p-3 shadow-sm transition-all",
+          "relative max-w-[80%] rounded-lg px-4 py-3 shadow-sm transition-all duration-300",
           isGuata 
             ? message.error
-              ? "bg-red-900/50 text-red-200 border-l-4 border-red-500" 
+              ? "bg-red-900 text-red-100 border-l-4 border-red-500" 
               : message.isTyping
-                ? "bg-slate-800/60 text-gray-400"
-                : "bg-slate-800 text-gray-200" 
+                ? "bg-slate-700 text-gray-300"
+                : "bg-slate-800 text-gray-100"
             : "bg-blue-700 text-white hover:bg-blue-800"
         )}
       >
@@ -48,7 +48,10 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
           <>
             <p className="whitespace-pre-line">{message.text}</p>
             {message.timestamp && (
-              <div className="text-xs text-gray-400 mt-1 text-right">
+              <div className={cn(
+                "text-xs mt-1",
+                isGuata ? "text-gray-400" : "text-blue-100"
+              )}>
                 {message.timestamp.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
               </div>
             )}
@@ -77,6 +80,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
           </>
         )}
       </div>
+      
     </motion.div>
   );
 };

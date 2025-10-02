@@ -1,12 +1,11 @@
 
 import React from "react";
-import { AIMessage } from "@/types/ai";
 import GuataProfile from "./GuataProfile";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
 interface GuataChatProps {
-  mensagens: AIMessage[];
+  mensagens: any[];
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
   enviarMensagem: () => void;

@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
+import { ViaJARAuthProvider } from "@/hooks/auth/ViaJARAuthProvider";
+import { OverflowOneAuthProvider } from "@/hooks/auth/OverflowOneAuthProviderFinal";
 import { CSRFProvider } from "@/components/security/CSRFProtection";
 import { TourismDataProvider } from "@/context/TourismDataContext";
 import { BrandProvider } from "@/context/BrandContext";
@@ -17,7 +19,7 @@ import RouteLogger from "@/components/common/RouteLogger";
 import ParamRedirect from "@/components/common/ParamRedirect";
 
 // Critical components (no lazy loading)
-import OverFlowOneSaaS from "@/pages/OverFlowOneSaaS";
+import ViaJARSaaS from "@/pages/ViaJARSaaS";
 import MSIndex from "@/pages/MSIndex";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -42,6 +44,14 @@ const RecursosAnalytics = lazy(() => import("@/pages/RecursosAnalytics"));
 const RecursosWhiteLabel = lazy(() => import("@/pages/RecursosWhiteLabel"));
 const RecursosMultiTenant = lazy(() => import("@/pages/RecursosMultiTenant"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
+
+// ViaJAR Specific Pages
+const ViaJARPrecos = lazy(() => import("@/pages/ViaJARPrecos"));
+const ViaJARContato = lazy(() => import("@/pages/ViaJARContato"));
+const InventoryPage = lazy(() => import("@/pages/InventoryPage"));
+const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
+const LeadsPage = lazy(() => import("@/pages/LeadsPage"));
+const PublicSectorPage = lazy(() => import("@/pages/PublicSectorPage"));
 
 // Security components
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
@@ -97,6 +107,18 @@ const GuataReliabilityDashboard = lazy(() => import("@/pages/GuataReliabilityDas
 const DynamicSearchTest = lazy(() => import("@/pages/DynamicSearchTest")); // Teste de busca dinâmica
 const CommercialPartnersPortal = lazy(() => import("@/pages/CommercialPartnersPortal"));
 const CommercialDashboard = lazy(() => import("@/pages/CommercialDashboard"));
+const OverflowOnePartners = lazy(() => import("@/pages/OverflowOnePartners"));
+const OverflowOneServices = lazy(() => import("@/pages/OverflowOneServices"));
+const OverflowOneDashboard = lazy(() => import("@/pages/OverflowOneDashboard"));
+const OverflowOneInventory = lazy(() => import("@/pages/OverflowOneInventory"));
+const OverflowOneLogin = lazy(() => import("@/pages/OverflowOneLogin"));
+const OverflowOneRegister = lazy(() => import("@/pages/OverflowOneRegister"));
+const OverflowOneForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
+const OverflowOneTestLogin = lazy(() => import("@/pages/OverflowOneTestLogin"));
+const OverflowOneMasterDashboard = lazy(() => import("@/pages/OverflowOneMasterDashboard"));
+const OverflowOneAtendenteDashboard = lazy(() => import("@/pages/OverflowOneAtendenteDashboard"));
+const OverflowOneMunicipalDashboard = lazy(() => import("@/pages/OverflowOneMunicipalDashboard"));
+const OverflowOneEstadualDashboard = lazy(() => import("@/pages/OverflowOneEstadualDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -108,12 +130,14 @@ function App() {
       <SecurityHeaders />
       <TourismDataProvider>
         <AuthProvider>
-          <CSRFProvider>
-            <SecurityProvider
-              enableSessionTimeout={true}
-              sessionTimeoutMinutes={30}
-              sessionWarningMinutes={5}
-            >
+          <ViaJARAuthProvider>
+            <OverflowOneAuthProvider>
+              <CSRFProvider>
+                <SecurityProvider
+                  enableSessionTimeout={true}
+                  sessionTimeoutMinutes={30}
+                  sessionWarningMinutes={5}
+                >
             <TooltipProvider>
               <Toaster />
               <BrowserRouter>
@@ -123,9 +147,12 @@ function App() {
                     <div className="min-h-screen bg-background font-sans antialiased">
                     <Routes>
                       
-                      {/* OverFlow One SaaS Routes */}
-                      <Route path="/" element={<OverFlowOneSaaS />} />
-                      <Route path="/overflow-one" element={<OverFlowOneSaaS />} />
+                      {/* ViaJAR SaaS Routes */}
+                      <Route path="/" element={<ViaJARSaaS />} />
+                      <Route path="/viajar" element={<ViaJARSaaS />} />
+                      
+                      {/* Legacy Overflow One Routes - Redirect to ViaJAR */}
+                      <Route path="/overflow-one" element={<Navigate to="/viajar" replace />} />
                       <Route path="/contato" element={<Suspense fallback={<LoadingFallback />}><ContatoOverFlowOne /></Suspense>} />
                       <Route path="/contato-overflow-one" element={<Suspense fallback={<LoadingFallback />}><ContatoOverFlowOne /></Suspense>} />
                       <Route path="/solucoes" element={<Suspense fallback={<LoadingFallback />}><Solucoes /></Suspense>} />
@@ -133,7 +160,7 @@ function App() {
                       <Route path="/precos" element={<Suspense fallback={<LoadingFallback />}><Precos /></Suspense>} />
                       <Route path="/parceiros-comerciais" element={<Suspense fallback={<LoadingFallback />}><ParceirosComerciais /></Suspense>} />
                       <Route path="/parceiros" element={<Suspense fallback={<LoadingFallback />}><ParceirosComerciais /></Suspense>} />
-                      <Route path="/servicos" element={<Suspense fallback={<LoadingFallback />}><ServicosStakeholders /></Suspense>} />
+                      <Route path="/servicos" element={<Suspense fallback={<LoadingFallback />}><OverflowOneServices /></Suspense>} />
                       <Route path="/sobre-overflow-one" element={<Suspense fallback={<LoadingFallback />}><SobreOverFlowOne /></Suspense>} />
                       <Route path="/sobre-flowtrip" element={<Navigate to="/sobre-overflow-one" replace />} />
                       <Route path="/blog" element={<Suspense fallback={<LoadingFallback />}><BlogOverFlowOne /></Suspense>} />
@@ -154,6 +181,55 @@ function App() {
                       <Route path="/comercial-dashboard" element={<Suspense fallback={<LoadingFallback />}><CommercialDashboard /></Suspense>} />
                       <Route path="/comercial-login" element={<Suspense fallback={<LoadingFallback />}><Login /></Suspense>} />
                       <Route path="/comercial-register" element={<Suspense fallback={<LoadingFallback />}><Register /></Suspense>} />
+                      
+                      {/* OverFlow One Partners Routes */}
+                      <Route path="/parceiros" element={<Suspense fallback={<LoadingFallback />}><OverflowOnePartners /></Suspense>} />
+                      <Route path="/overflow-one-parceiros" element={<Suspense fallback={<LoadingFallback />}><OverflowOnePartners /></Suspense>} />
+                      
+                      {/* OverFlow One Services Routes */}
+                      <Route path="/servicos" element={<Suspense fallback={<LoadingFallback />}><OverflowOneServices /></Suspense>} />
+                      <Route path="/overflow-one-servicos" element={<Suspense fallback={<LoadingFallback />}><OverflowOneServices /></Suspense>} />
+                      <Route path="/dashboard-empresarial" element={<Suspense fallback={<LoadingFallback />}><OverflowOneDashboard /></Suspense>} />
+                      <Route path="/inventario-turistico" element={<Suspense fallback={<LoadingFallback />}><InventoryPage /></Suspense>} />
+                      <Route path="/relatorios" element={<Suspense fallback={<LoadingFallback />}><ReportsPage /></Suspense>} />
+                      <Route path="/leads" element={<Suspense fallback={<LoadingFallback />}><LeadsPage /></Suspense>} />
+                      <Route path="/setor-publico" element={<Suspense fallback={<LoadingFallback />}><PublicSectorPage /></Suspense>} />
+                      
+                      {/* ViaJAR Auth Routes */}
+                      <Route path="/viajar/login" element={<Suspense fallback={<LoadingFallback />}><OverflowOneLogin /></Suspense>} />
+                      <Route path="/viajar/register" element={<Suspense fallback={<LoadingFallback />}><OverflowOneRegister /></Suspense>} />
+                      <Route path="/viajar/forgot-password" element={<Suspense fallback={<LoadingFallback />}><OverflowOneForgotPassword /></Suspense>} />
+                      <Route path="/viajar/dashboard" element={<Suspense fallback={<LoadingFallback />}><OverflowOneDashboard /></Suspense>} />
+                      <Route path="/viajar/inventario" element={<Suspense fallback={<LoadingFallback />}><InventoryPage /></Suspense>} />
+                      <Route path="/viajar/relatorios" element={<Suspense fallback={<LoadingFallback />}><ReportsPage /></Suspense>} />
+                      <Route path="/viajar/leads" element={<Suspense fallback={<LoadingFallback />}><LeadsPage /></Suspense>} />
+                      <Route path="/viajar/setor-publico" element={<Suspense fallback={<LoadingFallback />}><PublicSectorPage /></Suspense>} />
+                      <Route path="/viajar/test-login" element={<Suspense fallback={<LoadingFallback />}><OverflowOneTestLogin /></Suspense>} />
+                      <Route path="/viajar/master-dashboard" element={<Suspense fallback={<LoadingFallback />}><OverflowOneMasterDashboard /></Suspense>} />
+                      
+                      {/* ViaJAR Specific Dashboards */}
+                      <Route path="/viajar/atendente" element={<Suspense fallback={<LoadingFallback />}><OverflowOneAtendenteDashboard /></Suspense>} />
+                      <Route path="/viajar/municipal" element={<Suspense fallback={<LoadingFallback />}><OverflowOneMunicipalDashboard /></Suspense>} />
+                      <Route path="/viajar/estadual" element={<Suspense fallback={<LoadingFallback />}><OverflowOneEstadualDashboard /></Suspense>} />
+                      <Route path="/viajar/master" element={<Suspense fallback={<LoadingFallback />}><OverflowOneMasterDashboard /></Suspense>} />
+                      
+                      {/* ViaJAR Navigation Routes */}
+                      <Route path="/viajar/precos" element={<Suspense fallback={<LoadingFallback />}><ViaJARPrecos /></Suspense>} />
+                      <Route path="/viajar/sobre" element={<Suspense fallback={<LoadingFallback />}><SobreOverFlowOne /></Suspense>} />
+                      <Route path="/viajar/contato" element={<Suspense fallback={<LoadingFallback />}><ViaJARContato /></Suspense>} />
+                      
+                      {/* Legacy Overflow One Routes - Redirect to ViaJAR */}
+                      <Route path="/overflow-one/login" element={<Navigate to="/viajar/login" replace />} />
+                      <Route path="/overflow-one/register" element={<Navigate to="/viajar/register" replace />} />
+                      <Route path="/overflow-one/forgot-password" element={<Navigate to="/viajar/forgot-password" replace />} />
+                      <Route path="/overflow-one/dashboard" element={<Navigate to="/viajar/dashboard" replace />} />
+                      <Route path="/overflow-one/inventario" element={<Navigate to="/viajar/inventario" replace />} />
+                      <Route path="/overflow-one/test-login" element={<Navigate to="/viajar/test-login" replace />} />
+                      <Route path="/overflow-one/master-dashboard" element={<Navigate to="/viajar/master-dashboard" replace />} />
+                      <Route path="/overflow-one/atendente" element={<Navigate to="/viajar/atendente" replace />} />
+                      <Route path="/overflow-one/municipal" element={<Navigate to="/viajar/municipal" replace />} />
+                      <Route path="/overflow-one/estadual" element={<Navigate to="/viajar/estadual" replace />} />
+                      <Route path="/overflow-one/master" element={<Navigate to="/viajar/master" replace />} />
                       
                       {/* MS Routes */}
                       <Route path="/ms" element={<MSIndex />} />
@@ -299,6 +375,8 @@ function App() {
               </TooltipProvider>
             </SecurityProvider>
           </CSRFProvider>
+            </OverflowOneAuthProvider>
+            </ViaJARAuthProvider>
         </AuthProvider>
       </TourismDataProvider>
     </QueryClientProvider>

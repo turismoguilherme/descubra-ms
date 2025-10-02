@@ -404,3 +404,5 @@ export const CommercialPartnerForm = () => {
     </Card>
   );
 };
+
+export default CommercialPartnerForm;

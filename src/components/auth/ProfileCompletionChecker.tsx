@@ -42,13 +42,47 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
         '/passaporte'
       ];
 
+      // Rotas ViaJAR que não precisam de verificação de perfil
+      const viajarPaths = [
+        '/viajar',
+        '/viajar/login',
+        '/viajar/register',
+        '/viajar/dashboard',
+        '/viajar/inventario',
+        '/viajar/relatorios',
+        '/viajar/master-dashboard',
+        '/viajar/atendente',
+        '/viajar/municipal',
+        '/viajar/estadual',
+        '/viajar/test-login',
+        '/viajar/forgot-password',
+        '/viajar/precos',
+        '/viajar/sobre',
+        '/viajar/contato',
+        '/relatorios',
+        '/inventario-turistico',
+        '/dashboard-empresarial'
+      ];
+
       // Verificar se é uma rota permitida (com ou sem tenant)
       const isAllowedPath = allowedPaths.some(allowedPath => 
         location.pathname === allowedPath || 
         (isTenantPath && location.pathname === `/${currentTenant}${allowedPath}`)
       );
+
+      // Verificar se é uma rota ViaJAR (não precisa de verificação de perfil)
+      const isViajarPath = viajarPaths.some(viajarPath => 
+        location.pathname.startsWith(viajarPath)
+      );
       
       console.log("✅ PROFILE CHECKER: É rota permitida?", isAllowedPath);
+      console.log("🎯 PROFILE CHECKER: É rota ViaJAR?", isViajarPath);
+      
+      // Pular verificação de perfil para rotas ViaJAR
+      if (isViajarPath) {
+        console.log("🚀 PROFILE CHECKER: Rota ViaJAR detectada, pulando verificação de perfil");
+        return;
+      }
       
       if (profileComplete === false && !isAllowedPath) {
         // Manter contexto do tenant ao redirecionar

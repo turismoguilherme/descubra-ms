@@ -82,3 +82,13 @@ A plataforma foi restaurada com sucesso! A funcionalidade de parceiros está fun
 
 A aplicação está pronta para uso e desenvolvimento contínuo.
 
+
+
+
+
+
+
+
+
+
+

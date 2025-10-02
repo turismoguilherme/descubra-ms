@@ -106,3 +106,13 @@ A aplicação está rodando normalmente com todas as funcionalidades principais 
 
 **Sua plataforma está de volta ao normal!** 🎉
 
+
+
+
+
+
+
+
+
+
+

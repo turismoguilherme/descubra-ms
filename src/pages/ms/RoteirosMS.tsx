@@ -85,7 +85,7 @@ const RoteirosMS = () => {
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
                 Roteiros Únicos de
                 <span className="bg-gradient-to-r from-ms-accent-orange to-ms-secondary-teal bg-clip-text text-transparent block">
-                  Mato Grosso do Sul
+                  Descubra Mato Grosso do Sul
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-white/90 mb-8">

@@ -4,8 +4,6 @@ import { Send, Mic, MicOff, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { AIMessage } from "@/types/ai";
-
 interface ChatInputProps {
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
@@ -15,7 +13,7 @@ interface ChatInputProps {
   isLoading: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onClearConversation?: () => void; // Tornar opcional para fallback
-  mensagens: AIMessage[];
+  mensagens: any[];
 }
 
 const ChatInput = ({

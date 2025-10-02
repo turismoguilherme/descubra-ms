@@ -108,3 +108,13 @@ A aplicação agora reflete a complexidade e funcionalidades reais da plataforma
 
 *Restauração realizada em Janeiro 2025 - Baseada na documentação oficial da plataforma*
 
+
+
+
+
+
+
+
+
+
+

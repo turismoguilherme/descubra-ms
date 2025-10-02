@@ -30,7 +30,7 @@ const UniversalNavbar = () => {
             <div className="flex items-center">
               <img 
                 alt={config.logo.alt}
-                src={config.logo.src}
+                src={`${config.logo.src}?v=3`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
                 loading="eager"
                 onError={(e) => {

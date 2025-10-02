@@ -1,11 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { AIMessage } from "@/types/ai";
-
 interface GuataHeaderProps {
   onClearConversation: () => void;
-  mensagens: AIMessage[];
+  mensagens: any[];
 }
 
 const GuataHeader: React.FC<GuataHeaderProps> = ({ onClearConversation, mensagens }) => {

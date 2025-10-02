@@ -26,8 +26,8 @@ const UniversalHero = () => {
   const { config, isMS } = useBrand();
   const { getContentValue, isLoading } = useInstitutionalContent();
 
-  // Para MS, usar o conteúdo institucional; para FlowTrip, usar config estático
-  const title = isMS ? (getContentValue('hero_title') || config.hero.title) : config.hero.title;
+  // Para MS, sempre usar o título correto "Descubra Mato Grosso do Sul"
+  const title = isMS ? 'Descubra Mato Grosso do Sul' : config.hero.title;
   const subtitle = isMS ? (getContentValue('hero_subtitle') || config.hero.subtitle) : config.hero.subtitle;
 
   // Se estiver carregando e for MS, mostrar skeleton

@@ -42,7 +42,7 @@ const SecureProfileForm = () => {
     <div className="min-h-screen flex flex-col">
       <div className="flex justify-center py-6 bg-white">
         <img 
-          src="/lovable-uploads/63490622-9b5f-483c-857e-2427e85a58a3.png" 
+          src="/images/logo-descubra-ms-v3.png" 
           alt="Descubra Mato Grosso do Sul" 
           className="h-[60px] w-auto" 
         />

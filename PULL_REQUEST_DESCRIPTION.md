@@ -83,3 +83,13 @@ A nova logo melhora significativamente a identidade visual da plataforma, combin
 **Branch:** `feature/overflow-one-partners-safe`
 **Tipo:** Enhancement (Melhoria visual)
 
+
+
+
+
+
+
+
+
+
+

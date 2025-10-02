@@ -94,3 +94,13 @@ Você estava certo! As respostas devem ser **reais e autênticas**, sem exageros
 **O Guatá agora é super inteligente, mas com respostas reais e autênticas que não exageram!** 🎯✨
 
 
+
+
+
+
+
+
+
+
+
+

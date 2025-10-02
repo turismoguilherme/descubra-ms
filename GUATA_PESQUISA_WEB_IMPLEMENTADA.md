@@ -95,3 +95,13 @@ Você estava certo! O Guatá agora é **verdadeiramente inteligente** e sempre p
 **Agora o Guatá pode responder QUALQUER pergunta sobre MS com informações atualizadas e precisas!** 🎉
 
 
+
+
+
+
+
+
+
+
+
+

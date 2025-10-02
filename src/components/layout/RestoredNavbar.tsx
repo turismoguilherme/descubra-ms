@@ -112,16 +112,35 @@ const RestoredNavbar = () => {
             {/* Menu autenticado */}
             {user && (
               <>
-                <Link to="/ms/guata" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/ms/guata') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
-                }`}>
-                  Guatá IA
-                </Link>
-                <Link to="/ms/passaporte" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/ms/passaporte') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
-                }`}>
-                  Passaporte Digital
-                </Link>
+                {isFlowTrip ? (
+                  // Menu autenticado FlowTrip
+                  <>
+                    <Link to="/dashboard-empresarial" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                      isActivePath('/dashboard-empresarial') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                    }`}>
+                      Dashboard
+                    </Link>
+                    <Link to="/inventario-turistico" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                      isActivePath('/inventario-turistico') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                    }`}>
+                      Inventário
+                    </Link>
+                  </>
+                ) : (
+                  // Menu autenticado MS
+                  <>
+                    <Link to="/ms/guata" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                      isActivePath('/ms/guata') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                    }`}>
+                      Guatá IA
+                    </Link>
+                    <Link to="/ms/passaporte" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                      isActivePath('/ms/passaporte') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                    }`}>
+                      Passaporte Digital
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -133,18 +152,18 @@ const RestoredNavbar = () => {
             ) : (
               <>
                 {isFlowTrip ? (
-                  // CTA FlowTrip (Removido Agendar Demo e Ver Case MS do menu)
+                  // CTA FlowTrip
                   <>
-                    {/* <Link to="/contato">
-                      <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
-                        Agendar Demo
+                    <Link to="/ms/login">
+                      <Button variant="ghost" size="sm">
+                        Entrar
                       </Button>
                     </Link>
-                    <Link to="/ms">
-                      <Button variant="outline" size="sm">
-                        Ver Case MS
+                    <Link to="/ms/register">
+                      <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
+                        Cadastrar
                       </Button>
-                    </Link> */}
+                    </Link>
                   </>
                 ) : (
                   // CTA MS
@@ -259,16 +278,35 @@ const RestoredNavbar = () => {
               {user && (
                 <>
                   <div className="border-t border-gray-200 pt-2 mt-2">
-                    <Link to="/ms/guata" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                      isActivePath('/ms/guata') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                    }`} onClick={() => setIsOpen(false)}>
-                      Guatá IA
-                    </Link>
-                    <Link to="/ms/passaporte" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                      isActivePath('/ms/passaporte') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                    }`} onClick={() => setIsOpen(false)}>
-                      Passaporte Digital
-                    </Link>
+                    {isFlowTrip ? (
+                      // Menu autenticado mobile FlowTrip
+                      <>
+                        <Link to="/dashboard-empresarial" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActivePath('/dashboard-empresarial') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                        }`} onClick={() => setIsOpen(false)}>
+                          Dashboard
+                        </Link>
+                        <Link to="/inventario-turistico" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActivePath('/inventario-turistico') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                        }`} onClick={() => setIsOpen(false)}>
+                          Inventário
+                        </Link>
+                      </>
+                    ) : (
+                      // Menu autenticado mobile MS
+                      <>
+                        <Link to="/ms/guata" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActivePath('/ms/guata') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                        }`} onClick={() => setIsOpen(false)}>
+                          Guatá IA
+                        </Link>
+                        <Link to="/ms/passaporte" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActivePath('/ms/passaporte') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                        }`} onClick={() => setIsOpen(false)}>
+                          Passaporte Digital
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </>
               )}
@@ -277,14 +315,14 @@ const RestoredNavbar = () => {
               {!user && (
                 <div className="border-t border-gray-200 pt-2 mt-2">
                   {isFlowTrip ? (
-                    // CTA mobile FlowTrip (Removido Agendar Demo e Ver Case MS do menu mobile)
+                    // CTA mobile FlowTrip
                     <>
-                      {/* <Link to="/contato" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
-                        Agendar Demo
+                      <Link to="/ms/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
+                        Entrar
                       </Link>
-                      <Link to="/ms" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
-                        Ver Case MS
-                      </Link> */}
+                      <Link to="/ms/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
+                        Cadastrar
+                      </Link>
                     </>
                   ) : (
                     <>

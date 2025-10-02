@@ -73,3 +73,13 @@ Para funcionalidade completa com IA:
 **O chat do Guatá está funcionando perfeitamente!** 🎉
 
 
+
+
+
+
+
+
+
+
+
+

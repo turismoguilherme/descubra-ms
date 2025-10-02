@@ -1,299 +1,260 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, MapPin, Clock, Star, Filter, Heart, Share2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import UniversalLayout from "@/components/layout/UniversalLayout";
+import { Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
+// Interface para eventos
 interface Event {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  date: string;
-  location: string;
-  city: string;
-  category: string;
-  image: string;
-  price: number;
-  isFree: boolean;
-  rating: number;
-  attendees: number;
+  location: {
+    address: string;
+    city: string;
+    coordinates?: { lat: number; lng: number };
+  };
+  start_date: string;
+  end_date?: string;
+  image_url?: string;
+  source: string;
+  external_url?: string;
+  is_active?: boolean;
+  is_visible?: boolean;
+  active?: boolean;
 }
 
 const EventosMS = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [eventos, setEventos] = useState<Event[]>([]);
+  const [filtroAtivo, setFiltroAtivo] = useState("Todos");
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [cityFilter, setCityFilter] = useState('');
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Mock data para demonstração
+  // Efeito para verificar autenticação
   useEffect(() => {
-    const mockEvents: Event[] = [
-      {
-        id: '1',
-        name: 'Festival de Inverno de Bonito',
-        description: 'Celebre a temporada de inverno com gastronomia, música e aventuras em Bonito.',
-        date: '2024-07-15',
-        location: 'Centro de Bonito',
-        city: 'Bonito',
-        category: 'Festival',
-        image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400',
-        price: 0,
-        isFree: true,
-        rating: 4.8,
-        attendees: 2500
-      },
-      {
-        id: '2',
-        name: 'Cavalgada do Pantanal',
-        description: 'Passeio a cavalo pelos campos alagados do Pantanal com guias especializados.',
-        date: '2024-08-20',
-        location: 'Fazenda Pantanal',
-        city: 'Corumbá',
-        category: 'Aventura',
-        image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-        price: 150,
-        isFree: false,
-        rating: 4.9,
-        attendees: 120
-      },
-      {
-        id: '3',
-        name: 'Feira de Artesanato de Campo Grande',
-        description: 'Exposição e venda de artesanato local com apresentações culturais.',
-        date: '2024-09-10',
-        location: 'Parque das Nações',
-        city: 'Campo Grande',
-        category: 'Cultural',
-        image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400',
-        price: 0,
-        isFree: true,
-        rating: 4.6,
-        attendees: 800
-      },
-      {
-        id: '4',
-        name: 'Observação de Aves no Cerrado',
-        description: 'Tour guiado para observação de aves nativas do Cerrado sul-mato-grossense.',
-        date: '2024-10-05',
-        location: 'RPPN Cerrado',
-        city: 'Coxim',
-        category: 'Ecoturismo',
-        image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
-        price: 80,
-        isFree: false,
-        rating: 4.7,
-        attendees: 45
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Acesso restrito",
+          description: "Faça seu cadastro para descobrir os eventos do Descubra Mato Grosso do Sul.",
+          variant: "destructive",
+        });
+        navigate("/ms/register");
+        return;
       }
-    ];
+    };
 
-    setTimeout(() => {
-      setEvents(mockEvents);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    checkAuth();
+  }, [navigate, toast]);
 
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || event.category === categoryFilter;
-    const matchesCity = !cityFilter || event.city === cityFilter;
-    
-    return matchesSearch && matchesCategory && matchesCity;
+  // Buscar eventos do Supabase
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const { data: manualEvents, error: manualError } = await supabase
+          .from('events')
+          .select(`
+            *,
+            event_details ( is_visible )
+          `)
+          .order('start_date');
+
+        if (manualError) throw manualError;
+
+        // Mapear eventos para a interface Event
+        const mappedEvents: Event[] = (manualEvents || []).map(me => ({
+          id: me.id,
+          title: me.name,
+          description: me.description,
+          location: { address: me.location, city: "" },
+          start_date: me.start_date,
+          end_date: me.end_date,
+          image_url: me.image_url,
+          source: "Manual",
+          external_url: null,
+          is_active: true,
+          is_visible: true
+        }));
+
+        // Filtrar eventos ativos e visíveis, e ordenar por data
+        const activeAndVisibleEvents = mappedEvents.filter(event => 
+          new Date(event.end_date || event.start_date) >= new Date() &&
+          (('is_visible' in event) ? event.is_visible !== false : true) &&
+          (('active' in event) ? event.active !== false : true)
+        );
+        activeAndVisibleEvents.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+
+        setEventos(activeAndVisibleEvents);
+      } catch (error) {
+        console.error('Erro ao buscar eventos:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os eventos. Verifique o console para mais detalhes.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [toast]);
+
+  const formatEventDate = (startDate: string, endDate?: string) => {
+    const start = new Date(startDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      if (start.getFullYear() !== end.getFullYear()) {
+        return `${format(start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(end, 'dd/MM/yyyy', { locale: ptBR })}`;
+      }
+      return `${format(start, 'dd/MM', { locale: ptBR })} a ${format(end, 'dd/MM', { locale: ptBR })}`;
+    }
+    return format(start, 'dd/MM/yyyy', { locale: ptBR });
+  };
+
+  // Lógica de filtragem de eventos visíveis
+  const eventosVisiveis = eventos.filter(evento => {
+    const startDate = new Date(evento.start_date);
+    const endDate = evento.end_date ? new Date(evento.end_date) : startDate;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    switch (filtroAtivo) {
+      case "Hoje":
+        return startDate.toDateString() === today.toDateString();
+      case "Esta semana":
+        const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+        const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+        return (startDate >= firstDayOfWeek && startDate <= lastDayOfWeek) || (endDate >= firstDayOfWeek && endDate <= lastDayOfWeek);
+      case "Este mês":
+        return startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear();
+      default:
+        return true;
+    }
   });
 
-  const handleViewEvent = (event: Event) => {
-    navigate(`/ms/eventos/${event.id}`);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Eventos</h1>
-            <p className="text-xl text-gray-600">Carregando eventos...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Eventos</h1>
-          <p className="text-xl text-gray-600">
-            Descubra os melhores eventos e experiências em Mato Grosso do Sul
-          </p>
-        </div>
-
-        {/* Filtros */}
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Input
-                    placeholder="Buscar eventos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Todas as categorias</SelectItem>
-                      <SelectItem value="Festival">Festival</SelectItem>
-                      <SelectItem value="Aventura">Aventura</SelectItem>
-                      <SelectItem value="Cultural">Cultural</SelectItem>
-                      <SelectItem value="Ecoturismo">Ecoturismo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Select value={cityFilter} onValueChange={setCityFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Cidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Todas as cidades</SelectItem>
-                      <SelectItem value="Bonito">Bonito</SelectItem>
-                      <SelectItem value="Campo Grande">Campo Grande</SelectItem>
-                      <SelectItem value="Corumbá">Corumbá</SelectItem>
-                      <SelectItem value="Coxim">Coxim</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setSearchTerm('');
-                      setCategoryFilter('');
-                      setCityFilter('');
-                    }}
-                    className="w-full"
-                  >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Limpar Filtros
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Lista de Eventos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="aspect-video relative">
-                <img
-                  src={event.image}
-                  alt={event.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 right-4">
-                  <Badge variant={event.isFree ? "default" : "secondary"}>
-                    {event.isFree ? "Gratuito" : `R$ ${event.price}`}
-                  </Badge>
-                </div>
-                <div className="absolute top-4 left-4">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="bg-white/80 hover:bg-white"
-                  >
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant="outline">{event.category}</Badge>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                    {event.rating}
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-semibold mb-2 line-clamp-2">
-                  {event.name}
-                </h3>
-                
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {event.description}
-                </p>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {formatDate(event.date)}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {event.location}, {event.city}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="h-4 w-4 mr-2" />
-                    {event.attendees} participantes
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => handleViewEvent(event)}
-                    className="flex-1"
-                  >
-                    Ver Detalhes
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              Nenhum evento encontrado
-            </h3>
-            <p className="text-gray-500">
-              Tente ajustar os filtros para encontrar eventos.
-            </p>
+    <UniversalLayout>
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-grow">
+          <div className="bg-gradient-to-r from-ms-cerrado-orange to-ms-guavira-purple py-16">
+            <div className="ms-container text-center">
+              <Calendar size={48} className="text-white mx-auto mb-4" />
+              <h1 className="text-4xl font-bold text-white mb-6">Eventos</h1>
+              <p className="text-white/90 text-xl max-w-2xl mx-auto">
+                Confira o calendário de eventos culturais, festivais e celebrações do Descubra Mato Grosso do Sul
+              </p>
+            </div>
           </div>
-        )}
+
+          <div className="ms-container py-12">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="section-title">Próximos Eventos</h2>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setFiltroAtivo("Hoje")}
+                  className={`px-3 py-1 border rounded ${
+                    filtroAtivo === "Hoje" 
+                      ? "border-ms-pantanal-green bg-ms-pantanal-green text-white" 
+                      : "border-ms-pantanal-green text-ms-pantanal-green hover:bg-ms-pantanal-green/10"
+                  }`}
+                >
+                  Hoje
+                </button>
+                <button 
+                  onClick={() => setFiltroAtivo("Esta semana")}
+                  className={`px-3 py-1 border rounded ${
+                    filtroAtivo === "Esta semana" 
+                      ? "border-ms-pantanal-green bg-ms-pantanal-green text-white" 
+                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Esta semana
+                </button>
+                <button 
+                  onClick={() => setFiltroAtivo("Este mês")}
+                  className={`px-3 py-1 border rounded ${
+                    filtroAtivo === "Este mês" 
+                      ? "border-ms-pantanal-green bg-ms-pantanal-green text-white" 
+                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Este mês
+                </button>
+              </div>
+            </div>
+            
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-ms-primary-blue"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {eventosVisiveis.length > 0 ? (
+                  eventosVisiveis.map((evento) => (
+                    <div key={evento.id} className="flex flex-col md:flex-row bg-white rounded-lg overflow-hidden shadow-md card-hover">
+                      <div className="md:w-1/3 h-48 md:h-auto overflow-hidden">
+                        <img 
+                          src={evento.image_url} 
+                          alt={evento.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="md:w-2/3 p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-xl font-semibold text-ms-pantanal-green">{evento.title}</h3>
+                          <span className="bg-ms-cerrado-orange/10 text-ms-cerrado-orange px-2 py-1 rounded text-sm font-medium">
+                            {formatEventDate(evento.start_date, evento.end_date)}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 mb-2">{evento.location.address}, {evento.location.city}</p>
+                        <p className="text-gray-600 mb-4 line-clamp-3">{evento.description}</p>
+                        {evento.external_url ? (
+                          <a 
+                            href={evento.external_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-block bg-ms-secondary-yellow text-black px-4 py-2 rounded hover:bg-ms-secondary-yellow/90 transition-colors"
+                          >
+                            Saiba Mais
+                          </a>
+                        ) : (
+                          <Link 
+                            to={`/ms/eventos/${evento.id}`}
+                            className="inline-block bg-ms-secondary-yellow text-black px-4 py-2 rounded hover:bg-ms-secondary-yellow/90 transition-colors"
+                          >
+                            Saiba Mais
+                          </Link>
+                        )}
+                        {evento.source && (
+                          <span className="ml-2 text-xs text-gray-500">Fonte: {evento.source}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-gray-600 text-lg">Nenhum evento encontrado.</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {eventosVisiveis.length > 0 && (
+              <div className="mt-12 text-center">
+                <button className="btn-primary">Ver Todos os Eventos</button>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
 
