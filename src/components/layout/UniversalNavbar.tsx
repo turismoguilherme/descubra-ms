@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -12,9 +12,14 @@ const UniversalNavbar = () => {
   const { config, isOverflowOne } = useBrand();
   const location = useLocation();
 
-  const isActivePath = (path: string) => {
-    return location.pathname === path;
-  };
+  // Memoizar a função de verificação de path ativo para melhor performance
+  const isActivePath = useMemo(() => {
+    return (path: string) => location.pathname === path;
+  }, [location.pathname]);
+
+  // Memoizar os itens de navegação para evitar re-renderizações desnecessárias
+  const navigationItems = useMemo(() => config.navigation, [config.navigation]);
+  const authenticatedNavigationItems = useMemo(() => config.authenticatedNavigation, [config.authenticatedNavigation]);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 relative z-50">
@@ -25,7 +30,7 @@ const UniversalNavbar = () => {
             <div className="flex items-center">
               <img 
                 alt={config.logo.alt}
-                src={config.logo.src}
+                src={`${config.logo.src}?v=3`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
                 loading="eager"
                 onError={(e) => {
@@ -46,7 +51,7 @@ const UniversalNavbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {config.navigation.map(item => (
+            {navigationItems.map(item => (
               <Link 
                 key={item.name} 
                 to={item.path} 
@@ -60,7 +65,7 @@ const UniversalNavbar = () => {
               </Link>
             ))}
             
-            {user && config.authenticatedNavigation.map(item => (
+            {user && authenticatedNavigationItems.map(item => (
               <Link 
                 key={item.name} 
                 to={item.path} 
@@ -129,7 +134,7 @@ const UniversalNavbar = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-              {config.navigation.map(item => (
+              {navigationItems.map(item => (
                 <Link 
                   key={item.name} 
                   to={item.path} 
@@ -144,7 +149,7 @@ const UniversalNavbar = () => {
                 </Link>
               ))}
               
-              {user && config.authenticatedNavigation.map(item => (
+              {user && authenticatedNavigationItems.map(item => (
                 <Link 
                   key={item.name} 
                   to={item.path} 

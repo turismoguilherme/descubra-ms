@@ -20,104 +20,124 @@ const RouteMap = ({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   useEffect(() => {
-    if (!map || !routes || routes.length === 0) return;
+    console.log("🗺️ RouteMap: effect start", {
+      hasMap: Boolean(map),
+      routesCount: routes?.length,
+      checkpointsCount: checkpoints?.length,
+      tokenProvided: Boolean(mapboxToken)
+    });
+
+    if (!map || !routes || routes.length === 0) {
+      console.warn("🟡 RouteMap: missing map or routes");
+      return;
+    }
 
     const addRouteLayers = () => {
-      // Remover camadas e fontes antigas para evitar duplicação
-      if (map.getSource('routes')) {
-        map.removeLayer('routes-line');
-        map.removeSource('routes');
-      }
-      if (map.getSource('checkpoints')) {
-        map.removeLayer('checkpoints-circle');
-        map.removeSource('checkpoints');
-      }
-      
-      // Remover marcadores antigos
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
+      try {
+        console.log("➕ RouteMap: adding layers and markers");
+        // Remover camadas e fontes antigas para evitar duplicação
+        if (map.getSource('routes')) {
+          console.log("♻️ RouteMap: removing old routes source/layer");
+          map.removeLayer('routes-line');
+          map.removeSource('routes');
+        }
+        if (map.getSource('checkpoints')) {
+          console.log("♻️ RouteMap: removing old checkpoints source/layer");
+          map.removeLayer('checkpoints-circle');
+          map.removeSource('checkpoints');
+        }
+        
+        // Remover marcadores antigos
+        markersRef.current.forEach(marker => marker.remove());
+        markersRef.current = [];
 
-      // Adicionar fonte e camada para as rotas (linhas)
-      const geojsonRoutes = {
-        type: 'FeatureCollection',
-        features: routes.map(route => ({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: checkpoints
-              .filter(cp => cp.route_id === route.id) // Apenas checkpoints desta rota
-              .sort((a, b) => a.order - b.order) // Ordenar por ordem
-              .map(cp => [cp.longitude, cp.latitude]) // [longitude, latitude]
+        // Adicionar fonte e camada para as rotas (linhas)
+        const geojsonRoutes = {
+          type: 'FeatureCollection',
+          features: routes.map(route => ({
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: checkpoints
+                .filter(cp => cp.route_id === route.id) // Apenas checkpoints desta rota
+                .sort((a, b) => a.order - b.order) // Ordenar por ordem
+                .map(cp => [cp.longitude, cp.latitude]) // [longitude, latitude]
+            },
+            properties: {
+              name: route.name,
+              description: route.description,
+              id: route.id,
+            },
+          })),
+        };
+
+        console.log("🧱 RouteMap: geojsonRoutes", geojsonRoutes);
+
+        map.addSource('routes', {
+          type: 'geojson',
+          data: geojsonRoutes as any, // Mapbox typings can be strict here
+        });
+
+        map.addLayer({
+          id: 'routes-line',
+          type: 'line',
+          source: 'routes',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
           },
-          properties: {
-            name: route.name,
-            description: route.description,
-            id: route.id,
+          paint: {
+            'line-color': '#888',
+            'line-width': 6,
+            'line-opacity': 0.7,
           },
-        })),
-      };
+        });
 
-      map.addSource('routes', {
-        type: 'geojson',
-        data: geojsonRoutes as any, // Mapbox typings can be strict here
-      });
+        // Adicionar marcadores para cada checkpoint
+        checkpoints.forEach(cp => {
+          const el = document.createElement('div');
+          el.className = 'mapbox-marker';
+          
+          // Verificar se o checkpoint foi concluído
+          const isCompleted = completedCheckpointIds.includes(cp.id);
 
-      map.addLayer({
-        id: 'routes-line',
-        type: 'line',
-        source: 'routes',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#888',
-          'line-width': 6,
-          'line-opacity': 0.7,
-        },
-      });
+          if (isCompleted) {
+            el.classList.add('mapbox-marker-completed');
+          }
 
-      // Adicionar marcadores para cada checkpoint
-      checkpoints.forEach(cp => {
-        const el = document.createElement('div');
-        el.className = 'mapbox-marker';
-        
-        // Verificar se o checkpoint foi concluído
-        const isCompleted = completedCheckpointIds.includes(cp.id);
+          // Opcional: usar stamp_image_url para o ícone do marcador
+          if (cp.stamp_image_url) {
+            const img = document.createElement('img');
+            img.src = cp.stamp_image_url;
+            img.style.width = '30px'; // Ajuste o tamanho conforme necessário
+            img.style.height = '30px';
+            img.style.borderRadius = '50%';
+            img.style.border = '2px solid white';
+            el.appendChild(img);
+          } else {
+            el.innerHTML = '📍'; // Ícone padrão se não houver imagem
+          }
+          
+          const marker = new mapboxgl.Marker(el)
+            .setLngLat([cp.longitude, cp.latitude])
+            .setPopup(new mapboxgl.Popup().setHTML(`<h3>${cp.name}</h3><p>${cp.description || ''}</p>`))
+            .addTo(map);
+          
+          markersRef.current.push(marker);
+        });
 
-        if (isCompleted) {
-          el.classList.add('mapbox-marker-completed');
+        // Ajustar o zoom para a primeira rota, se houver
+        if (routes.length > 0 && checkpoints.length > 0) {
+          const firstRouteCheckpoints = checkpoints.filter(cp => cp.route_id === routes[0].id);
+          if (firstRouteCheckpoints.length > 0) {
+            const bounds = new mapboxgl.LngLatBounds();
+            firstRouteCheckpoints.forEach(cp => bounds.extend([cp.longitude, cp.latitude]));
+            console.log("🔎 RouteMap: fitting bounds", firstRouteCheckpoints.length);
+            map.fitBounds(bounds, { padding: 50, duration: 0 });
+          }
         }
-
-        // Opcional: usar stamp_image_url para o ícone do marcador
-        if (cp.stamp_image_url) {
-          const img = document.createElement('img');
-          img.src = cp.stamp_image_url;
-          img.style.width = '30px'; // Ajuste o tamanho conforme necessário
-          img.style.height = '30px';
-          img.style.borderRadius = '50%';
-          img.style.border = '2px solid white';
-          el.appendChild(img);
-        } else {
-          el.innerHTML = '📍'; // Ícone padrão se não houver imagem
-        }
-        
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([cp.longitude, cp.latitude])
-          .setPopup(new mapboxgl.Popup().setHTML(`<h3>${cp.name}</h3><p>${cp.description || ''}</p>`))
-          .addTo(map);
-        
-        markersRef.current.push(marker);
-      });
-
-      // Ajustar o zoom para a primeira rota, se houver
-      if (routes.length > 0 && checkpoints.length > 0) {
-        const firstRouteCheckpoints = checkpoints.filter(cp => cp.route_id === routes[0].id);
-        if (firstRouteCheckpoints.length > 0) {
-          const bounds = new mapboxgl.LngLatBounds();
-          firstRouteCheckpoints.forEach(cp => bounds.extend([cp.longitude, cp.latitude]));
-          map.fitBounds(bounds, { padding: 50, duration: 0 });
-        }
+      } catch (err) {
+        console.error("❌ RouteMap: error adding layers/markers", err);
       }
     };
 
@@ -128,20 +148,24 @@ const RouteMap = ({
     }
 
     return () => {
-      if (map) {
-        if (map.getSource('routes')) {
-          map.removeLayer('routes-line');
-          map.removeSource('routes');
+      try {
+        if (map) {
+          if (map.getSource('routes')) {
+            map.removeLayer('routes-line');
+            map.removeSource('routes');
+          }
+          if (map.getSource('checkpoints')) {
+            map.removeLayer('checkpoints-circle');
+            map.removeSource('checkpoints');
+          }
+          markersRef.current.forEach(marker => marker.remove());
+          markersRef.current = [];
         }
-        if (map.getSource('checkpoints')) {
-          map.removeLayer('checkpoints-circle');
-          map.removeSource('checkpoints');
-        }
-        markersRef.current.forEach(marker => marker.remove());
-        markersRef.current = [];
+      } catch (err) {
+        console.error("❌ RouteMap: cleanup error", err);
       }
     };
-  }, [map, routes, checkpoints, completedCheckpointIds]);
+  }, [map, routes, checkpoints, completedCheckpointIds, mapboxToken]);
 
   return (
     <div className="relative bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">

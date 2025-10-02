@@ -6,7 +6,7 @@ const STORAGE_KEY = "guata_chat_history";
 
 const DEFAULT_WELCOME_MESSAGE: AIMessage = {
   id: 1,
-  text: "Olá! Eu sou o Guatá, seu guia pessoal para as maravilhas do Mato Grosso do Sul! 🌟 Prepare-se para uma jornada incrível onde, juntos, vamos desvendar os segredos da nossa natureza exuberante e da rica cultura local. Curioso para saber o que o MS tem a oferecer? Vamos conversar!",
+  text: "Olá! 👋 Eu sou o Guatá, seu guia pessoal para as maravilhas do Mato Grosso do Sul! Como posso te ajudar a descobrir nosso estado hoje?",
   isUser: false,
   timestamp: new Date()
 };

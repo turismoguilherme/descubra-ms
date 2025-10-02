@@ -2,31 +2,37 @@ import { Link } from "react-router-dom";
 import { useBrand } from "@/context/BrandContext";
 import { useInstitutionalContent } from "@/hooks/useInstitutionalContent";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Suspense } from "react";
+
+// Componente de loading otimizado
+const HeroLoadingSkeleton = () => (
+  <div className="relative h-[70vh] bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green">
+    <div className="absolute inset-0 bg-black/20"></div>
+    <div className="relative h-full flex items-center justify-center">
+      <div className="ms-container text-center px-4 space-y-6">
+        <Skeleton className="h-12 w-96 mx-auto bg-white/30" />
+        <Skeleton className="h-8 w-[500px] mx-auto bg-white/30" />
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Skeleton className="h-12 w-32 bg-white/40" />
+          <Skeleton className="h-12 w-40 bg-white/40" />
+          <Skeleton className="h-12 w-48 bg-white/40" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const UniversalHero = () => {
   const { config, isMS } = useBrand();
   const { getContentValue, isLoading } = useInstitutionalContent();
 
-  // Para MS, usar o conteúdo institucional; para FlowTrip, usar config estático
-  const title = isMS ? (getContentValue('hero_title') || config.hero.title) : config.hero.title;
+  // Para MS, sempre usar o título correto "Descubra Mato Grosso do Sul"
+  const title = isMS ? 'Descubra Mato Grosso do Sul' : config.hero.title;
   const subtitle = isMS ? (getContentValue('hero_subtitle') || config.hero.subtitle) : config.hero.subtitle;
 
+  // Se estiver carregando e for MS, mostrar skeleton
   if (isLoading && isMS) {
-    return (
-      <div className="relative h-[70vh] bg-gray-200">
-        <div className="relative h-full flex items-center justify-center">
-          <div className="ms-container text-center px-4 space-y-6">
-            <Skeleton className="h-12 w-96 mx-auto bg-gray-300" />
-            <Skeleton className="h-8 w-[500px] mx-auto bg-gray-300" />
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Skeleton className="h-12 w-32 bg-gray-400" />
-              <Skeleton className="h-12 w-40 bg-gray-400" />
-              <Skeleton className="h-12 w-48 bg-gray-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <HeroLoadingSkeleton />;
   }
 
   return (

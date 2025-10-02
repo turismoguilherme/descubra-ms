@@ -9,7 +9,7 @@ const OverFlowOneLogo: React.FC = () => {
   console.log('🔍 OverFlowOneLogo: Configuração da logo recebida:', config.logo.src, config.logo.alt, config.logo.fallback);
 
   return (
-    <Link to="/" className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
+    <div className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
       <div className="flex items-center">
         {/* Logo com fallback para texto */}
         <div className="flex items-center">
@@ -44,7 +44,7 @@ const OverFlowOneLogo: React.FC = () => {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

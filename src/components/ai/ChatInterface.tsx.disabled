@@ -22,7 +22,7 @@ import {
   Brain,
   Sparkles
 } from 'lucide-react';
-import { aiConsultantService } from '@/services/ai/AIConsultantService';
+import { guataConsciousService } from '@/services/ai/guataConsciousService';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 
 interface Message {

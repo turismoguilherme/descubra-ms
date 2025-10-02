@@ -59,41 +59,33 @@ export const useRegions = (): UseRegionsReturn => {
 
   // Buscar região por slug
   const getRegionBySlug = (slug: string): TourismRegion | undefined => {
-    console.log('🔍 DEBUG: getRegionBySlug chamado com slug:', slug);
     const result = regions.find(region => region.slug === slug);
-    console.log('🔍 DEBUG: getRegionBySlug resultado:', result);
     return result;
   };
 
   // Buscar regiões por cidade
   const getRegionsByCity = (city: string): TourismRegion[] => {
-    console.log('🔍 DEBUG: getRegionsByCity chamado com cidade:', city);
     const result = regions.filter(region => 
       region.cities.some(c => 
         c.toLowerCase().includes(city.toLowerCase())
       )
     );
-    console.log('🔍 DEBUG: getRegionsByCity resultado:', result);
     return result;
   };
 
   // Buscar regiões por tipo de turismo (apenas para MS)
   const getRegionsByType = (type: MSRegion['tourism_type']): MSRegion[] => {
-    console.log('🔍 DEBUG: getRegionsByType chamado com tipo:', type);
     const result = MS_REGIONS.filter(region => region.tourism_type === type) as MSRegion[];
-    console.log('🔍 DEBUG: getRegionsByType resultado:', result);
     return result;
   };
 
   // Carregar regiões na inicialização
   useEffect(() => {
-    console.log('🚀 DEBUG: useEffect do useRegions executado');
     fetchRegions();
   }, []);
 
   // Função para recarregar regiões
   const refreshRegions = () => {
-    console.log('🔄 DEBUG: refreshRegions chamado');
     fetchRegions();
   };
 
@@ -162,10 +154,7 @@ export const useMSRegions = () => {
 
   // Buscar região por coordenadas (mais próxima)
   const getRegionByCoordinates = (lat: number, lng: number): TourismRegion | undefined => {
-    console.log('🔍 DEBUG: getRegionByCoordinates chamado com:', { lat, lng });
-    
     if (msRegions.length === 0) {
-      console.log('⚠️ DEBUG: msRegions vazio, retornando undefined');
       return undefined;
     }
 
@@ -184,7 +173,6 @@ export const useMSRegions = () => {
       }
     });
 
-    console.log('🔍 DEBUG: getRegionByCoordinates resultado:', closestRegion);
     return closestRegion;
   };
 

@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe } from 'lucide-react';
-import RestoredNavbar from '@/components/layout/RestoredNavbar';
+import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe, Building2 } from 'lucide-react';
+import OverflowOneNavbar from '@/components/layout/OverflowOneNavbar';
+import OverflowOneFooter from '@/components/layout/OverflowOneFooter';
 import CommercialSection from '@/components/commercial/CommercialSection';
 
 const OverFlowOneSaaS = () => {
@@ -48,7 +49,7 @@ const OverFlowOneSaaS = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <RestoredNavbar />
+      <OverflowOneNavbar />
       
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 text-white">
@@ -265,6 +266,109 @@ const OverFlowOneSaaS = () => {
       {/* Seção Comercial */}
       <CommercialSection />
 
+      {/* Seção de Serviços Empresariais */}
+      <section className="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Serviços Empresariais com IA
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Inteligência artificial, relatórios personalizados e inventário turístico para impulsionar seu negócio
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">IA Guilherme</h3>
+              <p className="text-gray-600">Assistente inteligente para análise de dados e suporte estratégico</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Relatórios Personalizados</h3>
+              <p className="text-gray-600">Relatórios detalhados com gráficos e infográficos personalizados</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Map className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Inventário Turístico</h3>
+              <p className="text-gray-600">Mapeie e gerencie todos os seus ativos físicos e serviços</p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link to="/overflow-one/servicos">
+              <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700">
+                Explorar Serviços
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Parceiros */}
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Nossos Parceiros Estratégicos
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Empresas inovadoras que confiam na nossa plataforma para expandir seus negócios
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Tecnologia</h3>
+              <p className="text-gray-600">Empresas de software e inovação</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Consultoria</h3>
+              <p className="text-gray-600">Especialistas em transformação digital</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Analytics</h3>
+              <p className="text-gray-600">Soluções de inteligência de dados</p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/parceiros">
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
+                  Conhecer Todos os Parceiros
+                </Button>
+              </Link>
+            <Link to="/overflow-one/servicos">
+              <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white">
+                Ver Serviços Empresariais
+              </Button>
+            </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Final */}
       <section className="py-20 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -289,12 +393,7 @@ const OverFlowOneSaaS = () => {
         </div>
       </section>
 
-      {/* Footer Simples */}
-      <footer className="bg-gray-800 text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>&copy; 2024 OverFlow One. Todos os direitos reservados.</p>
-        </div>
-      </footer>
+      <OverflowOneFooter />
     </div>
   );
 };

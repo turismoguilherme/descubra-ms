@@ -12,9 +12,12 @@ export const useGuataConnection = () => {
       setConnectionChecking(true);
       try {
         // Testar conexão com um ping simples
-        await supabase.functions.invoke("guata-ai", {
+        const { data, error } = await supabase.functions.invoke("guata-ai", {
           body: { prompt: "ping" }
         });
+        if (error) {
+          throw error;
+        }
         setIsConnected(true);
         console.log("Conexão com a API Guatá estabelecida com sucesso");
       } catch (error) {
