@@ -4,8 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, Clock, Mail, Play, Pause, Edit, Trash2, Plus } from 'lucide-react';
-import { reportService } from '@/services/reports/reportService';
-import { ReportSchedule } from '@/types/reports';
+
+interface ReportSchedule {
+  id: string;
+  name: string;
+  frequency: string;
+  time: string;
+  is_active: boolean;
+  next_run: string;
+  last_run?: string;
+  recipients: string[];
+}
 import { useOverflowOneAuth } from '@/hooks/useOverflowOneAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,56 +35,23 @@ const ReportSchedules: React.FC = () => {
 
     try {
       setLoading(true);
-      const data = await reportService.getSchedules(user.id);
-      setSchedules(data);
+      // TODO: Implement schedule loading
+      setSchedules([]);
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os agendamentos.",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleSchedule = async (scheduleId: string, isActive: boolean) => {
-    try {
-      await reportService.updateSchedule(scheduleId, { is_active: !isActive });
-      setSchedules(schedules.map(s => 
-        s.id === scheduleId ? { ...s, is_active: !isActive } : s
-      ));
-      toast({
-        title: "Sucesso",
-        description: `Agendamento ${!isActive ? 'ativado' : 'desativado'} com sucesso.`,
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar agendamento:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o agendamento.",
-        variant: "destructive",
-      });
-    }
+    // TODO: Implement schedule toggle
+    console.log('Toggle schedule:', scheduleId);
   };
 
   const handleDeleteSchedule = async (scheduleId: string) => {
-    try {
-      await reportService.deleteSchedule(scheduleId);
-      setSchedules(schedules.filter(s => s.id !== scheduleId));
-      toast({
-        title: "Sucesso",
-        description: "Agendamento excluído com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao excluir agendamento:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o agendamento.",
-        variant: "destructive",
-      });
-    }
+    // TODO: Implement schedule deletion
+    console.log('Delete schedule:', scheduleId);
   };
 
   const getFrequencyLabel = (frequency: string) => {

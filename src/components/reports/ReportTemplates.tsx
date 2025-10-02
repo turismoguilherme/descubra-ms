@@ -5,8 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Play, Eye, Edit, Trash2, Copy, BarChart, PieChart, LineChart } from 'lucide-react';
-import { reportService } from '@/services/reports/reportService';
-import { ReportTemplate } from '@/types/reports';
+
+interface ReportTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  data_source: string;
+  fields: string[];
+  filters: any[];
+  chart_config: {
+    type: string;
+  };
+}
 import { useOverflowOneAuth } from '@/hooks/useOverflowOneAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,15 +36,10 @@ const ReportTemplates: React.FC = () => {
   const loadTemplates = async () => {
     try {
       setLoading(true);
-      const data = await reportService.getTemplates();
-      setTemplates(data);
+      // TODO: Implement template loading
+      setTemplates([]);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os modelos de relatórios.",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -49,23 +55,8 @@ const ReportTemplates: React.FC = () => {
       return;
     }
 
-    try {
-      // For now, generate with empty parameters
-      // In a real implementation, you'd show a form to collect parameters
-      const report = await reportService.generateReport(template.id, {}, user.id);
-      
-      toast({
-        title: "Sucesso",
-        description: "Relatório gerado com sucesso!",
-      });
-    } catch (error) {
-      console.error('Erro ao gerar relatório:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível gerar o relatório.",
-        variant: "destructive",
-      });
-    }
+    // TODO: Implement report generation
+    console.log('Generate report:', template.id);
   };
 
   const getChartIcon = (chartType: string) => {

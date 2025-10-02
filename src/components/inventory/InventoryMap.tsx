@@ -2,7 +2,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
-import { TourismInventory } from '@/services/inventory/inventoryService';
+
+interface TourismInventory {
+  id: string;
+  name: string;
+}
 
 interface InventoryMapProps {
   items: TourismInventory[];

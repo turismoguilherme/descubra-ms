@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, FileText, Calendar, BarChart, Settings } from 'lucide-react';
 import ReportTemplates from './ReportTemplates';
-import ReportHistory from './ReportHistory';
 import ReportSchedules from './ReportSchedules';
 import ReportBuilder from './ReportBuilder';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -76,7 +75,10 @@ const ReportManager: React.FC = () => {
               <CardTitle>Histórico de Relatórios</CardTitle>
             </CardHeader>
             <CardContent>
-              <ReportHistory />
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Histórico de relatórios temporariamente indisponível</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
