@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Copy, Heart, Clock, Bot, User, Send, Lightbulb, TrendingUp, MapPin, Utensils, Hotel, Car, Calendar, AlertTriangle, Star, Sparkles, Brain } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { guataConsciousService } from '@/services/ai/guataConsciousService';
+import { guataIntelligentService } from '@/services/ai/guataIntelligentService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CATAIInterfaceProps {
@@ -168,7 +168,7 @@ const CATAIInterface = ({
     setLoading(true);
 
     try {
-      const response = await guataConsciousService.processQuestion({
+      const response = await guataIntelligentService.processQuestion({
         question: question,
         userId: attendantId,
         sessionId: `cat-session-${attendantId}`,
@@ -183,7 +183,7 @@ const CATAIInterface = ({
         timestamp: new Date(),
         confidence: response.confidence,
         sources: response.sources,
-        suggestions: [], // guataConsciousService não retorna suggestions
+        suggestions: [], // guataIntelligentService não retorna suggestions
         response: response
       };
 

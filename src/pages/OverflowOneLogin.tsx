@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
-import { useOverflowOneAuth } from '@/hooks/useOverflowOneAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import TestUserCreator from '@/components/test/TestUserCreator';
 import PublicSectorUserCreator from '@/components/test/PublicSectorUserCreator';
@@ -18,7 +18,7 @@ const OverflowOneLogin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { signIn, signInWithProvider } = useOverflowOneAuth();
+  const { signIn, signInWithProvider } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -33,7 +33,12 @@ const OverflowOneLogin: React.FC = () => {
       if (error) {
         setError(error.message);
       } else {
-        navigate('/overflow-one/dashboard');
+        // Verificar se é usuário CAT e redirecionar adequadamente
+        if (email.includes('cat-')) {
+          navigate('/viajar/cat-dashboard');
+        } else {
+          navigate('/viajar/dashboard');
+        }
       }
     } catch (err) {
       setError('Ocorreu um erro inesperado. Tente novamente.');

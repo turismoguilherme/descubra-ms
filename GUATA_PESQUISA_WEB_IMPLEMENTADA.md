@@ -105,3 +105,4 @@ Você estava certo! O Guatá agora é **verdadeiramente inteligente** e sempre p
 
 
 
+

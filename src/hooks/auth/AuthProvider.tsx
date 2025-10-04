@@ -200,6 +200,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Verificar se é um usuário de teste
+      const testUsers = {
+        'teste@viajar.com': { password: '123456', name: 'Usuário Teste ViaJAR', role: 'user' },
+        'atendente@ms.gov.br': { password: '123456', name: 'Atendente MS', role: 'atendente' },
+        'admin@viajar.com': { password: '123456', name: 'Admin ViaJAR', role: 'admin' },
+        'gestor@ms.gov.br': { password: '123456', name: 'Gestor MS', role: 'gestor_municipal' },
+        // Usuários dos CATs
+        'atendente@cat-campo-grande.com': { password: '123456', name: 'Atendente CAT Campo Grande', role: 'cat_attendant' },
+        'atendente@cat-dourados.com': { password: '123456', name: 'Atendente CAT Dourados', role: 'cat_attendant' },
+        'atendente@cat-corumba.com': { password: '123456', name: 'Atendente CAT Corumbá', role: 'cat_attendant' },
+        'atendente@cat-bonito.com': { password: '123456', name: 'Atendente CAT Bonito', role: 'cat_attendant' }
+      };
+
+      if (testUsers[email as keyof typeof testUsers] && testUsers[email as keyof typeof testUsers].password === password) {
+        console.log("🧪 AuthProvider: Login com usuário de teste:", email);
+        
+        // Criar usuário simulado
+        const testUser = {
+          id: `test-${email.replace('@', '-').replace('.', '-')}`,
+          email: email,
+          created_at: new Date().toISOString()
+        } as User;
+        
+        // Criar perfil simulado
+        const testProfile: UserProfile = {
+          user_id: testUser.id,
+          full_name: testUsers[email as keyof typeof testUsers].name,
+          role: testUsers[email as keyof typeof testUsers].role,
+          city_id: email.includes('ms') ? 'campo-grande' : 
+                   email.includes('cat-campo-grande') ? 'campo-grande' :
+                   email.includes('cat-dourados') ? 'dourados' :
+                   email.includes('cat-corumba') ? 'corumba' :
+                   email.includes('cat-bonito') ? 'bonito' : null,
+          region_id: email.includes('ms') ? 'regiao-pantanal' : 
+                     email.includes('cat') ? 'regiao-pantanal' : null
+        };
+        
+        // Salvar dados de teste no localStorage
+        localStorage.setItem('test-user-data', JSON.stringify({
+          id: testUser.id,
+          email: testUser.email,
+          name: testProfile.full_name,
+          role: testProfile.role,
+          created_at: testUser.created_at
+        }));
+        localStorage.setItem('supabase.auth.token', 'test-token');
+        
+        // Simular login bem-sucedido
+        setUser(testUser);
+        setUserProfile(testProfile);
+        setSession(null);
+        
+        toast({
+          title: "Login realizado com sucesso!",
+          description: `Bem-vindo, ${testProfile.full_name}!`,
+        });
+        
+        return { data: { user: testUser }, error: null };
+      }
+
+      // Tentar login real no Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

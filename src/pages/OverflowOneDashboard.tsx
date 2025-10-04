@@ -8,6 +8,7 @@ import {
   Brain, 
   BarChart3, 
   Map, 
+  MapPin,
   FileText, 
   TrendingUp, 
   Target, 
@@ -20,11 +21,18 @@ import {
   Eye,
   Download,
   Settings,
-  Bell
+  Bell,
+  Hotel,
+  Utensils,
+  Plus
 } from 'lucide-react';
 import { IAGuilhermeInterface } from '@/components/ai-assistant/IAGuilhermeInterface';
 import { BusinessIntelligenceDashboard } from '@/components/business-intelligence/BusinessIntelligenceDashboard';
 import { DataMarketplace } from '@/components/data-marketplace/DataMarketplace';
+import CATLocationManager from '@/components/admin/CATLocationManager';
+import CATGeolocationManager from '@/components/overflow-one/CATGeolocationManager';
+import { useAuth } from '@/hooks/useAuth';
+import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 
 const userStats = {
   totalServices: 4,
@@ -103,6 +111,48 @@ const services = [
 
 const OverflowOneDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { user } = useAuth();
+  const { userRole } = useRoleBasedAccess();
+
+  // Estatísticas dinâmicas baseadas no tipo de usuário
+  const getStatsForUser = () => {
+    switch (userRole) {
+      case 'cat_attendant':
+        return {
+          title: 'Atendimentos Hoje',
+          value: '24',
+          subtitle: 'Visitantes atendidos',
+          icon: Users,
+          color: 'blue'
+        };
+      case 'gestor_municipal':
+        return {
+          title: 'CATs Gerenciados',
+          value: '8',
+          subtitle: 'Centros ativos',
+          icon: Building2,
+          color: 'green'
+        };
+      case 'admin':
+        return {
+          title: 'Usuários Ativos',
+          value: '1,247',
+          subtitle: 'Total na plataforma',
+          icon: Users,
+          color: 'purple'
+        };
+      default:
+        return {
+          title: 'Estabelecimentos',
+          value: '12',
+          subtitle: 'Cadastrados',
+          icon: Building2,
+          color: 'blue'
+        };
+    }
+  };
+
+  const userStats = getStatsForUser();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -148,32 +198,38 @@ const OverflowOneDashboard: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-background/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-8 bg-background/50 backdrop-blur-sm">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="ai">IA Guilherme</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            <TabsTrigger value="establishments">Estabelecimentos</TabsTrigger>
             <TabsTrigger value="inventory">Inventário</TabsTrigger>
+            <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            <TabsTrigger value="leads">Leads & Parceiros</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="municipal">Gestão Municipal</TabsTrigger>
+            <TabsTrigger value="ai">IA Guilherme</TabsTrigger>
           </TabsList>
 
           {/* Visão Geral */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
+            {/* Stats Cards Dinâmicas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Estatística Principal do Usuário */}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                      <Building2 className="h-6 w-6 text-blue-600" />
+                    <div className={`w-12 h-12 bg-${userStats.color}-100 rounded-lg flex items-center justify-center mr-4`}>
+                      <userStats.icon className={`h-6 w-6 text-${userStats.color}-600`} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Serviços Ativos</p>
-                      <p className="text-2xl font-bold text-gray-900">{userStats.activeServices}/{userStats.totalServices}</p>
+                      <p className="text-sm font-medium text-gray-600">{userStats.title}</p>
+                      <p className="text-2xl font-bold text-gray-900">{userStats.value}</p>
+                      <p className="text-xs text-gray-500">{userStats.subtitle}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Estatísticas Adicionais */}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
@@ -181,8 +237,9 @@ const OverflowOneDashboard: React.FC = () => {
                       <FileText className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Relatórios Gerados</p>
-                      <p className="text-2xl font-bold text-gray-900">{userStats.monthlyReports}</p>
+                      <p className="text-sm font-medium text-gray-600">Relatórios</p>
+                      <p className="text-2xl font-bold text-gray-900">24</p>
+                      <p className="text-xs text-gray-500">Este mês</p>
                     </div>
                   </div>
                 </CardContent>
@@ -192,11 +249,12 @@ const OverflowOneDashboard: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                      <Brain className="h-6 w-6 text-purple-600" />
+                      <TrendingUp className="h-6 w-6 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Interações IA</p>
-                      <p className="text-2xl font-bold text-gray-900">{userStats.aiInteractions}</p>
+                      <p className="text-sm font-medium text-gray-600">Crescimento</p>
+                      <p className="text-2xl font-bold text-gray-900">+12%</p>
+                      <p className="text-xs text-gray-500">vs mês anterior</p>
                     </div>
                   </div>
                 </CardContent>
@@ -334,6 +392,130 @@ const OverflowOneDashboard: React.FC = () => {
             <DataMarketplace />
           </TabsContent>
 
+          {/* Estabelecimentos */}
+          <TabsContent value="establishments" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Hotéis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Hotel className="h-5 w-5 text-blue-600" />
+                    <span>Hotéis</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Gerencie hotéis e pousadas
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total de hotéis</span>
+                      <Badge variant="secondary">12</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Ocupação média</span>
+                      <Badge variant="outline">78%</Badge>
+                    </div>
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Hotel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Restaurantes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Utensils className="h-5 w-5 text-green-600" />
+                    <span>Restaurantes</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Gerencie restaurantes e bares
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total de restaurantes</span>
+                      <Badge variant="secondary">28</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Avaliação média</span>
+                      <Badge variant="outline">4.2★</Badge>
+                    </div>
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Restaurante
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Atrações */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <MapPin className="h-5 w-5 text-purple-600" />
+                    <span>Atrações</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Gerencie pontos turísticos
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total de atrações</span>
+                      <Badge variant="secondary">45</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Visitantes/mês</span>
+                      <Badge variant="outline">2.1k</Badge>
+                    </div>
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Atração
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Lista de Estabelecimentos */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Meus Estabelecimentos</CardTitle>
+                <p className="text-muted-foreground">
+                  Visualize e gerencie todos os seus estabelecimentos
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Exemplo de estabelecimento */}
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Hotel className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Hotel Pantanal Plaza</h3>
+                        <p className="text-sm text-gray-600">Campo Grande - MS</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline">Ativo</Badge>
+                      <Button size="sm" variant="outline">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Inventário */}
           <TabsContent value="inventory">
             <Card>
@@ -355,6 +537,214 @@ const OverflowOneDashboard: React.FC = () => {
                   <Button>
                     <Bell className="h-4 w-4 mr-2" />
                     Notificar quando disponível
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Leads & Parceiros */}
+          <TabsContent value="leads" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Leads Ativos */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <span>Leads Ativos</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Novos leads para conversão
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total de leads</span>
+                      <Badge variant="secondary">156</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Novos hoje</span>
+                      <Badge variant="outline">12</Badge>
+                    </div>
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Novo Lead
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Parceiros */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Building2 className="h-5 w-5 text-green-600" />
+                    <span>Parceiros</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Rede de parceiros ativos
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total de parceiros</span>
+                      <Badge variant="secondary">89</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Ativos</span>
+                      <Badge variant="outline">76</Badge>
+                    </div>
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Novo Parceiro
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Conversões */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                    <span>Conversões</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Taxa de conversão de leads
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Taxa de conversão</span>
+                      <Badge variant="secondary">23%</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Este mês</span>
+                      <Badge variant="outline">34</Badge>
+                    </div>
+                    <Button className="w-full">
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Ver Relatórios
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Lista de Leads Recentes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Leads Recentes</CardTitle>
+                <p className="text-muted-foreground">
+                  Acompanhe os leads mais recentes
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Exemplo de lead */}
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Users className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Hotel Fazenda São Bento</h3>
+                        <p className="text-sm text-gray-600">Interessado em parceria</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline">Novo</Badge>
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Gestão Municipal */}
+          <TabsContent value="municipal" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Building2 className="h-5 w-5 text-blue-600" />
+                    <span>Gestão de CATs</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Cadastre e gerencie Centros de Atendimento ao Turista
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <CATLocationManager />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <MapPin className="h-5 w-5 text-blue-600" />
+                    <span>Geolocalização dos CATs</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Configure áreas de check-in por geolocalização
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <CATGeolocationManager />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Acesso para Atendentes */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  <span>Acesso para Atendentes</span>
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Links diretos para o sistema de atendimento
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={() => window.open('/viajar/attendant-checkin', '_blank')}
+                  >
+                    <MapPin className="h-6 w-6 text-blue-600" />
+                    <span className="text-sm font-medium">Check-in</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={() => window.open('/viajar/cat-login', '_blank')}
+                  >
+                    <Users className="h-6 w-6 text-green-600" />
+                    <span className="text-sm font-medium">Login CAT</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={() => window.open('/viajar/cat-dashboard', '_blank')}
+                  >
+                    <BarChart3 className="h-6 w-6 text-purple-600" />
+                    <span className="text-sm font-medium">Dashboard CAT</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={() => window.open('/viajar/relatorios', '_blank')}
+                  >
+                    <FileText className="h-6 w-6 text-orange-600" />
+                    <span className="text-sm font-medium">Relatórios</span>
                   </Button>
                 </div>
               </CardContent>

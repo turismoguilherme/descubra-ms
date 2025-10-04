@@ -1,13 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const ViaJARNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDashboardOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const isActivePath = (path: string) => location.pathname === path;
 
@@ -19,6 +35,15 @@ const ViaJARNavbar = () => {
     { name: "Para Governos", path: "/governos" },
     { name: "Sobre", path: "/sobre" },
     { name: "Contato", path: "/contato" },
+  ];
+
+  const dashboardItems = [
+    { name: "Dashboard", path: "/viajar/dashboard" },
+    { name: "Inventário", path: "/viajar/inventario" },
+    { name: "Relatórios", path: "/viajar/relatorios" },
+    { name: "Leads", path: "/viajar/leads" },
+    { name: "Setor Público", path: "/viajar/setor-publico" },
+    { name: "Sistema CAT", path: "/viajar/attendant-checkin" },
   ];
 
   return (
@@ -53,11 +78,33 @@ const ViaJARNavbar = () => {
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <Link to="/viajar/dashboard">
-                <Button size="sm" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white">
+              <div className="relative" ref={dropdownRef}>
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                  onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+                >
                   Dashboard
+                  <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
-              </Link>
+                
+                {isDashboardOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                    {dashboardItems.map(item => (
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        className={`block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${
+                          isActivePath(item.path) ? 'bg-cyan-50 text-cyan-600' : ''
+                        }`}
+                        onClick={() => setIsDashboardOpen(false)}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <Link to="/viajar/login">
@@ -108,11 +155,23 @@ const ViaJARNavbar = () => {
               
               <div className="pt-4 space-y-2">
                 {user ? (
-                  <Link to="/viajar/dashboard" onClick={() => setIsOpen(false)}>
-                    <Button size="sm" className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
-                      Dashboard
-                    </Button>
-                  </Link>
+                  <>
+                    <div className="text-sm font-medium text-gray-500 mb-2">Dashboard</div>
+                    {dashboardItems.map(item => (
+                      <Link 
+                        key={item.name} 
+                        to={item.path} 
+                        className={`block px-3 py-2 text-sm font-medium transition-colors rounded-md ${
+                          isActivePath(item.path) 
+                            ? "text-cyan-600 bg-cyan-50" 
+                            : "text-gray-700 hover:text-cyan-600 hover:bg-gray-50"
+                        }`} 
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </>
                 ) : (
                   <>
                     <Link to="/viajar/login" onClick={() => setIsOpen(false)}>

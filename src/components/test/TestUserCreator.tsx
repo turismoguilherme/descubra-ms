@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useOverflowOneAuth } from '@/hooks/useOverflowOneAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, UserPlus, Mail, Lock } from 'lucide-react';
 
@@ -15,7 +15,7 @@ const TestUserCreator: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [created, setCreated] = useState(false);
   
-  const { signUp, signIn } = useOverflowOneAuth();
+  const { signUp, signIn } = useAuth();
   const { toast } = useToast();
 
   const handleCreateTestUser = async () => {

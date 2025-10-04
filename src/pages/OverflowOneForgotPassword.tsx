@@ -50,7 +50,7 @@ const OverflowOneForgotPassword: React.FC = () => {
                 Verifique sua caixa de entrada e siga as instruções.
               </p>
               <div className="space-y-3">
-                <Link to="/overflow-one/login">
+                <Link to="/viajar/login">
                   <Button className="w-full">
                     Voltar para o login
                   </Button>
@@ -78,7 +78,7 @@ const OverflowOneForgotPassword: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/overflow-one/login" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
+          <Link to="/viajar/login" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar para o login
           </Link>
@@ -133,7 +133,7 @@ const OverflowOneForgotPassword: React.FC = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Lembrou da senha?{' '}
-                <Link to="/overflow-one/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                <Link to="/viajar/login" className="text-blue-600 hover:text-blue-700 font-medium">
                   Faça login aqui
                 </Link>
               </p>

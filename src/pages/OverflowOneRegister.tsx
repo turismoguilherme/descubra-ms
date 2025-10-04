@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, EyeOff, Mail, Lock, Building, User, ArrowLeft } from 'lucide-react';
-import { useOverflowOneAuth } from '@/hooks/useOverflowOneAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const OverflowOneRegister: React.FC = () => {
@@ -24,7 +24,7 @@ const OverflowOneRegister: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { signUp, signInWithProvider } = useOverflowOneAuth();
+  const { signUp, signInWithProvider } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -64,7 +64,7 @@ const OverflowOneRegister: React.FC = () => {
       if (error) {
         setError(error.message);
       } else {
-        navigate('/overflow-one/login?message=check-email');
+        navigate('/viajar/login?message=check-email');
       }
     } catch (err) {
       setError('Ocorreu um erro inesperado. Tente novamente.');
@@ -292,7 +292,7 @@ const OverflowOneRegister: React.FC = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Já tem uma conta?{' '}
-                <Link to="/overflow-one/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                <Link to="/viajar/login" className="text-blue-600 hover:text-blue-700 font-medium">
                   Faça login aqui
                 </Link>
               </p>

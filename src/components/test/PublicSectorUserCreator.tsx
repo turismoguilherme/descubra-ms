@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useOverflowOneAuth } from '@/hooks/useOverflowOneAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, UserPlus, Mail, Lock, Building, Shield } from 'lucide-react';
 
@@ -22,7 +22,7 @@ const PublicSectorUserCreator: React.FC = () => {
   const [created, setCreated] = useState(false);
   const [createdUser, setCreatedUser] = useState<PublicSectorUser | null>(null);
   
-  const { signUp, signIn } = useOverflowOneAuth();
+  const { signUp, signIn } = useAuth();
   const { toast } = useToast();
 
   const publicSectorUsers: Record<string, PublicSectorUser> = {
