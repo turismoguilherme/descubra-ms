@@ -20,9 +20,9 @@ import {
   MapPin,
   Clock
 } from 'lucide-react';
-import { ReportManager } from '@/components/reports/ReportManager';
-import { ReportSchedules } from '@/components/reports/ReportSchedules';
-import { ReportTemplates } from '@/components/reports/ReportTemplates';
+// import { ReportManager } from '@/components/reports/ReportManager';
+// import { ReportSchedules } from '@/components/reports/ReportSchedules';
+// import { ReportTemplates } from '@/components/reports/ReportTemplates';
 
 const ViaJARReportsPage = () => {
   const [activeTab, setActiveTab] = useState('overview');

@@ -84,3 +84,8 @@ Para funcionalidade completa com IA:
 
 
 
+
+
+
+
+

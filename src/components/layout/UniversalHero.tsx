@@ -36,7 +36,7 @@ const UniversalHero = () => {
   }
 
   return (
-    <div className="relative h-[70vh] bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green overflow-hidden">
+    <div className="relative h-[70vh] bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 overflow-hidden">
       <div className="absolute inset-0 bg-[url('https://source.unsplash.com/photo-1482938289607-e9573fc25ebb')] bg-cover bg-center opacity-30"></div>
       
       {/* Elementos decorativos */}

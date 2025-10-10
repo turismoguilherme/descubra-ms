@@ -115,7 +115,7 @@ const LoginForm = () => {
       <div className="bg-white py-6 shadow-sm">
         <div className="flex justify-center">
           <img 
-            src="/images/logo-descubra-ms-v2.png" 
+            src="/images/logo-descubra-ms.png?v=3" 
             alt="Descubra Mato Grosso do Sul - Plataforma de Turismo" 
             className="h-[60px] w-auto" 
           />
@@ -123,7 +123,7 @@ const LoginForm = () => {
       </div>
 
       {/* Corpo com gradiente e card centralizado */}
-      <div className="flex-1 bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green flex items-center justify-center py-12 px-4">
+      <div className="flex-1 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
           <Card className="bg-white shadow-xl">
             <CardHeader className="pb-4">

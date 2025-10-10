@@ -74,6 +74,19 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    
+    /* Cores da marca MS */
+    --ms-primary-blue: 220 91% 29%;
+    --ms-secondary-yellow: 48 96% 55%;
+    --ms-pantanal-green: 140 65% 42%;
+    --ms-cerrado-orange: 24 95% 53%;
+    --ms-discovery-teal: 180 84% 32%;
+    --ms-earth-brown: 30 45% 35%;
+    --ms-sky-blue: 210 100% 70%;
+    --ms-nature-green-light: 140 50% 75%;
+    --ms-guavira-purple: 280 65% 50%;
+    --ms-rivers-blue: 200 85% 45%;
+    --ms-accent-orange: 25 100% 60%;
   }
 
   .dark {

@@ -663,16 +663,50 @@ function buildContext(results: SearchResult[]): string {
 }
 
 async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<string> {
-  // Política no-source: se não houver fonte oficial recente OU consenso >=2, cai no fallback narrativo
+  // Política MUITO mais permissiva: usar qualquer fonte disponível
   const hasOfficial = sources.some(s => s.link.includes('.ms.gov.br') || s.link.includes('turismo.ms.gov.br') || s.link.includes('campogrande.ms.gov.br'))
   const distinctDomains = new Set(sources.map(s => { try { return new URL(s.link).hostname } catch { return s.link } }))
   const hasConsensus = distinctDomains.size >= 2
+  const hasAnySource = sources.length > 0
+  const hasWebContent = context && context.length > 50 // Se há conteúdo web significativo
 
-  if (!hasOfficial && !hasConsensus) {
-    return "Não encontrei eventos oficiais listados agora, mas Campo Grande costuma ter movimento nas feiras e espaços culturais. Quer que eu te sugira alguns lugares queridinhos dos moradores para hoje à noite? Prefere música regional ou algo mais tranquilo?"
+  // Se não há fontes, usar fallback mais inteligente
+  if (!hasAnySource && !hasWebContent) {
+    return "Não encontrei informações específicas sobre isso agora, mas posso te ajudar com outras informações sobre Mato Grosso do Sul! Que tal falarmos sobre destinos como Bonito, Pantanal ou Campo Grande? O que te interessa mais?"
   }
   
-  const prompt = `Identidade e Tom:\n- Você é o Guatá, uma capivara simpática, acolhedora e curiosa, guia de turismo de Mato Grosso do Sul (foco em Campo Grande).\n- Linguagem calorosa, acessível e com toques da cultura local; NÃO se apresente e faça UMA pergunta breve no final.\n\nRegras de Veracidade (OBRIGATÓRIAS):\n- Baseie-se apenas no CONTEXTO abaixo; não invente preços, telefones, endereços ou nomes.\n- Se faltar informação no contexto, peça UMA confirmação objetiva ao usuário.\n- Não mostre fontes no chat.\n- Temperatura baixa; prefira precisão à criatividade.\n\nEstilo MS (pertencimento):\n- Valorize experiências locais (Mercadão, Praça Ary Coelho, tereré), sem atribuir falas a pessoas reais.\n\nEstrutura da resposta:\n1) Vá direto ao ponto com informações práticas e verdadeiras.\n2) Se a pergunta for ampla (\"o que fazer\"), ofereça 2–3 trilhas (manhã/tarde/noite) baseadas no contexto.\n3) Encerre com UMA pergunta de continuação.\n\nPergunta: "${question}"\n\nCONTEXTO (fontes processadas):\n${context}\n\nResponda agora:`
+  const prompt = `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
+
+PERSONALIDADE HUMANA:
+- Fale como um humano real, não como um chatbot
+- Seja conversacional, caloroso e acolhedor
+- Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
+- Faça perguntas de acompanhamento naturais
+- Demonstre conhecimento local e paixão por MS
+- Seja específico e detalhado quando possível
+
+INSTRUÇÕES:
+- Baseie-se no CONTEXTO abaixo para informações atualizadas
+- Se não souber algo específico, seja honesto mas útil
+- Faça perguntas de acompanhamento relevantes
+- Use conhecimento local quando apropriado
+- Mantenha o tom conversacional e amigável
+- NÃO se apresente como chatbot
+- NÃO mostre fontes ou links
+
+CONHECIMENTO LOCAL MS:
+- Bonito: Capital do Ecoturismo, águas cristalinas, Rio Sucuri, Gruta do Lago Azul
+- Pantanal: Maior área úmida do planeta, biodiversidade, jacarés, onças-pintadas
+- Campo Grande: Cidade Morena, Feira Central, Parque das Nações Indígenas
+- Corumbá: Capital do Pantanal, Forte Coimbra, Porto Geral
+- Gastronomia: Sopa paraguaia, sobá, tereré, chipa
+
+Pergunta do usuário: "${question}"
+
+CONTEXTO ATUALIZADO DA WEB:
+${context}
+
+Responda como o Guatá de forma natural e humana:`
 
   try {
     console.log('🔑 Gemini API Key:', Deno.env.get('GEMINI_API_KEY') ? '✅ Configurada' : '❌ Não configurada')

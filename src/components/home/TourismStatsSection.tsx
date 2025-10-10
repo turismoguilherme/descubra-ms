@@ -6,53 +6,64 @@ import { TrendingUp, Users, MapPin, Calendar } from "lucide-react";
 import { TourismData } from "@/types/tourism";
 
 interface TourismStatsSectionProps {
-  data: TourismData;
+  data?: TourismData;
 }
 
 const TourismStatsSection = ({ data }: TourismStatsSectionProps) => {
+  // Dados padrão caso data seja undefined
+  const defaultData = {
+    totalVisitors: 0,
+    growthRate: 0,
+    interests: [],
+    trends: [],
+    origins: {}
+  };
+
+  const safeData = data || defaultData;
+
   const stats = [
     {
       title: "Visitantes Totais",
-      value: data.totalVisitors?.toLocaleString() || "0",
+      value: safeData.totalVisitors?.toLocaleString() || "0",
       icon: Users,
       color: "text-blue-600"
     },
     {
       title: "Taxa de Crescimento",
-      value: `${data.growthRate || 0}%`,
+      value: `${safeData.growthRate || 0}%`,
       icon: TrendingUp,
       color: "text-green-600"
     },
     {
       title: "Principais Interesses",
-      value: data.interests?.length || 0,
+      value: safeData.interests?.length || 0,
       icon: MapPin,
       color: "text-purple-600"
     },
     {
       title: "Regiões de Origem",
-      value: Object.keys(data.origins || {}).length,
+      value: Object.keys(safeData.origins || {}).length,
       icon: Calendar,
       color: "text-orange-600"
     }
   ];
 
-  const monthlyData = data.trends?.map(trend => ({
+  const monthlyData = safeData.trends?.map(trend => ({
     month: trend.month,
     visitors: trend.visitors,
     revenue: trend.revenue / 1000000 // Converter para milhões
   })) || [];
 
-  const topOrigins = Object.entries(data.origins || {})
+  const topOrigins = Object.entries(safeData.origins || {})
     .sort(([,a], [,b]) => b - a)
     .slice(0, 5)
     .map(([name, visitors]) => ({ name, visitors }));
 
   return (
-    <div className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+    <section className="py-20 bg-gradient-to-br from-ms-primary-blue/5 via-white to-ms-pantanal-green/5">
+      <div className="ms-container">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
             Panorama do Turismo em MS
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -61,102 +72,135 @@ const TourismStatsSection = ({ data }: TourismStatsSectionProps) => {
         </div>
 
         {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">
-                        {stat.title}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {typeof stat.value === 'number' ? stat.value : stat.value}
-                      </p>
-                    </div>
+              <div key={index} className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="bg-gradient-to-br from-ms-pantanal-green/10 to-ms-discovery-teal/10 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                     <Icon className={`h-8 w-8 ${stat.color}`} />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                    {stat.title}
+                  </p>
+                  <p className="text-3xl font-bold text-ms-primary-blue group-hover:text-ms-discovery-teal transition-colors">
+                    {typeof stat.value === 'number' ? stat.value : stat.value}
+                  </p>
+                </div>
+              </div>
             );
           })}
         </div>
 
         {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
           {/* Gráfico de Tendências Mensais */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Visitantes por Mês</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: number) => [value.toLocaleString(), 'Visitantes']}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="visitors" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-ms-primary-blue mb-2">Visitantes por Mês</h3>
+              <p className="text-gray-600">Evolução mensal do número de visitantes</p>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <YAxis 
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <Tooltip 
+                  formatter={(value: number) => [value.toLocaleString(), 'Visitantes']}
+                  contentStyle={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="visitors" 
+                  stroke="#1e40af" 
+                  strokeWidth={3}
+                  dot={{ fill: '#1e40af', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#1e40af', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
 
           {/* Gráfico de Origem dos Visitantes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Principais Origens</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={topOrigins} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={80} />
-                  <Tooltip 
-                    formatter={(value: number) => [value.toLocaleString(), 'Visitantes']}
-                  />
-                  <Bar 
-                    dataKey="visitors" 
-                    fill="#10b981"
-                    radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-ms-primary-blue mb-2">Principais Origens</h3>
+              <p className="text-gray-600">Distribuição dos visitantes por região de origem</p>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topOrigins} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  type="number" 
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={100}
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <Tooltip 
+                  formatter={(value: number) => [value.toLocaleString(), 'Visitantes']}
+                  contentStyle={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Bar 
+                  dataKey="visitors" 
+                  fill="#059669"
+                  radius={[0, 8, 8, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Destaques dos Interesses */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Principais Interesses Turísticos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              {data.interests?.map((interest, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                >
-                  {interest}
-                </span>
-              )) || <span className="text-gray-500">Nenhum interesse registrado</span>}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-ms-primary-blue mb-2">Principais Interesses Turísticos</h3>
+            <p className="text-gray-600">Categorias mais procuradas pelos visitantes</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {safeData.interests?.map((interest, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-6 py-3 rounded-full text-sm font-semibold bg-gradient-to-r from-ms-pantanal-green/10 to-ms-discovery-teal/10 text-ms-primary-blue border border-ms-pantanal-green/20 hover:from-ms-pantanal-green/20 hover:to-ms-discovery-teal/20 transition-all duration-300 hover:scale-105"
+              >
+                {interest.name} ({interest.percentage}%)
+              </span>
+            )) || (
+              <div className="text-center w-full py-8">
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <p className="text-gray-500 text-lg">Nenhum interesse registrado</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

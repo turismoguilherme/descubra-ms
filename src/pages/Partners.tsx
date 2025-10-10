@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import UniversalLayout from "@/components/layout/UniversalLayout";
 import { usePartners } from "@/hooks/usePartners";
 import { PartnerCard } from "@/components/partners/PartnerCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,9 +11,13 @@ import { Link } from "react-router-dom";
 import { Users } from "lucide-react";
 
 const Partners = () => {
+    console.log("🤝 PARTNERS: Componente Partners sendo renderizado");
+    
     const { partners, isLoading, error } = usePartners('approved');
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState<'all' | 'local' | 'regional' | 'estadual'>('all');
+    
+    console.log("🤝 PARTNERS: Estado - isLoading:", isLoading, "partners.length:", partners.length, "error:", error);
 
     const filtered = partners.filter(p => {
         const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -27,8 +30,7 @@ const Partners = () => {
     console.log("🔍 Partners Component: isLoading", isLoading, "partners.length", partners.length, "error", error);
 
     return (
-        <div className="flex flex-col min-h-screen">
-            <Navbar />
+        <UniversalLayout>
             <main className="flex-grow">
                 <div className="bg-gray-50">
                     <div className="ms-container py-16 text-center">
@@ -87,8 +89,7 @@ const Partners = () => {
                     </div>
                 </div>
             </main>
-            <Footer />
-        </div>
+        </UniversalLayout>
     );
 }
 

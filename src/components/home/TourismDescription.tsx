@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 const TourismDescription = () => {
   return (
-    <section className="py-16 bg-gradient-to-r from-[#003087] to-[#2E7D32] text-white">
+    <section className="py-16 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 text-white">
       <div className="ms-container">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">"Descubra Mato Grosso do Sul" – Viva essa experiência!</h2>
@@ -21,7 +21,7 @@ const TourismDescription = () => {
             Cadastre-se para explorar mais e ajudar a melhorar o turismo local!
           </p>
           
-          <Link to="/welcome">
+          <Link to="/ms/register">
             <Button className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-black font-medium px-8 py-6 text-lg">
               Cadastre-se
             </Button>

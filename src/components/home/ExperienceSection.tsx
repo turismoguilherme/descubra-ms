@@ -30,18 +30,31 @@ const experiencias = [
 
 const ExperienceSection = () => {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="ms-container">
-        <h2 className="section-title">Experiências Completas</h2>
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
+            Experiências Completas
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {experiencias.map((exp) => (
-            <div key={exp.id} className="bg-white rounded-lg p-6 shadow-md card-hover">
-              <div className="mb-4">
-                {exp.icone}
+            <div key={exp.id} className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+              <div className="mb-6 flex justify-center">
+                <div className="bg-gradient-to-br from-ms-pantanal-green/10 to-ms-discovery-teal/10 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  {exp.icone}
+                </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2">{exp.titulo}</h3>
-              <p className="text-gray-600">{exp.descricao}</p>
+              <h3 className="text-xl font-bold text-ms-primary-blue mb-4 text-center group-hover:text-ms-discovery-teal transition-colors">
+                {exp.titulo}
+              </h3>
+              <p className="text-gray-600 text-center leading-relaxed group-hover:text-gray-700 transition-colors">
+                {exp.descricao}
+              </p>
             </div>
           ))}
         </div>

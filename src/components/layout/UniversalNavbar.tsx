@@ -7,10 +7,14 @@ import { useBrand } from "@/context/BrandContext";
 import UserMenu from "./UserMenu";
 
 const UniversalNavbar = () => {
+  console.log("🧭 NAVBAR: Componente UniversalNavbar sendo renderizado");
+  
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const { config, isOverflowOne } = useBrand();
   const location = useLocation();
+  
+  console.log("🧭 NAVBAR: Estado - user:", !!user, "isOverflowOne:", isOverflowOne, "pathname:", location.pathname);
 
   // Memoizar a função de verificação de path ativo para melhor performance
   const isActivePath = useMemo(() => {
@@ -54,7 +58,8 @@ const UniversalNavbar = () => {
             {navigationItems.map(item => (
               <Link 
                 key={item.name} 
-                to={item.path} 
+                to={item.path}
+                onClick={() => console.log('🔗 NAVBAR: Clicou em', item.name, '->', item.path)}
                 className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
                   isActivePath(item.path) 
                     ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
@@ -68,7 +73,8 @@ const UniversalNavbar = () => {
             {user && authenticatedNavigationItems.map(item => (
               <Link 
                 key={item.name} 
-                to={item.path} 
+                to={item.path}
+                onClick={() => console.log('🔗 NAVBAR: Clicou em (auth)', item.name, '->', item.path)}
                 className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
                   isActivePath(item.path) 
                     ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
@@ -137,13 +143,16 @@ const UniversalNavbar = () => {
               {navigationItems.map(item => (
                 <Link 
                   key={item.name} 
-                  to={item.path} 
+                  to={item.path}
+                  onClick={() => {
+                    console.log('🔗 NAVBAR MOBILE: Clicou em', item.name, '->', item.path);
+                    setIsOpen(false);
+                  }}
                   className={`block px-3 py-2 text-base font-medium transition-colors ${
                     isActivePath(item.path) 
                       ? "text-ms-primary-blue bg-blue-50" 
                       : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
                   }`} 
-                  onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>
@@ -152,13 +161,16 @@ const UniversalNavbar = () => {
               {user && authenticatedNavigationItems.map(item => (
                 <Link 
                   key={item.name} 
-                  to={item.path} 
+                  to={item.path}
+                  onClick={() => {
+                    console.log('🔗 NAVBAR MOBILE AUTH: Clicou em', item.name, '->', item.path);
+                    setIsOpen(false);
+                  }}
                   className={`block px-3 py-2 text-base font-medium transition-colors ${
                     isActivePath(item.path) 
                       ? "text-ms-primary-blue bg-blue-50" 
                       : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
                   }`} 
-                  onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>

@@ -25,9 +25,13 @@ import PassportStampModal from '@/components/passport/PassportStampModal';
 import { useToast } from '@/hooks/use-toast';
 
 const PassaporteRouteMS = () => {
+  console.log("📱 PASSAPORTE: Componente PassaporteRouteMS sendo renderizado");
+  
   const { routeId } = useParams<{ routeId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  console.log("📱 PASSAPORTE: routeId:", routeId);
   const { routes } = useRouteManagement();
   const [route, setRoute] = useState<TouristRoute | null>(null);
   const [checkpoints, setCheckpoints] = useState<RouteCheckpoint[]>([]);

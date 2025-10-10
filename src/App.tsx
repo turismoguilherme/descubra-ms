@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { ViaJARAuthProvider } from "@/hooks/auth/ViaJARAuthProvider";
 import { OverflowOneAuthProvider } from "@/hooks/auth/OverflowOneAuthProvider";
 import { CSRFProvider } from "@/components/security/CSRFProtection";
-import { TourismDataProvider } from "@/context/TourismDataContext";
 import { BrandProvider } from "@/context/BrandContext";
 import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
@@ -38,6 +37,15 @@ const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
 
 // State Pages
 import MSIndex from "@/pages/MSIndex";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Destinos from "@/pages/Destinos";
+import Partners from "@/pages/Partners";
+import Guata from "@/pages/Guata";
+import GuataTest from "@/pages/GuataTest";
+import EventosMS from "@/pages/ms/EventosMS";
+import PassaporteLista from "@/pages/ms/PassaporteLista";
+import DestinoDetalhes from "@/pages/DestinoDetalhes";
 
 const queryClient = new QueryClient();
 
@@ -47,8 +55,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SecurityHeaders />
-      <TourismDataProvider>
-        <AuthProvider>
+      <AuthProvider>
           <ViaJARAuthProvider>
             <OverflowOneAuthProvider>
               <CSRFProvider>
@@ -120,6 +127,15 @@ function App() {
                             
                             {/* MS Routes */}
                             <Route path="/ms" element={<MSIndex />} />
+                            <Route path="/ms/login" element={<Login />} />
+                            <Route path="/ms/register" element={<Register />} />
+                            <Route path="/ms/destinos" element={<Destinos />} />
+                            <Route path="/ms/destinos/:id" element={<DestinoDetalhes />} />
+                            <Route path="/ms/eventos" element={<EventosMS />} />
+                            <Route path="/ms/parceiros" element={<Partners />} />
+                            <Route path="/ms/guata" element={<Guata />} />
+                            <Route path="/ms/guata-test" element={<GuataTest />} />
+                            <Route path="/ms/passaporte" element={<PassaporteLista />} />
                             <Route path="/ms/*" element={<MSIndex />} />
                             
                             {/* Fallback */}
@@ -134,7 +150,6 @@ function App() {
             </OverflowOneAuthProvider>
           </ViaJARAuthProvider>
         </AuthProvider>
-      </TourismDataProvider>
     </QueryClientProvider>
   );
 }

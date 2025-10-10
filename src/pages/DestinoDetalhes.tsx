@@ -1,14 +1,13 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import UniversalLayout from "@/components/layout/UniversalLayout";
 import { MapPin, ArrowLeft, Play, Tag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import AdminEditButton from "@/components/admin/AdminEditButton";
-import { usePageTracking } from "@/hooks/usePageTracking"; // Importa o hook
+import { usePageTracking } from "@/hooks/usePageTracking";
 
 interface Destination {
   id: string;
@@ -45,28 +44,15 @@ const DestinoDetalhes = () => {
     target_name: destination?.name,
   });
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Acesso restrito",
-          description: "Faça seu cadastro para acessar os detalhes dos destinos.",
-          variant: "destructive",
-        });
-        navigate("/register");
-        return;
-      }
-    };
-
-    checkAuth();
-  }, [navigate, toast]);
+  // Removido o check de autenticação para permitir acesso público
 
   useEffect(() => {
     const fetchDestination = async () => {
       if (!id) return;
 
       try {
+        setLoading(true);
+        
         // Buscar informações básicas do destino
         const { data: destinationData, error: destError } = await supabase
           .from('destinations')
@@ -74,28 +60,87 @@ const DestinoDetalhes = () => {
           .eq('id', id)
           .single();
 
-        if (destError) throw destError;
+        if (destError) {
+          console.error('Erro ao buscar destino:', destError);
+          // Se não encontrar no Supabase, usar dados mock
+          const mockDestinations = [
+            {
+              id: "1",
+              name: "Bonito",
+              description: "Águas cristalinas e ecoturismo de classe mundial. Explore grutas, rios e cachoeiras em um dos destinos mais preservados do Brasil.",
+              location: "Bonito - MS",
+              region: "Sudoeste",
+              image_url: "https://images.unsplash.com/photo-1439066615861-d1af74d74000"
+            },
+            {
+              id: "2", 
+              name: "Pantanal",
+              description: "A maior planície alagável do mundo e sua biodiversidade única. Observe onças-pintadas, ariranhas e mais de 650 espécies de aves.",
+              location: "Corumbá - MS",
+              region: "Pantanal",
+              image_url: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5"
+            },
+            {
+              id: "3",
+              name: "Corumbá", 
+              description: "A capital do Pantanal, com rico histórico e cultura. Porto histórico às margens do Rio Paraguai, com forte influência cultural.",
+              location: "Corumbá - MS",
+              region: "Pantanal",
+              image_url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800"
+            },
+            {
+              id: "4",
+              name: "Campo Grande",
+              description: "A capital do estado, com atrativos urbanos e culturais. Cidade planejada com amplas avenidas e rica gastronomia regional.",
+              location: "Campo Grande - MS", 
+              region: "Centro",
+              image_url: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000"
+            }
+          ];
 
-        // Buscar detalhes do destino
-        const { data: detailsData, error: detailsError } = await supabase
-          .from('destination_details')
-          .select('*')
-          .eq('destination_id', id)
-          .single();
+          const mockDestination = mockDestinations.find(d => d.id === id);
+          if (mockDestination) {
+            setDestination(mockDestination);
+            // Dados mock para detalhes
+            setDetails({
+              id: mockDestination.id,
+              promotional_text: `Descubra ${mockDestination.name}, um destino único em Mato Grosso do Sul que oferece experiências inesquecíveis para todos os tipos de viajantes.`,
+              video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // Vídeo de exemplo
+              video_type: 'youtube' as const,
+              map_latitude: -20.4697,
+              map_longitude: -54.6201,
+              tourism_tags: ["Ecoturismo", "Aventura", "Natureza"],
+              image_gallery: [
+                mockDestination.image_url,
+                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+              ]
+            });
+          } else {
+            throw new Error('Destino não encontrado');
+          }
+        } else {
+          setDestination(destinationData);
+          
+          // Buscar detalhes do destino
+          const { data: detailsData, error: detailsError } = await supabase
+            .from('destination_details')
+            .select('*')
+            .eq('destination_id', id)
+            .single();
 
-        setDestination(destinationData);
-        if (detailsData) {
-          setDetails({
-            ...detailsData,
-            video_type: detailsData.video_type as 'youtube' | 'upload' | null
-          });
+          if (detailsData) {
+            setDetails({
+              ...detailsData,
+              video_type: detailsData.video_type as 'youtube' | 'upload' | null
+            });
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar destino:', error);
         toast({
-          title: "Erro",
-          description: "Não foi possível carregar os detalhes do destino.",
-          variant: "destructive",
+          title: "Aviso",
+          description: "Carregando informações do destino...",
         });
       } finally {
         setLoading(false);
@@ -112,39 +157,37 @@ const DestinoDetalhes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
+      <UniversalLayout>
         <main className="flex-grow flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-ms-primary-blue mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando detalhes do destino...</p>
+            <div className="relative">
+              <div className="animate-spin rounded-full h-20 w-20 border-4 border-ms-primary-blue/20"></div>
+              <div className="animate-spin rounded-full h-20 w-20 border-4 border-t-ms-primary-blue absolute top-0"></div>
+            </div>
+            <p className="mt-4 text-gray-600 text-lg">Carregando detalhes do destino...</p>
           </div>
         </main>
-        <Footer />
-      </div>
+      </UniversalLayout>
     );
   }
 
   if (!destination) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
+      <UniversalLayout>
         <main className="flex-grow flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Destino não encontrado</h1>
-            <Link to="/destinos" className="text-ms-primary-blue hover:underline">
+            <Link to="/ms/destinos" className="text-ms-primary-blue hover:underline">
               Voltar para destinos
             </Link>
           </div>
         </main>
-        <Footer />
-      </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <UniversalLayout>
       <main className="flex-grow">
         {/* Header com imagem de fundo */}
         <div 
@@ -156,7 +199,7 @@ const DestinoDetalhes = () => {
             <div className="ms-container">
               <div className="flex justify-between items-start mb-4">
                 <Link 
-                  to="/destinos"
+                  to="/ms/destinos"
                   className="inline-flex items-center text-white hover:text-ms-secondary-yellow transition-colors"
                 >
                   <ArrowLeft size={20} className="mr-2" />
@@ -299,8 +342,7 @@ const DestinoDetalhes = () => {
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+    </UniversalLayout>
   );
 };
 

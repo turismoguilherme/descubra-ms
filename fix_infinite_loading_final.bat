@@ -1,3 +1,4 @@
+
 @echo off
 echo ========================================
 echo CORREÇÃO DEFINITIVA DO CARREGAMENTO INFINITO

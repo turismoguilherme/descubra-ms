@@ -46,38 +46,52 @@ const cats = [
 
 const CatsSection = () => {
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-gradient-to-br from-ms-primary-blue/5 via-white to-ms-pantanal-green/5">
       <div className="ms-container">
-        <h2 className="section-title mb-2">Centros de Atendimento ao Turista</h2>
-        <p className="text-gray-600 max-w-2xl mb-8">
-          Os CATs são pontos de apoio onde você encontra informações e orientações para
-          aproveitar ao máximo sua experiência em Mato Grosso do Sul.
-        </p>
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
+            Centros de Atendimento ao Turista
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Os CATs são pontos de apoio onde você encontra informações e orientações para
+            aproveitar ao máximo sua experiência em Mato Grosso do Sul.
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {cats.map((cat) => (
             <div 
               key={cat.id} 
-              className="bg-gray-50 rounded-lg p-6 shadow-md border-t-4 border-ms-primary-blue transition-all duration-300 hover:shadow-lg"
+              className="group bg-white rounded-2xl p-8 shadow-lg border-t-4 border-ms-primary-blue transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
             >
-              <h3 className="text-lg font-semibold text-ms-primary-blue mb-3">{cat.nome}</h3>
-              <div className="flex items-start space-x-2 mb-2">
-                <MapPin size={18} className="text-ms-cerrado-orange mt-1 flex-shrink-0" />
-                <p className="text-gray-800">{cat.endereco}</p>
+              <div className="text-center mb-6">
+                <div className="bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <MapPin size={24} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-ms-primary-blue group-hover:text-ms-discovery-teal transition-colors">
+                  {cat.nome}
+                </h3>
               </div>
-              <div className="flex items-start space-x-2 mb-2">
-                <Clock size={18} className="text-ms-cerrado-orange mt-1 flex-shrink-0" />
-                <p className="text-gray-800">{cat.horario}</p>
-              </div>
-              <div className="flex items-start space-x-2 mt-4">
-                <Info size={18} className="text-ms-primary-blue mt-1 flex-shrink-0" />
-                <div>
-                  <p className="text-gray-800 font-medium">Região: {cat.regiao}</p>
-                  {cat.atendentes && cat.atendentes.length > 0 && (
-                    <p className="text-gray-700 text-sm mt-1">
-                      Atendentes: {cat.atendentes.join(", ")}
-                    </p>
-                  )}
+              
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <MapPin size={20} className="text-ms-cerrado-orange mt-1 flex-shrink-0" />
+                  <p className="text-gray-800 font-medium">{cat.endereco}</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <Clock size={20} className="text-ms-cerrado-orange mt-1 flex-shrink-0" />
+                  <p className="text-gray-800 font-medium">{cat.horario}</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <Info size={20} className="text-ms-primary-blue mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-gray-800 font-medium">Região: {cat.regiao}</p>
+                    {cat.atendentes && cat.atendentes.length > 0 && (
+                      <p className="text-gray-700 text-sm mt-1">
+                        Atendentes: {cat.atendentes.join(", ")}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

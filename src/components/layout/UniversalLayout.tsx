@@ -7,6 +7,8 @@ interface UniversalLayoutProps {
 }
 
 const UniversalLayout = ({ children }: UniversalLayoutProps) => {
+  console.log("🏗️ UNIVERSAL LAYOUT: Renderizando layout universal");
+  
   return (
     <div className="min-h-screen flex flex-col">
       <UniversalNavbar />
