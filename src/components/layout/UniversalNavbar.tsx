@@ -36,7 +36,7 @@ const UniversalNavbar = () => {
                 alt={config.logo.alt}
                 src={`${config.logo.src}?v=6`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+                style={{ display: 'none', maxWidth: '100%', height: 'auto' }}
                 loading="eager"
                 onLoad={() => console.log('✅ Logo carregada com sucesso no UniversalNavbar!')}
                 onError={(e) => {
@@ -48,10 +48,10 @@ const UniversalNavbar = () => {
                 }}
               />
               <span 
-                className="hidden text-lg font-bold text-ms-primary-blue"
-                style={{ display: 'none' }}
+                className="text-lg font-bold text-ms-primary-blue"
+                style={{ display: 'block' }}
               >
-                {isOverflowOne ? "OverFlow One" : "Descubra Mato Grosso do Sul"}
+                {isOverflowOne ? "OverFlow One" : "Descubra MS"}
               </span>
             </div>
           </Link>
