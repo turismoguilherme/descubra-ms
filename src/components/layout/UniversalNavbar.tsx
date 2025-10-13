@@ -34,10 +34,13 @@ const UniversalNavbar = () => {
             <div className="flex items-center">
               <img 
                 alt={config.logo.alt}
-                src={`${config.logo.src}?v=3`}
+                src={`${config.logo.src}?v=6`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
+                style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
                 loading="eager"
+                onLoad={() => console.log('✅ Logo carregada com sucesso no UniversalNavbar!')}
                 onError={(e) => {
+                  console.error('❌ Erro ao carregar logo no UniversalNavbar:', e);
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const fallback = target.nextElementSibling as HTMLElement;
