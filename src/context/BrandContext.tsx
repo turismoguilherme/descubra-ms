@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useMultiTenant } from '../hooks/useMultiTenant';
+import logoDescubraMS from '@/assets/images/logo-descubra-ms.png';
 
 export interface BrandConfig {
   brand: 'ms' | 'overflow-one';
@@ -69,7 +70,7 @@ const overflowOneConfig: BrandConfig = {
 const msConfig: BrandConfig = {
   brand: 'ms',
   logo: {
-    src: new URL('/images/logo-descubra-ms.png', import.meta.url).href, // Logo com import.meta.url
+    src: logoDescubraMS, // Logo importada corretamente
     alt: 'Descubra Mato Grosso do Sul - Plataforma de Turismo',
     fallback: 'Descubra MS'
   },
