@@ -34,7 +34,7 @@ const CasosSucesso = () => {
               <div className="bg-gradient-to-br from-blue-400 to-cyan-500 p-12 flex items-center justify-center">
                 <div className="text-center">
                   <img 
-                    src="/images/logo-descubra-ms.png" 
+                    src="/images/logo-descubra-ms.png?v=5" 
                     alt="Descubra MS" 
                     className="h-32 w-auto mx-auto mb-6"
                   />

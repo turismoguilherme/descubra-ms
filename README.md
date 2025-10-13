@@ -1,88 +1,104 @@
-# 🚀 OverFlow One/Descubra MS - Plataforma de Turismo Inteligente
+# 🚀 **PLATAFORMA DESCUBRA MS / VIAJAR**
 
-Uma plataforma completa de turismo inteligente que combina tecnologia avançada, inteligência artificial e dados estratégicos para revolucionar o turismo em Mato Grosso do Sul.
+## 📋 **VISÃO GERAL**
 
-**Status:** ✅ **100% FUNCIONAL EM PRODUÇÃO**
+Plataforma completa de turismo inteligente para Mato Grosso do Sul, integrando:
+- **Descubra Mato Grosso do Sul** - Turismo inteligente com IA
+- **ViaJAR SaaS** - Sistema de gestão empresarial
+- **Guatá** - Assistente virtual especializado
+- **Sistema de Perfis** - Avatares e preferências personalizadas
 
-## 📖 Documentação Principal
+## 🎯 **STATUS ATUAL**
 
-Para informações completas sobre a plataforma, consulte:
+### **✅ IMPLEMENTADO (70%):**
+- Sistema de Avatares Pantanal
+- Sistema de Perfis Personalizados
+- ViaJAR SaaS completo
+- Guatá básico funcional
+- Correções técnicas aplicadas
 
-📋 **[Documentação Consolidada](docs/OVERFLOW_ONE_DOCUMENTACAO_CONSOLIDADA.md)** - Documento principal com todas as funcionalidades, arquitetura e histórico
+### **🔄 EM DESENVOLVIMENTO (30%):**
+- Guatá Inteligente (personalização avançada)
+- Dashboard Personalizado
+- Integração Alumia (aguardando API)
 
-## 🎯 Funcionalidades Principais
+## 🛠️ **TECNOLOGIAS**
 
-- 🧠 **IA Consultora Estratégica (Guatá)** - Consultas em tempo real para gestores
-- 🤖 **Chatbot Inteligente** - Guia turístico com respostas contextuais e precisas
-- 🗺️ **Mapas de Calor Turísticos** - Visualização de fluxos e engajamento
-- 🎮 **Passaporte Digital** - Gamificação e retenção de turistas
-- 👥 **Sistema de Comunidade** - Participação ativa dos moradores
-- 📊 **Dashboards Multi-hierárquicos** - Municipal, Regional e Estadual
-- 📈 **Infográficos Automatizados** - Relatórios visuais inteligentes
+- **Frontend:** React 18 + TypeScript + Vite
+- **UI:** Radix UI + Tailwind CSS + Shadcn UI
+- **Backend:** Supabase (PostgreSQL + Auth + Storage)
+- **IA:** Guatá Intelligent Tourism Service
+- **Deploy:** Vercel
 
-## 🆕 Melhorias Recentes (Setembro 2025)
+## 🚀 **FUNCIONALIDADES PRINCIPAIS**
 
-### 🤖 Guatá - Chatbot Inteligente Aprimorado
-- ✅ **Respostas Contextuais**: Estrutura inteligente por tipo de pergunta
-- ✅ **Validação Geográfica**: Verificação de existência via Google Places API
-- ✅ **Informações Precisas**: Eliminação de dados inventados (ex: "Rio Taquari")
-- ✅ **Perguntas Inteligentes**: Baseadas no histórico da conversa
-- ✅ **Priorização de APIs**: Dados reais vs. simulados
+### **🤖 Sistema Guatá:**
+- IA personalizada para turismo
+- Respostas baseadas em preferências
+- Pesquisa web integrada
+- Sistema de fallback inteligente
 
-📋 **[Documentação das Melhorias](docs/MELHORIAS_GUATA_INTELIGENCIA.md)**
+### **👤 Sistema de Perfis:**
+- Questionários para turistas e moradores
+- Avatares de animais do Pantanal
+- Sistema de conquistas
+- Educação ambiental
 
-## 🚀 Tecnologias
+### **🏢 ViaJAR SaaS:**
+- Dashboard completo
+- Sistema de inventário
+- Relatórios avançados
+- Gestão de parceiros
 
-- **Frontend:** React 18 + TypeScript + Tailwind CSS
-- **Backend:** Supabase (PostgreSQL + Edge Functions)
-- **IA:** Gemini AI para processamento avançado
-- **Maps:** Mapbox para geolocalização
-- **Hospedagem:** Vercel
+## 📚 **DOCUMENTAÇÃO**
 
-## 🏁 Quick Start
+### **📋 Documentos Principais:**
+- `docs/README_CONSOLIDADO.md` - Visão geral completa
+- `docs/DOCUMENTACAO_CONSOLIDADA_PLATAFORMA.md` - Documentação técnica
+- `docs/PLANO_SISTEMA_INTELIGENTE_IMPLEMENTACAO.md` - Plano futuro
+- `docs/STATUS_PLANOS_IMPLEMENTACAO.md` - Status detalhado
 
+### **🔧 Estrutura do Código:**
+```
+src/
+├── components/          # Componentes reutilizáveis
+├── pages/              # Páginas da aplicação
+├── services/           # Serviços e APIs
+├── context/            # Contextos React
+├── hooks/              # Hooks customizados
+└── types/              # Definições de tipos
+```
+
+## 🚀 **COMO USAR**
+
+### **Desenvolvimento:**
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/descubra-ms.git
-
-# Instale as dependências
 npm install
-
-# Configure as variáveis de ambiente
-cp .env.example .env.local
-
-# Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── components/        # Componentes React
-├── services/          # Lógica de negócio e APIs
-├── pages/            # Páginas da aplicação
-├── hooks/            # Custom hooks
-├── types/            # Definições TypeScript
-└── utils/            # Utilitários
-
-docs/                 # Documentação técnica
-supabase/            # Configurações do backend
+### **Produção:**
+```bash
+npm run build
+npm run preview
 ```
 
-## 🤝 Contribuição
+## 📊 **PRÓXIMOS PASSOS**
 
-Para contribuir com o projeto:
+1. **Completar Guatá Inteligente** - Personalização avançada
+2. **Implementar Dashboard Personalizado** - Métricas específicas
+3. **Integrar Alumia** - Dados reais de turismo
+4. **Desenvolver Relatórios** - Análise de comportamento
 
-1. Fork o repositório
-2. Crie uma branch para sua feature
-3. Faça commit das suas alterações
-4. Abra um Pull Request
+## 🎯 **OBJETIVOS FUTUROS**
 
-## 📜 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+- **Personalização Avançada** - Guatá adaptativo
+- **Dados Reais** - Integração com Alumia
+- **Relatórios Inteligentes** - Análise de comportamento
+- **Sistema de Recomendações** - IA para sugestões
 
 ---
 
-**Desenvolvido pela OverFlow One para revolucionar o turismo em Mato Grosso do Sul** 🌍
+**Status:** ✅ **PLATAFORMA FUNCIONAL E ESTÁVEL**
+**Última Atualização:** 10 de Janeiro de 2025
+**Responsável:** Cursor AI Agent
