@@ -69,7 +69,7 @@ const overflowOneConfig: BrandConfig = {
 const msConfig: BrandConfig = {
   brand: 'ms',
   logo: {
-    src: '/images/logo-descubra-ms.png?v=11', // Logo com URL relativa
+    src: new URL('/images/logo-descubra-ms.png', import.meta.url).href, // Logo com import.meta.url
     alt: 'Descubra Mato Grosso do Sul - Plataforma de Turismo',
     fallback: 'Descubra MS'
   },
