@@ -32,25 +32,50 @@ const UniversalNavbar = () => {
           {/* Logo */}
           <Link to={isOverflowOne ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
-              {/* Logo SVG de teste */}
+              {/* Logo SVG Definitiva */}
               <svg 
-                width="120" 
+                width="180" 
                 height="48" 
-                viewBox="0 0 120 48" 
+                viewBox="0 0 180 48" 
                 className="h-12 w-auto"
                 style={{ display: 'block' }}
               >
-                <rect width="120" height="48" fill="#1e40af" rx="8"/>
+                {/* Fundo com gradiente */}
+                <defs>
+                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style={{stopColor:'#1e40af', stopOpacity:1}} />
+                    <stop offset="100%" style={{stopColor:'#059669', stopOpacity:1}} />
+                  </linearGradient>
+                </defs>
+                
+                {/* Retângulo de fundo */}
+                <rect width="180" height="48" fill="url(#logoGradient)" rx="8"/>
+                
+                {/* Ícone binocular/câmera */}
+                <circle cx="24" cy="24" r="8" fill="white" opacity="0.9"/>
+                <circle cx="40" cy="24" r="8" fill="white" opacity="0.9"/>
+                <path d="M32 16 Q36 20 32 24 Q36 28 32 32" stroke="white" strokeWidth="2" fill="none" opacity="0.7"/>
+                
+                {/* Texto principal */}
                 <text 
                   x="60" 
-                  y="30" 
-                  textAnchor="middle" 
+                  y="20" 
                   fill="white" 
-                  fontSize="14" 
+                  fontSize="12" 
                   fontWeight="bold"
                   fontFamily="Arial, sans-serif"
                 >
-                  DESCUBRA MS
+                  DESCUBRA
+                </text>
+                <text 
+                  x="60" 
+                  y="35" 
+                  fill="white" 
+                  fontSize="10" 
+                  fontWeight="600"
+                  fontFamily="Arial, sans-serif"
+                >
+                  MATO GROSSO DO SUL
                 </text>
               </svg>
               <img 
