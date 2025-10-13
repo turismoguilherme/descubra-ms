@@ -32,6 +32,27 @@ const UniversalNavbar = () => {
           {/* Logo */}
           <Link to={isOverflowOne ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
+              {/* Logo SVG de teste */}
+              <svg 
+                width="120" 
+                height="48" 
+                viewBox="0 0 120 48" 
+                className="h-12 w-auto"
+                style={{ display: 'block' }}
+              >
+                <rect width="120" height="48" fill="#1e40af" rx="8"/>
+                <text 
+                  x="60" 
+                  y="30" 
+                  textAnchor="middle" 
+                  fill="white" 
+                  fontSize="14" 
+                  fontWeight="bold"
+                  fontFamily="Arial, sans-serif"
+                >
+                  DESCUBRA MS
+                </text>
+              </svg>
               <img 
                 alt={config.logo.alt}
                 src={`${config.logo.src}?v=6`}
@@ -49,7 +70,7 @@ const UniversalNavbar = () => {
               />
               <span 
                 className="text-lg font-bold text-ms-primary-blue"
-                style={{ display: 'block' }}
+                style={{ display: 'none' }}
               >
                 {isOverflowOne ? "OverFlow One" : "Descubra MS"}
               </span>
