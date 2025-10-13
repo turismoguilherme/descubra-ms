@@ -32,65 +32,18 @@ const UniversalNavbar = () => {
           {/* Logo */}
           <Link to={isOverflowOne ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
-              {/* Logo SVG Definitiva */}
-              <svg 
-                width="180" 
-                height="48" 
-                viewBox="0 0 180 48" 
-                className="h-12 w-auto"
-                style={{ display: 'block' }}
-              >
-                {/* Fundo com gradiente */}
-                <defs>
-                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style={{stopColor:'#1e40af', stopOpacity:1}} />
-                    <stop offset="100%" style={{stopColor:'#059669', stopOpacity:1}} />
-                  </linearGradient>
-                </defs>
-                
-                {/* Retângulo de fundo */}
-                <rect width="180" height="48" fill="url(#logoGradient)" rx="8"/>
-                
-                {/* Ícone binocular/câmera */}
-                <circle cx="24" cy="24" r="8" fill="white" opacity="0.9"/>
-                <circle cx="40" cy="24" r="8" fill="white" opacity="0.9"/>
-                <path d="M32 16 Q36 20 32 24 Q36 28 32 32" stroke="white" strokeWidth="2" fill="none" opacity="0.7"/>
-                
-                {/* Texto principal */}
-                <text 
-                  x="60" 
-                  y="20" 
-                  fill="white" 
-                  fontSize="12" 
-                  fontWeight="bold"
-                  fontFamily="Arial, sans-serif"
-                >
-                  DESCUBRA
-                </text>
-                <text 
-                  x="60" 
-                  y="35" 
-                  fill="white" 
-                  fontSize="10" 
-                  fontWeight="600"
-                  fontFamily="Arial, sans-serif"
-                >
-                  MATO GROSSO DO SUL
-                </text>
-              </svg>
               <img 
                 alt={config.logo.alt}
-                src={`${config.logo.src}?v=6`}
+                src={`${config.logo.src}?v=7`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                style={{ display: 'none', maxWidth: '100%', height: 'auto' }}
+                style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
                 loading="eager"
-                onLoad={() => console.log('✅ Logo carregada com sucesso no UniversalNavbar!')}
+                onLoad={() => console.log('✅ Logo PNG carregada com sucesso!')}
                 onError={(e) => {
-                  console.error('❌ Erro ao carregar logo no UniversalNavbar:', e);
+                  console.error('❌ Erro ao carregar logo PNG:', e);
+                  console.log('Tentando fallback...');
                   const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'block';
+                  target.src = '/images/logo-descubra-ms.png';
                 }}
               />
               <span 
