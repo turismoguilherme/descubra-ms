@@ -577,6 +577,3 @@ export type { EmotionalIntelligenceQuery, EmotionalIntelligenceResponse };
 
 
 
-
-
-

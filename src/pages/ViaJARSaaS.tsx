@@ -227,7 +227,7 @@ const ViaJARSaaS = () => {
               <div className="bg-gradient-to-br from-blue-300 to-cyan-400 p-12 flex items-center justify-center">
                 <div className="text-center">
                   <img 
-                    src="/images/logo-descubra-ms.png?v=5" 
+                    src="/images/logo-descubra-ms.png" 
                     alt="Descubra MS" 
                     className="h-24 w-auto mx-auto mb-6"
                   />

@@ -97,7 +97,7 @@ const UniversalFooter = () => {
           <div>
             <div className="flex items-center mb-3">
               <img 
-                src="/images/logo-descubra-ms.png?v=5" 
+                src="/images/logo-descubra-ms.png?v=3" 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-10 w-auto mr-3"
               />
