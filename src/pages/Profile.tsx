@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ const Profile = () => {
         .from('user_profiles')
         .insert({
           user_id: user?.id,
-          full_name: "",
+          full_name: user?.user_metadata?.full_name || "",
           bio: "",
           city: "",
           region: ""
@@ -95,15 +94,18 @@ const Profile = () => {
 
       setProfile(data);
       setFormData({
-        full_name: "",
-        bio: "",
-        city: "",
-        region: ""
+        full_name: data.full_name || "",
+        bio: data.bio || "",
+        city: data.city || "",
+        region: data.region || ""
       });
     } catch (error) {
       console.error('Error creating profile:', error);
-    } finally {
-      setLoading(false);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar perfil",
+        variant: "destructive",
+      });
     }
   };
 
@@ -124,10 +126,10 @@ const Profile = () => {
         description: "Perfil atualizado com sucesso!",
       });
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error saving profile:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar perfil",
+        description: "Erro ao salvar perfil",
         variant: "destructive",
       });
     } finally {
@@ -137,9 +139,11 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <UniversalLayout>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -151,64 +155,60 @@ const Profile = () => {
             <CardTitle>Meu Perfil</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="full_name">Nome Completo</Label>
-            <Input
-              id="full_name"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              placeholder="Seu nome completo"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Nome Completo</Label>
+              <Input
+                id="full_name"
+                value={formData.full_name}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                placeholder="Digite seu nome completo"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="bio">Biografia</Label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              placeholder="Conte um pouco sobre você"
-              rows={4}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="bio">Biografia</Label>
+              <Textarea
+                id="bio"
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                placeholder="Conte um pouco sobre você"
+                rows={4}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="city">Cidade</Label>
-            <Input
-              id="city"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              placeholder="Sua cidade"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                placeholder="Digite sua cidade"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="region">Região</Label>
-            <Input
-              id="region"
-              value={formData.region}
-              onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-              placeholder="Sua região"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="region">Região</Label>
+              <Input
+                id="region"
+                value={formData.region}
+                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                placeholder="Digite sua região"
+              />
+            </div>
 
-          <Button 
-            onClick={handleSave} 
-            disabled={saving}
-            className="w-full"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              "Salvar Perfil"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+            <Button onClick={handleSave} disabled={saving} className="w-full">
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Perfil"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </UniversalLayout>
   );
 };
