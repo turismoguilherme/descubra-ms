@@ -35,23 +35,9 @@ const UniversalNavbar = () => {
               <img 
                 key={`logo-${Date.now()}-${Math.random()}`}
                 alt={config.logo.alt}
-                src={`${config.logo.src}?v=${Date.now()}&cache=${Math.random()}&force=${Math.floor(Math.random() * 10000)}`}
-                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                style={{ 
-                  display: 'block', 
-                  maxWidth: '200px', 
-                  height: '48px',
-                  width: 'auto',
-                  objectFit: 'contain',
-                  zIndex: 1001,
-                  position: 'relative'
-                }}
+                src={`${config.logo.src}?v=3`}
+                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain"
                 loading="eager"
-                onLoad={() => {
-                  console.log('✅ Logo PNG carregada com sucesso!');
-                  console.log('🔍 URL da logo:', config.logo.src);
-                  console.log('🔍 Alt da logo:', config.logo.alt);
-                }}
                 onError={(e) => {
                   console.error('❌ Erro ao carregar logo PNG:', e);
                   console.log('Tentando fallback...');
