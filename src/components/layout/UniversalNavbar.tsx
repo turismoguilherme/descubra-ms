@@ -55,15 +55,21 @@ const UniversalNavbar = () => {
                 onError={(e) => {
                   console.error('❌ Erro ao carregar logo PNG:', e);
                   console.log('Tentando fallback...');
+=======
+                src={`${config.logo.src}?v=3`}
+                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
+                loading="eager"
+                onError={(e) => {
+>>>>>>> 7c1d201ccea65b421caabb2cf0b2cad2a9b890a9
                   const target = e.target as HTMLImageElement;
                   target.src = `/images/logo-descubra-ms.png?v=${Date.now()}&fallback=true`;
                 }}
               />
               <span 
-                className="text-lg font-bold text-ms-primary-blue"
+                className="hidden text-lg font-bold text-ms-primary-blue"
                 style={{ display: 'none' }}
               >
-                {isOverflowOne ? "OverFlow One" : "Descubra MS"}
+                {isOverflowOne ? "OverFlow One" : "Descubra Mato Grosso do Sul"}
               </span>
             </div>
           </Link>

@@ -64,15 +64,9 @@ const Navbar = () => {
             <div className="flex items-center">
               <img 
                 alt="Descubra Mato Grosso do Sul" 
-                src="/images/logo-descubra-ms.png?v=6" 
+                src="/images/logo-descubra-ms.png?v=3" 
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
                 loading="eager" 
-                onError={(e) => {
-                  console.error('Erro ao carregar logo:', e);
-                  e.currentTarget.src = '/images/logo-descubra-ms.png';
-                }}
-                onLoad={() => console.log('Logo carregada com sucesso!')}
               />
             </div>
           </Link>
