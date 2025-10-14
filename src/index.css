@@ -36,6 +36,19 @@
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
+/* Forçar cores corretas para páginas específicas */
+.partners-page {
+  background-color: #f9fafb !important; /* bg-gray-50 */
+}
+
+.partners-page h1 {
+  color: #1e40af !important; /* text-ms-primary-blue */
+}
+
+.partners-page p {
+  color: #4b5563 !important; /* text-gray-600 */
+}
+
 .ms-brand {
   --ms-primary-blue: 220 91% 29%;
   --ms-secondary-yellow: 48 96% 55%;
@@ -247,4 +260,53 @@ select:focus-visible {
   html {
     font-size: 18px;
   }
+}
+
+/* Correção específica para sobreposição de texto no hero - REMOVIDO */
+
+/* Debug: Forçar visibilidade do título correto - REMOVIDO */
+
+/* Correção para sobreposição do logo */
+nav {
+  z-index: 1000;
+  position: relative;
+}
+
+nav img {
+  z-index: 1001;
+  position: relative;
+  max-width: 200px;
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Garantir que o hero tenha z-index menor que o navbar */
+.hero-section {
+  z-index: 1;
+  position: relative;
+}
+
+
+/* Forçar reload da logo */
+nav img[alt*="Descubra"] {
+  content: none !important;
+  background-image: none !important;
+}
+
+
+
+
+
+
+footer h3, footer h4 {
+  position: relative !important;
+  z-index: 1 !important;
+  display: none !important;
+}
+
+/* Garantir que elementos do footer não apareçam sobre o hero */
+footer * {
+  position: relative !important;
+  z-index: 1 !important;
 }

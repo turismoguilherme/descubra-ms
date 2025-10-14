@@ -102,8 +102,8 @@ const UniversalFooter = () => {
                 className="h-10 w-auto mr-3"
               />
               <div>
-                <h3 className="text-lg font-bold text-white">DESCUBRA</h3>
-                <h4 className="text-sm font-semibold text-white">MATO GROSSO DO SUL</h4>
+                <h3 className="text-lg font-bold text-white" style={{ position: 'relative', zIndex: 1, display: 'none' }}>DESCUBRA</h3>
+                <h4 className="text-sm font-semibold text-white" style={{ position: 'relative', zIndex: 1, display: 'none' }}>MATO GROSSO DO SUL</h4>
               </div>
             </div>
             <p className="text-blue-100 text-sm mb-4">

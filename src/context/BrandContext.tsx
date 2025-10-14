@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useMultiTenant } from '../hooks/useMultiTenant';
-import logoDescubraMS from '@/assets/images/logo-descubra-ms.png';
+import logoDescubraMS from '@/assets/images/logo-descubra-ms-v2.png';
 
 export interface BrandConfig {
   brand: 'ms' | 'overflow-one';
@@ -78,6 +78,7 @@ const msConfig: BrandConfig = {
     { name: 'Destinos', path: '/ms/destinos' },
     { name: 'Eventos', path: '/ms/eventos' },
     { name: 'Parceiros', path: '/ms/parceiros' },
+    { name: 'Sobre', path: '/ms/sobre' },
     { name: 'Entrar', path: '/ms/login' }
   ],
   authenticatedNavigation: [

@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { Users } from "lucide-react";
 
 const Partners = () => {
-    console.log("🤝 PARTNERS: Componente Partners sendo renderizado");
+    console.log("🤝 PARTNERS: Componente Partners sendo renderizado - CACHE FORCE RELOAD");
     
     const { partners, isLoading, error } = usePartners('approved');
     const [search, setSearch] = useState('');

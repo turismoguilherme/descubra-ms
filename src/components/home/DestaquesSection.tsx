@@ -30,6 +30,8 @@ const destinos = [
 ];
 
 const DestaquesSection = () => {
+  console.log("🌟 DESTAQUES: Componente sendo renderizado");
+  
   const handleDestinationClick = (destino: { id: number; nome: string }) => {
     InteractionTracker.track({
       interaction_type: 'destination_click',

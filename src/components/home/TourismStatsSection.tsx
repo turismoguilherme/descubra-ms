@@ -176,29 +176,6 @@ const TourismStatsSection = ({ data }: TourismStatsSectionProps) => {
           </div>
         </div>
 
-        {/* Destaques dos Interesses */}
-        <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold text-ms-primary-blue mb-2">Principais Interesses Turísticos</h3>
-            <p className="text-gray-600">Categorias mais procuradas pelos visitantes</p>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            {safeData.interests?.map((interest, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-6 py-3 rounded-full text-sm font-semibold bg-gradient-to-r from-ms-pantanal-green/10 to-ms-discovery-teal/10 text-ms-primary-blue border border-ms-pantanal-green/20 hover:from-ms-pantanal-green/20 hover:to-ms-discovery-teal/20 transition-all duration-300 hover:scale-105"
-              >
-                {interest.name} ({interest.percentage}%)
-              </span>
-            )) || (
-              <div className="text-center w-full py-8">
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <p className="text-gray-500 text-lg">Nenhum interesse registrado</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </section>
   );

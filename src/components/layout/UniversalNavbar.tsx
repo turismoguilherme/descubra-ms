@@ -26,24 +26,37 @@ const UniversalNavbar = () => {
   const authenticatedNavigationItems = useMemo(() => config.authenticatedNavigation, [config.authenticatedNavigation]);
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 relative z-50">
+    <nav className="bg-white shadow-sm border-b border-gray-200 relative" style={{ zIndex: 1000 }}>
       <div className="ms-container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to={isOverflowOne ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img 
+                key={`logo-${Date.now()}-${Math.random()}`}
                 alt={config.logo.alt}
-                src={`${config.logo.src}?v=7`}
+                src={`${config.logo.src}?v=${Date.now()}&cache=${Math.random()}&force=${Math.floor(Math.random() * 10000)}`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+                style={{ 
+                  display: 'block', 
+                  maxWidth: '200px', 
+                  height: '48px',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  zIndex: 1001,
+                  position: 'relative'
+                }}
                 loading="eager"
-                onLoad={() => console.log('✅ Logo PNG carregada com sucesso!')}
+                onLoad={() => {
+                  console.log('✅ Logo PNG carregada com sucesso!');
+                  console.log('🔍 URL da logo:', config.logo.src);
+                  console.log('🔍 Alt da logo:', config.logo.alt);
+                }}
                 onError={(e) => {
                   console.error('❌ Erro ao carregar logo PNG:', e);
                   console.log('Tentando fallback...');
                   const target = e.target as HTMLImageElement;
-                  target.src = '/images/logo-descubra-ms.png';
+                  target.src = `/images/logo-descubra-ms.png?v=${Date.now()}&fallback=true`;
                 }}
               />
               <span 
