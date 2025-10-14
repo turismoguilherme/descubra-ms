@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import UniversalLayout from "@/components/layout/UniversalLayout";
 
 interface Profile {
   id: string;
@@ -143,12 +144,13 @@ const Profile = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Meu Perfil</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <UniversalLayout>
+      <div className="container mx-auto py-8 px-4">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Meu Perfil</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="full_name">Nome Completo</Label>
             <Input
@@ -207,6 +209,7 @@ const Profile = () => {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 };
 

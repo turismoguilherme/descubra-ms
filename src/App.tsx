@@ -46,6 +46,7 @@ import GuataTest from "@/pages/GuataTest";
 import EventosMS from "@/pages/ms/EventosMS";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import DestinoDetalhes from "@/pages/DestinoDetalhes";
+import Profile from "@/pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,7 @@ function App() {
                             <Route path="/ms/guata" element={<Guata />} />
                             <Route path="/ms/guata-test" element={<GuataTest />} />
                             <Route path="/ms/passaporte" element={<PassaporteLista />} />
+                            <Route path="/ms/profile" element={<Profile />} />
                             <Route path="/ms/*" element={<MSIndex />} />
                             
                             {/* Fallback */}
