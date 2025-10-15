@@ -1,494 +1,353 @@
-# Documentação Completa - Descubra Mato Grosso do Sul
+# 📚 DOCUMENTAÇÃO COMPLETA - DESCUBRA MATO GROSSO DO SUL
 
-## 📋 Índice
+## 🎯 **VISÃO GERAL DA PLATAFORMA**
 
-1. [Visão Geral](#visão-geral)
-2. [Estrutura da Aplicação](#estrutura-da-aplicação)
-3. [Layout e Componentes](#layout-e-componentes)
-4. [Sistema de Navegação](#sistema-de-navegação)
-5. [Guatá IA - Sistema Completo](#guatá-ia---sistema-completo)
-6. [Cores e Branding](#cores-e-branding)
-7. [Páginas e Funcionalidades](#páginas-e-funcionalidades)
-8. [Sistema de Proteção](#sistema-de-proteção)
-9. [Restauração de Emergência](#restauração-de-emergência)
-10. [Troubleshooting](#troubleshooting)
+O **Descubra Mato Grosso do Sul** é uma plataforma de turismo inteligente que conecta visitantes com as belezas naturais, culturais e históricas do estado de Mato Grosso do Sul. A plataforma integra inteligência artificial, gamificação e educação ambiental para criar uma experiência única de descoberta.
 
 ---
 
-## 🎯 Visão Geral
+## 🏗️ **ARQUITETURA E ESTRUTURA**
 
-O **Descubra Mato Grosso do Sul** é uma plataforma de turismo inteligente que integra:
-- **Sistema de IA Guatá** - Assistente virtual especializado em turismo
-- **Passaporte Digital** - Sistema de gamificação para turistas
-- **Gestão de Destinos** - Catálogo completo de atrativos turísticos
-- **Sistema Multi-tenant** - Suporte a diferentes marcas (MS e ViaJAR)
+### **Tecnologias Utilizadas:**
+- **Frontend:** React 18 + TypeScript + Vite
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Backend:** Supabase (PostgreSQL + Auth + Storage)
+- **IA:** Gemini API + Edge Functions
+- **Deploy:** Vercel + Supabase Cloud
 
----
-
-## 🏗️ Estrutura da Aplicação
-
-### **Arquitetura Principal**
+### **Estrutura de Pastas:**
 ```
 src/
-├── components/
-│   ├── layout/           # Componentes de layout
-│   ├── home/            # Componentes da página inicial
-│   ├── auth/            # Autenticação
-│   └── ui/              # Componentes de interface
-├── pages/
-│   ├── MSIndex.tsx      # Página inicial MS
-│   ├── Guata.tsx        # Página do Guatá
-│   ├── Destinos.tsx     # Página de destinos
-│   └── ms/              # Páginas específicas MS
-├── context/
-│   ├── BrandContext.tsx # Contexto de marca
-│   └── TourismDataContext.tsx
-├── hooks/
-│   ├── useAuth.ts       # Hook de autenticação
-│   ├── useGuata*.ts     # Hooks do Guatá
-│   └── useTourismData.tsx
-├── services/
-│   ├── ai/              # Serviços de IA
-│   └── tourism/         # Serviços de turismo
-└── utils/
-    ├── guataLayoutProtection.ts
-    └── guataTimeout.ts
-```
-
-### **Roteamento Principal**
-```typescript
-// Rotas MS (App.tsx)
-<Route path="/ms" element={<MSIndex />} />
-<Route path="/ms/login" element={<Login />} />
-<Route path="/ms/register" element={<Register />} />
-<Route path="/ms/destinos" element={<Destinos />} />
-<Route path="/ms/destinos/:id" element={<DestinoDetalhes />} />
-<Route path="/ms/eventos" element={<EventosMS />} />
-<Route path="/ms/parceiros" element={<Partners />} />
-<Route path="/ms/guata" element={<Guata />} />
-<Route path="/ms/passaporte" element={<PassaporteLista />} />
+├── components/          # Componentes reutilizáveis
+│   ├── layout/         # Layouts universais
+│   ├── home/           # Seções da página inicial
+│   ├── guata/          # Componentes do Guatá IA
+│   ├── profile/        # Sistema de perfil e avatares
+│   └── ui/             # Componentes de interface
+├── pages/              # Páginas da aplicação
+│   ├── ms/             # Páginas específicas do MS
+│   └── ...             # Outras páginas
+├── hooks/              # Hooks customizados
+├── services/           # Serviços e APIs
+└── context/            # Contextos React
 ```
 
 ---
 
-## 🎨 Layout e Componentes
+## 🏠 **PÁGINA INICIAL (MSIndex.tsx)**
 
-### **1. UniversalLayout**
-**Arquivo**: `src/components/layout/UniversalLayout.tsx`
-- **Função**: Layout principal que envolve todas as páginas
-- **Componentes**: UniversalNavbar + UniversalFooter + children
-- **Responsivo**: Adapta-se a diferentes tamanhos de tela
+### **Funcionalidades:**
+- **Hero Section:** Apresentação visual impactante do MS
+- **Estatísticas de Turismo:** Dados em tempo real sobre visitantes
+- **Seção de Destaques:** Principais atrativos do estado
+- **Experiências:** Categorias de turismo disponíveis
+- **CATs:** Centros de Atendimento ao Turista
 
-### **2. UniversalNavbar**
-**Arquivo**: `src/components/layout/UniversalNavbar.tsx`
-- **Logo**: Logo dinâmica baseada no contexto de marca
-- **Menu**: Navegação adaptativa (público/autenticado)
-- **Botões**: "Entrar" e "Cadastrar" com links corretos
-- **Responsivo**: Menu hambúrguer em mobile
+### **Componentes Integrados:**
+- `UniversalHero`: Cabeçalho principal com CTA
+- `TourismStatsSection`: Métricas de turismo
+- `DestaquesSection`: Principais destinos
+- `ExperienceSection`: Tipos de experiência
+- `CatsSection`: Centros de atendimento
 
-### **3. UniversalHero**
-**Arquivo**: `src/components/layout/UniversalHero.tsx`
-- **Fundo**: Gradiente `from-blue-600 via-teal-600 to-green-600`
-- **Conteúdo**: Título, subtítulo e 3 botões de ação
-- **Botões**:
-  - "Descubra Agora" → `/ms/welcome`
-  - "Passaporte Digital" → `/ms/passaporte`
-  - "Converse com o Guatá" → `/ms/guata`
-
-### **4. Seções da Página Inicial**
-
-#### **TourismDescription**
-**Arquivo**: `src/components/home/TourismDescription.tsx`
-- **Fundo**: Gradiente igual ao cadastro
-- **Conteúdo**: Descrição da plataforma
-- **Botão**: "Cadastre-se" → `/ms/register`
-
-#### **TourismStatsSection**
-**Arquivo**: `src/components/home/TourismStatsSection.tsx`
-- **Fundo**: `from-ms-primary-blue/5 via-white to-ms-pantanal-green/5`
-- **Conteúdo**: Estatísticas de turismo com gráficos
-- **Dados**: Visitantes, crescimento, interesses, origens
-
-#### **DestaquesSection**
-**Arquivo**: `src/components/home/DestaquesSection.tsx`
-- **Conteúdo**: Destinos em destaque
-- **Link**: "Ver Todos os Destinos" → `/ms/destinos`
-
-#### **ExperienceSection**
-**Arquivo**: `src/components/home/ExperienceSection.tsx`
-- **Conteúdo**: Experiências completas
-- **Design**: Cards com gradientes e animações
-
-#### **CatsSection**
-**Arquivo**: `src/components/home/CatsSection.tsx`
-- **Conteúdo**: Centros de Atendimento ao Turista
-- **Design**: Cards centralizados com ícones
+### **Visual:**
+- Design responsivo com gradientes azul/verde
+- Animações suaves e transições
+- Cards interativos com hover effects
+- Layout mobile-first
 
 ---
 
-## 🧭 Sistema de Navegação
+## 🗺️ **DESTINOS (Destinos.tsx)**
 
-### **Menu Principal (Navbar)**
-```typescript
-// Navegação pública
-navigation: [
-  { name: 'Destinos', path: '/ms/destinos' },
-  { name: 'Eventos', path: '/ms/eventos' },
-  { name: 'Parceiros', path: '/ms/parceiros' },
-  { name: 'Entrar', path: '/ms/login' }
-]
+### **Funcionalidades:**
+- **Catálogo Completo:** Lista de todos os destinos do MS
+- **Filtros por Categoria:** Ecoturismo, Rural, Pesca, Cultural, Aventura
+- **Busca Inteligente:** Pesquisa por nome, localização, categoria
+- **Detalhes Completos:** Informações detalhadas de cada destino
+- **Integração com Supabase:** Dados dinâmicos do banco
 
-// Navegação autenticada
-authenticatedNavigation: [
-  { name: 'Home', path: '/ms' },
-  { name: 'Guatá IA', path: '/ms/guata' },
-  { name: 'Passaporte Digital', path: '/ms/passaporte' }
-]
-```
+### **Categorias Disponíveis:**
+1. **Ecoturismo** 🌿 - Pantanal, Bonito, Serra da Bodoquena
+2. **Turismo Rural** 🏔️ - Fazendas, Pousadas rurais
+3. **Pesca Esportiva** 🎣 - Rio Paraguai, Aquidauana
+4. **Turismo Cultural** 🏛️ - Museus, Centros históricos
+5. **Aventura** ⭐ - Rafting, Rapel, Trilhas
 
-### **Sistema de Branding**
-**Arquivo**: `src/context/BrandContext.tsx`
-- **Detecção automática** de tenant baseada na URL
-- **Configuração MS**: Cores, logo, textos específicos
-- **Configuração ViaJAR**: Configuração alternativa
-- **Logo dinâmica**: `/images/logo-descubra-ms.png?v=3`
+### **Visual:**
+- Grid responsivo de cards
+- Filtros com ícones intuitivos
+- Imagens de alta qualidade
+- Sistema de badges para categorias
+- Loading states e skeletons
 
 ---
 
-## 🤖 Guatá IA - Sistema Completo
+## 🤖 **GUATÁ - ASSISTENTE IA (Guata.tsx)**
 
-### **Arquitetura do Guatá**
+### **Funcionalidades:**
+- **Chat Inteligente:** Conversação natural sobre turismo no MS
+- **Base de Conhecimento:** 1000+ pontos de interesse
+- **Pesquisa Web:** Informações atualizadas em tempo real
+- **Personalização:** Adapta respostas ao perfil do usuário
+- **Múltiplas Linguagens:** Português, Inglês, Espanhol
 
-#### **1. Página Principal**
-**Arquivo**: `src/pages/Guata.tsx`
-- **Layout**: UniversalLayout (navbar + footer)
-- **Estados**: Loading, erro, modo convidado
-- **Timeout**: 3s para autenticação, 5s para inicialização
-- **Fallback**: Modo convidado se autenticação falhar
+### **Capacidades do Guatá:**
+- **Recomendações Personalizadas:** Baseadas em preferências
+- **Informações Turísticas:** Horários, preços, localizações
+- **Histórico Cultural:** Contexto histórico dos locais
+- **Dicas Práticas:** O que levar, melhor época, etc.
+- **Integração com Passaporte:** Sugere rotas baseadas no interesse
 
-#### **2. Hooks Especializados**
-
-##### **useGuataConnection**
-**Arquivo**: `src/hooks/useGuataConnection.ts`
-- **Função**: Verifica conexão com API do Guatá
-- **Timeout**: 5 segundos
-- **Retry**: 3 tentativas
-
-##### **useGuataConversation**
-**Arquivo**: `src/hooks/useGuataConversation.ts`
-- **Função**: Gerencia conversas com o Guatá
-- **Mensagens**: Envio e recebimento
-- **Estado**: Loading, erro, sucesso
-
-##### **useGuataMessages**
-**Arquivo**: `src/hooks/useGuataMessages.ts`
-- **Função**: Gerencia histórico de mensagens
-- **Persistência**: LocalStorage
-- **Limpeza**: Auto-limpeza de mensagens antigas
-
-#### **3. Serviços de IA**
-
-##### **Knowledge Base**
-**Arquivo**: `src/services/ai/knowledge/guataKnowledgeBase.ts`
-- **Conteúdo**: Base de conhecimento sobre MS
-- **Tópicos**: Turismo, cultura, geografia, história
-- **Atualização**: Manual via arquivo
-
-##### **AI Service**
-**Arquivo**: `src/services/ai/index.ts`
-- **Função**: Orquestra todos os serviços de IA
-- **Integração**: Conecta hooks e serviços
-- **Fallback**: Respostas padrão se API falhar
-
-#### **4. Sistema de Timeout**
-**Arquivo**: `src/utils/guataTimeout.ts`
-```typescript
-export const GUATA_TIMEOUTS = {
-  AUTH_LOADING: 3000,      // 3s para carregar auth
-  INITIALIZATION: 5000,    // 5s para inicializar
-  CONNECTION_CHECK: 5000,  // 5s para verificar conexão
-  MESSAGE_SEND: 10000,     // 10s para enviar mensagem
-  COMPONENT_LOAD: 3000     // 3s para carregar componente
-};
-```
-
-#### **5. Proteção de Layout**
-**Arquivo**: `src/utils/guataLayoutProtection.ts`
-- **Função**: Protege layout do Guatá contra alterações
-- **Backup**: Cria backup automático
-- **Restauração**: Restaura layout original se necessário
-- **Verificação**: Valida integridade do componente
-
-### **Estados do Guatá**
-
-#### **1. Carregamento Inicial**
-```typescript
-const [isInitializing, setIsInitializing] = useState(true);
-const [initializationError, setInitializationError] = useState<string | null>(null);
-const [retryCount, setRetryCount] = useState(0);
-```
-
-#### **2. Autenticação**
-```typescript
-const [isGuestMode, setIsGuestMode] = useState(false);
-const [authTimeout, setAuthTimeout] = useState(false);
-```
-
-#### **3. Conversa**
-```typescript
-const [messages, setMessages] = useState<Message[]>([]);
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
-```
-
-### **Interface do Guatá**
-
-#### **Tela de Carregamento**
-- **Spinner**: Animação de carregamento
-- **Mensagem**: "Inicializando Guatá..."
-- **Timeout**: Opção de continuar como convidado
-
-#### **Tela de Erro**
-- **Mensagem**: Erro específico
-- **Botão**: "Tentar Novamente"
-- **Fallback**: "Continuar como Convidado"
-
-#### **Modo Convidado**
-- **Banner**: Aviso de modo limitado
-- **Funcionalidade**: Chat básico sem persistência
-
-#### **Chat Principal**
-- **Input**: Campo de texto com placeholder
-- **Mensagens**: Histórico com scroll
-- **Typing**: Indicador de digitação
-- **Envio**: Enter ou botão
+### **Visual:**
+- Interface de chat moderna
+- Avatar animado da capivara Guatá
+- Mensagens com timestamps
+- Sugestões de perguntas
+- Indicadores de digitação
+- Sistema de feedback
 
 ---
 
-## 🎨 Cores e Branding
+## 📅 **EVENTOS (EventosMS.tsx)**
 
-### **Cores Principais MS**
-**Arquivo**: `src/index.css`
-```css
-:root {
-  --ms-primary-blue: 220 91% 29%;
-  --ms-secondary-yellow: 48 96% 55%;
-  --ms-pantanal-green: 140 65% 42%;
-  --ms-cerrado-orange: 24 95% 53%;
-  --ms-discovery-teal: 180 84% 32%;
-  --ms-earth-brown: 30 45% 35%;
-  --ms-sky-blue: 210 100% 70%;
-  --ms-nature-green-light: 140 50% 75%;
-  --ms-guavira-purple: 280 65% 50%;
-  --ms-rivers-blue: 200 85% 45%;
-  --ms-accent-orange: 25 100% 60%;
-}
-```
+### **Funcionalidades:**
+- **Calendário de Eventos:** Eventos culturais, festivais, shows
+- **Filtros por Data:** Eventos por mês/ano
+- **Categorização:** Cultura, Esporte, Gastronomia, Religioso
+- **Integração Externa:** APIs de eventos governamentais
+- **Sistema de Favoritos:** Salvar eventos de interesse
 
-### **Gradientes Padrão**
-- **Hero**: `from-blue-600 via-teal-600 to-green-600`
-- **Descrição**: `from-blue-600 via-teal-600 to-green-600`
-- **Estatísticas**: `from-ms-primary-blue/5 via-white to-ms-pantanal-green/5`
+### **Tipos de Eventos:**
+- **Culturais:** Festivais, shows, exposições
+- **Esportivos:** Competições, maratonas
+- **Gastronômicos:** Festivais de comida, degustações
+- **Religiosos:** Festas tradicionais, romarias
+- **Ecológicos:** Eventos de sustentabilidade
+
+### **Visual:**
+- Layout de calendário
+- Cards com imagens dos eventos
+- Filtros laterais
+- Sistema de busca
+- Integração com mapas
 
 ---
 
-## 📄 Páginas e Funcionalidades
+## 🎫 **PASSAPORTE DIGITAL (PassaporteLista.tsx)**
 
-### **1. Página Inicial (MSIndex)**
-**Arquivo**: `src/pages/MSIndex.tsx`
-- **Componentes**: Hero + Descrição + Estatísticas + Destaques + Experiências + CATs
-- **Dados**: Mock data para evitar loading infinito
-- **Responsivo**: Adapta-se a todos os dispositivos
+### **Funcionalidades:**
+- **Rotas Temáticas:** Trilhas pré-definidas pelo MS
+- **Sistema de Check-ins:** Marcação de locais visitados
+- **Gamificação:** Pontos, conquistas, rankings
+- **Progresso Visual:** Barras de progresso e mapas
+- **Certificados Digitais:** Conquistas compartilháveis
 
-### **2. Página de Destinos**
-**Arquivo**: `src/pages/Destinos.tsx`
-- **Layout**: Grid responsivo de cards
-- **Filtros**: Por categoria e região
-- **Links**: Para páginas de detalhes
-- **Design**: Cards com hover effects
+### **Rotas Disponíveis:**
+1. **Rota do Pantanal** 🐊 - Biodiversidade e vida selvagem
+2. **Rota de Bonito** 💎 - Águas cristalinas e cachoeiras
+3. **Rota Cultural** 🏛️ - História e tradições
+4. **Rota Gastronômica** 🍽️ - Sabores regionais
+5. **Rota de Aventura** ⛰️ - Esportes radicais
 
-### **3. Página de Detalhes do Destino**
-**Arquivo**: `src/pages/DestinoDetalhes.tsx`
-- **Rota**: `/ms/destinos/:id`
-- **Dados**: Mock data com fallback
-- **Conteúdo**: Descrição, vídeo, fotos
-- **Navegação**: Voltar para destinos
+### **Sistema de Gamificação:**
+- **Pontos:** Por cada local visitado
+- **Conquistas:** Badges especiais
+- **Rankings:** Comparação com outros usuários
+- **Certificados:** Documentos digitais de conclusão
 
-### **4. Página de Eventos**
-**Arquivo**: `src/pages/ms/EventosMS.tsx`
-- **Conteúdo**: Calendário de eventos
-- **Dados**: Mock data
-- **Filtros**: Por data e categoria
-
-### **5. Página de Parceiros**
-**Arquivo**: `src/pages/Partners.tsx`
-- **Conteúdo**: Lista de parceiros
-- **Categorias**: Diferentes tipos de parceiros
-- **Contato**: Informações de contato
+### **Visual:**
+- Cards de rotas com progresso
+- Mapas interativos
+- Sistema de badges
+- Barras de progresso animadas
+- Certificados digitais
 
 ---
 
-## 🛡️ Sistema de Proteção
+## 👤 **SISTEMA DE PERFIL (ProfilePageFixed.tsx)**
 
-### **1. Proteção do Layout Guatá**
-**Arquivo**: `src/utils/guataLayoutProtection.ts`
-```typescript
-export const protectGuataLayout = () => {
-  // Cria backup do layout atual
-  // Monitora alterações
-  // Restaura se necessário
-};
-```
+### **Funcionalidades Principais:**
 
-### **2. Scripts de Restauração**
-- **restore_guata_layout.bat**: Restaura layout do Guatá
-- **verify_guata_layout.bat**: Verifica integridade
-- **test_guata_protection.bat**: Testa proteção
+#### **1. Seleção de Avatar do Pantanal**
+- **5 Animais Disponíveis:** Onça-pintada, Arara-azul, Capivara, Tuiuiú, Jacaré
+- **Sistema de Raridade:** Comum, Raro, Épico, Lendário
+- **Personalidade dos Animais:** Traços que refletem o usuário
+- **Educação Ambiental:** Informações sobre conservação
 
-### **3. Backups Automáticos**
-- **Guata.tsx.backup**: Backup do componente principal
-- **Verificação contínua**: Monitora alterações
-- **Restauração automática**: Se detectar problemas
+#### **2. Sistema de Conquistas**
+- **Progresso Visual:** Barras de progresso personalizadas
+- **Categorias:** Exploração, Educação, Social, Especial
+- **Recompensas:** Novos avatares, badges, certificados
+- **Histórico:** Timeline de conquistas
 
----
+#### **3. Quiz Educativo**
+- **5 Perguntas:** Sobre biodiversidade do Pantanal
+- **Categorias:** Conservação, Fauna, Geografia, Turismo
+- **Sistema de Pontuação:** 0-100% com explicações
+- **Recompensas:** Desbloqueio de avatares especiais
 
-## 🔧 Restauração de Emergência
+#### **4. Abas do Perfil:**
+- **Perfil:** Informações pessoais e avatar atual
+- **Conquistas:** Sistema de gamificação
+- **Quiz:** Educação ambiental interativa
+- **Animais:** Catálogo de avatares disponíveis
+- **Histórico:** Timeline de atividades
 
-### **1. Restaurar Layout do Guatá**
-```bash
-# Executar script de restauração
-./restore_guata_layout.bat
-
-# Verificar integridade
-./verify_guata_layout.bat
-```
-
-### **2. Restaurar Cores e Branding**
-```bash
-# Restaurar cores MS
-git checkout HEAD -- src/index.css
-
-# Restaurar contexto de marca
-git checkout HEAD -- src/context/BrandContext.tsx
-```
-
-### **3. Restaurar Estrutura Completa**
-```bash
-# Restaurar todos os componentes
-git checkout HEAD -- src/components/
-git checkout HEAD -- src/pages/
-git checkout HEAD -- src/hooks/
-```
-
-### **4. Verificar Funcionamento**
-```bash
-# Testar aplicação
-npm run dev
-
-# Verificar logs
-npm run build
-```
+### **Visual:**
+- Design responsivo com gradientes
+- Cards interativos com animações
+- Sistema de badges coloridos
+- Modais informativos
+- Layout mobile-first
 
 ---
 
-## 🚨 Troubleshooting
+## 🎨 **SISTEMA DE DESIGN**
 
-### **Problemas Comuns**
+### **Paleta de Cores:**
+- **Primária:** Azul MS (#1E40AF)
+- **Secundária:** Verde Pantanal (#059669)
+- **Acentos:** Amarelo Ouro (#F59E0B)
+- **Neutros:** Cinza (#6B7280)
 
-#### **1. Loading Infinito**
-- **Causa**: TourismDataProvider com React Query
-- **Solução**: Usar dados mock no MSIndex
-- **Prevenção**: Evitar dependências complexas
+### **Tipografia:**
+- **Títulos:** Inter Bold
+- **Corpo:** Inter Regular
+- **Destaques:** Inter SemiBold
 
-#### **2. Tela Branca**
-- **Causa**: Erro de renderização (objetos como children)
-- **Solução**: Verificar renderização de arrays/objetos
-- **Debug**: Console do navegador
-
-#### **3. Guatá Não Carrega**
-- **Causa**: Timeout de autenticação
-- **Solução**: Modo convidado ou retry
-- **Configuração**: Ajustar timeouts
-
-#### **4. Cores Não Aplicam**
-- **Causa**: Variáveis CSS não definidas
-- **Solução**: Verificar src/index.css
-- **Aplicação**: Reiniciar servidor
-
-### **Logs de Debug**
-```typescript
-// Ativar logs detalhados
-console.log("🚀 APP: Componente App sendo renderizado");
-console.log("🧭 NAVBAR: Componente UniversalNavbar sendo renderizado");
-console.log("🏗️ UNIVERSAL LAYOUT: Renderizando layout universal");
-```
+### **Componentes UI:**
+- **Cards:** Sombras suaves, bordas arredondadas
+- **Botões:** Estados hover, disabled, loading
+- **Formulários:** Validação em tempo real
+- **Modais:** Overlay com animações
+- **Navegação:** Breadcrumbs, tabs, menus
 
 ---
 
-## 📚 Arquivos de Documentação
+## 🔧 **FUNCIONALIDADES TÉCNICAS**
 
-### **Documentação Técnica**
-- `CORRECAO_LOADING_INFINITO.md` - Correção de loading infinito
-- `CORRECAO_ERRO_OBJETOS_REACT.md` - Correção de erros de renderização
-- `ALTERACAO_CORES_HERO_CADASTRO.md` - Harmonização de cores
-- `CORRECAO_BOTAO_E_CORES_DESCRICAO.md` - Correção de botões e cores
-- `SISTEMA_PROTECAO_LAYOUT_GUATA.md` - Sistema de proteção
+### **Autenticação:**
+- **Supabase Auth:** Login/registro seguro
+- **RLS (Row Level Security):** Proteção de dados
+- **Sessões:** Timeout automático
+- **Perfis:** Dados personalizados
 
-### **Documentação de Funcionalidades**
-- `GUATA_IA_INTELIGENTE_IMPLEMENTADA.md` - Sistema Guatá
-- `SISTEMA_VIAJAR_FUNCIONANDO.md` - Sistema ViaJAR
-- `IMPLEMENTACAO_MULTI_TENANT_CONCLUIDA.md` - Multi-tenant
+### **Performance:**
+- **Lazy Loading:** Componentes sob demanda
+- **Code Splitting:** Otimização de bundle
+- **Caching:** Dados em cache local
+- **PWA Ready:** Funciona offline
 
----
-
-## 🎯 Resumo de Funcionamento
-
-### **Fluxo Principal**
-1. **Usuário acessa** `/ms`
-2. **BrandContext** detecta tenant MS
-3. **UniversalLayout** carrega com navbar MS
-4. **MSIndex** renderiza seções da página inicial
-5. **Navegação** para outras páginas via navbar
-6. **Guatá** disponível via `/ms/guata`
-
-### **Sistema de Cores**
-- **Consistente** em todas as seções
-- **Gradiente padrão**: `blue-600 → teal-600 → green-600`
-- **Variáveis CSS** definidas em `:root`
-- **Tailwind** aplica cores automaticamente
-
-### **Sistema Guatá**
-- **Protegido** contra alterações acidentais
-- **Timeout** configurável para diferentes operações
-- **Fallback** para modo convidado
-- **Persistência** de mensagens no localStorage
-
-### **Responsividade**
-- **Mobile-first** design
-- **Breakpoints** Tailwind padrão
-- **Componentes** adaptativos
-- **Navegação** hambúrguer em mobile
+### **Responsividade:**
+- **Mobile First:** Design otimizado para mobile
+- **Breakpoints:** sm, md, lg, xl, 2xl
+- **Touch Friendly:** Elementos tácteis
+- **Acessibilidade:** WCAG 2.1 AA
 
 ---
 
-## 🔄 Manutenção e Atualizações
+## 🚀 **ROTAS E NAVEGAÇÃO**
 
-### **Verificações Regulares**
-1. **Testar** todas as páginas principais
-2. **Verificar** funcionamento do Guatá
-3. **Validar** cores e branding
-4. **Confirmar** responsividade
+### **Rotas Principais:**
+- `/ms` - Página inicial do Descubra MS
+- `/ms/destinos` - Catálogo de destinos
+- `/ms/guata` - Assistente IA
+- `/ms/eventos` - Calendário de eventos
+- `/ms/passaporte` - Passaporte digital
+- `/ms/profile` - Perfil do usuário
 
-### **Backup Contínuo**
-1. **Commits** regulares no Git
-2. **Backups** automáticos dos componentes críticos
-3. **Documentação** sempre atualizada
-4. **Scripts** de restauração testados
+### **Navegação:**
+- **Header Universal:** Logo, menu, autenticação
+- **Footer:** Links, redes sociais, contato
+- **Breadcrumbs:** Navegação contextual
+- **Menu Mobile:** Hamburger responsivo
 
 ---
 
-**📝 Esta documentação deve ser mantida sempre atualizada e serve como referência completa para restaurar a funcionalidade do Descubra Mato Grosso do Sul em caso de problemas.**
+## 📊 **INTEGRAÇÕES**
 
+### **APIs Externas:**
+- **Gemini AI:** Inteligência artificial
+- **Unsplash:** Imagens de alta qualidade
+- **Google Maps:** Localização e rotas
+- **APIs Governamentais:** Dados oficiais
 
+### **Supabase:**
+- **Database:** PostgreSQL
+- **Auth:** Autenticação
+- **Storage:** Arquivos e imagens
+- **Edge Functions:** Lógica serverless
 
+---
 
+## 🎯 **OBJETIVOS EDUCACIONAIS**
+
+### **Consciência Ambiental:**
+- **Biodiversidade:** Conhecimento sobre fauna/flora
+- **Conservação:** Ações de preservação
+- **Sustentabilidade:** Turismo responsável
+- **Educação:** Quiz e informações
+
+### **Gamificação:**
+- **Engajamento:** Sistema de pontos
+- **Aprendizado:** Conquistas educativas
+- **Social:** Compartilhamento de conquistas
+- **Progressão:** Desbloqueio de conteúdo
+
+---
+
+## 🔮 **ROADMAP FUTURO**
+
+### **Fase 1 - Implementada ✅**
+- Sistema de perfil com avatares
+- Quiz educativo
+- Sistema de conquistas
+- Interface responsiva
+
+### **Fase 2 - Planejada 🚧**
+- Integração com Alumia API
+- Dados reais de turismo
+- Relatórios personalizados
+- Sistema de recomendações
+
+### **Fase 3 - Futuro 🔮**
+- Realidade aumentada
+- Integração com IoT
+- Análise preditiva
+- Marketplace de experiências
+
+---
+
+## 📱 **EXPERIÊNCIA DO USUÁRIO**
+
+### **Jornada do Usuário:**
+1. **Descoberta:** Página inicial atrativa
+2. **Exploração:** Navegação pelos destinos
+3. **Interação:** Chat com Guatá IA
+4. **Personalização:** Criação do perfil
+5. **Gamificação:** Sistema de conquistas
+6. **Educação:** Quiz e aprendizado
+7. **Compartilhamento:** Rede social
+
+### **Valor Agregado:**
+- **Educação Ambiental:** Consciência ecológica
+- **Turismo Inteligente:** Recomendações personalizadas
+- **Gamificação:** Engajamento e diversão
+- **Acessibilidade:** Interface inclusiva
+- **Performance:** Carregamento rápido
+
+---
+
+## 🏆 **DIFERENCIAIS COMPETITIVOS**
+
+1. **IA Integrada:** Guatá como assistente personalizado
+2. **Gamificação:** Sistema de conquistas único
+3. **Educação Ambiental:** Foco na sustentabilidade
+4. **Design Responsivo:** Experiência mobile-first
+5. **Dados Reais:** Integração com APIs governamentais
+6. **Comunidade:** Sistema social integrado
+
+---
+
+*Esta documentação é atualizada continuamente conforme novas funcionalidades são implementadas na plataforma Descubra Mato Grosso do Sul.*
