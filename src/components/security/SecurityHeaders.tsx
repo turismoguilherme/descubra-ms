@@ -11,7 +11,7 @@ export const SecurityHeaders = () => {
       "default-src 'self'",
       "script-src 'self' https://cdn.gpteng.co", // Removido 'unsafe-inline' e 'unsafe-eval' por segurança
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Mantido 'unsafe-inline' apenas para styles
-      "img-src 'self' data: https://flowtrip.com.br https://*.supabase.co https://images.unsplash.com https://cdn.pixabay.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.lovable.app https://lovable-uploads.s3.amazonaws.com https://*.amazonaws.com",
+      "img-src 'self' data: https://flowtrip.com.br https://*.supabase.co https://images.unsplash.com https://cdn.pixabay.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.lovable.app https://lovable-uploads.s3.amazonaws.com https://*.amazonaws.com https://*.vercel.app https://*.netlify.app https://*.github.io https://*.githubusercontent.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.sympla.com.br https://maps.googleapis.com https://*.googleapis.com",
       "base-uri 'self'",

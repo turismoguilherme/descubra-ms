@@ -97,7 +97,7 @@ const PasswordResetForm = () => {
               Verifique sua caixa de entrada e siga as instruções.
             </p>
             <Link 
-              to="/login" 
+              to="/ms/login" 
               className="inline-flex items-center text-ms-primary-blue hover:underline"
             >
               <ArrowLeft size={16} className="mr-2" />
@@ -161,7 +161,7 @@ const PasswordResetForm = () => {
 
           <div className="mt-6 text-center">
             <Link 
-              to="/login" 
+              to="/ms/login" 
               className="inline-flex items-center text-sm text-ms-primary-blue hover:underline"
             >
               <ArrowLeft size={16} className="mr-2" />

@@ -1,61 +1,97 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 const Precos = () => {
+  const navigate = useNavigate();
+
+  const handleSelectPlan = (planName: string) => {
+    // Mapear nomes dos planos para IDs
+    const planMapping: { [key: string]: string } = {
+      'Freemium': 'freemium',
+      'Professional': 'professional', 
+      'Enterprise': 'enterprise',
+      'Government': 'government'
+    };
+    
+    const planId = planMapping[planName] || 'professional';
+    // Redirecionar para cadastro com plano pré-selecionado
+    navigate(`/viajar/register?plan=${planId}&billing=monthly`);
+  };
   const plans = [
     {
-      name: "Starter",
-      price: "Sob Consulta",
-      description: "Para municípios pequenos",
+      name: "Freemium",
+      price: "R$ 0",
+      period: "/mês",
+      description: "Para pequenos negócios iniciantes",
       features: [
-        "Até 50.000 habitantes",
-        "IA Guilherme básica",
-        "Gestão de destinos",
-        "Relatórios mensais",
-        "Suporte por email",
-        "1 usuário admin"
+        "Perfil público básico",
+        "Até 5 fotos",
+        "Aparece nas buscas",
+        "Localização no mapa",
+        "Horários de funcionamento"
       ],
-      cta: "Começar Agora",
+      cta: "Começar Grátis",
       highlighted: false
     },
     {
       name: "Professional",
-      price: "Sob Consulta",
-      description: "Para cidades médias",
+      price: "R$ 199",
+      period: "/mês",
+      description: "Para hotéis e pousadas médios",
       features: [
-        "Até 500.000 habitantes",
-        "IA Guilherme completa",
-        "Gestão de destinos e eventos",
-        "Analytics avançado",
-        "Passaporte digital",
-        "Suporte prioritário",
-        "5 usuários admin",
-        "Customização de marca"
+        "Fotos ilimitadas",
+        "Intelligence IA básica",
+        "Relatórios mensais",
+        "Análise de concorrência",
+        "Destaque nas buscas",
+        "Suporte prioritário (24h)",
+        "Estatísticas de visualização"
       ],
       cta: "Mais Popular",
       highlighted: true
     },
     {
       name: "Enterprise",
-      price: "Sob Consulta",
-      description: "Para estados e capitais",
+      price: "R$ 499",
+      period: "/mês",
+      description: "Para grandes hotéis e redes",
       features: [
-        "Usuários ilimitados",
-        "IA Guilherme + customizações",
-        "Multi-tenant completo",
-        "Analytics em tempo real",
-        "Gamificação completa",
-        "API personalizada",
-        "Suporte 24/7",
-        "Usuários admin ilimitados",
-        "Treinamento dedicado",
-        "Consultoria estratégica"
+        "ViaJAR Intelligence Suite completa",
+        "Revenue Optimizer (IA)",
+        "Market Intelligence",
+        "Competitive Benchmark",
+        "Previsão de demanda",
+        "API de integração",
+        "Consultoria mensal (1h)",
+        "Selo 'Verificado ViaJAR'",
+        "Suporte 24/7 WhatsApp"
       ],
       cta: "Falar com Vendas",
+      highlighted: false
+    },
+    {
+      name: "Governo",
+      price: "R$ 2.000",
+      period: "/mês",
+      description: "Para prefeituras e secretarias",
+      features: [
+        "Dashboard municipal completo",
+        "Gestão de CATs com GPS",
+        "Gestão de atendentes (ponto)",
+        "Analytics estadual/municipal",
+        "Mapas de calor (fluxo turístico)",
+        "IA Consultora Estratégica",
+        "Relatórios consolidados",
+        "Upload de arquivos oficiais",
+        "Multi-usuários ilimitados",
+        "Treinamento da equipe",
+        "Suporte dedicado"
+      ],
+      cta: "Contato Institucional",
       highlighted: false
     }
   ];
@@ -70,11 +106,18 @@ const Precos = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Planos e Preços
+              Planos Transparentes para Todos
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Soluções flexíveis para cada necessidade, do município pequeno ao estado inteiro
+              Do pequeno estabelecimento às grandes redes e governos. Todos os planos com 14 dias grátis.
             </p>
+            <div className="flex justify-center gap-4">
+              <Link to="/viajar/pricing">
+                <Button size="lg" variant="secondary">
+                  Ver Comparação Completa
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -124,18 +167,17 @@ const Precos = () => {
                   ))}
                 </ul>
 
-                <Link to="/contato">
-                  <Button 
-                    size="lg" 
-                    className={`w-full ${
-                      plan.highlighted 
-                        ? 'bg-white text-blue-900 hover:bg-blue-50' 
-                        : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className={`w-full ${
+                    plan.highlighted 
+                      ? 'bg-white text-blue-900 hover:bg-blue-50' 
+                      : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
+                  }`}
+                  onClick={() => handleSelectPlan(plan.name)}
+                >
+                  {plan.cta}
+                </Button>
               </div>
             ))}
           </div>

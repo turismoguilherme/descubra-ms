@@ -10,6 +10,8 @@ import UniversalLayout from '@/components/layout/UniversalLayout';
 import PantanalAvatarSelector, { PantanalAnimal } from '@/components/profile/PantanalAvatarSelector';
 import AchievementSystemSimple from '@/components/profile/AchievementSystemSimple';
 import EnvironmentalQuizSimple from '@/components/profile/EnvironmentalQuizSimple';
+import UserSettingsModal from '@/components/profile/UserSettingsModal';
+import ShareProfileModal from '@/components/profile/ShareProfileModal';
 import { 
   User, 
   Trophy, 
@@ -40,6 +42,8 @@ const ProfilePageFixed: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   // Dados mockados dos animais do Pantanal
   const pantanalAnimals: PantanalAnimal[] = [
@@ -224,6 +228,10 @@ const ProfilePageFixed: React.FC = () => {
     setShowQuiz(false);
   };
 
+  const handleProfileUpdate = (updatedProfile: any) => {
+    setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+  };
+
   if (loading) {
     return (
       <UniversalLayout>
@@ -288,11 +296,11 @@ const ProfilePageFixed: React.FC = () => {
                       <Edit3 className="h-4 w-4 mr-2" />
                       Editar Avatar
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => setShowShare(true)}>
                       <Share2 className="h-4 w-4 mr-2" />
                       Compartilhar
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => setShowSettings(true)}>
                       <Settings className="h-4 w-4 mr-2" />
                       Configurações
                     </Button>
@@ -369,46 +377,49 @@ const ProfilePageFixed: React.FC = () => {
 
             <TabsContent value="quiz">
               <div className="space-y-6">
-                {/* Introdução Educativa */}
-                <Card className="shadow-lg border-0 bg-gradient-to-r from-green-50 to-blue-50">
-                  <CardContent className="p-8 text-center">
-                    <BookOpen className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Quiz Educativo do Pantanal</h3>
-                    <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                      Teste seus conhecimentos sobre a biodiversidade do Pantanal e aprenda sobre a conservação 
-                      da fauna sul-mato-grossense. Cada pergunta é uma oportunidade de aprender mais sobre 
-                      este bioma único!
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="p-4 bg-white/50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">5</div>
-                        <div className="text-sm text-gray-600">Perguntas</div>
-                      </div>
-                      <div className="p-4 bg-white/50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">4</div>
-                        <div className="text-sm text-gray-600">Categorias</div>
-                      </div>
-                      <div className="p-4 bg-white/50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">100%</div>
-                        <div className="text-sm text-gray-600">Educativo</div>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={() => setShowQuiz(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
-                    >
-                      <BookOpen className="h-5 w-5 mr-2" />
-                      Iniciar Quiz Educativo
-                    </Button>
-                  </CardContent>
-                </Card>
-                
                 {/* Quiz Component */}
-                {showQuiz && (
+                {showQuiz ? (
                   <EnvironmentalQuizSimple 
                     animals={pantanalAnimals || []}
                     onQuizComplete={handleQuizComplete}
+                    onClose={() => setShowQuiz(false)}
                   />
+                ) : (
+                  <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-blue-50">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-2xl font-bold text-gray-900">
+                        Quiz Educativo do Pantanal
+                      </CardTitle>
+                      <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
+                        Teste seus conhecimentos sobre a biodiversidade do Pantanal e aprenda sobre a conservação da fauna sul-mato-grossense. Cada pergunta é uma oportunidade de aprender mais sobre este bioma único!
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-6 text-center">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        <div className="p-4 bg-white/50 rounded-lg text-center">
+                          <div className="text-2xl font-bold text-blue-600">5</div>
+                          <div className="text-sm text-gray-600">Perguntas</div>
+                        </div>
+                        <div className="p-4 bg-white/50 rounded-lg text-center">
+                          <div className="text-2xl font-bold text-green-600">4</div>
+                          <div className="text-sm text-gray-600">Categorias</div>
+                        </div>
+                        <div className="p-4 bg-white/50 rounded-lg text-center">
+                          <div className="text-2xl font-bold text-purple-600">100%</div>
+                          <div className="text-sm text-gray-600">Educativo</div>
+                        </div>
+                      </div>
+                      <div className="flex justify-center">
+                        <Button 
+                          onClick={() => setShowQuiz(true)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+                        >
+                          <BookOpen className="h-5 w-5 mr-2" />
+                          Iniciar Quiz Educativo
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             </TabsContent>
@@ -497,6 +508,35 @@ const ProfilePageFixed: React.FC = () => {
             selectedAvatar={profile.selected_avatar || null}
             onSelect={handleAvatarSelect}
             onClose={() => setShowAvatarSelector(false)}
+          />
+        )}
+
+        {/* Settings Modal */}
+        {showSettings && profile && (
+          <UserSettingsModal
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+            userProfile={{
+              id: profile.id,
+              full_name: profile.full_name,
+              email: profile.email,
+              avatar_url: profile.avatar_url
+            }}
+            onProfileUpdate={handleProfileUpdate}
+          />
+        )}
+
+        {/* Share Profile Modal */}
+        {showShare && profile && (
+          <ShareProfileModal
+            isOpen={showShare}
+            onClose={() => setShowShare(false)}
+            userProfile={{
+              id: profile.id,
+              full_name: profile.full_name,
+              email: profile.email,
+              avatar_url: profile.avatar_url
+            }}
           />
         )}
       </div>

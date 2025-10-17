@@ -39,6 +39,7 @@ const ViaJARNavbar = () => {
 
   const dashboardItems = [
     { name: "Dashboard", path: "/viajar/dashboard" },
+    { name: "Intelligence IA", path: "/viajar/intelligence" },
     { name: "Inventário", path: "/viajar/inventario" },
     { name: "Relatórios", path: "/viajar/relatorios" },
     { name: "Leads", path: "/viajar/leads" },

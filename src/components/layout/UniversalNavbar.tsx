@@ -11,10 +11,10 @@ const UniversalNavbar = () => {
   
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const { config, isOverflowOne } = useBrand();
+  const { config, isOverflowOne, isMS } = useBrand();
   const location = useLocation();
   
-  console.log("🧭 NAVBAR: Estado - user:", !!user, "isOverflowOne:", isOverflowOne, "pathname:", location.pathname);
+  console.log("🧭 NAVBAR: Estado - user:", !!user, "isOverflowOne:", isOverflowOne, "isMS:", isMS, "pathname:", location.pathname);
 
   // Memoizar a função de verificação de path ativo para melhor performance
   const isActivePath = useMemo(() => {

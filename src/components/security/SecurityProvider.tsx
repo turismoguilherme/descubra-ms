@@ -34,15 +34,28 @@ export const SecurityProvider = ({
   sessionTimeoutMinutes = 30,
   sessionWarningMinutes = 5,
 }: SecurityProviderProps) => {
-  const { user } = useAuth();
+  // Usar try-catch para evitar erro quando não há AuthProvider
+  let user = null;
+  let sessionSecurityEnabled = false;
   
-  // Initialize session security monitoring
-  useSessionSecurity({
-    enabled: !!user,
-    timeoutMinutes: sessionTimeoutMinutes,
-    warningMinutes: sessionWarningMinutes,
-    trackActivity: true
-  });
+  try {
+    const auth = useAuth();
+    user = auth.user;
+    sessionSecurityEnabled = !!user;
+  } catch (error) {
+    // Se não há AuthProvider, continuar sem usuário
+    console.log("🔒 SecurityProvider: AuthProvider não disponível, continuando sem usuário");
+  }
+  
+  // Initialize session security monitoring apenas se há usuário
+  if (sessionSecurityEnabled) {
+    useSessionSecurity({
+      enabled: true,
+      timeoutMinutes: sessionTimeoutMinutes,
+      warningMinutes: sessionWarningMinutes,
+      trackActivity: true
+    });
+  }
 
   const contextValue: SecurityContextType = {
     isSecure: !!user,

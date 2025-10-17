@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SimplifiedAdminMenu from './SimplifiedAdminMenu';
+import EventManagementPanel from './EventManagementPanel';
 import { 
   BarChart3, 
   Users, 
   Calendar, 
   FileText,
   Settings,
-  AlertTriangle 
+  AlertTriangle,
+  Cog
 } from 'lucide-react';
 
 const ImprovedAdminDashboard: React.FC = () => {
@@ -191,6 +193,17 @@ const ImprovedAdminDashboard: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        );
+
+      case 'settings':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Cog className="h-5 w-5" />
+              <h2 className="text-xl font-semibold">Configurações do Sistema</h2>
+            </div>
+            <EventManagementPanel />
           </div>
         );
 

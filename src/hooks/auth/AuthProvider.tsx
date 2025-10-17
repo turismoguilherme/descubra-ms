@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/auth";
 import { AuthContext, AuthContextType } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentTestUser, type TestUser } from "@/services/auth/TestUsers";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -46,55 +47,148 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => { // Adicionado 'async' aqui
-        console.log("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event, "Sessão:", session);
-        
-        // Verificar dados de teste se não houver sessão real
-        const testUserData = localStorage.getItem('test-user-data');
-        const testToken = localStorage.getItem('supabase.auth.token');
-        
-        if (!session && testUserData && testToken === 'test-token') {
-          // Usar dados de teste
-          console.log("🧪 AuthProvider: Usando dados de teste");
-          const testData = JSON.parse(testUserData);
+    console.log("🔄 AuthProvider: useEffect iniciado");
+    
+    // Função para configurar usuário de teste
+    const setupTestUser = (testUser: any) => {
+      console.log("🧪 AuthProvider: Configurando usuário de teste:", testUser);
+      
+      // Criar usuário simulado
+      const simulatedUser = {
+        id: testUser.id,
+        email: testUser.email,
+        created_at: new Date().toISOString()
+      } as User;
+      
+      // Criar perfil simulado
+      const testProfile: UserProfile = {
+        user_id: testUser.id,
+        full_name: testUser.name,
+        role: testUser.role,
+        city_id: testUser.role === 'gestor_municipal' ? 'campo-grande' : 
+                 testUser.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
+        region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+      };
+      
+      console.log("🧪 AuthProvider: Usuário simulado:", simulatedUser);
+      console.log("🧪 AuthProvider: Perfil simulado:", testProfile);
+      
+      setSession(null);
+      setUser(simulatedUser);
+      setUserProfile(testProfile);
+      setLoading(false);
+      console.log("✅ AuthProvider: Perfil de teste definido com sucesso");
+    };
+    
+    // Verificar usuário de teste imediatamente
+    const testUser = getCurrentTestUser();
+    console.log("🧪 AuthProvider: Verificando usuário de teste:", testUser);
+    
+    if (testUser) {
+      setupTestUser(testUser);
+      return;
+    }
+    
+    // Se não há usuário de teste, configurar Supabase
+    console.log("🧪 AuthProvider: Nenhum usuário de teste encontrado, configurando Supabase");
+    setLoading(false);
+  }, []);
+
+  // Adicionar listener para mudanças no localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'test_user_id' && e.newValue) {
+        console.log("🧪 AuthProvider: localStorage mudou, verificando usuário de teste...");
+        const testUser = getCurrentTestUser();
+        if (testUser) {
+          console.log("🧪 AuthProvider: Usuário de teste encontrado após mudança no localStorage:", testUser);
           
           // Criar usuário simulado
-          const testUser = {
-            id: testData.id,
-            email: testData.email,
-            created_at: testData.created_at
+          const simulatedUser = {
+            id: testUser.id,
+            email: testUser.email,
+            created_at: new Date().toISOString()
           } as User;
           
           // Criar perfil simulado
           const testProfile: UserProfile = {
-            user_id: testData.id,
-            full_name: testData.name,
-            role: testData.role,
-            city_id: testData.role === 'gestor_municipal' ? 'campo-grande' : 
-                     testData.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
-            region_id: testData.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+            user_id: testUser.id,
+            full_name: testUser.name,
+            role: testUser.role,
+            city_id: testUser.role === 'gestor_municipal' ? 'campo-grande' : 
+                     testUser.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
+            region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
           };
           
           setSession(null);
-          setUser(testUser);
+          setUser(simulatedUser);
           setUserProfile(testProfile);
-          console.log("✅ AuthProvider: Perfil de teste definido:", testProfile);
-        } else {
-          // Usar dados reais do Supabase
-          setSession(session);
-          setUser(session?.user ?? null);
+          setLoading(false);
+          console.log("✅ AuthProvider: Perfil de teste atualizado após mudança no localStorage");
+        }
+      }
+    };
 
-          if (session?.user) {
-            console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
-            await fetchUserProfile(session.user.id); // Garante que o perfil é buscado e esperado aqui também
-          } else {
-            console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
-            setUserProfile(null);
-          }
+    // Listener para mudanças no localStorage (mesmo tab)
+    const handleLocalStorageChange = () => {
+      const testUser = getCurrentTestUser();
+      if (testUser && !user) {
+        console.log("🧪 AuthProvider: Usuário de teste detectado via polling:", testUser);
+        
+        // Criar usuário simulado
+        const simulatedUser = {
+          id: testUser.id,
+          email: testUser.email,
+          created_at: new Date().toISOString()
+        } as User;
+        
+        // Criar perfil simulado
+        const testProfile: UserProfile = {
+          user_id: testUser.id,
+          full_name: testUser.name,
+          role: testUser.role,
+          city_id: testUser.role === 'gestor_municipal' ? 'campo-grande' : 
+                   testUser.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
+          region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+        };
+        
+        setSession(null);
+        setUser(simulatedUser);
+        setUserProfile(testProfile);
+        setLoading(false);
+        console.log("✅ AuthProvider: Perfil de teste detectado e configurado");
+      }
+    };
+
+    // Polling para detectar mudanças no localStorage
+    const interval = setInterval(handleLocalStorageChange, 500);
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event, "Sessão:", session);
+        
+        // Usar dados reais do Supabase
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
+          await fetchUserProfile(session.user.id);
+        } else {
+          console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
+          setUserProfile(null);
         }
 
-        setLoading(false); // Agora, setLoading(false) é chamado após o perfil ser carregado em ambos os cenários.
+        setLoading(false);
         console.log("🏁 AuthProvider: Carregamento finalizado. Loading:", false);
       }
     );
@@ -166,7 +260,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("🏛️ SIGNUP: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
       
       // Redirecionar mantendo contexto do tenant
-      const redirectUrl = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/`;
+      const redirectUrl = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/ms`;
       console.log("🔄 SIGNUP: Redirecionando para:", redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({
@@ -302,7 +396,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Redirecionar mantendo contexto do tenant e usando URL específica para produção
       const isProduction = window.location.hostname === 'flow-trip.vercel.app';
       const baseUrl = isProduction ? 'https://flow-trip.vercel.app' : window.location.origin;
-      const redirectPath = isTenantPath ? `${baseUrl}/${currentTenant}` : `${baseUrl}/auth/callback`;
+      const redirectPath = isTenantPath ? `${baseUrl}/${currentTenant}` : `${baseUrl}/ms`;
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
       
       const { data, error } = await supabase.auth.signInWithOAuth({

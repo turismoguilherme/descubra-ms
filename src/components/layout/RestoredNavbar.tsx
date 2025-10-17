@@ -154,7 +154,7 @@ const RestoredNavbar = () => {
                 {isFlowTrip ? (
                   // CTA FlowTrip
                   <>
-                    <Link to="/ms/login">
+                    <Link to="/viajar/login">
                       <Button variant="ghost" size="sm">
                         Entrar
                       </Button>
@@ -168,7 +168,7 @@ const RestoredNavbar = () => {
                 ) : (
                   // CTA MS
                   <>
-                    <Link to="/ms/login">
+                    <Link to="/viajar/login">
                       <Button variant="ghost" size="sm">
                         Entrar
                       </Button>
@@ -317,7 +317,7 @@ const RestoredNavbar = () => {
                   {isFlowTrip ? (
                     // CTA mobile FlowTrip
                     <>
-                      <Link to="/ms/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
+                      <Link to="/viajar/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
                         Entrar
                       </Link>
                       <Link to="/ms/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
@@ -326,7 +326,7 @@ const RestoredNavbar = () => {
                     </>
                   ) : (
                     <>
-                      <Link to="/ms/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
+                      <Link to="/viajar/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
                         Entrar
                       </Link>
                       <Link to="/ms/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>

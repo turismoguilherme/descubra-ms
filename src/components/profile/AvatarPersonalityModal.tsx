@@ -149,7 +149,7 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center text-gray-900 flex items-center justify-between">
             <span>Personalidade do {animal.name}</span>
@@ -159,10 +159,10 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Personalidade */}
           <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Heart className="h-5 w-5 mr-2 text-purple-600" />
                 Personalidade
@@ -188,7 +188,7 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
 
           {/* Sobre o Animal */}
           <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-cyan-50">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Target className="h-5 w-5 mr-2 text-blue-600" />
                 Sobre o {animal.name}
@@ -219,14 +219,14 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
 
           {/* Consciência Ambiental */}
           <Card className="shadow-lg border-0 bg-gradient-to-r from-green-50 to-blue-50">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Shield className="h-5 w-5 mr-2 text-green-600" />
                 Consciência Ambiental
               </h3>
               <div className="space-y-4">
                 {/* Ameaças */}
-                <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
+                <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
                   <h4 className="font-semibold text-red-800 mb-2 flex items-center">
                     <Shield className="h-4 w-4 mr-2" />
                     Principais Ameaças
@@ -242,7 +242,7 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
                 </div>
 
                 {/* Ações de Conservação */}
-                <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                <div className="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
                   <h4 className="font-semibold text-green-800 mb-2 flex items-center">
                     <Heart className="h-4 w-4 mr-2" />
                     Como Ajudar na Conservação
@@ -258,7 +258,7 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
                 </div>
 
                 {/* Impacto no Ecossistema */}
-                <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                   <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
                     <Target className="h-4 w-4 mr-2" />
                     Importância no Ecossistema

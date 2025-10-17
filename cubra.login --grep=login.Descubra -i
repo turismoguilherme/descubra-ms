@@ -1,0 +1,27 @@
+[33ma95bb52[m docs: Documentação completa do Descubra MS
+[33m47ca955[m fix: Adicionar rota /ms/profile e configurar Profile.tsx com UniversalLayout
+[33m3a9b8dd[m feat: Implementar logo SVG definitiva para Descubra MS
+[33md4dd9d4[m fix: Corrigir logo do Descubra MS e atualizar cache busting para v5
+[33m5265bd0[m fix: Restaurar MSIndex original e habilitar Guata
+[33m1627771[m fix: Corrigir rodapé MS e páginas de eventos/roteiros
+[33mfa9c350[m feat: Restaurar rodapé original do Descubra MS e otimizar carregamento
+[33m12a33d2[m fix: adiciona rota alternativa /ms/chatguata e build validado
+[33m297bc73[m Resolvendo conflito de mesclagem para public/images/logo-descubra-ms.png
+[33m0c76a3e[m Fix build errors and update logo
+[33ma8d2e09[m Fix logo loading issue
+[33m7e97bb0[m docs: Create comprehensive documentation - Add complete implementation documentation (IMPLEMENTACAO_COMPLETA.md) - Add executive summary (RESUMO_EXECUTIVO.md) - Add logo configuration guide (GUIA_LOGO_FLOWTRIP.md) - Document all problems solved and solutions implemented - Include architecture, design system, and performance metrics - Provide troubleshooting guides and next steps
+[33m4254c46[m feat: Restore original menu with FlowTrip logo integration - Create RestoredNavbar with all original functionality - Add FlowTrip logo placeholder in menu - Maintain Master Dashboard authentication - Keep all original menu items and navigation - Add logo setup instructions - Preserve responsive design and hover effects
+[33mb2f7100[m fix: Resolve loading issues and add Master Dashboard authentication - Fix LoadingFallback component colors - Add authentication system to Master Dashboard - Create SimpleNavbar for basic navigation - Simplify FlowTripSaaS to avoid complex dependencies - Add login credentials: master@flowtrip.com / FlowTripMaster2024!
+[33mee4e6dd[m Implement plan
+[33m07f102e[m Implement dual FlowTrip SaaS structure
+[33m3b10136[m Fix login and authentication flow
+[33m6642e49[m Implement plan
+[33mb221b04[m Fix form logo
+[33me490e54[m Fix layout and login issues
+[33mc0a6f35[m Fix layout and Guatá image
+[33m910a49e[m Fix login and registration issues
+[33mf95e2f4[m Merge branch 'main' of https://github.com/turismoguilherme/descubra-ms
+[33m89b237c[m Fix admin authentication and component errors
+[33m8d65013[m Implement security enhancements
+[33m4008a4b[m Implement profile completion flow
+[33m817346d[m Replace logo paths

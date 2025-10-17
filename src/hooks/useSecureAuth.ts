@@ -114,11 +114,11 @@ export const useSecureAuth = () => {
       await supabase.auth.signOut({ scope: 'global' });
       
       // Force page refresh
-      window.location.href = '/';
+      window.location.href = '/ms';
     } catch (error) {
       console.error('Logout error:', error);
       // Force refresh even if logout fails
-      window.location.href = '/';
+      window.location.href = '/ms';
     }
   };
 

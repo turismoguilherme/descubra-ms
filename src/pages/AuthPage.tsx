@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
+import { useAuth } from '@/hooks/useAuth';
 
 const AuthPage = () => {
   const [email, setEmail] = useState('');
@@ -17,11 +19,12 @@ const AuthPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
+  const { signInWithProvider } = useAuth();
 
   // Redirecionar se já autenticado
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate('/ms', { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -31,6 +34,25 @@ const AuthPage = () => {
         localStorage.removeItem(key);
       }
     });
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    console.log(`🔐 SOCIAL LOGIN: Tentativa de login com ${provider}`);
+    
+    try {
+      await signInWithProvider(provider);
+      toast({
+        title: "Sucesso",
+        description: `Login com ${provider} realizado com sucesso!`,
+      });
+    } catch (error: any) {
+      console.error(`❌ SOCIAL LOGIN: Erro no login com ${provider}:`, error);
+      toast({
+        title: "Erro no Login",
+        description: `Erro ao fazer login com ${provider}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -74,7 +96,7 @@ const AuthPage = () => {
         });
         
         // Forçar redirecionamento
-        window.location.href = '/';
+        window.location.href = '/ms';
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -126,12 +148,11 @@ const AuthPage = () => {
         <div className="max-w-md mx-auto">
           <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
             <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-900 flex flex-col items-center">
-                <LogIn className="mb-3 h-10 w-10 text-blue-600" />
-                Acesso ao Sistema
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                Descubra Mato Grosso do Sul
               </CardTitle>
               <p className="text-gray-600 text-sm">
-                Entre com suas credenciais para acessar o sistema
+                Entre na sua conta
               </p>
             </CardHeader>
             <CardContent className="px-6 pb-6">
@@ -199,13 +220,34 @@ const AuthPage = () => {
                 </Button>
               </form>
 
-              <div className="mt-6 text-center">
-                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <strong className="text-blue-800">Para testes:</strong><br />
-                  Email: guilhermearevalo27@gmail.com<br />
-                  Senha: (sua senha)
+              {/* Login Social */}
+              <div className="mt-4">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">Ou continue com</span>
+                  </div>
                 </div>
+                
+                <SocialLoginButtons onSocialLogin={handleSocialLogin} />
               </div>
+
+              {/* Link para Cadastro */}
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Não tem uma conta?{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/ms/register')}
+                    className="text-blue-600 hover:text-blue-500 font-medium"
+                  >
+                    Criar conta
+                  </button>
+                </p>
+              </div>
+
             </CardContent>
           </Card>
         </div>

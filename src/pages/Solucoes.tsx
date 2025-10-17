@@ -1,53 +1,80 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Brain, BarChart3, Map, Users, Shield, Zap, Globe } from 'lucide-react';
+import { Brain, BarChart3, Map, Users, Shield, Globe, TrendingUp, Building2, CheckCircle2 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 const Solucoes = () => {
-  const solutions = [
+  // Soluções para o TRADE (Setor Privado)
+  const tradeSolutions = [
     {
       icon: Brain,
-      title: "IA Guilherme",
-      description: "Assistente inteligente com IA generativa especializado em turismo, oferecendo insights estratégicos 24/7.",
-      features: ["Respostas contextualizadas", "Análise preditiva", "Recomendações personalizadas"],
-      color: "from-blue-600 to-cyan-500"
-    },
-    {
-      icon: BarChart3,
-      title: "Analytics Avançado",
-      description: "Dashboards inteligentes com análise de dados em tempo real e relatórios automatizados.",
-      features: ["Métricas em tempo real", "Relatórios customizados", "Alertas inteligentes"],
-      color: "from-green-600 to-emerald-500"
-    },
-    {
-      icon: Map,
-      title: "Inventário Turístico",
-      description: "Gestão completa de ativos turísticos com mapas interativos e geolocalização.",
-      features: ["Mapas interativos", "Gestão de POIs", "Rotas otimizadas"],
+      title: "ViaJAR Intelligence IA",
+      description: "Inteligência artificial que analisa seu negócio e fornece recomendações estratégicas baseadas em dados reais do mercado turístico.",
+      features: ["Previsão de demanda com IA", "Análise de concorrência", "Insights personalizados", "Tendências de mercado"],
       color: "from-purple-600 to-violet-500"
     },
     {
-      icon: Users,
-      title: "Gestão de Parceiros",
-      description: "Plataforma para gerenciar parcerias, contratos e colaborações no setor turístico.",
-      features: ["Portal de parceiros", "Gestão de contratos", "Performance tracking"],
+      icon: TrendingUp,
+      title: "Revenue Optimizer",
+      description: "Sistema de precificação dinâmica que maximiza sua receita baseado em demanda, eventos, sazonalidade e concorrência.",
+      features: ["Precificação dinâmica", "Análise de RevPAR", "Projeção de receita", "Otimização de ocupação"],
+      color: "from-green-600 to-emerald-500"
+    },
+    {
+      icon: BarChart3,
+      title: "Market Intelligence",
+      description: "Análise completa do mercado: origem dos turistas, perfil de clientes, ROI por canal de marketing e tendências do setor.",
+      features: ["Análise de origem", "Segmentação de público", "ROI por canal", "Benchmarking competitivo"],
+      color: "from-blue-600 to-cyan-500"
+    }
+  ];
+
+  // Soluções para GOVERNOS
+  const govSolutions = [
+    {
+      icon: Map,
+      title: "Gestão de CATs",
+      description: "Controle completo de Centros de Atendimento ao Turista com GPS, ponto eletrônico e métricas de atendimento em tempo real.",
+      features: ["Check-in por GPS", "Ponto eletrônico", "Relatórios de atendimento", "Dashboard de performance"],
       color: "from-indigo-600 to-blue-500"
     },
     {
-      icon: Globe,
-      title: "Multi-Tenant",
-      description: "Arquitetura escalável para múltiplos estados e municípios com isolamento de dados.",
-      features: ["Isolamento de dados", "Customização por região", "Escalabilidade"],
+      icon: BarChart3,
+      title: "Analytics Municipal",
+      description: "Dashboards com mapas de calor, análise de fluxo turístico e KPIs estratégicos para tomada de decisão baseada em dados.",
+      features: ["Mapas de calor", "Fluxo turístico", "KPIs em tempo real", "Relatórios consolidados"],
       color: "from-orange-600 to-amber-500"
     },
     {
+      icon: Brain,
+      title: "IA Consultora Estratégica",
+      description: "Assistente especializado que analisa dados do município e sugere políticas públicas e ações estratégicas baseadas em evidências.",
+      features: ["Recomendações estratégicas", "Análise de impacto", "Benchmarking", "Projeções futuras"],
+      color: "from-purple-600 to-pink-500"
+    }
+  ];
+
+  // Recursos Gerais
+  const generalFeatures = [
+    {
+      icon: Globe,
+      title: "Multi-Regional",
+      description: "Funciona em 27 estados brasileiros + internacional",
+      color: "from-cyan-600 to-blue-500"
+    },
+    {
       icon: Shield,
-      title: "Segurança Avançada",
-      description: "Proteção de dados com criptografia, auditoria completa e conformidade LGPD.",
-      features: ["Criptografia ponta-a-ponta", "Auditoria de logs", "Conformidade LGPD"],
-      color: "from-red-600 to-pink-500"
+      title: "Segurança LGPD",
+      description: "Conformidade total com LGPD e criptografia E2E",
+      color: "from-red-600 to-rose-500"
+    },
+    {
+      icon: CheckCircle2,
+      title: "CADASTUR Verificado",
+      description: "Integração oficial com Ministério do Turismo",
+      color: "from-green-600 to-emerald-500"
     }
   ];
 
@@ -61,35 +88,137 @@ const Solucoes = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Soluções Inteligentes para o Turismo
+              Soluções para Cada Necessidade
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Tecnologia de ponta para transformar a gestão do turismo com inteligência artificial, 
-              análise de dados e automação.
+              Tecnologia de ponta para estabelecimentos privados e governos transformarem a gestão do turismo.
             </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/viajar/pricing">
+                <Button size="lg" variant="secondary">
+                  Ver Planos e Preços
+                </Button>
+              </Link>
+              <Link to="/contato">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900">
+                  Agendar Demo
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Solutions Grid */}
+      {/* Trade Solutions */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {solutions.map((solution, index) => (
-              <div key={index} className="bg-white p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full mb-4">
+              <Building2 className="h-4 w-4" />
+              <span className="font-semibold">Para Hotéis, Pousadas e Agências</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Business Intelligence Turístico
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Dados tratados + IA para maximizar sua receita e entender seu mercado
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {tradeSolutions.map((solution, index) => (
+              <div key={index} className="bg-white p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className={`w-14 h-14 bg-gradient-to-r ${solution.color} rounded-xl flex items-center justify-center mb-6`}>
                   <solution.icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{solution.title}</h3>
                 <p className="text-gray-600 mb-6">{solution.description}</p>
-                <ul className="space-y-2 mb-6">
+                <ul className="space-y-2">
                   {solution.features.map((feature, idx) => (
                     <li key={idx} className="flex items-center text-sm text-gray-600">
-                      <Zap className="h-4 w-4 text-cyan-600 mr-2" />
+                      <CheckCircle2 className="h-4 w-4 text-cyan-600 mr-2 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link to="/viajar/pricing">
+              <Button size="lg" className="gap-2">
+                Ver Planos para Trade
+                <TrendingUp className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Government Solutions */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full mb-4">
+              <Building2 className="h-4 w-4" />
+              <span className="font-semibold">Para Prefeituras e Secretarias</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              GovTech Turístico
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Gestão completa de CATs, analytics municipal e IA consultora estratégica
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {govSolutions.map((solution, index) => (
+              <div key={index} className="bg-white p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className={`w-14 h-14 bg-gradient-to-r ${solution.color} rounded-xl flex items-center justify-center mb-6`}>
+                  <solution.icon className="h-7 w-7 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{solution.title}</h3>
+                <p className="text-gray-600 mb-6">{solution.description}</p>
+                <ul className="space-y-2">
+                  {solution.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-center text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-cyan-600 mr-2 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link to="/governos">
+              <Button size="lg" variant="outline" className="gap-2">
+                Saber Mais sobre Soluções GovTech
+                <Map className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* General Features */}
+      <section className="py-16 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h3 className="text-2xl font-bold text-center mb-8 text-gray-900">
+            Recursos Incluídos em Todos os Planos
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {generalFeatures.map((feature, index) => (
+              <div key={index} className="flex items-start gap-4 p-6 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-200">
+                <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                  <feature.icon className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">{feature.title}</h4>
+                  <p className="text-sm text-gray-600">{feature.description}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -103,7 +232,7 @@ const Solucoes = () => {
             Pronto para Transformar seu Turismo?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            Agende uma demonstração e veja como nossas soluções podem revolucionar sua gestão turística.
+            Teste grátis por 14 dias. Sem cartão de crédito. Cancele quando quiser.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/viajar/register">
@@ -111,9 +240,9 @@ const Solucoes = () => {
                 Começar Teste Grátis
               </Button>
             </Link>
-            <Link to="/contato">
+            <Link to="/viajar/pricing">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900 px-8 py-4 text-lg">
-                Agendar Demo
+                Ver Todos os Planos
               </Button>
             </Link>
           </div>

@@ -24,6 +24,29 @@ export function ProtectedRoute({
     return <div>Carregando...</div>;
   }
 
+  // Debug: Log do estado atual
+  console.log('🔐 ProtectedRoute: Verificando acesso:', {
+    user: user ? { id: user.id, email: user.email } : null,
+    userProfile: userProfile ? { user_id: userProfile.user_id, role: userProfile.role } : null,
+    loading,
+    pathname: location.pathname
+  });
+
+  // Verificar se há usuário de teste no localStorage (fallback)
+  const testUserId = localStorage.getItem('test_user_id');
+  const testUserData = localStorage.getItem('test_user_data');
+  
+  if (!user && testUserId && testUserData) {
+    console.log('🔐 ProtectedRoute: Usuário de teste encontrado no localStorage, aguardando AuthProvider...');
+    // Aguardar um pouco mais para o AuthProvider processar
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p>Carregando usuário de teste...</p>
+      </div>
+    </div>;
+  }
+
   // Verificar autenticação
   if (!user) {
     // Redirecionar para o login correto baseado na rota

@@ -79,6 +79,11 @@ const ViaJARSaaS = () => {
                   Entrar
                 </Button>
               </Link>
+              <Link to="/test-login">
+                <Button size="lg" variant="secondary" className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-4 text-lg">
+                  🧪 Login de Teste
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ import AttendantManager from '@/components/admin/AttendantManager';
 import PlatformConfigCenter from '@/components/admin/PlatformConfigCenter';
 import AdminUserManagement from '@/components/admin/AdminUserManagement';
 import SecurityDashboard from '@/components/admin/SecurityDashboard';
+import EventManagementPanel from '@/components/admin/EventManagementPanel';
 
 const AdminPortal = () => {
   console.log('🚀 AdminPortal: Componente iniciando...');
@@ -159,6 +160,17 @@ const AdminDashboard = () => {
                 <Bell className="h-4 w-4 inline mr-2" />
                 Segurança
               </button>
+              <button
+                onClick={() => setActiveTab('events')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'events'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Calendar className="h-4 w-4 inline mr-2" />
+                Eventos
+              </button>
             </nav>
           </div>
 
@@ -169,6 +181,7 @@ const AdminDashboard = () => {
             {activeTab === 'config' && <PlatformConfigCenter />}
             {activeTab === 'users' && <AdminUserManagement />}
             {activeTab === 'security' && <SecurityDashboard />}
+            {activeTab === 'events' && <EventManagementPanel />}
           </div>
         </div>
       </div>

@@ -59,7 +59,7 @@ const Welcome = () => {
                   Cadastre-se <ArrowRight className="ml-2" />
                 </Button>
               </Link>
-              <Link to="/login">
+              <Link to="/ms/login">
                 <Button className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white text-lg px-8 py-6 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                   Já tenho conta
                 </Button>

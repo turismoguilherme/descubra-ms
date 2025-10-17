@@ -120,10 +120,13 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   const detectTenantFromPath = (): 'ms' | 'overflow-one' => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      console.log("🔍 detectTenantFromPath: pathname:", path);
       if (path.startsWith('/ms')) {
+        console.log("🔍 detectTenantFromPath: Detectado MS");
         return 'ms';
       }
     }
+    console.log("🔍 detectTenantFromPath: Fallback para overflow-one");
     return 'overflow-one';
   };
 
@@ -164,14 +167,15 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
 
     // Detectar tenant do path se não estivermos no modo multi-tenant
     const detectedTenant = detectTenantFromPath();
-    console.log("🔍 BrandContext: Path detectado (case-insensitive), usando msConfig como base.");
+    console.log("🔍 BrandContext: Path detectado:", detectedTenant, "pathname:", window.location.pathname);
     
     if (detectedTenant === 'ms') {
+      console.log("🔍 BrandContext: Usando msConfig para MS");
       return msConfig;
     }
 
     // Fallback para Overflow One
-    console.log("🔍 BrandContext: Tenant ainda está carregando, usando a baseConfig atual.");
+    console.log("🔍 BrandContext: Usando overflowOneConfig como fallback");
     return overflowOneConfig;
   }, [currentTenant, tenantConfig, tenantLoading]);
   const isOverflowOne = config.brand === 'overflow-one';

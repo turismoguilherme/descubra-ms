@@ -8,15 +8,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import TestUserCreator from '@/components/test/TestUserCreator';
-import PublicSectorUserCreator from '@/components/test/PublicSectorUserCreator';
+import { supabase } from '@/integrations/supabase/client';
+import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 
 const OverflowOneLogin: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [loginField, setLoginField] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loginMethod, setLoginMethod] = useState<'cadastur' | 'cnpj' | 'email'>('cadastur');
   
   const { signIn, signInWithProvider } = useAuth();
   const { toast } = useToast();
@@ -28,14 +29,48 @@ const OverflowOneLogin: React.FC = () => {
     setError('');
 
     try {
-      const { error } = await signIn(email, password);
+      let loginEmail = loginField;
+      
+      if (loginMethod === 'cadastur') {
+        // Buscar email pelo CADASTUR no banco
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('cadastur', loginField)
+          .single();
+        
+        if (!profile) {
+          setError('CADASTUR não encontrado. Verifique o número ou cadastre-se.');
+          return;
+        }
+        
+        loginEmail = profile.email;
+      } else if (loginMethod === 'cnpj') {
+        // Buscar email pelo CNPJ no banco
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('cnpj', loginField)
+          .single();
+        
+        if (!profile) {
+          setError('CNPJ não encontrado. Verifique o número ou cadastre-se.');
+          return;
+        }
+        
+        loginEmail = profile.email;
+      }
+      // Se for email, usar diretamente
+
+      const { error } = await signIn(loginEmail, password);
       
       if (error) {
         setError(error.message);
       } else {
-        // Verificar se é usuário CAT e redirecionar adequadamente
-        if (email.includes('cat-')) {
-          navigate('/viajar/cat-dashboard');
+        // Redirecionar baseado no contexto (MS ou ViaJAR)
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/ms/')) {
+          navigate('/ms');
         } else {
           navigate('/viajar/dashboard');
         }
@@ -59,31 +94,35 @@ const OverflowOneLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para Overflow One
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bem-vindo de volta
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
+      <ViaJARNavbar />
+      
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              <span className="text-white">Entrar na</span>
+              <span className="text-cyan-300"> ViaJAR</span>
           </h1>
-          <p className="text-gray-600">
-            Acesse sua conta empresarial na Overflow One
+            <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+              Acesse sua conta empresarial e continue transformando seu negócio turístico
           </p>
+          </div>
         </div>
+      </section>
 
-        {/* Test User Creator */}
-        <TestUserCreator />
-
-        {/* Login Form */}
+      {/* Login Form */}
+      <div className="max-w-md mx-auto px-4 py-12">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Entrar na Overflow One
+              Entrar na ViaJAR
             </CardTitle>
+            <p className="text-sm text-gray-600 mt-2">
+              Acesse sua conta empresarial
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,20 +132,73 @@ const OverflowOneLogin: React.FC = () => {
                 </Alert>
               )}
 
+              {/* Método de Login */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label>Método de Login</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    variant={loginMethod === 'cadastur' ? 'default' : 'outline'}
+                    onClick={() => setLoginMethod('cadastur')}
+                    className="text-xs"
+                  >
+                    CADASTUR
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={loginMethod === 'cnpj' ? 'default' : 'outline'}
+                    onClick={() => setLoginMethod('cnpj')}
+                    className="text-xs"
+                  >
+                    CNPJ
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={loginMethod === 'email' ? 'default' : 'outline'}
+                    onClick={() => setLoginMethod('email')}
+                    className="text-xs"
+                  >
+                    Email
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="loginField">
+                  {loginMethod === 'cadastur' ? 'CADASTUR' : 
+                   loginMethod === 'cnpj' ? 'CNPJ' : 'Email'}
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="loginField"
+                    type={loginMethod === 'email' ? 'email' : 'text'}
+                    placeholder={
+                      loginMethod === 'cadastur' ? '123456789' :
+                      loginMethod === 'cnpj' ? '12.345.678/0001-90' :
+                      'seu@email.com'
+                    }
+                    value={loginField}
+                    onChange={(e) => setLoginField(e.target.value)}
                     className="pl-10"
                     required
                   />
                 </div>
+                {loginMethod === 'cadastur' && (
+                  <p className="text-xs text-gray-500">
+                    Digite seu número CADASTUR (Cadastro de Prestadores de Serviços Turísticos)
+                  </p>
+                )}
+                {loginMethod === 'cnpj' && (
+                  <p className="text-xs text-gray-500">
+                    Digite seu CNPJ (com ou sem formatação)
+                  </p>
+                )}
+                {loginMethod === 'email' && (
+                  <p className="text-xs text-gray-500">
+                    Digite seu email de cadastro
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -140,7 +232,7 @@ const OverflowOneLogin: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <Link 
-                  to="/overflow-one/forgot-password" 
+                  to="/viajar/forgot-password" 
                   className="text-sm text-blue-600 hover:text-blue-700"
                 >
                   Esqueceu sua senha?
@@ -200,31 +292,11 @@ const OverflowOneLogin: React.FC = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Não tem uma conta?{' '}
-                <Link to="/overflow-one/register" className="text-blue-600 hover:text-blue-700 font-medium">
+                <Link to="/viajar/register" className="text-blue-600 hover:text-blue-700 font-medium">
                   Cadastre-se aqui
                 </Link>
               </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Test User Creator */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-center">Criar Usuário de Teste ViaJAR</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TestUserCreator />
-          </CardContent>
-        </Card>
-
-        {/* Public Sector User Creator */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-center">Criar Usuário Setor Público</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PublicSectorUserCreator />
           </CardContent>
         </Card>
 
@@ -247,8 +319,3 @@ const OverflowOneLogin: React.FC = () => {
 };
 
 export default OverflowOneLogin;
-
-
-
-
-

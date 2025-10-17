@@ -16,7 +16,16 @@ export const useSessionSecurity = ({
   warningMinutes = 5,
   trackActivity = true
 }: UseSessionSecurityOptions = {}) => {
-  const { user } = useAuth();
+  // Usar try-catch para evitar erro quando não há AuthProvider
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth.user;
+  } catch (error) {
+    // Se não há AuthProvider, continuar sem usuário
+    console.log("🔒 useSessionSecurity: AuthProvider não disponível, continuando sem usuário");
+  }
+  
   const { toast } = useToast();
   const [sessionWarningShown, setSessionWarningShown] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
