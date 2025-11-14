@@ -9,7 +9,18 @@ export const useMultiTenant = () => {
   const [tenantConfig, setTenantConfig] = useState<any>(null); // Pode ser mais específico com um tipo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userProfile, loading: authLoading } = useAuth(); // Usar o useAuth
+  
+  // Usar try-catch para evitar erro quando não há AuthProvider
+  let userProfile = null;
+  let authLoading = false;
+  
+  try {
+    const auth = useAuth();
+    userProfile = auth.userProfile;
+    authLoading = auth.loading;
+  } catch (error) {
+    console.log("🔍 useMultiTenant: AuthProvider não disponível, continuando sem usuário");
+  }
 
   useEffect(() => {
     const detectAndLoadTenant = async () => {

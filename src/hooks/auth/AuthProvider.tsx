@@ -160,8 +160,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Polling para detectar mudanças no localStorage
-    const interval = setInterval(handleLocalStorageChange, 500);
+    // Polling para detectar mudanças no localStorage (mais agressivo)
+    const interval = setInterval(handleLocalStorageChange, 5); // Reduced to 5ms for faster detection
 
     window.addEventListener('storage', handleStorageChange);
     

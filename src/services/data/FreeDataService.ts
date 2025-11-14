@@ -310,7 +310,7 @@ export class FreeDataService {
    */
   private isMSRegion(): boolean {
     // Verificar variáveis de ambiente ou configuração
-    return process.env.VITE_ALUMIA_API_KEY !== undefined;
+    return import.meta.env.VITE_ALUMIA_API_KEY !== undefined;
   }
 }
 
@@ -336,8 +336,8 @@ class OpenStreetMapService {
 }
 
 class GoogleSearchService {
-  private apiKey = process.env.VITE_GOOGLE_SEARCH_API_KEY;
-  private searchEngineId = process.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+  private apiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
+  private searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
   
   async getTourismData(region: string, type: string): Promise<any[]> {
     if (!this.apiKey || !this.searchEngineId) {

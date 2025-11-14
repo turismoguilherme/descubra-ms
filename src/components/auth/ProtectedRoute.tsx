@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -17,11 +17,43 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, userProfile, loading } = useAuth();
   const location = useLocation();
+  const [waitingForTestUser, setWaitingForTestUser] = useState(false);
 
-  // Aguardar carregamento inicial
-  if (loading) {
-    console.log('🔐 ProtectedRoute: loading=true, aguardando...');
-    return <div>Carregando...</div>;
+  // Verificar se há usuário de teste no localStorage e aguardar processamento
+  useEffect(() => {
+    const testUserId = localStorage.getItem('test_user_id');
+    const testUserData = localStorage.getItem('test_user_data');
+    
+    if (!user && testUserId && testUserData && !waitingForTestUser) {
+      console.log('🔐 ProtectedRoute: Usuário de teste detectado, aguardando processamento...');
+      setWaitingForTestUser(true);
+      
+      // Aguardar até 3 segundos para o AuthProvider processar
+      const timeout = setTimeout(() => {
+        console.log('🔐 ProtectedRoute: Timeout aguardando usuário de teste, continuando...');
+        setWaitingForTestUser(false);
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+    
+    if (user && waitingForTestUser) {
+      console.log('🔐 ProtectedRoute: Usuário de teste processado pelo AuthProvider');
+      setWaitingForTestUser(false);
+    }
+  }, [user, waitingForTestUser]);
+
+  // Aguardar carregamento inicial ou usuário de teste
+  if (loading || waitingForTestUser) {
+    console.log('🔐 ProtectedRoute: loading=true ou aguardando usuário de teste, aguardando...');
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   // Debug: Log do estado atual
@@ -29,7 +61,8 @@ export function ProtectedRoute({
     user: user ? { id: user.id, email: user.email } : null,
     userProfile: userProfile ? { user_id: userProfile.user_id, role: userProfile.role } : null,
     loading,
-    pathname: location.pathname
+    pathname: location.pathname,
+    allowedRoles
   });
 
   // Verificar se há usuário de teste no localStorage (fallback)
@@ -37,38 +70,111 @@ export function ProtectedRoute({
   const testUserData = localStorage.getItem('test_user_data');
   
   if (!user && testUserId && testUserData) {
-    console.log('🔐 ProtectedRoute: Usuário de teste encontrado no localStorage, aguardando AuthProvider...');
-    // Aguardar um pouco mais para o AuthProvider processar
+    console.log('🔐 ProtectedRoute: Usuário de teste encontrado no localStorage, processando imediatamente...');
+    
+    try {
+      const testUser = JSON.parse(testUserData);
+      console.log('🔐 ProtectedRoute: Processando usuário de teste:', testUser);
+      console.log('🔐 ProtectedRoute: Roles permitidos:', allowedRoles);
+      console.log('🔐 ProtectedRoute: Rota atual:', location.pathname);
+      
+      // Verificar se o role do usuário de teste está permitido
+      if (allowedRoles.length > 0 && !allowedRoles.includes(testUser.role)) {
+        console.warn('🔐 ProtectedRoute: Role de usuário de teste não permitida:', {
+          userRole: testUser.role,
+          allowedRoles,
+          pathname: location.pathname
+        });
+        
+        // Para usuários de teste com role não permitida, redirecionar para test-login
+        return <Navigate to="/test-login" replace />;
+      }
+      
+      console.log('🔐 ProtectedRoute: Acesso liberado para usuário de teste com role:', testUser.role);
+      
+      // Para usuários de teste, permitir acesso direto sem redirecionamento
+      // O AuthProvider processará em background
+      return <>{children}</>;
+    } catch (error) {
+      console.error('🔐 ProtectedRoute: Erro ao processar usuário de teste:', error);
+      // Se houver erro, aguardar o AuthProvider
+      return <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Carregando usuário de teste...</p>
+        </div>
+      </div>;
+    }
+  }
+
+  // Se não há usuário de teste no localStorage, mas ainda está carregando, aguardar mais
+  if (!user && !testUserId && loading) {
+    console.log('🔐 ProtectedRoute: Aguardando AuthProvider carregar...');
     return <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p>Carregando usuário de teste...</p>
+        <p>Aguardando autenticação...</p>
       </div>
     </div>;
   }
 
-  // Verificar autenticação
-  if (!user) {
+  // Verificar autenticação (apenas para usuários reais)
+  if (!user && !testUserId) {
     // Redirecionar para o login correto baseado na rota
-    const loginPath = location.pathname.startsWith('/viajar') ? '/viajar/login' : '/ms/login';
+    const isViaJARRoute = location.pathname.startsWith('/viajar') || 
+                         location.pathname.startsWith('/attendant-dashboard') || 
+                         location.pathname.startsWith('/secretary-dashboard') || 
+                         location.pathname.startsWith('/private-dashboard') || 
+                         location.pathname.startsWith('/unified');
+    const loginPath = isViaJARRoute ? '/viajar/login' : '/ms/login';
     console.warn('🔐 ProtectedRoute: usuário não autenticado. Redirecionando para', loginPath, { from: location.pathname });
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
-  // Verificar perfil do usuário
-  if (!userProfile) {
+  // Verificar perfil do usuário (apenas para usuários reais)
+  if (!userProfile && !testUserId) {
     // Redirecionar para o login correto baseado na rota
-    const loginPath = location.pathname.startsWith('/viajar') ? '/viajar/login' : '/ms/login';
+    const isViaJARRoute = location.pathname.startsWith('/viajar') || 
+                         location.pathname.startsWith('/attendant-dashboard') || 
+                         location.pathname.startsWith('/secretary-dashboard') || 
+                         location.pathname.startsWith('/private-dashboard') || 
+                         location.pathname.startsWith('/unified');
+    const loginPath = isViaJARRoute ? '/viajar/login' : '/ms/login';
     console.warn('🔐 ProtectedRoute: userProfile ausente. Redirecionando para', loginPath, { from: location.pathname });
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
+  // Determinar o role do usuário (para usuários de teste, verificar o localStorage)
+  let userRole = userProfile?.role || 'user'; // Valor padrão
+  if (testUserId && testUserData) {
+    try {
+      const testUser = JSON.parse(testUserData);
+      userRole = testUser.role;
+      console.log('🔐 ProtectedRoute: Verificando role de usuário de teste:', userRole);
+    } catch (error) {
+      console.error('🔐 ProtectedRoute: Erro ao processar usuário de teste para verificação de role:', error);
+      userRole = 'user'; // Fallback para user
+    }
+  }
+
   // Verificar permissões de role
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userProfile.role)) {
-    // Redirecionar para o login correto baseado na rota
-    const loginPath = location.pathname.startsWith('/viajar') ? '/viajar/login' : '/ms/login';
-    console.warn('🔐 ProtectedRoute: role não permitida.', { role: userProfile.role, allowedRoles, from: location.pathname });
-    return <Navigate to={loginPath} replace />;
+  if (allowedRoles.length > 0) {
+    if (!allowedRoles.includes(userRole)) {
+      // Redirecionar para o login correto baseado na rota
+      const isViaJARRoute = location.pathname.startsWith('/viajar') || 
+                           location.pathname.startsWith('/attendant-dashboard') || 
+                           location.pathname.startsWith('/secretary-dashboard') || 
+                           location.pathname.startsWith('/private-dashboard') || 
+                           location.pathname.startsWith('/unified');
+      const loginPath = isViaJARRoute ? '/viajar/login' : '/ms/login';
+      console.warn('🔐 ProtectedRoute: role não permitida.', { 
+        userRole, 
+        allowedRoles, 
+        from: location.pathname,
+        isTestUser: !!testUserId 
+      });
+      return <Navigate to={loginPath} replace />;
+    }
   }
 
   // Verificar região se necessário
@@ -84,7 +190,8 @@ export function ProtectedRoute({
   }
 
   // Verificações específicas por role
-  switch (userProfile.role) {
+  const currentRole = userRole || userProfile?.role || 'user';
+  switch (currentRole) {
     case 'master_admin':
       console.log('🔐 ProtectedRoute: acesso total (master_admin)');
       return <>{children}</>;
@@ -104,8 +211,8 @@ export function ProtectedRoute({
       break;
 
     case 'cat_attendant':
-      // Verificar se tem CAT associado
-      if (!(userProfile as any).cat_id) {
+      // Verificar se tem CAT associado (apenas para usuários reais, não de teste)
+      if (!(userProfile as any).cat_id && !testUserId) {
         console.warn('🔐 ProtectedRoute: cat_attendant sem cat_id. Redirecionando para /ms/select-cat');
         return <Navigate to="/ms/select-cat" replace />;
       }

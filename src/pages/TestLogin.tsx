@@ -33,23 +33,62 @@ const TestLogin: React.FC = () => {
   }, []);
 
   const handleUserSelected = (user: TestUser) => {
+    console.log("🧪 TestLogin: handleUserSelected chamado para:", user);
     setCurrentUser(user);
     setShowSelector(false);
     
-    // Redirecionar para dashboard baseado no role
-    switch (user.role) {
-      case 'admin':
-        navigate('/viajar/dashboard');
-        break;
-      case 'gestor_municipal':
-        navigate('/viajar/dashboard');
-        break;
-      case 'user':
-        navigate('/viajar/dashboard');
-        break;
-      default:
-        navigate('/viajar/dashboard');
-    }
+    // Salvar usuário no localStorage para o AuthProvider processar
+    localStorage.setItem('test_user_id', user.id);
+    localStorage.setItem('test_user_data', JSON.stringify(user));
+    
+    console.log("🧪 TestLogin: Usuário salvo no localStorage:", {
+      test_user_id: localStorage.getItem('test_user_id'),
+      test_user_data: localStorage.getItem('test_user_data')
+    });
+    
+    // Aguardar mais tempo para o AuthProvider processar o usuário
+    setTimeout(() => {
+      console.log("🧪 TestLogin: Redirecionando para dashboard baseado no role:", user.role);
+      
+      // Verificar se o usuário ainda está no localStorage
+      const savedUserId = localStorage.getItem('test_user_id');
+      const savedUserData = localStorage.getItem('test_user_data');
+      console.log("🧪 TestLogin: Verificação antes do redirecionamento:", {
+        savedUserId,
+        savedUserData: savedUserData ? JSON.parse(savedUserData) : null
+      });
+      
+      // Se os dados não estão no localStorage, salvar novamente
+      if (!savedUserId || !savedUserData) {
+        console.log("🧪 TestLogin: Dados não encontrados, salvando novamente...");
+        localStorage.setItem('test_user_id', user.id);
+        localStorage.setItem('test_user_data', JSON.stringify(user));
+      }
+      
+      // Redirecionar para dashboard baseado no role
+      switch (user.role) {
+        case 'admin':
+          console.log("🧪 TestLogin: Redirecionando admin para /viajar/dashboard");
+          navigate('/viajar/dashboard');
+          break;
+        case 'gestor_municipal':
+          console.log("🧪 TestLogin: Redirecionando gestor_municipal para /secretary-dashboard");
+          navigate('/secretary-dashboard');
+          break;
+        case 'user':
+          console.log("🧪 TestLogin: Redirecionando user para /private-dashboard");
+          navigate('/private-dashboard');
+          break;
+        case 'atendente':
+        case 'cat_attendant':
+          console.log("🧪 TestLogin: Redirecionando atendente para /attendant-dashboard");
+          navigate('/attendant-dashboard');
+          break;
+        default:
+          console.log("🧪 TestLogin: Redirecionando para /unified");
+          navigate('/unified');
+      }
+    }, 2000); // Increased timeout to 2 seconds
   };
 
   const handleQuickLogin = (businessType: string) => {
@@ -61,7 +100,9 @@ const TestLogin: React.FC = () => {
       restaurant: 'restaurant-owner-1',
       attraction: 'attraction-owner-1',
       admin: 'admin-1',
-      municipal: 'municipal-1'
+      municipal: 'municipal-1',
+      attendant: 'attendant-1',
+      cat_attendant: 'cat-attendant-1'
     };
 
     const userId = users[businessType as keyof typeof users];
@@ -151,6 +192,24 @@ const TestLogin: React.FC = () => {
               <Badge variant="secondary">Dashboard Municipal</Badge>
             </CardContent>
           </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleQuickLogin('attendant')}>
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">👩‍💼</div>
+              <h3 className="font-semibold">Atendente CAT</h3>
+              <p className="text-sm text-muted-foreground">Maria Silva - CAT Centro</p>
+              <Badge variant="secondary">Controle de Ponto</Badge>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleQuickLogin('cat_attendant')}>
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">👨‍💼</div>
+              <h3 className="font-semibold">Atendente CAT Aeroporto</h3>
+              <p className="text-sm text-muted-foreground">João Santos - CAT Aeroporto</p>
+              <Badge variant="secondary">IA para Atendimento</Badge>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="text-center">
@@ -227,7 +286,20 @@ const TestLogin: React.FC = () => {
         <div className="text-center space-y-4">
           <Button 
             size="lg" 
-            onClick={() => navigate('/viajar/dashboard')}
+            onClick={() => {
+              if (currentUser) {
+                // Salvar usuário no localStorage para o AuthProvider processar
+                localStorage.setItem('test_user_id', currentUser.id);
+                localStorage.setItem('test_user_data', JSON.stringify(currentUser));
+                
+                // Aguardar um pouco para o AuthProvider processar o usuário
+                setTimeout(() => {
+                  handleUserSelected(currentUser);
+                }, 1000);
+              } else {
+                navigate('/unified');
+              }
+            }}
             className="flex items-center gap-2"
           >
             Ir para Dashboard
@@ -246,6 +318,12 @@ const TestLogin: React.FC = () => {
               onClick={() => navigate('/viajar')}
             >
               Voltar ao Início
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => navigate('/debug-auth')}
+            >
+              🔍 Debug Auth
             </Button>
           </div>
         </div>

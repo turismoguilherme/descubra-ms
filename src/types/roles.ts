@@ -4,6 +4,7 @@ export type UserRole =
   | 'gestor_igr'
   | 'gestor_municipal'
   | 'atendente'
+  | 'cat_attendant'
   | 'user';
 
 export interface RolePermissions {
@@ -124,6 +125,25 @@ export const ROLE_CONFIG: Record<UserRole, UserRoleData> = {
     },
     displayName: 'Atendente',
     description: 'Atendimento ao público',
+    dashboardComponent: 'AtendenteDashboard'
+  },
+  cat_attendant: {
+    role: 'cat_attendant',
+    permissions: {
+      canViewDestinations: true,
+      canEditDestinations: false,
+      canViewEvents: true,
+      canEditEvents: false,
+      canViewUsers: false,
+      canEditUsers: false,
+      canViewAnalytics: false,
+      canViewReports: false,
+      canManageCheckins: true,
+      canViewRegionalData: false,
+      canViewStateData: false,
+    },
+    displayName: 'Atendente CAT',
+    description: 'Atendente do Centro de Atendimento ao Turista',
     dashboardComponent: 'AtendenteDashboard'
   },
   user: {

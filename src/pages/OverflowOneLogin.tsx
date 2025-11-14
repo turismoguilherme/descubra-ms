@@ -19,7 +19,23 @@ const OverflowOneLogin: React.FC = () => {
   const [error, setError] = useState('');
   const [loginMethod, setLoginMethod] = useState<'cadastur' | 'cnpj' | 'email'>('cadastur');
   
-  const { signIn, signInWithProvider } = useAuth();
+  // Verificar se o AuthProvider está disponível
+  let auth = null;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error('OverflowOneLogin: AuthProvider não disponível:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Carregando sistema de autenticação...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  const { signIn, signInWithProvider } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
 

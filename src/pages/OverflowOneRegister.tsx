@@ -31,7 +31,23 @@ const OverflowOneRegister: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
   
-  const { signUp, signInWithProvider } = useAuth();
+  // Verificar se o AuthProvider está disponível
+  let auth = null;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error('OverflowOneRegister: AuthProvider não disponível:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Carregando sistema de autenticação...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  const { signUp, signInWithProvider } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
 

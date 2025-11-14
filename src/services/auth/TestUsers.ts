@@ -88,6 +88,30 @@ export const TEST_USERS: TestUser[] = [
     description: 'Gestor municipal de turismo de Bonito, MS',
     features: ['Dashboard Municipal', 'Relatórios de Turismo', 'Gestão de Atrações'],
     autoLogin: true
+  },
+  {
+    id: 'attendant-1',
+    name: 'Maria Silva',
+    email: 'maria.silva@bonito.ms.gov.br',
+    businessType: 'other',
+    businessName: 'CAT Bonito - Centro',
+    role: 'atendente',
+    avatar: '👩‍💼',
+    description: 'Atendente do CAT Centro de Bonito, MS',
+    features: ['Controle de Ponto', 'IA para Atendimento', 'Gestão de Turistas', 'Tradução Automática'],
+    autoLogin: true
+  },
+  {
+    id: 'cat-attendant-1',
+    name: 'João Santos',
+    email: 'joao.santos@bonito.ms.gov.br',
+    businessType: 'other',
+    businessName: 'CAT Aeroporto',
+    role: 'cat_attendant',
+    avatar: '👨‍💼',
+    description: 'Atendente do CAT Aeroporto de Bonito, MS',
+    features: ['Controle de Ponto', 'IA para Atendimento', 'Gestão de Turistas', 'Tradução Automática'],
+    autoLogin: true
   }
 ];
 

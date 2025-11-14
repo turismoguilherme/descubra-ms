@@ -4,33 +4,63 @@ import { UserRole, RoleBasedAccess, ROLE_CONFIG, RolePermissions } from '@/types
 // Utilities removidos - funcionalidade de teste não necessária em produção
 
 export const useRoleBasedAccess = (): RoleBasedAccess => {
-  const { user, userProfile } = useAuth();
+  // Verificar se o AuthProvider está disponível
+  let auth = null;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error('useRoleBasedAccess: AuthProvider não disponível:', error);
+    // Retornar valores padrão se não há auth
+    return {
+      userRole: 'user' as UserRole,
+      permissions: ROLE_CONFIG.user.permissions,
+      regionId: null,
+      cityId: null,
+      canAccess: () => false,
+      isManager: false,
+      isAdmin: false,
+      isSecretary: false,
+      isAttendant: false,
+      isPrivate: false
+    };
+  }
+  
+  const { user, userProfile } = auth;
 
   const roleData = useMemo(() => {
     // Verificar se está em modo de teste
     // Verificar dados de teste no localStorage para desenvolvimento
-    const testUserData = localStorage.getItem('test-user-data');
-    const testToken = localStorage.getItem('supabase.auth.token');
+    const testUserId = localStorage.getItem('test_user_id');
+    const testUserData = localStorage.getItem('test_user_data');
     
-    if (testUserData && testToken === 'test-token') {
-      const testData = JSON.parse(testUserData);
-      if (testData) {
-        const role = testData.role as UserRole;
-        const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
+    if (testUserId && testUserData) {
+      try {
+        const testData = JSON.parse(testUserData);
+        console.log('🔍 useRoleBasedAccess: Detectando usuário de teste:', testData);
+        
+        if (testData) {
+          const role = testData.role as UserRole;
+          const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
 
-        const cityMapping = {
-          'atendente': 'campo-grande',
-          'gestor_municipal': 'campo-grande', 
-          'gestor_igr': 'dourados',
-          'diretor_estadual': 'campo-grande'
-        };
+          const cityMapping = {
+            'atendente': 'campo-grande',
+            'cat_attendant': 'campo-grande',
+            'gestor_municipal': 'campo-grande', 
+            'gestor_igr': 'dourados',
+            'diretor_estadual': 'campo-grande'
+          };
 
-        return {
-          userRole: role,
-          permissions: config.permissions,
-          regionId: role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
-          cityId: cityMapping[role] || 'campo-grande'
-        };
+          console.log('🔍 useRoleBasedAccess: Role detectado:', role, 'Config:', config);
+
+          return {
+            userRole: role,
+            permissions: config.permissions,
+            regionId: role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
+            cityId: cityMapping[role] || 'campo-grande'
+          };
+        }
+      } catch (error) {
+        console.error('🔍 useRoleBasedAccess: Erro ao processar usuário de teste:', error);
       }
     }
 

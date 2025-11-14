@@ -49,7 +49,7 @@ const REGION_CONFIGS: Record<string, RegionConfig> = {
     features: ['all'],
     lastUpdate: new Date(),
     updateFrequency: 'tempo real',
-    apiEndpoint: process.env.VITE_ALUMIA_API_URL,
+    apiEndpoint: import.meta.env.VITE_ALUMIA_API_URL,
     hasOfficialData: true,
   },
   

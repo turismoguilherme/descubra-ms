@@ -7,7 +7,31 @@ import { useAuth } from "@/hooks/useAuth";
 const ViaJARNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const { user } = useAuth();
+  
+  // Verificar se o AuthProvider está disponível
+  let auth = null;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error('ViaJARNavbar: AuthProvider não disponível:', error);
+    // Retornar navbar sem funcionalidades de usuário
+    return (
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-32 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+  
+  const { user } = auth;
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 

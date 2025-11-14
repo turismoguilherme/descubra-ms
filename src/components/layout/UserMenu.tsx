@@ -16,7 +16,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 
 const UserMenu = () => {
-  const { user } = useAuth();
+  // Verificar se o AuthProvider está disponível
+  let auth = null;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error('UserMenu: AuthProvider não disponível:', error);
+    return null; // Não renderizar menu se não há auth
+  }
+  
+  const { user } = auth;
   const { userRole, isManager, isAdmin, handleSecureLogout } = useSecureAuth();
   const location = useLocation();
   

@@ -12,6 +12,10 @@ import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+// Removendo imports complexos temporariamente
+// import ErrorBoundary from "@/components/error/ErrorBoundary";
+// import DebugPanel from "@/components/debug/DebugPanel";
+// import { ErrorMonitorPanel } from "@/services/ErrorMonitor";
 
 // Inicializar serviços de eventos automaticamente
 import "@/services/events/EventServiceInitializer";
@@ -47,6 +51,11 @@ const SmartOnboarding = lazy(() => import("@/pages/SmartOnboarding"));
 const TestLogin = lazy(() => import("@/pages/TestLogin"));
 const CATDashboard = lazy(() => import("@/pages/CATDashboard"));
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
+const SecretaryDashboard = lazy(() => import("@/components/secretary/SecretaryDashboard"));
+const AttendantDashboardRestored = lazy(() => import("@/components/cat/AttendantDashboardRestored"));
+const PrivateDashboard = lazy(() => import("@/pages/PrivateDashboard"));
+const UnifiedDashboard = lazy(() => import("@/pages/UnifiedDashboard"));
+const AuthDebug = lazy(() => import("@/components/debug/AuthDebug"));
 
 // State Pages
 import MSIndex from "@/pages/MSIndex";
@@ -105,6 +114,29 @@ function App() {
                             <Route path="/viajar/pricing" element={<Suspense fallback={<LoadingFallback />}><ViaJARPricing /></Suspense>} />
                             <Route path="/viajar/diagnostico" element={<Suspense fallback={<LoadingFallback />}><DiagnosticPage /></Suspense>} />
                             <Route path="/test-login" element={<Suspense fallback={<LoadingFallback />}><TestLogin /></Suspense>} />
+                            <Route path="/debug-auth" element={<Suspense fallback={<LoadingFallback />}><AuthDebug /></Suspense>} />
+                            
+                            {/* Dashboard Routes Específicos */}
+                            <Route path="/secretary-dashboard" element={
+                              <ProtectedRoute allowedRoles={['gestor_municipal', 'admin']}>
+                                <Suspense fallback={<LoadingFallback />}><SecretaryDashboard /></Suspense>
+                              </ProtectedRoute>
+                            } />
+                            <Route path="/attendant-dashboard" element={
+                              <ProtectedRoute allowedRoles={['atendente', 'cat_attendant', 'admin']}>
+                                <Suspense fallback={<LoadingFallback />}><AttendantDashboardRestored /></Suspense>
+                              </ProtectedRoute>
+                            } />
+                            <Route path="/private-dashboard" element={
+                              <ProtectedRoute allowedRoles={['user', 'admin']}>
+                                <Suspense fallback={<LoadingFallback />}><PrivateDashboard /></Suspense>
+                              </ProtectedRoute>
+                            } />
+                            <Route path="/unified" element={
+                              <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                <Suspense fallback={<LoadingFallback />}><UnifiedDashboard /></Suspense>
+                              </ProtectedRoute>
+                            } />
                             
                             {/* ViaJAR Dashboard Routes (protegidas) */}
                             <Route path="/viajar/dashboard" element={
@@ -185,7 +217,7 @@ function App() {
             </OverflowOneAuthProvider>
           </ViaJARAuthProvider>
         </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
   );
 }
 
