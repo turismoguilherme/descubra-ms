@@ -4,43 +4,19 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { 
   Clock, 
-  MapPin, 
-  Users, 
-  MessageCircle, 
-  CheckCircle, 
-  XCircle,
-  Calendar,
-  TrendingUp,
-  Phone,
-  Mail,
-  Building2,
-  UserCheck,
   Bot,
-  Wifi,
-  WifiOff,
-  RefreshCw,
-  LogIn,
-  LogOut,
-  Timer,
-  Star,
-  Heart,
-  Globe,
   BarChart3,
   Settings
 } from 'lucide-react';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { touristService } from '@/services/cat/touristService';
-import { attendanceService } from '@/services/cat/attendanceService';
-import { aiConversationService } from '@/services/cat/aiConversationService';
-import { translationService } from '@/services/cat/translationService';
+import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
+import CATCheckInSection from './CATCheckInSection';
+import CATAIInterface from './CATAIInterface';
+import CATReportsSection from './CATReportsSection';
 
 const AttendantDashboardRestored: React.FC = () => {
   // Verificar se o AuthProvider está disponível
@@ -60,107 +36,126 @@ const AttendantDashboardRestored: React.FC = () => {
   }
 
   const { user } = auth;
-  const { isAttendant } = useRoleBasedAccess();
-  const { toast } = useToast();
-
-  const [activeTab, setActiveTab] = useState('ai');
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [tourists, setTourists] = useState<any[]>([]);
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
-  const [isLoadingTourists, setIsLoadingTourists] = useState(false);
-  const [touristStats, setTouristStats] = useState<any>(null);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+  
+  // Hooks devem ser chamados sempre, não condicionalmente
+  let roleAccess;
+  try {
+    roleAccess = useRoleBasedAccess();
+  } catch (error) {
+    console.error('AttendantDashboardRestored: Erro ao obter role access:', error);
+    // Retornar valores padrão se houver erro
+    roleAccess = {
+      isAttendant: false,
+      userRole: 'user' as const,
+      isAdmin: false,
+      isManager: false,
+      isSecretary: false,
+      isPrivate: false,
+      permissions: {} as any,
+      canAccess: () => false,
+      getDashboardComponent: () => '',
+      getDisplayName: () => '',
+      getDescription: () => '',
+      regionId: undefined,
+      cityId: undefined
     };
-  }, []);
+  }
+  
+  const isAttendant = roleAccess?.isAttendant || false;
+  const userRole = roleAccess?.userRole || 'user';
 
-  // Carregar dados do Supabase
+  // Debug: Log do estado de autenticação
+  console.log('🔍 AttendantDashboardRestored: Estado atual:', {
+    user: user ? { id: user.id, email: user.email } : null,
+    isAttendant,
+    userRole,
+    testUserId: typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null,
+    testUserData: typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null
+  });
+
+  const [activeTab, setActiveTab] = useState('checkin');
+
+  // Forçar processamento de usuário de teste se necessário
   useEffect(() => {
-    if (user?.id && activeTab === 'tourists') {
-      loadTourists();
-      loadTouristStats();
-    }
-    if (user?.id && activeTab === 'reports') {
-      loadAttendanceRecords();
-    }
-  }, [user, activeTab]);
-
-  const loadTourists = async () => {
-    if (!user?.id) return;
-    setIsLoadingTourists(true);
+    let testUserId: string | null = null;
+    let testUserData: string | null = null;
+    
     try {
-      const data = await touristService.getTourists({
-        attendant_id: user.id,
-        startDate: new Date().toISOString().split('T')[0]
-      });
-      setTourists(data);
-    } catch (error) {
-      console.error('Erro ao carregar turistas:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os turistas',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoadingTourists(false);
+      testUserId = typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null;
+      testUserData = typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null;
+    } catch (e) {
+      // Ignorar erros de localStorage
     }
-  };
+    
+    if (testUserId && testUserData && !user) {
+      console.log('🔍 AttendantDashboardRestored: Forçando processamento de usuário de teste...');
+      // Disparar evento customizado para o AuthProvider processar
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('storage'));
+          // Também tentar novamente após um pequeno delay
+          const timeout = setTimeout(() => {
+            window.dispatchEvent(new Event('storage'));
+          }, 100);
+          
+          return () => clearTimeout(timeout);
+        }
+      } catch (e) {
+        console.warn('🔍 AttendantDashboardRestored: Erro ao disparar evento:', e);
+      }
+    }
+  }, [user]);
 
-  const loadTouristStats = async () => {
-    if (!user?.id) return;
+  // Verificar se há usuário de teste no localStorage (aguardar processamento)
+  let testUserId: string | null = null;
+  let testUserData: string | null = null;
+  
+  try {
+    testUserId = typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null;
+    testUserData = typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null;
+  } catch (e) {
+    console.warn('🔍 AttendantDashboardRestored: Erro ao acessar localStorage:', e);
+  }
+  
+  // Se há usuário de teste mas ainda não foi processado, aguardar
+  if (testUserId && testUserData && !user) {
     try {
-      const stats = await touristService.getTouristStats({
-        attendant_id: user.id
-      });
-      setTouristStats(stats);
+      const testUser = JSON.parse(testUserData);
+      const isTestAttendant = testUser.role === 'atendente' || testUser.role === 'cat_attendant';
+      
+      if (isTestAttendant) {
+        console.log('🔍 AttendantDashboardRestored: Aguardando processamento do usuário de teste...');
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Carregando usuário de teste...</p>
+            </div>
+          </div>
+        );
+      }
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      console.error('🔍 AttendantDashboardRestored: Erro ao processar usuário de teste:', error);
     }
-  };
-
-  const loadAttendanceRecords = async () => {
-    if (!user?.id) return;
-    try {
-      const records = await attendanceService.getAttendanceRecords({
-        attendant_id: user.id,
-        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-      setAttendanceRecords(records);
-    } catch (error) {
-      console.error('Erro ao carregar registros de atendimento:', error);
-    }
-  };
+  }
 
   if (!user || !isAttendant) {
+    console.warn('🔍 AttendantDashboardRestored: Acesso negado', {
+      hasUser: !!user,
+      isAttendant,
+      userRole
+    });
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <Card className="w-full max-w-md p-6 text-center">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-red-600">Acesso Negado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 mb-4">Você não tem permissão para acessar este dashboard.</p>
-            <Button onClick={() => window.location.href = '/test-login'}>Voltar para Login de Teste</Button>
-          </CardContent>
-        </Card>
+        <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h2>
+          <p className="text-gray-700 mb-4">Você não tem permissão para acessar este dashboard.</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Role: {userRole || 'não definido'} | isAttendant: {isAttendant ? 'sim' : 'não'}
+          </p>
+          <Button onClick={() => window.location.href = '/test-login'}>Voltar para Login de Teste</Button>
+        </div>
       </div>
     );
   }
@@ -178,10 +173,6 @@ const AttendantDashboardRestored: React.FC = () => {
               <p className="text-blue-100 mt-2">Bem-vindo, {user?.name || 'Atendente'}</p>
             </div>
             <div className="flex gap-4">
-              <Button className="bg-blue-700 hover:bg-blue-800 text-white">
-                <UserCheck className="h-4 w-4 mr-2" />
-                CAT Atendente
-              </Button>
               <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -198,47 +189,36 @@ const AttendantDashboardRestored: React.FC = () => {
             <nav className="space-y-2">
               <button
                 onClick={() => setActiveTab('checkin')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex flex-col items-center gap-2 ${
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeTab === 'checkin' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Clock className="h-5 w-5" />
-                <span className="text-sm font-medium">Controle de Ponto</span>
+                <Clock className="h-4 w-4" />
+                Controle de Ponto
               </button>
               <button
                 onClick={() => setActiveTab('ai')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex flex-col items-center gap-2 ${
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeTab === 'ai' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Bot className="h-5 w-5" />
-                <span className="text-sm font-medium">IA Guatá</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('tourists')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex flex-col items-center gap-2 ${
-                  activeTab === 'tourists' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Users className="h-5 w-5" />
-                <span className="text-sm font-medium">Gestão de Turistas</span>
+                <Bot className="h-4 w-4" />
+                IA Guilherme
               </button>
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex flex-col items-center gap-2 ${
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeTab === 'reports' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <BarChart3 className="h-5 w-5" />
-                <span className="text-sm font-medium">Relatórios</span>
+                <BarChart3 className="h-4 w-4" />
+                Relatórios
               </button>
             </nav>
           </div>
@@ -246,600 +226,19 @@ const AttendantDashboardRestored: React.FC = () => {
                 
         {/* Conteúdo Principal */}
         <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
-          {/* Seção IA Guatá */}
-          {activeTab === 'ai' && (
-            <div className="space-y-6">
-              {/* Header da IA */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Bot className="h-8 w-8 text-purple-600" />
-                  <h2 className="text-2xl font-bold text-purple-800">IA Guatá - Assistente Inteligente</h2>
-                </div>
-                </div>
-                
-              {/* Informações do Assistente */}
-              <Card className="bg-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Building2 className="h-6 w-6 text-blue-600" />
-                </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Assistente IA - CAT Centro</h3>
-                        <p className="text-sm text-gray-600">Atendente: Pedro Atendente</p>
-                  </div>
-                </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Histórico
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4" />
-                </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-              {/* Chat Interface */}
-              <Card className="bg-white">
-                <CardContent className="p-6">
-                  {/* Mensagem de Boas-vindas */}
-                  <div className="mb-6">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Bot className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div className="bg-gray-100 rounded-lg p-4 max-w-md">
-                        <p className="text-gray-800">
-                          Olá! Sou o assistente IA do CAT Centro. Como posso ajudá-lo hoje?
-                        </p>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span>17:38</span>
-                          <span>BR</span>
-                          <button className="hover:text-gray-700">
-                            <MessageCircle className="h-3 w-3" />
-                          </button>
-                          <button className="hover:text-gray-700">
-                            <Star className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Ações Rápidas */}
-                  <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Ações Rápidas</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        👋 Boas-vindas
-                      </Button>
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        🏖️ Atrativos
-                      </Button>
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        🍽️ Restaurantes
-                      </Button>
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        🏨 Hospedagem
-                      </Button>
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        🚗 Transporte
-                      </Button>
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        📅 Eventos
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Campo de Entrada */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-500" />
-                      <select className="text-sm border-none bg-transparent text-gray-600">
-                        <option>BR Português</option>
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <Input placeholder="Digite sua pergunta..." />
-                    </div>
-                </div>
-              </CardContent>
-            </Card>
-            </div>
-          )}
-
-          {/* Seção Controle de Ponto */}
+          {/* Controle de Ponto */}
           {activeTab === 'checkin' && (
-            <div className="space-y-6">
-              {/* Header do Controle de Ponto */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-8 w-8 text-green-600" />
-                  <h2 className="text-2xl font-bold text-green-800">Controle de Ponto</h2>
-                </div>
-                <Badge className={`px-3 py-1 text-sm ${isOnline ? 'bg-green-500/20 text-green-200 border-green-300/30' : 'bg-red-500/20 text-red-200 border-red-300/30'}`}>
-                  {isOnline ? <Wifi className="h-4 w-4 mr-2" /> : <WifiOff className="h-4 w-4 mr-2" />}
-                  {isOnline ? 'Online' : 'Offline'}
-                </Badge>
-              </div>
-
-              {/* Status Atual */}
-              <Card className="bg-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                        <UserCheck className="h-8 w-8 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">Pedro Atendente</h3>
-                        <p className="text-sm text-gray-600">CAT Centro - Bonito, MS</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className="bg-green-100 text-green-800 px-3 py-1">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Ativo
-                          </Badge>
-                          <span className="text-sm text-gray-500">
-                            {currentTime.toLocaleTimeString('pt-BR')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-green-600">08:30</div>
-                      <p className="text-sm text-gray-600">Tempo trabalhado hoje</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Botões de Ação */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <LogIn className="h-5 w-5 text-green-600" />
-                      Check-in
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <p className="text-sm text-green-800 mb-2">
-                          <MapPin className="h-4 w-4 inline mr-2" />
-                          Localização: CAT Centro, Bonito-MS
-                        </p>
-                        <p className="text-xs text-green-600">
-                          Precisão: ±3 metros
-                        </p>
-                      </div>
-                      <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Fazer Check-in
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <LogOut className="h-5 w-5 text-red-600" />
-                      Check-out
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-4 bg-red-50 rounded-lg">
-                        <p className="text-sm text-red-800 mb-2">
-                          <Timer className="h-4 w-4 inline mr-2" />
-                          Tempo atual: 08:30
-                        </p>
-                        <p className="text-xs text-red-600">
-                          Registro automático
-                        </p>
-                      </div>
-                      <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Fazer Check-out
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Histórico de Pontos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                    Histórico de Pontos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <div>
-                          <p className="text-sm font-medium">Check-in</p>
-                          <p className="text-xs text-gray-500">Hoje, 08:00</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Confirmado</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <div>
-                          <p className="text-sm font-medium">Check-out</p>
-                          <p className="text-xs text-gray-500">Ontem, 17:30</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-red-100 text-red-800">Finalizado</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <div>
-                          <p className="text-sm font-medium">Check-in</p>
-                          <p className="text-xs text-gray-500">Ontem, 08:15</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Confirmado</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-                      </div>
+            <CATCheckInSection catName="CAT Centro" />
           )}
 
-          {/* Seção Gestão de Turistas */}
-          {activeTab === 'tourists' && (
-            <div className="space-y-6">
-              {/* Header da Gestão de Turistas */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Users className="h-8 w-8 text-blue-600" />
-                  <h2 className="text-2xl font-bold text-blue-800">Gestão de Turistas</h2>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-                  <Users className="h-4 w-4 mr-2" />
-                  {touristStats?.today || 0} turistas hoje
-                </Badge>
-              </div>
-
-              {/* Estatísticas */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">
-                      {touristStats?.today || 0}
-                    </div>
-                    <p className="text-sm text-gray-600">Turistas Hoje</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-green-600 mb-2">
-                      {touristStats?.averageRating?.toFixed(1) || '0.0'}
-                    </div>
-                    <p className="text-sm text-gray-600">Avaliação Média</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-purple-600 mb-2">
-                      {touristStats?.thisWeek || 0}
-                    </div>
-                    <p className="text-sm text-gray-600">Esta Semana</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-orange-600 mb-2">
-                      {touristStats?.thisMonth || 0}
-                    </div>
-                    <p className="text-sm text-gray-600">Este Mês</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Lista de Turistas */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    Turistas Atendidos Hoje
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingTourists ? (
-                    <div className="flex items-center justify-center p-8">
-                      <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
-                    </div>
-                  ) : tourists.length === 0 ? (
-                    <div className="text-center p-8 text-gray-500">
-                      Nenhum turista atendido hoje.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {tourists.slice(0, 10).map((tourist) => (
-                        <div key={tourist.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <Users className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{tourist.name || 'Sem nome'}</p>
-                              <p className="text-sm text-gray-600">
-                                {tourist.origin_city && tourist.origin_state 
-                                  ? `${tourist.origin_city}, ${tourist.origin_state}`
-                                  : tourist.origin_country || 'Origem não informada'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            {tourist.rating && (
-                              <Badge className="bg-green-100 text-green-800">
-                                <Star className="h-3 w-3 mr-1" />
-                                {tourist.rating.toFixed(1)}
-                              </Badge>
-                            )}
-                            <span className="text-sm text-gray-500">
-                              {new Date(tourist.visit_time).toLocaleTimeString('pt-BR', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Avaliações Recentes */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-600" />
-                    Avaliações Recentes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span className="text-sm font-medium ml-2">5.0</span>
-                      </div>
-                      <p className="text-sm text-gray-800 mb-2">
-                        "Excelente atendimento! Muito prestativo e conhece bem a região."
-                      </p>
-                      <p className="text-xs text-gray-600">Maria Silva - 14:30</p>
-                    </div>
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <Star className="h-4 w-4 text-gray-300" />
-                        <span className="text-sm font-medium ml-2">4.0</span>
-                      </div>
-                      <p className="text-sm text-gray-800 mb-2">
-                        "Bom atendimento, mas poderia ter mais informações em inglês."
-                      </p>
-                      <p className="text-xs text-gray-600">John Smith - 13:45</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-                </div>
+          {/* IA Guilherme */}
+          {activeTab === 'ai' && (
+            <CATAIInterface catId={undefined} />
           )}
 
-          {/* Seção Relatórios */}
+          {/* Relatórios */}
           {activeTab === 'reports' && (
-            <div className="space-y-6">
-              {/* Header dos Relatórios */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="h-8 w-8 text-purple-600" />
-                  <h2 className="text-2xl font-bold text-purple-800">Relatórios</h2>
-                </div>
-                <Badge className="bg-purple-100 text-purple-800 px-3 py-1">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Últimos 30 dias
-                </Badge>
-              </div>
-
-              {/* Métricas Principais */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-3xl font-bold text-blue-600 mb-2">247</div>
-                        <p className="text-sm text-gray-600">Total de Atendimentos</p>
-                      </div>
-                      <TrendingUp className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{width: '85%'}}></div>
-                        </div>
-                        <span className="text-sm font-semibold">85%</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">Meta mensal</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-3xl font-bold text-green-600 mb-2">4.8</div>
-                        <p className="text-sm text-gray-600">Avaliação Média</p>
-                      </div>
-                      <Star className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-600 h-2 rounded-full" style={{width: '96%'}}></div>
-                        </div>
-                        <span className="text-sm font-semibold">96%</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">Excelente</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-3xl font-bold text-purple-600 mb-2">156</div>
-                        <p className="text-sm text-gray-600">Horas Trabalhadas</p>
-                      </div>
-                      <Clock className="h-8 w-8 text-purple-600" />
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-purple-600 h-2 rounded-full" style={{width: '78%'}}></div>
-                        </div>
-                        <span className="text-sm font-semibold">78%</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">Presença</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Relatórios Disponíveis */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-blue-600" />
-                      Relatório Diário
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Data:</span>
-                        <span className="font-semibold">Hoje</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Atendimentos:</span>
-                        <span className="font-semibold">15</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Tempo médio:</span>
-                        <span className="font-semibold">8 min</span>
-                      </div>
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Gerar Relatório
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
-                      Relatório Semanal
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Período:</span>
-                        <span className="font-semibold">Esta semana</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Atendimentos:</span>
-                        <span className="font-semibold">89</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Crescimento:</span>
-                        <span className="font-semibold text-green-600">+12%</span>
-                      </div>
-                      <Button className="w-full bg-green-600 hover:bg-green-700">
-                        <TrendingUp className="h-4 w-4 mr-2" />
-                        Gerar Relatório
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Gráfico de Performance */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-purple-600" />
-                    Performance dos Últimos 7 Dias
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-purple-800">Segunda-feira</p>
-                        <p className="text-sm text-purple-600">12 atendimentos</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div className="bg-purple-600 h-2 rounded-full" style={{width: '80%'}}></div>
-                        </div>
-                        <span className="text-sm font-semibold">80%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-blue-800">Terça-feira</p>
-                        <p className="text-sm text-blue-600">15 atendimentos</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{width: '100%'}}></div>
-                        </div>
-                        <span className="text-sm font-semibold">100%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-green-800">Quarta-feira</p>
-                        <p className="text-sm text-green-600">18 atendimentos</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-600 h-2 rounded-full" style={{width: '120%'}}></div>
-                        </div>
-                        <span className="text-sm font-semibold">120%</span>
-                      </div>
-                    </div>
-                  </div>
-              </CardContent>
-            </Card>
-          </div>
+            <CATReportsSection catId={undefined} />
           )}
         </div>
       </div>

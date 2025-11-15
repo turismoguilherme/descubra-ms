@@ -176,4 +176,9 @@ export interface RoleBasedAccess {
   getDashboardComponent: () => string;
   getDisplayName: () => string;
   getDescription: () => string;
+  isAdmin: boolean;
+  isManager: boolean;
+  isSecretary: boolean;
+  isAttendant: boolean;
+  isPrivate: boolean;
 } 

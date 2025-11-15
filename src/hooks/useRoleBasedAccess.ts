@@ -28,43 +28,72 @@ export const useRoleBasedAccess = (): RoleBasedAccess => {
   const { user, userProfile } = auth;
 
   const roleData = useMemo(() => {
-    // Verificar se está em modo de teste
-    // Verificar dados de teste no localStorage para desenvolvimento
-    const testUserId = localStorage.getItem('test_user_id');
-    const testUserData = localStorage.getItem('test_user_data');
-    
-    if (testUserId && testUserData) {
+    try {
+      // Verificar se está em modo de teste
+      // Verificar dados de teste no localStorage para desenvolvimento
+      let testUserId: string | null = null;
+      let testUserData: string | null = null;
+      
       try {
-        const testData = JSON.parse(testUserData);
-        console.log('🔍 useRoleBasedAccess: Detectando usuário de teste:', testData);
-        
-        if (testData) {
-          const role = testData.role as UserRole;
-          const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
-
-          const cityMapping = {
-            'atendente': 'campo-grande',
-            'cat_attendant': 'campo-grande',
-            'gestor_municipal': 'campo-grande', 
-            'gestor_igr': 'dourados',
-            'diretor_estadual': 'campo-grande'
-          };
-
-          console.log('🔍 useRoleBasedAccess: Role detectado:', role, 'Config:', config);
-
-          return {
-            userRole: role,
-            permissions: config.permissions,
-            regionId: role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
-            cityId: cityMapping[role] || 'campo-grande'
-          };
-        }
-      } catch (error) {
-        console.error('🔍 useRoleBasedAccess: Erro ao processar usuário de teste:', error);
+        testUserId = typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null;
+        testUserData = typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null;
+      } catch (e) {
+        // localStorage pode não estar disponível
+        console.warn('🔍 useRoleBasedAccess: localStorage não disponível:', e);
       }
-    }
+      
+      if (testUserId && testUserData) {
+        try {
+          const testData = JSON.parse(testUserData);
+          console.log('🔍 useRoleBasedAccess: Detectando usuário de teste:', testData);
+          
+          if (testData) {
+            const role = testData.role as UserRole;
+            const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
 
-    if (!user || !userProfile) {
+            const cityMapping: Record<string, string> = {
+              'atendente': 'campo-grande',
+              'cat_attendant': 'campo-grande',
+              'gestor_municipal': 'campo-grande', 
+              'gestor_igr': 'dourados',
+              'diretor_estadual': 'campo-grande'
+            };
+
+            console.log('🔍 useRoleBasedAccess: Role detectado:', role, 'Config:', config);
+
+            return {
+              userRole: role,
+              permissions: config.permissions,
+              regionId: role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
+              cityId: cityMapping[role] || 'campo-grande'
+            };
+          }
+        } catch (error) {
+          console.error('🔍 useRoleBasedAccess: Erro ao processar usuário de teste:', error);
+        }
+      }
+
+      if (!user || !userProfile) {
+        return {
+          userRole: 'user' as UserRole,
+          permissions: ROLE_CONFIG.user.permissions,
+          regionId: undefined,
+          cityId: undefined
+        };
+      }
+
+      const role = userProfile.role as UserRole;
+      const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
+
+      return {
+        userRole: role,
+        permissions: config.permissions,
+        regionId: userProfile.region_id || undefined,
+        cityId: userProfile.city_id || undefined
+      };
+    } catch (error) {
+      console.error('🔍 useRoleBasedAccess: Erro no useMemo:', error);
+      // Retornar valores padrão em caso de erro
       return {
         userRole: 'user' as UserRole,
         permissions: ROLE_CONFIG.user.permissions,
@@ -72,16 +101,6 @@ export const useRoleBasedAccess = (): RoleBasedAccess => {
         cityId: undefined
       };
     }
-
-    const role = userProfile.role as UserRole;
-    const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
-
-    return {
-      userRole: role,
-      permissions: config.permissions,
-      regionId: userProfile.region_id || undefined,
-      cityId: userProfile.city_id || undefined
-    };
   }, [user, userProfile]);
 
   const canAccess = (permission: keyof RolePermissions): boolean => {
@@ -103,6 +122,23 @@ export const useRoleBasedAccess = (): RoleBasedAccess => {
     return ROLE_CONFIG[role]?.description || 'Usuário comum';
   };
 
+  // Calcular flags de role
+  const role = roleData.userRole;
+  const isAdmin = role === 'admin' || role === 'diretor_estadual';
+  const isManager = role === 'gestor_igr' || role === 'gestor_municipal' || role === 'diretor_estadual';
+  const isSecretary = role === 'gestor_municipal';
+  const isAttendant = role === 'atendente' || role === 'cat_attendant';
+  const isPrivate = role === 'user';
+
+  console.log('🔍 useRoleBasedAccess: Flags calculadas:', {
+    role,
+    isAdmin,
+    isManager,
+    isSecretary,
+    isAttendant,
+    isPrivate
+  });
+
   return {
     userRole: roleData.userRole,
     regionId: roleData.regionId,
@@ -111,7 +147,12 @@ export const useRoleBasedAccess = (): RoleBasedAccess => {
     canAccess,
     getDashboardComponent,
     getDisplayName,
-    getDescription
+    getDescription,
+    isAdmin,
+    isManager,
+    isSecretary,
+    isAttendant,
+    isPrivate
   };
 };
 
