@@ -30,13 +30,26 @@ import {
   XCircle,
   Star,
   Map,
-  TrendingUp
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
+import { Skeleton } from '@/components/ui/skeleton';
 import TourismInventoryManager from '@/components/secretary/TourismInventoryManager';
 import EventManagementSystem from '@/components/secretary/EventManagementSystem';
+import TourismHeatmap from '@/components/management/TourismHeatmap';
+import CATGeolocationManager from '@/components/overflow-one/CATGeolocationManager';
+import StrategicAIChat from '@/components/secretary/StrategicAIChat';
+import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
+import ReportGenerator from '@/components/secretary/ReportGenerator';
+import AdvancedAnalytics from '@/components/secretary/AdvancedAnalytics';
+import RegionalData from '@/components/secretary/RegionalData';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { format } from 'date-fns';
+import { Brain, FileText, FileBarChart, TrendingUp, Globe } from 'lucide-react';
 
 interface Attraction {
   id: string;
@@ -72,28 +85,11 @@ export default function SecretaryDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Attraction | Event | CAT | null>(null);
 
-  // Dados mockados conforme layout original
-  const attractions: Attraction[] = [
-    { id: '1', name: 'Gruta do Lago Azul', category: 'Natural', visitors: 1250, status: 'active' },
-    { id: '2', name: 'Buraco das Araras', category: 'Natural', visitors: 890, status: 'active' },
-    { id: '3', name: 'Aquário Natural', category: 'Aquático', visitors: 2100, status: 'active' },
-    { id: '4', name: 'Museu de Bonito', category: 'Cultural', visitors: 340, status: 'active' },
-    { id: '5', name: 'Fazenda San Francisco', category: 'Rural', visitors: 560, status: 'active' },
-    { id: '6', name: 'Parque das Cachoeiras', category: 'Natural', visitors: 0, status: 'maintenance' }
-  ];
+  // Hook para buscar métricas do Supabase
+  const { metrics, loading, error, alerts, isRealtime, refresh } = useDashboardMetrics(5 * 60 * 1000); // Refresh a cada 5 minutos
 
-  const events: Event[] = [
-    { id: '1', name: 'Festival de Inverno', date: '2024-07-15', participants: 500, status: 'confirmed' },
-    { id: '2', name: 'Feira de Artesanato', date: '2024-08-20', participants: 200, status: 'planning' }
-  ];
-
-  const cats: CAT[] = [
-    { id: '1', name: 'CAT Centro', location: 'Praça da Liberdade, 123', tourists: 156, rating: 4.8, status: 'excellent', attendants: 3 },
-    { id: '2', name: 'CAT Aeroporto', location: 'Aeroporto Internacional', tourists: 89, rating: 4.6, status: 'good', attendants: 2 },
-    { id: '3', name: 'CAT Rodoviária', location: 'Terminal Rodoviário', tourists: 67, rating: 4.4, status: 'excellent', attendants: 2 },
-    { id: '4', name: 'CAT Shopping', location: 'Shopping Center', tourists: 45, rating: 4.2, status: 'excellent', attendants: 1 },
-    { id: '5', name: 'CAT Pousada', location: 'Zona Rural', tourists: 0, rating: 0, status: 'needs_improvement', attendants: 0 }
-  ];
+  // Cores para gráficos
+  const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
 
   const handleEdit = (item: Attraction | Event | CAT) => {
     setEditingItem(item);
@@ -212,6 +208,61 @@ export default function SecretaryDashboard() {
                 <MapPin className="h-4 w-4" />
                 Mapas de Calor
               </button>
+              <button
+                onClick={() => setActiveSection('ai-strategic')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'ai-strategic' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Brain className="h-4 w-4" />
+                IA Estratégica
+              </button>
+              <button
+                onClick={() => setActiveSection('documents')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'documents' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Upload Documentos
+              </button>
+              <button
+                onClick={() => setActiveSection('analytics')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'analytics' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                Analytics
+              </button>
+              <button
+                onClick={() => setActiveSection('regional')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'regional' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Globe className="h-4 w-4" />
+                Dados Regionais
+              </button>
+              <button
+                onClick={() => setActiveSection('reports')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'reports' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <FileBarChart className="h-4 w-4" />
+                Relatórios
+              </button>
             </nav>
           </div>
         </div>
@@ -224,48 +275,260 @@ export default function SecretaryDashboard() {
             <SectionWrapper 
               variant="default" 
               title="Visão Geral Municipal"
+              actions={
+                <div className="flex items-center gap-2">
+                  {isRealtime && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>Atualizando...</span>
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refresh}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    Atualizar
+                  </Button>
+                </div>
+              }
             >
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-red-800 mb-1">Erro ao carregar dados</p>
+                    <p className="text-sm text-red-700">{error}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refresh}
+                      className="mt-2 text-red-700 border-red-300 hover:bg-red-100"
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Alertas Inteligentes */}
+              {alerts.length > 0 && (
+                <div className="mb-6 space-y-2">
+                  {alerts.slice(0, 5).map((alert) => (
+                    <div
+                      key={alert.id}
+                      className={`p-4 rounded-lg border flex items-start gap-3 ${
+                        alert.type === 'warning'
+                          ? 'bg-yellow-50 border-yellow-200'
+                          : alert.type === 'error'
+                          ? 'bg-red-50 border-red-200'
+                          : alert.type === 'success'
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <AlertCircle
+                        className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
+                          alert.type === 'warning'
+                            ? 'text-yellow-600'
+                            : alert.type === 'error'
+                            ? 'text-red-600'
+                            : alert.type === 'success'
+                            ? 'text-green-600'
+                            : 'text-blue-600'
+                        }`}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-semibold text-slate-800">{alert.title}</p>
+                          {alert.priority === 'high' && (
+                            <Badge variant="destructive" className="text-xs">Alta Prioridade</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-700 mb-2">{alert.message}</p>
+                        {alert.actionUrl && alert.actionLabel && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setActiveSection(alert.actionUrl?.replace('#', '') || 'overview')}
+                            className="text-xs"
+                          >
+                            {alert.actionLabel}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Cards de Resumo */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <CardBox>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">12</div>
-                  <p className="text-sm text-gray-600">CATs Ativos</p>
+                  {loading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold text-blue-600 mb-2">
+                        {metrics.totalCATs.toLocaleString('pt-BR')}
+                      </div>
+                      <p className="text-sm text-gray-600">CATs Ativos</p>
+                    </>
+                  )}
                 </CardBox>
                 
                 <CardBox>
-                  <div className="text-3xl font-bold text-green-600 mb-2">1,247</div>
-                  <p className="text-sm text-gray-600">Turistas Hoje</p>
+                  {loading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold text-green-600 mb-2">
+                        {metrics.touristsToday.toLocaleString('pt-BR')}
+                      </div>
+                      <p className="text-sm text-gray-600">Turistas Hoje</p>
+                    </>
+                  )}
                 </CardBox>
                 
                 <CardBox>
-                  <div className="text-3xl font-bold text-purple-600 mb-2">45</div>
-                  <p className="text-sm text-gray-600">Atrações</p>
+                  {loading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold text-purple-600 mb-2">
+                        {metrics.totalAttractions.toLocaleString('pt-BR')}
+                      </div>
+                      <p className="text-sm text-gray-600">Atrações</p>
+                    </>
+                  )}
                 </CardBox>
                 
                 <CardBox>
-                  <div className="text-3xl font-bold text-orange-600 mb-2">8</div>
-                  <p className="text-sm text-gray-600">Eventos</p>
+                  {loading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold text-orange-600 mb-2">
+                        {metrics.totalEvents.toLocaleString('pt-BR')}
+                      </div>
+                      <p className="text-sm text-gray-600">Eventos</p>
+                    </>
+                  )}
                 </CardBox>
               </div>
 
-              {/* Performance dos CATs */}
+              {/* Gráficos */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                {/* Gráfico de Turistas por Dia */}
+                <CardBox>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Turistas por Dia (Últimos 7 dias)</h3>
+                  {loading ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  ) : metrics.touristsByDay.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={metrics.touristsByDay}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tickFormatter={(value) => format(new Date(value), 'dd/MM')}
+                        />
+                        <YAxis />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd/MM/yyyy')}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="count" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2}
+                          name="Turistas"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center text-gray-500">
+                      <p>Nenhum dado disponível</p>
+                    </div>
+                  )}
+                </CardBox>
+
+                {/* Gráfico de Origem dos Turistas */}
+                <CardBox>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Origem dos Turistas (Top 10)</h3>
+                  {loading ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  ) : metrics.touristsByOrigin.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={metrics.touristsByOrigin}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="origin" 
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                        />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="count" fill="#10b981" name="Turistas" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center text-gray-500">
+                      <p>Nenhum dado disponível</p>
+                    </div>
+                  )}
+                </CardBox>
+              </div>
+
+              {/* Performance dos CATs e Atividades Recentes */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <CardBox>
                   <div className="flex items-center gap-2 mb-4">
                     <Building2 className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Performance dos CATs</h3>
                   </div>
+                  {loading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : metrics.cats.length > 0 ? (
                   <div className="space-y-3">
-                    {cats.map((cat) => (
+                      {metrics.cats.map((cat) => (
                       <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <h4 className="font-medium text-slate-800">{cat.name}</h4>
-                          <p className="text-sm text-gray-600">{cat.tourists} turistas</p>
+                            <p className="text-sm text-gray-600">{cat.tourists} turistas hoje</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
                             <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                            <span className="text-sm font-medium">{cat.rating}</span>
+                              <span className="text-sm font-medium">{cat.rating.toFixed(1)}</span>
                           </div>
                           <span className={`rounded-full text-xs font-medium px-2 py-1 ${
                             cat.status === 'excellent' ? 'bg-green-100 text-green-700' :
@@ -279,6 +542,12 @@ export default function SecretaryDashboard() {
                       </div>
                     ))}
                   </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Building2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                      <p>Nenhum CAT cadastrado</p>
+                    </div>
+                  )}
                 </CardBox>
 
                 <CardBox>
@@ -286,22 +555,46 @@ export default function SecretaryDashboard() {
                     <Bell className="h-5 w-5 text-green-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Atividades Recentes</h3>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Calendar className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">Novo evento cadastrado</p>
-                        <p className="text-xs text-gray-500">14:30</p>
-                      </div>
+                  {loading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-48" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  ) : metrics.recentActivities.length > 0 ? (
+                    <div className="space-y-3">
+                      {metrics.recentActivities.slice(0, 10).map((activity) => (
+                        <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          {activity.type === 'event' ? (
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                          ) : activity.type === 'tourist' ? (
                       <Users className="h-4 w-4 text-green-600" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">CAT Centro - 15 novos turistas</p>
-                        <p className="text-xs text-gray-500">14:15</p>
+                          ) : activity.type === 'attraction' ? (
+                            <MapPin className="h-4 w-4 text-purple-600" />
+                          ) : (
+                            <Building2 className="h-4 w-4 text-orange-600" />
+                          )}
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-slate-800">{activity.message}</p>
+                            <p className="text-xs text-gray-500">
+                              {format(activity.timestamp, 'HH:mm')}
+                            </p>
+                          </div>
                       </div>
+                      ))}
                     </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Bell className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                      <p>Nenhuma atividade recente</p>
                   </div>
+                  )}
                 </CardBox>
               </div>
             </SectionWrapper>
@@ -319,64 +612,37 @@ export default function SecretaryDashboard() {
 
           {/* Gestão de CATs */}
           {activeSection === 'cats' && (
-            <SectionWrapper 
-              variant="cats" 
-              title="Gestão de CATs"
-              actions={
-                <Button onClick={() => setShowAddModal(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo CAT
-                </Button>
-              }
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {cats.map((cat) => (
-                  <CardBox key={cat.id}>
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-slate-800">{cat.name}</h3>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        cat.status === 'excellent' || cat.status === 'good' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {cat.status === 'excellent' || cat.status === 'good' ? 'Ativo' : 'Manutenção'}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-1 mb-4">
-                      <p className="text-slate-600 text-sm">{cat.location}</p>
-                      <p className="text-slate-600 text-sm">Atendentes: {cat.attendants}</p>
-                      <p className="text-slate-600 text-sm">Turistas hoje: {cat.tourists}</p>
-                      <p className="text-slate-600 text-sm flex items-center gap-1">
-                        Avaliação: <Star className="w-4 h-4 text-yellow-500 fill-current" /> {cat.rating}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 pt-4 flex-wrap border-t">
-                      <button className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50">
-                        <Eye className="w-4 h-4" />
-                        Ver
-                      </button>
-                      <button onClick={() => handleEdit(cat)} className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50">
-                        <Edit className="w-4 h-4" />
-                        Editar
-                      </button>
-                    </div>
-                  </CardBox>
-                ))}
-              </div>
-            </SectionWrapper>
+            <CATGeolocationManager />
           )}
 
           {/* Mapas de Calor */}
           {activeSection === 'heatmaps' && (
-            <SectionWrapper variant="default" title="Mapas de Calor">
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Map className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Mapas de Calor</h3>
-                  <p className="text-gray-500">Visualização de dados de turismo em desenvolvimento</p>
-                </CardContent>
-              </Card>
-            </SectionWrapper>
+            <TourismHeatmap />
+          )}
+
+          {/* IA Estratégica */}
+          {activeSection === 'ai-strategic' && (
+            <StrategicAIChat />
+          )}
+
+          {/* Upload de Documentos */}
+          {activeSection === 'documents' && (
+            <DocumentUploadPublic />
+          )}
+
+          {/* Analytics Avançados */}
+          {activeSection === 'analytics' && (
+            <AdvancedAnalytics />
+          )}
+
+          {/* Dados Regionais */}
+          {activeSection === 'regional' && (
+            <RegionalData />
+          )}
+
+          {/* Relatórios */}
+          {activeSection === 'reports' && (
+            <ReportGenerator />
           )}
 
           {/* Modal de Adicionar/Editar */}

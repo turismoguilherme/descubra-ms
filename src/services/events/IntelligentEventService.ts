@@ -128,19 +128,55 @@ export class IntelligentEventService {
   }
 
   /**
-   * Salva eventos processados no banco (temporariamente desabilitado)
+   * Salva eventos processados no banco
    */
   private async saveProcessedEvents(processedEvents: any[]): Promise<void> {
-    console.log(`💾 INTELLIGENT EVENTS: ${processedEvents.length} eventos processados (salvamento temporariamente desabilitado)`);
+    console.log(`💾 INTELLIGENT EVENTS: Salvando ${processedEvents.length} eventos processados...`);
     
-    // TODO: Implementar salvamento no Supabase quando a tabela estiver configurada
-    // Por enquanto, apenas log dos eventos processados
-    processedEvents.forEach((processedEvent, index) => {
-      const evento = processedEvent.evento_processado;
-      console.log(`📅 EVENTO ${index + 1}: ${evento.titulo} (${evento.cidade})`);
-    });
+    for (const processedEvent of processedEvents) {
+      try {
+        const evento = processedEvent.evento_processado;
+        
+        // Converter evento processado para formato da tabela events
+        const eventData = {
+          name: evento.titulo || evento.nome || 'Evento sem título',
+          description: evento.descricao_completa || evento.descricao_resumida || evento.descricao || '',
+          location: evento.local || evento.endereco || evento.cidade || '',
+          start_date: evento.data_inicio || evento.data || new Date().toISOString(),
+          end_date: evento.data_fim || null,
+          is_visible: true,
+          auto_hide: true,
+        };
+
+        // Verificar se evento já existe (por título e data)
+        const { data: existingEvents } = await supabase
+          .from('events')
+          .select('id')
+          .eq('name', eventData.name)
+          .eq('start_date', eventData.start_date)
+          .limit(1);
+
+        if (existingEvents && existingEvents.length > 0) {
+          console.log(`⏭️  INTELLIGENT EVENTS: Evento "${eventData.name}" já existe, pulando...`);
+          continue;
+        }
+
+        // Inserir novo evento
+        const { error } = await supabase
+          .from('events')
+          .insert(eventData);
+
+        if (error) {
+          console.error(`❌ INTELLIGENT EVENTS: Erro ao salvar evento "${eventData.name}":`, error);
+        } else {
+          console.log(`✅ INTELLIGENT EVENTS: Evento "${eventData.name}" salvo com sucesso`);
+        }
+      } catch (error) {
+        console.error(`❌ INTELLIGENT EVENTS: Erro ao processar evento:`, error);
+      }
+    }
     
-    console.log(`✅ INTELLIGENT EVENTS: ${processedEvents.length} eventos processados com sucesso`);
+    console.log(`✅ INTELLIGENT EVENTS: ${processedEvents.length} eventos processados`);
   }
 
   /**

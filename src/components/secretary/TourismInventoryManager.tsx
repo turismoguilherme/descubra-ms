@@ -34,6 +34,10 @@ import {
   CheckCircle
 } from 'lucide-react';
 import FileUpload from '@/components/ui/FileUpload';
+import { inventoryService, TourismAttraction as InventoryAttraction } from '@/services/public/inventoryService';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 interface TourismAttraction {
   id: string;
@@ -74,6 +78,7 @@ interface ValidationErrors {
 }
 
 const TourismInventoryManager: React.FC = () => {
+  const { user } = useAuth();
   const [attractions, setAttractions] = useState<TourismAttraction[]>([]);
   const [filteredAttractions, setFilteredAttractions] = useState<TourismAttraction[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -171,41 +176,43 @@ const TourismInventoryManager: React.FC = () => {
         return;
       }
 
-      // Simular salvamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Converter para formato do serviço
+      const serviceData: any = {
+        name: attractionData.name || '',
+        description: attractionData.description || '',
+        address: attractionData.address || '',
+        latitude: attractionData.coordinates?.lat,
+        longitude: attractionData.coordinates?.lng,
+        phone: attractionData.contact?.phone,
+        email: attractionData.contact?.email,
+        website: attractionData.contact?.website,
+        price_range: attractionData.priceRange,
+        opening_hours: attractionData.openingHours,
+        amenities: attractionData.features || [],
+        images: attractionData.images || [],
+        is_active: attractionData.isActive !== undefined ? attractionData.isActive : true,
+        status: attractionData.verified ? 'approved' : 'draft',
+        created_by: user?.id,
+      };
+
+      let savedAttraction: InventoryAttraction;
       
       if (editingAttraction) {
         // Atualizar atração existente
-        setAttractions(prev => prev.map(attr => 
-          attr.id === editingAttraction.id 
-            ? { ...attr, ...attractionData, lastUpdated: new Date() }
-            : attr
-        ));
+        savedAttraction = await inventoryService.updateAttraction(editingAttraction.id, serviceData);
+        addNotification('success', 'Atração atualizada com sucesso!');
       } else {
         // Criar nova atração
-        const newAttraction: TourismAttraction = {
-          ...attractionData as TourismAttraction,
-          id: Date.now().toString(),
-          rating: 0,
-          images: [],
-          features: [],
-          isActive: true,
-          verified: false,
-          lastUpdated: new Date(),
-          createdBy: 'current-user'
-        };
-        setAttractions(prev => [...prev, newAttraction]);
+        savedAttraction = await inventoryService.createAttraction(serviceData);
+        addNotification('success', 'Nova atração criada com sucesso!');
       }
+
+      // Recarregar lista
+      await loadAttractions();
 
       setShowForm(false);
       setEditingAttraction(null);
       setValidationErrors({});
-      
-      // Notificação de sucesso
-      addNotification('success', editingAttraction 
-        ? 'Atração atualizada com sucesso!' 
-        : 'Nova atração criada com sucesso!'
-      );
       
     } catch (error) {
       console.error('Erro ao salvar atração:', error);
@@ -215,29 +222,82 @@ const TourismInventoryManager: React.FC = () => {
     }
   };
 
-  // Função para upload de imagens
+  // Função para upload de imagens para Supabase Storage
   const handleImageUpload = async (files: FileList, attractionId: string) => {
     setLoading(true);
     
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        // Simular upload para servidor
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Retornar URL simulada
-        return URL.createObjectURL(file);
-      });
+      const BUCKET_NAME = 'tourism-images';
+      const uploadedUrls: string[] = [];
 
-      const uploadedUrls = await Promise.all(uploadPromises);
-      
-      // Atualizar atração com novas imagens
+      // Upload de cada arquivo
+      for (const file of Array.from(files)) {
+        // Validar tipo de arquivo
+        if (!file.type.startsWith('image/')) {
+          addNotification('warning', `Arquivo ${file.name} não é uma imagem válida.`);
+          continue;
+        }
+
+        // Validar tamanho (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          addNotification('warning', `Imagem ${file.name} excede o tamanho máximo de 5MB.`);
+          continue;
+        }
+
+        try {
+          // Gerar nome único para o arquivo
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${attractionId}/${uuidv4()}.${fileExt}`;
+
+          // Upload para Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) {
+            console.error('Erro no upload:', uploadError);
+            addNotification('error', `Erro ao fazer upload de ${file.name}: ${uploadError.message}`);
+            continue;
+          }
+
+          // Obter URL pública da imagem
+          const { data: publicUrlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(fileName);
+
+          if (publicUrlData?.publicUrl) {
+            uploadedUrls.push(publicUrlData.publicUrl);
+          }
+        } catch (fileError) {
+          console.error(`Erro ao processar ${file.name}:`, fileError);
+          addNotification('error', `Erro ao processar ${file.name}`);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        // Atualizar atração com novas imagens no banco de dados
+        const attraction = attractions.find(attr => attr.id === attractionId);
+        if (attraction) {
+          const updatedImages = [...(attraction.images || []), ...uploadedUrls];
+          
+          // Atualizar no banco de dados
+          await inventoryService.updateAttraction(attractionId, {
+            images: updatedImages
+          });
+
+          // Atualizar estado local
       setAttractions(prev => prev.map(attr => 
         attr.id === attractionId 
-          ? { ...attr, images: [...attr.images, ...uploadedUrls] }
+              ? { ...attr, images: updatedImages }
           : attr
       ));
       
       addNotification('success', `${uploadedUrls.length} imagem(ns) carregada(s) com sucesso!`);
+        }
+      }
       
     } catch (error) {
       console.error('Erro no upload de imagens:', error);
@@ -320,96 +380,69 @@ const TourismInventoryManager: React.FC = () => {
     }
   };
 
-  // Dados mock para demonstração
+  // Carregar atrações do Supabase
   useEffect(() => {
-    const mockAttractions: TourismAttraction[] = [
-      {
-        id: '1',
-        name: 'Parque das Cachoeiras',
-        description: 'Parque natural com trilhas, cachoeiras e piscinas naturais. Ideal para ecoturismo e atividades ao ar livre.',
-        category: 'natural',
-        address: 'Rodovia MS-382, Km 15, Bonito - MS',
-        coordinates: { lat: -21.1261, lng: -56.4816 },
-        images: ['/images/cachoeira1.jpg', '/images/cachoeira2.jpg'],
-        rating: 4.8,
-        priceRange: 'medium',
-        openingHours: '08:00 - 17:00',
-        contact: {
-          phone: '(67) 3255-1234',
-          email: 'contato@parquedascachoeiras.com',
-          website: 'www.parquedascachoeiras.com'
-        },
-        features: ['Trilhas', 'Cachoeiras', 'Piscinas naturais', 'Guia local'],
-        isActive: true,
-        verified: true,
-        lastUpdated: new Date(),
-        createdBy: 'Secretaria de Turismo'
-      },
-      {
-        id: '2',
-        name: 'Centro Histórico',
-        description: 'Centro histórico preservado com arquitetura colonial, museus e praças históricas.',
-        category: 'cultural',
-        address: 'Praça da Liberdade, Centro, Bonito - MS',
-        coordinates: { lat: -21.1261, lng: -56.4816 },
-        images: ['/images/centro1.jpg'],
-        rating: 4.5,
-        priceRange: 'free',
-        openingHours: '24h',
-        contact: {
-          phone: '(67) 3255-5678'
-        },
-        features: ['Arquitetura colonial', 'Museus', 'Praças', 'Guia turístico'],
-        isActive: true,
-        verified: true,
-        lastUpdated: new Date(),
-        createdBy: 'Secretaria de Turismo'
-      },
-      {
-        id: '3',
-        name: 'Restaurante Sabores do MS',
-        description: 'Restaurante especializado em culinária regional com pratos típicos do Mato Grosso do Sul.',
-        category: 'gastronomic',
-        address: 'Rua das Flores, 123, Centro, Bonito - MS',
-        coordinates: { lat: -21.1261, lng: -56.4816 },
-        images: ['/images/restaurante1.jpg'],
-        rating: 4.7,
-        priceRange: 'medium',
-        openingHours: '11:00 - 22:00',
-        contact: {
-          phone: '(67) 3255-9999',
-          email: 'contato@saboresdoms.com'
-        },
-        features: ['Culinária regional', 'Prato do dia', 'Delivery', 'Estacionamento'],
-        isActive: true,
-        verified: true,
-        lastUpdated: new Date(),
-        createdBy: 'Secretaria de Turismo'
-      }
-    ];
-
-    setAttractions(mockAttractions);
-    setFilteredAttractions(mockAttractions);
+    loadAttractions();
   }, []);
 
-  // Filtrar atrativos
+  const loadAttractions = async () => {
+    setLoading(true);
+    try {
+      const data = await inventoryService.getAttractions({
+        is_active: true,
+        search: searchTerm || undefined,
+        category_id: selectedCategory !== 'all' ? selectedCategory : undefined,
+      });
+
+      // Converter para formato do componente
+      const convertedAttractions: TourismAttraction[] = data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        category: (item.category_id || 'natural') as any, // TODO: mapear category_id para category
+        address: item.address || '',
+        coordinates: item.latitude && item.longitude 
+          ? { lat: Number(item.latitude), lng: Number(item.longitude) }
+          : { lat: 0, lng: 0 },
+        images: item.images || [],
+        rating: 0, // TODO: calcular rating das reviews
+        priceRange: (item.price_range || 'free') as any,
+        openingHours: typeof item.opening_hours === 'string' 
+          ? item.opening_hours 
+          : JSON.stringify(item.opening_hours || {}),
+        contact: {
+          phone: item.phone,
+          email: item.email,
+          website: item.website,
+        },
+        features: item.amenities || [],
+        isActive: item.is_active || false,
+        verified: item.status === 'approved',
+        lastUpdated: item.updated_at ? new Date(item.updated_at) : new Date(),
+        createdBy: item.created_by || 'system',
+      }));
+
+      setAttractions(convertedAttractions);
+    } catch (error) {
+      console.error('Erro ao carregar atrações:', error);
+      addNotification('error', 'Erro ao carregar atrações. Usando dados locais.');
+      // Fallback para dados mockados em caso de erro
+      const mockAttractions: TourismAttraction[] = [];
+      setAttractions(mockAttractions);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Recarregar quando filtros mudarem
   useEffect(() => {
-    let filtered = attractions;
+    loadAttractions();
+  }, [searchTerm, selectedCategory]);
 
-    if (searchTerm) {
-      filtered = filtered.filter(attraction =>
-        attraction.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attraction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attraction.address.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(attraction => attraction.category === selectedCategory);
-    }
-
-    setFilteredAttractions(filtered);
-  }, [attractions, searchTerm, selectedCategory]);
+  // Filtrar atrativos localmente (já vem filtrado do servidor, mas manter para compatibilidade)
+  useEffect(() => {
+    setFilteredAttractions(attractions);
+  }, [attractions]);
 
   const handleAddAttraction = () => {
     setEditingAttraction(null);
@@ -421,18 +454,39 @@ const TourismInventoryManager: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDeleteAttraction = (id: string) => {
+  const handleDeleteAttraction = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este atrativo?')) {
-      setAttractions(prev => prev.filter(attraction => attraction.id !== id));
+      setLoading(true);
+      try {
+        await inventoryService.deleteAttraction(id);
+        addNotification('success', 'Atração excluída com sucesso!');
+        await loadAttractions();
+      } catch (error) {
+        console.error('Erro ao excluir atração:', error);
+        addNotification('error', 'Erro ao excluir atração. Tente novamente.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleToggleActive = (id: string) => {
-    setAttractions(prev => prev.map(attraction => 
-      attraction.id === id 
-        ? { ...attraction, isActive: !attraction.isActive }
-        : attraction
-    ));
+  const handleToggleActive = async (id: string) => {
+    setLoading(true);
+    try {
+      const attraction = attractions.find(a => a.id === id);
+      if (attraction) {
+        await inventoryService.updateAttraction(id, {
+          is_active: !attraction.isActive,
+        });
+        addNotification('success', `Atração ${!attraction.isActive ? 'ativada' : 'desativada'} com sucesso!`);
+        await loadAttractions();
+      }
+    } catch (error) {
+      console.error('Erro ao alterar status da atração:', error);
+      addNotification('error', 'Erro ao alterar status. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getCategoryIcon = (category: string) => {
@@ -453,18 +507,11 @@ const TourismInventoryManager: React.FC = () => {
     return (
       <AttractionForm
         attraction={editingAttraction}
-        onSave={(attraction) => {
-          if (editingAttraction) {
-            setAttractions(prev => prev.map(a => a.id === attraction.id ? attraction : a));
-          } else {
-            setAttractions(prev => [...prev, { ...attraction, id: Date.now().toString() }]);
-          }
-          setShowForm(false);
-          setEditingAttraction(null);
-        }}
+        onSave={handleSaveAttraction}
         onCancel={() => {
           setShowForm(false);
           setEditingAttraction(null);
+          setValidationErrors({});
         }}
       />
     );

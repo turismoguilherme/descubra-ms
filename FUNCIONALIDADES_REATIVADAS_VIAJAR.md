@@ -216,3 +216,4 @@ Este documento lista todas as funcionalidades que foram reativadas e conectadas 
 - Setor Privado: 85% funcional (componentes conectados, dados ainda mockados)
 - Setor Público: 90% funcional (componentes reais conectados, analytics pendente)
 
+

@@ -31,14 +31,14 @@ export class EventManagementService {
         logCleanupActions: true
       },
       googleCalendar: {
-        enabled: false, // Desabilitado por padrão
+        enabled: false, // Desabilitado por padrão - será ativado apenas se credenciais estiverem disponíveis
         calendarIds: [],
         syncInterval: 6,
         autoCreateEvents: false,
         logSyncActions: true
       },
       geminiAI: {
-        enabled: false, // Desabilitado por padrão
+        enabled: false, // Desabilitado por padrão - será ativado apenas se credenciais estiverem disponíveis
         processNewEvents: true,
         processExistingEvents: false,
         autoCategorize: true,
@@ -82,26 +82,42 @@ export class EventManagementService {
         result.errors.push(`Erro ao iniciar limpeza: ${error}`);
       }
 
-      // 2. Inicializar serviço do Google Calendar (se habilitado)
+      // 2. Inicializar serviço do Google Calendar (se habilitado e com credenciais)
       if (this.config.googleCalendar.enabled) {
         try {
-          googleCalendarSyncService.updateConfig(this.config.googleCalendar);
-          await googleCalendarSyncService.startSyncService();
-          result.servicesStarted.push('GoogleCalendarSyncService');
-          console.log("✅ EVENT MANAGEMENT: Serviço do Google Calendar iniciado");
+          // Verificar credenciais antes de iniciar
+          const hasCredentials = await this.checkGoogleCalendarCredentials();
+          if (hasCredentials) {
+            googleCalendarSyncService.updateConfig(this.config.googleCalendar);
+            await googleCalendarSyncService.startSyncService();
+            result.servicesStarted.push('GoogleCalendarSyncService');
+            console.log("✅ EVENT MANAGEMENT: Serviço do Google Calendar iniciado");
+          } else {
+            console.warn("⚠️ EVENT MANAGEMENT: Google Calendar não iniciado - credenciais não disponíveis");
+            result.servicesFailed.push('GoogleCalendarSyncService');
+            result.errors.push('Credenciais do Google Calendar não disponíveis');
+          }
         } catch (error) {
           result.servicesFailed.push('GoogleCalendarSyncService');
           result.errors.push(`Erro ao iniciar Google Calendar: ${error}`);
         }
       }
 
-      // 3. Inicializar serviço do Gemini AI (se habilitado)
+      // 3. Inicializar serviço do Gemini AI (se habilitado e com credenciais)
       if (this.config.geminiAI.enabled) {
         try {
-          geminiEventProcessorService.updateConfig(this.config.geminiAI);
-          await geminiEventProcessorService.startProcessingService();
-          result.servicesStarted.push('GeminiEventProcessorService');
-          console.log("✅ EVENT MANAGEMENT: Serviço do Gemini AI iniciado");
+          // Verificar credenciais antes de iniciar
+          const hasCredentials = await this.checkGeminiCredentials();
+          if (hasCredentials) {
+            geminiEventProcessorService.updateConfig(this.config.geminiAI);
+            await geminiEventProcessorService.startProcessingService();
+            result.servicesStarted.push('GeminiEventProcessorService');
+            console.log("✅ EVENT MANAGEMENT: Serviço do Gemini AI iniciado");
+          } else {
+            console.warn("⚠️ EVENT MANAGEMENT: Gemini AI não iniciado - credenciais não disponíveis");
+            result.servicesFailed.push('GeminiEventProcessorService');
+            result.errors.push('Credenciais do Gemini AI não disponíveis');
+          }
         } catch (error) {
           result.servicesFailed.push('GeminiEventProcessorService');
           result.errors.push(`Erro ao iniciar Gemini AI: ${error}`);
@@ -119,6 +135,48 @@ export class EventManagementService {
     }
 
     return result;
+  }
+
+  /**
+   * Verifica se as credenciais do Google Calendar estão disponíveis
+   */
+  private async checkGoogleCalendarCredentials(): Promise<boolean> {
+    try {
+      // Verificar variáveis de ambiente ou configurações
+      const hasApiKey = !!(typeof process !== 'undefined' && process.env?.VITE_GOOGLE_CALENDAR_API_KEY);
+      const hasClientId = !!(typeof process !== 'undefined' && process.env?.VITE_GOOGLE_CLIENT_ID);
+      
+      // Se não tiver variáveis de ambiente, verificar se o serviço consegue verificar
+      if (!hasApiKey && !hasClientId) {
+        // O serviço próprio já verifica disponibilidade
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("🎯 EVENT MANAGEMENT: Erro ao verificar credenciais do Google Calendar:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Verifica se as credenciais do Gemini AI estão disponíveis
+   */
+  private async checkGeminiCredentials(): Promise<boolean> {
+    try {
+      // Verificar variáveis de ambiente
+      const hasApiKey = !!(typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY);
+      
+      if (!hasApiKey) {
+        // O serviço próprio já verifica disponibilidade
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("🎯 EVENT MANAGEMENT: Erro ao verificar credenciais do Gemini AI:", error);
+      return false;
+    }
   }
 
   /**

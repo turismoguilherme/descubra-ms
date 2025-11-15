@@ -164,40 +164,113 @@ export class TourismHeatmapService {
     }
   }
 
-  // Buscar movimentos com filtros
+  // Buscar movimentos com filtros - usando dados reais de cat_checkins e cat_tourists
   private async getMovements(filters: HeatmapFilters): Promise<TourismMovement[]> {
     try {
-      let query = supabase
-        .from('tourism_movements')
-        .select('*')
+      const movements: TourismMovement[] = [];
+
+      // Buscar check-ins de CATs (têm coordenadas GPS)
+      let checkinsQuery = supabase
+        .from('cat_checkins')
+        .select('*, cat_locations(name, city, region)')
+        .eq('status', 'active')
         .order('timestamp', { ascending: false });
 
       if (filters.timeRange) {
-        query = query
+        checkinsQuery = checkinsQuery
           .gte('timestamp', filters.timeRange.start)
           .lte('timestamp', filters.timeRange.end);
       }
 
-      if (filters.region) {
-        query = query.eq('region', filters.region);
+      const { data: checkins, error: checkinsError } = await checkinsQuery;
+
+      if (checkinsError) {
+        console.warn('⚠️ Erro ao buscar check-ins:', checkinsError);
+      } else if (checkins) {
+        // Converter check-ins para TourismMovement
+        checkins.forEach((checkin: any) => {
+          if (checkin.latitude && checkin.longitude) {
+            const catLocation = checkin.cat_locations;
+            movements.push({
+              id: checkin.id,
+              user_id: checkin.user_id,
+              location: {
+                lat: Number(checkin.latitude),
+                lng: Number(checkin.longitude),
+                accuracy: checkin.distance_from_cat ? Number(checkin.distance_from_cat) : undefined
+              },
+              timestamp: checkin.timestamp || checkin.created_at,
+              type: 'check_in',
+              activity: 'visiting',
+              duration_minutes: 30, // Estimativa padrão para check-in
+              region: catLocation?.region || filters.region || 'N/A',
+              city: catLocation?.city || filters.city || 'N/A',
+              attraction_name: catLocation?.name || checkin.cat_name,
+              source: 'mobile_app'
+            });
+          }
+        });
+      }
+
+      // Buscar turistas atendidos (para enriquecer dados)
+      let touristsQuery = supabase
+        .from('cat_tourists')
+        .select('*, cat_locations(name, city, region, latitude, longitude)')
+        .eq('is_active', true)
+        .order('visit_time', { ascending: false });
+
+      if (filters.timeRange) {
+        touristsQuery = touristsQuery
+          .gte('visit_time', filters.timeRange.start)
+          .lte('visit_time', filters.timeRange.end);
+      }
+
+      const { data: tourists, error: touristsError } = await touristsQuery;
+
+      if (touristsError) {
+        console.warn('⚠️ Erro ao buscar turistas:', touristsError);
+      } else if (tourists) {
+        // Converter turistas para TourismMovement (usando coordenadas do CAT)
+        tourists.forEach((tourist: any) => {
+          const catLocation = tourist.cat_locations;
+          if (catLocation?.latitude && catLocation?.longitude) {
+            movements.push({
+              id: tourist.id,
+              user_id: tourist.attendant_id,
+              location: {
+                lat: Number(catLocation.latitude),
+                lng: Number(catLocation.longitude)
+              },
+              timestamp: tourist.visit_time || tourist.visit_date,
+              type: 'check_in',
+              activity: 'visiting',
+              duration_minutes: 45, // Estimativa padrão para atendimento
+              region: catLocation.region || filters.region || 'N/A',
+              city: catLocation.city || filters.city || 'N/A',
+              attraction_name: catLocation.name,
+              source: 'mobile_app'
+            });
+          }
+        });
+      }
+
+      // Aplicar filtros adicionais
+      let filteredMovements = movements;
+
+      if (filters.region && filters.region !== 'all') {
+        filteredMovements = filteredMovements.filter(m => m.region === filters.region);
       }
 
       if (filters.city) {
-        query = query.eq('city', filters.city);
+        filteredMovements = filteredMovements.filter(m => m.city === filters.city);
       }
 
-      if (filters.attraction_type && filters.attraction_type.length > 0) {
-        query = query.in('attraction_type', filters.attraction_type);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return data || [];
+      console.log(`✅ ${filteredMovements.length} movimentos encontrados`);
+      return filteredMovements;
     } catch (error) {
       console.error('❌ Erro ao buscar movimentos:', error);
-      throw error;
+      // Retornar array vazio em caso de erro para não quebrar a UI
+      return [];
     }
   }
 
@@ -507,29 +580,46 @@ export class TourismHeatmapService {
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      // Buscar movimentos da última hora
-      const { data: recentMovements, error } = await supabase
-        .from('tourism_movements')
-        .select('*')
+      // Buscar check-ins da última hora
+      const { data: recentCheckins } = await supabase
+        .from('cat_checkins')
+        .select('*, cat_locations(name)')
+        .eq('status', 'active')
         .gte('timestamp', oneHourAgo.toISOString());
 
-      if (error) throw error;
+      // Buscar turistas de hoje
+      const { data: todayTourists } = await supabase
+        .from('cat_tourists')
+        .select('*, cat_locations(name)')
+        .eq('is_active', true)
+        .gte('visit_time', todayStart.toISOString());
 
-      const activeVisitors = new Set(recentMovements?.map(m => m.user_id) || []).size;
-      
-      // Buscar movimentos de hoje
-      const { data: todayMovements } = await supabase
-        .from('tourism_movements')
-        .select('*')
-        .gte('timestamp', todayStart.toISOString());
+      const activeVisitors = new Set([
+        ...(recentCheckins?.map(c => c.user_id).filter(Boolean) || []),
+        ...(todayTourists?.map(t => t.attendant_id).filter(Boolean) || [])
+      ]).size;
 
-      const todayVisits = todayMovements?.length || 0;
-      const currentHourVisits = recentMovements?.length || 0;
+      const currentHourVisits = recentCheckins?.length || 0;
+      const todayVisits = (recentCheckins?.length || 0) + (todayTourists?.length || 0);
 
       // Calcular atrações populares agora
-      const popularNow = this.calculatePopularAttractions(recentMovements || [])
+      const popularNow: string[] = [];
+      const catCounts = new Map<string, number>();
+
+      recentCheckins?.forEach((checkin: any) => {
+        const catName = checkin.cat_locations?.name || checkin.cat_name || 'CAT';
+        catCounts.set(catName, (catCounts.get(catName) || 0) + 1);
+      });
+
+      todayTourists?.forEach((tourist: any) => {
+        const catName = tourist.cat_locations?.name || 'CAT';
+        catCounts.set(catName, (catCounts.get(catName) || 0) + 1);
+      });
+
+      popularNow.push(...Array.from(catCounts.entries())
+        .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
-        .map(a => a.name);
+        .map(([name]) => name));
 
       return {
         active_visitors: activeVisitors,
@@ -539,7 +629,13 @@ export class TourismHeatmapService {
       };
     } catch (error) {
       console.error('❌ Erro ao obter estatísticas em tempo real:', error);
-      throw error;
+      // Retornar valores padrão em caso de erro
+      return {
+        active_visitors: 0,
+        current_hour_visits: 0,
+        today_visits: 0,
+        popular_now: []
+      };
     }
   }
 
@@ -549,16 +645,28 @@ export class TourismHeatmapService {
       this.realtimeSubscription.unsubscribe();
     }
 
+    // Subscrever a mudanças em cat_checkins e cat_tourists
     this.realtimeSubscription = supabase
-      .channel('tourism_movements_realtime')
+      .channel('tourism_heatmap_realtime')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'tourism_movements' 
+          table: 'cat_checkins' 
         }, 
         (payload) => {
-          console.log('🔥 Dados de movimento em tempo real:', payload);
+          console.log('🔥 Check-in em tempo real:', payload);
+          callback(payload);
+        }
+      )
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'cat_tourists' 
+        }, 
+        (payload) => {
+          console.log('🔥 Turista em tempo real:', payload);
           callback(payload);
         }
       )
@@ -599,22 +707,22 @@ export class TourismHeatmapService {
     }
   }
 
-  // Mapa de calor em tempo real
+  // Mapa de calor em tempo real - usando dados reais
   async getRealtimeHeatmapData(): Promise<HeatmapData[]> {
     try {
       const now = new Date();
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-      const { data: movements, error } = await supabase
-        .from('tourism_movements')
-        .select('*')
-        .gte('timestamp', oneHourAgo.toISOString())
-        .order('timestamp', { ascending: false });
-
-      if (error) throw error;
+      // Buscar movimentos da última hora usando o método adaptado
+      const movements = await this.getMovements({
+        timeRange: {
+          start: oneHourAgo.toISOString(),
+          end: now.toISOString()
+        }
+      });
 
       // Processar dados para mapa de calor
-      const heatmapData = this.processMovementsToHeatmap(movements || []);
+      const heatmapData = this.processMovementsToHeatmap(movements);
       
       // Disparar callbacks de tempo real
       this.triggerRealtimeCallbacks('heatmap_update', heatmapData);
@@ -622,7 +730,7 @@ export class TourismHeatmapService {
       return heatmapData;
     } catch (error) {
       console.error('❌ Erro ao obter mapa de calor em tempo real:', error);
-      throw error;
+      return [];
     }
   }
 
