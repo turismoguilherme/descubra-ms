@@ -43,7 +43,7 @@ interface UserProfile {
 }
 
 const UnifiedLoginSystem = () => {
-  const { user, login, logout } = useAuth();
+  const { user, signIn, signOut } = useAuth();
   const { userRole, permissions, canAccess } = useRoleBasedAccess();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -110,7 +110,7 @@ const UnifiedLoginSystem = () => {
     setLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await signIn(email, password);
       
       if (result.success) {
         toast({
@@ -141,17 +141,19 @@ const UnifiedLoginSystem = () => {
 
   const redirectToDashboard = () => {
     switch (userRole) {
-      case 'private':
-        navigate('/private-dashboard');
-        break;
-      case 'secretary':
+      case 'gestor_municipal':
         navigate('/municipal-dashboard');
         break;
-      case 'attendant':
+      case 'atendente':
+      case 'cat_attendant':
         navigate('/attendant-dashboard');
         break;
       case 'admin':
+      case 'diretor_estadual':
         navigate('/admin-dashboard');
+        break;
+      case 'gestor_igr':
+        navigate('/regional-dashboard');
         break;
       default:
         navigate('/dashboard');
@@ -209,7 +211,7 @@ const UnifiedLoginSystem = () => {
                 <ArrowRight className="h-4 w-4 mr-2" />
                 Ir para Dashboard
               </Button>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={signOut}>
                 Sair
               </Button>
             </div>

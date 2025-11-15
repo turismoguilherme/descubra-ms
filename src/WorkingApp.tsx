@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 // Componentes principais
 import OverFlowOneSaaS from "@/pages/OverFlowOneSaaS";
 import MSIndex from "@/pages/MSIndex";
-import Login from "@/pages/Login";
+import Login from "@/pages/OverflowOneLogin";
 import Register from "@/pages/Register";
 import Welcome from "@/pages/Welcome";
 

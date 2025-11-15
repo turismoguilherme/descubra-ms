@@ -18,6 +18,7 @@ import {
   Award,
   CheckCircle,
   ArrowRight,
+  Clock,
   Download,
   Share2,
   Calendar,
