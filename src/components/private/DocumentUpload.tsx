@@ -143,13 +143,13 @@ const DocumentUpload: React.FC = () => {
       const blob = await documentService.downloadDocument(document.file_path);
       if (blob) {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = document.file_name;
-        document.body.appendChild(a);
-        a.click();
+        const link = window.document.createElement('a');
+        link.href = url;
+        link.download = document.file_name;
+        window.document.body.appendChild(link);
+        link.click();
         window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        window.document.body.removeChild(link);
       }
     } catch (error) {
       console.error('Erro ao fazer download:', error);
