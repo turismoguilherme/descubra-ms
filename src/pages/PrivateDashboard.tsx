@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,10 +20,15 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import DiagnosticQuestionnaire from '@/components/private/DiagnosticQuestionnaire';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
-import SectionWrapper from '@/components/ui/SectionWrapper';
+import DocumentUpload from '@/components/private/DocumentUpload';
+const ViaJARIntelligence = React.lazy(() => import('@/pages/ViaJARIntelligence'));
 import { useAuth } from '@/hooks/useAuth';
 import { QuestionnaireAnswers } from '@/components/private/DiagnosticQuestionnaire';
-import { AnalysisResult } from '@/services/diagnostic/analysisService';
+import { AnalysisResult, analyzeBusinessProfile } from '@/services/diagnostic/analysisService';
+import { diagnosticService } from '@/services/viajar/diagnosticService';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
+import { useToast } from '@/hooks/use-toast';
 
 const PrivateDashboard = () => {
   // Verificar se o AuthProvider está disponível
@@ -41,7 +47,9 @@ const PrivateDashboard = () => {
     );
   }
   
-  const { userProfile } = auth;
+  const { user, userProfile } = auth;
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('overview');
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [onboardingData, setOnboardingData] = useState<any>(null);
@@ -49,24 +57,50 @@ const PrivateDashboard = () => {
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<QuestionnaireAnswers | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [showIntelligence, setShowIntelligence] = useState(false);
+  const [intelligenceTab, setIntelligenceTab] = useState<'revenue' | 'market' | 'benchmark'>('revenue');
 
   useEffect(() => {
-    // Verificar se o usuário já completou o onboarding
-    const checkOnboardingStatus = () => {
-      // Simular verificação no banco de dados
-      // Em produção, isso viria do perfil do usuário
-      const completed = localStorage.getItem('hasCompletedOnboarding');
-      const data = localStorage.getItem('onboardingData');
-      
-      setHasCompletedOnboarding(completed === 'true');
-      if (data) {
-        setOnboardingData(JSON.parse(data));
+    // Carregar diagnóstico do Supabase
+    const loadDiagnosticData = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+
+      try {
+        // Buscar último diagnóstico do usuário
+        const latestDiagnostic = await diagnosticService.getLatestDiagnosticResult(user.id);
+        
+        if (latestDiagnostic) {
+          setDiagnosticAnswers(latestDiagnostic.answers as QuestionnaireAnswers);
+          setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
+        }
+
+        // Verificar onboarding (manter localStorage por enquanto para compatibilidade)
+        const completed = localStorage.getItem('hasCompletedOnboarding');
+        const data = localStorage.getItem('onboardingData');
+        
+        setHasCompletedOnboarding(completed === 'true');
+        if (data) {
+          setOnboardingData(JSON.parse(data));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do diagnóstico:', error);
+        // Fallback para localStorage
+        const completed = localStorage.getItem('hasCompletedOnboarding');
+        const data = localStorage.getItem('onboardingData');
+        setHasCompletedOnboarding(completed === 'true');
+        if (data) {
+          setOnboardingData(JSON.parse(data));
+        }
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    checkOnboardingStatus();
-  }, []);
+    loadDiagnosticData();
+  }, [user]);
 
   const handleOnboardingComplete = (data: any) => {
     // Salvar dados do onboarding
@@ -90,21 +124,51 @@ const PrivateDashboard = () => {
     setAnalysisResult(null);
   };
 
-  const handleDiagnosticComplete = (answers: QuestionnaireAnswers) => {
+  const handleDiagnosticComplete = async (answers: QuestionnaireAnswers) => {
     setDiagnosticAnswers(answers);
     setShowDiagnostic(false);
     
-    // Simular análise (em produção, isso viria da IA)
+    if (!user?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    try {
+      // Usar análise real do serviço
+      const analysis = await analyzeBusinessProfile(answers);
+      setAnalysisResult(analysis);
+
+      // Salvar no Supabase
+      try {
+        await diagnosticService.saveDiagnosticResult(user.id, answers, analysis);
+        toast({
+          title: 'Sucesso',
+          description: 'Diagnóstico salvo com sucesso'
+        });
+      } catch (saveError) {
+        console.error('Erro ao salvar diagnóstico no Supabase:', saveError);
+        // Continuar mesmo se falhar ao salvar
+      }
+    } catch (error) {
+      console.error('Erro ao analisar diagnóstico:', error);
+      // Fallback para análise mockada em caso de erro
     const mockAnalysis: AnalysisResult = {
       overallScore: 71,
       growthPotential: 25,
       estimatedROI: 25,
       businessProfile: {
         strengths: ['Localização estratégica', 'Experiência no mercado', 'Qualidade do atendimento'],
+          weaknesses: [],
         opportunities: ['Expansão digital', 'Novos canais de venda', 'Parcerias estratégicas'],
+          threats: [],
+          potentialGrowth: 25,
+          estimatedRevenue: 50000,
         riskLevel: 'low' as const,
-        marketPosition: 'challenger' as const,
-        estimatedRevenue: 50000
+          marketPosition: 'challenger' as const
       },
       recommendations: [
         {
@@ -117,7 +181,8 @@ const PrivateDashboard = () => {
           estimatedROI: 35,
           implementationTime: '2-4 semanas',
           features: ['Reservas online', 'Pagamento digital', 'Gestão de disponibilidade'],
-          benefits: ['Aumento de vendas', 'Redução de trabalho manual', 'Melhor experiência do cliente']
+          benefits: ['Aumento de vendas', 'Redução de trabalho manual', 'Melhor experiência do cliente'],
+          requirements: ['Integração PMS', 'Dados históricos', 'Conectividade']
         },
         {
           id: '2',
@@ -129,7 +194,8 @@ const PrivateDashboard = () => {
           estimatedROI: 20,
           implementationTime: '1-2 semanas',
           features: ['Gestão de redes sociais', 'Conteúdo automatizado', 'Análise de engajamento'],
-          benefits: ['Maior visibilidade', 'Engajamento com clientes', 'Novos leads']
+          benefits: ['Maior visibilidade', 'Engajamento com clientes', 'Novos leads'],
+          requirements: ['Contas em redes sociais', 'Conteúdo visual', 'Ferramentas de gestão']
         },
         {
           id: '3',
@@ -141,26 +207,99 @@ const PrivateDashboard = () => {
           estimatedROI: 30,
           implementationTime: '3-6 semanas',
           features: ['Google Ads', 'Facebook Ads', 'Analytics avançado'],
-          benefits: ['ROI mensurável', 'Alcance segmentado', 'Conversão otimizada']
+          benefits: ['ROI mensurável', 'Alcance segmentado', 'Conversão otimizada'],
+          requirements: ['Orçamento para campanhas', 'Pixels de rastreamento', 'Landing pages']
         }
       ],
       implementationPlan: {
         phase1: [
-          { id: '1', name: 'Configurar Google My Business', priority: 1, timeline: '1 semana' },
-          { id: '2', name: 'Criar perfil no Instagram', priority: 2, timeline: '1 semana' }
+          { 
+            id: '1', 
+            name: 'Configurar Google My Business', 
+            description: 'Configuração inicial do Google My Business',
+            priority: 1 as const, 
+            category: 'marketing' as const,
+            confidence: 0.9,
+            estimatedROI: 15,
+            implementationTime: '1 semana',
+            features: [],
+            benefits: [],
+            requirements: []
+          },
+          { 
+            id: '2', 
+            name: 'Criar perfil no Instagram', 
+            description: 'Criação e configuração de perfil no Instagram',
+            priority: 2 as const, 
+            category: 'marketing' as const,
+            confidence: 0.85,
+            estimatedROI: 10,
+            implementationTime: '1 semana',
+            features: [],
+            benefits: [],
+            requirements: []
+          }
         ],
         phase2: [
-          { id: '3', name: 'Implementar sistema de reservas', priority: 1, timeline: '4 semanas' },
-          { id: '4', name: 'Configurar analytics', priority: 2, timeline: '2 semanas' }
+          { 
+            id: '3', 
+            name: 'Implementar sistema de reservas', 
+            description: 'Implementação de sistema completo de reservas',
+            priority: 1 as const, 
+            category: 'technology' as const,
+            confidence: 0.95,
+            estimatedROI: 35,
+            implementationTime: '4 semanas',
+            features: [],
+            benefits: [],
+            requirements: []
+          },
+          { 
+            id: '4', 
+            name: 'Configurar analytics', 
+            description: 'Configuração de ferramentas de analytics',
+            priority: 2 as const, 
+            category: 'analytics' as const,
+            confidence: 0.8,
+            estimatedROI: 20,
+            implementationTime: '2 semanas',
+            features: [],
+            benefits: [],
+            requirements: []
+          }
         ],
         phase3: [
-          { id: '5', name: 'Campanhas de marketing', priority: 1, timeline: '6 semanas' },
-          { id: '6', name: 'Otimização contínua', priority: 2, timeline: 'Ongoing' }
+          { 
+            id: '5', 
+            name: 'Campanhas de marketing', 
+            description: 'Execução de campanhas de marketing digital',
+            priority: 1 as const, 
+            category: 'marketing' as const,
+            confidence: 0.82,
+            estimatedROI: 30,
+            implementationTime: '6 semanas',
+            features: [],
+            benefits: [],
+            requirements: []
+          },
+          { 
+            id: '6', 
+            name: 'Otimização contínua', 
+            description: 'Processo contínuo de otimização',
+            priority: 2 as const, 
+            category: 'analytics' as const,
+            confidence: 0.75,
+            estimatedROI: 15,
+            implementationTime: 'Ongoing',
+            features: [],
+            benefits: [],
+            requirements: []
+          }
         ]
       }
-    };
-    
+      };
     setAnalysisResult(mockAnalysis);
+    }
   };
 
   if (isLoading) {
@@ -239,69 +378,91 @@ const PrivateDashboard = () => {
       </div>
 
       <div className="flex h-screen">
-        {/* Sidebar Esquerda - Funcionalidades */}
+        {/* Sidebar Esquerda */}
         <div className="w-64 bg-white shadow-lg h-full flex-shrink-0">
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Funcionalidades</h2>
             <nav className="space-y-2">
               <button
-                onClick={() => setActiveSection('revenue')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                onClick={() => setActiveSection('overview')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'overview' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Visão Geral
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection('revenue');
+                  setShowIntelligence(true);
+                  setIntelligenceTab('revenue');
+                }}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'revenue' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <TrendingUp className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">Revenue Optimizer</div>
-                  <div className="text-xs text-gray-500">Otimize sua receita</div>
-                </div>
+                <TrendingUp className="h-4 w-4" />
+                Revenue Optimizer
               </button>
-              
               <button
-                onClick={() => setActiveSection('market')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                onClick={() => {
+                  setActiveSection('market');
+                  setShowIntelligence(true);
+                  setIntelligenceTab('market');
+                }}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'market' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <BarChart3 className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">Market Intelligence</div>
-                  <div className="text-xs text-gray-500">Análise de mercado</div>
-                </div>
+                <BarChart3 className="h-4 w-4" />
+                Market Intelligence
               </button>
-              
               <button
-                onClick={() => setActiveSection('ai')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                onClick={() => {
+                  setActiveSection('benchmark');
+                  setShowIntelligence(true);
+                  setIntelligenceTab('benchmark');
+                }}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'benchmark' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Target className="h-4 w-4" />
+                Competitive Benchmark
+              </button>
+              <button
+                onClick={() => {
+                  setActiveSection('ai');
+                  navigate('/ms/guata');
+                }}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'ai' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Brain className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">IA Conversacional</div>
-                  <div className="text-xs text-gray-500">IA Guatá</div>
-                </div>
+                <Brain className="h-4 w-4" />
+                IA Conversacional
               </button>
-              
               <button
                 onClick={() => setActiveSection('upload')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'upload' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Upload className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">Upload Documentos</div>
-                  <div className="text-xs text-gray-500">Envie documentos</div>
-                </div>
+                <Upload className="h-4 w-4" />
+                Upload Documentos
               </button>
             </nav>
           </div>
@@ -309,144 +470,143 @@ const PrivateDashboard = () => {
 
         {/* Conteúdo Principal */}
         <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
-          {/* Resultados do Diagnóstico */}
-          <SectionWrapper variant="default" title="Resultados do Diagnóstico">
-            {/* Cards de Métricas */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card className="bg-white shadow-lg">
-                <CardContent className="p-6 text-center">
-                  <div className="text-4xl font-bold text-blue-600 mb-2">71%</div>
-                  <div className="text-sm text-gray-600">Score Geral</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white shadow-lg">
-                <CardContent className="p-6 text-center">
-                  <div className="text-4xl font-bold text-green-600 mb-2">+25%</div>
-                  <div className="text-sm text-gray-600">ROI Estimado</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white shadow-lg">
-                <CardContent className="p-6 text-center">
-                  <div className="text-4xl font-bold text-purple-600 mb-2">5</div>
-                  <div className="text-sm text-gray-600">Recomendações</div>
-                </CardContent>
-              </Card>
-            </div>
-          </SectionWrapper>
 
-          {/* Principais Recomendações */}
-          <SectionWrapper variant="default" title="Principais Recomendações">
-            <div className="space-y-3">
-              <div className="flex items-center p-4 bg-white rounded-lg shadow">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                <span className="text-gray-700">Implementar sistema de reservas online</span>
-              </div>
-              <div className="flex items-center p-4 bg-white rounded-lg shadow">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                <span className="text-gray-700">Otimizar presença nas redes sociais</span>
-              </div>
-              <div className="flex items-center p-4 bg-white rounded-lg shadow">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                <span className="text-gray-700">Investir em marketing digital</span>
-              </div>
-            </div>
-          </SectionWrapper>
+          {/* Visão Geral */}
+          {activeSection === 'overview' && (
+            <>
+              {analysisResult ? (
+                <>
+                  {/* Resultados do Diagnóstico */}
+                  <SectionWrapper 
+                    variant="default" 
+                    title="Resultados do Diagnóstico"
+                    actions={
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleRetakeDiagnostic}
+                      >
+                        Refazer Diagnóstico
+                      </Button>
+                    }
+                  >
+                    {/* Cards de Métricas */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <CardBox>
+                        <div className="text-4xl font-bold text-blue-600 mb-2 text-center">
+                          {analysisResult.overallScore}%
+                        </div>
+                        <div className="text-sm text-gray-600 text-center">Score Geral</div>
+                      </CardBox>
+                      
+                      <CardBox>
+                        <div className="text-4xl font-bold text-green-600 mb-2 text-center">
+                          +{analysisResult.estimatedROI}%
+                        </div>
+                        <div className="text-sm text-gray-600 text-center">ROI Estimado</div>
+                      </CardBox>
+                      
+                      <CardBox>
+                        <div className="text-4xl font-bold text-purple-600 mb-2 text-center">
+                          {analysisResult.recommendations.length}
+                        </div>
+                        <div className="text-sm text-gray-600 text-center">Recomendações</div>
+                      </CardBox>
+                    </div>
+                  </SectionWrapper>
 
-          {/* Próximos Passos */}
-          <SectionWrapper variant="default" title="Próximos Passos">
-            <div className="space-y-3">
-              <div className="flex items-center p-4 bg-white rounded-lg shadow">
-                <Target className="h-5 w-5 text-blue-500 mr-3" />
-                <span className="text-gray-700">Configurar Google My Business</span>
-              </div>
-              <div className="flex items-center p-4 bg-white rounded-lg shadow">
-                <Target className="h-5 w-5 text-blue-500 mr-3" />
-                <span className="text-gray-700">Criar perfil no Instagram</span>
-              </div>
-              <div className="flex items-center p-4 bg-white rounded-lg shadow">
-                <Target className="h-5 w-5 text-blue-500 mr-3" />
-                <span className="text-gray-700">Implementar sistema de avaliações</span>
-              </div>
-            </div>
-          </SectionWrapper>
+                  {/* Principais Recomendações */}
+                  {analysisResult.recommendations.length > 0 && (
+                    <SectionWrapper 
+                      variant="default" 
+                      title="Principais Recomendações"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {analysisResult.recommendations.slice(0, 6).map((rec) => (
+                          <CardBox key={rec.id}>
+                            <div className="flex items-start mb-3">
+                              <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <span className="text-slate-700 font-medium block mb-1">{rec.name}</span>
+                                <span className="text-slate-500 text-sm">{rec.description}</span>
+                              </div>
+                            </div>
+                          </CardBox>
+                        ))}
+                      </div>
+                    </SectionWrapper>
+                  )}
 
-          {/* Conteúdo das Funcionalidades */}
-          {activeSection === 'revenue' && (
-            <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
-                  Revenue Optimizer
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Sistema inteligente para otimização de receita baseado em análise de mercado e comportamento do cliente.
-                </p>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Acessar Revenue Optimizer
-                </Button>
-              </CardContent>
-            </Card>
+                  {/* Próximos Passos */}
+                  {analysisResult.implementationPlan.phase1.length > 0 && (
+                    <SectionWrapper 
+                      variant="default" 
+                      title="Próximos Passos"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {analysisResult.implementationPlan.phase1.map((step) => (
+                          <CardBox key={step.id}>
+                            <div className="flex items-start mb-3">
+                              <Target className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <span className="text-slate-700 font-medium block mb-1">{step.name}</span>
+                                <span className="text-slate-500 text-sm">{step.description}</span>
+                              </div>
+                            </div>
+                          </CardBox>
+                        ))}
+                      </div>
+                    </SectionWrapper>
+                  )}
+                </>
+              ) : (
+                <SectionWrapper 
+                  variant="default" 
+                  title="Bem-vindo ao ViaJAR"
+                >
+                  <CardBox>
+                    <p className="text-gray-600 mb-4">
+                      Complete o diagnóstico para receber recomendações personalizadas para o seu negócio.
+                    </p>
+                    <Button 
+                      onClick={() => setShowDiagnostic(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Iniciar Diagnóstico
+                    </Button>
+                  </CardBox>
+                </SectionWrapper>
+              )}
+            </>
           )}
 
-          {activeSection === 'market' && (
-            <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BarChart3 className="h-5 w-5 mr-2 text-green-600" />
-                  Market Intelligence
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Análise completa de mercado com dados em tempo real e insights estratégicos.
-                </p>
-                <Button className="bg-green-600 hover:bg-green-700 text-white">
-                  Acessar Market Intelligence
+          {/* Revenue Optimizer, Market Intelligence, Competitive Benchmark */}
+          {showIntelligence && (activeSection === 'revenue' || activeSection === 'market' || activeSection === 'benchmark') && (
+            <SectionWrapper 
+              variant="default" 
+              title="Intelligence Suite"
+              actions={
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowIntelligence(false);
+                    setActiveSection('overview');
+                  }}
+                >
+                  Voltar
                 </Button>
-              </CardContent>
-            </Card>
+              }
+            >
+              <Suspense fallback={<div className="flex items-center justify-center p-8"><RefreshCw className="h-6 w-6 animate-spin text-blue-600" /></div>}>
+                <ViaJARIntelligence initialTab={intelligenceTab} hideHeader={true} />
+              </Suspense>
+            </SectionWrapper>
           )}
 
-          {activeSection === 'ai' && (
-            <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Brain className="h-5 w-5 mr-2 text-purple-600" />
-                  IA Conversacional
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Assistente virtual inteligente para atendimento ao cliente 24/7.
-                </p>
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                  Acessar IA Conversacional
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* Upload Documentos */}
           {activeSection === 'upload' && (
-            <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Upload className="h-5 w-5 mr-2 text-orange-600" />
-                  Upload Documentos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Sistema de upload e processamento inteligente de documentos com IA.
-                </p>
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white">
-                  Fazer Upload de Documentos
-                </Button>
-              </CardContent>
-            </Card>
+            <DocumentUpload />
           )}
         </div>
       </div>

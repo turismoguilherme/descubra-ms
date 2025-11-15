@@ -20,13 +20,18 @@ Esta documentação contém **toda a informação necessária** para entender, m
   - Login de teste automático
   - Dashboard unificado
   - IA conversacional integrada
-- [**📊 Status Completo de Implementação 2024**](./viajar/STATUS_IMPLEMENTACAO_COMPLETO_2024.md) - **🎯 STATUS ATUAL**
-  - Todas as funcionalidades implementadas
-  - Sistema de questionários funcionando
-  - Dashboard com sidebar lateral
-  - Login automático operacional
-  - **🆓 APIs gratuitas integradas**
-  - **🌍 Sistema global sem custos**
+- [**📊 Análise: Documentação vs Código Real**](../../ANALISE_FUNCIONALIDADES_VIAJAR_DOCUMENTACAO_VS_CODIGO.md) - **🎯 DOCUMENTO PRECISO**
+  - Comparação real entre documentação e código
+  - Status real de cada funcionalidade
+  - Discrepâncias identificadas
+  - **⚠️ IMPORTANTE: Este documento reflete o estado real do código**
+- [**✅ Funcionalidades Reativadas**](../../FUNCIONALIDADES_REATIVADAS_VIAJAR.md) - **📋 STATUS ATUAL**
+  - Funcionalidades reativadas recentemente
+  - Componentes conectados
+  - Status por setor (público/privado)
+- [**📊 Status Completo de Implementação 2024**](./viajar/STATUS_IMPLEMENTACAO_COMPLETO_2024.md) - **📖 DOCUMENTAÇÃO TÉCNICA**
+  - Documentação técnica das funcionalidades
+  - **⚠️ NOTA: Verifique ANALISE_FUNCIONALIDADES_VIAJAR_DOCUMENTACAO_VS_CODIGO.md para status real**
 - [**🔧 Correções Implementadas ViaJAR 2024**](./viajar/CORRECOES_IMPLEMENTADAS_VIAJAR_2024.md)
   - Correções de autenticação
   - Redirecionamento de login

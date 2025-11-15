@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -39,6 +38,8 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import SecretaryDashboard from '@/components/secretary/SecretaryDashboard';
 import AttendantDashboardRestored from '@/components/cat/AttendantDashboardRestored';
 import PrivateDashboard from '@/pages/PrivateDashboard';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
 
 interface Attraction {
   id: string;
@@ -133,6 +134,10 @@ export default function ViaJARUnifiedDashboard() {
   // Debug: Log do role do usuário
   console.log('🔍 DEBUG - userRole:', userRole);
   console.log('🔍 DEBUG - isSecretary:', isSecretary);
+  console.log('🔍 DEBUG - isPrivate:', isPrivate);
+  console.log('🔍 DEBUG - isAttendant:', isAttendant);
+  console.log('🔍 DEBUG - user:', user);
+  console.log('🔍 DEBUG - userProfile:', userProfile);
 
   // Se for secretária de turismo, mostrar dashboard específico
   if (isSecretary) {
@@ -147,6 +152,14 @@ export default function ViaJARUnifiedDashboard() {
 
   // Se for usuário privado, mostrar dashboard específico
   if (isPrivate) {
+    return <PrivateDashboard />;
+  }
+
+  // Verificar se foi forçado o dashboard privado
+  const forcePrivate = localStorage.getItem('force_private_dashboard');
+  if (forcePrivate === 'true') {
+    localStorage.removeItem('force_private_dashboard');
+    // Temporariamente definir role como 'user' para mostrar PrivateDashboard
     return <PrivateDashboard />;
   }
 
@@ -177,61 +190,176 @@ export default function ViaJARUnifiedDashboard() {
         </div>
 
       <div className="container mx-auto px-6 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-              <div className="text-2xl font-bold">1,234</div>
-                      <p className="text-xs text-muted-foreground">
-                +20% em relação ao mês anterior
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sessões Hoje</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-              <div className="text-2xl font-bold">567</div>
-                      <p className="text-xs text-muted-foreground">
-                +12% em relação a ontem
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sistema Online</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
-                    </CardHeader>
-                    <CardContent>
-              <div className="text-2xl font-bold text-green-600">99.9%</div>
-                      <p className="text-xs text-muted-foreground">
-                Uptime nas últimas 24h
-                      </p>
-                    </CardContent>
-                  </Card>
+        {/* Métricas Principais */}
+        <SectionWrapper 
+          variant="default" 
+          title="Visão Geral do Sistema"
+          subtitle="Métricas principais do ViaJAR"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardBox>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-600 mb-1">Usuários Ativos</h3>
+                  <div className="text-3xl font-bold text-slate-800">1,234</div>
                 </div>
-        
-        <div className="mt-8">
-                <Card>
-            <CardHeader>
-              <CardTitle>Bem-vindo ao ViaJAR Dashboard</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-              <p className="text-gray-600">
-                Este é o dashboard unificado do sistema ViaJAR. 
-                Selecione seu perfil de usuário para acessar funcionalidades específicas.
-                    </p>
-                  </CardContent>
-                </Card>
+                <Users className="h-5 w-5 text-blue-500" />
               </div>
-            </div>
+              <p className="text-xs text-slate-500">
+                +20% em relação ao mês anterior
+              </p>
+            </CardBox>
+            
+            <CardBox>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-600 mb-1">Sessões Hoje</h3>
+                  <div className="text-3xl font-bold text-slate-800">567</div>
+                </div>
+                <BarChart3 className="h-5 w-5 text-purple-500" />
+              </div>
+              <p className="text-xs text-slate-500">
+                +12% em relação a ontem
+              </p>
+            </CardBox>
+            
+            <CardBox>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-600 mb-1">Sistema Online</h3>
+                  <div className="text-3xl font-bold text-green-600">99.9%</div>
+                </div>
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-xs text-slate-500">
+                Uptime nas últimas 24h
+              </p>
+            </CardBox>
+          </div>
+        </SectionWrapper>
+
+        {/* Mensagem de Boas-vindas */}
+        <SectionWrapper 
+          variant="default" 
+          title="Bem-vindo ao ViaJAR Dashboard"
+        >
+          <CardBox>
+            <p className="text-slate-600 mb-4">
+              Este é o dashboard unificado do sistema ViaJAR. 
+              Selecione seu perfil de usuário para acessar funcionalidades específicas.
+            </p>
+            {userRole && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-slate-600">
+                  <strong>Role detectado:</strong> {userRole}
+                </p>
+              </div>
+            )}
+          </CardBox>
+        </SectionWrapper>
+
+        {/* Funcionalidades do Setor Privado */}
+        <SectionWrapper 
+          variant="default" 
+          title="Funcionalidades do Setor Privado"
+          subtitle="Acesse as ferramentas de inteligência e otimização"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardBox>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-800 mb-1">Revenue Optimizer</h3>
+                  <p className="text-sm text-slate-600">Otimize sua receita com IA</p>
+                </div>
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => {
+                  // Forçar role como 'user' temporariamente para mostrar PrivateDashboard
+                  localStorage.setItem('force_private_dashboard', 'true');
+                  window.location.reload();
+                }}
+              >
+                Acessar
+              </Button>
+            </CardBox>
+
+            <CardBox>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-800 mb-1">Market Intelligence</h3>
+                  <p className="text-sm text-slate-600">Análise de mercado em tempo real</p>
+                </div>
+                <BarChart3 className="h-5 w-5 text-blue-500" />
+              </div>
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => {
+                  localStorage.setItem('force_private_dashboard', 'true');
+                  window.location.reload();
+                }}
+              >
+                Acessar
+              </Button>
+            </CardBox>
+
+            <CardBox>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-800 mb-1">Competitive Benchmark</h3>
+                  <p className="text-sm text-slate-600">Compare com concorrentes</p>
+                </div>
+                <Target className="h-5 w-5 text-purple-500" />
+              </div>
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => {
+                  localStorage.setItem('force_private_dashboard', 'true');
+                  window.location.reload();
+                }}
+              >
+                Acessar
+              </Button>
+            </CardBox>
+
+            <CardBox>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-800 mb-1">IA Conversacional</h3>
+                  <p className="text-sm text-slate-600">Assistente inteligente Guatá</p>
+                </div>
+                <Brain className="h-5 w-5 text-orange-500" />
+              </div>
+              <Button 
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={() => window.location.href = '/ms/guata'}
+              >
+                Acessar
+              </Button>
+            </CardBox>
+
+            <CardBox>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-800 mb-1">Upload Documentos</h3>
+                  <p className="text-sm text-slate-600">Processamento inteligente com IA</p>
+                </div>
+                <Upload className="h-5 w-5 text-cyan-500" />
+              </div>
+              <Button 
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+                onClick={() => {
+                  localStorage.setItem('force_private_dashboard', 'true');
+                  window.location.reload();
+                }}
+              >
+                Acessar
+              </Button>
+            </CardBox>
+          </div>
+        </SectionWrapper>
+      </div>
     </div>
   );
 }

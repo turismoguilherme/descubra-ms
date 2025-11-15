@@ -63,6 +63,7 @@ import Destinos from "@/pages/Destinos";
 import Partners from "@/pages/Partners";
 import Guata from "@/pages/Guata";
 import GuataTest from "@/pages/GuataTest";
+import ChatGuata from "@/pages/ChatGuata";
 import EventosMS from "@/pages/ms/EventosMS";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import DestinoDetalhes from "@/pages/DestinoDetalhes";
@@ -102,6 +103,9 @@ function App() {
                             <Route path="/governos" element={<ParaGovernos />} />
                             <Route path="/sobre" element={<Sobre />} />
                             <Route path="/contato" element={<Contato />} />
+                            
+                            {/* Chatbot Guatá Standalone - Totem */}
+                            <Route path="/chatguata" element={<ChatGuata />} />
                             
                             {/* ViaJAR Auth Routes (públicas) */}
                             <Route path="/viajar/login" element={<Suspense fallback={<LoadingFallback />}><ViaJARLogin /></Suspense>} />

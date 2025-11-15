@@ -34,6 +34,18 @@ const SuggestionQuestions = ({ onSuggestionClick }: SuggestionQuestionsProps) =>
         >
           "O que fazer em Corumbá?"
         </button>
+        <button 
+          className="bg-white p-3 rounded-lg shadow-sm hover:shadow-md text-left text-gray-700 transition-all hover:bg-ms-guavira-purple/5"
+          onClick={() => onSuggestionClick("O que fazer em Campo Grande?")}
+        >
+          "O que fazer em Campo Grande?"
+        </button>
+        <button 
+          className="bg-white p-3 rounded-lg shadow-sm hover:shadow-md text-left text-gray-700 transition-all hover:bg-ms-guavira-purple/5"
+          onClick={() => onSuggestionClick("Quais são os principais pontos turísticos de Campo Grande?")}
+        >
+          "Quais são os principais pontos turísticos de Campo Grande?"
+        </button>
       </div>
     </div>
   );

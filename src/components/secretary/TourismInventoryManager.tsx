@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
 import { 
   Plus, 
   Search, 
@@ -470,58 +472,57 @@ const TourismInventoryManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Inventário Turístico</h2>
-          <p className="text-gray-600">Gerencie atrativos, serviços e pontos de interesse</p>
-        </div>
-        <Button onClick={handleAddAttraction} className="bg-green-600 hover:bg-green-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Atrativo
-        </Button>
-      </div>
+      <SectionWrapper
+        variant="inventario"
+        title="Inventário Turístico"
+        subtitle="Gerencie atrativos, serviços e pontos de interesse"
+        actions={
+          <Button onClick={handleAddAttraction} className="bg-green-600 hover:bg-green-700 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Atrativo
+          </Button>
+        }
+      >
 
-      {/* Filtros */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Label htmlFor="search">Buscar</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="search"
-                  placeholder="Nome, descrição ou endereço..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+        {/* Filtros */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Label htmlFor="search">Buscar</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="search"
+                    placeholder="Nome, descrição ou endereço..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="md:w-48">
+                <Label htmlFor="category">Categoria</Label>
+                <select
+                  id="category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  {categories.map(category => (
+                    <option key={category.value} value={category.value}>
+                      {category.icon} {category.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-            <div className="md:w-48">
-              <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              >
-                {categories.map(category => (
-                  <option key={category.value} value={category.value}>
-                    {category.icon} {category.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total de Atrativos</p>
@@ -529,10 +530,8 @@ const TourismInventoryManager: React.FC = () => {
               </div>
               <MapPin className="h-8 w-8 text-blue-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </CardBox>
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ativos</p>
@@ -542,10 +541,8 @@ const TourismInventoryManager: React.FC = () => {
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </CardBox>
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Verificados</p>
@@ -555,10 +552,8 @@ const TourismInventoryManager: React.FC = () => {
               </div>
               <Star className="h-8 w-8 text-blue-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </CardBox>
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Avaliação Média</p>
@@ -568,116 +563,119 @@ const TourismInventoryManager: React.FC = () => {
               </div>
               <Star className="h-8 w-8 text-yellow-600" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </CardBox>
+        </div>
 
-      {/* Lista de Atrativos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAttractions.map((attraction) => (
-          <Card key={attraction.id} className="overflow-hidden">
-            <div className="h-48 bg-gray-200 relative">
-              {attraction.images.length > 0 ? (
-                <img
-                  src={attraction.images[0]}
-                  alt={attraction.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Camera className="h-12 w-12 text-gray-400" />
+        {/* Lista de Atrativos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredAttractions.map((attraction) => (
+            <CardBox key={attraction.id}>
+              {/* Cabeçalho com título e badge */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-1">{attraction.name}</h3>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm font-medium">{attraction.rating}</span>
+                  </div>
                 </div>
-              )}
-              <div className="absolute top-2 right-2 flex space-x-1">
-                <Badge className={attraction.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                  {attraction.isActive ? 'Ativo' : 'Inativo'}
-                </Badge>
-                {attraction.verified && (
-                  <Badge className="bg-blue-100 text-blue-800">
-                    Verificado
-                  </Badge>
+                <div className="flex flex-col gap-1">
+                  <span className={`rounded-full text-xs font-medium px-2 py-1 ${
+                    attraction.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {attraction.isActive ? 'Ativo' : 'Inativo'}
+                  </span>
+                  {attraction.verified && (
+                    <span className="rounded-full text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700">
+                      Verificado
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Imagem */}
+              <div className="h-32 bg-gray-200 rounded-md mb-3 relative overflow-hidden">
+                {attraction.images.length > 0 ? (
+                  <img
+                    src={attraction.images[0]}
+                    alt={attraction.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Camera className="h-8 w-8 text-gray-400" />
+                  </div>
                 )}
               </div>
-            </div>
-            
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-lg">{attraction.name}</h3>
-                <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                  <span className="text-sm font-medium">{attraction.rating}</span>
+              
+              {/* Metadados */}
+              <div className="space-y-1 mb-4">
+                <p className="text-slate-600 text-sm line-clamp-2">
+                  {attraction.description}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">{getCategoryIcon(attraction.category)}</span>
+                  <span className={`rounded-full text-xs font-medium px-2 py-1 ${getPriceRangeColor(attraction.priceRange)}`}>
+                    {priceRanges[attraction.priceRange]}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm text-slate-600">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span className="truncate">{attraction.address}</span>
+                </div>
+                <div className="flex items-center text-sm text-slate-600">
+                  <Clock className="h-4 w-4 mr-1" />
+                  <span>{attraction.openingHours}</span>
                 </div>
               </div>
               
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                {attraction.description}
-              </p>
-              
-              <div className="flex items-center space-x-2 mb-3">
-                <span className="text-sm text-gray-500">{getCategoryIcon(attraction.category)}</span>
-                <Badge className={getPriceRangeColor(attraction.priceRange)}>
-                  {priceRanges[attraction.priceRange]}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center text-sm text-gray-500 mb-3">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span className="truncate">{attraction.address}</span>
-              </div>
-              
-              <div className="flex items-center text-sm text-gray-500 mb-4">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>{attraction.openingHours}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <div className="flex space-x-1">
-                  <Button size="sm" variant="outline" onClick={() => handleEditAttraction(attraction)}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => handleDeleteAttraction(attraction.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-                <Button
-                  size="sm"
-                  variant={attraction.isActive ? "outline" : "default"}
-                  onClick={() => handleToggleActive(attraction.id)}
+              {/* Botões de Ação */}
+              <div className="flex items-center gap-2 pt-4 flex-wrap border-t">
+                <button 
+                  className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50"
+                  onClick={() => {}}
                 >
-                  {attraction.isActive ? 'Desativar' : 'Ativar'}
-                </Button>
+                  <Eye className="w-4 h-4" />
+                  Ver
+                </button>
+                <button 
+                  className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50"
+                  onClick={() => handleEditAttraction(attraction)}
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar
+                </button>
+                <button 
+                  className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-red-600 text-sm hover:bg-red-50"
+                  onClick={() => handleDeleteAttraction(attraction.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Excluir
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </CardBox>
+          ))}
+        </div>
 
-      {filteredAttractions.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum atrativo encontrado</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm || selectedCategory !== 'all' 
-                ? 'Tente ajustar os filtros de busca'
-                : 'Comece adicionando o primeiro atrativo turístico'
-              }
-            </p>
-            <Button onClick={handleAddAttraction}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Atrativo
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {filteredAttractions.length === 0 && (
+          <CardBox>
+            <div className="text-center py-8">
+              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum atrativo encontrado</h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm || selectedCategory !== 'all' 
+                  ? 'Tente ajustar os filtros de busca'
+                  : 'Comece adicionando o primeiro atrativo turístico'
+                }
+              </p>
+              <Button onClick={handleAddAttraction} className="bg-green-600 hover:bg-green-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Atrativo
+              </Button>
+            </div>
+          </CardBox>
+        )}
+      </SectionWrapper>
     </div>
   );
 };

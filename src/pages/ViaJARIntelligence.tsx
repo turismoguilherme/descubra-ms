@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -85,30 +85,45 @@ const MOCK_COMPETITIVE_BENCHMARK = {
 
 const COLORS = ['#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#3B82F6'];
 
-export default function ViaJARIntelligence() {
-  const [activeTab, setActiveTab] = useState('revenue');
+interface ViaJARIntelligenceProps {
+  initialTab?: 'revenue' | 'market' | 'benchmark';
+  hideHeader?: boolean; // Para quando renderizado dentro de outro dashboard
+}
+
+export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) {
+  const { initialTab = 'revenue', hideHeader = false } = props;
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // Atualizar aba quando initialTab mudar
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
+    <div className={`${hideHeader ? '' : 'min-h-screen'} bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20`}>
       <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Brain className="h-8 w-8 text-purple-600" />
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                ViaJAR Intelligence Suite
-              </h1>
+        {/* Header - Oculto se hideHeader for true */}
+        {!hideHeader && (
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Brain className="h-8 w-8 text-purple-600" />
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  ViaJAR Intelligence Suite
+                </h1>
+              </div>
+              <p className="text-muted-foreground">
+                Inteligência artificial para decisões estratégicas do seu negócio
+              </p>
             </div>
-            <p className="text-muted-foreground">
-              Inteligência artificial para decisões estratégicas do seu negócio
-            </p>
+            <Badge variant="secondary" className="gap-1">
+              <Sparkles className="h-3 w-3" />
+              Powered by IA
+            </Badge>
           </div>
-          <Badge variant="secondary" className="gap-1">
-            <Sparkles className="h-3 w-3" />
-            Powered by IA
-          </Badge>
-        </div>
+        )}
 
         {/* Alert sobre dados ALUMIA */}
         <Alert className="border-purple-200 bg-purple-50/50">

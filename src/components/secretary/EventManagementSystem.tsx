@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
 import { 
   Plus, 
   Calendar, 
@@ -255,93 +257,92 @@ const EventManagementSystem: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Gestão de Eventos</h2>
-          <p className="text-gray-600">Gerencie eventos turísticos e culturais</p>
-        </div>
-        <div className="flex space-x-2">
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            onClick={() => setViewMode('list')}
-          >
-            Lista
-          </Button>
-          <Button
-            variant={viewMode === 'calendar' ? 'default' : 'outline'}
-            onClick={() => setViewMode('calendar')}
-          >
-            Calendário
-          </Button>
-          <Button onClick={handleAddEvent} className="bg-green-600 hover:bg-green-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Evento
-          </Button>
-        </div>
-      </div>
+      <SectionWrapper
+        variant="default"
+        title="Gestão de Eventos"
+        subtitle="Gerencie eventos turísticos e culturais"
+        actions={
+          <div className="flex space-x-2">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              onClick={() => setViewMode('list')}
+            >
+              Lista
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'outline'}
+              onClick={() => setViewMode('calendar')}
+            >
+              Calendário
+            </Button>
+            <Button onClick={handleAddEvent} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Evento
+            </Button>
+          </div>
+        }
+      >
 
-      {/* Filtros */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="search">Buscar</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="search"
-                  placeholder="Título, descrição ou local..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+        {/* Filtros */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="search">Buscar</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="search"
+                    placeholder="Título, descrição ou local..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="category">Categoria</Label>
+                <select
+                  id="category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  {categories.map(category => (
+                    <option key={category.value} value={category.value}>
+                      {category.icon} {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  {statuses.map(status => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <Button variant="outline" className="w-full">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Mais Filtros
+                </Button>
               </div>
             </div>
-            <div>
-              <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              >
-                {categories.map(category => (
-                  <option key={category.value} value={category.value}>
-                    {category.icon} {category.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              >
-                {statuses.map(status => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end">
-              <Button variant="outline" className="w-full">
-                <Filter className="h-4 w-4 mr-2" />
-                Mais Filtros
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total de Eventos</p>
@@ -349,10 +350,8 @@ const EventManagementSystem: React.FC = () => {
               </div>
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </CardBox>
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ativos</p>
@@ -362,10 +361,8 @@ const EventManagementSystem: React.FC = () => {
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </CardBox>
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Público Total</p>
@@ -375,10 +372,8 @@ const EventManagementSystem: React.FC = () => {
               </div>
               <Users className="h-8 w-8 text-purple-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </CardBox>
+          <CardBox>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Orçamento Total</p>
@@ -388,159 +383,137 @@ const EventManagementSystem: React.FC = () => {
               </div>
               <DollarSign className="h-8 w-8 text-orange-600" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </CardBox>
+        </div>
 
-      {/* Lista de Eventos */}
-      {viewMode === 'list' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredEvents.map((event) => (
-            <Card key={event.id} className="overflow-hidden">
-              <div className="h-48 bg-gray-200 relative">
-                {event.images.length > 0 ? (
-                  <img
-                    src={event.images[0]}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Image className="h-12 w-12 text-gray-400" />
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 flex space-x-1">
-                  <Badge className={getStatusColor(event.status)}>
-                    {statuses.find(s => s.value === event.status)?.label}
-                  </Badge>
-                  {event.isPublic && (
-                    <Badge className="bg-blue-100 text-blue-800">
-                      Público
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-lg">{event.title}</h3>
-                  <div className="flex items-center space-x-1">
+        {/* Lista de Eventos */}
+        {viewMode === 'list' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredEvents.map((event) => (
+              <CardBox key={event.id}>
+                {/* Cabeçalho com título e badge */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-1">{event.title}</h3>
                     <span className="text-sm text-gray-500">{getCategoryIcon(event.category)}</span>
                   </div>
+                  <div className="flex flex-col gap-1">
+                    <span className={`rounded-full text-xs font-medium px-2 py-1 ${getStatusColor(event.status)}`}>
+                      {statuses.find(s => s.value === event.status)?.label}
+                    </span>
+                    {event.isPublic && (
+                      <span className="rounded-full text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700">
+                        Público
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {event.description}
-                </p>
+                {/* Imagem */}
+                <div className="h-32 bg-gray-200 rounded-md mb-3 relative overflow-hidden">
+                  {event.images.length > 0 ? (
+                    <img
+                      src={event.images[0]}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Image className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
                 
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Calendar className="h-4 w-4 mr-2" />
+                {/* Metadados */}
+                <div className="space-y-1 mb-4">
+                  <p className="text-slate-600 text-sm line-clamp-2">
+                    {event.description}
+                  </p>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <Calendar className="h-4 w-4 mr-1" />
                     <span>{formatDate(event.date)}</span>
                     {event.endDate && (
                       <span> - {formatDate(event.endDate)}</span>
                     )}
                   </div>
-                  
-                  <div className="flex items-center text-sm text-gray-500">
-                    <MapPin className="h-4 w-4 mr-2" />
+                  <div className="flex items-center text-sm text-slate-600">
+                    <MapPin className="h-4 w-4 mr-1" />
                     <span className="truncate">{event.location}</span>
                   </div>
-                  
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Users className="h-4 w-4 mr-2" />
+                  <div className="flex items-center text-sm text-slate-600">
+                    <Users className="h-4 w-4 mr-1" />
                     <span>{event.expectedAudience.toLocaleString()} pessoas</span>
                   </div>
-                  
-                  <div className="flex items-center text-sm text-gray-500">
-                    <DollarSign className="h-4 w-4 mr-2" />
+                  <div className="flex items-center text-sm text-slate-600">
+                    <DollarSign className="h-4 w-4 mr-1" />
                     <span>{formatCurrency(event.budget)}</span>
                   </div>
                 </div>
                 
-                <div className="flex justify-between">
-                  <div className="flex space-x-1">
-                    <Button size="sm" variant="outline" onClick={() => handleEditEvent(event)}>
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-3 w-3" />
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Share className="h-3 w-3" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="flex space-x-1">
-                    {event.status === 'planned' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleToggleStatus(event.id, 'active')}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Ativar
-                      </Button>
-                    )}
-                    {event.status === 'active' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleToggleStatus(event.id, 'completed')}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        Concluir
-                      </Button>
-                    )}
-                  </div>
+                {/* Botões de Ação */}
+                <div className="flex items-center gap-2 pt-4 flex-wrap border-t">
+                  <button 
+                    className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50"
+                    onClick={() => {}}
+                  >
+                    <Eye className="w-4 h-4" />
+                    Ver
+                  </button>
+                  <button 
+                    className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50"
+                    onClick={() => handleEditEvent(event)}
+                  >
+                    <Edit className="w-4 h-4" />
+                    Editar
+                  </button>
+                  <button 
+                    className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-red-600 text-sm hover:bg-red-50"
+                    onClick={() => handleDeleteEvent(event.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Excluir
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </CardBox>
+            ))}
+          </div>
+        )}
 
-      {/* Vista de Calendário */}
-      {viewMode === 'calendar' && (
-        <Card>
-          <CardContent className="p-4">
+        {/* Vista de Calendário */}
+        {viewMode === 'calendar' && (
+          <CardBox>
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Vista de Calendário</h3>
               <p className="text-gray-600 mb-4">
                 Vista de calendário será implementada em breve
               </p>
-              <Button onClick={() => setViewMode('list')}>
+              <Button onClick={() => setViewMode('list')} className="bg-blue-600 hover:bg-blue-700 text-white">
                 Voltar para Lista
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </CardBox>
+        )}
 
-      {filteredEvents.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum evento encontrado</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all'
-                ? 'Tente ajustar os filtros de busca'
-                : 'Comece criando o primeiro evento'
-              }
-            </p>
-            <Button onClick={handleAddEvent}>
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Evento
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {filteredEvents.length === 0 && (
+          <CardBox>
+            <div className="text-center py-8">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum evento encontrado</h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all'
+                  ? 'Tente ajustar os filtros de busca'
+                  : 'Comece criando o primeiro evento'
+                }
+              </p>
+              <Button onClick={handleAddEvent} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Evento
+              </Button>
+            </div>
+          </CardBox>
+        )}
+      </SectionWrapper>
     </div>
   );
 };

@@ -37,6 +37,10 @@ import {
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { touristService } from '@/services/cat/touristService';
+import { attendanceService } from '@/services/cat/attendanceService';
+import { aiConversationService } from '@/services/cat/aiConversationService';
+import { translationService } from '@/services/cat/translationService';
 
 const AttendantDashboardRestored: React.FC = () => {
   // Verificar se o AuthProvider está disponível
@@ -62,6 +66,10 @@ const AttendantDashboardRestored: React.FC = () => {
   const [activeTab, setActiveTab] = useState('ai');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [tourists, setTourists] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [isLoadingTourists, setIsLoadingTourists] = useState(false);
+  const [touristStats, setTouristStats] = useState<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -83,6 +91,63 @@ const AttendantDashboardRestored: React.FC = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Carregar dados do Supabase
+  useEffect(() => {
+    if (user?.id && activeTab === 'tourists') {
+      loadTourists();
+      loadTouristStats();
+    }
+    if (user?.id && activeTab === 'reports') {
+      loadAttendanceRecords();
+    }
+  }, [user, activeTab]);
+
+  const loadTourists = async () => {
+    if (!user?.id) return;
+    setIsLoadingTourists(true);
+    try {
+      const data = await touristService.getTourists({
+        attendant_id: user.id,
+        startDate: new Date().toISOString().split('T')[0]
+      });
+      setTourists(data);
+    } catch (error) {
+      console.error('Erro ao carregar turistas:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os turistas',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingTourists(false);
+    }
+  };
+
+  const loadTouristStats = async () => {
+    if (!user?.id) return;
+    try {
+      const stats = await touristService.getTouristStats({
+        attendant_id: user.id
+      });
+      setTouristStats(stats);
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const loadAttendanceRecords = async () => {
+    if (!user?.id) return;
+    try {
+      const records = await attendanceService.getAttendanceRecords({
+        attendant_id: user.id,
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      });
+      setAttendanceRecords(records);
+    } catch (error) {
+      console.error('Erro ao carregar registros de atendimento:', error);
+    }
+  };
 
   if (!user || !isAttendant) {
     return (
@@ -444,7 +509,7 @@ const AttendantDashboardRestored: React.FC = () => {
                 </div>
                 <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
                   <Users className="h-4 w-4 mr-2" />
-                  15 turistas hoje
+                  {touristStats?.today || 0} turistas hoje
                 </Badge>
               </div>
 
@@ -452,26 +517,34 @@ const AttendantDashboardRestored: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card>
                   <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">15</div>
+                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                      {touristStats?.today || 0}
+                    </div>
                     <p className="text-sm text-gray-600">Turistas Hoje</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-green-600 mb-2">4.8</div>
+                    <div className="text-3xl font-bold text-green-600 mb-2">
+                      {touristStats?.averageRating?.toFixed(1) || '0.0'}
+                    </div>
                     <p className="text-sm text-gray-600">Avaliação Média</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-purple-600 mb-2">12</div>
-                    <p className="text-sm text-gray-600">Atendimentos</p>
+                    <div className="text-3xl font-bold text-purple-600 mb-2">
+                      {touristStats?.thisWeek || 0}
+                    </div>
+                    <p className="text-sm text-gray-600">Esta Semana</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-orange-600 mb-2">8</div>
-                    <p className="text-sm text-gray-600">Países</p>
+                    <div className="text-3xl font-bold text-orange-600 mb-2">
+                      {touristStats?.thisMonth || 0}
+                    </div>
+                    <p className="text-sm text-gray-600">Este Mês</p>
                   </CardContent>
                 </Card>
               </div>
@@ -485,62 +558,49 @@ const AttendantDashboardRestored: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Maria Silva</p>
-                          <p className="text-sm text-gray-600">São Paulo, Brasil</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-800">
-                          <Star className="h-3 w-3 mr-1" />
-                          5.0
-                        </Badge>
-                        <span className="text-sm text-gray-500">14:30</span>
-                      </div>
+                  {isLoadingTourists ? (
+                    <div className="flex items-center justify-center p-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <Globe className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">John Smith</p>
-                          <p className="text-sm text-gray-600">New York, USA</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-800">
-                          <Star className="h-3 w-3 mr-1" />
-                          4.5
-                        </Badge>
-                        <span className="text-sm text-gray-500">13:45</span>
-                      </div>
+                  ) : tourists.length === 0 ? (
+                    <div className="text-center p-8 text-gray-500">
+                      Nenhum turista atendido hoje.
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                          <Globe className="h-5 w-5 text-purple-600" />
+                  ) : (
+                    <div className="space-y-3">
+                      {tourists.slice(0, 10).map((tourist) => (
+                        <div key={tourist.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Users className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{tourist.name || 'Sem nome'}</p>
+                              <p className="text-sm text-gray-600">
+                                {tourist.origin_city && tourist.origin_state 
+                                  ? `${tourist.origin_city}, ${tourist.origin_state}`
+                                  : tourist.origin_country || 'Origem não informada'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {tourist.rating && (
+                              <Badge className="bg-green-100 text-green-800">
+                                <Star className="h-3 w-3 mr-1" />
+                                {tourist.rating.toFixed(1)}
+                              </Badge>
+                            )}
+                            <span className="text-sm text-gray-500">
+                              {new Date(tourist.visit_time).toLocaleTimeString('pt-BR', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">Carlos Rodriguez</p>
-                          <p className="text-sm text-gray-600">Madrid, Espanha</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-800">
-                          <Star className="h-3 w-3 mr-1" />
-                          4.8
-                        </Badge>
-                        <span className="text-sm text-gray-500">12:20</span>
-                      </div>
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 

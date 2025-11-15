@@ -35,6 +35,8 @@ import {
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
+import TourismInventoryManager from '@/components/secretary/TourismInventoryManager';
+import EventManagementSystem from '@/components/secretary/EventManagementSystem';
 
 interface Attraction {
   id: string;
@@ -225,208 +227,94 @@ export default function SecretaryDashboard() {
             >
               {/* Cards de Resumo */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <Card className="bg-white">
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">12</div>
-                    <p className="text-sm text-gray-600">CATs Ativos</p>
-                  </CardContent>
-                </Card>
+                <CardBox>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">12</div>
+                  <p className="text-sm text-gray-600">CATs Ativos</p>
+                </CardBox>
                 
-                <Card className="bg-white">
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-green-600 mb-2">1,247</div>
-                    <p className="text-sm text-gray-600">Turistas Hoje</p>
-                  </CardContent>
-                </Card>
+                <CardBox>
+                  <div className="text-3xl font-bold text-green-600 mb-2">1,247</div>
+                  <p className="text-sm text-gray-600">Turistas Hoje</p>
+                </CardBox>
                 
-                <Card className="bg-white">
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-purple-600 mb-2">45</div>
-                    <p className="text-sm text-gray-600">Atrações</p>
-                  </CardContent>
-                </Card>
+                <CardBox>
+                  <div className="text-3xl font-bold text-purple-600 mb-2">45</div>
+                  <p className="text-sm text-gray-600">Atrações</p>
+                </CardBox>
                 
-                <Card className="bg-white">
-                  <CardContent className="p-6">
-                    <div className="text-3xl font-bold text-orange-600 mb-2">8</div>
-                    <p className="text-sm text-gray-600">Eventos</p>
-                  </CardContent>
-                </Card>
+                <CardBox>
+                  <div className="text-3xl font-bold text-orange-600 mb-2">8</div>
+                  <p className="text-sm text-gray-600">Eventos</p>
+                </CardBox>
               </div>
 
               {/* Performance dos CATs */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building2 className="h-5 w-5 text-blue-600" />
-                      Performance dos CATs
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {cats.map((cat) => (
-                        <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <CardBox>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Building2 className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Performance dos CATs</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {cats.map((cat) => (
+                      <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
-                            <h4 className="font-medium">{cat.name}</h4>
-                            <p className="text-sm text-gray-600">{cat.tourists} turistas</p>
+                          <h4 className="font-medium text-slate-800">{cat.name}</h4>
+                          <p className="text-sm text-gray-600">{cat.tourists} turistas</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                            <span className="text-sm font-medium">{cat.rating}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                              <span className="text-sm font-medium">{cat.rating}</span>
+                          <span className={`rounded-full text-xs font-medium px-2 py-1 ${
+                            cat.status === 'excellent' ? 'bg-green-100 text-green-700' :
+                            cat.status === 'good' ? 'bg-blue-100 text-blue-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {cat.status === 'excellent' ? 'Excelente' :
+                             cat.status === 'good' ? 'Bom' : 'Melhorar'}
+                          </span>
                         </div>
-                            <Badge className={
-                              cat.status === 'excellent' ? 'bg-green-100 text-green-800' :
-                              cat.status === 'good' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }>
-                              {cat.status === 'excellent' ? 'Excelente' :
-                               cat.status === 'good' ? 'Bom' : 'Melhorar'}
-                        </Badge>
                       </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                    ))}
+                  </div>
+                </CardBox>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-green-600" />
-                      Atividades Recentes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Calendar className="h-4 w-4 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium">Novo evento cadastrado</p>
-                          <p className="text-xs text-gray-500">14:30</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Users className="h-4 w-4 text-green-600" />
-                        <div>
-                          <p className="text-sm font-medium">CAT Centro - 15 novos turistas</p>
-                          <p className="text-xs text-gray-500">14:15</p>
-                        </div>
+                <CardBox>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Bell className="h-5 w-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-slate-800">Atividades Recentes</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Calendar className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">Novo evento cadastrado</p>
+                        <p className="text-xs text-gray-500">14:30</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Users className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">CAT Centro - 15 novos turistas</p>
+                        <p className="text-xs text-gray-500">14:15</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardBox>
               </div>
             </SectionWrapper>
           )}
 
           {/* Inventário Turístico */}
           {activeSection === 'inventory' && (
-            <SectionWrapper 
-              variant="inventario" 
-              title="Inventário Turístico"
-              subtitle="Atrações Cadastradas"
-              actions={
-                <>
-                  <Button onClick={() => setShowAddModal(true)} className="bg-green-600 hover:bg-green-700 text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Atração
-                  </Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Users className="h-4 w-4 mr-2" />
-                    Adicionar Colaboradores
-                  </Button>
-                </>
-              }
-            >
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {attractions.map((attraction) => (
-                  <CardBox key={attraction.id}>
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-slate-800">{attraction.name}</h3>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        attraction.status === 'active' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {attraction.status === 'active' ? 'Ativo' : 'Manutenção'}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-1 mb-4">
-                      <p className="text-slate-600 text-sm">{attraction.category}</p>
-                      <p className="text-slate-600 text-sm">{attraction.visitors.toLocaleString()} visitantes</p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 pt-4 flex-wrap border-t">
-                      <button className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50">
-                        <Eye className="w-4 h-4" />
-                        Ver
-                      </button>
-                      <button onClick={() => handleEdit(attraction)} className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50">
-                        <Edit className="w-4 h-4" />
-                        Editar
-                      </button>
-                      <button onClick={() => handleDelete(attraction)} className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-red-600 text-sm hover:bg-red-50">
-                        <Trash2 className="w-4 h-4" />
-                        Excluir
-                      </button>
-                    </div>
-                  </CardBox>
-                ))}
-              </div>
-            </SectionWrapper>
+            <TourismInventoryManager />
           )}
 
           {/* Gestão de Eventos */}
           {activeSection === 'events' && (
-            <SectionWrapper 
-              variant="default" 
-              title="Gestão de Eventos"
-              actions={
-                <Button onClick={() => setShowAddModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Evento
-                </Button>
-              }
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {events.map((event) => (
-                  <CardBox key={event.id}>
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-slate-800">{event.name}</h3>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        event.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {event.status === 'confirmed' ? 'Confirmado' : 'Planejamento'}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-1 mb-4">
-                      <p className="text-slate-600 text-sm">{new Date(event.date).toLocaleDateString('pt-BR')}</p>
-                      <p className="text-slate-600 text-sm">{event.participants} participantes</p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 pt-4 flex-wrap border-t">
-                      <button className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50">
-                        <Eye className="w-4 h-4" />
-                        Ver
-                      </button>
-                      <button onClick={() => handleEdit(event)} className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50">
-                        <Edit className="w-4 h-4" />
-                        Editar
-                      </button>
-                      <button onClick={() => handleDelete(event)} className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-red-600 text-sm hover:bg-red-50">
-                        <Trash2 className="w-4 h-4" />
-                        Excluir
-                      </button>
-                    </div>
-                  </CardBox>
-                ))}
-              </div>
-            </SectionWrapper>
+            <EventManagementSystem />
           )}
 
           {/* Gestão de CATs */}

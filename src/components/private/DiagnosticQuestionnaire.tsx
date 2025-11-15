@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -40,7 +42,24 @@ interface DiagnosticResult {
   estimatedROI: number;
 }
 
-const DiagnosticQuestionnaire: React.FC = () => {
+export interface QuestionnaireAnswers {
+  business_type?: string;
+  experience_years?: string;
+  revenue_monthly?: string;
+  occupancy_rate?: string;
+  marketing_channels?: string[];
+  digital_presence?: string;
+  customer_service?: string;
+  main_challenges?: string[];
+  technology_usage?: string[];
+  sustainability?: string;
+}
+
+interface DiagnosticQuestionnaireProps {
+  onComplete?: (answers: QuestionnaireAnswers) => void;
+}
+
+const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -157,11 +176,8 @@ const DiagnosticQuestionnaire: React.FC = () => {
     setIsAnalyzing(true);
     
     try {
-      // Importar o serviço de IA
-      const { geminiAIService } = await import('@/services/ai/GeminiAIService');
-      
       // Converter respostas para o formato esperado
-      const diagnosticAnswers = {
+      const diagnosticAnswers: QuestionnaireAnswers = {
         business_type: answers.business_type || '',
         experience_years: answers.experience_years || '',
         revenue_monthly: answers.revenue_monthly || '',
@@ -174,6 +190,16 @@ const DiagnosticQuestionnaire: React.FC = () => {
         sustainability: answers.sustainability || ''
       };
 
+      // Se houver callback onComplete, usar ele (o dashboard processará com analysisService)
+      if (onComplete) {
+        onComplete(diagnosticAnswers);
+        return; // O dashboard vai gerenciar o resultado
+      }
+
+      // Caso contrário, processar localmente (fallback)
+      // Importar o serviço de IA
+      const { geminiAIService } = await import('@/services/ai/GeminiAIService');
+      
       // Analisar com IA real
       const aiResult = await geminiAIService.analyzeDiagnostic(diagnosticAnswers);
       
@@ -222,26 +248,23 @@ const DiagnosticQuestionnaire: React.FC = () => {
 
   if (result) {
     return (
-      <div className="space-y-6">
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <CheckCircle className="h-12 w-12 text-green-500 mr-3" />
-              <div>
-                <CardTitle className="text-2xl">Diagnóstico Concluído!</CardTitle>
-                <p className="text-gray-600">Análise personalizada para seu negócio</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Score */}
+      <SectionWrapper
+        variant="default"
+        title="Diagnóstico Concluído!"
+        subtitle="Análise personalizada para seu negócio"
+      >
+        <div className="space-y-6">
+          {/* Score */}
+          <CardBox>
             <div className="text-center">
               <div className="text-4xl font-bold text-blue-600 mb-2">{result.score}%</div>
               <p className="text-gray-600">Score de Maturidade Digital</p>
             </div>
+          </CardBox>
 
-            {/* ROI Estimado */}
-            <div className="bg-green-50 p-4 rounded-lg text-center">
+          {/* ROI Estimado */}
+          <CardBox className="bg-green-50 border-green-200">
+            <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <TrendingUp className="h-6 w-6 text-green-600 mr-2" />
                 <span className="text-lg font-semibold text-green-800">
@@ -252,118 +275,122 @@ const DiagnosticQuestionnaire: React.FC = () => {
                 Potencial de aumento na receita com as implementações
               </p>
             </div>
+          </CardBox>
 
-            {/* Recomendações */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <Target className="h-5 w-5 mr-2" />
-                Recomendações Prioritárias
-              </h3>
-              <div className="space-y-2">
-                {result.recommendations.map((rec, index) => (
-                  <div key={index} className="flex items-start">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                    <span className="text-sm">{rec}</span>
+          {/* Recomendações */}
+          <CardBox>
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-slate-800">
+              <Target className="h-5 w-5 mr-2" />
+              Recomendações Prioritárias
+            </h3>
+            <div className="space-y-2">
+              {result.recommendations.map((rec, index) => (
+                <div key={index} className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                  <span className="text-sm text-slate-700">{rec}</span>
+                </div>
+              ))}
+            </div>
+          </CardBox>
+
+          {/* Pontos Fortes */}
+          <CardBox>
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-slate-800">
+              <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
+              Pontos Fortes
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {result.strengths.map((strength, index) => (
+                <span key={index} className="rounded-full text-xs font-medium px-2 py-1 bg-green-100 text-green-700">
+                  {strength}
+                </span>
+              ))}
+            </div>
+          </CardBox>
+
+          {/* Pontos de Melhoria */}
+          <CardBox>
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-slate-800">
+              <AlertCircle className="h-5 w-5 mr-2 text-orange-500" />
+              Pontos de Melhoria
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {result.weaknesses.map((weakness, index) => (
+                <span key={index} className="rounded-full text-xs font-medium px-2 py-1 bg-orange-100 text-orange-700 border border-orange-200">
+                  {weakness}
+                </span>
+              ))}
+            </div>
+          </CardBox>
+
+          {/* Plano de Ação */}
+          <CardBox>
+            <h3 className="text-lg font-semibold mb-3 flex items-center text-slate-800">
+              <FileText className="h-5 w-5 mr-2" />
+              Plano de Ação
+            </h3>
+            <div className="space-y-2">
+              {result.actionPlan.map((action, index) => (
+                <div key={index} className="flex items-start">
+                  <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3 mt-1 flex-shrink-0">
+                    {index + 1}
                   </div>
-                ))}
-              </div>
+                  <span className="text-sm text-slate-700">{action}</span>
+                </div>
+              ))}
             </div>
+          </CardBox>
 
-            {/* Pontos Fortes */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
-                Pontos Fortes
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {result.strengths.map((strength, index) => (
-                  <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
-                    {strength}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Pontos de Melhoria */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <AlertCircle className="h-5 w-5 mr-2 text-orange-500" />
-                Pontos de Melhoria
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {result.weaknesses.map((weakness, index) => (
-                  <Badge key={index} variant="outline" className="border-orange-300 text-orange-700">
-                    {weakness}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Plano de Ação */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <FileText className="h-5 w-5 mr-2" />
-                Plano de Ação
-              </h3>
-              <div className="space-y-2">
-                {result.actionPlan.map((action, index) => (
-                  <div key={index} className="flex items-start">
-                    <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3 mt-1 flex-shrink-0">
-                      {index + 1}
-                    </div>
-                    <span className="text-sm">{action}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Ações */}
-            <div className="flex gap-3 pt-4">
-              <Button className="flex-1" size="lg">
-                <Download className="h-4 w-4 mr-2" />
-                Baixar Relatório PDF
-              </Button>
-              <Button variant="outline" size="lg">
-                <Brain className="h-4 w-4 mr-2" />
-                Consultoria Personalizada
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Ações */}
+          <div className="flex gap-3 pt-4">
+            <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="lg">
+              <Download className="h-4 w-4 mr-2" />
+              Baixar Relatório PDF
+            </Button>
+            <Button variant="outline" size="lg" className="border border-slate-300">
+              <Brain className="h-4 w-4 mr-2" />
+              Consultoria Personalizada
+            </Button>
+          </div>
+        </div>
+      </SectionWrapper>
     );
   }
 
   if (isAnalyzing) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <h3 className="text-lg font-semibold mb-2">Analisando seu negócio...</h3>
-        <p className="text-gray-600">Nossa IA está processando suas respostas</p>
-      </div>
+      <SectionWrapper variant="default" title="Analisando seu negócio...">
+        <CardBox>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Nossa IA está processando suas respostas</p>
+          </div>
+        </CardBox>
+      </SectionWrapper>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <SectionWrapper
+      variant="default"
+      title="Diagnóstico Inteligente"
+      subtitle={`Pergunta ${currentStep + 1} de ${totalSteps} - ${Math.round(progress)}% concluído`}
+    >
       {/* Progress */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Pergunta {currentStep + 1} de {totalSteps}</span>
-          <span>{Math.round(progress)}% concluído</span>
-        </div>
+      <div className="mb-6">
         <Progress value={progress} className="h-2" />
       </div>
 
       {/* Question */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">{currentQuestion.text}</CardTitle>
-            <Badge variant="outline">{currentQuestion.category}</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <CardBox>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold text-slate-800">{currentQuestion.text}</h3>
+          <span className="rounded-full text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700">
+            {currentQuestion.category}
+          </span>
+        </div>
+        
+        <div className="space-y-4">
           {currentQuestion.type === 'single' && (
             <div className="space-y-2">
               {currentQuestion.options?.map((option, index) => (
@@ -428,15 +455,16 @@ const DiagnosticQuestionnaire: React.FC = () => {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </CardBox>
 
       {/* Navigation */}
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-6">
         <Button
           variant="outline"
           onClick={handlePrevious}
           disabled={currentStep === 0}
+          className="border border-slate-300"
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
           Anterior
@@ -447,7 +475,7 @@ const DiagnosticQuestionnaire: React.FC = () => {
             onClick={handleSubmit}
             disabled={!canProceed}
             size="lg"
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             <Brain className="h-4 w-4 mr-2" />
             Analisar com IA
@@ -456,13 +484,14 @@ const DiagnosticQuestionnaire: React.FC = () => {
           <Button
             onClick={handleNext}
             disabled={!canProceed}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Próxima
             <ChevronRight className="h-4 w-4 ml-2" />
           </Button>
         )}
       </div>
-    </div>
+    </SectionWrapper>
   );
 };
 
