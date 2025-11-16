@@ -108,7 +108,8 @@ serve(async (req) => {
       
       // Chamar a Edge Function de envio de e-mail (ou um NotificationService se disponível no backend)
       // Para o Deno, teríamos que fazer a chamada HTTP diretamente para send-email-via-gateway
-      const emailResponse = await fetch(`${supabaseAdmin.functions.url}/send-email-via-gateway`, {
+      const functionUrl = Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '/functions/v1');
+      const emailResponse = await fetch(`${functionUrl}/send-email-via-gateway`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: adminEmail, subject, body, aiGenerated: true }),

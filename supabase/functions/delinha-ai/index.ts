@@ -20,8 +20,8 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: `Erro ao processar sua solicitação: ${error.message}`,
-        details: error.toString()
+      error: `Erro ao processar sua solicitação: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: error instanceof Error ? error.toString() : String(error)
       }),
       { 
         status: 500, 
