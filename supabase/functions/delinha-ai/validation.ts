@@ -36,7 +36,7 @@ export function validateRequest(body: any, clientIP: string): {
     if (!rateLimitResult.allowed) {
       return {
         isValid: false,
-        error: `Rate limit exceeded. Try again in ${Math.ceil(rateLimitResult.resetIn / 60000)} minutes.`
+        error: `Rate limit exceeded. Try again in ${Math.ceil((rateLimitResult.resetIn || 60000) / 60000)} minutes.`
       };
     }
 
