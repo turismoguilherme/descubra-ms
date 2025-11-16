@@ -2405,7 +2405,7 @@ export type Database = {
           description: string | null
           difficulty: string | null
           distance_km: number | null
-          estimated_duration: unknown | null
+          estimated_duration: unknown
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -2423,7 +2423,7 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           distance_km?: number | null
-          estimated_duration?: unknown | null
+          estimated_duration?: unknown
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -2441,7 +2441,7 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           distance_km?: number | null
-          estimated_duration?: unknown | null
+          estimated_duration?: unknown
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -2520,7 +2520,7 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           success: boolean
           user_agent: string | null
           user_id: string | null
@@ -2530,7 +2530,7 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success: boolean
           user_agent?: string | null
           user_id?: string | null
@@ -2540,7 +2540,7 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
@@ -2763,7 +2763,7 @@ export type Database = {
           event_id: string | null
           id: string
           interaction_type: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           page_url: string | null
           session_id: string | null
@@ -2777,7 +2777,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           interaction_type: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           page_url?: string | null
           session_id?: string | null
@@ -2791,7 +2791,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           interaction_type?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           page_url?: string | null
           session_id?: string | null
@@ -3057,18 +3057,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      auto_expire_events: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
-      }
-      calculate_user_level: {
-        Args: { points: number }
-        Returns: Json
-      }
+      auto_expire_events: { Args: never; Returns: undefined }
+      calculate_user_level: { Args: { points: number }; Returns: Json }
       can_access_document: {
         Args: { p_document_id: string; p_user_id?: string }
         Returns: boolean
@@ -3077,10 +3067,7 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: boolean
       }
-      cleanup_old_ai_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_old_ai_logs: { Args: never; Returns: undefined }
       create_attendant_user: {
         Args: {
           send_invite?: boolean
@@ -3108,7 +3095,7 @@ export type Database = {
         Returns: string
       }
       create_test_user_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email_ref: string
           role_assigned: string
@@ -3119,18 +3106,9 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: Json
       }
-      elevate_to_admin: {
-        Args: { user_email: string }
-        Returns: undefined
-      }
-      ensure_admin_exists: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      fix_incomplete_profiles: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      elevate_to_admin: { Args: { user_email: string }; Returns: undefined }
+      ensure_admin_exists: { Args: never; Returns: boolean }
+      fix_incomplete_profiles: { Args: never; Returns: undefined }
       get_ai_consultant_stats: {
         Args: {
           p_city_id?: string
@@ -3146,14 +3124,8 @@ export type Database = {
           total_users: number
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_role: {
-        Args: { check_user_id: string }
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
+      get_user_role: { Args: { check_user_id: string }; Returns: string }
       get_user_states: {
         Args: { check_user_id: string }
         Returns: {
@@ -3164,7 +3136,7 @@ export type Database = {
         }[]
       }
       get_user_statistics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_count: number
           role_name: string
@@ -3182,7 +3154,7 @@ export type Database = {
         }[]
       }
       get_users_with_details: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           city_id: string
           city_name: string
@@ -3199,22 +3171,6 @@ export type Database = {
           user_type: string
         }[]
       }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
       has_state_role: {
         Args: {
           check_state_id: string
@@ -3223,50 +3179,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      is_admin_user: {
-        Args: { check_user_id: string }
-        Returns: boolean
-      }
-      is_manager: {
-        Args: { check_user_id: string }
-        Returns: boolean
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: unknown
-      }
+      is_admin_user: { Args: { check_user_id: string }; Returns: boolean }
+      is_manager: { Args: { check_user_id: string }; Returns: boolean }
       log_document_access: {
         Args: {
           p_access_type: string
@@ -3325,53 +3239,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
       update_user_points: {
         Args: { p_points: number; p_state_id: string; p_user_id: string }
         Returns: undefined
       }
-      validate_cnpj: {
-        Args: { cnpj_input: string }
-        Returns: boolean
-      }
+      validate_cnpj: { Args: { cnpj_input: string }; Returns: boolean }
       validate_password_reset_token: {
         Args: { token_hash: string; user_email: string }
         Returns: boolean
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
     }
     Enums: {

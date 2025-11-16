@@ -111,13 +111,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           } as User;
           
           // Criar perfil simulado
-          const testProfile: UserProfile = {
+        const testProfile: UserProfile = {
             user_id: testUser.id,
             full_name: testUser.name,
             role: testUser.role,
             city_id: testUser.role === 'gestor_municipal' ? 'campo-grande' : 
-                     testUser.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
-            region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+                     (testUser.role === 'gestor_igr' || testUser.role === 'diretor_estadual') ? 'dourados' : 'campo-grande',
+            region_id: (testUser.role === 'gestor_igr' || testUser.role === 'diretor_estadual') ? 'igr-grande-dourados' : 'regiao-pantanal'
           };
           
           setSession(null);
@@ -148,8 +148,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           full_name: testUser.name,
           role: testUser.role,
           city_id: testUser.role === 'gestor_municipal' ? 'campo-grande' : 
-                   testUser.role === 'gestor_igr' ? 'dourados' : 'campo-grande',
-          region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
+                   (testUser.role === 'gestor_igr' || testUser.role === 'diretor_estadual') ? 'dourados' : 'campo-grande',
+          region_id: (testUser.role === 'gestor_igr' || testUser.role === 'diretor_estadual') ? 'igr-grande-dourados' : 'regiao-pantanal'
         };
         
         setSession(null);

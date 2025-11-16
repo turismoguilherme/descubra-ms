@@ -1,33 +1,30 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   TrendingUp, 
   BarChart3, 
   Brain, 
-  Upload, 
-  Settings, 
-  CheckCircle, 
   Target,
-  Info,
-  Crown,
-  Globe,
-  RefreshCw
+  DollarSign,
+  Users,
+  FileText
 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import DiagnosticQuestionnaire from '@/components/private/DiagnosticQuestionnaire';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
-import DocumentUpload from '@/components/private/DocumentUpload';
-const ViaJARIntelligence = React.lazy(() => import('@/pages/ViaJARIntelligence'));
 import { useAuth } from '@/hooks/useAuth';
 import { QuestionnaireAnswers } from '@/components/private/DiagnosticQuestionnaire';
-import { AnalysisResult, analyzeBusinessProfile } from '@/services/diagnostic/analysisService';
+import { AnalysisResult } from '@/services/diagnostic/analysisService';
 import { diagnosticService } from '@/services/viajar/diagnosticService';
-import SectionWrapper from '@/components/ui/SectionWrapper';
-import CardBox from '@/components/ui/CardBox';
+import { ViaJARSection } from '@/components/ui/ViaJARSection';
+import { ViaJARMetricCard } from '@/components/ui/ViaJARMetricCard';
+import { ViaJARCard } from '@/components/ui/ViaJARCard';
+import { RevenueOptimizerWidget } from '@/components/private/RevenueOptimizerWidget';
+import { MarketIntelligenceWidget } from '@/components/private/MarketIntelligenceWidget';
+import { CompetitiveBenchmarkWidget } from '@/components/private/CompetitiveBenchmarkWidget';
 import { useToast } from '@/hooks/use-toast';
 
 const PrivateDashboard = () => {
@@ -52,13 +49,10 @@ const PrivateDashboard = () => {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('overview');
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
-  const [onboardingData, setOnboardingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<QuestionnaireAnswers | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [showIntelligence, setShowIntelligence] = useState(false);
-  const [intelligenceTab, setIntelligenceTab] = useState<'revenue' | 'market' | 'benchmark'>('revenue');
 
   useEffect(() => {
     // Carregar diagnóstico do Supabase
@@ -77,23 +71,13 @@ const PrivateDashboard = () => {
           setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
         }
 
-        // Verificar onboarding (manter localStorage por enquanto para compatibilidade)
+        // Verificar onboarding
         const completed = localStorage.getItem('hasCompletedOnboarding');
-        const data = localStorage.getItem('onboardingData');
-        
         setHasCompletedOnboarding(completed === 'true');
-        if (data) {
-          setOnboardingData(JSON.parse(data));
-        }
       } catch (error) {
         console.error('Erro ao carregar dados do diagnóstico:', error);
-        // Fallback para localStorage
         const completed = localStorage.getItem('hasCompletedOnboarding');
-        const data = localStorage.getItem('onboardingData');
         setHasCompletedOnboarding(completed === 'true');
-        if (data) {
-          setOnboardingData(JSON.parse(data));
-        }
       } finally {
         setIsLoading(false);
       }
