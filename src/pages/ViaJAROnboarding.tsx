@@ -18,7 +18,7 @@ import DiagnosticQuestionnaire from '@/components/diagnostic/DiagnosticQuestionn
 import AIRecommendationEngine from '@/components/diagnostic/AIRecommendationEngine';
 import type { CadastURVerificationResult } from '@/services/cadasturService';
 import type { PlanTier, BillingPeriod } from '@/services/subscriptionService';
-import type { QuestionnaireAnswers } from '@/components/diagnostic/DiagnosticQuestionnaire';
+import type { QuestionnaireAnswers } from '@/types/diagnostic';
 import type { AnalysisResult } from '@/services/diagnostic/analysisService';
 
 interface OnboardingStep {

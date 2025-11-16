@@ -23,7 +23,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { QuestionnaireAnswers } from './DiagnosticQuestionnaire';
+import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult } from '@/services/diagnostic/analysisService';
 
 interface Badge {

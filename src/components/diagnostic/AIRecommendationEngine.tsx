@@ -24,7 +24,7 @@ import {
   Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { QuestionnaireAnswers } from './DiagnosticQuestionnaire';
+import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult, Recommendation, BusinessProfile } from '@/services/diagnostic/analysisService';
 import { analyzeBusinessProfile } from '@/services/diagnostic/analysisService';
 

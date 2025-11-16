@@ -3,7 +3,7 @@
  * Serviço para análise de respostas do questionário com IA
  */
 
-import { QuestionnaireAnswers } from '@/components/diagnostic/DiagnosticQuestionnaire';
+import { QuestionnaireAnswers } from '@/types/diagnostic';
 
 export interface BusinessProfile {
   strengths: string[];

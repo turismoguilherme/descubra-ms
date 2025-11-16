@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuestionnaireAnswers } from '@/components/private/DiagnosticQuestionnaire';
+import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult } from '@/services/diagnostic/analysisService';
 
 export interface DiagnosticResult {

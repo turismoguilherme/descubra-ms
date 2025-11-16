@@ -6,7 +6,6 @@ import TourismInventoryManager from '@/components/secretary/TourismInventoryMana
 import EventManagementSystem from '@/components/secretary/EventManagementSystem';
 import AdvancedAnalytics from '@/components/secretary/AdvancedAnalytics';
 import RegionalData from '@/components/secretary/RegionalData';
-import TourismHeatmap from '@/components/management/TourismHeatmap';
 import CATGeolocationManager from '@/components/overflow-one/CATGeolocationManager';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
 
@@ -90,7 +89,11 @@ export const SecretaryModernDashboard: React.FC = () => {
         description="Visualização geográfica do fluxo turístico"
         icon={<Map />}
       >
-        <TourismHeatmap />
+        <div className="text-center py-12 text-gray-500">
+          <Map className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+          <p className="text-lg font-medium mb-2">Mapas de Calor</p>
+          <p className="text-sm">Funcionalidade em desenvolvimento</p>
+        </div>
       </ViaJARSection>
 
       {/* Gestão de CATs */}

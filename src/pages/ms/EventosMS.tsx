@@ -1,6 +1,6 @@
 import UniversalLayout from "@/components/layout/UniversalLayout";
 import { Calendar } from "lucide-react";
-import EventCalendarSimple from "@/components/events/EventCalendarSimple";
+import EventCalendar from "@/components/events/EventCalendar";
 
 const EventosMS = () => {
   return (
@@ -18,7 +18,7 @@ const EventosMS = () => {
 
         <div className="ms-container py-12">
           {/* Calendário de Eventos */}
-          <EventCalendarSimple autoLoad={true} />
+          <EventCalendar autoLoad={true} />
         </div>
       </main>
     </UniversalLayout>

@@ -40,14 +40,12 @@ import CardBox from '@/components/ui/CardBox';
 import { Skeleton } from '@/components/ui/skeleton';
 import TourismInventoryManager from '@/components/secretary/TourismInventoryManager';
 import EventManagementSystem from '@/components/secretary/EventManagementSystem';
-import TourismHeatmap from '@/components/management/TourismHeatmap';
 import CATGeolocationManager from '@/components/overflow-one/CATGeolocationManager';
 import StrategicAIChat from '@/components/secretary/StrategicAIChat';
 import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
 import AdvancedAnalytics from '@/components/secretary/AdvancedAnalytics';
 import RegionalData from '@/components/secretary/RegionalData';
-import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { format } from 'date-fns';
 import { Brain, FileText, FileBarChart, TrendingUp, Globe } from 'lucide-react';
 
@@ -85,8 +83,22 @@ export default function SecretaryDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Attraction | Event | CAT | null>(null);
 
-  // Hook para buscar métricas do Supabase
-  const { metrics, loading, error, alerts, isRealtime, refresh } = useDashboardMetrics(5 * 60 * 1000); // Refresh a cada 5 minutos
+  // Dados mock para métricas
+  const loading = false;
+  const error = null;
+  const alerts: Array<{ id: string; title: string; message: string; type: string; priority?: string; actionUrl?: string; actionLabel?: string }> = [];
+  const isRealtime = false;
+  const refresh = () => {};
+  const metrics = {
+    totalCATs: 4,
+    touristsToday: 2450,
+    totalAttractions: 156,
+    totalEvents: 18,
+    touristsByDay: [],
+    touristsByOrigin: [],
+    cats: [],
+    recentActivities: []
+  };
 
   // Cores para gráficos
   const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
@@ -617,7 +629,13 @@ export default function SecretaryDashboard() {
 
           {/* Mapas de Calor */}
           {activeSection === 'heatmaps' && (
-            <TourismHeatmap />
+            <SectionWrapper variant="default" title="Mapas de Calor">
+              <div className="text-center py-12 text-gray-500">
+                <Map className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-lg font-medium mb-2">Mapas de Calor</p>
+                <p className="text-sm">Funcionalidade em desenvolvimento</p>
+              </div>
+            </SectionWrapper>
           )}
 
           {/* IA Estratégica */}

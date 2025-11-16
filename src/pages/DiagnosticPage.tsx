@@ -12,7 +12,7 @@ import { ArrowLeft, Brain, Target, TrendingUp, Star } from 'lucide-react';
 import DiagnosticQuestionnaire from '@/components/diagnostic/DiagnosticQuestionnaire';
 import AIRecommendationEngine from '@/components/diagnostic/AIRecommendationEngine';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
-import { QuestionnaireAnswers } from '@/components/diagnostic/DiagnosticQuestionnaire';
+import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult } from '@/services/diagnostic/analysisService';
 
 type DiagnosticStep = 'questionnaire' | 'analysis' | 'results';

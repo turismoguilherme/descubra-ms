@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,22 +9,24 @@ import {
   Target,
   DollarSign,
   Users,
-  FileText
+  FileText,
+  RefreshCw,
+  Info,
+  Settings,
+  Upload,
+  CheckCircle
 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
-import DiagnosticQuestionnaire from '@/components/private/DiagnosticQuestionnaire';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useAuth } from '@/hooks/useAuth';
-import { QuestionnaireAnswers } from '@/components/private/DiagnosticQuestionnaire';
-import { AnalysisResult } from '@/services/diagnostic/analysisService';
+import { QuestionnaireAnswers } from '@/types/diagnostic';
+import { AnalysisResult, analyzeBusinessProfile } from '@/services/diagnostic/analysisService';
 import { diagnosticService } from '@/services/viajar/diagnosticService';
-import { ViaJARSection } from '@/components/ui/ViaJARSection';
-import { ViaJARMetricCard } from '@/components/ui/ViaJARMetricCard';
-import { ViaJARCard } from '@/components/ui/ViaJARCard';
-import { RevenueOptimizerWidget } from '@/components/private/RevenueOptimizerWidget';
-import { MarketIntelligenceWidget } from '@/components/private/MarketIntelligenceWidget';
-import { CompetitiveBenchmarkWidget } from '@/components/private/CompetitiveBenchmarkWidget';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
+import DocumentUpload from '@/components/private/DocumentUpload';
+import ViaJARIntelligence from '@/pages/ViaJARIntelligence';
 import { useToast } from '@/hooks/use-toast';
 
 const PrivateDashboard = () => {
@@ -53,6 +55,9 @@ const PrivateDashboard = () => {
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<QuestionnaireAnswers | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [onboardingData, setOnboardingData] = useState<any>(null);
+  const [showIntelligence, setShowIntelligence] = useState(false);
+  const [intelligenceTab, setIntelligenceTab] = useState('revenue');
 
   useEffect(() => {
     // Carregar diagnóstico do Supabase
@@ -307,14 +312,9 @@ const PrivateDashboard = () => {
   }
 
   if (showDiagnostic) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <ViaJARNavbar />
-        <div className="container mx-auto px-6 py-8">
-          <DiagnosticQuestionnaire onComplete={handleDiagnosticComplete} />
-        </div>
-      </div>
-    );
+    // Redirecionar para a página de diagnóstico
+    navigate('/viajar/diagnostic');
+    return null;
   }
 
   if (analysisResult && diagnosticAnswers) {

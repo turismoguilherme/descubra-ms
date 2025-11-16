@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   MapPin,
+  Map,
   Calendar,
   Users,
   TrendingUp,
@@ -29,7 +30,7 @@ import AdvancedAnalyticsDashboard from '@/components/ai/AdvancedAnalyticsDashboa
 import ReportGenerator from '@/components/ai/ReportGenerator';
 import AlertsAndRecommendations from '@/components/ai/AlertsAndRecommendations';
 import AttendantGeoManager from '@/components/admin/AttendantGeoManager';
-import TourismHeatmap from '@/components/management/TourismHeatmap';
+// TourismHeatmap removido - componente deletado
 import CommunityContributionsManager from '@/components/admin/CommunityContributionsManager';
 import RouteManagement from '@/components/admin/RouteManagement';
 import CATGeolocationManager from '@/components/overflow-one/CATGeolocationManager';
@@ -562,7 +563,11 @@ const MunicipalDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <TourismHeatmap />
+            <div className="text-center py-12 text-gray-500">
+              <Map className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <p className="text-lg font-medium mb-2">Mapas de Calor</p>
+              <p className="text-sm">Funcionalidade em desenvolvimento</p>
+            </div>
           </CardContent>
         </Card>
 
