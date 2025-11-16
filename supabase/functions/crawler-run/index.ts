@@ -228,8 +228,9 @@ async function executeIntelligentCrawling(sources: any[], depth: number, budget_
           // Rate limiting
           await new Promise(resolve => setTimeout(resolve, CRAWLING_CONFIG.RATE_LIMIT_MS))
           
-        } catch (error) {
-          console.log(`⚠️ Erro ao crawlear seção ${section}:`, error.message)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.log(`⚠️ Erro ao crawlear seção ${section}:`, errorMessage)
         }
       }
 
@@ -395,7 +396,8 @@ async function cleanupOldData(supabase: any, state_code: string): Promise<any> {
 
   } catch (error) {
     console.error('❌ Erro ao limpar dados antigos:', error)
-    return { old_documents_removed: 0, error: error.message }
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { old_documents_removed: 0, error: errorMessage }
   }
 }
 

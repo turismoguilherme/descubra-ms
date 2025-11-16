@@ -57,7 +57,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Security monitoring failed',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       }),
       {
         status: 500,
@@ -317,9 +317,9 @@ async function generateSecurityReport(supabaseClient: any): Promise<Response> {
       },
       summary: {
         total_events: securityEvents?.length || 0,
-        successful_events: securityEvents?.filter(e => e.success).length || 0,
-        failed_events: securityEvents?.filter(e => !e.success).length || 0,
-        unique_users: new Set(securityEvents?.map(e => e.user_id).filter(Boolean)).size
+      successful_events: securityEvents?.filter((e: any) => e.success).length || 0,
+      failed_events: securityEvents?.filter((e: any) => !e.success).length || 0,
+      unique_users: new Set(securityEvents?.map((e: any) => e.user_id).filter(Boolean)).size
       },
       threat_breakdown: {},
       daily_activity: {},

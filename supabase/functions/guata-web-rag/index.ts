@@ -916,7 +916,7 @@ async function applyContinuousLearning(
       query_type: queryType,
       confidence: confidence + learningBoost,
       sources,
-      learning_boost: learningBoost,
+      
       knowledge_gaps: knowledgeGaps
     }
     
