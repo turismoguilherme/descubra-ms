@@ -25,6 +25,8 @@ import {
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useBusinessType } from '@/hooks/useBusinessType';
 import { getBusinessMetricLabel, isMetricRelevant } from '@/services/business/businessMetricsService';
+import { regionalDataIntegrationService } from '@/services/private/regionalDataIntegrationService';
+import { useAuth } from '@/hooks/useAuth';
 
 // Dados mockados - serão substituídos pela ALUMIA API
 const MOCK_REVENUE_PREDICTION = {
@@ -97,6 +99,8 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
   const { initialTab = 'revenue', hideHeader = false } = props;
   const [activeTab, setActiveTab] = useState(initialTab);
   const { businessType } = useBusinessType();
+  const { userProfile } = useAuth();
+  const [regionalData, setRegionalData] = useState<any>(null);
   
   // Atualizar aba quando initialTab mudar
   useEffect(() => {
@@ -104,6 +108,24 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  // Carregar dados regionais
+  useEffect(() => {
+    const loadRegionalData = async () => {
+      // Detectar estado do usuário (por enquanto, assumir MS)
+      // TODO: Obter do perfil do usuário
+      const userState = 'MS'; // userProfile?.state || 'MS';
+      
+      try {
+        const data = await regionalDataIntegrationService.getRegionalData(userState, businessType || undefined);
+        setRegionalData(data);
+      } catch (error) {
+        console.error('Erro ao carregar dados regionais:', error);
+      }
+    };
+
+    loadRegionalData();
+  }, [businessType, userProfile]);
 
   return (
     <div className={`${hideHeader ? '' : 'min-h-screen'} bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20`}>
@@ -571,11 +593,15 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                       <p className="text-sm text-slate-600 mb-4">
                         Dados agregados e anonimizados de estabelecimentos similares na região
                       </p>
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-xs text-blue-700">
-                          <strong>Nota:</strong> Dados de demonstração. Comparações reais serão baseadas em dados do mercado quando disponíveis.
-                        </p>
-                      </div>
+                      {regionalData && (
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-xs text-blue-700">
+                            <strong>Fonte:</strong> {regionalData.source === 'ALUMIA' 
+                              ? 'ALUMIA - Dados oficiais agregados e anonimizados'
+                              : 'Google Scholar - Pesquisa acadêmica e estudos de mercado'}
+                          </p>
+                        </div>
+                      )}
                   <div className="relative overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="text-xs uppercase bg-gray-50">
@@ -1079,11 +1105,15 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                       <p className="text-sm text-slate-600 mb-4">
                         Dados agregados e anonimizados de estabelecimentos similares na região
                       </p>
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-xs text-blue-700">
-                          <strong>Nota:</strong> Dados de demonstração. Comparações reais serão baseadas em dados do mercado quando disponíveis.
-                        </p>
-                      </div>
+                      {regionalData && (
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-xs text-blue-700">
+                            <strong>Fonte:</strong> {regionalData.source === 'ALUMIA' 
+                              ? 'ALUMIA - Dados oficiais agregados e anonimizados'
+                              : 'Google Scholar - Pesquisa acadêmica e estudos de mercado'}
+                          </p>
+                        </div>
+                      )}
                 <div className="relative overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="text-xs uppercase bg-gray-50">

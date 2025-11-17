@@ -14,7 +14,8 @@ import {
   Info,
   Settings,
   Upload,
-  CheckCircle
+  CheckCircle,
+  MapPin
 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
@@ -29,6 +30,7 @@ import DocumentUpload from '@/components/private/DocumentUpload';
 import ViaJARIntelligence from '@/pages/ViaJARIntelligence';
 import PrivateAIConversation from '@/components/private/PrivateAIConversation';
 import DiagnosticSection from '@/components/private/DiagnosticSection';
+import RegionalDataSection from '@/components/private/RegionalDataSection';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -479,6 +481,17 @@ const PrivateDashboard = () => {
                 <Upload className="h-4 w-4" />
                 Upload Documentos
               </button>
+              <button
+                onClick={() => setActiveSection('regional')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'regional' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <MapPin className="h-4 w-4" />
+                Dados Regionais
+              </button>
             </nav>
           </div>
         </div>
@@ -639,6 +652,11 @@ const PrivateDashboard = () => {
           {/* IA Conversacional */}
           {activeSection === 'ai' && (
             <PrivateAIConversation businessType={userProfile?.business_type} />
+          )}
+
+          {/* Dados Regionais */}
+          {activeSection === 'regional' && (
+            <RegionalDataSection />
           )}
         </div>
       </div>

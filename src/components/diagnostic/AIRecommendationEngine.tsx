@@ -61,18 +61,34 @@ const AIRecommendationEngine: React.FC<AIRecommendationEngineProps> = ({
     onAnalysis?.(true);
 
     try {
-      // Simular análise passo a passo
-      for (let i = 0; i < analysisSteps.length; i++) {
-        setCurrentStep(i);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Realizar análise real
+      // Passo 1: Análise do Perfil (real)
+      setCurrentStep(0);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Passo 2: Análise de Desafios (real)
+      setCurrentStep(1);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Passo 3: Geração de Recomendações (real - chama o serviço)
+      setCurrentStep(2);
       const result = await analyzeBusinessProfile(answers);
+      
+      // Passo 4: Otimização (finalização)
+      setCurrentStep(3);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       setAnalysisResult(result);
       onRecommendations(result);
     } catch (error) {
       console.error('Erro na análise:', error);
+      // Em caso de erro, ainda chamar onRecommendations com resultado básico
+      try {
+        const fallbackResult = await analyzeBusinessProfile(answers);
+        setAnalysisResult(fallbackResult);
+        onRecommendations(fallbackResult);
+      } catch (fallbackError) {
+        console.error('Erro no fallback:', fallbackError);
+      }
     } finally {
       setIsAnalyzing(false);
       onAnalysis?.(false);

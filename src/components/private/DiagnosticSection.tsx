@@ -12,6 +12,7 @@ import CardBox from '@/components/ui/CardBox';
 import DiagnosticQuestionnaire from '@/components/diagnostic/DiagnosticQuestionnaire';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
 import AIRecommendationEngine from '@/components/diagnostic/AIRecommendationEngine';
+import DiagnosticReportsTab from '@/components/private/DiagnosticReportsTab';
 import { 
   X, 
   Brain, 
@@ -19,7 +20,9 @@ import {
   Target,
   RefreshCw,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  FileText,
+  Download
 } from 'lucide-react';
 import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult } from '@/services/diagnostic/analysisService';
@@ -33,7 +36,7 @@ interface DiagnosticSectionProps {
   existingAnswers?: QuestionnaireAnswers | null;
 }
 
-type DiagnosticStep = 'questionnaire' | 'analysis' | 'results';
+type DiagnosticStep = 'questionnaire' | 'analysis' | 'results' | 'reports';
 
 const DiagnosticSection: React.FC<DiagnosticSectionProps> = ({
   onClose,
@@ -190,13 +193,17 @@ const DiagnosticSection: React.FC<DiagnosticSectionProps> = ({
           <span className={currentStep === 'results' ? 'font-semibold text-blue-600' : ''}>
             Resultados
           </span>
+          <span className={currentStep === 'reports' ? 'font-semibold text-blue-600' : ''}>
+            Relatórios
+          </span>
         </div>
         <div className="w-full bg-slate-200 rounded-full h-2">
           <div 
             className="bg-blue-600 h-2 rounded-full transition-all duration-500"
             style={{ 
-              width: currentStep === 'questionnaire' ? '33%' : 
-                     currentStep === 'analysis' ? '66%' : '100%' 
+              width: currentStep === 'questionnaire' ? '25%' : 
+                     currentStep === 'analysis' ? '50%' : 
+                     currentStep === 'results' ? '75%' : '100%'
             }}
           />
         </div>
@@ -242,20 +249,8 @@ const DiagnosticSection: React.FC<DiagnosticSectionProps> = ({
             analysisResult={analysisResult}
             onImplement={(rec) => console.log('Implementar:', rec)}
             onExport={() => {
-              const data = {
-                answers,
-                analysisResult,
-                timestamp: new Date().toISOString()
-              };
-              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `diagnostico-viajar-${new Date().toISOString().split('T')[0]}.json`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
+              // Navegar para aba de relatórios
+              setCurrentStep('reports');
             }}
             onShare={() => {
               if (navigator.share) {
@@ -266,6 +261,14 @@ const DiagnosticSection: React.FC<DiagnosticSectionProps> = ({
                 });
               }
             }}
+          />
+        )}
+
+        {currentStep === 'reports' && (
+          <DiagnosticReportsTab
+            answers={answers}
+            analysisResult={analysisResult}
+            businessType={existingAnswers?.business_type || null}
           />
         )}
       </div>
