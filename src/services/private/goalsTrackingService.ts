@@ -29,6 +29,12 @@ export interface GoalProgress {
   daysRemaining: number;
   onTrack: boolean;
   estimatedCompletion?: Date;
+  expectedProgress: number;
+  progressDifference: number; // Diferença entre progresso atual e esperado
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  isAtRisk: boolean;
+  isOverdue: boolean;
+  isNearCompletion: boolean; // 90%+ completo
 }
 
 export class GoalsTrackingService {
@@ -158,14 +164,33 @@ export class GoalsTrackingService {
     const daysRemaining = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     // Calcular se está no caminho certo
-    const daysSinceCreation = Math.ceil((now.getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24));
-    const totalDays = Math.ceil((deadline.getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceCreation = Math.max(1, Math.ceil((now.getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24)));
+    const totalDays = Math.max(1, Math.ceil((deadline.getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24)));
     const expectedProgress = totalDays > 0 ? (daysSinceCreation / totalDays) * 100 : 0;
+    const progressDifference = goal.progress - expectedProgress;
     const onTrack = goal.progress >= expectedProgress - 10; // Margem de 10%
+
+    // Detectar nível de risco
+    const isOverdue = daysRemaining < 0 && goal.progress < 100;
+    const isNearCompletion = goal.progress >= 90 && goal.progress < 100;
+    const isAtRisk = !onTrack && daysRemaining > 0;
+    
+    let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
+    if (isOverdue) {
+      riskLevel = 'critical';
+    } else if (isAtRisk) {
+      if (progressDifference < -30) {
+        riskLevel = 'high';
+      } else if (progressDifference < -15) {
+        riskLevel = 'medium';
+      } else {
+        riskLevel = 'low';
+      }
+    }
 
     // Estimar data de conclusão
     let estimatedCompletion: Date | undefined;
-    if (goal.progress > 0 && goal.progress < 100) {
+    if (goal.progress > 0 && goal.progress < 100 && daysSinceCreation > 0) {
       const progressPerDay = goal.progress / daysSinceCreation;
       if (progressPerDay > 0) {
         const daysToComplete = (100 - goal.progress) / progressPerDay;
@@ -178,8 +203,78 @@ export class GoalsTrackingService {
       progress: goal.progress,
       daysRemaining: Math.max(0, daysRemaining),
       onTrack,
-      estimatedCompletion
+      estimatedCompletion,
+      expectedProgress: Math.round(expectedProgress * 10) / 10,
+      progressDifference: Math.round(progressDifference * 10) / 10,
+      riskLevel,
+      isAtRisk,
+      isOverdue,
+      isNearCompletion
     };
+  }
+
+  /**
+   * Atualizar progresso automaticamente baseado na categoria
+   */
+  async updateProgressAutomatically(goalId: string, userId: string): Promise<BusinessGoal | null> {
+    try {
+      // Buscar meta
+      const { data: goalData, error: fetchError } = await supabase
+        .from('business_goals')
+        .select('*')
+        .eq('id', goalId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError || !goalData) {
+        return null;
+      }
+
+      const goal = this.mapToGoal(goalData);
+      
+      // Buscar valor atual baseado na categoria
+      let currentValue = goal.currentValue;
+      
+      // TODO: Integrar com sistemas reais quando disponíveis
+      // Por enquanto, retornar a meta sem alterações
+      // Quando houver integração:
+      // - occupancy: buscar do sistema de reservas
+      // - revenue: buscar do sistema financeiro
+      // - rating: buscar do Google/Booking
+      
+      // Se o valor não mudou, retornar a meta atual
+      if (currentValue === goal.currentValue) {
+        return goal;
+      }
+
+      // Atualizar progresso
+      return await this.updateGoalProgress(goalId, userId, currentValue);
+    } catch (error) {
+      console.error('Erro ao atualizar progresso automaticamente:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Atualizar progresso de todas as metas ativas automaticamente
+   */
+  async updateAllActiveGoalsProgress(userId: string): Promise<BusinessGoal[]> {
+    try {
+      const activeGoals = await this.getUserGoals(userId, 'active');
+      const updatedGoals: BusinessGoal[] = [];
+
+      for (const goal of activeGoals) {
+        const updated = await this.updateProgressAutomatically(goal.id, userId);
+        if (updated) {
+          updatedGoals.push(updated);
+        }
+      }
+
+      return updatedGoals;
+    } catch (error) {
+      console.error('Erro ao atualizar progresso de todas as metas:', error);
+      return [];
+    }
   }
 
   /**

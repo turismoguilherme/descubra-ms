@@ -39,16 +39,22 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { goalsTrackingService, BusinessGoal, GoalProgress } from '@/services/private/goalsTrackingService';
+import { goalsAlertsService, GoalsSummary } from '@/services/private/goalsAlertsService';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const GoalsTracking: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [goals, setGoals] = useState<BusinessGoal[]>([]);
   const [goalProgress, setGoalProgress] = useState<Map<string, GoalProgress>>(new Map());
+  const [summary, setSummary] = useState<GoalsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<BusinessGoal | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({
     title: '',
     description: '',
@@ -81,6 +87,10 @@ const GoalsTracking: React.FC = () => {
         progressMap.set(goal.id, progress);
       }
       setGoalProgress(progressMap);
+
+      // Carregar resumo
+      const goalsSummary = await goalsAlertsService.getGoalsSummary(user.id);
+      setSummary(goalsSummary);
     } catch (error) {
       console.error('Erro ao carregar metas:', error);
       toast({
@@ -359,7 +369,47 @@ const GoalsTracking: React.FC = () => {
           </div>
         </CardBox>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-6">
+          {/* Dashboard de Resumo */}
+          {summary && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <CardBox>
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-slate-600">Total</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-800">{summary.total}</div>
+                <p className="text-xs text-slate-500 mt-1">{summary.active} ativas</p>
+              </CardBox>
+              <CardBox>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-slate-600">Concluídas</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-800">{summary.completed}</div>
+                <p className="text-xs text-slate-500 mt-1">{summary.onTrack} no caminho certo</p>
+              </CardBox>
+              <CardBox>
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium text-slate-600">Em Risco</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-800">{summary.atRisk}</div>
+                <p className="text-xs text-slate-500 mt-1">{summary.overdue} atrasadas</p>
+              </CardBox>
+              <CardBox>
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-medium text-slate-600">Progresso Geral</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-800">{summary.overallProgress}%</div>
+                <Progress value={summary.overallProgress} className="h-2 mt-2" />
+              </CardBox>
+            </div>
+          )}
+
+          {/* Lista de Metas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map((goal) => {
             const progress = goalProgress.get(goal.id);
             return (
@@ -424,15 +474,43 @@ const GoalsTracking: React.FC = () => {
                         {progress.daysRemaining} dias restantes
                       </span>
                     </div>
-                    {!progress.onTrack && progress.daysRemaining > 0 && (
-                      <div className="flex items-center gap-2 p-2 bg-amber-50 rounded border border-amber-200">
-                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                        <p className="text-xs text-amber-700">
-                          Meta pode não ser alcançada no prazo. Considere ajustar estratégia.
+                    {progress.isOverdue && (
+                      <div className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-200">
+                        <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                        <p className="text-xs text-red-700">
+                          Meta atrasada! Ajuste o prazo ou intensifique os esforços.
                         </p>
                       </div>
                     )}
-                    {progress.onTrack && progress.daysRemaining > 0 && (
+                    {progress.isAtRisk && !progress.isOverdue && (
+                      <div className={`flex items-center gap-2 p-2 rounded border ${
+                        progress.riskLevel === 'high' || progress.riskLevel === 'critical'
+                          ? 'bg-red-50 border-red-200'
+                          : 'bg-amber-50 border-amber-200'
+                      }`}>
+                        <AlertCircle className={`h-4 w-4 flex-shrink-0 ${
+                          progress.riskLevel === 'high' || progress.riskLevel === 'critical'
+                            ? 'text-red-600'
+                            : 'text-amber-600'
+                        }`} />
+                        <p className={`text-xs ${
+                          progress.riskLevel === 'high' || progress.riskLevel === 'critical'
+                            ? 'text-red-700'
+                            : 'text-amber-700'
+                        }`}>
+                          Meta em risco ({progress.riskLevel === 'high' ? 'Alto' : progress.riskLevel === 'critical' ? 'Crítico' : 'Médio'}). Progresso: {progress.progress.toFixed(1)}% vs. Esperado: {progress.expectedProgress.toFixed(1)}%
+                        </p>
+                      </div>
+                    )}
+                    {progress.isNearCompletion && (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
+                        <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                        <p className="text-xs text-green-700">
+                          Quase lá! Meta {progress.progress.toFixed(1)}% completa.
+                        </p>
+                      </div>
+                    )}
+                    {progress.onTrack && !progress.isNearCompletion && progress.daysRemaining > 0 && (
                       <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
                         <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
                         <p className="text-xs text-green-700">
@@ -440,13 +518,169 @@ const GoalsTracking: React.FC = () => {
                         </p>
                       </div>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedGoal(goal);
+                        setIsDetailsDialogOpen(true);
+                      }}
+                      className="w-full mt-2"
+                    >
+                      Ver Detalhes
+                    </Button>
                   </div>
                 )}
               </CardBox>
             );
           })}
+          </div>
         </div>
       )}
+
+      {/* Dialog de Detalhes da Meta */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedGoal && (() => {
+            const progress = goalProgress.get(selectedGoal.id);
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{selectedGoal.title}</DialogTitle>
+                  <DialogDescription>
+                    {selectedGoal.description || 'Detalhes da meta'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 mt-4">
+                  {/* Informações Básicas */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-slate-500">Categoria</Label>
+                      <p className="font-medium">{getCategoryLabel(selectedGoal.category)}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-500">Prioridade</Label>
+                      <Badge className={getPriorityColor(selectedGoal.priority)}>
+                        {selectedGoal.priority}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Progresso */}
+                  {progress && (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm font-medium">Progresso</Label>
+                          <span className="text-sm font-bold text-blue-600">
+                            {progress.progress.toFixed(1)}%
+                          </span>
+                        </div>
+                        <Progress value={progress.progress} className="h-3" />
+                        <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                          <span>
+                            {selectedGoal.currentValue} {selectedGoal.unit} / {selectedGoal.targetValue} {selectedGoal.unit}
+                          </span>
+                          <span>
+                            Esperado: {progress.expectedProgress.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tempo */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-xs text-slate-500">Prazo</Label>
+                          <p className="font-medium">
+                            {format(new Date(selectedGoal.deadline), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-500">Dias Restantes</Label>
+                          <p className={`font-medium ${progress.daysRemaining < 0 ? 'text-red-600' : ''}`}>
+                            {progress.daysRemaining < 0 
+                              ? `${Math.abs(progress.daysRemaining)} dias atrasado`
+                              : `${progress.daysRemaining} dias`
+                            }
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Estimativa de Conclusão */}
+                      {progress.estimatedCompletion && (
+                        <div>
+                          <Label className="text-xs text-slate-500">Estimativa de Conclusão</Label>
+                          <p className="font-medium">
+                            {format(progress.estimatedCompletion, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Status */}
+                      <div>
+                        <Label className="text-xs text-slate-500">Status</Label>
+                        <div className="mt-2 space-y-2">
+                          {progress.isOverdue && (
+                            <div className="p-3 bg-red-50 rounded border border-red-200">
+                              <p className="text-sm font-medium text-red-900">⚠️ Meta Atrasada</p>
+                              <p className="text-xs text-red-700 mt-1">
+                                A meta está atrasada. Considere ajustar o prazo ou intensificar os esforços.
+                              </p>
+                            </div>
+                          )}
+                          {progress.isAtRisk && !progress.isOverdue && (
+                            <div className={`p-3 rounded border ${
+                              progress.riskLevel === 'high' || progress.riskLevel === 'critical'
+                                ? 'bg-red-50 border-red-200'
+                                : 'bg-amber-50 border-amber-200'
+                            }`}>
+                              <p className={`text-sm font-medium ${
+                                progress.riskLevel === 'high' || progress.riskLevel === 'critical'
+                                  ? 'text-red-900'
+                                  : 'text-amber-900'
+                              }`}>
+                                ⚠️ Meta em Risco ({progress.riskLevel === 'high' ? 'Alto' : progress.riskLevel === 'critical' ? 'Crítico' : 'Médio'})
+                              </p>
+                              <p className={`text-xs mt-1 ${
+                                progress.riskLevel === 'high' || progress.riskLevel === 'critical'
+                                  ? 'text-red-700'
+                                  : 'text-amber-700'
+                              }`}>
+                                Progresso atual está {Math.abs(progress.progressDifference).toFixed(1)}% abaixo do esperado.
+                              </p>
+                            </div>
+                          )}
+                          {progress.isNearCompletion && (
+                            <div className="p-3 bg-green-50 rounded border border-green-200">
+                              <p className="text-sm font-medium text-green-900">🎉 Quase Lá!</p>
+                              <p className="text-xs text-green-700 mt-1">
+                                Você está muito próximo de atingir esta meta. Continue assim!
+                              </p>
+                            </div>
+                          )}
+                          {progress.onTrack && !progress.isNearCompletion && !progress.isAtRisk && (
+                            <div className="p-3 bg-green-50 rounded border border-green-200">
+                              <p className="text-sm font-medium text-green-900">✅ No Caminho Certo</p>
+                              <p className="text-xs text-green-700 mt-1">
+                                Sua meta está progredindo conforme esperado. Continue assim!
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDetailsDialogOpen(false)}>
+                    Fechar
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </SectionWrapper>
   );
 };
