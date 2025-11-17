@@ -34,6 +34,15 @@ import RegionalDataSection from '@/components/private/RegionalDataSection';
 import ProactiveNotifications from '@/components/private/ProactiveNotifications';
 import EvolutionHistory from '@/components/private/EvolutionHistory';
 import GoalsTracking from '@/components/private/GoalsTracking';
+import SettingsSection from '@/components/private/SettingsSection';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { evolutionHistoryService } from '@/services/private/evolutionHistoryService';
@@ -70,6 +79,7 @@ const PrivateDashboard = () => {
   const [intelligenceTab, setIntelligenceTab] = useState('revenue');
   const [showDiagnosticSection, setShowDiagnosticSection] = useState(false);
   const [isDiagnosticMinimized, setIsDiagnosticMinimized] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
   useEffect(() => {
     // Carregar diagnóstico do Supabase
@@ -508,17 +518,6 @@ const PrivateDashboard = () => {
                 Dados Regionais
               </button>
               <button
-                onClick={() => setActiveSection('evolution')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'evolution' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <TrendingUp className="h-4 w-4" />
-                Histórico de Evolução
-              </button>
-              <button
                 onClick={() => setActiveSection('goals')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'goals' 
@@ -584,6 +583,18 @@ const PrivateDashboard = () => {
                         >
                           <RefreshCw className="h-4 w-4 mr-1" />
                           Refazer Diagnóstico
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsSettingsDialogOpen(true);
+                          }}
+                          type="button"
+                        >
+                          <Settings className="h-4 w-4" />
                         </Button>
                       </div>
                     }
@@ -779,9 +790,12 @@ const PrivateDashboard = () => {
                           </CardBox>
                         ))}
                       </div>
-                    </SectionWrapper>
-                  )}
-                </>
+                      </SectionWrapper>
+                    )}
+
+                    {/* Histórico de Evolução */}
+                    <EvolutionHistory />
+                  </>
               ) : (
                 <SectionWrapper 
                   variant="default" 
@@ -830,7 +844,15 @@ const PrivateDashboard = () => {
 
           {/* Upload Documentos */}
           {activeSection === 'upload' && (
-            <DocumentUpload />
+            <ErrorBoundary>
+              <React.Suspense fallback={
+                <div className="flex items-center justify-center p-8">
+                  <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                </div>
+              }>
+                <DocumentUpload />
+              </React.Suspense>
+            </ErrorBoundary>
           )}
 
           {/* IA Conversacional */}
@@ -843,17 +865,33 @@ const PrivateDashboard = () => {
             <RegionalDataSection />
           )}
 
-          {/* Histórico de Evolução */}
-          {activeSection === 'evolution' && (
-            <EvolutionHistory />
-          )}
-
           {/* Metas e Acompanhamento */}
           {activeSection === 'goals' && (
             <GoalsTracking />
           )}
         </div>
       </div>
+
+      {/* Dialog de Configurações */}
+      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configurações da Conta</DialogTitle>
+            <DialogDescription>
+              Gerencie suas informações pessoais, senha, email e plano
+            </DialogDescription>
+          </DialogHeader>
+          <ErrorBoundary>
+            <React.Suspense fallback={
+              <div className="flex items-center justify-center p-8">
+                <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+              </div>
+            }>
+              <SettingsSection />
+            </React.Suspense>
+          </ErrorBoundary>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
