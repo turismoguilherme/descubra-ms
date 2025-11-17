@@ -872,26 +872,8 @@ const PrivateDashboard = () => {
         </div>
       </div>
 
-      {/* Dialog de Configurações */}
-      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Configurações da Conta</DialogTitle>
-            <DialogDescription>
-              Gerencie suas informações pessoais, senha, email e plano
-            </DialogDescription>
-          </DialogHeader>
-          <ErrorBoundary>
-            <React.Suspense fallback={
-              <div className="flex items-center justify-center p-8">
-                <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
-              </div>
-            }>
-              <SettingsSection />
-            </React.Suspense>
-          </ErrorBoundary>
-        </DialogContent>
-      </Dialog>
+      {/* Modal de Configurações */}
+      <SettingsModal isOpen={isSettingsDialogOpen} onClose={() => setIsSettingsDialogOpen(false)} />
     </div>
   );
 };
