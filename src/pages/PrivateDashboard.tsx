@@ -27,7 +27,10 @@ import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import DocumentUpload from '@/components/private/DocumentUpload';
 import ViaJARIntelligence from '@/pages/ViaJARIntelligence';
+import PrivateAIConversation from '@/components/private/PrivateAIConversation';
+import DiagnosticSection from '@/components/private/DiagnosticSection';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const PrivateDashboard = () => {
   // Verificar se o AuthProvider está disponível
@@ -58,6 +61,8 @@ const PrivateDashboard = () => {
   const [onboardingData, setOnboardingData] = useState<any>(null);
   const [showIntelligence, setShowIntelligence] = useState(false);
   const [intelligenceTab, setIntelligenceTab] = useState('revenue');
+  const [showDiagnosticSection, setShowDiagnosticSection] = useState(false);
+  const [isDiagnosticMinimized, setIsDiagnosticMinimized] = useState(false);
 
   useEffect(() => {
     // Carregar diagnóstico do Supabase
@@ -74,6 +79,12 @@ const PrivateDashboard = () => {
         if (latestDiagnostic) {
           setDiagnosticAnswers(latestDiagnostic.answers as QuestionnaireAnswers);
           setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
+        } else {
+          // Se não houver diagnóstico, mostrar a seção automaticamente no primeiro acesso
+          const hasSeenDiagnostic = localStorage.getItem('hasSeenDiagnostic');
+          if (!hasSeenDiagnostic) {
+            setShowDiagnosticSection(true);
+          }
         }
 
         // Verificar onboarding
@@ -91,13 +102,34 @@ const PrivateDashboard = () => {
     loadDiagnosticData();
   }, [user]);
 
-  const handleOnboardingComplete = (data: any) => {
+  const handleOnboardingComplete = async (data: any) => {
     // Salvar dados do onboarding
     localStorage.setItem('hasCompletedOnboarding', 'true');
     localStorage.setItem('onboardingData', JSON.stringify(data));
     
     setHasCompletedOnboarding(true);
     setOnboardingData(data);
+
+    // Salvar business_type no perfil do usuário no Supabase
+    if (user?.id && data.businessType) {
+      try {
+        const { error } = await supabase
+          .from('users')
+          .update({ 
+            business_type: data.businessType,
+            business_name: data.businessName || null
+          })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Erro ao salvar business_type:', error);
+        } else {
+          console.log('business_type salvo com sucesso:', data.businessType);
+        }
+      } catch (error) {
+        console.error('Erro ao salvar business_type:', error);
+      }
+    }
   };
 
   const handleOnboardingSkip = () => {
@@ -311,28 +343,30 @@ const PrivateDashboard = () => {
     );
   }
 
-  if (showDiagnostic) {
-    // Redirecionar para a página de diagnóstico
-    navigate('/viajar/diagnostic');
-    return null;
-  }
+  const handleDiagnosticSectionComplete = async (result: AnalysisResult, answers: QuestionnaireAnswers) => {
+    setAnalysisResult(result);
+    setDiagnosticAnswers(answers);
+    setShowDiagnosticSection(false);
+    localStorage.setItem('hasSeenDiagnostic', 'true');
+    
+    // Salvar no Supabase
+    if (user?.id) {
+      try {
+        await diagnosticService.saveDiagnosticResult({
+          user_id: user.id,
+          answers: answers as any,
+          analysis_result: result as any
+        });
+      } catch (error) {
+        console.error('Erro ao salvar diagnóstico:', error);
+      }
+    }
+  };
 
-  if (analysisResult && diagnosticAnswers) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <ViaJARNavbar />
-        <div className="container mx-auto px-6 py-8">
-          <DiagnosticDashboard 
-            answers={diagnosticAnswers}
-            analysisResult={analysisResult}
-            onImplement={(rec) => console.log('Implementar:', rec)}
-            onExport={() => console.log('Exportar')}
-            onShare={() => console.log('Compartilhar')}
-          />
-        </div>
-      </div>
-    );
-  }
+  const handleDiagnosticSectionClose = () => {
+    setShowDiagnosticSection(false);
+    localStorage.setItem('hasSeenDiagnostic', 'true');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -424,10 +458,7 @@ const PrivateDashboard = () => {
                 Competitive Benchmark
               </button>
               <button
-                onClick={() => {
-                  setActiveSection('ai');
-                  navigate('/ms/guata');
-                }}
+                onClick={() => setActiveSection('ai')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'ai' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -453,7 +484,18 @@ const PrivateDashboard = () => {
         </div>
 
         {/* Conteúdo Principal */}
-        <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
+        <div className="flex-1 p-8 overflow-y-auto bg-gray-50 space-y-6">
+          {/* Seção de Diagnóstico (expandida no topo) */}
+          {showDiagnosticSection && (
+            <DiagnosticSection
+              onClose={handleDiagnosticSectionClose}
+              onMinimize={() => setIsDiagnosticMinimized(!isDiagnosticMinimized)}
+              isMinimized={isDiagnosticMinimized}
+              onComplete={handleDiagnosticSectionComplete}
+              existingResult={analysisResult}
+              existingAnswers={diagnosticAnswers}
+            />
+          )}
 
           {/* Visão Geral */}
           {activeSection === 'overview' && (
@@ -553,7 +595,10 @@ const PrivateDashboard = () => {
                       Complete o diagnóstico para receber recomendações personalizadas para o seu negócio.
                     </p>
                     <Button 
-                      onClick={() => setShowDiagnostic(true)}
+                      onClick={() => {
+                        setShowDiagnosticSection(true);
+                        setIsDiagnosticMinimized(false);
+                      }}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       Iniciar Diagnóstico
@@ -589,6 +634,11 @@ const PrivateDashboard = () => {
           {/* Upload Documentos */}
           {activeSection === 'upload' && (
             <DocumentUpload />
+          )}
+
+          {/* IA Conversacional */}
+          {activeSection === 'ai' && (
+            <PrivateAIConversation businessType={userProfile?.business_type} />
           )}
         </div>
       </div>

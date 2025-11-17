@@ -23,6 +23,8 @@ import {
   Brain
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useBusinessType } from '@/hooks/useBusinessType';
+import { getBusinessMetricLabel, isMetricRelevant } from '@/services/business/businessMetricsService';
 
 // Dados mockados - serão substituídos pela ALUMIA API
 const MOCK_REVENUE_PREDICTION = {
@@ -94,6 +96,7 @@ interface ViaJARIntelligenceProps {
 export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) {
   const { initialTab = 'revenue', hideHeader = false } = props;
   const [activeTab, setActiveTab] = useState(initialTab);
+  const { businessType } = useBusinessType();
   
   // Atualizar aba quando initialTab mudar
   useEffect(() => {
@@ -148,15 +151,46 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                 title="Revenue Optimizer"
                 subtitle="Otimize sua receita com insights inteligentes baseados em dados reais"
               >
+                {/* Mensagem quando não houver business_type */}
+                {!businessType && (
+                  <CardBox className="mb-6 border-amber-200 bg-amber-50">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-amber-900 mb-1">Configure seu tipo de negócio</p>
+                        <p className="text-sm text-amber-700">
+                          Complete o onboarding para ver métricas personalizadas para o seu tipo de negócio.
+                        </p>
+                      </div>
+                    </div>
+                  </CardBox>
+                )}
+
                 {/* Cards de métricas */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   <CardBox>
                     <div className="flex items-center gap-2 mb-2">
                       <DollarSign className="h-4 w-4 text-purple-600" />
-                      <span className="text-sm font-medium text-slate-600">Preço Atual</span>
+                      <span className="text-sm font-medium text-slate-600">
+                        {businessType === 'hotel' || businessType === 'pousada' 
+                          ? 'Preço Atual' 
+                          : businessType === 'restaurante' 
+                          ? 'Ticket Médio'
+                          : businessType === 'agencia'
+                          ? 'Valor Médio do Pacote'
+                          : 'Preço Atual'}
+                      </span>
                     </div>
                     <div className="text-2xl font-bold text-slate-800">R$ {MOCK_REVENUE_PREDICTION.currentPrice}</div>
-                    <p className="text-xs text-slate-500 mt-1">por noite</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {businessType === 'hotel' || businessType === 'pousada' 
+                        ? 'por noite' 
+                        : businessType === 'restaurante' 
+                        ? 'por pedido'
+                        : businessType === 'agencia'
+                        ? 'por pacote'
+                        : 'atual'}
+                    </p>
                   </CardBox>
 
                   <CardBox>
@@ -171,16 +205,20 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                     <p className="text-xs text-slate-500 mt-1">em receita anual</p>
                   </CardBox>
 
-                  <CardBox>
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-slate-600">Ocupação Média</span>
-                    </div>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {MOCK_REVENUE_PREDICTION.averageOccupancy}%
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">próximos 7 dias</p>
-                  </CardBox>
+                  {isMetricRelevant(businessType, 'occupancy_rate') && (
+                    <CardBox>
+                      <div className="flex items-center gap-2 mb-2">
+                        <BarChart3 className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          {getBusinessMetricLabel(businessType, 'occupancy_rate') || 'Ocupação Média'}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {MOCK_REVENUE_PREDICTION.averageOccupancy}%
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">próximos 7 dias</p>
+                    </CardBox>
+                  )}
 
                   <CardBox>
                     <div className="flex items-center gap-2 mb-2">
@@ -423,34 +461,46 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
               >
                 {/* Comparação você vs mercado */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <CardBox>
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 className="h-4 w-4 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-600">Taxa de Ocupação</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-slate-500">Você</p>
-                        <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy}%</p>
+                  {isMetricRelevant(businessType, 'occupancy_rate') && (
+                    <CardBox>
+                      <div className="flex items-center gap-2 mb-2">
+                        <BarChart3 className="h-4 w-4 text-slate-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          {getBusinessMetricLabel(businessType, 'occupancy_rate') || 'Taxa de Ocupação'}
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Média do Mercado</p>
-                        <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy}%</p>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-slate-500">Você</p>
+                          <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Média do Mercado</p>
+                          <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy}%</p>
+                        </div>
+                        <Badge variant={MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? 'destructive' : 'default'} className="rounded-full text-xs px-2 py-0.5">
+                          {MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? (
+                            <>-4pp abaixo <ArrowDownRight className="h-3 w-3 ml-1" /></>
+                          ) : (
+                            <>+4pp acima <ArrowUpRight className="h-3 w-3 ml-1" /></>
+                          )}
+                        </Badge>
                       </div>
-                      <Badge variant={MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? 'destructive' : 'default'} className="rounded-full text-xs px-2 py-0.5">
-                        {MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? (
-                          <>-4pp abaixo <ArrowDownRight className="h-3 w-3 ml-1" /></>
-                        ) : (
-                          <>+4pp acima <ArrowUpRight className="h-3 w-3 ml-1" /></>
-                        )}
-                      </Badge>
-                    </div>
-                  </CardBox>
+                    </CardBox>
+                  )}
 
                   <CardBox>
                     <div className="flex items-center gap-2 mb-2">
                       <DollarSign className="h-4 w-4 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-600">Preço Médio</span>
+                      <span className="text-sm font-medium text-slate-600">
+                        {businessType === 'hotel' || businessType === 'pousada' 
+                          ? 'Preço Médio (ADR)'
+                          : businessType === 'restaurante' 
+                          ? 'Ticket Médio'
+                          : businessType === 'agencia'
+                          ? 'Valor Médio do Pacote'
+                          : 'Preço Médio'}
+                      </span>
                     </div>
                     <div className="space-y-2">
                       <div>
@@ -487,25 +537,29 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                     </div>
                   </CardBox>
 
-                  <CardBox>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-4 w-4 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-600">Tempo Médio</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-slate-500">Você</p>
-                        <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.avgStay} dias</p>
+                  {(businessType === 'hotel' || businessType === 'pousada') && (
+                    <CardBox>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="h-4 w-4 text-slate-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          {getBusinessMetricLabel(businessType, 'avg_stay') || 'Permanência Média'}
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Média do Mercado</p>
-                        <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.avgStay} dias</p>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-slate-500">Você</p>
+                          <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.avgStay} dias</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Média do Mercado</p>
+                          <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.avgStay} dias</p>
+                        </div>
+                        <Badge variant="destructive" className="rounded-full text-xs px-2 py-0.5">
+                          -0.4 dias <ArrowDownRight className="h-3 w-3 ml-1" />
+                        </Badge>
                       </div>
-                      <Badge variant="destructive" className="rounded-full text-xs px-2 py-0.5">
-                        -0.4 dias <ArrowDownRight className="h-3 w-3 ml-1" />
-                      </Badge>
-                    </div>
-                  </CardBox>
+                    </CardBox>
+                  )}
                 </div>
 
                 {/* Tabela de concorrentes */}
@@ -514,9 +568,14 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                     <Target className="h-5 w-5 text-purple-600" />
                     <h3 className="text-lg font-semibold text-slate-800">Comparação Detalhada com Concorrentes</h3>
                   </div>
-                  <p className="text-sm text-slate-600 mb-4">
-                    Dados agregados e anonimizados de estabelecimentos similares na região
-                  </p>
+                      <p className="text-sm text-slate-600 mb-4">
+                        Dados agregados e anonimizados de estabelecimentos similares na região
+                      </p>
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-700">
+                          <strong>Nota:</strong> Dados de demonstração. Comparações reais serão baseadas em dados do mercado quando disponíveis.
+                        </p>
+                      </div>
                   <div className="relative overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="text-xs uppercase bg-gray-50">
@@ -909,36 +968,48 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
               subtitle="Compare-se com seus concorrentes usando dados reais"
             >
               {/* Comparação você vs mercado */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <CardBox>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-600">Taxa de Ocupação</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-slate-500">Você</p>
-                      <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy}%</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Média do Mercado</p>
-                      <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy}%</p>
-                    </div>
-                    <Badge variant={MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? 'destructive' : 'default'} className="rounded-full text-xs px-2 py-0.5">
-                      {MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? (
-                        <>-4pp abaixo <ArrowDownRight className="h-3 w-3 ml-1" /></>
-                      ) : (
-                        <>+4pp acima <ArrowUpRight className="h-3 w-3 ml-1" /></>
-                      )}
-                    </Badge>
-                  </div>
-                </CardBox>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  {isMetricRelevant(businessType, 'occupancy_rate') && (
+                    <CardBox>
+                      <div className="flex items-center gap-2 mb-2">
+                        <BarChart3 className="h-4 w-4 text-slate-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          {getBusinessMetricLabel(businessType, 'occupancy_rate') || 'Taxa de Ocupação'}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-slate-500">Você</p>
+                          <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Média do Mercado</p>
+                          <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy}%</p>
+                        </div>
+                        <Badge variant={MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? 'destructive' : 'default'} className="rounded-full text-xs px-2 py-0.5">
+                          {MOCK_COMPETITIVE_BENCHMARK.yourPerformance.occupancy < MOCK_COMPETITIVE_BENCHMARK.marketAverage.occupancy ? (
+                            <>-4pp abaixo <ArrowDownRight className="h-3 w-3 ml-1" /></>
+                          ) : (
+                            <>+4pp acima <ArrowUpRight className="h-3 w-3 ml-1" /></>
+                          )}
+                        </Badge>
+                      </div>
+                    </CardBox>
+                  )}
 
-                <CardBox>
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-600">Preço Médio</span>
-                  </div>
+                  <CardBox>
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="h-4 w-4 text-slate-600" />
+                      <span className="text-sm font-medium text-slate-600">
+                        {businessType === 'hotel' || businessType === 'pousada' 
+                          ? 'Preço Médio (ADR)'
+                          : businessType === 'restaurante' 
+                          ? 'Ticket Médio'
+                          : businessType === 'agencia'
+                          ? 'Valor Médio do Pacote'
+                          : 'Preço Médio'}
+                      </span>
+                    </div>
                   <div className="space-y-2">
                     <div>
                       <p className="text-xs text-slate-500">Você</p>
@@ -974,25 +1045,29 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                   </div>
                 </CardBox>
 
-                <CardBox>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="h-4 w-4 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-600">Tempo Médio</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-slate-500">Você</p>
-                      <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.avgStay} dias</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Média do Mercado</p>
-                      <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.avgStay} dias</p>
-                    </div>
-                    <Badge variant="destructive" className="rounded-full text-xs px-2 py-0.5">
-                      -0.4 dias <ArrowDownRight className="h-3 w-3 ml-1" />
-                    </Badge>
-                  </div>
-                </CardBox>
+                  {(businessType === 'hotel' || businessType === 'pousada') && (
+                    <CardBox>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="h-4 w-4 text-slate-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          {getBusinessMetricLabel(businessType, 'avg_stay') || 'Permanência Média'}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-slate-500">Você</p>
+                          <p className="text-xl font-bold text-slate-800">{MOCK_COMPETITIVE_BENCHMARK.yourPerformance.avgStay} dias</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Média do Mercado</p>
+                          <p className="text-lg font-semibold text-slate-600">{MOCK_COMPETITIVE_BENCHMARK.marketAverage.avgStay} dias</p>
+                        </div>
+                        <Badge variant="destructive" className="rounded-full text-xs px-2 py-0.5">
+                          -0.4 dias <ArrowDownRight className="h-3 w-3 ml-1" />
+                        </Badge>
+                      </div>
+                    </CardBox>
+                  )}
               </div>
 
               {/* Tabela de concorrentes */}
@@ -1001,9 +1076,14 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                   <Target className="h-5 w-5 text-purple-600" />
                   <h3 className="text-lg font-semibold text-slate-800">Comparação Detalhada com Concorrentes</h3>
                 </div>
-                <p className="text-sm text-slate-600 mb-4">
-                  Dados agregados e anonimizados de estabelecimentos similares na região
-                </p>
+                      <p className="text-sm text-slate-600 mb-4">
+                        Dados agregados e anonimizados de estabelecimentos similares na região
+                      </p>
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-700">
+                          <strong>Nota:</strong> Dados de demonstração. Comparações reais serão baseadas em dados do mercado quando disponíveis.
+                        </p>
+                      </div>
                 <div className="relative overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="text-xs uppercase bg-gray-50">
