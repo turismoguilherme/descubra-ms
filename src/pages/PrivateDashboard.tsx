@@ -566,10 +566,8 @@ const PrivateDashboard = () => {
 
           {/* Revenue Optimizer, Market Intelligence, Competitive Benchmark */}
           {showIntelligence && (activeSection === 'revenue' || activeSection === 'market' || activeSection === 'benchmark') && (
-            <SectionWrapper 
-              variant="default" 
-              title="Intelligence Suite"
-              actions={
+            <div>
+              <div className="mb-4 flex justify-end">
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -578,14 +576,14 @@ const PrivateDashboard = () => {
                     setActiveSection('overview');
                   }}
                 >
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   Voltar
                 </Button>
-              }
-            >
+              </div>
               <Suspense fallback={<div className="flex items-center justify-center p-8"><RefreshCw className="h-6 w-6 animate-spin text-blue-600" /></div>}>
                 <ViaJARIntelligence initialTab={intelligenceTab} hideHeader={true} />
               </Suspense>
-            </SectionWrapper>
+            </div>
           )}
 
           {/* Upload Documentos */}

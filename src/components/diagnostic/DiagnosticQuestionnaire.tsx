@@ -1,17 +1,22 @@
-<<<<<<< HEAD
 /**
  * Diagnostic Questionnaire Component
- * Componente placeholder - funcionalidade em desenvolvimento
+ * Componente padronizado com SectionWrapper e CardBox
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import SectionWrapper from '@/components/ui/SectionWrapper';
+import CardBox from '@/components/ui/CardBox';
 import { QuestionnaireAnswers } from '@/types/diagnostic';
+import { AlertCircle } from 'lucide-react';
 
 interface DiagnosticQuestionnaireProps {
   onComplete: (answers: QuestionnaireAnswers) => void;
   onProgress?: (progress: number) => void;
+}
+
+export interface DiagnosticAnswers extends QuestionnaireAnswers {
+  business_type: string;
 }
 
 const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({ 
@@ -36,62 +41,31 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Diagnóstico Inteligente</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <SectionWrapper 
+      variant="default" 
+      title="Diagnóstico Inteligente"
+      subtitle="Complete o questionário para receber uma análise personalizada do seu negócio"
+    >
+      <CardBox>
         <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">
+          <AlertCircle className="h-12 w-12 mx-auto text-amber-500 mb-4" />
+          <p className="text-slate-600 mb-4 font-medium">
             O questionário de diagnóstico está em desenvolvimento.
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-slate-500 mb-6">
             Por enquanto, você pode pular esta etapa e continuar com o dashboard.
           </p>
-          <Button onClick={handleSkip} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button 
+            onClick={handleSkip} 
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             Pular e Continuar
           </Button>
         </div>
-      </CardContent>
-=======
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
-export interface QuestionnaireAnswers {
-  business_type: string;
-  [key: string]: any;
-}
-
-export interface DiagnosticAnswers extends QuestionnaireAnswers {
-  business_type: string;
-}
-
-interface DiagnosticQuestionnaireProps {
-  onComplete?: (answers: QuestionnaireAnswers) => void;
-}
-
-const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({ onComplete }) => {
-  return (
-    <Card className="p-6">
-      <h3 className="text-xl font-semibold mb-4">Questionário de Diagnóstico</h3>
-      <p className="text-muted-foreground">
-        Complete o questionário para receber uma análise personalizada do seu negócio.
-      </p>
-      <Button 
-        className="mt-4" 
-        onClick={() => onComplete?.({ business_type: 'hotel' })}
-      >
-        Iniciar Questionário
-      </Button>
->>>>>>> d0cd2ce2a6af1f17bf0d27c8bd765cd104c8c0ce
-    </Card>
+      </CardBox>
+    </SectionWrapper>
   );
 };
 
 export default DiagnosticQuestionnaire;
-<<<<<<< HEAD
 export type { QuestionnaireAnswers };
-
-=======
->>>>>>> d0cd2ce2a6af1f17bf0d27c8bd765cd104c8c0ce
