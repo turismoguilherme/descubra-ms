@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useBusinessType } from '@/hooks/useBusinessType';
 import { useAuth } from '@/hooks/useAuth';
-import { regionalDataIntegrationService, RegionalTourismData } from '@/services/private/regionalDataIntegrationService';
+import { regionalDataService, RegionalTourismData } from '@/services/private/regionalDataService';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const RegionalDataSection: React.FC = () => {
@@ -39,11 +39,10 @@ const RegionalDataSection: React.FC = () => {
   const loadRegionalData = async () => {
     setIsLoading(true);
     try {
-      // Detectar estado do usuário (por enquanto, assumir MS)
-      // TODO: Obter do perfil do usuário (userProfile?.state ou location)
-      const state = userState || 'MS';
+      // Detectar estado do usuário (obter do perfil ou usar padrão)
+      const state = userProfile?.state || userProfile?.city?.split(',')[1]?.trim() || userState || 'MS';
       
-      const data = await regionalDataIntegrationService.getRegionalData(state, businessType || undefined);
+      const data = await regionalDataService.getRegionalData(state, businessType || undefined);
       setRegionalData(data);
     } catch (error) {
       console.error('Erro ao carregar dados regionais:', error);
@@ -90,16 +89,21 @@ const RegionalDataSection: React.FC = () => {
     );
   }
 
-  const isMS = regionalData.state === 'MS';
-  const sourceBadge = isMS 
+  const isMS = regionalData.state === 'MS' || regionalData.state === 'Mato Grosso do Sul';
+  const isAlumia = regionalData.source === 'ALUMIA';
+  const isGoogleSearch = regionalData.source === 'GOOGLE_SEARCH';
+  
+  const sourceBadge = isAlumia 
     ? <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700">ALUMIA</Badge>
-    : <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 bg-blue-100 text-blue-700">Google Scholar</Badge>;
+    : isGoogleSearch
+    ? <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 bg-blue-100 text-blue-700">Google Search</Badge>
+    : <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 bg-amber-100 text-amber-700">Não configurado</Badge>;
 
   return (
     <SectionWrapper
       variant="default"
       title="Dados Regionais"
-      subtitle={`Informações de turismo para ${regionalData.state} - ${isMS ? 'Dados oficiais ALUMIA' : 'Pesquisa acadêmica'}`}
+      subtitle={`Informações de turismo para ${regionalData.state} - ${isAlumia ? 'Dados oficiais ALUMIA' : isGoogleSearch ? 'Google Search API' : 'Não configurado'}`}
       actions={
         <div className="flex items-center gap-2">
           {sourceBadge}
@@ -127,7 +131,7 @@ const RegionalDataSection: React.FC = () => {
               <div className="text-2xl font-bold text-slate-800">
                 {regionalData.data.touristArrivals.toLocaleString('pt-BR')}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Fonte: {isMS ? 'ALUMIA' : 'Google Scholar'}</p>
+              <p className="text-xs text-slate-500 mt-1">Fonte: {isAlumia ? 'ALUMIA' : isGoogleSearch ? 'Google Search' : 'N/A'}</p>
             </CardBox>
 
             {regionalData.data.averageStay && (
@@ -139,7 +143,7 @@ const RegionalDataSection: React.FC = () => {
                 <div className="text-2xl font-bold text-slate-800">
                   {regionalData.data.averageStay} dias
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Fonte: {isMS ? 'ALUMIA' : 'Google Scholar'}</p>
+                <p className="text-xs text-slate-500 mt-1">Fonte: {isAlumia ? 'ALUMIA' : isGoogleSearch ? 'Google Search' : 'N/A'}</p>
               </CardBox>
             )}
 
@@ -152,7 +156,7 @@ const RegionalDataSection: React.FC = () => {
                 <div className="text-2xl font-bold text-slate-800">
                   R$ {regionalData.data.averageSpending}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Fonte: {isMS ? 'ALUMIA' : 'Google Scholar'}</p>
+                <p className="text-xs text-slate-500 mt-1">Fonte: {isAlumia ? 'ALUMIA' : isGoogleSearch ? 'Google Search' : 'N/A'}</p>
               </CardBox>
             )}
           </div>
@@ -225,10 +229,22 @@ const RegionalDataSection: React.FC = () => {
                 Fonte dos Dados
               </p>
               <p className="text-sm text-slate-600">
-                {isMS 
+                {isAlumia 
                   ? 'Dados oficiais da ALUMIA - Plataforma do Governo de Mato Grosso do Sul. Atualizados em tempo real.'
-                  : 'Dados baseados em pesquisas acadêmicas do Google Scholar. Para informações oficiais, consulte as fontes governamentais do seu estado.'}
+                  : isGoogleSearch
+                  ? 'Dados baseados em Google Search API. Não são dados oficiais. Para informações oficiais, consulte as fontes governamentais do seu estado.'
+                  : regionalData.statusMessage || 'Configure ALUMIA (se for MS) ou Google Search API para ver dados regionais.'}
               </p>
+              {!regionalData.isConfigured && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-medium text-amber-900 mb-1">⚠️ Configuração necessária</p>
+                  <p className="text-xs text-amber-700">
+                    {isMS 
+                      ? 'Configure VITE_ALUMIA_API_KEY e VITE_ALUMIA_BASE_URL para usar dados oficiais da ALUMIA.'
+                      : 'Configure VITE_GOOGLE_SEARCH_API_KEY e VITE_GOOGLE_SEARCH_ENGINE_ID para buscar dados regionais.'}
+                  </p>
+                </div>
+              )}
               <p className="text-xs text-slate-500 mt-2">
                 Última atualização: {regionalData.lastUpdate.toLocaleDateString('pt-BR')}
               </p>
