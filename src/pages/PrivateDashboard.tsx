@@ -34,7 +34,7 @@ import RegionalDataSection from '@/components/private/RegionalDataSection';
 import ProactiveNotifications from '@/components/private/ProactiveNotifications';
 import EvolutionHistory from '@/components/private/EvolutionHistory';
 import GoalsTracking from '@/components/private/GoalsTracking';
-import SettingsSection from '@/components/private/SettingsSection';
+import SettingsModal from '@/components/private/SettingsModal';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import {
   Dialog,

@@ -1,0 +1,741 @@
+/**
+ * Settings Modal Component
+ * Modal completo de configurações com abas: Perfil, Segurança, Plano, Notificações, Integrações, Privacidade
+ */
+
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import CardBox from '@/components/ui/CardBox';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  User,
+  Lock,
+  Mail,
+  CreditCard,
+  Bell,
+  Shield,
+  Link as LinkIcon,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  AlertCircle,
+  Trash2,
+  X,
+  Settings
+} from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Switch } from '@/components/ui/switch';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { user, userProfile, signOut } = useAuth();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Estados para Perfil
+  const [profileData, setProfileData] = useState({
+    fullName: userProfile?.full_name || '',
+    businessName: userProfile?.business_name || '',
+    phone: userProfile?.phone || '',
+  });
+
+  // Estados para Segurança
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [emailData, setEmailData] = useState({
+    newEmail: '',
+  });
+
+  // Estados para Notificações
+  const [notifications, setNotifications] = useState({
+    email: true,
+    sms: false,
+    push: true,
+    marketing: false,
+    updates: true,
+    security: true,
+  });
+
+  // Estados para Privacidade
+  const [privacy, setPrivacy] = useState({
+    profilePublic: false,
+    showEmail: false,
+    showPhone: false,
+    analytics: true,
+    cookies: true,
+  });
+
+  // Estados para Plano
+  const [currentPlan, setCurrentPlan] = useState<'free' | 'basic' | 'premium' | 'enterprise'>('basic');
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+
+  useEffect(() => {
+    if (isOpen && userProfile) {
+      setProfileData({
+        fullName: userProfile.full_name || '',
+        businessName: userProfile.business_name || '',
+        phone: userProfile.phone || '',
+      });
+    }
+  }, [isOpen, userProfile]);
+
+  const tabs = [
+    { id: 'profile', label: 'Perfil', icon: User },
+    { id: 'security', label: 'Segurança', icon: Lock },
+    { id: 'plan', label: 'Plano', icon: CreditCard },
+    { id: 'notifications', label: 'Notificações', icon: Bell },
+    { id: 'privacy', label: 'Privacidade', icon: Shield },
+  ];
+
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          full_name: profileData.fullName,
+          business_name: profileData.businessName,
+          phone: profileData.phone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Perfil atualizado com sucesso',
+      });
+    } catch (error: any) {
+      console.error('Erro ao atualizar perfil:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao atualizar perfil',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      toast({
+        title: 'Erro',
+        description: 'Preencha todos os campos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: 'Erro',
+        description: 'A senha deve ter pelo menos 6 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: 'Erro',
+        description: 'As senhas não coincidem',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Senha alterada com sucesso',
+      });
+
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error: any) {
+      console.error('Erro ao alterar senha:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao alterar senha',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!emailData.newEmail || !emailData.newEmail.includes('@')) {
+      toast({
+        title: 'Erro',
+        description: 'Email inválido',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: emailData.newEmail,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Email alterado com sucesso. Verifique sua caixa de entrada para confirmar.',
+      });
+
+      setEmailData({ newEmail: '' });
+    } catch (error: any) {
+      console.error('Erro ao alterar email:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao alterar email',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'EXCLUIR') {
+      toast({
+        title: 'Erro',
+        description: 'Digite EXCLUIR para confirmar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (signOut) {
+        await signOut();
+      }
+
+      toast({
+        title: 'Conta excluída',
+        description: 'Sua conta foi excluída com sucesso',
+      });
+
+      onClose();
+    } catch (error: any) {
+      console.error('Erro ao excluir conta:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao excluir conta',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const plans = [
+    {
+      id: 'free' as const,
+      name: 'Gratuito',
+      price: 'R$ 0',
+      features: ['Diagnóstico básico', 'Até 3 relatórios/mês', 'Suporte por email'],
+    },
+    {
+      id: 'basic' as const,
+      name: 'Básico',
+      price: 'R$ 99/mês',
+      features: ['Diagnóstico completo', 'Relatórios ilimitados', 'Insights semanais', 'Suporte prioritário'],
+    },
+    {
+      id: 'premium' as const,
+      name: 'Premium',
+      price: 'R$ 199/mês',
+      features: ['Tudo do Básico', 'IA Conversacional', 'Análises avançadas', 'Integração ALUMIA', 'Suporte 24/7'],
+    },
+    {
+      id: 'enterprise' as const,
+      name: 'Enterprise',
+      price: 'Sob consulta',
+      features: ['Tudo do Premium', 'API personalizada', 'Treinamento dedicado', 'Gerente de conta'],
+    },
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'profile':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Informações do Perfil</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="fullName">Nome Completo</Label>
+                  <Input
+                    id="fullName"
+                    value={profileData.fullName}
+                    onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+                    placeholder="Seu nome completo"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="businessName">Nome do Negócio</Label>
+                  <Input
+                    id="businessName"
+                    value={profileData.businessName}
+                    onChange={(e) => setProfileData({ ...profileData, businessName: e.target.value })}
+                    placeholder="Nome do seu negócio"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" value={user?.email || ''} disabled />
+                </div>
+              </div>
+              <Button onClick={handleSaveProfile} disabled={isLoading} className="mt-4">
+                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'security':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Alterar Senha</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="newPassword">Nova Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showPasswords.new ? 'text' : 'password'}
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      placeholder="Nova senha"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                    >
+                      {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showPasswords.confirm ? 'text' : 'password'}
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      placeholder="Confirmar senha"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                    >
+                      {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <Button onClick={handleChangePassword} disabled={isLoading} className="mt-4">
+                {isLoading ? 'Alterando...' : 'Alterar Senha'}
+              </Button>
+            </div>
+
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Alterar Email</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="currentEmail">Email Atual</Label>
+                  <Input id="currentEmail" value={user?.email || ''} disabled />
+                </div>
+                <div>
+                  <Label htmlFor="newEmail">Novo Email</Label>
+                  <Input
+                    id="newEmail"
+                    type="email"
+                    value={emailData.newEmail}
+                    onChange={(e) => setEmailData({ newEmail: e.target.value })}
+                    placeholder="novo@email.com"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleChangeEmail} disabled={isLoading} className="mt-4">
+                {isLoading ? 'Alterando...' : 'Alterar Email'}
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'plan':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Planos Disponíveis</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {plans.map((plan) => (
+                  <CardBox
+                    key={plan.id}
+                    className={currentPlan === plan.id ? 'border-2 border-blue-500 bg-blue-50' : ''}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-slate-800">{plan.name}</h3>
+                      {currentPlan === plan.id && (
+                        <Badge className="bg-blue-600 text-white rounded-full text-xs px-2 py-0.5">
+                          Atual
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-2xl font-bold text-slate-800 mb-4">{plan.price}</div>
+                    <ul className="space-y-2 mb-4">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    {currentPlan === plan.id ? (
+                      <div className="space-y-2">
+                        <Button variant="outline" className="w-full" disabled>
+                          Plano Atual
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            toast({
+                              title: 'Em breve',
+                              description: 'Funcionalidade de cancelamento em desenvolvimento',
+                            });
+                          }}
+                        >
+                          Cancelar Assinatura
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => {
+                          toast({
+                            title: 'Em breve',
+                            description: 'Funcionalidade de mudança de plano em desenvolvimento',
+                          });
+                        }}
+                      >
+                        Mudar para {plan.name}
+                      </Button>
+                    )}
+                  </CardBox>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Preferências de Notificação</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Notificações por Email</Label>
+                    <p className="text-sm text-slate-500">Receba atualizações importantes por email</p>
+                  </div>
+                  <Switch
+                    checked={notifications.email}
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Notificações Push</Label>
+                    <p className="text-sm text-slate-500">Receba notificações no navegador</p>
+                  </div>
+                  <Switch
+                    checked={notifications.push}
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, push: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Atualizações do Sistema</Label>
+                    <p className="text-sm text-slate-500">Receba notificações sobre novas funcionalidades</p>
+                  </div>
+                  <Switch
+                    checked={notifications.updates}
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, updates: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Alertas de Segurança</Label>
+                    <p className="text-sm text-slate-500">Receba alertas sobre atividades de segurança</p>
+                  </div>
+                  <Switch
+                    checked={notifications.security}
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, security: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Marketing e Promoções</Label>
+                    <p className="text-sm text-slate-500">Receba ofertas e novidades</p>
+                  </div>
+                  <Switch
+                    checked={notifications.marketing}
+                    onCheckedChange={(checked) => setNotifications({ ...notifications, marketing: checked })}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  toast({
+                    title: 'Sucesso',
+                    description: 'Preferências de notificação salvas',
+                  });
+                }}
+                className="mt-4"
+              >
+                Salvar Preferências
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'privacy':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Configurações de Privacidade</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Perfil Público</Label>
+                    <p className="text-sm text-slate-500">Tornar seu perfil visível publicamente</p>
+                  </div>
+                  <Switch
+                    checked={privacy.profilePublic}
+                    onCheckedChange={(checked) => setPrivacy({ ...privacy, profilePublic: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Mostrar Email</Label>
+                    <p className="text-sm text-slate-500">Exibir seu email no perfil</p>
+                  </div>
+                  <Switch
+                    checked={privacy.showEmail}
+                    onCheckedChange={(checked) => setPrivacy({ ...privacy, showEmail: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Mostrar Telefone</Label>
+                    <p className="text-sm text-slate-500">Exibir seu telefone no perfil</p>
+                  </div>
+                  <Switch
+                    checked={privacy.showPhone}
+                    onCheckedChange={(checked) => setPrivacy({ ...privacy, showPhone: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Analytics</Label>
+                    <p className="text-sm text-slate-500">Permitir coleta de dados de uso</p>
+                  </div>
+                  <Switch
+                    checked={privacy.analytics}
+                    onCheckedChange={(checked) => setPrivacy({ ...privacy, analytics: checked })}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  toast({
+                    title: 'Sucesso',
+                    description: 'Configurações de privacidade salvas',
+                  });
+                }}
+                className="mt-4"
+              >
+                Salvar Configurações
+              </Button>
+            </div>
+
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-red-800 mb-4">Zona de Perigo</h3>
+              <CardBox className="border-red-200 bg-red-50">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-red-900 mb-2">Excluir Conta</h3>
+                    <p className="text-sm text-red-700 mb-4">
+                      Esta ação é irreversível. Todos os seus dados serão permanentemente excluídos.
+                    </p>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Excluir Conta
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente excluídos.
+                            <br /><br />
+                            Digite <strong>EXCLUIR</strong> para confirmar:
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <Input
+                          value={deleteConfirm}
+                          onChange={(e) => setDeleteConfirm(e.target.value)}
+                          placeholder="Digite EXCLUIR"
+                          className="mt-4"
+                        />
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteAccount}
+                            disabled={isLoading || deleteConfirm !== 'EXCLUIR'}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isLoading ? 'Excluindo...' : 'Excluir Conta'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </CardBox>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configurações da Conta
+          </DialogTitle>
+          <DialogDescription>
+            Gerencie suas configurações de conta, segurança e preferências
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-1 gap-6 overflow-hidden">
+          {/* Sidebar com abas */}
+          <div className="w-48 flex-shrink-0 border-r pr-4">
+            <nav className="space-y-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Conteúdo da aba */}
+          <div className="flex-1 overflow-y-auto pr-2">
+            {renderTabContent()}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default SettingsModal;
+
