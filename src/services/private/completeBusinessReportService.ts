@@ -8,7 +8,7 @@ import { diagnosticService } from '@/services/viajar/diagnosticService';
 import { documentService } from '@/services/viajar/documentService';
 import { evolutionHistoryService } from './evolutionHistoryService';
 import { goalsTrackingService } from './goalsTrackingService';
-import { regionalDataIntegrationService } from './regionalDataIntegrationService';
+import { RegionalDataService } from './regionalDataService';
 import { privateReportGenerationService, ReportData } from './reportGenerationService';
 
 export interface CompleteBusinessData {
@@ -76,7 +76,8 @@ export class CompleteBusinessReportService {
 
       let regionalData = null;
       try {
-        regionalData = await regionalDataIntegrationService.getRegionalData(userState, businessType || undefined);
+        const regionalDataService = new RegionalDataService();
+        regionalData = await regionalDataService.getRegionalData(userState, businessType || undefined);
       } catch (error) {
         console.error('Erro ao buscar dados regionais:', error);
       }

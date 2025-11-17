@@ -20,7 +20,7 @@ try {
 }
 
 export interface ReportData {
-  type: 'diagnostic' | 'revenue' | 'market' | 'benchmark' | 'consolidated';
+  type: 'diagnostic' | 'revenue' | 'market' | 'benchmark' | 'goals' | 'documents' | 'consolidated';
   format: 'pdf' | 'excel' | 'json';
   answers?: QuestionnaireAnswers | null;
   analysisResult?: AnalysisResult | null;
@@ -28,7 +28,14 @@ export interface ReportData {
   user?: string;
   generatedAt: string;
   dataSources: string[];
-  metadata?: any;
+  metadata?: {
+    goals?: any[];
+    documents?: any[];
+    evolutionHistory?: any;
+    regionalData?: any;
+    businessInfo?: any;
+    [key: string]: any;
+  };
 }
 
 export class PrivateReportGenerationService {
@@ -96,9 +103,24 @@ export class PrivateReportGenerationService {
     // Conteúdo específico por tipo de relatório
     if (data.type === 'diagnostic' && data.analysisResult) {
       yPosition = this.addDiagnosticContent(doc, data.analysisResult, yPosition, pageWidth, margin);
-    } else if (data.type === 'consolidated' && data.analysisResult) {
-      yPosition = this.addDiagnosticContent(doc, data.analysisResult, yPosition, pageWidth, margin);
-      // Adicionar outras seções se necessário
+    } else if (data.type === 'goals' && data.metadata?.goals) {
+      yPosition = this.addGoalsContent(doc, data.metadata.goals, yPosition, pageWidth, margin);
+    } else if (data.type === 'documents' && data.metadata?.documents) {
+      yPosition = this.addDocumentsContent(doc, data.metadata.documents, yPosition, pageWidth, margin);
+    } else if (data.type === 'consolidated') {
+      // Relatório consolidado - adicionar todas as seções
+      if (data.analysisResult) {
+        yPosition = this.addDiagnosticContent(doc, data.analysisResult, yPosition, pageWidth, margin);
+      }
+      if (data.metadata?.goals && data.metadata.goals.length > 0) {
+        yPosition = this.addGoalsContent(doc, data.metadata.goals, yPosition, pageWidth, margin);
+      }
+      if (data.metadata?.documents && data.metadata.documents.length > 0) {
+        yPosition = this.addDocumentsContent(doc, data.metadata.documents, yPosition, pageWidth, margin);
+      }
+      if (data.metadata?.evolutionHistory) {
+        yPosition = this.addEvolutionHistoryContent(doc, data.metadata.evolutionHistory, yPosition, pageWidth, margin);
+      }
     }
 
     return doc.output('blob');
@@ -142,6 +164,20 @@ export class PrivateReportGenerationService {
       const recommendationsData = this.buildRecommendationsExcelData(data.analysisResult);
       const recommendationsSheet = XLSX.utils.aoa_to_sheet(recommendationsData);
       XLSX.utils.book_append_sheet(workbook, recommendationsSheet, 'Recomendações');
+    }
+
+    // Aba: Metas (se disponível)
+    if (data.metadata?.goals && data.metadata.goals.length > 0) {
+      const goalsData = this.buildGoalsExcelData(data.metadata.goals);
+      const goalsSheet = XLSX.utils.aoa_to_sheet(goalsData);
+      XLSX.utils.book_append_sheet(workbook, goalsSheet, 'Metas');
+    }
+
+    // Aba: Documentos (se disponível)
+    if (data.metadata?.documents && data.metadata.documents.length > 0) {
+      const documentsData = this.buildDocumentsExcelData(data.metadata.documents);
+      const documentsSheet = XLSX.utils.aoa_to_sheet(documentsData);
+      XLSX.utils.book_append_sheet(workbook, documentsSheet, 'Documentos');
     }
 
     // Gerar arquivo
@@ -271,6 +307,191 @@ export class PrivateReportGenerationService {
   }
 
   /**
+   * Adicionar conteúdo de metas ao PDF
+   */
+  private addGoalsContent(
+    doc: jsPDF,
+    goals: any[],
+    yPosition: number,
+    pageWidth: number,
+    margin: number
+  ): number {
+    doc.addPage();
+    yPosition = margin;
+
+    doc.setFontSize(14);
+    doc.setTextColor(59, 130, 246);
+    doc.text('Metas e Acompanhamento', margin, yPosition);
+    yPosition += 15;
+
+    // Tabela de metas
+    const goalsData = [
+      ['Meta', 'Categoria', 'Progresso', 'Status', 'Prazo']
+    ];
+
+    goals.forEach(goal => {
+      const progress = goal.current_value !== undefined && goal.target_value !== undefined
+        ? `${((goal.current_value / goal.target_value) * 100).toFixed(0)}%`
+        : 'N/A';
+      const status = goal.status || 'Em andamento';
+      const deadline = goal.deadline 
+        ? format(new Date(goal.deadline), 'dd/MM/yyyy', { locale: ptBR })
+        : 'Sem prazo';
+
+      goalsData.push([
+        goal.name || 'Meta sem nome',
+        goal.category || 'Geral',
+        progress,
+        status,
+        deadline
+      ]);
+    });
+
+    (doc as any).autoTable({
+      startY: yPosition,
+      head: [goalsData[0]],
+      body: goalsData.slice(1),
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246] },
+      margin: { left: margin, right: margin }
+    });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 15;
+    return yPosition;
+  }
+
+  /**
+   * Adicionar conteúdo de documentos ao PDF
+   */
+  private addDocumentsContent(
+    doc: jsPDF,
+    documents: any[],
+    yPosition: number,
+    pageWidth: number,
+    margin: number
+  ): number {
+    doc.addPage();
+    yPosition = margin;
+
+    doc.setFontSize(14);
+    doc.setTextColor(59, 130, 246);
+    doc.text('Documentos Anexados', margin, yPosition);
+    yPosition += 15;
+
+    // Lista de documentos
+    documents.forEach((docItem, index) => {
+      if (yPosition > doc.internal.pageSize.height - 40) {
+        doc.addPage();
+        yPosition = margin;
+      }
+
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${index + 1}. ${docItem.title || docItem.fileName}`, margin, yPosition);
+      yPosition += 6;
+
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      if (docItem.category) {
+        doc.text(`Categoria: ${docItem.category}`, margin + 5, yPosition);
+        yPosition += 5;
+      }
+      if (docItem.uploadedAt) {
+        doc.text(`Enviado em: ${format(new Date(docItem.uploadedAt), 'dd/MM/yyyy', { locale: ptBR })}`, margin + 5, yPosition);
+        yPosition += 5;
+      }
+      yPosition += 5;
+    });
+
+    return yPosition;
+  }
+
+  /**
+   * Adicionar conteúdo de histórico de evolução ao PDF
+   */
+  private addEvolutionHistoryContent(
+    doc: jsPDF,
+    evolutionHistory: any,
+    yPosition: number,
+    pageWidth: number,
+    margin: number
+  ): number {
+    doc.addPage();
+    yPosition = margin;
+
+    doc.setFontSize(14);
+    doc.setTextColor(59, 130, 246);
+    doc.text('Histórico de Evolução', margin, yPosition);
+    yPosition += 15;
+
+    if (evolutionHistory.stats) {
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Período analisado: ${evolutionHistory.stats.period || 'Último ano'}`, margin, yPosition);
+      yPosition += 10;
+
+      if (evolutionHistory.stats.totalDataPoints) {
+        doc.text(`Total de pontos de dados: ${evolutionHistory.stats.totalDataPoints}`, margin, yPosition);
+        yPosition += 6;
+      }
+    }
+
+    yPosition += 10;
+    return yPosition;
+  }
+
+  /**
+   * Construir dados de metas para Excel
+   */
+  private buildGoalsExcelData(goals: any[]): any[][] {
+    const data = [
+      ['Nome', 'Categoria', 'Valor Atual', 'Valor Alvo', 'Progresso (%)', 'Status', 'Prazo', 'Criado em']
+    ];
+
+    goals.forEach(goal => {
+      const progress = goal.current_value !== undefined && goal.target_value !== undefined
+        ? ((goal.current_value / goal.target_value) * 100).toFixed(2)
+        : 'N/A';
+
+      data.push([
+        goal.name || 'Meta sem nome',
+        goal.category || 'Geral',
+        goal.current_value ?? 'N/A',
+        goal.target_value ?? 'N/A',
+        progress,
+        goal.status || 'Em andamento',
+        goal.deadline ? format(new Date(goal.deadline), 'dd/MM/yyyy', { locale: ptBR }) : 'Sem prazo',
+        goal.created_at ? format(new Date(goal.created_at), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'
+      ]);
+    });
+
+    return data;
+  }
+
+  /**
+   * Construir dados de documentos para Excel
+   */
+  private buildDocumentsExcelData(documents: any[]): any[][] {
+    const data = [
+      ['Título', 'Nome do Arquivo', 'Categoria', 'Tamanho', 'Enviado em', 'Status de Análise']
+    ];
+
+    documents.forEach(doc => {
+      data.push([
+        doc.title || 'Sem título',
+        doc.fileName || 'N/A',
+        doc.category || 'N/A',
+        doc.file_size ? `${(doc.file_size / 1024).toFixed(2)} KB` : 'N/A',
+        doc.uploadedAt ? format(new Date(doc.uploadedAt), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A',
+        doc.analysis_status || 'Pendente'
+      ]);
+    });
+
+    return data;
+  }
+
+  /**
    * Obter título do relatório
    */
   private getReportTitle(type: string): string {
@@ -279,6 +500,8 @@ export class PrivateReportGenerationService {
       revenue: 'Revenue Optimizer',
       market: 'Market Intelligence',
       benchmark: 'Competitive Benchmark',
+      goals: 'Relatório de Metas',
+      documents: 'Relatório de Documentos',
       consolidated: 'Relatório Consolidado'
     };
     return titles[type] || 'Relatório ViaJAR';
