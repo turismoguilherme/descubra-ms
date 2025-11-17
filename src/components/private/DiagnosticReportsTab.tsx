@@ -24,6 +24,7 @@ import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult } from '@/services/diagnostic/analysisService';
 import { useBusinessType } from '@/hooks/useBusinessType';
 import { useAuth } from '@/hooks/useAuth';
+import { privateReportGenerationService } from '@/services/private/reportGenerationService';
 
 interface DiagnosticReportsTabProps {
   answers: QuestionnaireAnswers | null;
@@ -115,17 +116,37 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
   };
 
   const generatePDFReport = async (data: any, type: string) => {
-    // TODO: Implementar geração de PDF usando jsPDF ou similar
-    // Por enquanto, usar JSON como fallback
-    alert('Geração de PDF em desenvolvimento. Baixando JSON por enquanto.');
-    generateJSONReport(data, type);
+    try {
+      const blob = await privateReportGenerationService.generatePDF(data);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-${type}-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    }
   };
 
   const generateExcelReport = async (data: any, type: string) => {
-    // TODO: Implementar geração de Excel usando xlsx ou similar
-    // Por enquanto, usar JSON como fallback
-    alert('Geração de Excel em desenvolvimento. Baixando JSON por enquanto.');
-    generateJSONReport(data, type);
+    try {
+      const blob = await privateReportGenerationService.generateExcel(data);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-${type}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao gerar Excel:', error);
+      alert('Erro ao gerar Excel. Tente novamente.');
+    }
   };
 
   const reportTypes = [

@@ -31,8 +31,13 @@ import ViaJARIntelligence from '@/pages/ViaJARIntelligence';
 import PrivateAIConversation from '@/components/private/PrivateAIConversation';
 import DiagnosticSection from '@/components/private/DiagnosticSection';
 import RegionalDataSection from '@/components/private/RegionalDataSection';
+import ProactiveNotifications from '@/components/private/ProactiveNotifications';
+import EvolutionHistory from '@/components/private/EvolutionHistory';
+import GoalsTracking from '@/components/private/GoalsTracking';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { evolutionHistoryService } from '@/services/private/evolutionHistoryService';
+import { weeklyInsightsService } from '@/services/private/weeklyInsightsService';
 
 const PrivateDashboard = () => {
   // Verificar se o AuthProvider está disponível
@@ -359,6 +364,16 @@ const PrivateDashboard = () => {
           answers: answers as any,
           analysis_result: result as any
         });
+
+        // Salvar ponto de evolução
+        await evolutionHistoryService.saveEvolutionPoint(user.id, result);
+
+        // Verificar e enviar insights semanais (se necessário)
+        const hasSentThisWeek = await weeklyInsightsService.hasSentThisWeek(user.id);
+        if (!hasSentThisWeek && userProfile?.email) {
+          const insights = await weeklyInsightsService.generateWeeklyInsights(user.id, result);
+          await weeklyInsightsService.sendWeeklyInsightsEmail(user.id, userProfile.email, insights);
+        }
       } catch (error) {
         console.error('Erro ao salvar diagnóstico:', error);
       }
@@ -492,64 +507,233 @@ const PrivateDashboard = () => {
                 <MapPin className="h-4 w-4" />
                 Dados Regionais
               </button>
+              <button
+                onClick={() => setActiveSection('evolution')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'evolution' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                Histórico de Evolução
+              </button>
+              <button
+                onClick={() => setActiveSection('goals')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'goals' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Target className="h-4 w-4" />
+                Metas e Acompanhamento
+              </button>
             </nav>
           </div>
         </div>
 
         {/* Conteúdo Principal */}
         <div className="flex-1 p-8 overflow-y-auto bg-gray-50 space-y-6">
-          {/* Seção de Diagnóstico (expandida no topo) */}
-          {showDiagnosticSection && (
-            <DiagnosticSection
-              onClose={handleDiagnosticSectionClose}
-              onMinimize={() => setIsDiagnosticMinimized(!isDiagnosticMinimized)}
-              isMinimized={isDiagnosticMinimized}
-              onComplete={handleDiagnosticSectionComplete}
-              existingResult={analysisResult}
-              existingAnswers={diagnosticAnswers}
-            />
-          )}
-
           {/* Visão Geral */}
           {activeSection === 'overview' && (
             <>
+              {/* Seção de Diagnóstico (só mostrar na Visão Geral quando ativo) */}
+              {showDiagnosticSection && (
+                <DiagnosticSection
+                  onClose={handleDiagnosticSectionClose}
+                  onMinimize={() => setIsDiagnosticMinimized(!isDiagnosticMinimized)}
+                  isMinimized={isDiagnosticMinimized}
+                  onComplete={handleDiagnosticSectionComplete}
+                  existingResult={analysisResult}
+                  existingAnswers={diagnosticAnswers}
+                />
+              )}
+
               {analysisResult ? (
                 <>
-                  {/* Resultados do Diagnóstico */}
+                  {/* Notificações Proativas */}
+                  <ProactiveNotifications
+                    analysisResult={analysisResult}
+                    currentMetrics={{}}
+                  />
+
+                  {/* Resumo Executivo - Métricas Principais */}
                   <SectionWrapper 
                     variant="default" 
-                    title="Resultados do Diagnóstico"
+                    title="Visão Geral do Negócio"
+                    subtitle="Resumo executivo das principais métricas e indicadores"
                     actions={
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleRetakeDiagnostic}
-                      >
-                        Refazer Diagnóstico
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setActiveSection('revenue');
+                            setShowIntelligence(true);
+                            setIntelligenceTab('revenue');
+                          }}
+                        >
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          Revenue
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleRetakeDiagnostic}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-1" />
+                          Refazer Diagnóstico
+                        </Button>
+                      </div>
                     }
                   >
-                    {/* Cards de Métricas */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {/* Cards de Métricas Principais */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                       <CardBox>
-                        <div className="text-4xl font-bold text-blue-600 mb-2 text-center">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-slate-600">Score Geral</span>
+                        </div>
+                        <div className="text-3xl font-bold text-blue-600 mb-1">
                           {analysisResult.overallScore}%
                         </div>
-                        <div className="text-sm text-gray-600 text-center">Score Geral</div>
+                        <div className="text-xs text-slate-500">
+                          {analysisResult.overallScore >= 80 ? 'Excelente' : 
+                           analysisResult.overallScore >= 60 ? 'Bom' : 
+                           analysisResult.overallScore >= 40 ? 'Regular' : 'Precisa Melhorar'}
+                        </div>
                       </CardBox>
                       
                       <CardBox>
-                        <div className="text-4xl font-bold text-green-600 mb-2 text-center">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-slate-600">ROI Estimado</span>
+                        </div>
+                        <div className="text-3xl font-bold text-green-600 mb-1">
                           +{analysisResult.estimatedROI}%
                         </div>
-                        <div className="text-sm text-gray-600 text-center">ROI Estimado</div>
+                        <div className="text-xs text-slate-500">Retorno sobre investimento</div>
                       </CardBox>
                       
                       <CardBox>
-                        <div className="text-4xl font-bold text-purple-600 mb-2 text-center">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium text-slate-600">Recomendações</span>
+                        </div>
+                        <div className="text-3xl font-bold text-purple-600 mb-1">
                           {analysisResult.recommendations.length}
                         </div>
-                        <div className="text-sm text-gray-600 text-center">Recomendações</div>
+                        <div className="text-xs text-slate-500">Ações sugeridas</div>
+                      </CardBox>
+
+                      <CardBox>
+                        <div className="flex items-center gap-2 mb-2">
+                          <BarChart3 className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm font-medium text-slate-600">Crescimento</span>
+                        </div>
+                        <div className="text-3xl font-bold text-amber-600 mb-1">
+                          {analysisResult.growthPotential}%
+                        </div>
+                        <div className="text-xs text-slate-500">Potencial de crescimento</div>
+                      </CardBox>
+                    </div>
+
+                    {/* Status do Negócio */}
+                    <CardBox className="border-l-4 border-l-blue-500 bg-blue-50">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="font-medium text-blue-900 mb-1">Status do Negócio</p>
+                          <p className="text-sm text-blue-700">
+                            {analysisResult.overallScore >= 80 
+                              ? 'Seu negócio está em excelente condição! Continue implementando as recomendações para manter o crescimento.'
+                              : analysisResult.overallScore >= 60
+                              ? 'Seu negócio está em boa condição. Implemente as recomendações prioritárias para melhorar ainda mais.'
+                              : 'Há oportunidades significativas de melhoria. Foque nas recomendações de alta prioridade para acelerar o crescimento.'}
+                          </p>
+                        </div>
+                      </div>
+                    </CardBox>
+                  </SectionWrapper>
+
+                  {/* Acesso Rápido aos Módulos */}
+                  <SectionWrapper 
+                    variant="default" 
+                    title="Acesso Rápido"
+                    subtitle="Módulos principais da plataforma"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <CardBox 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          setActiveSection('revenue');
+                          setShowIntelligence(true);
+                          setIntelligenceTab('revenue');
+                        }}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <DollarSign className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-800">Revenue Optimizer</h3>
+                            <p className="text-xs text-slate-500">Otimize preços</p>
+                          </div>
+                        </div>
+                      </CardBox>
+
+                      <CardBox 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          setActiveSection('market');
+                          setShowIntelligence(true);
+                          setIntelligenceTab('market');
+                        }}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Users className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-800">Market Intelligence</h3>
+                            <p className="text-xs text-slate-500">Análise de mercado</p>
+                          </div>
+                        </div>
+                      </CardBox>
+
+                      <CardBox 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          setActiveSection('benchmark');
+                          setShowIntelligence(true);
+                          setIntelligenceTab('benchmark');
+                        }}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-purple-100 rounded-lg">
+                            <Target className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-800">Competitive Benchmark</h3>
+                            <p className="text-xs text-slate-500">Compare-se</p>
+                          </div>
+                        </div>
+                      </CardBox>
+
+                      <CardBox 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => setActiveSection('regional')}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-amber-100 rounded-lg">
+                            <MapPin className="h-5 w-5 text-amber-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-800">Dados Regionais</h3>
+                            <p className="text-xs text-slate-500">Informações locais</p>
+                          </div>
+                        </div>
                       </CardBox>
                     </div>
                   </SectionWrapper>
@@ -657,6 +841,16 @@ const PrivateDashboard = () => {
           {/* Dados Regionais */}
           {activeSection === 'regional' && (
             <RegionalDataSection />
+          )}
+
+          {/* Histórico de Evolução */}
+          {activeSection === 'evolution' && (
+            <EvolutionHistory />
+          )}
+
+          {/* Metas e Acompanhamento */}
+          {activeSection === 'goals' && (
+            <GoalsTracking />
           )}
         </div>
       </div>
