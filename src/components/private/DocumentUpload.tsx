@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { documentService, Document } from '@/services/viajar/documentService';
+import { useBusinessType } from '@/hooks/useBusinessType';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -33,7 +42,9 @@ import {
   CheckCircle,
   Calendar,
   FileType,
-  X
+  X,
+  Brain,
+  Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -41,10 +52,14 @@ const DocumentUpload: React.FC = () => {
   try {
     const auth = useAuth();
     const { user } = auth || { user: null };
+    const { businessType } = useBusinessType();
     const { toast } = useToast();
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
+    const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+    const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
     const [isGeneratingReport, setIsGeneratingReport] = useState<string | null>(null);
     const [uploadForm, setUploadForm] = useState({
       file: null as File | null,
@@ -124,7 +139,7 @@ const DocumentUpload: React.FC = () => {
       setIsUploading(true);
       setError(null);
       try {
-        await documentService.uploadDocument(
+        const uploadedDoc = await documentService.uploadDocument(
           user.id,
           uploadForm.file,
           {
@@ -137,7 +152,7 @@ const DocumentUpload: React.FC = () => {
 
         toast({
           title: 'Sucesso',
-          description: 'Documento enviado com sucesso'
+          description: 'Documento enviado com sucesso. Iniciando análise...'
         });
 
         setUploadForm({
@@ -149,6 +164,26 @@ const DocumentUpload: React.FC = () => {
         });
 
         await loadDocuments();
+
+        // Iniciar análise automática
+        try {
+          setIsAnalyzing(uploadedDoc.id);
+          await documentService.analyzeDocument(uploadedDoc.id, businessType || undefined);
+          toast({
+            title: 'Análise concluída',
+            description: 'Documento analisado com sucesso!'
+          });
+          await loadDocuments();
+        } catch (err) {
+          console.error('Erro ao analisar documento:', err);
+          toast({
+            title: 'Aviso',
+            description: 'Documento enviado, mas análise falhou. Você pode tentar analisar manualmente.',
+            variant: 'destructive'
+          });
+        } finally {
+          setIsAnalyzing(null);
+        }
       } catch (err: any) {
         console.error('Erro ao fazer upload:', err);
         const errorMessage = err?.message || 'Não foi possível fazer upload do documento';
@@ -181,6 +216,32 @@ const DocumentUpload: React.FC = () => {
           variant: 'destructive'
         });
       }
+    };
+
+    const handleAnalyze = async (docId: string) => {
+      setIsAnalyzing(docId);
+      try {
+        await documentService.analyzeDocument(docId, businessType || undefined);
+        toast({
+          title: 'Sucesso',
+          description: 'Documento analisado com sucesso!'
+        });
+        await loadDocuments();
+      } catch (err: any) {
+        console.error('Erro ao analisar documento:', err);
+        toast({
+          title: 'Erro',
+          description: err?.message || 'Não foi possível analisar o documento',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsAnalyzing(null);
+      }
+    };
+
+    const handleViewAnalysis = (doc: Document) => {
+      setSelectedDocument(doc);
+      setIsAnalysisDialogOpen(true);
     };
 
     const handleDownload = async (document: Document) => {
@@ -531,12 +592,32 @@ const DocumentUpload: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    {doc.analysis_status === 'completed' && (
-                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Analisado
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {doc.analysis_status === 'processing' && (
+                        <Badge className="rounded-full text-xs px-2 py-0.5 bg-blue-100 text-blue-700 border-blue-200">
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Analisando...
+                        </Badge>
+                      )}
+                      {doc.analysis_status === 'completed' && (
+                        <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Analisado
+                        </Badge>
+                      )}
+                      {doc.analysis_status === 'failed' && (
+                        <Badge className="rounded-full text-xs px-2 py-0.5 bg-red-100 text-red-700 border-red-200">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Erro
+                        </Badge>
+                      )}
+                      {doc.analysis_status === 'pending' && (
+                        <Badge className="rounded-full text-xs px-2 py-0.5 bg-amber-100 text-amber-700 border-amber-200">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pendente
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   {/* Description */}
@@ -557,30 +638,171 @@ const DocumentUpload: React.FC = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(doc)}
-                      className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(doc.id)}
-                      className="text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(doc)}
+                        className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(doc.id)}
+                        className="text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {doc.analysis_status === 'completed' && doc.analysis_result && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewAnalysis(doc)}
+                        className="w-full border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        <FileText className="h-4 w-4 mr-1" />
+                        Ver Análise
+                      </Button>
+                    )}
+                    {(doc.analysis_status === 'pending' || doc.analysis_status === 'failed') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAnalyze(doc.id)}
+                        disabled={isAnalyzing === doc.id}
+                        className="w-full border-purple-200 text-purple-700 hover:bg-purple-50"
+                      >
+                        {isAnalyzing === doc.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            Analisando...
+                          </>
+                        ) : (
+                          <>
+                            <Brain className="h-4 w-4 mr-1" />
+                            Analisar com IA
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </CardBox>
               ))}
             </div>
           )}
         </SectionWrapper>
+
+        {/* Dialog de Análise */}
+        <Dialog open={isAnalysisDialogOpen} onOpenChange={setIsAnalysisDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            {selectedDocument && selectedDocument.analysis_result && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Análise do Documento</DialogTitle>
+                  <DialogDescription>
+                    {selectedDocument.title || selectedDocument.file_name}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 mt-4">
+                  {/* Resumo */}
+                  {selectedDocument.analysis_result.summary && (
+                    <CardBox>
+                      <h3 className="font-semibold text-slate-800 mb-2">Resumo</h3>
+                      <p className="text-sm text-slate-600">
+                        {selectedDocument.analysis_result.summary}
+                      </p>
+                    </CardBox>
+                  )}
+
+                  {/* Dados Extraídos */}
+                  {selectedDocument.analysis_result.extracted_data && (
+                    <CardBox>
+                      <h3 className="font-semibold text-slate-800 mb-4">Dados Extraídos</h3>
+                      <div className="space-y-3">
+                        {Object.entries(selectedDocument.analysis_result.extracted_data).map(([key, value]) => {
+                          if (value === null || value === undefined) return null;
+                          if (Array.isArray(value) && value.length === 0) return null;
+                          
+                          return (
+                            <div key={key} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-slate-500 uppercase mb-1">
+                                  {key.replace(/_/g, ' ')}
+                                </p>
+                                <p className="text-sm text-slate-800">
+                                  {Array.isArray(value) 
+                                    ? JSON.stringify(value, null, 2)
+                                    : typeof value === 'object'
+                                    ? JSON.stringify(value, null, 2)
+                                    : String(value)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardBox>
+                  )}
+
+                  {/* Principais Pontos */}
+                  {selectedDocument.analysis_result.key_points && 
+                   selectedDocument.analysis_result.key_points.length > 0 && (
+                    <CardBox>
+                      <h3 className="font-semibold text-slate-800 mb-4">Principais Pontos</h3>
+                      <ul className="space-y-2">
+                        {selectedDocument.analysis_result.key_points.map((point: string, index: number) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                            <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardBox>
+                  )}
+
+                  {/* Recomendações */}
+                  {selectedDocument.analysis_result.recommendations && 
+                   selectedDocument.analysis_result.recommendations.length > 0 && (
+                    <CardBox>
+                      <h3 className="font-semibold text-slate-800 mb-4">Recomendações</h3>
+                      <ul className="space-y-2">
+                        {selectedDocument.analysis_result.recommendations.map((rec: string, index: number) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                            <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardBox>
+                  )}
+
+                  {/* Confiança */}
+                  {selectedDocument.analysis_result.confidence !== undefined && (
+                    <CardBox>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-slate-600">Confiança da Análise</span>
+                        <Badge className={
+                          selectedDocument.analysis_result.confidence >= 0.8
+                            ? 'bg-green-100 text-green-700'
+                            : selectedDocument.analysis_result.confidence >= 0.6
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-red-100 text-red-700'
+                        }>
+                          {(selectedDocument.analysis_result.confidence * 100).toFixed(0)}%
+                        </Badge>
+                      </div>
+                    </CardBox>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     );
   } catch (err: any) {

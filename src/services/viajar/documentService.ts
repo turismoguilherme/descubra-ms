@@ -235,34 +235,54 @@ export class DocumentService {
   }
 
   /**
-   * Analisar documento (mockado por enquanto)
+   * Analisar documento com IA
    */
-  async analyzeDocument(id: string): Promise<any> {
+  async analyzeDocument(id: string, businessType?: string): Promise<any> {
     try {
+      // Buscar documento
+      const document = await this.getDocumentById(id);
+      if (!document) {
+        throw new Error('Documento não encontrado');
+      }
+
       // Atualizar status para processing
       await this.updateDocument(id, { analysis_status: 'processing' });
 
-      // Simular processamento (mockado)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Obter URL do documento
+      const documentUrl = await this.getDocumentUrl(document.file_path);
+      if (!documentUrl) {
+        throw new Error('Não foi possível obter URL do documento');
+      }
 
-      // Mock de resultado de análise
-      const mockAnalysis = {
-        extracted_data: {
-          business_name: 'Exemplo',
-          cnpj: '00.000.000/0000-00',
-          address: 'Endereço exemplo'
-        },
-        summary: 'Documento processado com sucesso',
-        confidence: 0.85
+      // Importar serviço de análise dinamicamente para evitar dependências circulares
+      const { documentAnalysisService } = await import('@/services/ai/documentAnalysisService');
+
+      // Analisar documento
+      const analysis = await documentAnalysisService.analyzeDocumentFromUrl(
+        documentUrl,
+        document.file_name,
+        document.mime_type || '',
+        businessType
+      );
+
+      // Formatar resultado para salvar
+      const analysisResult = {
+        extracted_data: analysis.extractedData,
+        summary: analysis.summary,
+        key_points: analysis.keyPoints,
+        recommendations: analysis.recommendations,
+        confidence: analysis.confidence,
+        document_type: analysis.documentType,
+        business_type: analysis.businessType
       };
 
       // Atualizar com resultado
       await this.updateDocument(id, {
-        analysis_result: mockAnalysis,
+        analysis_result: analysisResult,
         analysis_status: 'completed'
       });
 
-      return mockAnalysis;
+      return analysisResult;
     } catch (error) {
       console.error('Erro ao analisar documento:', error);
       await this.updateDocument(id, { analysis_status: 'failed' });
