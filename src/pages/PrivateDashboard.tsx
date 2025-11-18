@@ -96,12 +96,11 @@ const PrivateDashboard = () => {
         if (latestDiagnostic) {
           setDiagnosticAnswers(latestDiagnostic.answers as QuestionnaireAnswers);
           setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
+          // Se já tem diagnóstico, não mostrar a seção automaticamente
+          setShowDiagnosticSection(false);
         } else {
-          // Se não houver diagnóstico, mostrar a seção automaticamente no primeiro acesso
-          const hasSeenDiagnostic = localStorage.getItem('hasSeenDiagnostic');
-          if (!hasSeenDiagnostic) {
-            setShowDiagnosticSection(true);
-          }
+          // Se não houver diagnóstico, mostrar a seção automaticamente
+          setShowDiagnosticSection(true);
         }
 
         // Verificar onboarding
@@ -156,10 +155,11 @@ const PrivateDashboard = () => {
   };
 
   const handleRetakeDiagnostic = () => {
-    // Permitir refazer o diagnóstico
-    setShowDiagnostic(true);
-    setDiagnosticAnswers(null);
+    setShowDiagnosticSection(true);
+    setIsDiagnosticMinimized(false);
     setAnalysisResult(null);
+    setDiagnosticAnswers(null);
+    localStorage.removeItem('hasSeenDiagnostic');
   };
 
   const handleDiagnosticComplete = async (answers: QuestionnaireAnswers) => {
