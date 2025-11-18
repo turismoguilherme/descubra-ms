@@ -353,8 +353,8 @@ const PrivateDashboard = () => {
   };
 
   const handleDiagnosticSectionClose = () => {
-    // Não fechar completamente, apenas minimizar
-    setIsDiagnosticMinimized(true);
+    // Fechar o modal
+    setShowDiagnosticSection(false);
     localStorage.setItem('hasSeenDiagnostic', 'true');
   };
 
