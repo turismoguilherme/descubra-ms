@@ -538,14 +538,10 @@ const PrivateDashboard = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setIsSettingsDialogOpen(true);
-                          }}
-                          type="button"
+                          onClick={() => setIsSettingsDialogOpen(true)}
                         >
-                          <Settings className="h-4 w-4" />
+                          <Settings className="h-4 w-4 mr-1" />
+                          Configurações
                         </Button>
                       </div>
                     }
@@ -932,19 +928,6 @@ const PrivateDashboard = () => {
         </button>
       )}
 
-      {/* Botão Flutuante de Configurações */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsSettingsDialogOpen(true);
-        }}
-        className="fixed bottom-6 right-6 z-40 bg-slate-700 hover:bg-slate-800 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all"
-        style={!showDiagnosticSection ? { bottom: '6rem' } : {}}
-        aria-label="Configurações"
-      >
-        <Settings className="h-5 w-5" />
-      </button>
     </div>
   );
 };
