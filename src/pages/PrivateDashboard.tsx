@@ -96,11 +96,13 @@ const PrivateDashboard = () => {
         if (latestDiagnostic) {
           setDiagnosticAnswers(latestDiagnostic.answers as QuestionnaireAnswers);
           setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
-          // Se já tem diagnóstico, não mostrar a seção automaticamente
-          setShowDiagnosticSection(false);
-        } else {
-          // Se não houver diagnóstico, mostrar a seção automaticamente
+          // Se já tem diagnóstico, mostrar minimizado por padrão
           setShowDiagnosticSection(true);
+          setIsDiagnosticMinimized(true);
+        } else {
+          // Se não houver diagnóstico, mostrar a seção expandida
+          setShowDiagnosticSection(true);
+          setIsDiagnosticMinimized(false);
         }
 
         // Verificar onboarding
@@ -363,7 +365,9 @@ const PrivateDashboard = () => {
   const handleDiagnosticSectionComplete = async (result: AnalysisResult, answers: QuestionnaireAnswers) => {
     setAnalysisResult(result);
     setDiagnosticAnswers(answers);
-    setShowDiagnosticSection(false);
+    // Manter a seção visível, mas minimizada após completar
+    setShowDiagnosticSection(true);
+    setIsDiagnosticMinimized(true);
     localStorage.setItem('hasSeenDiagnostic', 'true');
     
     // Salvar no Supabase
@@ -391,7 +395,8 @@ const PrivateDashboard = () => {
   };
 
   const handleDiagnosticSectionClose = () => {
-    setShowDiagnosticSection(false);
+    // Não fechar completamente, apenas minimizar
+    setIsDiagnosticMinimized(true);
     localStorage.setItem('hasSeenDiagnostic', 'true');
   };
 
