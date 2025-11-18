@@ -113,17 +113,31 @@ const PrivateAIConversation: React.FC<PrivateAIConversationProps> = ({ businessT
     setInputMessage('');
 
     try {
-      // Simular resposta da IA (mockado por enquanto)
-      // TODO: Integrar com serviço real de IA quando disponível
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Resposta contextualizada para empresários
-      const mockAnswer = `Com base na sua pergunta sobre "${messageToSend}", posso ajudá-lo com insights estratégicos. Para uma análise mais precisa, recomendo verificar as métricas do seu dashboard e usar as ferramentas de Revenue Optimizer e Market Intelligence.`;
+      // Integrar com Gemini AI Service
+      let aiAnswer: string;
+      
+      try {
+        const { GeminiAIService } = await import('@/services/ai/GeminiAIService');
+        const geminiService = new GeminiAIService();
+        
+        // Construir contexto do negócio
+        const businessContext = businessType 
+          ? `O usuário é um empresário do setor de ${businessType}. `
+          : 'O usuário é um empresário do setor de turismo. ';
+        
+        const context = `${businessContext}Esta é uma plataforma de inteligência de negócios para o setor de turismo. O usuário pode ter acesso a Revenue Optimizer, Market Intelligence, Competitive Benchmark, e outras ferramentas de análise.`;
+        
+        aiAnswer = await geminiService.generateChatResponse(messageToSend, context);
+      } catch (aiError) {
+        console.error('Erro ao chamar IA:', aiError);
+        // Fallback para resposta contextualizada
+        aiAnswer = `Com base na sua pergunta sobre "${messageToSend}", posso ajudá-lo com insights estratégicos. Para uma análise mais precisa, recomendo verificar as métricas do seu dashboard e usar as ferramentas de Revenue Optimizer e Market Intelligence.`;
+      }
 
       const assistantMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant' as const,
-        content: mockAnswer,
+        content: aiAnswer,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
@@ -134,7 +148,7 @@ const PrivateAIConversation: React.FC<PrivateAIConversationProps> = ({ businessT
           attendant_id: user.id,
           session_id: sessionId,
           question: messageToSend,
-          answer: mockAnswer,
+          answer: aiAnswer,
           category: 'business',
           language: 'pt-BR',
           confidence_score: 0.85
@@ -270,7 +284,13 @@ const PrivateAIConversation: React.FC<PrivateAIConversationProps> = ({ businessT
                   className="flex-1"
                 />
                 <Button 
-                  onClick={handleAIMessage}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botão Enviar IA clicado', { inputMessage, isLoading });
+                    handleAIMessage();
+                  }}
                   disabled={!inputMessage.trim() || isLoading}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >

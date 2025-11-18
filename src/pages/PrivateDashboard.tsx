@@ -29,7 +29,7 @@ import DocumentUpload from '@/components/private/DocumentUpload';
 import ViaJARIntelligence from '@/pages/ViaJARIntelligence';
 import PrivateAIConversation from '@/components/private/PrivateAIConversation';
 import DiagnosticModal from '@/components/private/DiagnosticModal';
-import RegionalDataSection from '@/components/private/RegionalDataSection';
+import ReportsSection from '@/components/private/ReportsSection';
 import ProactiveNotifications from '@/components/private/ProactiveNotifications';
 import EvolutionHistory from '@/components/private/EvolutionHistory';
 import GoalsTracking from '@/components/private/GoalsTracking';
@@ -73,6 +73,7 @@ const PrivateDashboard = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [showIntelligence, setShowIntelligence] = useState(false);
   const [intelligenceTab, setIntelligenceTab] = useState('revenue');
+  const [intelligenceKey, setIntelligenceKey] = useState(0); // Para forçar atualização
   const [showDiagnosticSection, setShowDiagnosticSection] = useState(false);
   const [isDiagnosticMinimized, setIsDiagnosticMinimized] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
@@ -377,7 +378,11 @@ const PrivateDashboard = () => {
                 <Info className="h-4 w-4 mr-2" />
                 Refazer Diagnóstico
               </Button>
-              <Button variant="secondary" size="sm">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => setIsSettingsDialogOpen(true)}
+              >
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
@@ -470,15 +475,15 @@ const PrivateDashboard = () => {
                 Upload Documentos
               </button>
               <button
-                onClick={() => setActiveSection('regional')}
+                onClick={() => setActiveSection('reports')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'regional' 
+                  activeSection === 'reports' 
                     ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <MapPin className="h-4 w-4" />
-                Dados Regionais
+                <FileText className="h-4 w-4" />
+                Relatórios
               </button>
               <button
                 onClick={() => setActiveSection('goals')}
@@ -744,15 +749,15 @@ const PrivateDashboard = () => {
 
                       <CardBox 
                         className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => setActiveSection('regional')}
+                        onClick={() => setActiveSection('reports')}
                       >
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="p-2 bg-amber-100 rounded-lg">
-                            <MapPin className="h-5 w-5 text-amber-600" />
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <FileText className="h-5 w-5 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-slate-800">Dados Regionais</h3>
-                            <p className="text-xs text-slate-500">Informações locais</p>
+                            <h3 className="font-semibold text-slate-800">Relatórios</h3>
+                            <p className="text-xs text-slate-500">Baixar relatórios</p>
                           </div>
                         </div>
                       </CardBox>
@@ -832,22 +837,20 @@ const PrivateDashboard = () => {
 
           {/* Revenue Optimizer, Market Intelligence, Competitive Benchmark */}
           {showIntelligence && (activeSection === 'revenue' || activeSection === 'market' || activeSection === 'benchmark') && (
-            <div>
-              <div className="mb-4 flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setShowIntelligence(false);
-                    setActiveSection('overview');
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-              </div>
+            <div className="relative">
+              {/* Botão Atualizar sutil no canto superior direito */}
+              <button
+                onClick={() => {
+                  // Forçar atualização dos dados
+                  setIntelligenceKey(prev => prev + 1);
+                }}
+                className="absolute top-0 right-0 z-10 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                title="Atualizar dados"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
               <Suspense fallback={<div className="flex items-center justify-center p-8"><RefreshCw className="h-6 w-6 animate-spin text-blue-600" /></div>}>
-                <ViaJARIntelligence initialTab={intelligenceTab} hideHeader={true} />
+                <ViaJARIntelligence key={intelligenceKey} initialTab={intelligenceTab} hideHeader={true} />
               </Suspense>
             </div>
           )}
@@ -870,9 +873,13 @@ const PrivateDashboard = () => {
             <PrivateAIConversation businessType={userProfile?.business_type} />
           )}
 
-          {/* Dados Regionais */}
-          {activeSection === 'regional' && (
-            <RegionalDataSection />
+          {/* Relatórios */}
+          {activeSection === 'reports' && (
+            <ReportsSection
+              diagnosticAnswers={diagnosticAnswers}
+              analysisResult={analysisResult}
+              businessType={userProfile?.business_type}
+            />
           )}
 
           {/* Metas e Acompanhamento */}
@@ -911,22 +918,6 @@ const PrivateDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Botão Flutuante de Diagnóstico */}
-      {!showDiagnosticSection && (
-        <button
-          onClick={() => {
-            setShowDiagnosticSection(true);
-            setIsDiagnosticMinimized(false);
-          }}
-          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all flex items-center gap-3 group"
-          aria-label="Abrir Diagnóstico"
-        >
-          <Brain className="h-6 w-6" />
-          <span className="hidden group-hover:block whitespace-nowrap pr-2 font-medium">
-            {analysisResult ? 'Ver Diagnóstico' : 'Iniciar Diagnóstico'}
-          </span>
-        </button>
-      )}
 
     </div>
   );

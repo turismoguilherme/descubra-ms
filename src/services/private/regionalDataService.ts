@@ -192,8 +192,8 @@ export class RegionalDataService {
       const allResults: any[] = [];
       
       // Buscar para cada query usando Google Custom Search diretamente
-      const apiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
-      const searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+      const apiKey = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
+      const searchEngineId = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
       
       if (!apiKey || !searchEngineId) {
         throw new Error('Google Search API não configurada');

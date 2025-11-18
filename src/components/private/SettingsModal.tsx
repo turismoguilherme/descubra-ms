@@ -156,10 +156,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleChangePassword = async () => {
-    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       toast({
         title: 'Erro',
         description: 'Preencha todos os campos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Verificar senha atual
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: passwordData.currentPassword,
+      });
+
+      if (signInError) {
+        toast({
+          title: 'Erro',
+          description: 'Senha atual incorreta',
+          variant: 'destructive',
+        });
+        return;
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao verificar senha atual',
         variant: 'destructive',
       });
       return;
@@ -169,6 +193,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       toast({
         title: 'Erro',
         description: 'A senha deve ter pelo menos 6 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (passwordData.newPassword === passwordData.currentPassword) {
+      toast({
+        title: 'Erro',
+        description: 'A nova senha deve ser diferente da senha atual',
         variant: 'destructive',
       });
       return;
@@ -206,6 +239,40 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao alterar senha',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!user?.email) {
+      toast({
+        title: 'Erro',
+        description: 'Email não encontrado',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Email enviado!',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha',
+      });
+    } catch (error: any) {
+      console.error('Erro ao enviar email de recuperação:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao enviar email de recuperação',
         variant: 'destructive',
       });
     } finally {
@@ -364,14 +431,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               <h3 className="text-lg font-semibold text-slate-800 mb-4">Alterar Senha</h3>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="newPassword">Nova Senha</Label>
+                  <Label htmlFor="currentPassword">Senha Atual *</Label>
+                  <div className="relative">
+                    <Input
+                      id="currentPassword"
+                      type={showPasswords.current ? 'text' : 'password'}
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      placeholder="Digite sua senha atual"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                    >
+                      {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="newPassword">Nova Senha *</Label>
                   <div className="relative">
                     <Input
                       id="newPassword"
                       type={showPasswords.new ? 'text' : 'password'}
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      placeholder="Nova senha"
+                      placeholder="Nova senha (mínimo 6 caracteres)"
                     />
                     <Button
                       type="button"
@@ -385,14 +473,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                  <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showPasswords.confirm ? 'text' : 'password'}
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      placeholder="Confirmar senha"
+                      placeholder="Confirme a nova senha"
                     />
                     <Button
                       type="button"
@@ -406,9 +494,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               </div>
-              <Button onClick={handleChangePassword} disabled={isLoading} className="mt-4">
-                {isLoading ? 'Alterando...' : 'Alterar Senha'}
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={handleChangePassword} disabled={isLoading}>
+                  {isLoading ? 'Alterando...' : 'Alterar Senha'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleForgotPassword} 
+                  disabled={isLoading}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  Esqueci minha senha
+                </Button>
+              </div>
             </div>
 
             <div className="border-t pt-6">
@@ -417,9 +515,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 <div>
                   <Label htmlFor="currentEmail">Email Atual</Label>
                   <Input id="currentEmail" value={user?.email || ''} disabled />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Um email de confirmação será enviado para o novo endereço
+                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="newEmail">Novo Email</Label>
+                  <Label htmlFor="newEmail">Novo Email *</Label>
                   <Input
                     id="newEmail"
                     type="email"
@@ -427,9 +528,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setEmailData({ newEmail: e.target.value })}
                     placeholder="novo@email.com"
                   />
+                  {emailData.newEmail && !emailData.newEmail.includes('@') && (
+                    <p className="text-xs text-red-500 mt-1">Email inválido</p>
+                  )}
                 </div>
               </div>
-              <Button onClick={handleChangeEmail} disabled={isLoading} className="mt-4">
+              <Button onClick={handleChangeEmail} disabled={isLoading || !emailData.newEmail || !emailData.newEmail.includes('@')} className="mt-4">
                 {isLoading ? 'Alterando...' : 'Alterar Email'}
               </Button>
             </div>
@@ -485,14 +589,36 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     ) : (
                       <Button
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => {
-                          toast({
-                            title: 'Em breve',
-                            description: 'Funcionalidade de mudança de plano em desenvolvimento',
-                          });
+                        onClick={async () => {
+                          setIsLoading(true);
+                          try {
+                            // Atualizar plano no perfil do usuário
+                            const { error } = await supabase
+                              .from('user_profiles')
+                              .update({ plan: plan.id })
+                              .eq('user_id', user?.id);
+
+                            if (error) throw error;
+
+                            setCurrentPlan(plan.id);
+                            toast({
+                              title: 'Sucesso',
+                              description: `Plano alterado para ${plan.name} com sucesso!`,
+                            });
+                          } catch (error: any) {
+                            console.error('Erro ao alterar plano:', error);
+                            toast({
+                              title: 'Erro',
+                              description: error.message || 'Erro ao alterar plano. Tente novamente.',
+                              variant: 'destructive',
+                            });
+                          } finally {
+                            setIsLoading(false);
+                          }
                         }}
+                        disabled={isLoading}
                       >
-                        Mudar para {plan.name}
+                        {isLoading ? 'Alterando...' : `Mudar para ${plan.name}`}
                       </Button>
                     )}
                   </CardBox>

@@ -60,7 +60,6 @@ const DocumentUpload: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
     const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
     const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
-    const [isGeneratingReport, setIsGeneratingReport] = useState<string | null>(null);
     const [uploadForm, setUploadForm] = useState({
       file: null as File | null,
       title: '',
@@ -292,45 +291,6 @@ const DocumentUpload: React.FC = () => {
       return labels[category || 'outro'] || 'Outro';
     };
 
-    const handleGenerateCompleteReport = async (format: 'pdf' | 'excel' | 'json') => {
-      if (!user?.id || !user?.email) {
-        toast({
-          title: 'Erro',
-          description: 'Você precisa estar logado para gerar relatórios',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      setIsGeneratingReport(format);
-      try {
-        const reportModule = await import('@/services/private/completeBusinessReportService');
-        const reportService = reportModule.completeBusinessReportService || reportModule.default;
-        
-        if (!reportService) {
-          throw new Error('Serviço de relatórios não disponível');
-        }
-
-        await reportService.downloadCompleteReport(
-          user.id,
-          user.email,
-          format
-        );
-        toast({
-          title: 'Sucesso',
-          description: 'Relatório completo gerado com sucesso!'
-        });
-      } catch (err: any) {
-        console.error('Erro ao gerar relatório completo:', err);
-        toast({
-          title: 'Erro',
-          description: err?.message || 'Erro ao gerar relatório completo. Tente novamente mais tarde.',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsGeneratingReport(null);
-      }
-    };
 
     if (!user) {
       return (
@@ -346,71 +306,6 @@ const DocumentUpload: React.FC = () => {
 
     return (
       <div className="space-y-6">
-        {/* Relatório Completo do Negócio */}
-        <SectionWrapper
-          variant="default"
-          title="Relatório Completo do Negócio"
-          subtitle="Gere um relatório completo com todos os dados da plataforma"
-        >
-          <CardBox className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-blue-900 mb-2">Relatório Completo do Negócio</h3>
-                <p className="text-sm text-blue-700 mb-4">
-                  Este relatório inclui: Diagnóstico completo, Revenue Optimizer, Market Intelligence, 
-                  Competitive Benchmark, Histórico de Evolução, Metas, Documentos anexados e Dados Regionais.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleGenerateCompleteReport('pdf')}
-                    disabled={!!isGeneratingReport}
-                    className="bg-white hover:bg-gray-50 border-blue-300 text-blue-700"
-                  >
-                    {isGeneratingReport === 'pdf' ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <FileText className="h-4 w-4 mr-2" />
-                    )}
-                    Baixar PDF
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleGenerateCompleteReport('excel')}
-                    disabled={!!isGeneratingReport}
-                    className="bg-white hover:bg-gray-50 border-green-300 text-green-700"
-                  >
-                    {isGeneratingReport === 'excel' ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    )}
-                    Baixar Excel
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleGenerateCompleteReport('json')}
-                    disabled={!!isGeneratingReport}
-                    className="bg-white hover:bg-gray-50 border-yellow-300 text-yellow-700"
-                  >
-                    {isGeneratingReport === 'json' ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <FileJson className="h-4 w-4 mr-2" />
-                    )}
-                    Baixar JSON
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardBox>
-        </SectionWrapper>
 
         {/* Upload Form */}
         <SectionWrapper 

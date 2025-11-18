@@ -35,8 +35,25 @@ import {
   AlertCircle,
   Edit,
   Trash2,
-  Calendar
+  Calendar,
+  BarChart3,
+  PieChart as PieChartIcon
 } from 'lucide-react';
+import { 
+  BarChart, 
+  Bar, 
+  LineChart, 
+  Line, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { goalsTrackingService, BusinessGoal, GoalProgress } from '@/services/private/goalsTrackingService';
 import { goalsAlertsService, GoalsSummary } from '@/services/private/goalsAlertsService';
@@ -230,7 +247,16 @@ const GoalsTracking: React.FC = () => {
       actions={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs px-3 py-1">
+            <Button 
+              type="button"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs px-3 py-1"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Nova Meta clicado');
+                setIsDialogOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-1" />
               Nova Meta
             </Button>
@@ -341,7 +367,16 @@ const GoalsTracking: React.FC = () => {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreateGoal} className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Botão Criar Meta clicado', newGoal);
+                  handleCreateGoal();
+                }} 
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 Criar Meta
               </Button>
             </DialogFooter>
@@ -372,44 +407,114 @@ const GoalsTracking: React.FC = () => {
         <div className="space-y-6">
           {/* Dashboard de Resumo */}
           {summary && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <CardBox>
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-slate-600">Total</span>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <CardBox>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-600">Total</span>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-800">{summary.total}</div>
+                  <p className="text-xs text-slate-500 mt-1">{summary.active} ativas</p>
+                </CardBox>
+                <CardBox>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-slate-600">Concluídas</span>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-800">{summary.completed}</div>
+                  <p className="text-xs text-slate-500 mt-1">{summary.onTrack} no caminho certo</p>
+                </CardBox>
+                <CardBox>
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-medium text-slate-600">Em Risco</span>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-800">{summary.atRisk}</div>
+                  <p className="text-xs text-slate-500 mt-1">{summary.overdue} atrasadas</p>
+                </CardBox>
+                <CardBox>
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm font-medium text-slate-600">Progresso Geral</span>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-800">{summary.overallProgress}%</div>
+                  <Progress value={summary.overallProgress} className="h-2 mt-2" />
+                </CardBox>
+              </div>
+
+              {/* Gráficos de Visualização */}
+              {goals.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                  {/* Gráfico de Progresso por Meta */}
+                  <CardBox>
+                    <div className="flex items-center gap-2 mb-4">
+                      <BarChart3 className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold text-slate-800">Progresso das Metas</h3>
+                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={goals.map(goal => ({
+                        name: goal.title.length > 15 ? goal.title.substring(0, 15) + '...' : goal.title,
+                        progresso: goal.progress,
+                        esperado: 100
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="progresso" fill="#3b82f6" name="Progresso Atual" />
+                        <Bar dataKey="esperado" fill="#e5e7eb" name="Meta (100%)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardBox>
+
+                  {/* Gráfico de Distribuição por Categoria */}
+                  <CardBox>
+                    <div className="flex items-center gap-2 mb-4">
+                      <PieChartIcon className="h-5 w-5 text-purple-600" />
+                      <h3 className="font-semibold text-slate-800">Metas por Categoria</h3>
+                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(
+                            goals.reduce((acc, goal) => {
+                              acc[goal.category] = (acc[goal.category] || 0) + 1;
+                              return acc;
+                            }, {} as Record<string, number>)
+                          ).map(([name, value]) => ({
+                            name: getCategoryLabel(name as BusinessGoal['category']),
+                            value
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {Object.entries(
+                            goals.reduce((acc, goal) => {
+                              acc[goal.category] = (acc[goal.category] || 0) + 1;
+                              return acc;
+                            }, {} as Record<string, number>)
+                          ).map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardBox>
                 </div>
-                <div className="text-2xl font-bold text-slate-800">{summary.total}</div>
-                <p className="text-xs text-slate-500 mt-1">{summary.active} ativas</p>
-              </CardBox>
-              <CardBox>
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-slate-600">Concluídas</span>
-                </div>
-                <div className="text-2xl font-bold text-slate-800">{summary.completed}</div>
-                <p className="text-xs text-slate-500 mt-1">{summary.onTrack} no caminho certo</p>
-              </CardBox>
-              <CardBox>
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600" />
-                  <span className="text-sm font-medium text-slate-600">Em Risco</span>
-                </div>
-                <div className="text-2xl font-bold text-slate-800">{summary.atRisk}</div>
-                <p className="text-xs text-slate-500 mt-1">{summary.overdue} atrasadas</p>
-              </CardBox>
-              <CardBox>
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium text-slate-600">Progresso Geral</span>
-                </div>
-                <div className="text-2xl font-bold text-slate-800">{summary.overallProgress}%</div>
-                <Progress value={summary.overallProgress} className="h-2 mt-2" />
-              </CardBox>
-            </div>
+              )}
+            </>
           )}
 
           {/* Lista de Metas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map((goal) => {
             const progress = goalProgress.get(goal.id);
             return (
@@ -534,7 +639,7 @@ const GoalsTracking: React.FC = () => {
               </CardBox>
             );
           })}
-          </div>
+        </div>
         </div>
       )}
 

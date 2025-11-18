@@ -79,7 +79,7 @@ export class GeminiAIService {
         }
       };
 
-      const response = await this.makeRequest('/models/gemini-pro:generateContent', data);
+      const response = await this.makeRequest('/models/gemini-1.5-flash:generateContent', data);
       
       if (!response.candidates || !response.candidates[0]?.content?.parts?.[0]?.text) {
         throw new Error('Invalid response from Gemini API');
@@ -112,7 +112,7 @@ export class GeminiAIService {
         }
       };
 
-      const response = await this.makeRequest('/models/gemini-pro:generateContent', data);
+      const response = await this.makeRequest('/models/gemini-1.5-flash:generateContent', data);
       
       if (!response.candidates || !response.candidates[0]?.content?.parts?.[0]?.text) {
         throw new Error('Invalid response from Gemini API');
@@ -143,7 +143,7 @@ export class GeminiAIService {
         }
       };
 
-      const response = await this.makeRequest('/models/gemini-pro:generateContent', data);
+      const response = await this.makeRequest('/models/gemini-1.5-flash:generateContent', data);
       
       if (!response.candidates || !response.candidates[0]?.content?.parts?.[0]?.text) {
         throw new Error('Invalid response from Gemini API');

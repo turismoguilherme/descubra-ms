@@ -17,8 +17,8 @@ export interface GoogleSearchResponse {
 }
 
 export class GoogleSearchAPI {
-  private readonly API_KEY = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
-  private readonly SEARCH_ENGINE_ID = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+  private readonly API_KEY = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
+  private readonly SEARCH_ENGINE_ID = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
   
   // Sites oficiais de MS para busca específica
   private readonly OFFICIAL_SITES = [

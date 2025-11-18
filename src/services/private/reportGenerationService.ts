@@ -10,14 +10,8 @@ import { ptBR } from 'date-fns/locale';
 import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult } from '@/services/diagnostic/analysisService';
 
-// Importação dinâmica do xlsx para evitar problemas de build
-let XLSX: any = null;
-try {
-  // @ts-ignore - xlsx pode não estar instalado
-  XLSX = require('xlsx');
-} catch (e) {
-  console.warn('xlsx não disponível, funcionalidade Excel desabilitada');
-}
+// Importação dinâmica do xlsx - será carregado apenas quando necessário
+// Isso evita erros de build se o módulo não estiver instalado
 
 export interface ReportData {
   type: 'diagnostic' | 'revenue' | 'market' | 'benchmark' | 'goals' | 'documents' | 'consolidated';
@@ -130,8 +124,21 @@ export class PrivateReportGenerationService {
    * Gerar relatório em Excel
    */
   async generateExcel(data: ReportData): Promise<Blob> {
-    if (!XLSX) {
-      throw new Error('Biblioteca xlsx não disponível. Por favor, instale: npm install xlsx');
+    // Carregar xlsx dinamicamente apenas quando necessário
+    let XLSX: any;
+    try {
+      // @ts-ignore - xlsx pode não estar instalado
+      XLSX = await import('xlsx');
+    } catch (error: any) {
+      // Se o módulo não estiver instalado, retornar um erro mais amigável
+      if (error?.message?.includes('Failed to resolve') || error?.code === 'MODULE_NOT_FOUND') {
+        throw new Error('Funcionalidade Excel não disponível. Por favor, instale o módulo xlsx executando: npm install xlsx');
+      }
+      throw error;
+    }
+    
+    if (!XLSX || !XLSX.utils) {
+      throw new Error('Biblioteca xlsx não está funcionando corretamente. Por favor, reinstale: npm install xlsx');
     }
     
     const workbook = XLSX.utils.book_new();

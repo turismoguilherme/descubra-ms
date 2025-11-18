@@ -1,20 +1,30 @@
-[33m7971694[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32msafe-pre-merge-keep-admin[m[33m)[m merge: integração com repositório remoto
-[33m38ba523[m feat: atualização da logo Descubra MS e correções de navegação
-[33mfd1e954[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Implement next phases of commercial features
-[33mab7e394[m Implement Phase 1
-[33mc45c9a0[m[33m ([m[1;32mbackup/pre-remote-update-3477[m[33m)[m apply: pos-merge preservando Admin/Chatbo
-[33me7a123e[m merge: remoto preservando Admin e Chatbot
-[33m25c9a9f[m Implement plan to fix routing
-[33mcb99eff[m Fix: Resolve ReferenceError for AdminPortal and DestinationEditor
-[33m135c451[m Fix build errors in App.tsx
-[33m8b2dae2[m Fix: Resolve build errors
-[33m4c9394e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/overflow-one-partners-safe[m[33m, [m[1;31morigin/feature/overflow-one-partners-safe[m[33m)[m fix: Corrigir erros críticos que causam tela branca
-[33m5265bd0[m fix: Restaurar MSIndex original e habilitar Guata
-[33ma86a234[m fix: Corrigir problemas de navegação e CSP
-[33m1627771[m fix: Corrigir rodapé MS e páginas de eventos/roteiros
-[33mfa9c350[m feat: Restaurar rodapé original do Descubra MS e otimizar carregamento
-[33m262c18c[m fix: Corrigir importações desabilitadas no App.tsx
-[33m699ba1d[m feat: Merge com branch main - Integração de funcionalidades comerciais e melhorias de segurança
-[33mbfd31ef[m feat: Atualizações locais antes do merge com main - Documentação e melhorias
-[33mc3f9555[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Refactor: Improve security and organization
-[33m7a57a28[m Refactor commercial partner routes
+
+                   SSUUMMMMAARRYY OOFF LLEESSSS CCOOMMMMAANNDDSS
+
+      Commands marked with * may be preceded by a number, _N.
+      Notes in parentheses indicate the behavior if _N is given.
+      A key preceded by a caret indicates the Ctrl key; thus ^K is ctrl-K.
+
+  h  H                 Display this help.
+  q  :q  Q  :Q  ZZ     Exit.
+ ---------------------------------------------------------------------------
+
+                           MMOOVVIINNGG
+
+  e  ^E  j  ^N  CR  *  Forward  one line   (or _N lines).
+  y  ^Y  k  ^K  ^P  *  Backward one line   (or _N lines).
+  ESC-j             *  Forward  one file line (or _N file lines).
+  ESC-k             *  Backward one file line (or _N file lines).
+  f  ^F  ^V  SPACE  *  Forward  one window (or _N lines).
+  b  ^B  ESC-v      *  Backward one window (or _N lines).
+  z                 *  Forward  one window (and set window to _N).
+  w                 *  Backward one window (and set window to _N).
+  ESC-SPACE         *  Forward  one window, but don't stop at end-of-file.
+  ESC-b             *  Backward one window, but don't stop at beginning-of-file.
+  d  ^D             *  Forward  one half-window (and set half-window to _N).
+  u  ^U             *  Backward one half-window (and set half-window to _N).
+  ESC-)  RightArrow *  Right one half screen width (or _N positions).
+  ESC-(  LeftArrow  *  Left  one half screen width (or _N positions).
+  ESC-}  ^RightArrow   Right to last column displayed.
+  ESC-{  ^LeftArrow    Left  to first column.
+  F                    Forward forever; like "tail -f".
