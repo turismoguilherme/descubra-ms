@@ -599,6 +599,69 @@ const PrivateDashboard = () => {
                       </div>
                     }
                   >
+                    {/* Indicador de Maturidade do Negócio */}
+                    {analysisResult && (
+                      <CardBox className="mb-6 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-800 mb-1">Nível de Maturidade do Negócio</h3>
+                            <p className="text-sm text-slate-600">
+                              Baseado no diagnóstico e configurações completas
+                            </p>
+                          </div>
+                          <Badge className={`text-sm px-3 py-1 ${
+                            analysisResult.overallScore >= 80 
+                              ? 'bg-green-100 text-green-700 border-green-300'
+                              : analysisResult.overallScore >= 60
+                              ? 'bg-blue-100 text-blue-700 border-blue-300'
+                              : analysisResult.overallScore >= 40
+                              ? 'bg-amber-100 text-amber-700 border-amber-300'
+                              : 'bg-red-100 text-red-700 border-red-300'
+                          }`}>
+                            {analysisResult.overallScore >= 80 
+                              ? 'Avançado'
+                              : analysisResult.overallScore >= 60
+                              ? 'Intermediário'
+                              : analysisResult.overallScore >= 40
+                              ? 'Iniciante'
+                              : 'Básico'}
+                          </Badge>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-600">Progresso Geral</span>
+                            <span className="font-medium text-slate-800">{analysisResult.overallScore}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-2.5">
+                            <div 
+                              className={`h-2.5 rounded-full transition-all ${
+                                analysisResult.overallScore >= 80 
+                                  ? 'bg-green-600'
+                                  : analysisResult.overallScore >= 60
+                                  ? 'bg-blue-600'
+                                  : analysisResult.overallScore >= 40
+                                  ? 'bg-amber-600'
+                                  : 'bg-red-600'
+                              }`}
+                              style={{ width: `${analysisResult.overallScore}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-slate-500 mt-2">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-green-600" />
+                              <span>Diagnóstico Completo</span>
+                            </div>
+                            {userProfile?.business_type && (
+                              <div className="flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-green-600" />
+                                <span>Tipo de Negócio Configurado</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardBox>
+                    )}
+
                     {/* Cards de Métricas Principais */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                       <CardBox>
