@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
-import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useAuth } from '@/hooks/useAuth';
 import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult, analyzeBusinessProfile } from '@/services/diagnostic/analysisService';
@@ -69,12 +68,9 @@ const PrivateDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('overview');
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<QuestionnaireAnswers | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [onboardingData, setOnboardingData] = useState<any>(null);
   const [showIntelligence, setShowIntelligence] = useState(false);
   const [intelligenceTab, setIntelligenceTab] = useState('revenue');
   const [showDiagnosticSection, setShowDiagnosticSection] = useState(false);
@@ -105,13 +101,8 @@ const PrivateDashboard = () => {
           setIsDiagnosticMinimized(false);
         }
 
-        // Verificar onboarding
-        const completed = localStorage.getItem('hasCompletedOnboarding');
-        setHasCompletedOnboarding(completed === 'true');
       } catch (error) {
         console.error('Erro ao carregar dados do diagnóstico:', error);
-        const completed = localStorage.getItem('hasCompletedOnboarding');
-        setHasCompletedOnboarding(completed === 'true');
       } finally {
         setIsLoading(false);
       }
@@ -120,41 +111,6 @@ const PrivateDashboard = () => {
     loadDiagnosticData();
   }, [user]);
 
-  const handleOnboardingComplete = async (data: any) => {
-    // Salvar dados do onboarding
-    localStorage.setItem('hasCompletedOnboarding', 'true');
-    localStorage.setItem('onboardingData', JSON.stringify(data));
-    
-    setHasCompletedOnboarding(true);
-    setOnboardingData(data);
-
-    // Salvar business_type no perfil do usuário no Supabase
-    if (user?.id && data.businessType) {
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ 
-            business_type: data.businessType,
-            business_name: data.businessName || null
-          })
-          .eq('id', user.id);
-
-        if (error) {
-          console.error('Erro ao salvar business_type:', error);
-        } else {
-          console.log('business_type salvo com sucesso:', data.businessType);
-        }
-      } catch (error) {
-        console.error('Erro ao salvar business_type:', error);
-      }
-    }
-  };
-
-  const handleOnboardingSkip = () => {
-    // Permitir pular o onboarding (não recomendado)
-    localStorage.setItem('hasCompletedOnboarding', 'true');
-    setHasCompletedOnboarding(true);
-  };
 
   const handleRetakeDiagnostic = () => {
     setShowDiagnosticSection(true);
@@ -353,14 +309,6 @@ const PrivateDashboard = () => {
     );
   }
 
-  if (!hasCompletedOnboarding) {
-    return (
-      <OnboardingWizard 
-        onComplete={handleOnboardingComplete}
-        onSkip={handleOnboardingSkip}
-      />
-    );
-  }
 
   const handleDiagnosticSectionComplete = async (result: AnalysisResult, answers: QuestionnaireAnswers) => {
     setAnalysisResult(result);
@@ -378,6 +326,17 @@ const PrivateDashboard = () => {
           answers: answers as any,
           analysis_result: result as any
         });
+
+        // Atualizar perfil com informações do diagnóstico se necessário
+        if (answers.business_type) {
+          await supabase
+            .from('users')
+            .update({
+              business_type: answers.business_type,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+        }
 
         // Salvar ponto de evolução
         await evolutionHistoryService.saveEvolutionPoint(user.id, result);
