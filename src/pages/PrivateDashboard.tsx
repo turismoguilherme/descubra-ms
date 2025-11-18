@@ -28,7 +28,7 @@ import CardBox from '@/components/ui/CardBox';
 import DocumentUpload from '@/components/private/DocumentUpload';
 import ViaJARIntelligence from '@/pages/ViaJARIntelligence';
 import PrivateAIConversation from '@/components/private/PrivateAIConversation';
-import DiagnosticSection from '@/components/private/DiagnosticSection';
+import DiagnosticModal from '@/components/private/DiagnosticModal';
 import RegionalDataSection from '@/components/private/RegionalDataSection';
 import ProactiveNotifications from '@/components/private/ProactiveNotifications';
 import EvolutionHistory from '@/components/private/EvolutionHistory';
@@ -92,11 +92,10 @@ const PrivateDashboard = () => {
         if (latestDiagnostic) {
           setDiagnosticAnswers(latestDiagnostic.answers as QuestionnaireAnswers);
           setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
-          // Se já tem diagnóstico, mostrar minimizado por padrão
-          setShowDiagnosticSection(true);
-          setIsDiagnosticMinimized(true);
+          // Se já tem diagnóstico, não mostrar modal automaticamente
+          setShowDiagnosticSection(false);
         } else {
-          // Se não houver diagnóstico, mostrar a seção expandida
+          // Se não houver diagnóstico, mostrar o modal automaticamente
           setShowDiagnosticSection(true);
           setIsDiagnosticMinimized(false);
         }
@@ -501,18 +500,6 @@ const PrivateDashboard = () => {
           {/* Visão Geral */}
           {activeSection === 'overview' && (
             <>
-              {/* Seção de Diagnóstico (só mostrar na Visão Geral quando ativo) */}
-              {showDiagnosticSection && (
-                <DiagnosticSection
-                  onClose={handleDiagnosticSectionClose}
-                  onMinimize={() => setIsDiagnosticMinimized(!isDiagnosticMinimized)}
-                  isMinimized={isDiagnosticMinimized}
-                  onComplete={handleDiagnosticSectionComplete}
-                  existingResult={analysisResult}
-                  existingAnswers={diagnosticAnswers}
-                />
-              )}
-
               {analysisResult ? (
                 <>
                   {/* Notificações Proativas */}
@@ -901,6 +888,63 @@ const PrivateDashboard = () => {
 
       {/* Modal de Configurações */}
       <SettingsModal isOpen={isSettingsDialogOpen} onClose={() => setIsSettingsDialogOpen(false)} />
+
+      {/* Modal de Diagnóstico (Flutuante) */}
+      <Dialog open={showDiagnosticSection} onOpenChange={(open) => {
+        if (!open) {
+          handleDiagnosticSectionClose();
+        } else {
+          setShowDiagnosticSection(true);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Diagnóstico Inteligente</DialogTitle>
+            <DialogDescription>
+              Avalie a maturidade do seu negócio e receba recomendações personalizadas
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <DiagnosticModal
+              onClose={handleDiagnosticSectionClose}
+              onComplete={handleDiagnosticSectionComplete}
+              existingResult={analysisResult}
+              existingAnswers={diagnosticAnswers}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Botão Flutuante de Diagnóstico */}
+      {!showDiagnosticSection && (
+        <button
+          onClick={() => {
+            setShowDiagnosticSection(true);
+            setIsDiagnosticMinimized(false);
+          }}
+          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all flex items-center gap-3 group"
+          aria-label="Abrir Diagnóstico"
+        >
+          <Brain className="h-6 w-6" />
+          <span className="hidden group-hover:block whitespace-nowrap pr-2 font-medium">
+            {analysisResult ? 'Ver Diagnóstico' : 'Iniciar Diagnóstico'}
+          </span>
+        </button>
+      )}
+
+      {/* Botão Flutuante de Configurações */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsSettingsDialogOpen(true);
+        }}
+        className="fixed bottom-6 right-6 z-40 bg-slate-700 hover:bg-slate-800 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all"
+        style={!showDiagnosticSection ? { bottom: '6rem' } : {}}
+        aria-label="Configurações"
+      >
+        <Settings className="h-5 w-5" />
+      </button>
     </div>
   );
 };
