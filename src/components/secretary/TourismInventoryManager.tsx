@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -520,11 +519,20 @@ const TourismInventoryManager: React.FC = () => {
   return (
     <div className="space-y-6">
       <SectionWrapper
-        variant="inventario"
+        variant="default"
         title="Inventário Turístico"
         subtitle="Gerencie atrativos, serviços e pontos de interesse"
         actions={
-          <Button onClick={handleAddAttraction} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Botão Novo Atrativo clicado');
+              handleAddAttraction();
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Novo Atrativo
           </Button>
@@ -532,196 +540,191 @@ const TourismInventoryManager: React.FC = () => {
       >
 
         {/* Filtros */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Buscar</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="search"
-                    placeholder="Nome, descrição ou endereço..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="md:w-48">
-                <Label htmlFor="category">Categoria</Label>
-                <select
-                  id="category"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  {categories.map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.icon} {category.label}
-                    </option>
-                  ))}
-                </select>
+        <CardBox className="mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Label htmlFor="search">Buscar</Label>
+              <div className="relative mt-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="search"
+                  placeholder="Nome, descrição ou endereço..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total de Atrativos</p>
-                <p className="text-2xl font-bold">{attractions.length}</p>
-              </div>
-              <MapPin className="h-8 w-8 text-blue-600" />
+            <div className="md:w-48">
+              <Label htmlFor="category">Categoria</Label>
+              <select
+                id="category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full p-2 border rounded-md mt-1"
+              >
+                {categories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.icon} {category.label}
+                  </option>
+                ))}
+              </select>
             </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Ativos</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {attractions.filter(a => a.isActive).length}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Verificados</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {attractions.filter(a => a.verified).length}
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Avaliação Média</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {(attractions.reduce((sum, a) => sum + a.rating, 0) / attractions.length).toFixed(1)}
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-yellow-600" />
-            </div>
-          </CardBox>
-        </div>
+          </div>
+        </CardBox>
 
         {/* Lista de Atrativos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAttractions.map((attraction) => (
-            <CardBox key={attraction.id}>
-              {/* Cabeçalho com título e badge */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-1">{attraction.name}</h3>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm font-medium">{attraction.rating}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className={`rounded-full text-xs font-medium px-2 py-1 ${
-                    attraction.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    {attraction.isActive ? 'Ativo' : 'Inativo'}
-                  </span>
-                  {attraction.verified && (
-                    <span className="rounded-full text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700">
-                      Verificado
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              {/* Imagem */}
-              <div className="h-32 bg-gray-200 rounded-md mb-3 relative overflow-hidden">
-                {attraction.images.length > 0 ? (
-                  <img
-                    src={attraction.images[0]}
-                    alt={attraction.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Camera className="h-8 w-8 text-gray-400" />
-                  </div>
-                )}
-              </div>
-              
-              {/* Metadados */}
-              <div className="space-y-1 mb-4">
-                <p className="text-slate-600 text-sm line-clamp-2">
-                  {attraction.description}
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">{getCategoryIcon(attraction.category)}</span>
-                  <span className={`rounded-full text-xs font-medium px-2 py-1 ${getPriceRangeColor(attraction.priceRange)}`}>
-                    {priceRanges[attraction.priceRange]}
-                  </span>
-                </div>
-                <div className="flex items-center text-sm text-slate-600">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span className="truncate">{attraction.address}</span>
-                </div>
-                <div className="flex items-center text-sm text-slate-600">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>{attraction.openingHours}</span>
-                </div>
-              </div>
-              
-              {/* Botões de Ação */}
-              <div className="flex items-center gap-2 pt-4 flex-wrap border-t">
-                <button 
-                  className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50"
-                  onClick={() => {}}
-                >
-                  <Eye className="w-4 h-4" />
-                  Ver
-                </button>
-                <button 
-                  className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-slate-700 text-sm hover:bg-slate-50"
-                  onClick={() => handleEditAttraction(attraction)}
-                >
-                  <Edit className="w-4 h-4" />
-                  Editar
-                </button>
-                <button 
-                  className="flex items-center gap-2 border border-slate-300 rounded-md px-3 py-2 text-red-600 text-sm hover:bg-red-50"
-                  onClick={() => handleDeleteAttraction(attraction.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Excluir
-                </button>
-              </div>
-            </CardBox>
-          ))}
-        </div>
-
-        {filteredAttractions.length === 0 && (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <CardBox key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+              </CardBox>
+            ))}
+          </div>
+        ) : filteredAttractions.length === 0 ? (
           <CardBox>
-            <div className="text-center py-8">
-              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum atrativo encontrado</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="text-center py-12">
+              <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <MapPin className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-slate-600 font-medium mb-1">Nenhum atrativo encontrado</p>
+              <p className="text-sm text-slate-500 mb-4">
                 {searchTerm || selectedCategory !== 'all' 
                   ? 'Tente ajustar os filtros de busca'
                   : 'Comece adicionando o primeiro atrativo turístico'
                 }
               </p>
-              <Button onClick={handleAddAttraction} className="bg-green-600 hover:bg-green-700 text-white">
+              <Button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Botão Adicionar Atrativo clicado');
+                  handleAddAttraction();
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar Atrativo
               </Button>
             </div>
           </CardBox>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredAttractions.map((attraction) => (
+              <CardBox key={attraction.id} className="hover:shadow-md transition-shadow">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="p-2 bg-slate-100 rounded-lg flex-shrink-0">
+                      <MapPin className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-slate-800 truncate mb-1">
+                        {attraction.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <span>{getCategoryIcon(attraction.category)}</span>
+                        <span>{priceRanges[attraction.priceRange]}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {attraction.isActive && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Ativo
+                      </Badge>
+                    )}
+                    {!attraction.isActive && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
+                        Inativo
+                      </Badge>
+                    )}
+                    {attraction.verified && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-blue-100 text-blue-700 border-blue-200">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verificado
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                {attraction.description && (
+                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{attraction.description}</p>
+                )}
+
+                {/* Metadata */}
+                <div className="flex items-center gap-3 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-200">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{attraction.address}</span>
+                  </div>
+                  {attraction.openingHours && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{attraction.openingHours}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Ver atração clicado', attraction.id);
+                      }}
+                      className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Editar atração clicado', attraction.id);
+                        handleEditAttraction(attraction);
+                      }}
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Excluir atração clicado', attraction.id);
+                        handleDeleteAttraction(attraction.id);
+                      }}
+                      className="text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardBox>
+            ))}
+          </div>
         )}
+
       </SectionWrapper>
     </div>
   );
@@ -754,17 +757,17 @@ const AttractionForm: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     onSave(formData);
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>
-          {attraction ? 'Editar Atrativo' : 'Novo Atrativo'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <SectionWrapper
+      variant="default"
+      title={attraction ? 'Editar Atrativo' : 'Novo Atrativo'}
+      subtitle={attraction ? 'Atualize as informações do atrativo' : 'Preencha os dados do novo atrativo turístico'}
+    >
+      <CardBox className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -841,17 +844,35 @@ const AttractionForm: React.FC<{
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Cancelar formulário atração clicado');
+                onCancel();
+              }}
+            >
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button 
+              type="submit"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Salvar atração clicado');
+                handleSubmit(e);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               {attraction ? 'Atualizar' : 'Criar'} Atrativo
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </CardBox>
+    </SectionWrapper>
   );
 };
 

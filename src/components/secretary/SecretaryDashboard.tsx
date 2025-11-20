@@ -44,10 +44,9 @@ import CATGeolocationManager from '@/components/overflow-one/CATGeolocationManag
 import StrategicAIChat from '@/components/secretary/StrategicAIChat';
 import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
-import AdvancedAnalytics from '@/components/secretary/AdvancedAnalytics';
-import RegionalData from '@/components/secretary/RegionalData';
+import PublicSettingsModal from '@/components/secretary/PublicSettingsModal';
 import { format } from 'date-fns';
-import { Brain, FileText, FileBarChart, TrendingUp, Globe } from 'lucide-react';
+import { Brain, FileText, FileBarChart } from 'lucide-react';
 
 interface Attraction {
   id: string;
@@ -82,6 +81,7 @@ export default function SecretaryDashboard() {
   const [editFormData, setEditFormData] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Attraction | Event | CAT | null>(null);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
   // Dados mock para métricas
   const loading = false;
@@ -147,11 +147,28 @@ export default function SecretaryDashboard() {
               <p className="text-blue-100 mt-2">Bem-vindo, Prefeitura Bonito</p>
             </div>
             <div className="flex gap-4">
-              <Button className="bg-blue-700 hover:bg-blue-800 text-white">
+              <Button 
+                type="button"
+                variant="secondary" 
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
                 <Building2 className="h-4 w-4 mr-2" />
                 Setor Público
               </Button>
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
+              <Button 
+                type="button"
+                variant="secondary" 
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsSettingsDialogOpen(true);
+                }}
+              >
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
@@ -166,7 +183,13 @@ export default function SecretaryDashboard() {
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Secretaria</h2>
             <nav className="space-y-2">
               <button
-                onClick={() => setActiveSection('overview')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Visão Geral');
+                  setActiveSection('overview');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'overview' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -177,7 +200,13 @@ export default function SecretaryDashboard() {
                 Visão Geral
               </button>
               <button
-                onClick={() => setActiveSection('inventory')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Inventário Turístico');
+                  setActiveSection('inventory');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'inventory' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -188,7 +217,13 @@ export default function SecretaryDashboard() {
                 Inventário Turístico
               </button>
               <button
-                onClick={() => setActiveSection('events')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Gestão de Eventos');
+                  setActiveSection('events');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'events' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -199,7 +234,13 @@ export default function SecretaryDashboard() {
                 Gestão de Eventos
               </button>
               <button
-                onClick={() => setActiveSection('cats')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Gestão de CATs');
+                  setActiveSection('cats');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'cats' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -210,7 +251,13 @@ export default function SecretaryDashboard() {
                 Gestão de CATs
               </button>
               <button
-                onClick={() => setActiveSection('heatmaps')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Mapas de Calor');
+                  setActiveSection('heatmaps');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'heatmaps' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -221,7 +268,13 @@ export default function SecretaryDashboard() {
                 Mapas de Calor
               </button>
               <button
-                onClick={() => setActiveSection('ai-strategic')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em IA Estratégica');
+                  setActiveSection('ai-strategic');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'ai-strategic' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -232,7 +285,13 @@ export default function SecretaryDashboard() {
                 IA Estratégica
               </button>
               <button
-                onClick={() => setActiveSection('documents')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Upload Documentos');
+                  setActiveSection('documents');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'documents' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -243,29 +302,13 @@ export default function SecretaryDashboard() {
                 Upload Documentos
               </button>
               <button
-                onClick={() => setActiveSection('analytics')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'analytics' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <TrendingUp className="h-4 w-4" />
-                Analytics
-              </button>
-              <button
-                onClick={() => setActiveSection('regional')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'regional' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Globe className="h-4 w-4" />
-                Dados Regionais
-              </button>
-              <button
-                onClick={() => setActiveSection('reports')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Relatórios');
+                  setActiveSection('reports');
+                }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'reports' 
                     ? 'bg-blue-100 text-blue-700' 
@@ -280,336 +323,347 @@ export default function SecretaryDashboard() {
         </div>
 
         {/* Conteúdo Principal */}
-        <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
+        <div className="flex-1 p-8 overflow-y-auto bg-gray-50 space-y-6">
 
           {/* Visão Geral */}
           {activeSection === 'overview' && (
-            <SectionWrapper 
-              variant="default" 
-              title="Visão Geral Municipal"
-              actions={
-                <div className="flex items-center gap-2">
-                  {isRealtime && (
-                    <div className="flex items-center gap-2 text-sm text-green-600">
-                      <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span>Atualizando...</span>
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={refresh}
+            <div className="space-y-6">
+              {/* Resumo Executivo - Métricas Principais */}
+              <SectionWrapper 
+                variant="default" 
+                title="Visão Geral Municipal"
+                subtitle="Resumo executivo das principais métricas e indicadores"
+                actions={
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Botão Atualizar clicado');
+                      refresh();
+                    }}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Atualizar dados"
                     disabled={loading}
-                    className="flex items-center gap-2"
                   >
                     <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    Atualizar
-                  </Button>
-                </div>
-              }
-            >
-              {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-red-800 mb-1">Erro ao carregar dados</p>
-                    <p className="text-sm text-red-700">{error}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={refresh}
-                      className="mt-2 text-red-700 border-red-300 hover:bg-red-100"
-                    >
-                      Tentar novamente
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Alertas Inteligentes */}
-              {alerts.length > 0 && (
-                <div className="mb-6 space-y-2">
-                  {alerts.slice(0, 5).map((alert) => (
-                    <div
-                      key={alert.id}
-                      className={`p-4 rounded-lg border flex items-start gap-3 ${
-                        alert.type === 'warning'
-                          ? 'bg-yellow-50 border-yellow-200'
-                          : alert.type === 'error'
-                          ? 'bg-red-50 border-red-200'
-                          : alert.type === 'success'
-                          ? 'bg-green-50 border-green-200'
-                          : 'bg-blue-50 border-blue-200'
-                      }`}
-                    >
-                      <AlertCircle
-                        className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
-                          alert.type === 'warning'
-                            ? 'text-yellow-600'
-                            : alert.type === 'error'
-                            ? 'text-red-600'
-                            : alert.type === 'success'
-                            ? 'text-green-600'
-                            : 'text-blue-600'
-                        }`}
-                      />
+                  </button>
+                }
+              >
+                {error && (
+                  <CardBox className="border-red-200 bg-red-50 mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-red-600" />
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-semibold text-slate-800">{alert.title}</p>
-                          {alert.priority === 'high' && (
-                            <Badge variant="destructive" className="text-xs">Alta Prioridade</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-700 mb-2">{alert.message}</p>
-                        {alert.actionUrl && alert.actionLabel && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setActiveSection(alert.actionUrl?.replace('#', '') || 'overview')}
-                            className="text-xs"
-                          >
-                            {alert.actionLabel}
-                          </Button>
-                        )}
+                        <p className="text-sm font-medium text-red-800 mb-1">Erro ao carregar dados</p>
+                        <p className="text-sm text-red-700">{error}</p>
                       </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          refresh();
+                        }}
+                      >
+                        Tentar novamente
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </CardBox>
+                )}
 
-              {/* Cards de Resumo */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <CardBox>
-                  {loading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-3xl font-bold text-blue-600 mb-2">
-                        {metrics.totalCATs.toLocaleString('pt-BR')}
-                      </div>
-                      <p className="text-sm text-gray-600">CATs Ativos</p>
-                    </>
-                  )}
-                </CardBox>
-                
-                <CardBox>
-                  {loading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-3xl font-bold text-green-600 mb-2">
-                        {metrics.touristsToday.toLocaleString('pt-BR')}
-                      </div>
-                      <p className="text-sm text-gray-600">Turistas Hoje</p>
-                    </>
-                  )}
-                </CardBox>
-                
-                <CardBox>
-                  {loading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-3xl font-bold text-purple-600 mb-2">
-                        {metrics.totalAttractions.toLocaleString('pt-BR')}
-                      </div>
-                      <p className="text-sm text-gray-600">Atrações</p>
-                    </>
-                  )}
-                </CardBox>
-                
-                <CardBox>
-                  {loading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-3xl font-bold text-orange-600 mb-2">
-                        {metrics.totalEvents.toLocaleString('pt-BR')}
-                      </div>
-                      <p className="text-sm text-gray-600">Eventos</p>
-                    </>
-                  )}
-                </CardBox>
-              </div>
-
-              {/* Gráficos */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                {/* Gráfico de Turistas por Dia */}
-                <CardBox>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Turistas por Dia (Últimos 7 dias)</h3>
-                  {loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                      <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-                    </div>
-                  ) : metrics.touristsByDay.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={metrics.touristsByDay}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
-                          tickFormatter={(value) => format(new Date(value), 'dd/MM')}
-                        />
-                        <YAxis />
-                        <Tooltip 
-                          labelFormatter={(value) => format(new Date(value), 'dd/MM/yyyy')}
-                        />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="count" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          name="Turistas"
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-64 flex items-center justify-center text-gray-500">
-                      <p>Nenhum dado disponível</p>
-                    </div>
-                  )}
-                </CardBox>
-
-                {/* Gráfico de Origem dos Turistas */}
-                <CardBox>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Origem dos Turistas (Top 10)</h3>
-                  {loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                      <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-                    </div>
-                  ) : metrics.touristsByOrigin.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={metrics.touristsByOrigin}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="origin" 
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                        />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="count" fill="#10b981" name="Turistas" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-64 flex items-center justify-center text-gray-500">
-                      <p>Nenhum dado disponível</p>
-                    </div>
-                  )}
-                </CardBox>
-              </div>
-
-              {/* Performance dos CATs e Atividades Recentes */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <CardBox>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Building2 className="h-5 w-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-slate-800">Performance dos CATs</h3>
-                  </div>
-                  {loading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="p-3 bg-gray-50 rounded-lg space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : metrics.cats.length > 0 ? (
-                  <div className="space-y-3">
-                      {metrics.cats.map((cat) => (
-                      <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <h4 className="font-medium text-slate-800">{cat.name}</h4>
-                            <p className="text-sm text-gray-600">{cat.tourists} turistas hoje</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                              <span className="text-sm font-medium">{cat.rating.toFixed(1)}</span>
+                {/* Alertas Inteligentes - Compacto */}
+                {alerts.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {alerts.slice(0, 3).map((alert) => (
+                      <CardBox
+                        key={alert.id}
+                        className={`p-3 ${
+                          alert.type === 'warning'
+                            ? 'bg-yellow-50 border-yellow-200'
+                            : alert.type === 'error'
+                            ? 'bg-red-50 border-red-200'
+                            : alert.type === 'success'
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-blue-50 border-blue-200'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <AlertCircle
+                            className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                              alert.type === 'warning'
+                                ? 'text-yellow-600'
+                                : alert.type === 'error'
+                                ? 'text-red-600'
+                                : alert.type === 'success'
+                                ? 'text-green-600'
+                                : 'text-blue-600'
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-slate-800 truncate">{alert.title}</p>
+                            {alert.actionUrl && alert.actionLabel && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setActiveSection(alert.actionUrl?.replace('#', '') || 'overview');
+                                }}
+                                className="text-xs h-6 px-2 mt-1"
+                              >
+                                {alert.actionLabel}
+                              </Button>
+                            )}
                           </div>
-                          <span className={`rounded-full text-xs font-medium px-2 py-1 ${
-                            cat.status === 'excellent' ? 'bg-green-100 text-green-700' :
-                            cat.status === 'good' ? 'bg-blue-100 text-blue-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {cat.status === 'excellent' ? 'Excelente' :
-                             cat.status === 'good' ? 'Bom' : 'Melhorar'}
-                          </span>
                         </div>
-                      </div>
+                      </CardBox>
                     ))}
                   </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Building2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p>Nenhum CAT cadastrado</p>
-                    </div>
-                  )}
-                </CardBox>
+                )}
 
-                <CardBox>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Bell className="h-5 w-5 text-green-600" />
-                    <h3 className="text-lg font-semibold text-slate-800">Atividades Recentes</h3>
-                  </div>
-                  {loading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Skeleton className="h-4 w-4 rounded" />
-                          <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-48" />
-                            <Skeleton className="h-3 w-16" />
-                          </div>
+                {/* Cards de Métricas Principais - Compacto */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <CardBox className="p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <span className="text-xs font-medium text-slate-600">CATs Ativos</span>
+                    </div>
+                    {loading ? (
+                      <Skeleton className="h-7 w-16" />
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {metrics.totalCATs.toLocaleString('pt-BR')}
                         </div>
-                      ))}
-                    </div>
-                  ) : metrics.recentActivities.length > 0 ? (
-                    <div className="space-y-3">
-                      {metrics.recentActivities.slice(0, 10).map((activity) => (
-                        <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          {activity.type === 'event' ? (
-                            <Calendar className="h-4 w-4 text-blue-600" />
-                          ) : activity.type === 'tourist' ? (
+                        <div className="text-xs text-slate-500 mt-0.5">Centros de atendimento</div>
+                      </>
+                    )}
+                  </CardBox>
+                  
+                  <CardBox className="p-4">
+                    <div className="flex items-center gap-2 mb-1">
                       <Users className="h-4 w-4 text-green-600" />
-                          ) : activity.type === 'attraction' ? (
-                            <MapPin className="h-4 w-4 text-purple-600" />
-                          ) : (
-                            <Building2 className="h-4 w-4 text-orange-600" />
-                          )}
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-800">{activity.message}</p>
-                            <p className="text-xs text-gray-500">
-                              {format(activity.timestamp, 'HH:mm')}
-                            </p>
-                          </div>
-                      </div>
-                      ))}
+                      <span className="text-xs font-medium text-slate-600">Turistas Hoje</span>
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Bell className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p>Nenhuma atividade recente</p>
-                  </div>
-                  )}
-                </CardBox>
-              </div>
-            </SectionWrapper>
+                    {loading ? (
+                      <Skeleton className="h-7 w-16" />
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-green-600">
+                          {metrics.touristsToday.toLocaleString('pt-BR')}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">Visitantes atendidos</div>
+                      </>
+                    )}
+                  </CardBox>
+                  
+                  <CardBox className="p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin className="h-4 w-4 text-purple-600" />
+                      <span className="text-xs font-medium text-slate-600">Atrações</span>
+                    </div>
+                    {loading ? (
+                      <Skeleton className="h-7 w-16" />
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {metrics.totalAttractions.toLocaleString('pt-BR')}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">Pontos turísticos</div>
+                      </>
+                    )}
+                  </CardBox>
+                  
+                  <CardBox className="p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar className="h-4 w-4 text-orange-600" />
+                      <span className="text-xs font-medium text-slate-600">Eventos</span>
+                    </div>
+                    {loading ? (
+                      <Skeleton className="h-7 w-16" />
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-orange-600">
+                          {metrics.totalEvents.toLocaleString('pt-BR')}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">Eventos programados</div>
+                      </>
+                    )}
+                  </CardBox>
+                </div>
+
+                {/* Gráficos */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                  {/* Gráfico de Turistas por Dia */}
+                  <CardBox className="p-4">
+                    <h3 className="text-sm font-semibold text-slate-800 mb-3">Turistas por Dia (Últimos 7 dias)</h3>
+                    {loading ? (
+                      <div className="h-64 flex items-center justify-center">
+                        <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                      </div>
+                    ) : metrics.touristsByDay.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={metrics.touristsByDay}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(value) => format(new Date(value), 'dd/MM')}
+                          />
+                          <YAxis />
+                          <Tooltip 
+                            labelFormatter={(value) => format(new Date(value), 'dd/MM/yyyy')}
+                          />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            stroke="#3b82f6" 
+                            strokeWidth={2}
+                            name="Turistas"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center text-gray-500">
+                        <p>Nenhum dado disponível</p>
+                      </div>
+                    )}
+                  </CardBox>
+
+                  {/* Gráfico de Origem dos Turistas */}
+                  <CardBox className="p-4">
+                    <h3 className="text-sm font-semibold text-slate-800 mb-3">Origem dos Turistas (Top 10)</h3>
+                    {loading ? (
+                      <div className="h-64 flex items-center justify-center">
+                        <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                      </div>
+                    ) : metrics.touristsByOrigin.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={metrics.touristsByOrigin}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="origin" 
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="count" fill="#10b981" name="Turistas" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center text-gray-500">
+                        <p>Nenhum dado disponível</p>
+                      </div>
+                    )}
+                  </CardBox>
+                </div>
+
+                {/* Performance dos CATs e Atividades Recentes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <CardBox className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <h3 className="text-sm font-semibold text-slate-800">Performance dos CATs</h3>
+                    </div>
+                    {loading ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : metrics.cats.length > 0 ? (
+                      <div className="space-y-2">
+                        {metrics.cats.map((cat) => (
+                          <div key={cat.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                            <div>
+                              <h4 className="font-medium text-slate-800">{cat.name}</h4>
+                              <p className="text-sm text-gray-600">{cat.tourists} turistas hoje</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                <span className="text-sm font-medium">{cat.rating.toFixed(1)}</span>
+                              </div>
+                              <Badge className={`rounded-full text-xs px-2 py-0.5 ${
+                                cat.status === 'excellent' ? 'bg-green-100 text-green-700 border-green-200' :
+                                cat.status === 'good' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                'bg-yellow-100 text-yellow-700 border-yellow-200'
+                              }`}>
+                                {cat.status === 'excellent' ? 'Excelente' :
+                                 cat.status === 'good' ? 'Bom' : 'Melhorar'}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Building2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <p>Nenhum CAT cadastrado</p>
+                      </div>
+                    )}
+                  </CardBox>
+
+                  <CardBox className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Bell className="h-4 w-4 text-green-600" />
+                      <h3 className="text-sm font-semibold text-slate-800">Atividades Recentes</h3>
+                    </div>
+                    {loading ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <Skeleton className="h-4 w-4 rounded" />
+                            <div className="flex-1 space-y-2">
+                              <Skeleton className="h-4 w-48" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : metrics.recentActivities.length > 0 ? (
+                      <div className="space-y-2">
+                        {metrics.recentActivities.slice(0, 8).map((activity) => (
+                          <div key={activity.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                            {activity.type === 'event' ? (
+                              <Calendar className="h-4 w-4 text-blue-600" />
+                            ) : activity.type === 'tourist' ? (
+                              <Users className="h-4 w-4 text-green-600" />
+                            ) : activity.type === 'attraction' ? (
+                              <MapPin className="h-4 w-4 text-purple-600" />
+                            ) : (
+                              <Building2 className="h-4 w-4 text-orange-600" />
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-slate-800">{activity.message}</p>
+                              <p className="text-xs text-gray-500">
+                                {format(activity.timestamp, 'HH:mm')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Bell className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <p>Nenhuma atividade recente</p>
+                      </div>
+                    )}
+                  </CardBox>
+                </div>
+              </SectionWrapper>
+            </div>
           )}
 
           {/* Inventário Turístico */}
@@ -629,12 +683,20 @@ export default function SecretaryDashboard() {
 
           {/* Mapas de Calor */}
           {activeSection === 'heatmaps' && (
-            <SectionWrapper variant="default" title="Mapas de Calor">
-              <div className="text-center py-12 text-gray-500">
-                <Map className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-lg font-medium mb-2">Mapas de Calor</p>
-                <p className="text-sm">Funcionalidade em desenvolvimento</p>
-              </div>
+            <SectionWrapper 
+              variant="default" 
+              title="Mapas de Calor"
+              subtitle="Visualização geográfica do fluxo turístico"
+            >
+              <CardBox>
+                <div className="text-center py-12">
+                  <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <Map className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium mb-1">Mapas de Calor</p>
+                  <p className="text-sm text-slate-500">Funcionalidade em desenvolvimento</p>
+                </div>
+              </CardBox>
             </SectionWrapper>
           )}
 
@@ -648,15 +710,6 @@ export default function SecretaryDashboard() {
             <DocumentUploadPublic />
           )}
 
-          {/* Analytics Avançados */}
-          {activeSection === 'analytics' && (
-            <AdvancedAnalytics />
-          )}
-
-          {/* Dados Regionais */}
-          {activeSection === 'regional' && (
-            <RegionalData />
-          )}
 
           {/* Relatórios */}
           {activeSection === 'reports' && (
@@ -725,9 +778,12 @@ export default function SecretaryDashboard() {
             </div>
           </div>
         </div>
-      )}
+          )}
         </div>
       </div>
+
+      {/* Modal de Configurações */}
+      <PublicSettingsModal isOpen={isSettingsDialogOpen} onClose={() => setIsSettingsDialogOpen(false)} />
     </div>
   );
 }

@@ -493,3 +493,4 @@ Responda em JSON:
 export const adaptiveDiagnosticService = new AdaptiveDiagnosticService();
 
 
+

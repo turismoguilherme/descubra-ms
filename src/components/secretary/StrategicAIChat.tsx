@@ -8,7 +8,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { 
@@ -21,7 +20,8 @@ import {
   AlertCircle,
   CheckCircle,
   Brain,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 import { strategicAIService, StrategicRecommendation } from '@/services/public/strategicAIService';
 import { format } from 'date-fns';
@@ -141,158 +141,141 @@ const StrategicAIChat: React.FC = () => {
     <SectionWrapper 
       variant="default" 
       title="IA Estratégica"
-      subtitle="Análise inteligente de dados municipais"
+      subtitle="Assistente inteligente para estratégias e análises municipais"
       actions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setMessages([]);
-            addWelcomeMessage();
-          }}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Limpar
-        </Button>
+        <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 gap-1">
+          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+          Online
+        </Badge>
       }
     >
-      <div className="space-y-6">
-        {/* Área de Chat */}
-        <div className="bg-white border border-slate-200 rounded-lg shadow-sm" style={{ height: 'calc(100vh - 400px)', minHeight: '500px' }}>
-          <ScrollArea className="h-full p-4">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {message.type === 'ai' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-purple-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Chat Interface */}
+        <div className="lg:col-span-2">
+          <CardBox>
+            {/* Área de Mensagens */}
+            <div className="p-3 min-h-[300px] max-h-[400px] overflow-y-auto space-y-3 mb-3">
+              {messages.length === 0 ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 bg-blue-50 rounded-lg p-4">
+                    <p className="text-slate-800 font-medium mb-1">
+                      Olá! Sou sua IA Estratégica da ViaJAR.
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Analiso os dados do seu município e forneço recomendações estratégicas baseadas em evidências. Como posso ajudar você hoje?
+                    </p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                      <Clock className="h-3 w-3" />
+                      <span>{new Date().toLocaleTimeString('pt-BR')}</span>
                     </div>
-                  )}
-                  
-                  <div className={`flex flex-col max-w-[80%] ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
-                    <CardBox className={message.type === 'user' ? 'bg-blue-50 border-blue-200' : ''}>
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm text-slate-800 whitespace-pre-wrap flex-1">{message.content}</p>
+                  </div>
+                </div>
+              ) : (
+                messages.map((message) => (
+                  <div key={message.id} className={`flex items-start gap-3 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.type === 'user' ? 'bg-blue-100' : 'bg-purple-100'
+                    }`}>
+                      {message.type === 'user' ? (
+                        <User className="h-4 w-4 text-blue-600" />
+                      ) : (
+                      <Bot className="h-4 w-4 text-purple-600" />
+                      )}
+                    </div>
+                    <div className={`flex-1 ${message.type === 'user' ? 'text-right' : ''}`}>
+                      <div className={`inline-block rounded-lg p-3 ${
+                        message.type === 'user' 
+                          ? 'bg-blue-100 text-blue-900' 
+                          : 'bg-purple-50 text-slate-800'
+                      }`}>
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                      <div className={`flex items-center gap-2 mt-1 text-xs text-slate-500 ${message.type === 'user' ? 'justify-end' : ''}`}>
+                        <Clock className="h-3 w-3" />
+                        <span>{format(message.timestamp, 'HH:mm')}</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {format(message.timestamp, 'HH:mm')}
-                      </p>
-                    </CardBox>
 
-                    {/* Recomendações em Grid */}
+                      {/* Recomendações */}
                     {message.recommendations && message.recommendations.length > 0 && (
-                      <div className="mt-3 w-full">
-                        <p className="text-xs font-semibold text-gray-700 mb-3">Recomendações Estratégicas:</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="mt-3 space-y-2">
                           {message.recommendations.map((rec) => (
-                            <CardBox key={rec.id}>
-                              <div className="flex justify-between items-start mb-3">
-                                <h4 className="font-semibold text-sm text-slate-800 flex-1">{rec.title}</h4>
+                            <div key={rec.id} className="bg-white rounded-lg p-3 border border-slate-200">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-semibold text-xs text-slate-800 flex-1">{rec.title}</h4>
                                 <Badge className={`${getPriorityColor(rec.priority)} text-xs`}>
                                   {getPriorityLabel(rec.priority)}
                                 </Badge>
                               </div>
-                              <p className="text-xs text-gray-600 mb-3">{rec.description}</p>
-                              {rec.estimatedImpact && (
-                                <div className="flex items-center gap-1 mb-3 text-xs text-gray-600">
-                                  <TrendingUp className="h-3 w-3 text-green-600" />
-                                  <span>Impacto: {rec.estimatedImpact}</span>
+                              <p className="text-xs text-gray-600">{rec.description}</p>
                                 </div>
-                              )}
-                              {rec.actionItems && rec.actionItems.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-slate-200">
-                                  <p className="text-xs font-semibold text-gray-700 mb-2">Ações:</p>
-                                  <ul className="text-xs text-gray-600 space-y-1">
-                                    {rec.actionItems.map((item, idx) => (
-                                      <li key={idx} className="flex items-start gap-2">
-                                        <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                                        <span>{item}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </CardBox>
                           ))}
-                        </div>
                       </div>
                     )}
 
-                    {/* Insights em CardBox */}
+                      {/* Insights */}
                     {message.insights && message.insights.length > 0 && (
-                      <CardBox className="mt-3 bg-yellow-50 border-yellow-200">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Lightbulb className="h-4 w-4 text-yellow-600" />
+                        <div className="mt-3 bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Lightbulb className="h-3 w-3 text-yellow-600" />
                           <p className="text-xs font-semibold text-gray-700">Insights:</p>
                         </div>
                         <ul className="text-xs text-gray-700 space-y-1">
                           {message.insights.map((insight, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              <span className="text-yellow-600">•</span>
-                              <span>{insight}</span>
-                            </li>
+                              <li key={idx}>• {insight}</li>
                           ))}
                         </ul>
-                      </CardBox>
-                    )}
-                  </div>
-
-                  {message.type === 'user' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-blue-600" />
                     </div>
                   )}
                 </div>
-              ))}
+                  </div>
+                ))
+                  )}
 
               {loading && (
-                <div className="flex gap-3 justify-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-purple-600" />
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <RefreshCw className="h-4 w-4 animate-spin text-purple-600" />
                   </div>
-                  <CardBox>
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-                      <p className="text-sm text-gray-600">Analisando dados e gerando recomendações...</p>
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <span className="text-sm text-slate-600">Analisando...</span>
                     </div>
-                  </CardBox>
                 </div>
               )}
 
               <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
         </div>
 
-        {/* Perguntas Sugeridas */}
-        {messages.length <= 1 && (
-          <CardBox>
-            <p className="text-xs font-semibold text-gray-700 mb-3">Perguntas Sugeridas:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-              {suggestedQuestions.map((question, idx) => (
+            {/* Ações Rápidas */}
+            <div className="p-3 border-t border-slate-200">
+              <div className="flex flex-wrap gap-2 mb-2">
+                {suggestedQuestions.slice(0, 6).map((question, idx) => (
                 <Button
                   key={idx}
+                    type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => handleSuggestedQuestion(question)}
-                  className="text-xs justify-start"
+                    className="rounded-full text-xs px-3 py-1 border-slate-300 text-slate-700 hover:bg-slate-100"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Pergunta sugerida clicada', question);
+                      handleSuggestedQuestion(question);
+                    }}
+                    disabled={loading}
                 >
                   {question}
                 </Button>
               ))}
             </div>
-          </CardBox>
-        )}
 
-        {/* Input Area */}
-        <CardBox>
+              {/* Campo de Input */}
           <div className="flex gap-2">
             <Input
               ref={inputRef}
+                  placeholder="Pergunte sobre estratégias, métricas, turismo municipal..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => {
@@ -301,23 +284,70 @@ const StrategicAIChat: React.FC = () => {
                   handleSendMessage();
                 }
               }}
-              placeholder="Faça uma pergunta sobre o turismo municipal..."
               disabled={loading}
               className="flex-1"
             />
             <Button
-              onClick={handleSendMessage}
-              disabled={loading || !inputValue.trim()}
-              className="bg-blue-600 hover:bg-blue-700"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botão Enviar mensagem IA clicado', { inputValue, loading });
+                    handleSendMessage();
+                  }}
+                  disabled={!inputValue.trim() || loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                    <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />
               )}
             </Button>
+              </div>
+            </div>
+          </CardBox>
+        </div>
+
+        {/* Funcionalidades da IA */}
+        <div className="space-y-3">
+          <CardBox>
+            <div className="flex items-center gap-2 mb-3">
+              <Brain className="h-4 w-4 text-purple-600" />
+              <h3 className="text-base font-semibold text-slate-800">Funcionalidades</h3>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 text-sm text-slate-700">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Análise de performance dos CATs</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-slate-700">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Recomendações estratégicas baseadas em dados</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-slate-700">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Análise de atrações e eventos</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-slate-700">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Insights sobre tendências de turismo</span>
+              </div>
+            </div>
+          </CardBox>
+
+          <CardBox>
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <h3 className="text-base font-semibold text-slate-800">Dicas Rápidas</h3>
+            </div>
+            <div className="space-y-1.5 text-sm text-slate-600">
+              <p>• Use os dados de Analytics para entender tendências</p>
+              <p>• Consulte Dados Regionais para contexto</p>
+              <p>• Analise performance dos CATs regularmente</p>
           </div>
         </CardBox>
+        </div>
       </div>
     </SectionWrapper>
   );

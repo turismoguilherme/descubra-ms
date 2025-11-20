@@ -29,6 +29,7 @@ export interface TourismEvent {
   expected_audience?: number; // Não está na tabela
   budget?: number; // Não está na tabela
   status?: 'planned' | 'active' | 'completed' | 'cancelled'; // Não está na tabela
+  approval_status?: 'pending' | 'approved' | 'rejected'; // Status de aprovação para eventos do MS
   contact_phone?: string; // Não está na tabela
   contact_email?: string; // Não está na tabela
   contact_website?: string; // Não está na tabela
@@ -40,6 +41,7 @@ export interface TourismEvent {
 export interface EventFilters {
   category?: string;
   status?: string;
+  approval_status?: 'pending' | 'approved' | 'rejected';
   city?: string;
   state?: string;
   start_date?: string;
@@ -65,6 +67,9 @@ export class EventService {
         }
         if (filters.status) {
           query = query.eq('status', filters.status);
+        }
+        if (filters.approval_status) {
+          query = query.eq('approval_status', filters.approval_status);
         }
         if (filters.city) {
           query = query.eq('city', filters.city);
@@ -153,6 +158,7 @@ export class EventService {
         images: event.images && Array.isArray(event.images) ? event.images : undefined,
         category: event.category,
         status: event.status,
+        approval_status: event.approval_status,
         expected_audience: event.expected_audience,
         budget: event.budget,
         contact_phone: event.contact_phone,

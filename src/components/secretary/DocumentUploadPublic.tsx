@@ -12,18 +12,15 @@ import CardBox from '@/components/ui/CardBox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Upload, 
-  Trash2, 
-  Download, 
-  Loader2,
-  FileText,
-  AlertCircle,
-  CheckCircle,
-  Brain
-} from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -31,15 +28,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { 
+  Upload, 
+  File, 
+  Trash2, 
+  Download, 
+  Loader2, 
+  FileText, 
+  FileSpreadsheet, 
+  FileJson,
+  AlertCircle,
+  CheckCircle,
+  Calendar,
+  FileType,
+  X,
+  Brain,
+  Clock
+} from 'lucide-react';
 import { format } from 'date-fns';
 
 const DocumentUploadPublic: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [documents, setDocuments] = useState<PublicDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<PublicDocument | null>(null);
+  const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     file: null as File | null,
     title: '',
@@ -47,6 +63,8 @@ const DocumentUploadPublic: React.FC = () => {
     category: 'outros' as 'plano_diretor' | 'relatorio' | 'lei' | 'portaria' | 'outros',
     tags: [] as string[]
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const categories = [
     { value: 'plano_diretor', label: 'Plano Diretor', icon: '📋' },
@@ -59,19 +77,26 @@ const DocumentUploadPublic: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       loadDocuments();
+    } else {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   const loadDocuments = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
+    setError(null);
     try {
       const docs = await publicDocumentService.getDocuments(user.id, { is_active: true });
-      setDocuments(docs);
-    } catch (error) {
-      console.error('Erro ao carregar documentos:', error);
-      alert('Erro ao carregar documentos. Tente novamente.');
+      setDocuments(docs || []);
+    } catch (err: any) {
+      console.error('Erro ao carregar documentos:', err);
+      setError('Erro ao carregar documentos. Tente novamente.');
+      setDocuments([]);
     } finally {
       setIsLoading(false);
     }
@@ -80,11 +105,29 @@ const DocumentUploadPublic: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('Arquivo muito grande. Tamanho máximo: 10MB');
-        return;
-      }
+      setUploadForm({
+        ...uploadForm,
+        file,
+        title: file.name.replace(/\.[^/.]+$/, '')
+      });
+    }
+  };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
       setUploadForm({
         ...uploadForm,
         file,
@@ -95,7 +138,11 @@ const DocumentUploadPublic: React.FC = () => {
 
   const handleUpload = async () => {
     if (!user?.id || !uploadForm.file) {
-      alert('Selecione um arquivo para upload');
+      toast({
+        title: 'Erro',
+        description: 'Selecione um arquivo para upload',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -108,7 +155,10 @@ const DocumentUploadPublic: React.FC = () => {
         tags: uploadForm.tags.length > 0 ? uploadForm.tags : undefined
       });
 
-      alert('Documento enviado com sucesso!');
+      toast({
+        title: 'Sucesso',
+        description: 'Documento enviado com sucesso!'
+      });
       
       setUploadForm({
         file: null,
@@ -117,28 +167,36 @@ const DocumentUploadPublic: React.FC = () => {
         category: 'outros',
         tags: []
       });
-      setShowUploadForm(false);
       await loadDocuments();
-    } catch (error: any) {
-      console.error('Erro ao fazer upload:', error);
-      alert(`Erro ao fazer upload: ${error.message || 'Tente novamente'}`);
+    } catch (err: any) {
+      console.error('Erro ao fazer upload:', err);
+      toast({
+        title: 'Erro',
+        description: err?.message || 'Não foi possível fazer upload do documento',
+        variant: 'destructive'
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este documento?')) {
-      return;
-    }
+    if (!confirm('Tem certeza que deseja excluir este documento?')) return;
 
     try {
       await publicDocumentService.deleteDocument(id);
-      alert('Documento excluído com sucesso!');
+      toast({
+        title: 'Sucesso',
+        description: 'Documento excluído com sucesso'
+      });
       await loadDocuments();
-    } catch (error) {
-      console.error('Erro ao excluir documento:', error);
-      alert('Erro ao excluir documento. Tente novamente.');
+    } catch (err: any) {
+      console.error('Erro ao excluir documento:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o documento',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -146,19 +204,40 @@ const DocumentUploadPublic: React.FC = () => {
     setIsProcessing(id);
     try {
       await publicDocumentService.processDocumentWithAI(id);
-      alert('Documento processado com sucesso!');
+      toast({
+        title: 'Sucesso',
+        description: 'Documento processado com sucesso!'
+      });
       await loadDocuments();
-    } catch (error) {
-      console.error('Erro ao processar documento:', error);
-      alert('Erro ao processar documento. Tente novamente.');
+    } catch (err: any) {
+      console.error('Erro ao processar documento:', err);
+      toast({
+        title: 'Erro',
+        description: err?.message || 'Não foi possível processar o documento',
+        variant: 'destructive'
+      });
     } finally {
       setIsProcessing(null);
     }
   };
 
-  const handleDownload = (document: PublicDocument) => {
-    const url = publicDocumentService.getDocumentUrl(document);
-    window.open(url, '_blank');
+  const handleDownload = async (document: PublicDocument) => {
+    try {
+      const url = publicDocumentService.getDocumentUrl(document);
+      window.open(url, '_blank');
+    } catch (err: any) {
+      console.error('Erro ao fazer download:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível fazer download do documento',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleViewAnalysis = (doc: PublicDocument) => {
+    setSelectedDocument(doc);
+    setIsAnalysisDialogOpen(true);
   };
 
   const getCategoryLabel = (category: string) => {
@@ -181,230 +260,439 @@ const DocumentUploadPublic: React.FC = () => {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
 
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (['pdf'].includes(ext || '')) return <FileText className="h-5 w-5 text-red-600" />;
+    if (['xls', 'xlsx', 'csv'].includes(ext || '')) return <FileSpreadsheet className="h-5 w-5 text-green-600" />;
+    if (['json', 'xml'].includes(ext || '')) return <FileJson className="h-5 w-5 text-yellow-600" />;
+    return <File className="h-5 w-5 text-blue-600" />;
+  };
+
+  if (!user) {
+    return (
+      <SectionWrapper variant="default" title="Upload de Documentos">
+        <CardBox>
+          <div className="text-center py-8">
+            <p className="text-gray-600">Você precisa estar logado para acessar esta funcionalidade.</p>
+          </div>
+        </CardBox>
+      </SectionWrapper>
+    );
+  }
+
   return (
-    <SectionWrapper 
-      variant="default" 
-      title="Upload de Documentos"
-      subtitle="Gerencie documentos municipais como planos diretores, relatórios, leis e portarias"
-      actions={
-        <Button
-          onClick={() => setShowUploadForm(!showUploadForm)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          {showUploadForm ? 'Cancelar' : 'Novo Documento'}
-        </Button>
-      }
-    >
-      <div className="space-y-6">
-        {/* Formulário de Upload */}
-        {showUploadForm && (
-          <CardBox>
-            <h3 className="font-semibold text-slate-800 mb-4">Novo Documento</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="file">Arquivo *</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png"
-                    className="mt-1"
-                  />
-                  {uploadForm.file && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      {uploadForm.file.name} ({formatFileSize(uploadForm.file.size)})
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Categoria</Label>
-                  <Select
-                    value={uploadForm.category}
-                    onValueChange={(value: any) => setUploadForm({ ...uploadForm, category: value })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.icon} {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="title">Título *</Label>
-                <Input
-                  id="title"
-                  value={uploadForm.title}
-                  onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
-                  placeholder="Ex: Plano Diretor de Turismo 2024"
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={uploadForm.description}
-                  onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
-                  placeholder="Descreva o conteúdo do documento..."
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleUpload}
-                  disabled={isUploading || !uploadForm.file || !uploadForm.title}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Enviar Documento
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowUploadForm(false);
-                    setUploadForm({
-                      file: null,
-                      title: '',
-                      description: '',
-                      category: 'outros',
-                      tags: []
-                    });
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </div>
+    <div className="space-y-6">
+      {/* Upload Form */}
+      <SectionWrapper 
+        variant="default" 
+        title="Upload de Documentos"
+        subtitle="Envie documentos municipais para análise e processamento pela IA"
+      >
+        {error && (
+          <CardBox className="border-red-200 bg-red-50 mb-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           </CardBox>
         )}
 
-        {/* Lista de Documentos em Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Área de Upload */}
+          <CardBox className="border-2 border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-blue-50">
+            <div
+              className={`p-8 text-center transition-all ${
+                isDragOver 
+                  ? 'border-blue-400 bg-blue-100' 
+                  : 'hover:bg-blue-50'
+              } rounded-lg cursor-pointer`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById('file-input')?.click()}
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-4 bg-blue-100 rounded-full">
+                  <Upload className="h-8 w-8 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-slate-800 mb-1">
+                    {uploadForm.file ? uploadForm.file.name : 'Clique ou arraste arquivos aqui'}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {uploadForm.file 
+                      ? `${formatFileSize(uploadForm.file.size)} • Clique para alterar`
+                      : 'Suporte para PDF, Excel, Word e imagens'}
+                  </p>
+                </div>
+                {uploadForm.file && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setUploadForm({ ...uploadForm, file: null, title: '' });
+                    }}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Remover arquivo
+                  </Button>
+                )}
+              </div>
+              <input
+                id="file-input"
+                type="file"
+                onChange={handleFileChange}
+                disabled={isUploading}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png"
+              />
+            </div>
+          </CardBox>
+
+          {/* Formulário de Detalhes */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title" className="text-slate-700 font-medium">
+                Título do Documento
+              </Label>
+              <Input
+                id="title"
+                value={uploadForm.title}
+                onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                placeholder="Ex: Plano Diretor de Turismo 2024"
+                disabled={isUploading}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description" className="text-slate-700 font-medium">
+                Descrição (opcional)
+              </Label>
+              <Input
+                id="description"
+                value={uploadForm.description}
+                onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                placeholder="Adicione uma descrição..."
+                disabled={isUploading}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="category" className="text-slate-700 font-medium">
+                Categoria
+              </Label>
+              <Select
+                value={uploadForm.category}
+                onValueChange={(value: any) => setUploadForm({ ...uploadForm, category: value })}
+                disabled={isUploading}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.icon} {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Enviar Documento clicado');
+                handleUpload();
+              }}
+              disabled={!uploadForm.file || isUploading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Enviar Documento
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* Documents List */}
+      <SectionWrapper 
+        variant="default" 
+        title="Meus Documentos"
+        subtitle={`${documents.length} documento(s) cadastrado(s)`}
+      >
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <CardBox key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-              </CardBox>
-            ))}
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           </div>
         ) : documents.length === 0 ? (
           <CardBox>
             <div className="text-center py-12">
-              <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-slate-600 font-medium mb-2">Nenhum documento cadastrado</p>
-              <p className="text-sm text-slate-500">
-                Clique em "Novo Documento" para fazer o primeiro upload
-              </p>
+              <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <File className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-slate-600 font-medium mb-1">Nenhum documento cadastrado</p>
+              <p className="text-sm text-slate-500">Envie seu primeiro documento usando o formulário acima</p>
             </div>
           </CardBox>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documents.map((doc) => (
-              <CardBox key={doc.id}>
-                {/* Header do Card */}
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-800 mb-1">{doc.title || doc.file_name}</h3>
-                    <p className="text-xs text-gray-600">{getCategoryLabel(doc.category || 'outros')}</p>
-                  </div>
-                  <Badge className={`${getStatusColor(doc.analysis_status)} text-xs`}>
-                    {doc.analysis_status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
-                    {doc.analysis_status === 'processing' && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                    {doc.analysis_status === 'failed' && <AlertCircle className="h-3 w-3 mr-1" />}
-                    {doc.analysis_status === 'pending' && 'Pendente'}
-                    {doc.analysis_status === 'processing' && 'Processando'}
-                    {doc.analysis_status === 'completed' && 'Processado'}
-                    {doc.analysis_status === 'failed' && 'Erro'}
-                  </Badge>
-                </div>
-
-                {/* Informações Secundárias */}
-                {doc.description && (
-                  <p className="text-sm text-slate-600 mb-3 line-clamp-2">{doc.description}</p>
-                )}
-
-                <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                  <span>{formatFileSize(doc.file_size)}</span>
-                  <span>•</span>
-                  <span>{format(new Date(doc.created_at), 'dd/MM/yyyy')}</span>
-                </div>
-
-                {/* Análise da IA (se disponível) */}
-                {doc.analysis_result && doc.analysis_status === 'completed' && (
-                  <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded text-xs">
-                    <div className="flex items-center gap-1 mb-1">
-                      <Brain className="h-3 w-3 text-green-600" />
-                      <span className="font-semibold text-green-800">Análise disponível</span>
+              <CardBox key={doc.id} className="hover:shadow-md transition-shadow">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="p-2 bg-slate-100 rounded-lg flex-shrink-0">
+                      {getFileIcon(doc.file_name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-slate-800 truncate mb-1">
+                        {doc.title || doc.file_name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <FileType className="h-3 w-3" />
+                        <span>{getCategoryLabel(doc.category || 'outros')}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    {doc.analysis_status === 'processing' && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-blue-100 text-blue-700 border-blue-200">
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        Analisando...
+                      </Badge>
+                    )}
+                    {doc.analysis_status === 'completed' && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Analisado
+                      </Badge>
+                    )}
+                    {doc.analysis_status === 'failed' && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-red-100 text-red-700 border-red-200">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Erro
+                      </Badge>
+                    )}
+                    {doc.analysis_status === 'pending' && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-amber-100 text-amber-700 border-amber-200">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Pendente
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                {doc.description && (
+                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{doc.description}</p>
                 )}
 
-                {/* Ações na parte inferior */}
-                <div className="flex gap-2 mt-4 pt-3 border-t border-slate-200">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(doc)}
-                    className="flex-1"
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Download
-                  </Button>
-                  {doc.analysis_status === 'pending' && (
+                {/* Metadata */}
+                <div className="flex items-center gap-3 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-200">
+                  <div className="flex items-center gap-1">
+                    <File className="h-3 w-3" />
+                    <span>{formatFileSize(doc.file_size)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{format(new Date(doc.created_at), 'dd/MM/yyyy')}</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleProcessWithAI(doc.id)}
-                      disabled={isProcessing === doc.id}
-                      className="flex-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Download documento clicado', doc.id);
+                        handleDownload(doc);
+                      }}
+                      className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
                     >
-                      {isProcessing === doc.id ? (
-                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                      ) : (
-                        <Brain className="h-3 w-3 mr-1" />
-                      )}
-                      Processar
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Excluir documento clicado', doc.id);
+                        handleDelete(doc.id);
+                      }}
+                      className="text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {doc.analysis_status === 'completed' && doc.analysis_result && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Ver Análise clicado', doc.id);
+                        handleViewAnalysis(doc);
+                      }}
+                      className="w-full border-green-200 text-green-700 hover:bg-green-50"
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      Ver Análise
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(doc.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  {(doc.analysis_status === 'pending' || doc.analysis_status === 'failed') && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Processar com IA clicado', doc.id);
+                        handleProcessWithAI(doc.id);
+                      }}
+                      disabled={isProcessing === doc.id}
+                      className="w-full border-purple-200 text-purple-700 hover:bg-purple-50"
+                    >
+                      {isProcessing === doc.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Analisando...
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="h-4 w-4 mr-1" />
+                          Analisar com IA
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </CardBox>
             ))}
           </div>
         )}
-      </div>
-    </SectionWrapper>
+      </SectionWrapper>
+
+      {/* Dialog de Análise */}
+      <Dialog open={isAnalysisDialogOpen} onOpenChange={setIsAnalysisDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedDocument && selectedDocument.analysis_result && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Análise do Documento</DialogTitle>
+                <DialogDescription>
+                  {selectedDocument.title || selectedDocument.file_name}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 mt-4">
+                {/* Resumo */}
+                {selectedDocument.analysis_result.summary && (
+                  <CardBox>
+                    <h3 className="font-semibold text-slate-800 mb-2">Resumo</h3>
+                    <p className="text-sm text-slate-600">
+                      {typeof selectedDocument.analysis_result.summary === 'string' 
+                        ? selectedDocument.analysis_result.summary
+                        : JSON.stringify(selectedDocument.analysis_result.summary, null, 2)}
+                    </p>
+                  </CardBox>
+                )}
+
+                {/* Dados Extraídos */}
+                {selectedDocument.analysis_result.extracted_data && (
+                  <CardBox>
+                    <h3 className="font-semibold text-slate-800 mb-4">Dados Extraídos</h3>
+                    <div className="space-y-3">
+                      {Object.entries(selectedDocument.analysis_result.extracted_data).map(([key, value]) => {
+                        if (value === null || value === undefined) return null;
+                        if (Array.isArray(value) && value.length === 0) return null;
+                        
+                        return (
+                          <div key={key} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                            <div className="flex-1">
+                              <p className="text-xs font-medium text-slate-500 uppercase mb-1">
+                                {key.replace(/_/g, ' ')}
+                              </p>
+                              <p className="text-sm text-slate-800">
+                                {Array.isArray(value) 
+                                  ? JSON.stringify(value, null, 2)
+                                  : typeof value === 'object'
+                                  ? JSON.stringify(value, null, 2)
+                                  : String(value)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardBox>
+                )}
+
+                {/* Principais Pontos */}
+                {selectedDocument.analysis_result.key_points && 
+                 Array.isArray(selectedDocument.analysis_result.key_points) &&
+                 selectedDocument.analysis_result.key_points.length > 0 && (
+                  <CardBox>
+                    <h3 className="font-semibold text-slate-800 mb-4">Principais Pontos</h3>
+                    <ul className="space-y-2">
+                      {selectedDocument.analysis_result.key_points.map((point: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardBox>
+                )}
+
+                {/* Recomendações */}
+                {selectedDocument.analysis_result.recommendations && 
+                 Array.isArray(selectedDocument.analysis_result.recommendations) &&
+                 selectedDocument.analysis_result.recommendations.length > 0 && (
+                  <CardBox>
+                    <h3 className="font-semibold text-slate-800 mb-4">Recomendações</h3>
+                    <ul className="space-y-2">
+                      {selectedDocument.analysis_result.recommendations.map((rec: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                          <Brain className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardBox>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

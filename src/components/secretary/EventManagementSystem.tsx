@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { 
@@ -38,6 +37,7 @@ import { eventService, TourismEvent as ServiceEvent } from '@/services/public/ev
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 
 interface TourismEvent {
   id: string;
@@ -50,6 +50,7 @@ interface TourismEvent {
   expectedAudience: number;
   budget: number;
   status: 'planned' | 'active' | 'completed' | 'cancelled';
+  approval_status?: 'pending' | 'approved' | 'rejected';
   images: string[];
   contact: {
     phone?: string;
@@ -64,15 +65,19 @@ interface TourismEvent {
 
 const EventManagementSystem: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [events, setEvents] = useState<TourismEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<TourismEvent[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TourismEvent | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [loading, setLoading] = useState(false);
+  const [userState, setUserState] = useState<string | null>(null);
+  const [isMSUser, setIsMSUser] = useState(false);
 
   const categories = [
     { value: 'all', label: 'Todos', icon: '📅' },
@@ -92,6 +97,29 @@ const EventManagementSystem: React.FC = () => {
     { value: 'cancelled', label: 'Cancelado', color: 'red' }
   ];
 
+  // Verificar se usuário é do MS
+  useEffect(() => {
+    const checkUserState = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('state')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        const state = profile?.state?.toUpperCase() || null;
+        setUserState(state);
+        setIsMSUser(state === 'MS' || state === 'MATO GROSSO DO SUL');
+      } catch (error) {
+        console.error('Erro ao verificar estado do usuário:', error);
+      }
+    };
+    
+    checkUserState();
+  }, [user]);
+
   // Carregar eventos do Supabase
   useEffect(() => {
     loadEvents();
@@ -100,12 +128,23 @@ const EventManagementSystem: React.FC = () => {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      const data = await eventService.getEvents({
+      // Se for usuário do MS, mostrar todos os eventos (incluindo pendentes)
+      // Se não for, mostrar apenas aprovados
+      const filters: any = {
         search: searchTerm || undefined,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         status: selectedStatus !== 'all' ? selectedStatus : undefined,
         is_public: true,
-      });
+      };
+      
+      // Se não for usuário do MS, mostrar apenas eventos aprovados
+      if (!isMSUser) {
+        filters.approval_status = 'approved';
+      } else if (selectedApprovalStatus !== 'all') {
+        filters.approval_status = selectedApprovalStatus;
+      }
+      
+      const data = await eventService.getEvents(filters);
 
       // Converter para formato do componente
       const convertedEvents: TourismEvent[] = data.map((item) => ({
@@ -119,6 +158,7 @@ const EventManagementSystem: React.FC = () => {
         expectedAudience: item.expected_audience || 0,
         budget: item.budget || 0,
         status: (item.status || 'planned') as any,
+        approval_status: item.approval_status,
         images: item.images || [],
         contact: {
           phone: item.contact_phone,
@@ -144,7 +184,7 @@ const EventManagementSystem: React.FC = () => {
   // Recarregar quando filtros mudarem
   useEffect(() => {
     loadEvents();
-  }, [searchTerm, selectedCategory, selectedStatus]);
+  }, [searchTerm, selectedCategory, selectedStatus, selectedApprovalStatus, isMSUser]);
 
   // Filtrar eventos localmente (já vem filtrado do servidor, mas manter para compatibilidade)
   useEffect(() => {
@@ -167,9 +207,17 @@ const EventManagementSystem: React.FC = () => {
       try {
         await eventService.deleteEvent(id);
         await loadEvents();
+        toast({
+          title: 'Sucesso',
+          description: 'Evento excluído com sucesso!',
+        });
       } catch (error) {
         console.error('Erro ao excluir evento:', error);
-        alert('Erro ao excluir evento. Tente novamente.');
+        toast({
+          title: 'Erro',
+          description: 'Erro ao excluir evento. Tente novamente.',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
@@ -184,9 +232,17 @@ const EventManagementSystem: React.FC = () => {
         status: newStatus as any,
       });
       await loadEvents();
+      toast({
+        title: 'Sucesso',
+        description: 'Status do evento atualizado!',
+      });
     } catch (error) {
       console.error('Erro ao alterar status do evento:', error);
-      alert('Erro ao alterar status. Tente novamente.');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao alterar status. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -208,6 +264,9 @@ const EventManagementSystem: React.FC = () => {
         expected_audience: eventData.expectedAudience,
         budget: eventData.budget,
         status: eventData.status || 'planned',
+        approval_status: editingEvent 
+          ? eventData.approval_status || editingEvent.approval_status
+          : (isMSUser ? 'pending' : 'approved'), // Novos eventos do MS começam como 'pending'
         images: eventData.images || [],
         contact_phone: eventData.contact?.phone,
         contact_email: eventData.contact?.email,
@@ -226,9 +285,31 @@ const EventManagementSystem: React.FC = () => {
       await loadEvents();
       setShowForm(false);
       setEditingEvent(null);
+      
+      // Mostrar mensagem se evento foi criado como pendente
+      if (!editingEvent && isMSUser) {
+        toast({
+          title: 'Evento criado com sucesso!',
+          description: 'O evento será enviado para análise e aparecerá no calendário do Descubra Mato Grosso do Sul após aprovação.',
+        });
+      } else if (!editingEvent) {
+        toast({
+          title: 'Sucesso',
+          description: 'Evento criado com sucesso!',
+        });
+      } else {
+        toast({
+          title: 'Sucesso',
+          description: 'Evento atualizado com sucesso!',
+        });
+      }
     } catch (error) {
       console.error('Erro ao salvar evento:', error);
-      alert('Erro ao salvar evento. Tente novamente.');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao salvar evento. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -246,6 +327,24 @@ const EventManagementSystem: React.FC = () => {
       case 'purple': return 'bg-purple-100 text-purple-800';
       case 'red': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getApprovalStatusColor = (approvalStatus?: string) => {
+    switch (approvalStatus) {
+      case 'approved': return 'bg-green-100 text-green-700 border-green-200';
+      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getApprovalStatusLabel = (approvalStatus?: string) => {
+    switch (approvalStatus) {
+      case 'approved': return 'Aprovado';
+      case 'pending': return 'Aguardando Aprovação';
+      case 'rejected': return 'Rejeitado';
+      default: return 'N/A';
     }
   };
 
@@ -276,13 +375,21 @@ const EventManagementSystem: React.FC = () => {
       for (const file of Array.from(files)) {
         // Validar tipo de arquivo
         if (!file.type.startsWith('image/')) {
-          alert(`Arquivo ${file.name} não é uma imagem válida.`);
+          toast({
+            title: 'Arquivo inválido',
+            description: `Arquivo ${file.name} não é uma imagem válida.`,
+            variant: 'destructive',
+          });
           continue;
         }
 
         // Validar tamanho (máximo 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          alert(`Imagem ${file.name} excede o tamanho máximo de 5MB.`);
+          toast({
+            title: 'Arquivo muito grande',
+            description: `Imagem ${file.name} excede o tamanho máximo de 5MB.`,
+            variant: 'destructive',
+          });
           continue;
         }
 
@@ -301,7 +408,11 @@ const EventManagementSystem: React.FC = () => {
 
           if (uploadError) {
             console.error('Erro no upload:', uploadError);
-            alert(`Erro ao fazer upload de ${file.name}: ${uploadError.message}`);
+            toast({
+              title: 'Erro no upload',
+              description: `Erro ao fazer upload de ${file.name}: ${uploadError.message}`,
+              variant: 'destructive',
+            });
             continue;
           }
 
@@ -315,7 +426,11 @@ const EventManagementSystem: React.FC = () => {
           }
         } catch (fileError) {
           console.error(`Erro ao processar ${file.name}:`, fileError);
-          alert(`Erro ao processar ${file.name}`);
+          toast({
+            title: 'Erro',
+            description: `Erro ao processar ${file.name}`,
+            variant: 'destructive',
+          });
         }
       }
 
@@ -333,13 +448,20 @@ const EventManagementSystem: React.FC = () => {
 
           // Recarregar eventos
           await loadEvents();
-          alert(`${uploadedUrls.length} imagem(ns) carregada(s) com sucesso!`);
+          toast({
+            title: 'Sucesso',
+            description: `${uploadedUrls.length} imagem(ns) carregada(s) com sucesso!`,
+          });
         }
       }
       
     } catch (error) {
       console.error('Erro no upload de imagens:', error);
-      alert('Erro no upload de imagens. Tente novamente.');
+      toast({
+        title: 'Erro',
+        description: 'Erro no upload de imagens. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -366,18 +488,39 @@ const EventManagementSystem: React.FC = () => {
       actions={
         <div className="flex space-x-2">
           <Button
+            type="button"
             variant={viewMode === 'list' ? 'default' : 'outline'}
-            onClick={() => setViewMode('list')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Botão Lista clicado');
+              setViewMode('list');
+            }}
           >
             Lista
           </Button>
           <Button
+            type="button"
             variant={viewMode === 'calendar' ? 'default' : 'outline'}
-            onClick={() => setViewMode('calendar')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Botão Calendário clicado');
+              setViewMode('calendar');
+            }}
           >
             Calendário
           </Button>
-          <Button onClick={handleAddEvent} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Botão Novo Evento clicado');
+              handleAddEvent();
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Novo Evento
           </Button>
@@ -387,7 +530,7 @@ const EventManagementSystem: React.FC = () => {
 
         {/* Filtros */}
         <CardBox className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-4 ${isMSUser ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
             <div>
               <Label htmlFor="search">Buscar</Label>
               <div className="relative mt-1">
@@ -431,8 +574,33 @@ const EventManagementSystem: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+            {isMSUser && (
+              <div>
+                <Label htmlFor="approvalStatus">Aprovação</Label>
+                <Select value={selectedApprovalStatus} onValueChange={setSelectedApprovalStatus}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="pending">Aguardando</SelectItem>
+                    <SelectItem value="approved">Aprovados</SelectItem>
+                    <SelectItem value="rejected">Rejeitados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex items-end">
-              <Button variant="outline" className="w-full">
+              <Button 
+                type="button"
+                variant="outline" 
+                className="w-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Botão Mais Filtros clicado');
+                }}
+              >
                 <Filter className="h-4 w-4 mr-2" />
                 Mais Filtros
               </Button>
@@ -440,68 +608,15 @@ const EventManagementSystem: React.FC = () => {
           </div>
         </CardBox>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Total de Eventos</p>
-                <p className="text-3xl font-bold text-slate-800">{events.length}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Ativos</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {events.filter(e => e.status === 'active').length}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Público Total</p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {events.reduce((sum, e) => sum + e.expectedAudience, 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Orçamento Total</p>
-                <p className="text-3xl font-bold text-orange-600">
-                  {formatCurrency(events.reduce((sum, e) => sum + e.budget, 0))}
-                </p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </CardBox>
-        </div>
 
         {/* Lista de Eventos */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <CardBox key={i} className="animate-pulse">
-                <div className="h-32 bg-gray-200 rounded-md mb-3"></div>
                 <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
               </CardBox>
             ))}
           </div>
@@ -509,15 +624,26 @@ const EventManagementSystem: React.FC = () => {
           filteredEvents.length === 0 ? (
             <CardBox>
               <div className="text-center py-12">
-                <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-slate-600 font-medium mb-2">Nenhum evento encontrado</p>
+                <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Calendar className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="text-slate-600 font-medium mb-1">Nenhum evento encontrado</p>
                 <p className="text-sm text-slate-500 mb-4">
                   {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all'
                     ? 'Tente ajustar os filtros de busca'
                     : 'Comece criando o primeiro evento'
                   }
                 </p>
-                <Button onClick={handleAddEvent} className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botão Criar Evento clicado');
+                    handleAddEvent();
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Evento
                 </Button>
@@ -526,94 +652,98 @@ const EventManagementSystem: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredEvents.map((event) => (
-                <CardBox key={event.id}>
-                  {/* Cabeçalho com título e badge */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-slate-800 mb-1">{event.title}</h3>
-                      <span className="text-sm text-gray-500">{getCategoryIcon(event.category)}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className={`rounded-full text-xs font-medium px-2 py-1 ${getStatusColor(event.status)}`}>
-                        {statuses.find(s => s.value === event.status)?.label}
-                      </span>
-                      {event.isPublic && (
-                        <span className="rounded-full text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700">
-                          Público
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Imagem */}
-                  <div className="h-32 bg-gray-200 rounded-md mb-3 relative overflow-hidden">
-                    {event.images.length > 0 ? (
-                      <img
-                        src={event.images[0]}
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Image className="h-8 w-8 text-gray-400" />
+                <CardBox key={event.id} className="hover:shadow-md transition-shadow">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="p-2 bg-slate-100 rounded-lg flex-shrink-0">
+                        <Calendar className="h-5 w-5 text-blue-600" />
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Metadados */}
-                  <div className="space-y-1 mb-4">
-                    <p className="text-slate-600 text-sm line-clamp-2">
-                      {event.description}
-                    </p>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>{formatDate(event.date)}</span>
-                      {event.endDate && (
-                        <span> - {formatDate(event.endDate)}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-slate-800 truncate mb-1">
+                          {event.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>{getCategoryIcon(event.category)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={`rounded-full text-xs px-2 py-0.5 ${getStatusColor(event.status)}`}>
+                        {statuses.find(s => s.value === event.status)?.label}
+                      </Badge>
+                      {isMSUser && event.approval_status && (
+                        <Badge className={`rounded-full text-xs px-2 py-0.5 border ${getApprovalStatusColor(event.approval_status)}`}>
+                          {getApprovalStatusLabel(event.approval_status)}
+                        </Badge>
                       )}
                     </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <MapPin className="h-4 w-4 mr-1" />
+                  </div>
+
+                  {/* Description */}
+                  {event.description && (
+                    <p className="text-sm text-slate-600 mb-4 line-clamp-2">{event.description}</p>
+                  )}
+
+                  {/* Metadata */}
+                  <div className="flex items-center gap-3 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-200">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{formatDate(event.date)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
                       <span className="truncate">{event.location}</span>
                     </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Users className="h-4 w-4 mr-1" />
-                      <span>{event.expectedAudience.toLocaleString()} pessoas</span>
-                    </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>{formatCurrency(event.budget)}</span>
-                    </div>
                   </div>
-                  
-                  {/* Botões de Ação */}
-                  <div className="flex items-center gap-2 pt-4 border-t border-slate-200">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {}}
-                      className="flex-1"
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      Ver
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditEvent(event)}
-                      className="flex-1"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+
+                  {/* Actions */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Botão Ver evento clicado', event.id);
+                        }}
+                        className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Ver
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Botão Editar evento clicado', event.id);
+                          handleEditEvent(event);
+                        }}
+                        className="flex-1"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Botão Excluir evento clicado', event.id);
+                          handleDeleteEvent(event.id);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardBox>
               ))}
@@ -630,7 +760,16 @@ const EventManagementSystem: React.FC = () => {
               <p className="text-slate-600 mb-4">
                 Vista de calendário será implementada em breve
               </p>
-              <Button onClick={() => setViewMode('list')} className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Botão Voltar para Lista clicado');
+                  setViewMode('list');
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 Voltar para Lista
               </Button>
             </div>
@@ -667,17 +806,17 @@ const EventForm: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     onSave(formData);
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>
-          {event ? 'Editar Evento' : 'Novo Evento'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <SectionWrapper
+      variant="default"
+      title={event ? 'Editar Evento' : 'Novo Evento'}
+      subtitle={event ? 'Atualize as informações do evento' : 'Preencha os dados do novo evento turístico'}
+    >
+      <CardBox className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -776,17 +915,35 @@ const EventForm: React.FC<{
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Cancelar formulário evento clicado');
+                onCancel();
+              }}
+            >
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button 
+              type="submit"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Salvar evento clicado');
+                handleSubmit(e);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               {event ? 'Atualizar' : 'Criar'} Evento
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </CardBox>
+    </SectionWrapper>
   );
 };
 

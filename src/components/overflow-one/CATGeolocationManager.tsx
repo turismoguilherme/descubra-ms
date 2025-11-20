@@ -213,11 +213,20 @@ const CATGeolocationManager: React.FC = () => {
 
   return (
     <SectionWrapper
-      variant="cats"
+      variant="default"
       title={`Gestão de CATs – ${cityName}/${stateName}`}
       subtitle="Cadastre e gerencie os Centros de Atendimento ao Turista com geolocalização"
       actions={
-        <Button onClick={() => setIsAdding(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Botão Novo CAT clicado');
+            setIsAdding(true);
+          }}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Novo CAT
         </Button>
@@ -305,7 +314,12 @@ const CATGeolocationManager: React.FC = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={useCurrentLocation}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Usar localização atual clicado');
+                        useCurrentLocation();
+                      }}
                       disabled={!userLocation || isLoadingLocation}
                     >
                       <Navigation className="h-4 w-4" />
@@ -335,11 +349,29 @@ const CATGeolocationManager: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2 pt-4 border-t border-slate-200">
-                <Button onClick={handleAddCAT} className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botão Salvar CAT clicado');
+                    handleAddCAT();
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Salvar CAT
                 </Button>
-                <Button variant="outline" onClick={() => setIsAdding(false)}>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botão Cancelar formulário CAT clicado');
+                    setIsAdding(false);
+                  }}
+                >
                   Cancelar
                 </Button>
               </div>
@@ -349,78 +381,119 @@ const CATGeolocationManager: React.FC = () => {
 
         {/* Lista de CATs */}
         {loading ? (
-          <div className="grid gap-4">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <CardBox key={i} className="animate-pulse">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-32"></div>
-                    <div className="h-3 bg-gray-200 rounded w-48"></div>
-                  </div>
-                </div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
               </CardBox>
             ))}
           </div>
         ) : catLocations.length === 0 ? (
           <CardBox>
             <div className="text-center py-12">
-              <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-slate-600 font-medium mb-2">Nenhum CAT cadastrado</p>
+              <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-slate-600 font-medium mb-1">Nenhum CAT cadastrado</p>
               <p className="text-sm text-slate-500">
                 Clique em "Novo CAT" para cadastrar o primeiro Centro de Atendimento ao Turista
               </p>
             </div>
           </CardBox>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {catLocations.map((cat) => (
-              <CardBox key={cat.id} className={cat.isActive ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-gray-300'}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                      cat.isActive ? 'bg-blue-100' : 'bg-gray-100'
-                    }`}>
-                      <MapPin className={`h-6 w-6 ${cat.isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+              <CardBox key={cat.id} className="hover:shadow-md transition-shadow">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="p-2 bg-slate-100 rounded-lg flex-shrink-0">
+                      <Building2 className="h-5 w-5 text-blue-600" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-slate-800">{cat.name}</h3>
-                        <Badge variant={cat.isActive ? 'default' : 'secondary'} className="text-xs">
-                          {cat.isActive ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-slate-600 mb-1">{cat.address}</p>
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
-                        <span>{cat.latitude.toFixed(6)}, {cat.longitude.toFixed(6)}</span>
-                        <span>•</span>
-                        <span>Raio: {cat.radius}m</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-slate-800 truncate mb-1">
+                        {cat.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <MapPin className="h-3 w-3" />
+                        <span className="truncate">{cat.address}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {cat.isActive && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Ativo
+                      </Badge>
+                    )}
+                    {!cat.isActive && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
+                        Inativo
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                <div className="flex items-center gap-3 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-200">
+                  <div className="flex items-center gap-1">
+                    <Navigation className="h-3 w-3" />
+                    <span>{cat.latitude.toFixed(6)}, {cat.longitude.toFixed(6)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>Raio: {cat.radius}m</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
                     <Button
-                      size="sm"
+                      type="button"
                       variant="outline"
-                      onClick={() => toggleCATStatus(cat.id)}
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Toggle status CAT clicado', cat.id);
+                        toggleCATStatus(cat.id);
+                      }}
                       disabled={loading}
+                      className="flex-1"
                     >
                       {cat.isActive ? 'Desativar' : 'Ativar'}
                     </Button>
                     <Button
-                      size="sm"
+                      type="button"
                       variant="outline"
-                      onClick={() => handleEditCAT(cat.id)}
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Editar CAT clicado', cat.id);
+                        handleEditCAT(cat.id);
+                      }}
                       disabled={loading}
+                      className="flex-1"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
                     </Button>
                     <Button
-                      size="sm"
+                      type="button"
                       variant="outline"
-                      onClick={() => handleDeleteCAT(cat.id)}
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Botão Excluir CAT clicado', cat.id);
+                        handleDeleteCAT(cat.id);
+                      }}
                       disabled={loading}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -431,46 +504,6 @@ const CATGeolocationManager: React.FC = () => {
           </div>
         )}
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Total de CATs</p>
-                <div className="text-3xl font-bold text-slate-800">{catLocations.length}</div>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <MapPin className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">CATs Ativos</p>
-                <div className="text-3xl font-bold text-green-600">
-                  {catLocations.filter(cat => cat.isActive).length}
-                </div>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardBox>
-          <CardBox>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Cobertura</p>
-                <div className="text-3xl font-bold text-purple-600">
-                  {catLocations.length > 0 ? Math.round((catLocations.filter(cat => cat.isActive).length / catLocations.length) * 100) : 0}%
-                </div>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Navigation className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardBox>
-        </div>
       </div>
     </SectionWrapper>
   );

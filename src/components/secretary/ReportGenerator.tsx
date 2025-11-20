@@ -123,227 +123,62 @@ const ReportGenerator: React.FC = () => {
   }
 
   return (
-    <SectionWrapper 
-      variant="default" 
-      title="Gerador de Relatórios"
-      subtitle="Gere relatórios completos em PDF com dados do município"
+    <SectionWrapper
+      variant="default"
+      title="Relatório Completo Municipal"
+      subtitle="Gere um relatório completo com todos os dados da plataforma"
     >
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-800 mb-1">Erro ao gerar relatório</p>
+        <CardBox className="border-red-200 bg-red-50 mb-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-600" />
             <p className="text-sm text-red-700">{error}</p>
           </div>
-        </div>
+        </CardBox>
       )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card Informativo */}
-        <CardBox>
-          <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-1">Relatórios Municipais</h3>
-              <p className="text-sm text-gray-600">
-                Gere relatórios completos em PDF com dados do município, incluindo métricas, 
-                performance dos CATs, atrações, eventos e análises de turistas.
-              </p>
-            </div>
+
+      <CardBox className="bg-blue-50 border-blue-200">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 bg-blue-100 rounded-lg">
+            <FileText className="h-6 w-6 text-blue-600" />
           </div>
-          
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span>Dados atualizados do Supabase</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span>Formato PDF profissional</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span>Personalização de seções</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span>Download automático</span>
-            </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-blue-900 mb-2 text-lg">
+              Relatório Completo Municipal
+            </h3>
+            <p className="text-sm text-blue-700 leading-relaxed">
+              Este relatório inclui: Métricas principais, Performance dos CATs, Atrações turísticas, 
+              Eventos programados, Análises de turistas e Dados regionais.
+            </p>
           </div>
-        </CardBox>
+        </div>
 
-        {/* Card de Configuração */}
-        <CardBox>
-          <h3 className="font-semibold text-slate-800 mb-4">Configuração do Relatório</h3>
-          
-          <div className="space-y-4">
-            {/* Título */}
-            <div>
-              <Label htmlFor="title">Título do Relatório</Label>
-              <Input
-                id="title"
-                value={reportConfig.title}
-                onChange={(e) => setReportConfig({ ...reportConfig, title: e.target.value })}
-                placeholder="Ex: Relatório Municipal de Turismo - Janeiro 2024"
-                className="mt-1"
-              />
-            </div>
-
-            {/* Período - Presets */}
-            <div>
-              <Label>Período - Seleção Rápida</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {periodPresets.map((preset) => (
-                  <Button
-                    key={preset.value}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePresetSelect(preset)}
-                    className="text-xs"
-                  >
-                    <CalendarIcon className="h-3 w-3 mr-1" />
-                    {preset.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Período - Datas Customizadas */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startDate">Data Inicial</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={format(reportConfig.period.start, 'yyyy-MM-dd')}
-                  onChange={(e) => setReportConfig({
-                    ...reportConfig,
-                    period: {
-                      ...reportConfig.period,
-                      start: new Date(e.target.value)
-                    }
-                  })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="endDate">Data Final</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={format(reportConfig.period.end, 'yyyy-MM-dd')}
-                  onChange={(e) => setReportConfig({
-                    ...reportConfig,
-                    period: {
-                      ...reportConfig.period,
-                      end: new Date(e.target.value)
-                    }
-                  })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            {/* Preview do Período */}
-            <CardBox className="bg-blue-50 border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="h-4 w-4 text-blue-600" />
-                <p className="text-xs font-semibold text-blue-800">Período Selecionado:</p>
-              </div>
-              <p className="text-sm text-blue-800">
-                {format(reportConfig.period.start, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} a{' '}
-                {format(reportConfig.period.end, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </p>
-            </CardBox>
-          </div>
-        </CardBox>
-
-        {/* Card de Seções */}
-        <CardBox className="md:col-span-2">
-          <h3 className="font-semibold text-slate-800 mb-4">Seções a Incluir</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includeMetrics"
-                checked={reportConfig.includeMetrics}
-                onCheckedChange={(checked) => 
-                  setReportConfig({ ...reportConfig, includeMetrics: checked as boolean })
-                }
-              />
-              <Label htmlFor="includeMetrics" className="flex items-center gap-2 cursor-pointer">
-                <BarChart3 className="h-4 w-4 text-blue-600" />
-                Métricas Principais
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includeCATs"
-                checked={reportConfig.includeCATs}
-                onCheckedChange={(checked) => 
-                  setReportConfig({ ...reportConfig, includeCATs: checked as boolean })
-                }
-              />
-              <Label htmlFor="includeCATs" className="flex items-center gap-2 cursor-pointer">
-                <Building2 className="h-4 w-4 text-green-600" />
-                Performance dos CATs
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includeAttractions"
-                checked={reportConfig.includeAttractions}
-                onCheckedChange={(checked) => 
-                  setReportConfig({ ...reportConfig, includeAttractions: checked as boolean })
-                }
-              />
-              <Label htmlFor="includeAttractions" className="flex items-center gap-2 cursor-pointer">
-                <MapPin className="h-4 w-4 text-purple-600" />
-                Atrações Turísticas
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includeEvents"
-                checked={reportConfig.includeEvents}
-                onCheckedChange={(checked) => 
-                  setReportConfig({ ...reportConfig, includeEvents: checked as boolean })
-                }
-              />
-              <Label htmlFor="includeEvents" className="flex items-center gap-2 cursor-pointer">
-                <Calendar className="h-4 w-4 text-orange-600" />
-                Eventos Programados
-              </Label>
-            </div>
-          </div>
-        </CardBox>
-
-        {/* Botão de Gerar */}
-        <CardBox className="md:col-span-2">
+        <div className="flex gap-3">
           <Button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            size="lg"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Botão Baixar PDF clicado');
+              handleGenerate();
+            }}
+            disabled={!!isGenerating}
+            className="flex-1 bg-white hover:bg-gray-50 border-blue-300 text-blue-700 border-2"
           >
             {isGenerating ? (
               <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Gerando Relatório...
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Gerando...
               </>
             ) : (
               <>
-                <Download className="h-5 w-5 mr-2" />
-                Gerar e Baixar Relatório PDF
+                <Download className="h-4 w-4 mr-2" />
+                Baixar PDF
               </>
             )}
           </Button>
-        </CardBox>
-      </div>
+        </div>
+      </CardBox>
     </SectionWrapper>
   );
 };

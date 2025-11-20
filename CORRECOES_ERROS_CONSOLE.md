@@ -146,3 +146,4 @@ CREATE INDEX IF NOT EXISTS idx_diagnostic_created_at ON viajar_diagnostic_result
 
 **Status:** ✅ CORREÇÕES DE API APLICADAS - ⏳ AGUARDANDO CRIAÇÃO DE TABELAS NO SUPABASE
 
+

@@ -134,3 +134,4 @@ Se encontrar problemas:
 3. Revisar `TESTE_COMPLETO_PRE_DEPLOY.md`
 4. Executar `test_all_modules.bat` novamente
 
+
