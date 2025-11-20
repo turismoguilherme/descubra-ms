@@ -9,6 +9,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Calendar, 
   MapPin, 
@@ -20,11 +22,14 @@ import {
   Globe,
   Ticket,
   Phone,
-  Mail
+  Mail,
+  Search,
+  Filter
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EventoCompleto } from '@/types/events';
+import { eventService, TourismEvent } from '@/services/public/eventService';
 
 interface EventCalendarProps {
   events?: EventoCompleto[];
@@ -42,6 +47,9 @@ const EventCalendar: React.FC<EventCalendarProps> = ({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [selectedEvent, setSelectedEvent] = useState<EventoCompleto | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [filteredEvents, setFilteredEvents] = useState<EventoCompleto[]>([]);
 
   // Carregar eventos automaticamente
   useEffect(() => {
@@ -50,106 +58,88 @@ const EventCalendar: React.FC<EventCalendarProps> = ({
     }
   }, [autoLoad]);
 
-  // Carregar eventos (versão simplificada e funcional)
+  // Carregar eventos aprovados do Supabase
   const loadEvents = async () => {
     setLoading(true);
     try {
-      console.log("📅 EVENT CALENDAR: Carregando eventos...");
+      console.log("📅 EVENT CALENDAR: Carregando eventos aprovados...");
       
-      // Sempre carregar dados de demonstração primeiro
-      const demoEvents: EventoCompleto[] = [
-        {
-          id: 'demo-1',
-          titulo: 'Festival de Inverno de Bonito 2024',
-          descricao_resumida: 'Celebre a temporada de inverno com música, gastronomia e aventuras em Bonito.',
-          descricao_completa: 'O Festival de Inverno de Bonito é um dos maiores eventos culturais do estado, reunindo artistas locais e nacionais para celebrar a rica cultura de Mato Grosso do Sul.',
-          data_inicio: '2024-07-15',
-          data_fim: '2024-07-20',
-          local: 'Centro de Bonito',
-          cidade: 'Bonito',
-          estado: 'MS',
-          endereco_completo: 'Centro de Bonito, MS',
-          categoria: 'cultural',
-          tipo_entrada: 'gratuito',
-          publico_alvo: 'geral',
-          status: 'ativo',
-          visibilidade: true,
-          destaque: true,
-          organizador: 'Prefeitura de Bonito',
-          fonte: 'manual' as const,
-          processado_por_ia: false,
-          confiabilidade: 100,
-          ultima_atualizacao: new Date().toISOString(),
-          tags: ['festival', 'inverno', 'cultura'],
-          palavras_chave: ['festival', 'inverno', 'bonito'],
-          relevancia: 95
+      // Buscar apenas eventos aprovados (do ViaJAR e Descubra MS)
+      const dbEvents = await eventService.getEvents({
+        approval_status: 'approved',
+        is_public: true,
+      });
+
+      // Converter para formato EventoCompleto
+      const convertedEvents: EventoCompleto[] = dbEvents.map((event: TourismEvent) => ({
+        id: event.id,
+        titulo: event.title || event.name || 'Evento sem título',
+        descricao_resumida: event.description?.substring(0, 150) || 'Sem descrição',
+        descricao_completa: event.description || 'Sem descrição completa',
+        data_inicio: event.start_date || event.date || new Date().toISOString(),
+        data_fim: event.end_date,
+        local: event.location || 'Local não informado',
+        cidade: event.city || 'MS',
+        estado: event.state || 'MS',
+        endereco_completo: event.location || '',
+        categoria: (event.category || 'cultural') as any,
+        tipo_entrada: 'gratuito', // Default, pode ser melhorado
+        publico_alvo: 'geral',
+        status: (event.status === 'active' ? 'ativo' : event.status === 'completed' ? 'finalizado' : 'ativo') as any,
+        visibilidade: event.is_public !== false,
+        destaque: false,
+        organizador: 'Organizador não informado',
+        fonte: 'manual' as const,
+        processado_por_ia: false,
+        confiabilidade: 100,
+        ultima_atualizacao: event.updated_at || event.created_at || new Date().toISOString(),
+        tags: [],
+        palavras_chave: [],
+        relevancia: 80,
+        imagem_principal: event.images?.[0] || event.image_url,
+        galeria_imagens: event.images || [],
+        contato: {
+          telefone: event.contact_phone,
+          email: event.contact_email,
+          site: event.contact_website,
         },
-        {
-          id: 'demo-2',
-          titulo: 'Exposição Pantanal em Foco',
-          descricao_resumida: 'Exposição fotográfica sobre a biodiversidade do Pantanal.',
-          descricao_completa: 'Uma exposição fotográfica única que mostra a rica biodiversidade do Pantanal, com obras de fotógrafos locais e nacionais.',
-          data_inicio: '2024-08-01',
-          data_fim: '2024-08-31',
-          local: 'Museu da Imagem e do Som',
-          cidade: 'Campo Grande',
-          estado: 'MS',
-          endereco_completo: 'Museu da Imagem e do Som, Campo Grande, MS',
-          categoria: 'cultural',
-          tipo_entrada: 'gratuito',
-          publico_alvo: 'geral',
-          status: 'ativo',
-          visibilidade: true,
-          destaque: false,
-          organizador: 'Museu da Imagem e do Som',
-          fonte: 'manual' as const,
-          processado_por_ia: false,
-          confiabilidade: 100,
-          ultima_atualizacao: new Date().toISOString(),
-          tags: ['exposição', 'fotografia', 'pantanal'],
-          palavras_chave: ['exposição', 'fotografia', 'pantanal'],
-          relevancia: 85
-        },
-        {
-          id: 'demo-3',
-          titulo: 'Rota Gastronômica MS',
-          descricao_resumida: 'Descubra os sabores únicos de Mato Grosso do Sul em um tour gastronômico.',
-          descricao_completa: 'Uma experiência gastronômica única que leva você pelos sabores autênticos de Mato Grosso do Sul, passando por diversos restaurantes da capital.',
-          data_inicio: '2024-09-10',
-          data_fim: '2024-09-15',
-          local: 'Vários restaurantes',
-          cidade: 'Campo Grande',
-          estado: 'MS',
-          endereco_completo: 'Vários restaurantes, Campo Grande, MS',
-          categoria: 'gastronomico',
-          tipo_entrada: 'pago',
-          publico_alvo: 'geral',
-          status: 'ativo',
-          visibilidade: true,
-          destaque: true,
-          organizador: 'Secretaria de Turismo',
-          fonte: 'manual' as const,
-          processado_por_ia: false,
-          confiabilidade: 100,
-          ultima_atualizacao: new Date().toISOString(),
-          tags: ['gastronomia', 'turismo', 'culinaria'],
-          palavras_chave: ['gastronomia', 'turismo', 'culinaria'],
-          relevancia: 90
-        }
-      ];
-      
-      // Simular delay de carregamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setEvents(demoEvents);
-      console.log(`📅 EVENT CALENDAR: ${demoEvents.length} eventos carregados`);
+      }));
+
+      setEvents(convertedEvents);
+      setFilteredEvents(convertedEvents);
+      console.log(`📅 EVENT CALENDAR: ${convertedEvents.length} eventos aprovados carregados`);
       
     } catch (error) {
       console.error("📅 EVENT CALENDAR: Erro ao carregar eventos:", error);
+      setEvents([]);
+      setFilteredEvents([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Filtrar eventos
+  useEffect(() => {
+    let filtered = events;
+
+    // Filtro de busca
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(event =>
+        event.titulo.toLowerCase().includes(searchLower) ||
+        event.descricao_resumida.toLowerCase().includes(searchLower) ||
+        event.local.toLowerCase().includes(searchLower) ||
+        event.cidade.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Filtro de categoria
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(event => event.categoria === selectedCategory);
+    }
+
+    setFilteredEvents(filtered);
+  }, [events, searchTerm, selectedCategory]);
 
   // Agrupar eventos por data
   const eventsByDate = events.reduce((acc, event) => {
@@ -232,13 +222,23 @@ const EventCalendar: React.FC<EventCalendarProps> = ({
     );
   }
 
+  const categories = [
+    { value: 'all', label: 'Todas' },
+    { value: 'cultural', label: 'Cultural' },
+    { value: 'gastronomic', label: 'Gastronômico' },
+    { value: 'sports', label: 'Esportivo' },
+    { value: 'religious', label: 'Religioso' },
+    { value: 'entertainment', label: 'Entretenimento' },
+    { value: 'business', label: 'Negócios' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header com controles */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-ms-primary-blue">Calendário de Eventos</h2>
-          <p className="text-gray-600">Eventos oficiais de Mato Grosso do Sul</p>
+          <p className="text-gray-600">Eventos aprovados de Mato Grosso do Sul</p>
         </div>
         
         <div className="flex gap-2">
@@ -259,11 +259,37 @@ const EventCalendar: React.FC<EventCalendarProps> = ({
         </div>
       </div>
 
+      {/* Filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar eventos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger>
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map(cat => (
+              <SelectItem key={cat.value} value={cat.value}>
+                {cat.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Lista de Eventos */}
       {viewMode === 'list' && (
         <div className="space-y-4">
-          {events.length > 0 ? (
-            events.map((event) => {
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => {
               const status = getEventStatus(event);
               return (
                 <Card key={event.id} className="hover:shadow-md transition-shadow">

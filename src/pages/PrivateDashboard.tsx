@@ -15,7 +15,7 @@ import {
   Settings,
   Upload,
   CheckCircle,
-  MapPin
+  MapPin,
 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import DiagnosticDashboard from '@/components/diagnostic/DiagnosticDashboard';
@@ -886,6 +886,7 @@ const PrivateDashboard = () => {
           {activeSection === 'goals' && (
             <GoalsTracking />
           )}
+
         </div>
       </div>
 

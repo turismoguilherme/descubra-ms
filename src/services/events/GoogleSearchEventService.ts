@@ -180,6 +180,112 @@ export class GoogleSearchEventService {
   }
 
   /**
+   * Buscar sugestões de eventos para secretaria cadastrar
+   * Usado quando secretaria vai cadastrar um novo evento
+   */
+  public async suggestEventsForRegistration(
+    location?: string,
+    date?: string
+  ): Promise<{
+    success: boolean;
+    eventos: EventoCompleto[];
+    total_encontrados: number;
+    errors: string[];
+    fromCache: boolean;
+  }> {
+    const result = {
+      success: true,
+      eventos: [] as EventoCompleto[],
+      total_encontrados: 0,
+      errors: [] as string[],
+      fromCache: false
+    };
+
+    try {
+      // Verificar se API está configurada
+      if (!API_CONFIG.GOOGLE.isConfigured()) {
+        result.success = false;
+        result.errors.push("Google Search API não configurada");
+        return result;
+      }
+
+      // Construir query baseada em localização e data
+      let query = 'eventos Mato Grosso do Sul 2025';
+      if (location) {
+        query = `eventos ${location} Mato Grosso do Sul 2025`;
+      }
+      if (date) {
+        const dateObj = new Date(date);
+        const month = dateObj.toLocaleString('pt-BR', { month: 'long' });
+        query = `eventos ${location || 'Mato Grosso do Sul'} ${month} 2025`;
+      }
+
+      // Chave de cache baseada na query
+      const cacheKey = `suggestions_${location || 'ms'}_${date || 'all'}`;
+      
+      // Verificar cache primeiro
+      const cachedData = this.getCachedData(cacheKey);
+      if (cachedData) {
+        result.eventos = cachedData;
+        result.total_encontrados = cachedData.length;
+        result.fromCache = true;
+        console.log(`📦 CACHE: ${cachedData.length} sugestões retornadas do cache`);
+        return result;
+      }
+
+      // Verificar se pode fazer requisição
+      const canRequest = this.canMakeRequest();
+      if (!canRequest.allowed) {
+        result.success = false;
+        result.errors.push(canRequest.reason || "Limite de requisições atingido");
+        console.warn(`⚠️ LIMITE: ${canRequest.reason}`);
+        return result;
+      }
+
+      // Fazer requisição
+      console.log(`🔍 GOOGLE SEARCH: Buscando sugestões de eventos para "${query}"...`);
+      
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${API_CONFIG.GOOGLE.SEARCH_API_KEY}&cx=${API_CONFIG.GOOGLE.SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}&num=10`;
+
+      // Registrar requisição ANTES de fazer
+      this.logRequest();
+
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      if (response.status === 429) {
+        result.success = false;
+        result.errors.push("Limite de requisições da API atingido. Tente novamente mais tarde.");
+        return result;
+      }
+
+      if (!response.ok || data.error) {
+        result.success = false;
+        result.errors.push(data.error?.message || "Erro na busca");
+        return result;
+      }
+
+      // Processar resultados
+      const eventos = this.processSearchResults(data.items || [], location, date);
+      
+      // Salvar no cache
+      this.setCachedData(cacheKey, eventos);
+
+      result.eventos = eventos;
+      result.total_encontrados = eventos.length;
+      result.fromCache = false;
+
+      console.log(`✅ GOOGLE SEARCH: ${eventos.length} sugestões encontradas`);
+      return result;
+    } catch (error: any) {
+      console.error('❌ GOOGLE SEARCH: Erro na busca:', error);
+      result.success = false;
+      result.errors.push(error.message || "Erro desconhecido");
+      return result;
+    }
+  }
+
+  /**
    * Busca eventos na web usando Google Search API
    */
   public async searchEvents(): Promise<{
@@ -274,9 +380,29 @@ export class GoogleSearchEventService {
   }
 
   /**
+   * Processa múltiplos resultados da busca
+   */
+  private processSearchResults(
+    items: any[],
+    location?: string,
+    date?: string
+  ): EventoCompleto[] {
+    const eventos: EventoCompleto[] = [];
+    
+    for (const item of items.slice(0, 10)) { // Máximo 10 sugestões
+      const evento = this.processSearchResult(item, location, date);
+      if (evento) {
+        eventos.push(evento);
+      }
+    }
+    
+    return eventos;
+  }
+
+  /**
    * Processa resultado da busca
    */
-  private processSearchResult(item: any): EventoCompleto | null {
+  private processSearchResult(item: any, location?: string, date?: string): EventoCompleto | null {
     try {
       const titulo = item.title || 'Evento encontrado';
       const descricao = item.snippet || '';

@@ -29,10 +29,13 @@ import {
 import { format, subDays, subMonths, subYears } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+type ReportType = 'all' | 'cats' | 'events' | 'inventory' | 'metrics';
+
 const ReportGenerator: React.FC = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reportType, setReportType] = useState<ReportType>('all');
   const [reportConfig, setReportConfig] = useState<ReportOptions>({
     title: 'Relatório Municipal de Turismo',
     period: {
@@ -88,6 +91,30 @@ const ReportGenerator: React.FC = () => {
     });
   };
 
+  const handleReportTypeChange = (type: ReportType) => {
+    setReportType(type);
+    // Atualizar configuração baseado no tipo
+    const config: ReportOptions = {
+      ...reportConfig,
+      includeMetrics: type === 'all' || type === 'metrics',
+      includeCATs: type === 'all' || type === 'cats',
+      includeAttractions: type === 'all' || type === 'inventory',
+      includeEvents: type === 'all' || type === 'events',
+    };
+    
+    // Atualizar título
+    const titles: Record<ReportType, string> = {
+      all: 'Relatório Completo Municipal',
+      cats: 'Relatório de CATs',
+      events: 'Relatório de Eventos',
+      inventory: 'Relatório de Inventário Turístico',
+      metrics: 'Relatório de Métricas'
+    };
+    config.title = titles[type];
+    
+    setReportConfig(config);
+  };
+
   const handleGenerate = async () => {
     if (!user?.id) {
       setError('Você precisa estar logado para gerar relatórios');
@@ -137,48 +164,188 @@ const ReportGenerator: React.FC = () => {
         </CardBox>
       )}
 
-      <CardBox className="bg-blue-50 border-blue-200">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <FileText className="h-6 w-6 text-blue-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-blue-900 mb-2 text-lg">
-              Relatório Completo Municipal
+      <div className="space-y-6">
+        {/* Seleção de Tipo de Relatório */}
+        <CardBox className="bg-gradient-to-br from-white to-blue-50/30 border-blue-200 shadow-md">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Tipo de Relatório
             </h3>
-            <p className="text-sm text-blue-700 leading-relaxed">
-              Este relatório inclui: Métricas principais, Performance dos CATs, Atrações turísticas, 
-              Eventos programados, Análises de turistas e Dados regionais.
+            <p className="text-sm text-slate-600">Selecione o tipo de relatório que deseja gerar</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            <button
+              type="button"
+              onClick={() => handleReportTypeChange('all')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'all'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <BarChart3 className={`h-6 w-6 ${reportType === 'all' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'all' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Completo
+                </span>
+                <span className="text-xs text-gray-500 text-center">Todos os dados</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleReportTypeChange('cats')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'cats'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Building2 className={`h-6 w-6 ${reportType === 'cats' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'cats' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  CATs
+                </span>
+                <span className="text-xs text-gray-500 text-center">Apenas CATs</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleReportTypeChange('events')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'events'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <CalendarIcon className={`h-6 w-6 ${reportType === 'events' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'events' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Eventos
+                </span>
+                <span className="text-xs text-gray-500 text-center">Apenas eventos</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleReportTypeChange('inventory')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'inventory'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <MapPin className={`h-6 w-6 ${reportType === 'inventory' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'inventory' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Inventário
+                </span>
+                <span className="text-xs text-gray-500 text-center">Apenas atrações</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleReportTypeChange('metrics')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'metrics'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <BarChart3 className={`h-6 w-6 ${reportType === 'metrics' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'metrics' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Métricas
+                </span>
+                <span className="text-xs text-gray-500 text-center">Apenas métricas</span>
+              </div>
+            </button>
+          </div>
+        </CardBox>
+
+        {/* Período e Configurações */}
+        <CardBox className="bg-gradient-to-br from-white to-slate-50/30 border-slate-200 shadow-md">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              Período do Relatório
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {periodPresets.map((preset) => (
+              <Button
+                key={preset.value}
+                type="button"
+                variant="outline"
+                onClick={() => handlePresetSelect(preset)}
+                className="h-auto py-3 flex flex-col items-center gap-1"
+              >
+                <span className="text-sm font-medium">{preset.label}</span>
+                <span className="text-xs text-gray-500">
+                  {format(preset.getPeriod().start, 'dd/MM')} - {format(preset.getPeriod().end, 'dd/MM')}
+                </span>
+              </Button>
+            ))}
+          </div>
+
+          <div className="pt-4 border-t border-slate-200">
+            <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
+              <Info className="h-4 w-4" />
+              <span>Período selecionado:</span>
+            </div>
+            <p className="text-sm font-medium text-slate-800">
+              {format(reportConfig.period.start, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} até{' '}
+              {format(reportConfig.period.end, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </div>
-        </div>
+        </CardBox>
 
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Botão Baixar PDF clicado');
-              handleGenerate();
-            }}
-            disabled={!!isGenerating}
-            className="flex-1 bg-white hover:bg-gray-50 border-blue-300 text-blue-700 border-2"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                Baixar PDF
-              </>
-            )}
-          </Button>
-        </div>
-      </CardBox>
+        {/* Botão de Geração */}
+        <CardBox className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-300 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-900 mb-1 text-lg">
+                {reportConfig.title}
+              </h3>
+              <p className="text-sm text-blue-700">
+                {reportType === 'all' && 'Inclui todas as seções: Métricas, CATs, Eventos, Inventário e Análises'}
+                {reportType === 'cats' && 'Inclui apenas dados dos Centros de Atendimento ao Turista'}
+                {reportType === 'events' && 'Inclui apenas eventos programados e realizados'}
+                {reportType === 'inventory' && 'Inclui apenas o inventário turístico (atrações e pontos de interesse)'}
+                {reportType === 'metrics' && 'Inclui apenas métricas e indicadores principais'}
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleGenerate();
+              }}
+              disabled={isGenerating}
+              className="ml-4 bg-blue-600 hover:bg-blue-700 text-white shadow-md px-6 py-3 h-auto"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <Download className="h-5 w-5 mr-2" />
+                  Baixar PDF
+                </>
+              )}
+            </Button>
+          </div>
+        </CardBox>
+      </div>
     </SectionWrapper>
   );
 };

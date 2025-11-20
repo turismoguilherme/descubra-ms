@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { 
@@ -30,7 +31,8 @@ import {
   Users,
   Heart,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  FileText
 } from 'lucide-react';
 import FileUpload from '@/components/ui/FileUpload';
 import { inventoryService, TourismAttraction as InventoryAttraction } from '@/services/public/inventoryService';
@@ -767,84 +769,115 @@ const AttractionForm: React.FC<{
       title={attraction ? 'Editar Atrativo' : 'Novo Atrativo'}
       subtitle={attraction ? 'Atualize as informações do atrativo' : 'Preencha os dados do novo atrativo turístico'}
     >
-      <CardBox className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Nome do Atrativo</Label>
+      <CardBox className="max-w-2xl mx-auto shadow-lg bg-gradient-to-br from-white to-blue-50/30">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                Nome do Atrativo *
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Ex: Gruta do Lago Azul"
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Filter className="h-4 w-4 text-blue-600" />
+                Categoria *
+              </Label>
+              <Select
                 value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as any }))}
-                className="w-full p-2 border rounded-md"
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as any }))}
               >
-                <option value="natural">🌿 Natural</option>
-                <option value="cultural">🏛️ Cultural</option>
-                <option value="gastronomic">🍽️ Gastronômico</option>
-                <option value="adventure">🏔️ Aventura</option>
-                <option value="religious">⛪ Religioso</option>
-                <option value="entertainment">🎭 Entretenimento</option>
-              </select>
+                <SelectTrigger className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="natural">🌿 Natural</SelectItem>
+                  <SelectItem value="cultural">🏛️ Cultural</SelectItem>
+                  <SelectItem value="gastronomic">🍽️ Gastronômico</SelectItem>
+                  <SelectItem value="adventure">🏔️ Aventura</SelectItem>
+                  <SelectItem value="religious">⛪ Religioso</SelectItem>
+                  <SelectItem value="entertainment">🎭 Entretenimento</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="description">Descrição</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-600" />
+              Descrição *
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
+              rows={4}
+              placeholder="Descreva o atrativo, suas características, história..."
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
-          <div>
-            <Label htmlFor="address">Endereço</Label>
+          <div className="space-y-2">
+            <Label htmlFor="address" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              Endereço *
+            </Label>
             <Input
               id="address"
               value={formData.address}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              placeholder="Ex: Rua 14 de Julho, 123, Centro, Bonito, MS"
+              className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="priceRange">Faixa de Preço</Label>
-              <select
-                id="priceRange"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="priceRange" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-blue-600" />
+                Faixa de Preço
+              </Label>
+              <Select
                 value={formData.priceRange}
-                onChange={(e) => setFormData(prev => ({ ...prev, priceRange: e.target.value as any }))}
-                className="w-full p-2 border rounded-md"
+                onValueChange={(value) => setFormData(prev => ({ ...prev, priceRange: value as any }))}
               >
-                <option value="free">Gratuito</option>
-                <option value="low">R$ 0-20</option>
-                <option value="medium">R$ 20-50</option>
-                <option value="high">R$ 50+</option>
-              </select>
+                <SelectTrigger className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Selecione a faixa de preço" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Gratuito</SelectItem>
+                  <SelectItem value="low">R$ 0-20</SelectItem>
+                  <SelectItem value="medium">R$ 20-50</SelectItem>
+                  <SelectItem value="high">R$ 50+</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <Label htmlFor="openingHours">Horário de Funcionamento</Label>
+            <div className="space-y-2">
+              <Label htmlFor="openingHours" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                Horário de Funcionamento
+              </Label>
               <Input
                 id="openingHours"
                 value={formData.openingHours}
                 onChange={(e) => setFormData(prev => ({ ...prev, openingHours: e.target.value }))}
                 placeholder="Ex: 08:00 - 17:00"
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
             <Button 
               type="button" 
               variant="outline" 
@@ -854,6 +887,7 @@ const AttractionForm: React.FC<{
                 console.log('Botão Cancelar formulário atração clicado');
                 onCancel();
               }}
+              className="px-6 h-11 border-slate-300 hover:bg-slate-50"
             >
               Cancelar
             </Button>
@@ -865,7 +899,7 @@ const AttractionForm: React.FC<{
                 console.log('Botão Salvar atração clicado');
                 handleSubmit(e);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md px-6 h-11"
             >
               {attraction ? 'Atualizar' : 'Criar'} Atrativo
             </Button>

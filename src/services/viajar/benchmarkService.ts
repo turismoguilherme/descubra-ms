@@ -29,6 +29,37 @@ export interface CompetitiveBenchmark {
 
 export class BenchmarkService {
   /**
+   * Verificar se usuário deu consentimento para compartilhamento de dados
+   */
+  async checkConsent(userId: string): Promise<{ hasConsent: boolean; dataTypes: string[] }> {
+    try {
+      const { data, error } = await supabase
+        .from('data_sharing_consents')
+        .select('consent_given, data_types_shared, revoked_at')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao verificar consentimento:', error);
+        return { hasConsent: false, dataTypes: [] };
+      }
+
+      if (!data) {
+        return { hasConsent: false, dataTypes: [] };
+      }
+
+      const hasConsent = data.consent_given && !data.revoked_at;
+      return {
+        hasConsent,
+        dataTypes: hasConsent ? (data.data_types_shared || []) : [],
+      };
+    } catch (error) {
+      console.error('Erro ao verificar consentimento:', error);
+      return { hasConsent: false, dataTypes: [] };
+    }
+  }
+
+  /**
    * Salvar dados de benchmark
    */
   async saveBenchmarkData(
@@ -69,8 +100,19 @@ export class BenchmarkService {
 
   /**
    * Buscar dados de benchmark (mockado, preparado para ALUMIA)
+   * Verifica consentimento antes de retornar dados
    */
   async getBenchmarkData(userId: string): Promise<any> {
+    // Verificar consentimento primeiro
+    const consent = await this.checkConsent(userId);
+    if (!consent.hasConsent) {
+      return {
+        error: 'NO_CONSENT',
+        message: 'Você precisa dar consentimento para compartilhamento de dados para visualizar benchmarking.',
+        requiresConsent: true,
+      };
+    }
+
     try {
       // Por enquanto retorna dados mockados
       // TODO: Integrar com ALUMIA API quando disponível

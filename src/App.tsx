@@ -55,6 +55,7 @@ const SecretaryDashboard = lazy(() => import("@/components/secretary/SecretaryDa
 const AttendantDashboardRestored = lazy(() => import("@/components/cat/AttendantDashboardRestored"));
 const PrivateDashboard = lazy(() => import("@/pages/PrivateDashboard"));
 const UnifiedDashboard = lazy(() => import("@/pages/UnifiedDashboard"));
+const ViaJARMasterDashboard = lazy(() => import("@/pages/ViaJARMasterDashboard"));
 const AuthDebug = lazy(() => import("@/components/debug/AuthDebug"));
 
 // State Pages
@@ -151,6 +152,11 @@ function App() {
                             <Route path="/viajar/dashboard-old" element={
                               <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
                                 <Suspense fallback={<LoadingFallback />}><ViaJARDashboard /></Suspense>
+                              </ProtectedRoute>
+                            } />
+                            <Route path="/viajar/master-dashboard" element={
+                              <ProtectedRoute allowedRoles={['admin', 'master_admin', 'tech']}>
+                                <Suspense fallback={<LoadingFallback />}><ViaJARMasterDashboard /></Suspense>
                               </ProtectedRoute>
                             } />
                             <Route path="/viajar/inventario" element={

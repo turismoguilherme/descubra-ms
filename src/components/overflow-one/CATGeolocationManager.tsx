@@ -3,12 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
-import { MapPin, Plus, Edit, Trash2, Navigation, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
+import { MapPin, Plus, Edit, Trash2, Navigation, CheckCircle, AlertCircle, Building2, Users } from 'lucide-react';
 import { useMultiTenantOverflowOne } from '@/hooks/useMultiTenantOverflowOne';
 import { catLocationService, CATLocation as ServiceCATLocation } from '@/services/public/catLocationService';
 import { useAuth } from '@/hooks/useAuth';
+import AttendantManagement from '@/components/secretary/AttendantManagement';
 
 interface CATLocation {
   id: string;
@@ -38,8 +41,11 @@ const CATGeolocationManager: React.FC = () => {
     address: '',
     latitude: '',
     longitude: '',
-    radius: '100'
+    radius: '200'
   });
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
 
   useEffect(() => {
     loadCATLocations();
@@ -96,11 +102,121 @@ const CATGeolocationManager: React.FC = () => {
     }
   };
 
-  const handleAddCAT = async () => {
-    if (!newCAT.name || !newCAT.address || !newCAT.latitude || !newCAT.longitude) {
-      alert('Preencha todos os campos obrigatórios');
+  // Buscar endereço e preencher coordenadas automaticamente
+  const searchAddress = async (address: string) => {
+    if (!address || address.length < 5) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
       return;
     }
+
+    setSearchingAddress(true);
+    try {
+      // Usar Nominatim (OpenStreetMap) - gratuito e não requer API key
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', ' + (cityName || '') + ', ' + (stateName || 'MS') + ', Brasil')}&limit=5&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'ViaJAR-Tourism-Platform/1.0'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAddressSuggestions(data);
+        setShowAddressSuggestions(data.length > 0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar endereço:', error);
+    } finally {
+      setSearchingAddress(false);
+    }
+  };
+
+  const selectAddress = (suggestion: any) => {
+    const address = suggestion.display_name || suggestion.name;
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+
+    setNewCAT(prev => ({
+      ...prev,
+      address: address,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6)
+    }));
+
+    setAddressSuggestions([]);
+    setShowAddressSuggestions(false);
+  };
+
+  const useCurrentLocation = () => {
+    if (userLocation) {
+      setNewCAT(prev => ({
+        ...prev,
+        latitude: userLocation.lat.toFixed(6),
+        longitude: userLocation.lng.toFixed(6)
+      }));
+    }
+  };
+
+  const handleAddCAT = async () => {
+    if (!newCAT.name || !newCAT.address) {
+      alert('Preencha pelo menos o nome e endereço do CAT');
+      return;
+    }
+
+    // Se não tem coordenadas, tentar buscar pelo endereço automaticamente
+    let lat = parseFloat(newCAT.latitude);
+    let lng = parseFloat(newCAT.longitude);
+
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      if (newCAT.address) {
+        setSearchingAddress(true);
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newCAT.address + ', ' + (cityName || '') + ', ' + (stateName || 'MS') + ', Brasil')}&limit=1`,
+            {
+              headers: {
+                'User-Agent': 'ViaJAR-Tourism-Platform/1.0'
+              }
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.length > 0) {
+              lat = parseFloat(data[0].lat);
+              lng = parseFloat(data[0].lon);
+              setNewCAT(prev => ({
+                ...prev,
+                latitude: lat.toFixed(6),
+                longitude: lng.toFixed(6)
+              }));
+            } else {
+              alert('Endereço não encontrado. Por favor, verifique o endereço ou use o botão "Usar Minha Localização".');
+              setSearchingAddress(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao buscar coordenadas:', error);
+          alert('Erro ao buscar coordenadas. Por favor, use o botão "Usar Minha Localização" ou tente novamente.');
+          setSearchingAddress(false);
+          return;
+        } finally {
+          setSearchingAddress(false);
+        }
+      } else {
+        alert('Não foi possível obter as coordenadas. Por favor, use a busca de endereço (selecione uma sugestão) ou o botão "Usar Minha Localização".');
+        return;
+      }
+    }
+
+    await saveCAT(lat, lng);
+  };
+
+  const saveCAT = async (lat: number, lng: number) => {
 
     setLoading(true);
     try {
@@ -109,15 +225,17 @@ const CATGeolocationManager: React.FC = () => {
         address: newCAT.address,
         city: cityName || '',
         state: stateName || 'MS',
-        latitude: parseFloat(newCAT.latitude),
-        longitude: parseFloat(newCAT.longitude),
+        latitude: lat,
+        longitude: lng,
         radius: parseInt(newCAT.radius),
         is_active: true,
       });
 
       await loadCATLocations();
-      setNewCAT({ name: '', address: '', latitude: '', longitude: '', radius: '100' });
+      setNewCAT({ name: '', address: '', latitude: '', longitude: '', radius: '200' });
       setIsAdding(false);
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
     } catch (error) {
       console.error('Erro ao criar CAT:', error);
       alert('Erro ao criar CAT. Tente novamente.');
@@ -160,16 +278,6 @@ const CATGeolocationManager: React.FC = () => {
       alert('Erro ao alterar status. Tente novamente.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const useCurrentLocation = () => {
-    if (userLocation) {
-      setNewCAT(prev => ({
-        ...prev,
-        latitude: userLocation.lat.toString(),
-        longitude: userLocation.lng.toString()
-      }));
     }
   };
 
@@ -216,23 +324,35 @@ const CATGeolocationManager: React.FC = () => {
       variant="default"
       title={`Gestão de CATs – ${cityName}/${stateName}`}
       subtitle="Cadastre e gerencie os Centros de Atendimento ao Turista com geolocalização"
-      actions={
-        <Button 
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Botão Novo CAT clicado');
-            setIsAdding(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Novo CAT
-        </Button>
-      }
     >
-      <div className="space-y-6">
+      <Tabs defaultValue="cats" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="cats" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Gestão de CATs
+          </TabsTrigger>
+          <TabsTrigger value="attendants" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Gestão de Atendentes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="cats" className="space-y-6">
+          <div className="flex justify-end mb-4">
+            <Button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Novo CAT clicado');
+                setIsAdding(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo CAT
+            </Button>
+          </div>
 
         {/* Status da Localização do Usuário */}
         {userLocation && (
@@ -275,80 +395,145 @@ const CATGeolocationManager: React.FC = () => {
 
         {/* Formulário para Novo CAT */}
         {isAdding && (
-          <CardBox className="border-l-4 border-l-green-500">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">Cadastrar Novo CAT</h3>
-              <p className="text-sm text-slate-600">Preencha os dados do Centro de Atendimento ao Turista</p>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardBox className="border-l-4 border-l-blue-500 shadow-lg bg-gradient-to-br from-white to-blue-50/30">
+            <div className="mb-6 pb-4 border-b border-slate-200">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Building2 className="h-5 w-5 text-blue-600" />
+                </div>
                 <div>
-                  <Label htmlFor="cat-name">Nome do CAT</Label>
+                  <h3 className="text-xl font-bold text-slate-900">Cadastrar Novo CAT</h3>
+                  <p className="text-sm text-slate-600">Preencha os dados do Centro de Atendimento ao Turista</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="cat-name" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    Nome do CAT *
+                  </Label>
                   <Input
                     id="cat-name"
                     value={newCAT.name}
                     onChange={(e) => setNewCAT(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Ex: CAT Centro"
+                    className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="cat-address">Endereço</Label>
-                  <Input
-                    id="cat-address"
-                    value={newCAT.address}
-                    onChange={(e) => setNewCAT(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="Endereço completo"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cat-latitude">Latitude</Label>
-                  <div className="flex gap-2">
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="cat-address" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600" />
+                    Endereço *
+                  </Label>
+                  <div className="relative">
                     <Input
-                      id="cat-latitude"
-                      type="number"
-                      step="0.000001"
-                      value={newCAT.latitude}
-                      onChange={(e) => setNewCAT(prev => ({ ...prev, latitude: e.target.value }))}
-                      placeholder="-20.4697"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('Botão Usar localização atual clicado');
-                        useCurrentLocation();
+                      id="cat-address"
+                      value={newCAT.address}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNewCAT(prev => ({ ...prev, address: value }));
+                        searchAddress(value);
                       }}
-                      disabled={!userLocation || isLoadingLocation}
-                    >
-                      <Navigation className="h-4 w-4" />
-                    </Button>
+                      onFocus={() => {
+                        if (addressSuggestions.length > 0) {
+                          setShowAddressSuggestions(true);
+                        }
+                      }}
+                      placeholder="Digite o endereço completo (ex: Rua 14 de Julho, 123, Centro, Campo Grande, MS)"
+                      className="pr-10 h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    {searchingAddress && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                    {showAddressSuggestions && addressSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-blue-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                        {addressSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => selectAddress(suggestion)}
+                            className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-slate-100 last:border-b-0 transition-colors"
+                          >
+                            <div className="flex items-start gap-2">
+                              <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <div className="font-medium text-sm text-slate-900">
+                                  {suggestion.display_name || suggestion.name}
+                                </div>
+                                {suggestion.address && (
+                                  <div className="text-xs text-slate-500 mt-1">
+                                    {suggestion.address.city || suggestion.address.town || ''} - {suggestion.address.state || ''}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                  <p className="text-xs text-slate-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Digite o endereço e selecione uma sugestão. As coordenadas serão preenchidas automaticamente.
+                  </p>
                 </div>
-                <div>
-                  <Label htmlFor="cat-longitude">Longitude</Label>
-                  <Input
-                    id="cat-longitude"
-                    type="number"
-                    step="0.000001"
-                    value={newCAT.longitude}
-                    onChange={(e) => setNewCAT(prev => ({ ...prev, longitude: e.target.value }))}
-                    placeholder="-54.6201"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cat-radius">Raio de Atuação (metros)</Label>
-                  <Input
-                    id="cat-radius"
-                    type="number"
+                <div className="space-y-2">
+                  <Label htmlFor="cat-radius" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Navigation className="h-4 w-4 text-blue-600" />
+                    Raio de Atuação
+                  </Label>
+                  <Select
                     value={newCAT.radius}
-                    onChange={(e) => setNewCAT(prev => ({ ...prev, radius: e.target.value }))}
-                    placeholder="100"
-                  />
+                    onValueChange={(value) => setNewCAT(prev => ({ ...prev, radius: value }))}
+                  >
+                    <SelectTrigger className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="50">50 metros (área pequena)</SelectItem>
+                      <SelectItem value="100">100 metros (área média)</SelectItem>
+                      <SelectItem value="200">200 metros (área grande) - Recomendado</SelectItem>
+                      <SelectItem value="500">500 metros (área muito grande)</SelectItem>
+                      <SelectItem value="1000">1 km (área extensa)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    Distância máxima para check-in dos atendentes
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Navigation className="h-4 w-4 text-blue-600" />
+                    Localização GPS
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={useCurrentLocation}
+                    disabled={!userLocation || isLoadingLocation}
+                    className="w-full h-11 border-slate-300 hover:bg-blue-50 hover:border-blue-400"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    {isLoadingLocation ? 'Obtendo localização...' : 'Usar Minha Localização'}
+                  </Button>
+                  {(newCAT.latitude && newCAT.longitude) && (
+                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <div className="font-medium text-sm text-green-800">Coordenadas obtidas</div>
+                      </div>
+                      <div className="text-xs text-green-700 font-mono">
+                        Lat: {newCAT.latitude} | Lng: {newCAT.longitude}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="flex gap-2 pt-4 border-t border-slate-200">
+              <div className="flex gap-3 pt-6 border-t border-slate-200">
                 <Button 
                   type="button"
                   onClick={(e) => {
@@ -357,10 +542,11 @@ const CATGeolocationManager: React.FC = () => {
                     console.log('Botão Salvar CAT clicado');
                     handleAddCAT();
                   }}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md px-6 h-11"
+                  disabled={loading}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Salvar CAT
+                  {loading ? 'Salvando...' : 'Salvar CAT'}
                 </Button>
                 <Button 
                   type="button"
@@ -370,7 +556,10 @@ const CATGeolocationManager: React.FC = () => {
                     e.stopPropagation();
                     console.log('Botão Cancelar formulário CAT clicado');
                     setIsAdding(false);
+                    setNewCAT({ name: '', address: '', latitude: '', longitude: '', radius: '200' });
+                    setAddressSuggestions([]);
                   }}
+                  className="px-6 h-11 border-slate-300 hover:bg-slate-50"
                 >
                   Cancelar
                 </Button>
@@ -504,7 +693,12 @@ const CATGeolocationManager: React.FC = () => {
           </div>
         )}
 
-      </div>
+        </TabsContent>
+
+        <TabsContent value="attendants" className="space-y-6">
+          <AttendantManagement />
+        </TabsContent>
+      </Tabs>
     </SectionWrapper>
   );
 };

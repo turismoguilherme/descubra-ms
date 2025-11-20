@@ -1,6 +1,8 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import ForcePasswordChange from './ForcePasswordChange';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -18,6 +20,8 @@ export function ProtectedRoute({
   const { user, userProfile, loading } = useAuth();
   const location = useLocation();
   const [waitingForTestUser, setWaitingForTestUser] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState<boolean | null>(null);
+  const [checkingPassword, setCheckingPassword] = useState(true);
 
   // Verificar se há usuário de teste no localStorage e aguardar processamento
   useEffect(() => {
@@ -43,8 +47,52 @@ export function ProtectedRoute({
     }
   }, [user, waitingForTestUser]);
 
+  // Verificar se usuário precisa trocar senha
+  useEffect(() => {
+    const checkPasswordChange = async () => {
+      // Pular verificação para usuários de teste
+      const testUserId = localStorage.getItem('test_user_id');
+      if (testUserId) {
+        setMustChangePassword(false);
+        setCheckingPassword(false);
+        return;
+      }
+
+      if (!user?.id) {
+        setCheckingPassword(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_metadata')
+          .select('must_change_password')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Erro ao verificar must_change_password:', error);
+          setMustChangePassword(false);
+        } else {
+          setMustChangePassword(data?.must_change_password || false);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar senha:', error);
+        setMustChangePassword(false);
+      } finally {
+        setCheckingPassword(false);
+      }
+    };
+
+    if (user && !loading) {
+      checkPasswordChange();
+    } else {
+      setCheckingPassword(false);
+    }
+  }, [user, loading]);
+
   // Aguardar carregamento inicial ou usuário de teste
-  if (loading || waitingForTestUser) {
+  if (loading || waitingForTestUser || checkingPassword) {
     console.log('🔐 ProtectedRoute: loading=true ou aguardando usuário de teste, aguardando...');
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -53,6 +101,20 @@ export function ProtectedRoute({
           <p>Carregando...</p>
         </div>
       </div>
+    );
+  }
+
+  // Verificar se precisa trocar senha (apenas para usuários reais, não de teste)
+  const testUserIdForPassword = localStorage.getItem('test_user_id');
+  if (mustChangePassword === true && !testUserIdForPassword && user) {
+    return (
+      <ForcePasswordChange
+        onPasswordChanged={() => {
+          setMustChangePassword(false);
+          // Recarregar página para garantir que tudo está atualizado
+          window.location.reload();
+        }}
+      />
     );
   }
 
@@ -66,8 +128,8 @@ export function ProtectedRoute({
   });
 
   // Verificar se há usuário de teste no localStorage (fallback)
-  const testUserId = localStorage.getItem('test_user_id');
   const testUserData = localStorage.getItem('test_user_data');
+  const testUserId = localStorage.getItem('test_user_id');
   
   if (!user && testUserId && testUserData) {
     console.log('🔐 ProtectedRoute: Usuário de teste encontrado no localStorage, processando imediatamente...');

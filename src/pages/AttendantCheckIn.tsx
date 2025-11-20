@@ -3,11 +3,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import GeoCheckInSimple from '@/components/attendant/GeoCheckInSimple';
 import CATAIInterface from '@/components/cat/CATAIInterface';
+import TouristSurveyForm from '@/components/attendant/TouristSurveyForm';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Bot, Users, Clock, CheckCircle } from 'lucide-react';
+import { MapPin, Bot, Users, Clock, CheckCircle, MessageSquare } from 'lucide-react';
 
 const AttendantCheckIn: React.FC = () => {
   const { user, loading } = useAuth();
@@ -52,11 +53,15 @@ const AttendantCheckIn: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="checkin" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="checkin" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="checkin" className="flex items-center space-x-2">
               <MapPin className="h-4 w-4" />
               <span>Check-in</span>
+            </TabsTrigger>
+            <TabsTrigger value="survey" className="flex items-center space-x-2">
+              <MessageSquare className="h-4 w-4" />
+              <span>Pesquisa</span>
             </TabsTrigger>
             <TabsTrigger value="ai" className="flex items-center space-x-2">
               <Bot className="h-4 w-4" />
@@ -84,6 +89,10 @@ const AttendantCheckIn: React.FC = () => {
                 <GeoCheckInSimple />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="survey" className="space-y-6">
+            <TouristSurveyForm />
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-6">

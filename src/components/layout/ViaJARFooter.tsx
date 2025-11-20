@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { Mail, Facebook, Instagram, Linkedin, Shield } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const ViaJARFooter: React.FC = () => {
+  const { userProfile } = useAuth();
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'master_admin' || userProfile?.role === 'tech';
+
   return (
     <footer className="bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -41,6 +45,18 @@ const ViaJARFooter: React.FC = () => {
               >
                 Cookies
               </Link>
+              {isAdmin && (
+                <>
+                  <span className="text-gray-300">|</span>
+                  <Link 
+                    to="/viajar/master-dashboard" 
+                    className="text-gray-500 hover:text-cyan-600 transition-colors flex items-center gap-1"
+                  >
+                    <Shield className="h-3 w-3" />
+                    Dashboard Master
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Separador */}

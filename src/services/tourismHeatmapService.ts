@@ -60,6 +60,91 @@ export interface HeatmapFilters {
 }
 
 export class TourismHeatmapService {
+  /**
+   * Quando atração é cadastrada, adiciona marcador no mapa
+   */
+  async onAttractionCreated(attractionId: string, location: { lat: number; lng: number }): Promise<void> {
+    try {
+      // Buscar dados da atração
+      const { data: attraction, error } = await supabase
+        .from('attractions')
+        .select('id, name, category, location')
+        .eq('id', attractionId)
+        .single();
+
+      if (error || !attraction) {
+        console.error('Erro ao buscar atração:', error);
+        return;
+      }
+
+      // Criar movimento inicial para marcar a atração no mapa
+      await this.recordMovement({
+        location: {
+          lat: location.lat,
+          lng: location.lng,
+        },
+        type: 'check_in',
+        activity: 'viewing',
+        region: 'MS',
+        city: attraction.location?.split(',')[0] || 'MS',
+        attraction_id: attractionId,
+        attraction_name: attraction.name,
+        source: 'website',
+      });
+
+      console.log(`✅ Marcador adicionado para atração ${attraction.name}`);
+    } catch (error) {
+      console.error('Erro ao adicionar marcador de atração:', error);
+    }
+  }
+
+  /**
+   * Quando turista visita atração, atualiza concentração
+   */
+  async onTouristVisit(attractionId: string, userId?: string): Promise<void> {
+    try {
+      // Buscar dados da atração
+      const { data: attraction, error } = await supabase
+        .from('attractions')
+        .select('id, name, location, latitude, longitude')
+        .eq('id', attractionId)
+        .single();
+
+      if (error || !attraction) {
+        console.error('Erro ao buscar atração:', error);
+        return;
+      }
+
+      // Registrar visita
+      const lat = attraction.latitude || 0;
+      const lng = attraction.longitude || 0;
+
+      if (lat === 0 || lng === 0) {
+        console.warn(`Atração ${attraction.name} não tem coordenadas`);
+        return;
+      }
+
+      await this.recordMovement({
+        location: {
+          lat,
+          lng,
+        },
+        type: 'check_in',
+        activity: 'visiting',
+        duration_minutes: 30, // Estimativa padrão
+        region: 'MS',
+        city: attraction.location?.split(',')[0] || 'MS',
+        attraction_id: attractionId,
+        attraction_name: attraction.name,
+        source: 'mobile_app',
+      });
+
+      console.log(`✅ Visita registrada para atração ${attraction.name}`);
+    } catch (error) {
+      console.error('Erro ao registrar visita:', error);
+    }
+  }
+
   // Registrar movimento turístico
   async recordMovement(movement: Omit<TourismMovement, 'id' | 'timestamp'>): Promise<TourismMovement> {
     try {

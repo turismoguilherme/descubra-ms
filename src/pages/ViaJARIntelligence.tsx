@@ -27,6 +27,11 @@ import { useBusinessType } from '@/hooks/useBusinessType';
 import { getBusinessMetricLabel, isMetricRelevant } from '@/services/business/businessMetricsService';
 import { regionalDataIntegrationService } from '@/services/private/regionalDataIntegrationService';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { ShieldCheck, ShieldOff, Info } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 // Dados mockados - serão substituídos pela ALUMIA API
 const MOCK_REVENUE_PREDICTION = {
@@ -99,8 +104,16 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
   const { initialTab = 'revenue', hideHeader = false } = props;
   const [activeTab, setActiveTab] = useState(initialTab);
   const { businessType } = useBusinessType();
-  const { userProfile } = useAuth();
+  const { userProfile, user } = useAuth();
+  const { toast } = useToast();
   const [regionalData, setRegionalData] = useState<any>(null);
+  const [hasConsent, setHasConsent] = useState<boolean | null>(null);
+  const [loadingConsent, setLoadingConsent] = useState(true);
+  const [selectedDataTypes, setSelectedDataTypes] = useState<string[]>(['revenue', 'occupancy', 'pricing', 'ratings']);
+  const [hasReadTerms, setHasReadTerms] = useState(false);
+  const [savingConsent, setSavingConsent] = useState(false);
+  const [localTouristData, setLocalTouristData] = useState<any>(null);
+  const [loadingLocalData, setLoadingLocalData] = useState(false);
   
   // Atualizar aba quando initialTab mudar
   useEffect(() => {
@@ -108,6 +121,42 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  // Verificar consentimento
+  useEffect(() => {
+    const checkConsent = async () => {
+      if (!user?.id) {
+        setLoadingConsent(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('data_sharing_consents')
+          .select('consent_given, data_types_shared, revoked_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+
+        if (data && data.consent_given && !data.revoked_at) {
+          setHasConsent(true);
+          setSelectedDataTypes(data.data_types_shared || []);
+        } else {
+          setHasConsent(false);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar consentimento:', error);
+        setHasConsent(false);
+      } finally {
+        setLoadingConsent(false);
+      }
+    };
+
+    checkConsent();
+  }, [user]);
 
   // Carregar dados regionais
   useEffect(() => {
@@ -126,6 +175,157 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
 
     loadRegionalData();
   }, [businessType, userProfile]);
+
+  // Carregar dados locais de turistas
+  useEffect(() => {
+    const loadLocalTouristData = async () => {
+      if (!userProfile?.city_id) {
+        setLoadingLocalData(false);
+        return;
+      }
+
+      setLoadingLocalData(true);
+      try {
+        // Buscar dados agregados de turistas da região
+        const { data: profiles, error } = await supabase
+          .from('user_profiles')
+          .select('age_range, gender, origin_state, travel_purpose, preferences')
+          .eq('city_id', userProfile.city_id)
+          .or('user_type.eq.turista,user_type.eq.tourist');
+
+        if (error) throw error;
+
+        if (!profiles || profiles.length === 0) {
+          setLocalTouristData(null);
+          setLoadingLocalData(false);
+          return;
+        }
+
+        // Processar dados
+        const ageCounts: Record<string, number> = {};
+        const genderCounts: Record<string, number> = {};
+        const originCounts: Record<string, number> = {};
+        const purposeCounts: Record<string, number> = {};
+        const preferenceCounts: Record<string, number> = {};
+
+        profiles.forEach((profile: any) => {
+          const age = profile.age_range;
+          const gender = profile.gender;
+          const origin = profile.origin_state || profile.state;
+          const purpose = profile.travel_purpose;
+          const preferences = profile.preferences || profile.travel_motives || [];
+
+          if (age) ageCounts[age] = (ageCounts[age] || 0) + 1;
+          if (gender) genderCounts[gender] = (genderCounts[gender] || 0) + 1;
+          if (origin) originCounts[origin] = (originCounts[origin] || 0) + 1;
+          if (purpose) purposeCounts[purpose] = (purposeCounts[purpose] || 0) + 1;
+          
+          if (Array.isArray(preferences)) {
+            preferences.forEach((pref: string) => {
+              preferenceCounts[pref] = (preferenceCounts[pref] || 0) + 1;
+            });
+          }
+        });
+
+        const total = profiles.length;
+        const calculatePercentage = (count: number) => total > 0 ? (count / total) * 100 : 0;
+
+        setLocalTouristData({
+          total_tourists: total,
+          age_distribution: Object.entries(ageCounts)
+            .map(([age_range, count]) => ({ age_range, count, percentage: calculatePercentage(count) }))
+            .sort((a, b) => b.count - a.count),
+          gender_distribution: Object.entries(genderCounts)
+            .map(([gender, count]) => ({ gender, count, percentage: calculatePercentage(count) }))
+            .sort((a, b) => b.count - a.count),
+          origin_distribution: Object.entries(originCounts)
+            .map(([origin, count]) => ({ origin, count, percentage: calculatePercentage(count) }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10),
+          travel_purpose_distribution: Object.entries(purposeCounts)
+            .map(([purpose, count]) => ({ purpose, count, percentage: calculatePercentage(count) }))
+            .sort((a, b) => b.count - a.count),
+          preferences_distribution: Object.entries(preferenceCounts)
+            .map(([preference, count]) => ({ preference, count, percentage: calculatePercentage(count) }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10),
+        });
+      } catch (error) {
+        console.error('Erro ao carregar dados locais de turistas:', error);
+        setLocalTouristData(null);
+      } finally {
+        setLoadingLocalData(false);
+      }
+    };
+
+    loadLocalTouristData();
+  }, [userProfile]);
+
+  // Salvar consentimento
+  const handleSaveConsent = async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (selectedDataTypes.length === 0) {
+      toast({
+        title: 'Selecione tipos de dados',
+        description: 'Selecione pelo menos um tipo de dado para compartilhar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!hasReadTerms) {
+      toast({
+        title: 'Leia os termos',
+        description: 'Por favor, leia e aceite os termos de consentimento',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSavingConsent(true);
+    try {
+      const { error } = await supabase
+        .from('data_sharing_consents')
+        .upsert({
+          user_id: user.id,
+          consent_given: true,
+          consent_date: new Date().toISOString(),
+          data_types_shared: selectedDataTypes,
+          revoked_at: null,
+          consent_version: '1.0',
+          terms_url: window.location.origin + '/termos-consentimento-benchmarking',
+          ip_address: null,
+          user_agent: navigator.userAgent,
+        }, {
+          onConflict: 'user_id',
+        });
+
+      if (error) throw error;
+
+      setHasConsent(true);
+      toast({
+        title: 'Consentimento registrado!',
+        description: 'Agora você pode acessar o Competitive Benchmark.',
+      });
+    } catch (error: any) {
+      console.error('Erro ao salvar consentimento:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível salvar o consentimento. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingConsent(false);
+    }
+  };
 
   return (
     <div className={`${hideHeader ? '' : 'min-h-screen'} bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20`}>
@@ -356,54 +556,136 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                     </ResponsiveContainer>
                   </CardBox>
 
-                  {/* Perfil do turista */}
+                  {/* Perfil do turista - Expandido com dados locais e regionais */}
                   <CardBox>
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-purple-600" />
-                      <h3 className="text-lg font-semibold text-slate-800">Perfil do Turista Típico</h3>
+                        <h3 className="text-lg font-semibold text-slate-800">Perfil do Turista</h3>
                     </div>
-                    <p className="text-sm text-slate-600 mb-4">
-                      Baseado em dados oficiais do governo (ALUMIA)
-                    </p>
-                    <div className="space-y-3">
+                      {localTouristData && localTouristData.total_tourists > 0 && (
+                        <Badge className="bg-green-100 text-green-700 border-green-300 text-xs">
+                          Dados Locais
+                        </Badge>
+                      )}
+                    </div>
+
+                    {loadingLocalData ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                        <p className="text-sm text-slate-600">Carregando dados locais...</p>
+                      </div>
+                    ) : localTouristData && localTouristData.total_tourists > 0 ? (
+                      <>
+                        {/* Dados Locais - Versão Compacta */}
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <MapPin className="h-4 w-4 text-blue-600" />
+                            <h4 className="text-sm font-semibold text-slate-800">Dados Locais</h4>
+                            <Badge variant="secondary" className="text-xs">
+                              {localTouristData.total_tourists} turistas
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            {localTouristData.age_distribution.length > 0 && (
+                              <div className="p-2 bg-blue-50 rounded border border-blue-200">
+                                <p className="text-xs text-slate-600 mb-0.5">Idade</p>
+                                <p className="text-sm font-semibold text-blue-700">
+                                  {localTouristData.age_distribution[0].age_range}
+                                </p>
+                              </div>
+                            )}
+                            {localTouristData.gender_distribution.length > 0 && (
+                              <div className="p-2 bg-purple-50 rounded border border-purple-200">
+                                <p className="text-xs text-slate-600 mb-0.5">Gênero</p>
+                                <p className="text-sm font-semibold text-purple-700">
+                                  {localTouristData.gender_distribution[0].gender}
+                                </p>
+                              </div>
+                            )}
+                            {localTouristData.origin_distribution.length > 0 && (
+                              <div className="p-2 bg-green-50 rounded border border-green-200">
+                                <p className="text-xs text-slate-600 mb-0.5">Origem</p>
+                                <p className="text-sm font-semibold text-green-700 truncate" title={localTouristData.origin_distribution[0].origin}>
+                                  {localTouristData.origin_distribution[0].origin}
+                                </p>
+                              </div>
+                            )}
+                            {localTouristData.travel_purpose_distribution.length > 0 && (
+                              <div className="p-2 bg-orange-50 rounded border border-orange-200">
+                                <p className="text-xs text-slate-600 mb-0.5">Propósito</p>
+                                <p className="text-sm font-semibold text-orange-700 truncate" title={localTouristData.travel_purpose_distribution[0].purpose}>
+                                  {localTouristData.travel_purpose_distribution[0].purpose}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Separador */}
+                        <div className="border-t border-slate-200 my-3"></div>
+                      </>
+                    ) : null}
+
+                    {/* Dados Regionais (ALUMIA) - Sempre visível */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-4 w-4 text-purple-600" />
+                        <h4 className="text-sm font-semibold text-slate-800">Perfil Regional</h4>
+                        <Badge variant="outline" className="text-xs">
+                          ALUMIA
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-3">
+                        Dados oficiais do estado/região
+                      </p>
+                      <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Faixa Etária:</span>
-                    <span className="text-sm text-purple-600 font-semibold">
+                          <span className="text-xs font-medium text-slate-700">Faixa Etária:</span>
+                          <span className="text-xs text-purple-600 font-semibold">
                       {MOCK_MARKET_INTELLIGENCE.touristProfile.ageRange}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Renda:</span>
-                    <span className="text-sm text-purple-600 font-semibold">
+                          <span className="text-xs font-medium text-slate-700">Renda:</span>
+                          <span className="text-xs text-purple-600 font-semibold">
                       {MOCK_MARKET_INTELLIGENCE.touristProfile.income}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Transporte:</span>
-                    <span className="text-sm text-purple-600 font-semibold">
+                          <span className="text-xs font-medium text-slate-700">Transporte:</span>
+                          <span className="text-xs text-purple-600 font-semibold">
                       {MOCK_MARKET_INTELLIGENCE.touristProfile.transport}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Permanência:</span>
-                    <span className="text-sm text-purple-600 font-semibold">
+                          <span className="text-xs font-medium text-slate-700">Permanência:</span>
+                          <span className="text-xs text-purple-600 font-semibold">
                       {MOCK_MARKET_INTELLIGENCE.touristProfile.stayDuration}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Reserva:</span>
-                    <span className="text-sm text-purple-600 font-semibold">
+                          <span className="text-xs font-medium text-slate-700">Reserva:</span>
+                          <span className="text-xs text-purple-600 font-semibold">
                       {MOCK_MARKET_INTELLIGENCE.touristProfile.bookingWindow}
                     </span>
                   </div>
                   <div className="p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Interesses:</span>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                          <span className="text-xs font-medium text-slate-700">Interesses:</span>
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {MOCK_MARKET_INTELLIGENCE.touristProfile.interests.map((interest, i) => (
-                        <Badge key={i} variant="secondary" className="rounded-full text-xs px-2 py-0.5">{interest}</Badge>
+                              <Badge key={i} variant="secondary" className="rounded-full text-xs px-1.5 py-0.5">
+                                {interest}
+                              </Badge>
                       ))}
                     </div>
                   </div>
+                      </div>
+                      {(!localTouristData || localTouristData.total_tourists === 0) && (
+                        <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                          💡 Conforme mais turistas se cadastrarem, você verá dados locais aqui.
+                        </div>
+                      )}
                     </div>
                   </CardBox>
                 </div>
@@ -481,6 +763,99 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                 title="Competitive Benchmark"
                 subtitle="Compare-se com seus concorrentes usando dados reais"
               >
+                {/* Verificar consentimento */}
+                {loadingConsent ? (
+                  <CardBox className="p-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600">Verificando consentimento...</p>
+                  </CardBox>
+                ) : !hasConsent ? (
+                  <CardBox className="p-8 bg-gradient-to-br from-blue-50 to-white border-blue-200">
+                    <div className="max-w-2xl mx-auto space-y-6">
+                      <div className="text-center">
+                        <ShieldCheck className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                          Consentimento para Benchmarking Competitivo
+                        </h3>
+                        <p className="text-slate-600">
+                          Para acessar o Competitive Benchmark, precisamos do seu consentimento para compartilhar dados agregados e anonimizados.
+                        </p>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-lg border border-slate-200 space-y-4">
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-3">Selecione os tipos de dados que você permite compartilhar:</h4>
+                          <div className="space-y-2">
+                            {[
+                              { id: 'revenue', label: 'Receita (agregada e anonimizada)' },
+                              { id: 'occupancy', label: 'Taxa de Ocupação (agregada e anonimizada)' },
+                              { id: 'pricing', label: 'Preço Médio (agregado e anonimizado)' },
+                              { id: 'ratings', label: 'Avaliações (agregadas e anonimizadas)' },
+                              { id: 'stay_duration', label: 'Duração Média da Estadia (agregada e anonimizada)' },
+                            ].map((option) => (
+                              <div key={option.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`data-type-${option.id}`}
+                                  checked={selectedDataTypes.includes(option.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedDataTypes([...selectedDataTypes, option.id]);
+                                    } else {
+                                      setSelectedDataTypes(selectedDataTypes.filter(id => id !== option.id));
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`data-type-${option.id}`} className="text-sm text-slate-700 cursor-pointer">
+                                  {option.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <Checkbox
+                            id="read-terms"
+                            checked={hasReadTerms}
+                            onCheckedChange={(checked) => setHasReadTerms(checked as boolean)}
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="read-terms" className="text-sm font-medium text-slate-700 cursor-pointer">
+                              Li e concordo com os{' '}
+                              <a href="/termos-consentimento-benchmarking" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                Termos de Consentimento para Benchmarking Competitivo
+                              </a>
+                            </Label>
+                            <p className="text-xs text-slate-600 mt-2">
+                              Seus dados serão utilizados de forma agregada e anonimizada para gerar insights de mercado e comparações competitivas, sempre em conformidade com a LGPD. Seus dados individuais nunca serão identificados ou compartilhados diretamente.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                          <Button
+                            onClick={handleSaveConsent}
+                            disabled={savingConsent || !hasReadTerms || selectedDataTypes.length === 0}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            {savingConsent ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Salvando...
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                                Aceitar e Continuar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardBox>
+                ) : (
+                  <>
                 {/* Comparação você vs mercado */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   {isMetricRelevant(businessType, 'occupancy_rate') && (
@@ -692,11 +1067,12 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                 </div>
                   </div>
                 </CardBox>
+                  </>
+                )}
               </SectionWrapper>
             )}
           </>
         ) : (
-          /* Quando hideHeader=false, mostrar tabs normalmente */
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-background/50 backdrop-blur-sm">
             <TabsTrigger value="revenue" className="gap-2">
@@ -868,54 +1244,136 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                   </ResponsiveContainer>
                 </CardBox>
 
-                {/* Perfil do turista */}
+                {/* Perfil do turista - Expandido com dados locais e regionais */}
                 <CardBox>
-                  <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-purple-600" />
-                    <h3 className="text-lg font-semibold text-slate-800">Perfil do Turista Típico</h3>
+                      <h3 className="text-lg font-semibold text-slate-800">Perfil do Turista</h3>
                   </div>
-                  <p className="text-sm text-slate-600 mb-4">
-                    Baseado em dados oficiais do governo (ALUMIA)
-                  </p>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium text-slate-700">Faixa Etária:</span>
-                      <span className="text-sm text-purple-600 font-semibold">
-                        {MOCK_MARKET_INTELLIGENCE.touristProfile.ageRange}
-                      </span>
+                    {localTouristData && localTouristData.total_tourists > 0 && (
+                      <Badge className="bg-green-100 text-green-700 border-green-300 text-xs">
+                        Dados Locais
+                      </Badge>
+                    )}
+                  </div>
+
+                  {loadingLocalData ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-slate-600">Carregando dados locais...</p>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium text-slate-700">Renda:</span>
-                      <span className="text-sm text-purple-600 font-semibold">
-                        {MOCK_MARKET_INTELLIGENCE.touristProfile.income}
-                      </span>
+                  ) : localTouristData && localTouristData.total_tourists > 0 ? (
+                    <>
+                      {/* Dados Locais - Versão Compacta */}
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <MapPin className="h-4 w-4 text-blue-600" />
+                          <h4 className="text-sm font-semibold text-slate-800">Dados Locais</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {localTouristData.total_tourists} turistas
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          {localTouristData.age_distribution.length > 0 && (
+                            <div className="p-2 bg-blue-50 rounded border border-blue-200">
+                              <p className="text-xs text-slate-600 mb-0.5">Idade</p>
+                              <p className="text-sm font-semibold text-blue-700">
+                                {localTouristData.age_distribution[0].age_range}
+                              </p>
+                            </div>
+                          )}
+                          {localTouristData.gender_distribution.length > 0 && (
+                            <div className="p-2 bg-purple-50 rounded border border-purple-200">
+                              <p className="text-xs text-slate-600 mb-0.5">Gênero</p>
+                              <p className="text-sm font-semibold text-purple-700">
+                                {localTouristData.gender_distribution[0].gender}
+                              </p>
+                            </div>
+                          )}
+                          {localTouristData.origin_distribution.length > 0 && (
+                            <div className="p-2 bg-green-50 rounded border border-green-200">
+                              <p className="text-xs text-slate-600 mb-0.5">Origem</p>
+                              <p className="text-sm font-semibold text-green-700 truncate" title={localTouristData.origin_distribution[0].origin}>
+                                {localTouristData.origin_distribution[0].origin}
+                              </p>
+                            </div>
+                          )}
+                          {localTouristData.travel_purpose_distribution.length > 0 && (
+                            <div className="p-2 bg-orange-50 rounded border border-orange-200">
+                              <p className="text-xs text-slate-600 mb-0.5">Propósito</p>
+                              <p className="text-sm font-semibold text-orange-700 truncate" title={localTouristData.travel_purpose_distribution[0].purpose}>
+                                {localTouristData.travel_purpose_distribution[0].purpose}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Separador */}
+                      <div className="border-t border-slate-200 my-3"></div>
+                    </>
+                  ) : null}
+
+                  {/* Dados Regionais (ALUMIA) - Sempre visível */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="h-4 w-4 text-purple-600" />
+                      <h4 className="text-sm font-semibold text-slate-800">Perfil Regional</h4>
+                      <Badge variant="outline" className="text-xs">
+                        ALUMIA
+                      </Badge>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium text-slate-700">Transporte:</span>
-                      <span className="text-sm text-purple-600 font-semibold">
-                        {MOCK_MARKET_INTELLIGENCE.touristProfile.transport}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium text-slate-700">Permanência:</span>
-                      <span className="text-sm text-purple-600 font-semibold">
-                        {MOCK_MARKET_INTELLIGENCE.touristProfile.stayDuration}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium text-slate-700">Reserva:</span>
-                      <span className="text-sm text-purple-600 font-semibold">
-                        {MOCK_MARKET_INTELLIGENCE.touristProfile.bookingWindow}
-                      </span>
-                    </div>
-                    <div className="p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium text-slate-700">Interesses:</span>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {MOCK_MARKET_INTELLIGENCE.touristProfile.interests.map((interest, i) => (
-                          <Badge key={i} variant="secondary" className="rounded-full text-xs px-2 py-0.5">{interest}</Badge>
-                        ))}
+                    <p className="text-xs text-slate-500 mb-3">
+                      Dados oficiais do estado/região
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-xs font-medium text-slate-700">Faixa Etária:</span>
+                        <span className="text-xs text-purple-600 font-semibold">
+                          {MOCK_MARKET_INTELLIGENCE.touristProfile.ageRange}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-xs font-medium text-slate-700">Renda:</span>
+                        <span className="text-xs text-purple-600 font-semibold">
+                          {MOCK_MARKET_INTELLIGENCE.touristProfile.income}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-xs font-medium text-slate-700">Transporte:</span>
+                        <span className="text-xs text-purple-600 font-semibold">
+                          {MOCK_MARKET_INTELLIGENCE.touristProfile.transport}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-xs font-medium text-slate-700">Permanência:</span>
+                        <span className="text-xs text-purple-600 font-semibold">
+                          {MOCK_MARKET_INTELLIGENCE.touristProfile.stayDuration}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-xs font-medium text-slate-700">Reserva:</span>
+                        <span className="text-xs text-purple-600 font-semibold">
+                          {MOCK_MARKET_INTELLIGENCE.touristProfile.bookingWindow}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-gray-50 rounded">
+                        <span className="text-xs font-medium text-slate-700">Interesses:</span>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {MOCK_MARKET_INTELLIGENCE.touristProfile.interests.map((interest, i) => (
+                            <Badge key={i} variant="secondary" className="rounded-full text-xs px-1.5 py-0.5">
+                              {interest}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
+                    {(!localTouristData || localTouristData.total_tourists === 0) && (
+                      <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                        💡 Conforme mais turistas se cadastrarem, você verá dados locais aqui.
+                      </div>
+                    )}
                   </div>
                 </CardBox>
               </div>
@@ -993,6 +1451,99 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
               title="Competitive Benchmark"
               subtitle="Compare-se com seus concorrentes usando dados reais"
             >
+              {/* Verificar consentimento */}
+              {loadingConsent ? (
+                <CardBox className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-slate-600">Verificando consentimento...</p>
+                </CardBox>
+              ) : !hasConsent ? (
+                <CardBox className="p-8 bg-gradient-to-br from-blue-50 to-white border-blue-200">
+                  <div className="max-w-2xl mx-auto space-y-6">
+                    <div className="text-center">
+                      <ShieldCheck className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                      <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                        Consentimento para Benchmarking Competitivo
+                      </h3>
+                      <p className="text-slate-600">
+                        Para acessar o Competitive Benchmark, precisamos do seu consentimento para compartilhar dados agregados e anonimizados.
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border border-slate-200 space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-slate-800 mb-3">Selecione os tipos de dados que você permite compartilhar:</h4>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'revenue', label: 'Receita (agregada e anonimizada)' },
+                            { id: 'occupancy', label: 'Taxa de Ocupação (agregada e anonimizada)' },
+                            { id: 'pricing', label: 'Preço Médio (agregado e anonimizado)' },
+                            { id: 'ratings', label: 'Avaliações (agregadas e anonimizadas)' },
+                            { id: 'stay_duration', label: 'Duração Média da Estadia (agregada e anonimizada)' },
+                          ].map((option) => (
+                            <div key={option.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`data-type-mobile-${option.id}`}
+                                checked={selectedDataTypes.includes(option.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedDataTypes([...selectedDataTypes, option.id]);
+                                  } else {
+                                    setSelectedDataTypes(selectedDataTypes.filter(id => id !== option.id));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`data-type-mobile-${option.id}`} className="text-sm text-slate-700 cursor-pointer">
+                                {option.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <Checkbox
+                          id="read-terms-mobile"
+                          checked={hasReadTerms}
+                          onCheckedChange={(checked) => setHasReadTerms(checked as boolean)}
+                        />
+                        <div className="flex-1">
+                          <Label htmlFor="read-terms-mobile" className="text-sm font-medium text-slate-700 cursor-pointer">
+                            Li e concordo com os{' '}
+                            <a href="/termos-consentimento-benchmarking" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              Termos de Consentimento para Benchmarking Competitivo
+                            </a>
+                          </Label>
+                          <p className="text-xs text-slate-600 mt-2">
+                            Seus dados serão utilizados de forma agregada e anonimizada para gerar insights de mercado e comparações competitivas, sempre em conformidade com a LGPD. Seus dados individuais nunca serão identificados ou compartilhados diretamente.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                        <Button
+                          onClick={handleSaveConsent}
+                          disabled={savingConsent || !hasReadTerms || selectedDataTypes.length === 0}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {savingConsent ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Salvando...
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="h-4 w-4 mr-2" />
+                              Aceitar e Continuar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardBox>
+              ) : (
+                <>
               {/* Comparação você vs mercado */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   {isMetricRelevant(businessType, 'occupancy_rate') && (
@@ -1204,6 +1755,8 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                 </div>
                 </div>
               </CardBox>
+                </>
+              )}
             </SectionWrapper>
           </TabsContent>
         </Tabs>

@@ -31,13 +31,17 @@ import {
   AlertCircle,
   CheckCircle,
   Filter,
-  Search
+  Search,
+  Globe,
+  FileText
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { eventService, TourismEvent as ServiceEvent } from '@/services/public/eventService';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
+import { googleSearchEventService } from '@/services/events/GoogleSearchEventService';
 
 interface TourismEvent {
   id: string;
@@ -78,6 +82,7 @@ const EventManagementSystem: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [userState, setUserState] = useState<string | null>(null);
   const [isMSUser, setIsMSUser] = useState(false);
+  const [sendToPublicCalendar, setSendToPublicCalendar] = useState(true);
 
   const categories = [
     { value: 'all', label: 'Todos', icon: '📅' },
@@ -266,14 +271,16 @@ const EventManagementSystem: React.FC = () => {
         status: eventData.status || 'planned',
         approval_status: editingEvent 
           ? eventData.approval_status || editingEvent.approval_status
-          : (isMSUser ? 'pending' : 'approved'), // Novos eventos do MS começam como 'pending'
+          : (sendToPublicCalendar ? 'approved' : 'pending'), // Se enviar para público, aprovar automaticamente
+        source: 'public', // Eventos da secretaria são sempre 'public'
         images: eventData.images || [],
         contact_phone: eventData.contact?.phone,
         contact_email: eventData.contact?.email,
         contact_website: eventData.contact?.website,
         features: eventData.features || [],
-        is_public: eventData.isPublic !== undefined ? eventData.isPublic : true,
+        is_public: sendToPublicCalendar, // Se enviar para calendário público, marcar como público
         created_by: user?.id,
+        submitted_by: user?.id,
       };
 
       if (editingEvent) {
@@ -475,7 +482,10 @@ const EventManagementSystem: React.FC = () => {
         onCancel={() => {
           setShowForm(false);
           setEditingEvent(null);
+          setSendToPublicCalendar(true);
         }}
+        sendToPublicCalendar={sendToPublicCalendar}
+        onSendToPublicCalendarChange={setSendToPublicCalendar}
       />
     );
   }
@@ -782,9 +792,16 @@ const EventManagementSystem: React.FC = () => {
 // Componente de formulário para adicionar/editar eventos
 const EventForm: React.FC<{
   event: TourismEvent | null;
-  onSave: (event: TourismEvent) => void;
+  onSave: (event: Partial<TourismEvent>) => void;
   onCancel: () => void;
-}> = ({ event, onSave, onCancel }) => {
+  sendToPublicCalendar?: boolean;
+  onSendToPublicCalendarChange?: (value: boolean) => void;
+}> = ({ event, onSave, onCancel, sendToPublicCalendar = true, onSendToPublicCalendarChange }) => {
+  const { toast } = useToast();
+  const [suggestedEvents, setSuggestedEvents] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
   const [formData, setFormData] = useState<TourismEvent>({
     id: event?.id || '',
     title: event?.title || '',
@@ -804,10 +821,66 @@ const EventForm: React.FC<{
     lastUpdated: new Date()
   });
 
+  // Buscar sugestões quando localização ou data mudarem
+  useEffect(() => {
+    if (!event && formData.location && formData.date) {
+      const timer = setTimeout(() => {
+        fetchEventSuggestions();
+      }, 1000); // Debounce de 1 segundo
+      return () => clearTimeout(timer);
+    }
+  }, [formData.location, formData.date]);
+
+  const fetchEventSuggestions = async () => {
+    if (!formData.location) return;
+    
+    setLoadingSuggestions(true);
+    try {
+      const dateStr = formData.date.toISOString().split('T')[0];
+      const result = await googleSearchEventService.suggestEventsForRegistration(
+        formData.location,
+        dateStr
+      );
+
+      if (result.success && result.eventos.length > 0) {
+        setSuggestedEvents(result.eventos);
+        setShowSuggestions(true);
+        toast({
+          title: 'Sugestões encontradas',
+          description: `Encontramos ${result.eventos.length} eventos similares na web.`,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar sugestões:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleUseSuggestion = (suggestedEvent: any) => {
+    setFormData({
+      ...formData,
+      title: suggestedEvent.titulo || formData.title,
+      description: suggestedEvent.descricao_completa || formData.description,
+      location: suggestedEvent.local || formData.location,
+      category: (suggestedEvent.categoria || formData.category) as any,
+    });
+    setShowSuggestions(false);
+    toast({
+      title: 'Sugestão aplicada',
+      description: 'Os dados do evento sugerido foram preenchidos. Revise e ajuste se necessário.',
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onSave(formData);
+    // Atualizar isPublic baseado no checkbox
+    const eventData = {
+      ...formData,
+      isPublic: sendToPublicCalendar,
+    };
+    onSave(eventData);
   };
 
   return (
@@ -816,60 +889,117 @@ const EventForm: React.FC<{
       title={event ? 'Editar Evento' : 'Novo Evento'}
       subtitle={event ? 'Atualize as informações do evento' : 'Preencha os dados do novo evento turístico'}
     >
-      <CardBox className="max-w-4xl mx-auto">
+      <CardBox className="max-w-4xl mx-auto shadow-lg bg-gradient-to-br from-white to-blue-50/30">
+        {/* Sugestões de Eventos */}
+        {!event && showSuggestions && suggestedEvents.length > 0 && (
+          <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-blue-900">Sugestões de Eventos Encontradas</h3>
+              <button
+                type="button"
+                onClick={() => setShowSuggestions(false)}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {suggestedEvents.slice(0, 5).map((suggested, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleUseSuggestion(suggested)}
+                >
+                  <div className="font-medium text-sm">{suggested.titulo}</div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    {suggested.local} • {suggested.data_inicio ? new Date(suggested.data_inicio).toLocaleDateString('pt-BR') : ''}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">Clique para usar esta sugestão</div>
+                </div>
+              ))}
+            </div>
+            {loadingSuggestions && (
+              <div className="text-sm text-gray-600 mt-2">Buscando mais sugestões...</div>
+            )}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="title">Título do Evento</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                Título do Evento *
+              </Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Ex: Festival de Inverno de Bonito"
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Star className="h-4 w-4 text-blue-600" />
+                Categoria *
+              </Label>
+              <Select
                 value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as any }))}
-                className="w-full p-2 border rounded-md"
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as any }))}
               >
-                <option value="cultural">🎭 Cultural</option>
-                <option value="gastronomic">🍽️ Gastronômico</option>
-                <option value="sports">⚽ Esportivo</option>
-                <option value="religious">⛪ Religioso</option>
-                <option value="entertainment">🎪 Entretenimento</option>
-                <option value="business">💼 Negócios</option>
-              </select>
+                <SelectTrigger className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cultural">🎭 Cultural</SelectItem>
+                  <SelectItem value="gastronomic">🍽️ Gastronômico</SelectItem>
+                  <SelectItem value="sports">⚽ Esportivo</SelectItem>
+                  <SelectItem value="religious">⛪ Religioso</SelectItem>
+                  <SelectItem value="entertainment">🎪 Entretenimento</SelectItem>
+                  <SelectItem value="business">💼 Negócios</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="description">Descrição</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-600" />
+              Descrição *
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
+              rows={4}
+              placeholder="Descreva o evento, atrações, programação..."
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="date">Data de Início</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                Data de Início *
+              </Label>
               <Input
                 id="date"
                 type="date"
                 value={formData.date.toISOString().split('T')[0]}
                 onChange={(e) => setFormData(prev => ({ ...prev, date: new Date(e.target.value) }))}
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="endDate">Data de Fim (opcional)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="endDate" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-slate-400" />
+                Data de Fim (opcional)
+              </Label>
               <Input
                 id="endDate"
                 type="date"
@@ -878,40 +1008,83 @@ const EventForm: React.FC<{
                   ...prev, 
                   endDate: e.target.value ? new Date(e.target.value) : undefined 
                 }))}
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="location">Local</Label>
+          <div className="space-y-2">
+            <Label htmlFor="location" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              Local *
+            </Label>
             <Input
               id="location"
               value={formData.location}
               onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+              placeholder="Ex: Centro de Convenções de Bonito"
+              className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="expectedAudience">Público Esperado</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="expectedAudience" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-600" />
+                Público Esperado *
+              </Label>
               <Input
                 id="expectedAudience"
                 type="number"
                 value={formData.expectedAudience}
                 onChange={(e) => setFormData(prev => ({ ...prev, expectedAudience: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="budget">Orçamento (R$)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="budget" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-blue-600" />
+                Orçamento (R$) *
+              </Label>
               <Input
                 id="budget"
                 type="number"
+                step="0.01"
                 value={formData.budget}
                 onChange={(e) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                placeholder="0.00"
+                className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
+            </div>
+          </div>
+
+          {/* Opção de enviar para calendário público */}
+          <div className="flex items-start space-x-3 p-5 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl">
+            <Checkbox
+              id="sendToPublicCalendar"
+              checked={sendToPublicCalendar}
+              onCheckedChange={(checked) => {
+                if (onSendToPublicCalendarChange) {
+                  onSendToPublicCalendarChange(checked as boolean);
+                }
+              }}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <Label
+                htmlFor="sendToPublicCalendar"
+                className="text-sm font-semibold text-slate-800 cursor-pointer flex items-center gap-2 mb-1"
+              >
+                <Globe className="h-4 w-4 text-blue-600" />
+                Enviar para calendário público
+              </Label>
+              <p className="text-xs text-slate-600 ml-6">
+                O evento aparecerá no calendário público do Descubra Mato Grosso do Sul após aprovação
+              </p>
             </div>
           </div>
 

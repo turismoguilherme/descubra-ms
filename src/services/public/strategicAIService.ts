@@ -64,6 +64,68 @@ export class StrategicAIService {
   }
 
   /**
+   * Buscar dados integrados de todos os módulos
+   */
+  async getIntegratedData(municipalityId?: string): Promise<{
+    municipal: MunicipalData;
+    events: any[];
+    surveys: any;
+    heatmap: any[];
+    inventory: any[];
+  }> {
+    try {
+      const municipal = await this.getMunicipalData(municipalityId);
+      
+      // Buscar eventos
+      const { data: events } = await supabase
+        .from('events')
+        .select('*')
+        .eq('approval_status', 'approved')
+        .gte('start_date', new Date().toISOString())
+        .limit(20);
+
+      // Buscar dados de pesquisas (via analyticsService)
+      const { analyticsService } = await import('@/services/public/analyticsService');
+      const surveys = await analyticsService.aggregateSurveyData({
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+      // Buscar dados de heatmap (via tourismHeatmapService)
+      const { tourismHeatmapService } = await import('@/services/tourismHeatmapService');
+      const heatmap = await tourismHeatmapService.generateHeatmapData({
+        timeRange: {
+          start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          end: new Date().toISOString(),
+        },
+      });
+
+      // Buscar inventário
+      const { data: inventory } = await supabase
+        .from('attractions')
+        .select('*')
+        .limit(50);
+
+      return {
+        municipal,
+        events: events || [],
+        surveys,
+        heatmap,
+        inventory: inventory || [],
+      };
+    } catch (error) {
+      console.error('Erro ao buscar dados integrados:', error);
+      const municipal = await this.getMunicipalData(municipalityId);
+      return {
+        municipal,
+        events: [],
+        surveys: null,
+        heatmap: [],
+        inventory: [],
+      };
+    }
+  }
+
+  /**
    * Buscar dados municipais do Supabase
    */
   async getMunicipalData(municipalityId?: string): Promise<MunicipalData> {
@@ -170,17 +232,17 @@ export class StrategicAIService {
   }
 
   /**
-   * Responder pergunta estratégica com contexto dos dados municipais
+   * Responder pergunta estratégica com contexto integrado de todos os módulos
    */
   async answerQuestion(question: string, municipalityId?: string): Promise<StrategicAIResponse> {
     try {
-      const data = await this.getMunicipalData(municipalityId);
+      const integratedData = await this.getIntegratedData(municipalityId);
       
       if (!this.genAI) {
-        return this.getFallbackResponse(question, data);
+        return this.getFallbackResponse(question, integratedData.municipal);
       }
 
-      const prompt = this.buildQuestionPrompt(question, data);
+      const prompt = this.buildIntegratedQuestionPrompt(question, integratedData);
       const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
       const result = await model.generateContent(prompt);
       const response = result.response.text();
@@ -191,15 +253,93 @@ export class StrategicAIService {
         answer: response,
         recommendations: recommendations.slice(0, 5), // Top 5 recomendações
         insights: this.extractInsights(response),
-        dataAnalysis: this.analyzeDataSummary(data),
-        confidence: 0.85,
-        sources: ['Dados do Supabase', 'Análise de tendências', 'Benchmarking setorial']
+        dataAnalysis: this.analyzeIntegratedDataSummary(integratedData),
+        confidence: 0.90, // Maior confiança com dados integrados
+        sources: [
+          'Dados do Supabase',
+          'Análise de tendências',
+          'Benchmarking setorial',
+          'Eventos aprovados',
+          'Pesquisas com turistas',
+          'Mapas de calor',
+          'Inventário turístico'
+        ]
       };
     } catch (error) {
       console.error('Erro ao responder pergunta:', error);
       const data = await this.getMunicipalData(municipalityId);
       return this.getFallbackResponse(question, data);
     }
+  }
+
+  /**
+   * Construir prompt com dados integrados de todos os módulos
+   */
+  private buildIntegratedQuestionPrompt(
+    question: string,
+    data: {
+      municipal: MunicipalData;
+      events: any[];
+      surveys: any;
+      heatmap: any[];
+      inventory: any[];
+    }
+  ): string {
+    return `
+Você é um assistente de IA estratégica para gestão de turismo. Analise os dados integrados abaixo e responda à pergunta do gestor público.
+
+PERGUNTA: ${question}
+
+DADOS MUNICIPAIS:
+- Total de CATs: ${data.municipal.totalCATs}
+- Turistas hoje: ${data.municipal.touristsToday}
+- Eventos cadastrados: ${data.municipal.totalEvents}
+- Atrações cadastradas: ${data.municipal.totalAttractions}
+
+EVENTOS APROVADOS (${data.events.length}):
+${data.events.slice(0, 5).map((e: any) => `- ${e.title || e.name}: ${e.start_date} em ${e.location}`).join('\n')}
+
+PESQUISAS COM TURISTAS:
+- Total de pesquisas: ${data.surveys?.total_surveys || 0}
+- Origem predominante: ${data.surveys?.origin_distribution?.[0]?.origin || 'N/A'}
+- Motivação principal: ${data.surveys?.motivation_distribution?.[0]?.motivation || 'N/A'}
+
+MAPAS DE CALOR:
+- Pontos de concentração: ${data.heatmap.length}
+- Atrações mais visitadas: ${data.heatmap.slice(0, 3).map((h: any) => h.metadata?.popular_activities?.[0] || 'N/A').join(', ')}
+
+INVENTÁRIO TURÍSTICO:
+- Total de atrações: ${data.inventory.length}
+- Categorias: ${[...new Set(data.inventory.map((i: any) => i.category))].join(', ')}
+
+Com base nestes dados integrados, forneça:
+1. Resposta direta à pergunta
+2. Insights relevantes
+3. Recomendações acionáveis
+4. Análise cruzada dos dados
+
+Resposta:
+`;
+  }
+
+  /**
+   * Resumir dados integrados
+   */
+  private analyzeIntegratedDataSummary(data: {
+    municipal: MunicipalData;
+    events: any[];
+    surveys: any;
+    heatmap: any[];
+    inventory: any[];
+  }): string {
+    return `
+Análise Integrada de Dados:
+- ${data.municipal.total_attractions} atrações cadastradas
+- ${data.events.length} eventos aprovados nos próximos 30 dias
+- ${data.surveys?.total_surveys || 0} pesquisas com turistas realizadas
+- ${data.heatmap.length} pontos de concentração turística identificados
+- ${data.inventory.length} itens no inventário turístico
+`;
   }
 
   /**

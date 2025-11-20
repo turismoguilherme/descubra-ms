@@ -42,6 +42,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 interface DiagnosticQuestionnaireProps {
   onComplete: (answers: QuestionnaireAnswers) => void;
   onProgress?: (progress: number) => void;
+  initialData?: Partial<QuestionnaireAnswers>;
+  registrationData?: {
+    origin_state?: string;
+    travel_purpose?: string;
+    age_range?: string;
+    preferences?: string[];
+  };
 }
 
 interface BaseQuestion {
@@ -58,16 +65,18 @@ interface BaseQuestion {
 
 const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({ 
   onComplete,
-  onProgress 
+  onProgress,
+  initialData,
+  registrationData
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<'basic' | 'questionnaire'>('basic');
   const [basicInfo, setBasicInfo] = useState({
-    businessName: '',
-    businessType: '',
-    city: '',
-    state: 'MS'
+    businessName: initialData?.business_name || '',
+    businessType: initialData?.business_type || '',
+    city: initialData?.business_city || '',
+    state: initialData?.business_state || registrationData?.origin_state || 'MS'
   });
   
   // 10 perguntas base
