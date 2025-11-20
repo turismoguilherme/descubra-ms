@@ -32,13 +32,27 @@ import {
   Heart,
   AlertCircle,
   CheckCircle,
-  FileText
+  FileText,
+  Download,
+  Building2,
+  User,
+  Shield,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import FileUpload from '@/components/ui/FileUpload';
 import { inventoryService, TourismAttraction as InventoryAttraction } from '@/services/public/inventoryService';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { seturExportService } from '@/services/public/seturExportService';
+import { seturValidationService } from '@/services/public/seturValidationService';
+import { useToast } from '@/hooks/use-toast';
+import { inventoryAIService } from '@/services/ai/inventoryAIService';
+import { googlePlacesService } from '@/services/integrations/googlePlacesService';
+import { inventoryValidationService } from '@/services/public/inventoryValidationService';
+import { Sparkles, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface TourismAttraction {
   id: string;
@@ -80,6 +94,7 @@ interface ValidationErrors {
 
 const TourismInventoryManager: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [attractions, setAttractions] = useState<TourismAttraction[]>([]);
   const [filteredAttractions, setFilteredAttractions] = useState<TourismAttraction[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +109,7 @@ const TourismInventoryManager: React.FC = () => {
     message: string;
     timestamp: Date;
   }>>([]);
+  const [exportingSeTur, setExportingSeTur] = useState(false);
 
   const categories = [
     { value: 'all', label: 'Todos', icon: '🏛️' },
@@ -194,6 +210,15 @@ const TourismInventoryManager: React.FC = () => {
         is_active: attractionData.isActive !== undefined ? attractionData.isActive : true,
         status: attractionData.verified ? 'approved' : 'draft',
         created_by: user?.id,
+        // Campos SeTur
+        legal_name: (attractionData as any).legal_name,
+        registration_number: (attractionData as any).registration_number,
+        license_number: (attractionData as any).license_number,
+        license_expiry_date: (attractionData as any).license_expiry_date,
+        responsible_name: (attractionData as any).responsible_name,
+        responsible_cpf: (attractionData as any).responsible_cpf,
+        responsible_email: (attractionData as any).responsible_email,
+        responsible_phone: (attractionData as any).responsible_phone,
       };
 
       let savedAttraction: InventoryAttraction;
@@ -421,7 +446,20 @@ const TourismInventoryManager: React.FC = () => {
         verified: item.status === 'approved',
         lastUpdated: item.updated_at ? new Date(item.updated_at) : new Date(),
         createdBy: item.created_by || 'system',
-      }));
+        // Campos SeTur
+        setur_code: (item as any).setur_code,
+        setur_category_code: (item as any).setur_category_code,
+        legal_name: (item as any).legal_name,
+        registration_number: (item as any).registration_number,
+        license_number: (item as any).license_number,
+        license_expiry_date: (item as any).license_expiry_date,
+        responsible_name: (item as any).responsible_name,
+        responsible_cpf: (item as any).responsible_cpf,
+        responsible_email: (item as any).responsible_email,
+        responsible_phone: (item as any).responsible_phone,
+        data_completeness_score: (item as any).data_completeness_score,
+        setur_compliance_score: (item as any).setur_compliance_score,
+      } as any));
 
       setAttractions(convertedAttractions);
     } catch (error) {
@@ -504,6 +542,12 @@ const TourismInventoryManager: React.FC = () => {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   if (showForm) {
     return (
       <AttractionForm
@@ -525,19 +569,63 @@ const TourismInventoryManager: React.FC = () => {
         title="Inventário Turístico"
         subtitle="Gerencie atrativos, serviços e pontos de interesse"
         actions={
-          <Button 
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Botão Novo Atrativo clicado');
-              handleAddAttraction();
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Atrativo
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setExportingSeTur(true);
+                try {
+                  const exportData = await seturExportService.exportToSeTurFormat(
+                    filteredAttractions.map(attr => {
+                      // Converter para formato do serviço
+                      const converted = attractions.find(a => a.id === attr.id);
+                      return converted as any;
+                    }) as any[],
+                    'json'
+                  );
+                  
+                  // Download do arquivo
+                  const blob = new Blob([exportData.content], { type: exportData.mimeType });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = exportData.filename;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  
+                  addNotification('success', 'Exportação SeTur realizada com sucesso!');
+                } catch (error) {
+                  console.error('Erro ao exportar SeTur:', error);
+                  addNotification('error', 'Erro ao exportar dados SeTur');
+                } finally {
+                  setExportingSeTur(false);
+                }
+              }}
+              disabled={exportingSeTur || filteredAttractions.length === 0}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {exportingSeTur ? 'Exportando...' : 'Exportar SeTur'}
+            </Button>
+            <Button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Novo Atrativo clicado');
+                handleAddAttraction();
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Atrativo
+            </Button>
+          </div>
         }
       >
 
@@ -634,7 +722,7 @@ const TourismInventoryManager: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {attraction.isActive && (
                       <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
                         <CheckCircle className="h-3 w-3 mr-1" />
@@ -652,6 +740,13 @@ const TourismInventoryManager: React.FC = () => {
                         Verificado
                       </Badge>
                     )}
+                    {/* Mostrar código SeTur se existir */}
+                    {(attraction as any).setur_code && (
+                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-purple-100 text-purple-700 border-purple-200" title="Código SeTur">
+                        <Shield className="h-3 w-3 mr-1" />
+                        {(attraction as any).setur_code}
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -661,15 +756,38 @@ const TourismInventoryManager: React.FC = () => {
                 )}
 
                 {/* Metadata */}
-                <div className="flex items-center gap-3 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-200">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    <span className="truncate">{attraction.address}</span>
-                  </div>
-                  {attraction.openingHours && (
+                <div className="space-y-2 mb-4 pb-4 border-b border-slate-200">
+                  <div className="flex items-center gap-3 text-xs text-slate-500">
                     <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{attraction.openingHours}</span>
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate">{attraction.address}</span>
+                    </div>
+                    {attraction.openingHours && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{attraction.openingHours}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Scores SeTur */}
+                  {((attraction as any).data_completeness_score !== undefined || (attraction as any).setur_compliance_score !== undefined) && (
+                    <div className="flex items-center gap-3 text-xs">
+                      {(attraction as any).data_completeness_score !== undefined && (
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3 text-blue-600" />
+                          <span className="text-slate-600">
+                            Completude: <strong className={getScoreColor((attraction as any).data_completeness_score)}>{(attraction as any).data_completeness_score}%</strong>
+                          </span>
+                        </div>
+                      )}
+                      {(attraction as any).setur_compliance_score !== undefined && (
+                        <div className="flex items-center gap-1">
+                          <Shield className="h-3 w-3 text-purple-600" />
+                          <span className="text-slate-600">
+                            Conformidade: <strong className={getScoreColor((attraction as any).setur_compliance_score)}>{(attraction as any).setur_compliance_score}%</strong>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -738,6 +856,17 @@ const AttractionForm: React.FC<{
   onSave: (attraction: TourismAttraction) => void;
   onCancel: () => void;
 }> = ({ attraction, onSave, onCancel }) => {
+  const { toast } = useToast();
+  const [showSeTurFields, setShowSeTurFields] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+  const [validating, setValidating] = useState(false);
+  const [validationResults, setValidationResults] = useState<{
+    address?: any;
+    registration?: any;
+    duplicates?: any;
+    completeness?: any;
+  }>({});
   const [formData, setFormData] = useState<TourismAttraction>({
     id: attraction?.id || '',
     name: attraction?.name || '',
@@ -756,11 +885,228 @@ const AttractionForm: React.FC<{
     lastUpdated: new Date(),
     createdBy: 'Secretaria de Turismo'
   });
+  
+  // Campos SeTur (estendendo formData)
+  const [seTurData, setSeTurData] = useState({
+    legal_name: (attraction as any)?.legal_name || '',
+    registration_number: (attraction as any)?.registration_number || '',
+    license_number: (attraction as any)?.license_number || '',
+    license_expiry_date: (attraction as any)?.license_expiry_date || '',
+    responsible_name: (attraction as any)?.responsible_name || '',
+    responsible_cpf: (attraction as any)?.responsible_cpf || '',
+    responsible_email: (attraction as any)?.responsible_email || '',
+    responsible_phone: (attraction as any)?.responsible_phone || '',
+  });
+
+  // Atualizar dados SeTur quando attraction mudar
+  useEffect(() => {
+    if (attraction) {
+      setSeTurData({
+        legal_name: (attraction as any)?.legal_name || '',
+        registration_number: (attraction as any)?.registration_number || '',
+        license_number: (attraction as any)?.license_number || '',
+        license_expiry_date: (attraction as any)?.license_expiry_date || '',
+        responsible_name: (attraction as any)?.responsible_name || '',
+        responsible_cpf: (attraction as any)?.responsible_cpf || '',
+        responsible_email: (attraction as any)?.responsible_email || '',
+        responsible_phone: (attraction as any)?.responsible_phone || '',
+      });
+    }
+  }, [attraction]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onSave(formData);
+    // Mesclar dados SeTur antes de salvar
+    const finalData = {
+      ...formData,
+      ...seTurData,
+    } as any;
+    onSave(finalData);
+  };
+
+  // Validar endereço em tempo real
+  const handleValidateAddress = async () => {
+    if (!formData.address) return;
+    
+    setValidating(true);
+    try {
+      const result = await inventoryValidationService.validateAddress(formData.address);
+      setValidationResults(prev => ({ ...prev, address: result }));
+      
+      if (result.isValid && result.formattedAddress) {
+        setFormData(prev => ({
+          ...prev,
+          address: result.formattedAddress || prev.address,
+          coordinates: result.coordinates ? {
+            lat: result.coordinates.lat,
+            lng: result.coordinates.lng,
+          } : prev.coordinates,
+        }));
+        toast({
+          title: 'Endereço validado!',
+          description: 'Endereço formatado e coordenadas atualizadas.',
+        });
+      } else {
+        toast({
+          title: 'Endereço não encontrado',
+          description: 'Verifique o endereço ou tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao validar endereço:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // Validar CNPJ/CPF em tempo real
+  const handleValidateRegistration = async () => {
+    if (!seTurData.registration_number) return;
+    
+    setValidating(true);
+    try {
+      const result = await inventoryValidationService.validateRegistrationNumber(seTurData.registration_number);
+      setValidationResults(prev => ({ ...prev, registration: result }));
+      
+      if (!result.isValid) {
+        toast({
+          title: 'CNPJ/CPF inválido',
+          description: result.errors.join(', '),
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'CNPJ/CPF válido!',
+          description: 'Número de registro validado com sucesso.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao validar registro:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // Verificar duplicatas
+  const handleCheckDuplicates = async () => {
+    if (!formData.name) {
+      toast({
+        title: 'Nome necessário',
+        description: 'Preencha o nome para verificar duplicatas.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setValidating(true);
+    try {
+      const result = await inventoryValidationService.checkDuplicates(formData as any);
+      setValidationResults(prev => ({ ...prev, duplicates: result }));
+      
+      if (result.hasDuplicates) {
+        toast({
+          title: 'Possíveis duplicatas encontradas',
+          description: `${result.duplicates.length} atrativo(s) similar(es) encontrado(s).`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Nenhuma duplicata encontrada',
+          description: 'O atrativo parece ser único.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar duplicatas:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // Validar completude
+  const handleValidateCompleteness = async () => {
+    setValidating(true);
+    try {
+      const result = await inventoryValidationService.validateCompleteness(formData as any);
+      setValidationResults(prev => ({ ...prev, completeness: result }));
+      
+      toast({
+        title: `Completude: ${result.score}%`,
+        description: `${result.filledFields} de ${result.totalFields} campos preenchidos.`,
+      });
+    } catch (error) {
+      console.error('Erro ao validar completude:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleAutoFill = async () => {
+    if (!formData.name || !formData.address) {
+      toast({
+        title: 'Campos necessários',
+        description: 'Preencha pelo menos o nome e endereço para usar o preenchimento automático.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAutoFilling(true);
+    try {
+      // 1. Validar endereço com Google Places
+      const addressValidation = await googlePlacesService.validateAddress(formData.address);
+      
+      if (addressValidation.isValid && addressValidation.coordinates) {
+        // Atualizar endereço formatado e coordenadas
+        setFormData(prev => ({
+          ...prev,
+          address: addressValidation.formattedAddress || prev.address,
+          coordinates: {
+            lat: addressValidation.coordinates.lat,
+            lng: addressValidation.coordinates.lng,
+          },
+        }));
+        setAutoFilledFields(prev => new Set([...prev, 'address', 'coordinates']));
+      }
+
+      // 2. Preencher dados com IA
+      const autoFilled = await inventoryAIService.autoFillFromNameAndAddress(
+        formData.name,
+        formData.address
+      );
+
+      // 3. Atualizar formulário com dados preenchidos
+      setFormData(prev => ({
+        ...prev,
+        description: autoFilled.description || prev.description,
+        category: (autoFilled.category as any) || prev.category,
+        tags: autoFilled.tags || prev.tags || [],
+        priceRange: (autoFilled.price_range as any) || prev.priceRange,
+        openingHours: autoFilled.opening_hours || prev.openingHours,
+        features: autoFilled.amenities || prev.features,
+      }));
+
+      // Marcar campos como preenchidos automaticamente
+      const newAutoFilled = new Set<string>(['description', 'category']);
+      if (autoFilled.opening_hours) newAutoFilled.add('openingHours');
+      if (autoFilled.price_range) newAutoFilled.add('priceRange');
+      setAutoFilledFields(newAutoFilled);
+
+      toast({
+        title: 'Preenchimento automático concluído!',
+        description: 'Os dados foram preenchidos automaticamente. Revise e ajuste se necessário.',
+      });
+    } catch (error) {
+      console.error('Erro no preenchimento automático:', error);
+      toast({
+        title: 'Erro no preenchimento automático',
+        description: 'Não foi possível preencher automaticamente. Preencha manualmente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAutoFilling(false);
+    }
   };
 
   return (
@@ -771,11 +1117,49 @@ const AttractionForm: React.FC<{
     >
       <CardBox className="max-w-2xl mx-auto shadow-lg bg-gradient-to-br from-white to-blue-50/30">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Botão de Preenchimento Automático */}
+          {!attraction && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-slate-800 flex items-center gap-2 mb-1">
+                    <Sparkles className="h-4 w-4 text-purple-600" />
+                    Preenchimento Automático com IA
+                  </h4>
+                  <p className="text-sm text-slate-600">
+                    Preencha o nome e endereço, depois clique no botão para preencher automaticamente os demais campos.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAutoFill}
+                  disabled={autoFilling || !formData.name || !formData.address}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                >
+                  {autoFilling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Preenchendo...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Preencher Automaticamente
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <Star className="h-4 w-4 text-blue-600" />
                 Nome do Atrativo *
+                {autoFilledFields.has('name') && (
+                  <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">IA</Badge>
+                )}
               </Label>
               <Input
                 id="name"
@@ -814,11 +1198,21 @@ const AttractionForm: React.FC<{
             <Label htmlFor="description" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
               <FileText className="h-4 w-4 text-blue-600" />
               Descrição *
+              {autoFilledFields.has('description') && (
+                <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">Preenchido automaticamente</Badge>
+              )}
             </Label>
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, description: e.target.value }));
+                setAutoFilledFields(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete('description');
+                  return newSet;
+                });
+              }}
               rows={4}
               placeholder="Descreva o atrativo, suas características, história..."
               className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
@@ -827,18 +1221,63 @@ const AttractionForm: React.FC<{
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-blue-600" />
-              Endereço *
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="address" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-blue-600" />
+                Endereço *
+                {autoFilledFields.has('address') && (
+                  <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">Validado</Badge>
+                )}
+                {validationResults.address?.isValid && (
+                  <Badge className="ml-2 text-xs bg-green-100 text-green-700">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Válido
+                  </Badge>
+                )}
+                {validationResults.address && !validationResults.address.isValid && (
+                  <Badge className="ml-2 text-xs bg-red-100 text-red-700">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Inválido
+                  </Badge>
+                )}
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleValidateAddress}
+                disabled={validating || !formData.address}
+                className="h-8 text-xs"
+              >
+                {validating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Validar'}
+              </Button>
+            </div>
             <Input
               id="address"
               value={formData.address}
-              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, address: e.target.value }));
+                setAutoFilledFields(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete('address');
+                  return newSet;
+                });
+                setValidationResults(prev => ({ ...prev, address: undefined }));
+              }}
               placeholder="Ex: Rua 14 de Julho, 123, Centro, Bonito, MS"
               className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               required
             />
+            {validationResults.address?.suggestions && validationResults.address.suggestions.length > 0 && (
+              <div className="text-xs text-slate-600">
+                <p className="font-semibold mb-1">Sugestões:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {validationResults.address.suggestions.map((suggestion: string, i: number) => (
+                    <li key={i}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -866,15 +1305,316 @@ const AttractionForm: React.FC<{
               <Label htmlFor="openingHours" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-blue-600" />
                 Horário de Funcionamento
+                {autoFilledFields.has('openingHours') && (
+                  <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">IA</Badge>
+                )}
               </Label>
               <Input
                 id="openingHours"
                 value={formData.openingHours}
-                onChange={(e) => setFormData(prev => ({ ...prev, openingHours: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, openingHours: e.target.value }));
+                  setAutoFilledFields(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete('openingHours');
+                    return newSet;
+                  });
+                }}
                 placeholder="Ex: 08:00 - 17:00"
                 className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+          </div>
+
+          {/* Seção SeTur (Expandível) */}
+          <div className="border-t border-slate-200 pt-6">
+            <button
+              type="button"
+              onClick={() => setShowSeTurFields(!showSeTurFields)}
+              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-600" />
+                <span className="font-semibold text-slate-800">Campos SeTur (Padrão Nacional)</span>
+                <Badge className="bg-blue-600 text-white text-xs">Opcional</Badge>
+              </div>
+              {showSeTurFields ? (
+                <ChevronUp className="h-5 w-5 text-blue-600" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-blue-600" />
+              )}
+            </button>
+
+            {showSeTurFields && (
+              <div className="mt-4 space-y-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="legal_name" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                      Razão Social
+                    </Label>
+                    <Input
+                      id="legal_name"
+                      value={seTurData.legal_name}
+                      onChange={(e) => setSeTurData(prev => ({ ...prev, legal_name: e.target.value }))}
+                      placeholder="Nome legal do estabelecimento"
+                      className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="registration_number" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-blue-600" />
+                        CNPJ/CPF
+                        {validationResults.registration?.isValid && (
+                          <Badge className="ml-2 text-xs bg-green-100 text-green-700">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Válido
+                          </Badge>
+                        )}
+                        {validationResults.registration && !validationResults.registration.isValid && (
+                          <Badge className="ml-2 text-xs bg-red-100 text-red-700">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Inválido
+                          </Badge>
+                        )}
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleValidateRegistration}
+                        disabled={validating || !seTurData.registration_number}
+                        className="h-8 text-xs"
+                      >
+                        {validating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Validar'}
+                      </Button>
+                    </div>
+                    <Input
+                      id="registration_number"
+                      value={seTurData.registration_number}
+                      onChange={(e) => {
+                        setSeTurData(prev => ({ ...prev, registration_number: e.target.value }));
+                        setValidationResults(prev => ({ ...prev, registration: undefined }));
+                      }}
+                      placeholder="00.000.000/0000-00 ou 000.000.000-00"
+                      className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    {validationResults.registration?.errors && validationResults.registration.errors.length > 0 && (
+                      <div className="text-xs text-red-600">
+                        {validationResults.registration.errors.map((error: string, i: number) => (
+                          <p key={i}>• {error}</p>
+                        ))}
+                      </div>
+                    )}
+                    {validationResults.registration?.warnings && validationResults.registration.warnings.length > 0 && (
+                      <div className="text-xs text-yellow-600">
+                        {validationResults.registration.warnings.map((warning: string, i: number) => (
+                          <p key={i}>⚠ {warning}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="license_number" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-blue-600" />
+                      Número de Licença/Alvará
+                    </Label>
+                    <Input
+                      id="license_number"
+                      value={seTurData.license_number}
+                      onChange={(e) => setSeTurData(prev => ({ ...prev, license_number: e.target.value }))}
+                      placeholder="Número da licença"
+                      className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="license_expiry_date" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-blue-600" />
+                      Data de Validade da Licença
+                    </Label>
+                    <Input
+                      id="license_expiry_date"
+                      type="date"
+                      value={seTurData.license_expiry_date}
+                      onChange={(e) => setSeTurData(prev => ({ ...prev, license_expiry_date: e.target.value }))}
+                      className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-300 pt-4">
+                  <h4 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-600" />
+                    Dados do Responsável Legal
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="responsible_name" className="text-sm font-semibold text-slate-700">
+                        Nome do Responsável
+                      </Label>
+                      <Input
+                        id="responsible_name"
+                        value={seTurData.responsible_name}
+                        onChange={(e) => setSeTurData(prev => ({ ...prev, responsible_name: e.target.value }))}
+                        placeholder="Nome completo"
+                        className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="responsible_cpf" className="text-sm font-semibold text-slate-700">
+                        CPF do Responsável
+                      </Label>
+                      <Input
+                        id="responsible_cpf"
+                        value={seTurData.responsible_cpf}
+                        onChange={(e) => setSeTurData(prev => ({ ...prev, responsible_cpf: e.target.value }))}
+                        placeholder="000.000.000-00"
+                        className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="responsible_email" className="text-sm font-semibold text-slate-700">
+                        Email do Responsável
+                      </Label>
+                      <Input
+                        id="responsible_email"
+                        type="email"
+                        value={seTurData.responsible_email}
+                        onChange={(e) => setSeTurData(prev => ({ ...prev, responsible_email: e.target.value }))}
+                        placeholder="email@exemplo.com"
+                        className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="responsible_phone" className="text-sm font-semibold text-slate-700">
+                        Telefone do Responsável
+                      </Label>
+                      <Input
+                        id="responsible_phone"
+                        value={seTurData.responsible_phone}
+                        onChange={(e) => setSeTurData(prev => ({ ...prev, responsible_phone: e.target.value }))}
+                        placeholder="(00) 00000-0000"
+                        className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Seção de Validação */}
+          <div className="border-t border-slate-200 pt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-slate-800 flex items-center gap-2">
+                <Shield className="h-4 w-4 text-blue-600" />
+                Validação e Verificação
+              </h4>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCheckDuplicates}
+                  disabled={validating || !formData.name}
+                  className="text-xs"
+                >
+                  {validating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <AlertTriangle className="h-3 w-3 mr-1" />}
+                  Verificar Duplicatas
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleValidateCompleteness}
+                  disabled={validating}
+                  className="text-xs"
+                >
+                  {validating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
+                  Validar Completude
+                </Button>
+              </div>
+            </div>
+
+            {/* Resultados de Duplicatas */}
+            {validationResults.duplicates?.hasDuplicates && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-yellow-800 mb-2">
+                      {validationResults.duplicates.duplicates.length} possível(is) duplicata(s) encontrada(s)
+                    </p>
+                    <ul className="space-y-1 text-sm text-yellow-700">
+                      {validationResults.duplicates.duplicates.map((dup) => (
+                        <li key={dup.id}>
+                          • <strong>{dup.name}</strong> - {dup.reason} (Similaridade: {Math.round(dup.similarity)}%)
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Resultados de Completude */}
+            {validationResults.completeness && (
+              <div className={`p-4 border rounded-lg ${
+                validationResults.completeness.score >= 80 
+                  ? 'bg-green-50 border-green-200' 
+                  : validationResults.completeness.score >= 60
+                  ? 'bg-yellow-50 border-yellow-200'
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                <div className="flex items-start gap-2">
+                  <TrendingUp className={`h-5 w-5 mt-0.5 ${
+                    validationResults.completeness.score >= 80 
+                      ? 'text-green-600' 
+                      : validationResults.completeness.score >= 60
+                      ? 'text-yellow-600'
+                      : 'text-red-600'
+                  }`} />
+                  <div className="flex-1">
+                    <p className={`font-semibold mb-2 ${
+                      validationResults.completeness.score >= 80 
+                        ? 'text-green-800' 
+                        : validationResults.completeness.score >= 60
+                        ? 'text-yellow-800'
+                        : 'text-red-800'
+                    }`}>
+                      Completude: {validationResults.completeness.score}%
+                    </p>
+                    <p className="text-sm text-slate-700 mb-2">
+                      {validationResults.completeness.filledFields} de {validationResults.completeness.totalFields} campos preenchidos
+                    </p>
+                    {validationResults.completeness.missingFields.length > 0 && (
+                      <div className="text-sm">
+                        <p className="font-semibold text-red-700 mb-1">Campos obrigatórios faltando:</p>
+                        <ul className="list-disc list-inside text-red-600">
+                          {validationResults.completeness.missingFields.map((field, i) => (
+                            <li key={i}>{field}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {validationResults.completeness.recommendedFields.length > 0 && (
+                      <div className="text-sm mt-2">
+                        <p className="font-semibold text-yellow-700 mb-1">Campos recomendados:</p>
+                        <ul className="list-disc list-inside text-yellow-600">
+                          {validationResults.completeness.recommendedFields.slice(0, 5).map((field, i) => (
+                            <li key={i}>{field}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">

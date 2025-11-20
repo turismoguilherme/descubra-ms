@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { seturValidationService } from './seturValidationService';
 
 export interface TourismAttraction {
   id: string;
@@ -37,6 +38,26 @@ export interface TourismAttraction {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
+  // Campos SeTur
+  setur_code?: string;
+  setur_category_code?: string;
+  legal_name?: string;
+  registration_number?: string;
+  license_number?: string;
+  license_expiry_date?: string;
+  responsible_name?: string;
+  responsible_cpf?: string;
+  responsible_email?: string;
+  responsible_phone?: string;
+  accessibility_features?: any; // JSONB
+  capacity_details?: any; // JSONB
+  payment_methods?: any; // JSONB
+  languages_spoken?: string[];
+  certifications?: any; // JSONB
+  last_verified_date?: string;
+  verification_status?: 'pending' | 'verified' | 'expired' | 'needs_update';
+  data_completeness_score?: number;
+  setur_compliance_score?: number;
 }
 
 export interface InventoryCategory {
@@ -152,10 +173,23 @@ export class InventoryService {
    */
   async createAttraction(attraction: Omit<TourismAttraction, 'id' | 'created_at' | 'updated_at'>): Promise<TourismAttraction> {
     try {
+      // Gerar código SeTur se não existir
+      let seturCode = attraction.setur_code;
+      if (!seturCode) {
+        seturCode = await seturValidationService.generateSeTurCode(attraction as TourismAttraction);
+      }
+
+      // Calcular scores de completude e conformidade
+      const completenessScore = await seturValidationService.calculateCompletenessScore(attraction as TourismAttraction);
+      const complianceScore = await seturValidationService.calculateComplianceScore(attraction as TourismAttraction);
+
       const { data, error } = await supabase
         .from('tourism_inventory')
         .insert({
           ...attraction,
+          setur_code: seturCode,
+          data_completeness_score: completenessScore,
+          setur_compliance_score: complianceScore,
           status: attraction.status || 'draft',
           is_active: attraction.is_active !== undefined ? attraction.is_active : true,
           is_featured: attraction.is_featured || false,
@@ -176,10 +210,32 @@ export class InventoryService {
    */
   async updateAttraction(id: string, updates: Partial<TourismAttraction>): Promise<TourismAttraction> {
     try {
+      // Buscar atração atual para recalcular scores
+      const current = await this.getAttractionById(id);
+      if (!current) {
+        throw new Error('Atração não encontrada');
+      }
+
+      // Mesclar atualizações
+      const updated = { ...current, ...updates };
+
+      // Recalcular scores se dados foram atualizados
+      const completenessScore = await seturValidationService.calculateCompletenessScore(updated);
+      const complianceScore = await seturValidationService.calculateComplianceScore(updated);
+
+      // Gerar código SeTur se não existir
+      let seturCode = updated.setur_code;
+      if (!seturCode) {
+        seturCode = await seturValidationService.generateSeTurCode(updated);
+      }
+
       const { data, error } = await supabase
         .from('tourism_inventory')
         .update({
           ...updates,
+          setur_code: seturCode,
+          data_completeness_score: completenessScore,
+          setur_compliance_score: complianceScore,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)

@@ -9,6 +9,9 @@ import { EventoCompleto, EventoFiltros, EventoEstatisticas } from '@/types/event
 import { googleSearchEventService } from './GoogleSearchEventService';
 import { geminiEventProcessor } from './GeminiEventProcessor';
 import { supabase } from '@/integrations/supabase/client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export interface IntelligentEventConfig {
   googleSearch: {
@@ -424,6 +427,242 @@ export class IntelligentEventService {
       googleSearch: googleSearchEventService.getServiceStatus(),
       geminiAI: geminiEventProcessor.getServiceStatus()
     };
+  }
+
+  /**
+   * Classificar categoria de evento automaticamente
+   */
+  public async classifyEventCategory(title: string, description: string): Promise<{
+    category: string;
+    confidence: number;
+    reasoning: string;
+  }> {
+    try {
+      if (!GEMINI_API_KEY) {
+        return {
+          category: 'cultural',
+          confidence: 0.5,
+          reasoning: 'IA não configurada, usando categoria padrão',
+        };
+      }
+
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Classifique o seguinte evento turístico em uma das categorias:
+- cultural (festivais, shows, exposições, arte)
+- gastronomia (festivais de comida, degustações)
+- esportivo (competições, maratonas, esportes)
+- religioso (festas religiosas, romarias)
+- natureza (ecoturismo, observação de aves, trilhas)
+- entretenimento (shows, festas, entretenimento)
+- educacional (workshops, palestras, cursos)
+- outros
+
+Título: ${title}
+Descrição: ${description || 'Sem descrição'}
+
+Responda em JSON:
+{
+  "category": "categoria",
+  "confidence": 0.0-1.0,
+  "reasoning": "explicação breve"
+}
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          category: parsed.category || 'cultural',
+          confidence: parsed.confidence || 0.5,
+          reasoning: parsed.reasoning || '',
+        };
+      }
+
+      return {
+        category: 'cultural',
+        confidence: 0.5,
+        reasoning: 'Não foi possível classificar automaticamente',
+      };
+    } catch (error) {
+      console.error('Erro ao classificar categoria:', error);
+      return {
+        category: 'cultural',
+        confidence: 0.5,
+        reasoning: 'Erro ao classificar',
+      };
+    }
+  }
+
+  /**
+   * Encontrar eventos similares
+   */
+  public async findSimilarEvents(event: any): Promise<Array<{
+    id: string;
+    name: string;
+    similarity: number;
+    reason: string;
+  }>> {
+    try {
+      const { data: existingEvents } = await supabase
+        .from('events')
+        .select('id, titulo, descricao, data_inicio, local')
+        .neq('id', event.id || '');
+
+      if (!existingEvents) return [];
+
+      const similar: Array<{ id: string; name: string; similarity: number; reason: string }> = [];
+
+      for (const existing of existingEvents) {
+        let similarity = 0;
+        const reasons: string[] = [];
+
+        // Comparar título
+        const titleSimilarity = this.calculateStringSimilarity(
+          (event.titulo || event.name || '').toLowerCase(),
+          (existing.titulo || existing.name || '').toLowerCase()
+        );
+        if (titleSimilarity > 0.7) {
+          similarity += titleSimilarity * 50;
+          reasons.push(`Título similar (${Math.round(titleSimilarity * 100)}%)`);
+        }
+
+        // Comparar local
+        if (event.local && existing.local) {
+          const locationSimilarity = this.calculateStringSimilarity(
+            event.local.toLowerCase(),
+            existing.local.toLowerCase()
+          );
+          if (locationSimilarity > 0.8) {
+            similarity += locationSimilarity * 30;
+            reasons.push(`Local similar`);
+          }
+        }
+
+        // Comparar data (mesmo mês)
+        if (event.data_inicio && existing.data_inicio) {
+          const eventDate = new Date(event.data_inicio);
+          const existingDate = new Date(existing.data_inicio);
+          if (
+            eventDate.getMonth() === existingDate.getMonth() &&
+            eventDate.getFullYear() === existingDate.getFullYear()
+          ) {
+            similarity += 20;
+            reasons.push('Mesmo período');
+          }
+        }
+
+        if (similarity > 50) {
+          similar.push({
+            id: existing.id,
+            name: existing.titulo || existing.name || '',
+            similarity: Math.min(100, similarity),
+            reason: reasons.join(', '),
+          });
+        }
+      }
+
+      return similar.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+    } catch (error) {
+      console.error('Erro ao encontrar eventos similares:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Sugerir tags para evento
+   */
+  public async suggestTags(title: string, description: string, category: string): Promise<string[]> {
+    try {
+      if (!GEMINI_API_KEY) {
+        return [category, title.toLowerCase().split(' ')[0]];
+      }
+
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Sugira 5-8 tags relevantes para o seguinte evento turístico:
+
+Título: ${title}
+Descrição: ${description || 'Sem descrição'}
+Categoria: ${category}
+
+As tags devem ser:
+- Palavras-chave relevantes para busca
+- Em português
+- Relacionadas ao turismo brasileiro
+- Específicas e úteis
+
+Retorne apenas um array JSON de strings:
+["tag1", "tag2", "tag3"]
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+
+      return [category, title.toLowerCase().split(' ')[0]];
+    } catch (error) {
+      console.error('Erro ao sugerir tags:', error);
+      return [category, title.toLowerCase().split(' ')[0]];
+    }
+  }
+
+  /**
+   * Calcular similaridade entre strings
+   */
+  private calculateStringSimilarity(str1: string, str2: string): number {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+
+    if (longer.length === 0) {
+      return 1.0;
+    }
+
+    const distance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - distance) / longer.length;
+  }
+
+  /**
+   * Distância de Levenshtein
+   */
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+
+    return matrix[str2.length][str1.length];
   }
 }
 

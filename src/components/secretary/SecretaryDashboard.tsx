@@ -3,7 +3,7 @@
  * Restaurado conforme especificação - SEM header gradiente, SEM tabs extras
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ import {
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
@@ -46,8 +46,19 @@ import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
 import PublicSettingsModal from '@/components/secretary/PublicSettingsModal';
 import AttendantManagement from '@/components/secretary/AttendantManagement';
+import InventoryAnalytics from '@/components/secretary/InventoryAnalytics';
 import { format } from 'date-fns';
-import { Brain, FileText, FileBarChart } from 'lucide-react';
+import { Brain, FileText, FileBarChart, HelpCircle, Sparkles, Target } from 'lucide-react';
+import { dataInterpretationAIService } from '@/services/ai/dataInterpretationAIService';
+import { useToast } from '@/hooks/use-toast';
+import { userDataAggregationService } from '@/services/public/userDataAggregationService';
+import { autoInsightsService } from '@/services/ai/autoInsightsService';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface Attraction {
   id: string;
@@ -76,6 +87,7 @@ interface CAT {
 }
 
 export default function SecretaryDashboard() {
+  const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('overview');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Attraction | Event | CAT | null>(null);
@@ -83,6 +95,15 @@ export default function SecretaryDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Attraction | Event | CAT | null>(null);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [interpretingMetric, setInterpretingMetric] = useState<string | null>(null);
+  const [metricInterpretations, setMetricInterpretations] = useState<Record<string, any>>({});
+  const [dashboardInsights, setDashboardInsights] = useState<any>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [userInsights, setUserInsights] = useState<any>(null);
+  const [userAIInsights, setUserAIInsights] = useState<any>(null);
+  const [loadingUserData, setLoadingUserData] = useState(false);
+  const [autoInsights, setAutoInsights] = useState<any>(null);
+  const [loadingAutoInsights, setLoadingAutoInsights] = useState(false);
 
   // Dados mock para métricas
   const loading = false;
@@ -134,6 +155,117 @@ export default function SecretaryDashboard() {
     setEditingItem(null);
     setEditFormData({});
   };
+
+  // Função para interpretar métrica
+  const handleInterpretMetric = async (metricName: string, value: number, unit: string = '') => {
+    if (metricInterpretations[metricName]) {
+      // Já tem interpretação, mostrar
+      return;
+    }
+
+    setInterpretingMetric(metricName);
+    try {
+      const interpretation = await dataInterpretationAIService.interpretMetric({
+        name: metricName,
+        value,
+        unit,
+        period: 'hoje',
+        previousValue: undefined, // TODO: buscar valor anterior
+      });
+      
+      setMetricInterpretations(prev => ({
+        ...prev,
+        [metricName]: interpretation,
+      }));
+    } catch (error) {
+      console.error('Erro ao interpretar métrica:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível interpretar a métrica no momento.',
+        variant: 'destructive',
+      });
+    } finally {
+      setInterpretingMetric(null);
+    }
+  };
+
+  const loadDashboardInsights = useCallback(async () => {
+    if (loadingInsights) return;
+    
+    setLoadingInsights(true);
+    try {
+      const insights = await dataInterpretationAIService.interpretDashboard({
+        metrics: [
+          { name: 'CATs Ativos', value: metrics.totalCATs, period: 'hoje' },
+          { name: 'Turistas Hoje', value: metrics.touristsToday, period: 'hoje' },
+          { name: 'Atrações Cadastradas', value: metrics.totalAttractions, period: 'hoje' },
+          { name: 'Eventos Programados', value: metrics.totalEvents, period: 'hoje' },
+        ],
+        period: 'hoje',
+      });
+      setDashboardInsights(insights);
+    } catch (error) {
+      console.error('Erro ao carregar insights:', error);
+      // Não definir insights em caso de erro para permitir nova tentativa
+    } finally {
+      setLoadingInsights(false);
+    }
+  }, [metrics.totalCATs, metrics.touristsToday, metrics.totalAttractions, metrics.totalEvents, loadingInsights]);
+
+  const loadUserData = useCallback(async () => {
+    if (loadingUserData) return;
+    
+    setLoadingUserData(true);
+    try {
+      const aggregated = await userDataAggregationService.aggregateUserData();
+      setUserInsights(aggregated);
+      
+      // Analisar com IA
+      const aiInsights = await userDataAggregationService.analyzeUserDataWithAI(aggregated);
+      setUserAIInsights(aiInsights);
+    } catch (error) {
+      console.error('Erro ao carregar dados de usuários:', error);
+      // Não definir insights em caso de erro para permitir nova tentativa
+    } finally {
+      setLoadingUserData(false);
+    }
+  }, [loadingUserData]);
+
+  // Carregar insights automáticos
+  const loadAutoInsights = useCallback(async () => {
+    if (loadingAutoInsights) return;
+    
+    setLoadingAutoInsights(true);
+    try {
+      const insights = await autoInsightsService.generateAutoInsights();
+      setAutoInsights(insights);
+    } catch (error) {
+      console.error('Erro ao carregar insights automáticos:', error);
+    } finally {
+      setLoadingAutoInsights(false);
+    }
+  }, [loadingAutoInsights]);
+
+  // Carregar insights do dashboard e dados de usuários
+  // Desabilitado temporariamente para evitar erros de carregamento
+  useEffect(() => {
+    // TODO: Reabilitar após verificar se os serviços estão funcionando
+    /*
+    if (activeSection === 'overview') {
+      // Carregar apenas uma vez quando a seção for aberta
+      if (!dashboardInsights && !loadingInsights) {
+        loadDashboardInsights();
+      }
+      if (!userInsights && !loadingUserData) {
+        loadUserData();
+      }
+      if (!autoInsights && !loadingAutoInsights) {
+        loadAutoInsights();
+      }
+    }
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -216,6 +348,23 @@ export default function SecretaryDashboard() {
               >
                 <MapPin className="h-4 w-4" />
                 Inventário Turístico
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Click em Analytics do Inventário');
+                  setActiveSection('inventory-analytics');
+                }}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'inventory-analytics' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Analytics do Inventário
               </button>
               <button
                 type="button"
@@ -434,7 +583,46 @@ export default function SecretaryDashboard() {
                     <div className="p-3 bg-blue-100 rounded-xl">
                       <Building2 className="h-6 w-6 text-blue-600" />
                     </div>
-                    <Badge className="bg-blue-100 text-blue-700 border-blue-200">Ativos</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-blue-100 text-blue-700 border-blue-200">Ativos</Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleInterpretMetric('CATs Ativos', metrics.totalCATs)}
+                              disabled={interpretingMetric === 'CATs Ativos'}
+                            >
+                              <HelpCircle className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm">
+                            {interpretingMetric === 'CATs Ativos' ? (
+                              <p>Interpretando...</p>
+                            ) : metricInterpretations['CATs Ativos'] ? (
+                              <div>
+                                <p className="font-semibold mb-2">{metricInterpretations['CATs Ativos'].explanation}</p>
+                                {metricInterpretations['CATs Ativos'].recommendations.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold mb-1">Recomendações:</p>
+                                    <ul className="text-xs list-disc list-inside">
+                                      {metricInterpretations['CATs Ativos'].recommendations.map((rec: string, i: number) => (
+                                        <li key={i}>{rec}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p>Clique para obter interpretação inteligente desta métrica</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                   {loading ? (
                     <Skeleton className="h-8 w-20 mb-2" />
@@ -454,7 +642,46 @@ export default function SecretaryDashboard() {
                     <div className="p-3 bg-green-100 rounded-xl">
                       <Users className="h-6 w-6 text-green-600" />
                     </div>
-                    <Badge className="bg-green-100 text-green-700 border-green-200">Hoje</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-100 text-green-700 border-green-200">Hoje</Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleInterpretMetric('Turistas Hoje', metrics.touristsToday)}
+                              disabled={interpretingMetric === 'Turistas Hoje'}
+                            >
+                              <HelpCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm">
+                            {interpretingMetric === 'Turistas Hoje' ? (
+                              <p>Interpretando...</p>
+                            ) : metricInterpretations['Turistas Hoje'] ? (
+                              <div>
+                                <p className="font-semibold mb-2">{metricInterpretations['Turistas Hoje'].explanation}</p>
+                                {metricInterpretations['Turistas Hoje'].recommendations.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold mb-1">Recomendações:</p>
+                                    <ul className="text-xs list-disc list-inside">
+                                      {metricInterpretations['Turistas Hoje'].recommendations.map((rec: string, i: number) => (
+                                        <li key={i}>{rec}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p>Clique para obter interpretação inteligente desta métrica</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                   {loading ? (
                     <Skeleton className="h-8 w-20 mb-2" />
@@ -510,6 +737,319 @@ export default function SecretaryDashboard() {
                 </CardBox>
               </div>
 
+              {/* Insights Automáticos */}
+              {dashboardInsights && (
+                <CardBox className="p-6 bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200 shadow-md mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">Insights Automáticos</h3>
+                      <p className="text-sm text-slate-600">Análise inteligente dos seus dados</p>
+                    </div>
+                  </div>
+                  
+                  {loadingInsights ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-purple-600" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white rounded-lg border border-purple-100">
+                        <p className="text-sm text-slate-700">{dashboardInsights.summary}</p>
+                      </div>
+                      
+                      {dashboardInsights.keyFindings.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-2">Principais Descobertas</h4>
+                          <ul className="space-y-2">
+                            {dashboardInsights.keyFindings.map((finding: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                <span>{finding}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {dashboardInsights.recommendations.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-2">Recomendações</h4>
+                          <ul className="space-y-2">
+                            {dashboardInsights.recommendations.map((rec: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                <Star className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                <span>{rec}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {dashboardInsights.alerts.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-red-800 mb-2">Alertas</h4>
+                          <ul className="space-y-2">
+                            {dashboardInsights.alerts.map((alert: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                <span>{alert}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardBox>
+              )}
+
+              {/* Insights Automáticos Agendados */}
+              {autoInsights && (
+                <CardBox className="p-6 bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200 shadow-md mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-cyan-100 rounded-lg">
+                        <Brain className="h-5 w-5 text-cyan-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Insights Automáticos</h3>
+                        <p className="text-sm text-slate-600">
+                          Atualizado automaticamente a cada 2 horas
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={loadAutoInsights}
+                      disabled={loadingAutoInsights}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${loadingAutoInsights ? 'animate-spin' : ''}`} />
+                      Atualizar Agora
+                    </Button>
+                  </div>
+                  
+                  {loadingAutoInsights ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-cyan-600" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white rounded-lg border border-cyan-100">
+                        <p className="text-sm text-slate-700">{autoInsights.summary}</p>
+                      </div>
+                      
+                      {autoInsights.keyFindings.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-2">Principais Descobertas</h4>
+                          <ul className="space-y-2">
+                            {autoInsights.keyFindings.map((finding: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                <span>{finding}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {autoInsights.opportunities.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-2">Oportunidades</h4>
+                          <ul className="space-y-2">
+                            {autoInsights.opportunities.map((opp: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                <Star className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                <span>{opp}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {autoInsights.recommendations.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-2">Recomendações</h4>
+                          <ul className="space-y-2">
+                            {autoInsights.recommendations.map((rec: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                <Target className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <span>{rec}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {autoInsights.alerts.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-red-800 mb-2">Alertas</h4>
+                          <ul className="space-y-2">
+                            {autoInsights.alerts.map((alert: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                <span>{alert}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-slate-500 pt-2 border-t border-slate-200">
+                        Última atualização: {new Date(autoInsights.generatedAt).toLocaleString('pt-BR')}
+                        {autoInsights.nextUpdate && (
+                          <> • Próxima atualização: {new Date(autoInsights.nextUpdate).toLocaleString('pt-BR')}</>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardBox>
+              )}
+
+              {/* Perfil dos Turistas e Moradores */}
+              {userInsights && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  {/* Perfil dos Turistas */}
+                  <CardBox className="p-6 shadow-md">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Users className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Perfil dos Usuários</h3>
+                        <p className="text-sm text-slate-500">Dados agregados de turistas e moradores</p>
+                      </div>
+                    </div>
+                    
+                    {loadingUserData ? (
+                      <div className="flex items-center justify-center py-8">
+                        <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-700">{userInsights.totalUsers}</div>
+                            <div className="text-xs text-slate-600">Total de Usuários</div>
+                          </div>
+                          <div className="p-3 bg-green-50 rounded-lg">
+                            <div className="text-2xl font-bold text-green-700">{userInsights.byType.turista}</div>
+                            <div className="text-xs text-slate-600">Turistas</div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-700 mb-2">Origem Principal</h4>
+                            <div className="p-2 bg-slate-50 rounded text-sm">
+                              {userInsights.trends.mostCommonOrigin}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-700 mb-2">Motivo Mais Comum</h4>
+                            <div className="p-2 bg-slate-50 rounded text-sm">
+                              {userInsights.trends.mostCommonMotive}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-700 mb-2">Duração Média</h4>
+                            <div className="p-2 bg-slate-50 rounded text-sm">
+                              {userInsights.trends.averageStayDuration}
+                            </div>
+                          </div>
+
+                          {Object.keys(userInsights.byOrigin.state).length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-slate-700 mb-2">Top 5 Origens (Estado)</h4>
+                              <div className="space-y-1">
+                                {Object.entries(userInsights.byOrigin.state)
+                                  .sort((a, b) => b[1] - a[1])
+                                  .slice(0, 5)
+                                  .map(([state, count]) => (
+                                    <div key={state} className="flex justify-between items-center p-2 bg-slate-50 rounded text-sm">
+                                      <span>{state}</span>
+                                      <Badge variant="secondary">{count}</Badge>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardBox>
+
+                  {/* Análise de Interesses e Recomendações */}
+                  {userAIInsights && (
+                    <CardBox className="p-6 shadow-md">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Brain className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-slate-800">Análise com IA</h3>
+                          <p className="text-sm text-slate-500">Insights baseados em dados de usuários</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <p className="text-sm text-slate-700">{userAIInsights.profileSummary}</p>
+                        </div>
+
+                        {userAIInsights.keyFindings.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-800 mb-2">Principais Descobertas</h4>
+                            <ul className="space-y-1">
+                              {userAIInsights.keyFindings.map((finding: string, i: number) => (
+                                <li key={i} className="text-sm text-slate-700 flex items-start gap-2">
+                                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                  <span>{finding}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {userAIInsights.recommendations.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-800 mb-2">Recomendações</h4>
+                            <ul className="space-y-1">
+                              {userAIInsights.recommendations.map((rec: string, i: number) => (
+                                <li key={i} className="text-sm text-slate-700 flex items-start gap-2">
+                                  <Star className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                  <span>{rec}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {userAIInsights.marketingSuggestions.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-800 mb-2">Sugestões de Marketing</h4>
+                            <ul className="space-y-1">
+                              {userAIInsights.marketingSuggestions.map((suggestion: string, i: number) => (
+                                <li key={i} className="text-sm text-slate-700 flex items-start gap-2">
+                                  <Sparkles className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                                  <span>{suggestion}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </CardBox>
+                  )}
+                </div>
+              )}
+
               {/* Gráficos e Análises */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Gráfico de Turistas por Dia */}
@@ -541,7 +1081,7 @@ export default function SecretaryDashboard() {
                           stroke="#64748b"
                           style={{ fontSize: '12px' }}
                         />
-                        <Tooltip 
+                        <RechartsTooltip 
                           labelFormatter={(value) => format(new Date(value), 'dd/MM/yyyy')}
                           contentStyle={{ 
                             backgroundColor: 'white', 
@@ -600,7 +1140,7 @@ export default function SecretaryDashboard() {
                           stroke="#64748b"
                           style={{ fontSize: '12px' }}
                         />
-                        <Tooltip 
+                        <RechartsTooltip 
                           contentStyle={{ 
                             backgroundColor: 'white', 
                             border: '1px solid #e2e8f0',
@@ -736,6 +1276,11 @@ export default function SecretaryDashboard() {
           {/* Inventário Turístico */}
           {activeSection === 'inventory' && (
             <TourismInventoryManager />
+          )}
+
+          {/* Analytics do Inventário */}
+          {activeSection === 'inventory-analytics' && (
+            <InventoryAnalytics />
           )}
 
           {/* Gestão de Eventos */}

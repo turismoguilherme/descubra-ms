@@ -42,6 +42,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { googleSearchEventService } from '@/services/events/GoogleSearchEventService';
+import { intelligentEventService } from '@/services/events/IntelligentEventService';
+import { eventValidationService } from '@/services/public/eventValidationService';
+import { eventPredictiveAnalyticsService } from '@/services/public/eventPredictiveAnalytics';
+import { Sparkles, Loader2, AlertTriangle, TrendingUp, Calendar as CalendarIcon } from 'lucide-react';
 
 interface TourismEvent {
   id: string;
@@ -83,6 +87,15 @@ const EventManagementSystem: React.FC = () => {
   const [userState, setUserState] = useState<string | null>(null);
   const [isMSUser, setIsMSUser] = useState(false);
   const [sendToPublicCalendar, setSendToPublicCalendar] = useState(true);
+  const [autoClassifying, setAutoClassifying] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResults, setValidationResults] = useState<{
+    conflicts?: any;
+    duplicates?: any;
+    completeness?: any;
+    audiencePrediction?: any;
+    optimalDates?: any[];
+  }>({});
 
   const categories = [
     { value: 'all', label: 'Todos', icon: '📅' },
@@ -801,6 +814,15 @@ const EventForm: React.FC<{
   const [suggestedEvents, setSuggestedEvents] = useState<any[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [autoClassifying, setAutoClassifying] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResults, setValidationResults] = useState<{
+    conflicts?: any;
+    duplicates?: any;
+    completeness?: any;
+    audiencePrediction?: any;
+    optimalDates?: any[];
+  }>({});
   
   const [formData, setFormData] = useState<TourismEvent>({
     id: event?.id || '',
@@ -872,6 +894,156 @@ const EventForm: React.FC<{
     });
   };
 
+  // Classificar categoria automaticamente
+  const handleAutoClassify = async () => {
+    if (!formData.title) {
+      toast({
+        title: 'Título necessário',
+        description: 'Preencha o título para classificar automaticamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAutoClassifying(true);
+    try {
+      const classification = await intelligentEventService.classifyEventCategory(
+        formData.title,
+        formData.description
+      );
+      
+      setFormData(prev => ({
+        ...prev,
+        category: classification.category as any,
+      }));
+
+      toast({
+        title: 'Categoria classificada!',
+        description: `Categoria sugerida: ${classification.category} (Confiança: ${Math.round(classification.confidence * 100)}%)`,
+      });
+    } catch (error) {
+      console.error('Erro ao classificar categoria:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível classificar automaticamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAutoClassifying(false);
+    }
+  };
+
+  // Verificar conflitos
+  const handleCheckConflicts = async () => {
+    if (!formData.date || !formData.location) {
+      toast({
+        title: 'Dados necessários',
+        description: 'Preencha data e local para verificar conflitos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setValidating(true);
+    try {
+      const conflicts = await eventValidationService.checkConflicts({
+        id: formData.id,
+        data_inicio: formData.date.toISOString(),
+        data_fim: formData.endDate?.toISOString(),
+        local: formData.location,
+      });
+
+      setValidationResults(prev => ({ ...prev, conflicts }));
+
+      if (conflicts.hasConflicts) {
+        toast({
+          title: 'Conflitos encontrados!',
+          description: `${conflicts.conflicts.length} evento(s) conflitante(s) encontrado(s).`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Nenhum conflito',
+          description: 'Não há conflitos de data/hora no mesmo local.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar conflitos:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // Prever público
+  const handlePredictAudience = async () => {
+    if (!formData.title) {
+      toast({
+        title: 'Título necessário',
+        description: 'Preencha o título para prever público.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setValidating(true);
+    try {
+      const prediction = await eventPredictiveAnalyticsService.predictAudience({
+        titulo: formData.title,
+        descricao: formData.description,
+        categoria: formData.category,
+        local: formData.location,
+      });
+
+      setValidationResults(prev => ({ ...prev, audiencePrediction: prediction }));
+      setFormData(prev => ({
+        ...prev,
+        expectedAudience: prediction.expectedAudience,
+      }));
+
+      toast({
+        title: 'Previsão de público gerada!',
+        description: `Público esperado: ${prediction.expectedAudience} pessoas (Confiança: ${Math.round(prediction.confidence * 100)}%)`,
+      });
+    } catch (error) {
+      console.error('Erro ao prever público:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // Sugerir datas ideais
+  const handleSuggestOptimalDates = async () => {
+    if (!formData.location) {
+      toast({
+        title: 'Local necessário',
+        description: 'Preencha o local para sugerir datas ideais.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setValidating(true);
+    try {
+      const dates = await eventPredictiveAnalyticsService.suggestOptimalDates(
+        formData.category,
+        formData.location
+      );
+
+      setValidationResults(prev => ({ ...prev, optimalDates: dates }));
+
+      if (dates.length > 0) {
+        toast({
+          title: 'Datas ideais sugeridas!',
+          description: `${dates.length} data(s) sugerida(s) com base em histórico.`,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao sugerir datas:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -941,10 +1113,27 @@ const EventForm: React.FC<{
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <Star className="h-4 w-4 text-blue-600" />
-                Categoria *
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="category" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-blue-600" />
+                  Categoria *
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoClassify}
+                  disabled={autoClassifying || !formData.title}
+                  className="h-8 text-xs"
+                >
+                  {autoClassifying ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3 mr-1" />
+                  )}
+                  Classificar com IA
+                </Button>
+              </div>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as any }))}
@@ -982,10 +1171,23 @@ const EventForm: React.FC<{
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-600" />
-                Data de Início *
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="date" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                  Data de Início *
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSuggestOptimalDates}
+                  disabled={validating || !formData.location}
+                  className="h-8 text-xs"
+                >
+                  {validating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CalendarIcon className="h-3 w-3 mr-1" />}
+                  Sugerir Datas
+                </Button>
+              </div>
               <Input
                 id="date"
                 type="date"
@@ -994,6 +1196,22 @@ const EventForm: React.FC<{
                 className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
+              {validationResults.optimalDates && validationResults.optimalDates.length > 0 && (
+                <div className="text-xs text-slate-600 mt-2">
+                  <p className="font-semibold mb-1">Datas ideais sugeridas:</p>
+                  <ul className="space-y-1">
+                    {validationResults.optimalDates.slice(0, 3).map((optDate, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <CalendarIcon className="h-3 w-3" />
+                        <span>{new Date(optDate.date).toLocaleDateString('pt-BR')}</span>
+                        <Badge variant="outline" className="text-xs">
+                          Score: {optDate.score}%
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="endDate" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -1014,26 +1232,79 @@ const EventForm: React.FC<{
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-blue-600" />
-              Local *
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="location" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-blue-600" />
+                Local *
+                {validationResults.conflicts?.hasConflicts && (
+                  <Badge className="ml-2 text-xs bg-red-100 text-red-700">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Conflitos
+                  </Badge>
+                )}
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCheckConflicts}
+                disabled={validating || !formData.date || !formData.location}
+                className="h-8 text-xs"
+              >
+                {validating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <AlertTriangle className="h-3 w-3 mr-1" />}
+                Verificar Conflitos
+              </Button>
+            </div>
             <Input
               id="location"
               value={formData.location}
-              onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, location: e.target.value }));
+                setValidationResults(prev => ({ ...prev, conflicts: undefined }));
+              }}
               placeholder="Ex: Centro de Convenções de Bonito"
               className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               required
             />
+            {validationResults.conflicts?.hasConflicts && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs">
+                <p className="font-semibold text-red-800 mb-2">Conflitos encontrados:</p>
+                <ul className="space-y-1 text-red-700">
+                  {validationResults.conflicts.conflicts.map((conflict: any) => (
+                    <li key={conflict.eventId}>
+                      • <strong>{conflict.eventName}</strong> - {conflict.conflictReason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="expectedAudience" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <Users className="h-4 w-4 text-blue-600" />
-                Público Esperado *
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="expectedAudience" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  Público Esperado *
+                  {validationResults.audiencePrediction && (
+                    <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Previsto
+                    </Badge>
+                  )}
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePredictAudience}
+                  disabled={validating || !formData.title}
+                  className="h-8 text-xs"
+                >
+                  {validating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <TrendingUp className="h-3 w-3 mr-1" />}
+                  Prever Público
+                </Button>
+              </div>
               <Input
                 id="expectedAudience"
                 type="number"
@@ -1087,6 +1358,33 @@ const EventForm: React.FC<{
               </p>
             </div>
           </div>
+
+          {/* Resultados de Previsão de Público */}
+          {validationResults.audiencePrediction && (
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <TrendingUp className="h-5 w-5 text-purple-600 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-purple-800 mb-2">
+                    Previsão de Público: {validationResults.audiencePrediction.expectedAudience} pessoas
+                  </p>
+                  <p className="text-sm text-purple-700 mb-2">
+                    Confiança: {Math.round(validationResults.audiencePrediction.confidence * 100)}%
+                  </p>
+                  {validationResults.audiencePrediction.factors.length > 0 && (
+                    <div className="text-sm">
+                      <p className="font-semibold mb-1">Fatores considerados:</p>
+                      <ul className="list-disc list-inside text-purple-600">
+                        {validationResults.audiencePrediction.factors.map((factor: string, i: number) => (
+                          <li key={i}>{factor}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
             <Button 
