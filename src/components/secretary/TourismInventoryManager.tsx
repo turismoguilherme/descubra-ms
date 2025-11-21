@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { 
@@ -53,6 +54,7 @@ import { inventoryAIService } from '@/services/ai/inventoryAIService';
 import { googlePlacesService } from '@/services/integrations/googlePlacesService';
 import { inventoryValidationService } from '@/services/public/inventoryValidationService';
 import { Sparkles, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import InventoryAnalytics from '@/components/secretary/InventoryAnalytics';
 
 interface TourismAttraction {
   id: string;
@@ -109,7 +111,6 @@ const TourismInventoryManager: React.FC = () => {
     message: string;
     timestamp: Date;
   }>>([]);
-  const [exportingSeTur, setExportingSeTur] = useState(false);
 
   const categories = [
     { value: 'all', label: 'Todos', icon: '🏛️' },
@@ -563,107 +564,35 @@ const TourismInventoryManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <SectionWrapper
-        variant="default"
-        title="Inventário Turístico"
-        subtitle="Gerencie atrativos, serviços e pontos de interesse"
-        actions={
-          <div className="flex gap-2">
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setExportingSeTur(true);
-                try {
-                  const exportData = await seturExportService.exportToSeTurFormat(
-                    filteredAttractions.map(attr => {
-                      // Converter para formato do serviço
-                      const converted = attractions.find(a => a.id === attr.id);
-                      return converted as any;
-                    }) as any[],
-                    'json'
-                  );
-                  
-                  // Download do arquivo
-                  const blob = new Blob([exportData.content], { type: exportData.mimeType });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = exportData.filename;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                  
-                  addNotification('success', 'Exportação SeTur realizada com sucesso!');
-                } catch (error) {
-                  console.error('Erro ao exportar SeTur:', error);
-                  addNotification('error', 'Erro ao exportar dados SeTur');
-                } finally {
-                  setExportingSeTur(false);
-                }
-              }}
-              disabled={exportingSeTur || filteredAttractions.length === 0}
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {exportingSeTur ? 'Exportando...' : 'Exportar SeTur'}
-            </Button>
-            <Button 
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Botão Novo Atrativo clicado');
-                handleAddAttraction();
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Atrativo
-            </Button>
-          </div>
-        }
-      >
+    <SectionWrapper
+      variant="default"
+      title="Inventário Turístico"
+      subtitle="Gerencie atrativos, serviços e pontos de interesse"
+    >
+      <Tabs defaultValue="lista" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="lista">Lista</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
 
-        {/* Filtros */}
-        <CardBox className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Label htmlFor="search">Buscar</Label>
-              <div className="relative mt-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  id="search"
-                  placeholder="Nome, descrição ou endereço..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          {/* Aba Lista */}
+          <TabsContent value="lista" className="space-y-6 mt-6">
+            <div className="flex justify-end gap-2 mb-4">
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Botão Novo Atrativo clicado');
+              handleAddAttraction();
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Atrativo
+          </Button>
               </div>
-            </div>
-            <div className="md:w-48">
-              <Label htmlFor="category">Categoria</Label>
-              <select
-                id="category"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full p-2 border rounded-md mt-1"
-              >
-                {categories.map(category => (
-                  <option key={category.value} value={category.value}>
-                    {category.icon} {category.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardBox>
 
-        {/* Lista de Atrativos */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -722,7 +651,7 @@ const TourismInventoryManager: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                     {attraction.isActive && (
                       <Badge className="rounded-full text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
                         <CheckCircle className="h-3 w-3 mr-1" />
@@ -740,56 +669,33 @@ const TourismInventoryManager: React.FC = () => {
                         Verificado
                       </Badge>
                     )}
-                    {/* Mostrar código SeTur se existir */}
-                    {(attraction as any).setur_code && (
-                      <Badge className="rounded-full text-xs px-2 py-0.5 bg-purple-100 text-purple-700 border-purple-200" title="Código SeTur">
-                        <Shield className="h-3 w-3 mr-1" />
-                        {(attraction as any).setur_code}
+                        {/* Mostrar código SeTur se existir */}
+                        {(attraction as any).setur_code && (
+                          <Badge className="rounded-full text-xs px-2 py-0.5 bg-purple-100 text-purple-700 border-purple-200" title="Código SeTur">
+                            <Shield className="h-3 w-3 mr-1" />
+                            {(attraction as any).setur_code}
+                          </Badge>
+                        )}
+                        {/* Mostrar score de completude SeTur se existir */}
+                        {(attraction as any).setur_completeness_score && (
+                          <Badge className="rounded-full text-xs px-2 py-0.5 bg-cyan-100 text-cyan-700 border-cyan-200" title="Completude SeTur">
+                            {(attraction as any).setur_completeness_score}%
                       </Badge>
                     )}
                   </div>
                 </div>
 
-                {/* Description */}
+                    {/* Descrição */}
                 {attraction.description && (
                   <p className="text-sm text-slate-600 mb-4 line-clamp-2">{attraction.description}</p>
                 )}
 
                 {/* Metadata */}
-                <div className="space-y-2 mb-4 pb-4 border-b border-slate-200">
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      <span className="truncate">{attraction.address}</span>
-                    </div>
-                    {attraction.openingHours && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{attraction.openingHours}</span>
-                      </div>
-                    )}
+                <div className="flex items-center gap-3 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-200">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{attraction.address}</span>
                   </div>
-                  {/* Scores SeTur */}
-                  {((attraction as any).data_completeness_score !== undefined || (attraction as any).setur_compliance_score !== undefined) && (
-                    <div className="flex items-center gap-3 text-xs">
-                      {(attraction as any).data_completeness_score !== undefined && (
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3 text-blue-600" />
-                          <span className="text-slate-600">
-                            Completude: <strong className={getScoreColor((attraction as any).data_completeness_score)}>{(attraction as any).data_completeness_score}%</strong>
-                          </span>
-                        </div>
-                      )}
-                      {(attraction as any).setur_compliance_score !== undefined && (
-                        <div className="flex items-center gap-1">
-                          <Shield className="h-3 w-3 text-purple-600" />
-                          <span className="text-slate-600">
-                            Conformidade: <strong className={getScoreColor((attraction as any).setur_compliance_score)}>{(attraction as any).setur_compliance_score}%</strong>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {/* Actions */}
@@ -844,9 +750,14 @@ const TourismInventoryManager: React.FC = () => {
             ))}
           </div>
         )}
+          </TabsContent>
 
-      </SectionWrapper>
-    </div>
+          {/* Aba Analytics */}
+          <TabsContent value="analytics" className="mt-6">
+            <InventoryAnalytics />
+          </TabsContent>
+        </Tabs>
+    </SectionWrapper>
   );
 };
 
@@ -1222,9 +1133,9 @@ const AttractionForm: React.FC<{
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="address" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-600" />
-                Endereço *
+            <Label htmlFor="address" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              Endereço *
                 {autoFilledFields.has('address') && (
                   <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">Validado</Badge>
                 )}
@@ -1240,7 +1151,7 @@ const AttractionForm: React.FC<{
                     Inválido
                   </Badge>
                 )}
-              </Label>
+            </Label>
               <Button
                 type="button"
                 variant="outline"

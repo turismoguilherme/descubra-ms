@@ -46,7 +46,6 @@ import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
 import PublicSettingsModal from '@/components/secretary/PublicSettingsModal';
 import AttendantManagement from '@/components/secretary/AttendantManagement';
-import InventoryAnalytics from '@/components/secretary/InventoryAnalytics';
 import { format } from 'date-fns';
 import { Brain, FileText, FileBarChart, HelpCircle, Sparkles, Target } from 'lucide-react';
 import { dataInterpretationAIService } from '@/services/ai/dataInterpretationAIService';
@@ -348,23 +347,6 @@ export default function SecretaryDashboard() {
               >
                 <MapPin className="h-4 w-4" />
                 Inventário Turístico
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Click em Analytics do Inventário');
-                  setActiveSection('inventory-analytics');
-                }}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'inventory-analytics' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <BarChart3 className="h-4 w-4" />
-                Analytics do Inventário
               </button>
               <button
                 type="button"
@@ -1278,10 +1260,6 @@ export default function SecretaryDashboard() {
             <TourismInventoryManager />
           )}
 
-          {/* Analytics do Inventário */}
-          {activeSection === 'inventory-analytics' && (
-            <InventoryAnalytics />
-          )}
 
           {/* Gestão de Eventos */}
           {activeSection === 'events' && (

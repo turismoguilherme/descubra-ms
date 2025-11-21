@@ -37,8 +37,12 @@ export interface IntelligentEventConfig {
 export class IntelligentEventService {
   private config: IntelligentEventConfig;
   private isInitialized: boolean = false;
+  private genAI: GoogleGenerativeAI | null = null;
 
   constructor(config: Partial<IntelligentEventConfig> = {}) {
+    if (GEMINI_API_KEY) {
+      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    }
     this.config = {
       googleSearch: {
         enabled: true,
@@ -663,6 +667,506 @@ Retorne apenas um array JSON de strings:
     }
 
     return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * Preencher dados do evento automaticamente usando IA
+   */
+  async autoFillEventData(name: string, location: string): Promise<Partial<any>> {
+    try {
+      if (!this.genAI) {
+        throw new Error('Gemini API não configurada');
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Com base no nome e local do evento turístico abaixo, preencha automaticamente os campos faltantes:
+
+Nome: ${name}
+Local: ${location}
+
+Forneça uma resposta em JSON com os seguintes campos (apenas os que você conseguir inferir):
+{
+  "titulo": "título completo do evento",
+  "descricao": "descrição detalhada e atrativa do evento",
+  "categoria": "cultural|gastronomic|sports|religious|entertainment|business",
+  "expected_audience": número estimado de público,
+  "budget": orçamento estimado em reais (número),
+  "contact_phone": "telefone de contato se disponível",
+  "contact_email": "email de contato se disponível",
+  "contact_website": "site oficial se disponível",
+  "features": ["característica1", "característica2"],
+  "opening_hours": "horário de funcionamento se aplicável"
+}
+
+Seja específico e realista. Use informações sobre o local e tipo de evento para fazer inferências inteligentes.
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      // Extrair JSON da resposta
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return parsed;
+      }
+
+      return {};
+    } catch (error) {
+      console.error('Erro ao preencher dados automaticamente:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Gerar descrição do evento usando IA
+   */
+  async generateDescription(title: string, category: string, location: string): Promise<string> {
+    try {
+      if (!this.genAI) {
+        throw new Error('Gemini API não configurada');
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Gere uma descrição atrativa e detalhada para o seguinte evento turístico:
+
+Título: ${title}
+Categoria: ${category}
+Local: ${location}
+
+A descrição deve:
+- Ser atrativa e convidativa
+- Ter entre 100 e 300 palavras
+- Destacar os principais atrativos do evento
+- Mencionar informações relevantes sobre o local
+- Ser escrita em português brasileiro
+- Usar linguagem turística apropriada
+
+Retorne apenas a descrição, sem formatação adicional.
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      // Limpar a resposta (remover markdown, aspas extras, etc)
+      return response
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .replace(/^["']|["']$/g, '')
+        .trim();
+    } catch (error) {
+      console.error('Erro ao gerar descrição:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Classificar categoria do evento automaticamente
+   */
+  async classifyEventAutomatically(title: string, description: string): Promise<string> {
+    try {
+      if (!this.genAI) {
+        return 'entertainment'; // Default
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Classifique o seguinte evento turístico em uma das categorias: cultural, gastronomic, sports, religious, entertainment, business
+
+Título: ${title}
+Descrição: ${description || 'Sem descrição'}
+
+Responda apenas com uma das categorias acima, sem explicações adicionais.
+`;
+
+      const result = await model.generateContent(prompt);
+      const category = result.response.text().trim().toLowerCase();
+
+      const validCategories = ['cultural', 'gastronomic', 'sports', 'religious', 'entertainment', 'business'];
+      if (validCategories.includes(category)) {
+        return category;
+      }
+
+      return 'entertainment'; // Default
+    } catch (error) {
+      console.error('Erro ao classificar evento:', error);
+      return 'entertainment';
+    }
+  }
+
+  /**
+   * Detectar eventos similares
+   */
+  async detectSimilarEvents(event: any): Promise<Array<{ id: string; name: string; similarity: number }>> {
+    try {
+      const { data: existingEvents } = await supabase
+        .from('events')
+        .select('id, titulo, descricao, data_inicio, local')
+        .neq('id', event.id || '');
+
+      if (!existingEvents) return [];
+
+      const similar: Array<{ id: string; name: string; similarity: number }> = [];
+
+      for (const existing of existingEvents) {
+        let similarity = 0;
+
+        // Comparar título
+        const title1 = (event.titulo || event.title || '').toLowerCase();
+        const title2 = (existing.titulo || existing.name || '').toLowerCase();
+        if (title1 && title2) {
+          const titleSimilarity = this.calculateSimilarity(title1, title2);
+          similarity += titleSimilarity * 0.5;
+        }
+
+        // Comparar local
+        const location1 = (event.local || event.location || '').toLowerCase();
+        const location2 = (existing.local || existing.location || '').toLowerCase();
+        if (location1 && location2 && location1 === location2) {
+          similarity += 0.3;
+        }
+
+        // Comparar data (mesmo mês)
+        if (event.data_inicio && existing.data_inicio) {
+          const date1 = new Date(event.data_inicio);
+          const date2 = new Date(existing.data_inicio);
+          if (date1.getMonth() === date2.getMonth() && date1.getFullYear() === date2.getFullYear()) {
+            similarity += 0.2;
+          }
+        }
+
+        if (similarity > 0.5) {
+          similar.push({
+            id: existing.id,
+            name: existing.titulo || existing.name || '',
+            similarity: Math.round(similarity * 100),
+          });
+        }
+      }
+
+      return similar.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+    } catch (error) {
+      console.error('Erro ao detectar eventos similares:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Sugerir tags para o evento
+   */
+  async suggestEventTags(title: string, description: string, category: string): Promise<string[]> {
+    try {
+      if (!this.genAI) {
+        return [];
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Sugira 5-10 tags relevantes para o seguinte evento turístico:
+
+Título: ${title}
+Descrição: ${description || 'Sem descrição'}
+Categoria: ${category}
+
+As tags devem ser:
+- Relevantes ao evento
+- Em português
+- Curtas (1-3 palavras)
+- Úteis para busca e categorização
+
+Retorne apenas as tags separadas por vírgula, sem numeração ou formatação adicional.
+`;
+
+      const result = await model.generateContent(prompt);
+      const tags = result.response.text()
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0)
+        .slice(0, 10);
+
+      return tags;
+    } catch (error) {
+      console.error('Erro ao sugerir tags:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Calcular similaridade entre strings
+   */
+  private calculateSimilarity(str1: string, str2: string): number {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+
+    if (longer.length === 0) return 1.0;
+
+    const distance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - distance) / longer.length;
+  }
+
+  /**
+   * Distância de Levenshtein
+   */
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * Preencher dados do evento automaticamente usando IA
+   */
+  async autoFillEventData(name: string, location: string): Promise<Partial<any>> {
+    try {
+      if (!this.genAI) {
+        throw new Error('Gemini API não configurada');
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Com base no nome e local do evento turístico abaixo, preencha automaticamente os campos faltantes:
+
+Nome: ${name}
+Local: ${location}
+
+Forneça uma resposta em JSON com os seguintes campos (apenas os que você conseguir inferir):
+{
+  "titulo": "título completo do evento",
+  "descricao": "descrição detalhada e atrativa do evento",
+  "categoria": "cultural|gastronomic|sports|religious|entertainment|business",
+  "expected_audience": número estimado de público,
+  "budget": orçamento estimado em reais (número),
+  "contact_phone": "telefone de contato se disponível",
+  "contact_email": "email de contato se disponível",
+  "contact_website": "site oficial se disponível",
+  "features": ["característica1", "característica2"],
+  "opening_hours": "horário de funcionamento se aplicável"
+}
+
+Seja específico e realista. Use informações sobre o local e tipo de evento para fazer inferências inteligentes.
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      // Extrair JSON da resposta
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return parsed;
+      }
+
+      return {};
+    } catch (error) {
+      console.error('Erro ao preencher dados automaticamente:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Gerar descrição do evento usando IA
+   */
+  async generateDescription(title: string, category: string, location: string): Promise<string> {
+    try {
+      if (!this.genAI) {
+        throw new Error('Gemini API não configurada');
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Gere uma descrição atrativa e detalhada para o seguinte evento turístico:
+
+Título: ${title}
+Categoria: ${category}
+Local: ${location}
+
+A descrição deve:
+- Ser atrativa e convidativa
+- Ter entre 100 e 300 palavras
+- Destacar os principais atrativos do evento
+- Mencionar informações relevantes sobre o local
+- Ser escrita em português brasileiro
+- Usar linguagem turística apropriada
+
+Retorne apenas a descrição, sem formatação adicional.
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      // Limpar a resposta (remover markdown, aspas extras, etc)
+      return response
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .replace(/^["']|["']$/g, '')
+        .trim();
+    } catch (error) {
+      console.error('Erro ao gerar descrição:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Classificar categoria do evento automaticamente
+   */
+  async classifyEventAutomatically(title: string, description: string): Promise<string> {
+    try {
+      if (!this.genAI) {
+        return 'entertainment'; // Default
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Classifique o seguinte evento turístico em uma das categorias: cultural, gastronomic, sports, religious, entertainment, business
+
+Título: ${title}
+Descrição: ${description || 'Sem descrição'}
+
+Responda apenas com uma das categorias acima, sem explicações adicionais.
+`;
+
+      const result = await model.generateContent(prompt);
+      const category = result.response.text().trim().toLowerCase();
+
+      const validCategories = ['cultural', 'gastronomic', 'sports', 'religious', 'entertainment', 'business'];
+      if (validCategories.includes(category)) {
+        return category;
+      }
+
+      return 'entertainment'; // Default
+    } catch (error) {
+      console.error('Erro ao classificar evento:', error);
+      return 'entertainment';
+    }
+  }
+
+  /**
+   * Detectar eventos similares
+   */
+  async detectSimilarEvents(event: any): Promise<Array<{ id: string; name: string; similarity: number }>> {
+    try {
+      const { data: existingEvents } = await supabase
+        .from('events')
+        .select('id, titulo, descricao, data_inicio, local')
+        .neq('id', event.id || '');
+
+      if (!existingEvents) return [];
+
+      const similar: Array<{ id: string; name: string; similarity: number }> = [];
+
+      for (const existing of existingEvents) {
+        let similarity = 0;
+
+        // Comparar título
+        const title1 = (event.titulo || event.title || '').toLowerCase();
+        const title2 = (existing.titulo || existing.name || '').toLowerCase();
+        if (title1 && title2) {
+          const titleSimilarity = this.calculateSimilarity(title1, title2);
+          similarity += titleSimilarity * 0.5;
+        }
+
+        // Comparar local
+        const location1 = (event.local || event.location || '').toLowerCase();
+        const location2 = (existing.local || existing.location || '').toLowerCase();
+        if (location1 && location2 && location1 === location2) {
+          similarity += 0.3;
+        }
+
+        // Comparar data (mesmo mês)
+        if (event.data_inicio && existing.data_inicio) {
+          const date1 = new Date(event.data_inicio);
+          const date2 = new Date(existing.data_inicio);
+          if (date1.getMonth() === date2.getMonth() && date1.getFullYear() === date2.getFullYear()) {
+            similarity += 0.2;
+          }
+        }
+
+        if (similarity > 0.5) {
+          similar.push({
+            id: existing.id,
+            name: existing.titulo || existing.name || '',
+            similarity: Math.round(similarity * 100),
+          });
+        }
+      }
+
+      return similar.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+    } catch (error) {
+      console.error('Erro ao detectar eventos similares:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Sugerir tags para o evento
+   */
+  async suggestEventTags(title: string, description: string, category: string): Promise<string[]> {
+    try {
+      if (!this.genAI) {
+        return [];
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `
+Sugira 5-10 tags relevantes para o seguinte evento turístico:
+
+Título: ${title}
+Descrição: ${description || 'Sem descrição'}
+Categoria: ${category}
+
+As tags devem ser:
+- Relevantes ao evento
+- Em português
+- Curtas (1-3 palavras)
+- Úteis para busca e categorização
+
+Retorne apenas as tags separadas por vírgula, sem numeração ou formatação adicional.
+`;
+
+      const result = await model.generateContent(prompt);
+      const tags = result.response.text()
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0)
+        .slice(0, 10);
+
+      return tags;
+    } catch (error) {
+      console.error('Erro ao sugerir tags:', error);
+      return [];
+    }
   }
 }
 

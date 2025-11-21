@@ -144,6 +144,36 @@ export class EventValidationService {
   }
 
   /**
+   * Validar formato de data/hora
+   */
+  validateDateTimeFormat(dateTime: string): { isValid: boolean; error?: string } {
+    if (!dateTime) {
+      return { isValid: false, error: 'Data/hora não fornecida' };
+    }
+
+    const date = new Date(dateTime);
+    if (isNaN(date.getTime())) {
+      return { isValid: false, error: 'Formato de data/hora inválido' };
+    }
+
+    // Verificar se a data não é muito antiga (mais de 10 anos atrás)
+    const tenYearsAgo = new Date();
+    tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+    if (date < tenYearsAgo) {
+      return { isValid: false, error: 'Data muito antiga (mais de 10 anos)' };
+    }
+
+    // Verificar se a data não é muito futura (mais de 5 anos no futuro)
+    const fiveYearsFromNow = new Date();
+    fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
+    if (date > fiveYearsFromNow) {
+      return { isValid: false, error: 'Data muito futura (mais de 5 anos)' };
+    }
+
+    return { isValid: true };
+  }
+
+  /**
    * Validar completude
    */
   async validateCompleteness(event: any): Promise<CompletenessReport> {
@@ -175,7 +205,21 @@ export class EventValidationService {
     // Verificar campos obrigatórios
     for (const field of requiredFields) {
       const value = event[field] || event[field.replace('titulo', 'name')];
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
+      
+      // Validação especial para data_inicio
+      if (field === 'data_inicio') {
+        const dateValue = event.data_inicio || event.start_date || event.date;
+        if (!dateValue) {
+          missingFields.push(field);
+        } else {
+          const dateValidation = this.validateDateTimeFormat(dateValue);
+          if (!dateValidation.isValid) {
+            missingFields.push(field);
+          } else {
+            filledFields++;
+          }
+        }
+      } else if (!value || (typeof value === 'string' && value.trim() === '')) {
         missingFields.push(field);
       } else {
         filledFields++;
@@ -185,7 +229,27 @@ export class EventValidationService {
     // Verificar campos recomendados
     for (const field of recommendedFields) {
       const value = event[field];
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
+      
+      // Validação especial para data_fim
+      if (field === 'data_fim') {
+        const endDate = event.data_fim || event.end_date || event.endDate;
+        if (endDate) {
+          const dateValidation = this.validateDateTimeFormat(endDate);
+          if (dateValidation.isValid) {
+            // Verificar se data_fim é posterior a data_inicio
+            const startDate = event.data_inicio || event.start_date || event.date;
+            if (startDate && new Date(endDate) < new Date(startDate)) {
+              recommendedMissing.push(field); // Data fim antes da data início
+            } else {
+              filledFields++;
+            }
+          } else {
+            recommendedMissing.push(field);
+          }
+        } else {
+          recommendedMissing.push(field);
+        }
+      } else if (!value || (typeof value === 'string' && value.trim() === '')) {
         recommendedMissing.push(field);
       } else {
         filledFields++;

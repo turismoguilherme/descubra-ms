@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { 
@@ -46,6 +47,7 @@ import { intelligentEventService } from '@/services/events/IntelligentEventServi
 import { eventValidationService } from '@/services/public/eventValidationService';
 import { eventPredictiveAnalyticsService } from '@/services/public/eventPredictiveAnalytics';
 import { Sparkles, Loader2, AlertTriangle, TrendingUp, Calendar as CalendarIcon } from 'lucide-react';
+import EventAnalytics from '@/components/secretary/EventAnalytics';
 
 interface TourismEvent {
   id: string;
@@ -83,6 +85,12 @@ const EventManagementSystem: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TourismEvent | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json');
+  const [exportFilters, setExportFilters] = useState({
+    onlyActive: true,
+    onlyApproved: false,
+    onlyUpcoming: false,
+  });
   const [loading, setLoading] = useState(false);
   const [userState, setUserState] = useState<string | null>(null);
   const [isMSUser, setIsMSUser] = useState(false);
@@ -508,48 +516,55 @@ const EventManagementSystem: React.FC = () => {
       variant="default"
       title="Gestão de Eventos"
       subtitle="Gerencie eventos turísticos e culturais"
-      actions={
-        <div className="flex space-x-2">
-          <Button
-            type="button"
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Botão Lista clicado');
-              setViewMode('list');
-            }}
-          >
-            Lista
-          </Button>
-          <Button
-            type="button"
-            variant={viewMode === 'calendar' ? 'default' : 'outline'}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Botão Calendário clicado');
-              setViewMode('calendar');
-            }}
-          >
-            Calendário
-          </Button>
-          <Button 
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Botão Novo Evento clicado');
-              handleAddEvent();
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Evento
-          </Button>
-        </div>
-      }
     >
+      <Tabs defaultValue="calendario" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="calendario">Calendário</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+        </TabsList>
+
+        {/* Aba Calendário */}
+        <TabsContent value="calendario" className="space-y-6 mt-6">
+          <div className="flex justify-end gap-2 mb-4">
+            <Button
+              type="button"
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Lista clicado');
+                setViewMode('list');
+              }}
+            >
+              Lista
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'calendar' ? 'default' : 'outline'}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Calendário clicado');
+                setViewMode('calendar');
+              }}
+            >
+              Calendário
+            </Button>
+            <Button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botão Novo Evento clicado');
+                handleAddEvent();
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Evento
+            </Button>
+          </div>
 
         {/* Filtros */}
         <CardBox className="mb-6">
@@ -798,6 +813,165 @@ const EventManagementSystem: React.FC = () => {
             </div>
           </CardBox>
         )}
+        </TabsContent>
+
+        {/* Aba Analytics */}
+        <TabsContent value="analytics" className="mt-6">
+          <EventAnalytics />
+        </TabsContent>
+
+        {/* Aba Relatórios */}
+        <TabsContent value="relatorios" className="mt-6">
+          <CardBox className="p-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">Exportação de Eventos</h3>
+                <p className="text-sm text-slate-600">
+                  Exporte eventos em diferentes formatos para relatórios e análises.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-slate-700 mb-2 block">Formato de Exportação</Label>
+                  <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as 'json' | 'csv')}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione o formato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="json">JSON (JavaScript Object Notation)</SelectItem>
+                      <SelectItem value="csv">CSV (Comma Separated Values)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-slate-700 mb-2 block">Filtros de Exportação</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="export-only-active" 
+                        checked={exportFilters.onlyActive}
+                        onChange={(e) => setExportFilters(prev => ({ ...prev, onlyActive: e.target.checked }))}
+                        className="rounded" 
+                      />
+                      <Label htmlFor="export-only-active" className="text-sm text-slate-600 cursor-pointer">
+                        Apenas eventos ativos
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="export-only-approved" 
+                        checked={exportFilters.onlyApproved}
+                        onChange={(e) => setExportFilters(prev => ({ ...prev, onlyApproved: e.target.checked }))}
+                        className="rounded" 
+                      />
+                      <Label htmlFor="export-only-approved" className="text-sm text-slate-600 cursor-pointer">
+                        Apenas eventos aprovados
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="export-upcoming" 
+                        checked={exportFilters.onlyUpcoming}
+                        onChange={(e) => setExportFilters(prev => ({ ...prev, onlyUpcoming: e.target.checked }))}
+                        className="rounded" 
+                      />
+                      <Label htmlFor="export-upcoming" className="text-sm text-slate-600 cursor-pointer">
+                        Apenas eventos futuros
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-200">
+                  <Button
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      try {
+                        // Aplicar filtros
+                        let eventsToExport = filteredEvents;
+
+                        if (exportFilters.onlyActive) {
+                          eventsToExport = eventsToExport.filter(e => e.status === 'active' || e.status === 'planned');
+                        }
+                        if (exportFilters.onlyApproved) {
+                          eventsToExport = eventsToExport.filter(e => e.approval_status === 'approved');
+                        }
+                        if (exportFilters.onlyUpcoming) {
+                          const now = new Date();
+                          eventsToExport = eventsToExport.filter(e => e.date > now);
+                        }
+
+                        // Converter para formato de exportação
+                        const exportData = exportFormat === 'json'
+                          ? JSON.stringify(eventsToExport, null, 2)
+                          : eventsToExport.length > 0
+                          ? eventsToExport.map(e => ({
+                              Título: e.title,
+                              Descrição: e.description,
+                              Data: formatDate(e.date),
+                              'Data Fim': e.endDate ? formatDate(e.endDate) : '',
+                              Local: e.location,
+                              Categoria: e.category,
+                              'Público Esperado': e.expectedAudience,
+                              Orçamento: e.budget,
+                              Status: e.status,
+                            })).reduce((csv, row) => {
+                              const values = Object.values(row).map(v => `"${String(v)}"`).join(',');
+                              return csv + values + '\n';
+                            }, Object.keys(eventsToExport[0] || {}).join(',') + '\n')
+                          : '';
+
+                        // Download do arquivo
+                        const blob = new Blob([exportData], { type: exportFormat === 'json' ? 'application/json' : 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `eventos_${new Date().toISOString().split('T')[0]}.${exportFormat}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        toast({
+                          title: 'Exportação realizada!',
+                          description: `${eventsToExport.length} evento(s) exportado(s) com sucesso.`,
+                        });
+                      } catch (error) {
+                        console.error('Erro ao exportar eventos:', error);
+                        toast({
+                          title: 'Erro',
+                          description: 'Não foi possível exportar os eventos.',
+                          variant: 'destructive',
+                        });
+                      }
+                    }}
+                    disabled={filteredEvents.length === 0}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar Eventos
+                  </Button>
+                </div>
+
+                {filteredEvents.length > 0 && (
+                  <div className="pt-4 border-t border-slate-200">
+                    <p className="text-sm text-slate-600">
+                      <strong>{filteredEvents.length}</strong> evento(s) disponível(is) para exportação.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardBox>
+        </TabsContent>
+      </Tabs>
     </SectionWrapper>
   );
 };
@@ -815,6 +989,7 @@ const EventForm: React.FC<{
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [autoClassifying, setAutoClassifying] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<{
     conflicts?: any;
@@ -1097,6 +1272,85 @@ const EventForm: React.FC<{
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Botão de Preenchimento Automático */}
+          {!event && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-slate-800 flex items-center gap-2 mb-1">
+                    <Sparkles className="h-4 w-4 text-purple-600" />
+                    Preenchimento Automático com IA
+                  </h4>
+                  <p className="text-sm text-slate-600">
+                    Preencha o título e local, depois clique no botão para preencher automaticamente os demais campos.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    if (!formData.title || !formData.location) {
+                      toast({
+                        title: 'Campos necessários',
+                        description: 'Preencha o título e local para usar o preenchimento automático.',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+
+                    setAutoFilling(true);
+                    try {
+                      const autoFilled = await intelligentEventService.autoFillEventData(
+                        formData.title,
+                        formData.location
+                      );
+
+                      setFormData(prev => ({
+                        ...prev,
+                        ...(autoFilled.titulo && { title: autoFilled.titulo }),
+                        ...(autoFilled.descricao && { description: autoFilled.descricao }),
+                        ...(autoFilled.categoria && { category: autoFilled.categoria as any }),
+                        ...(autoFilled.expected_audience && { expectedAudience: autoFilled.expected_audience }),
+                        ...(autoFilled.budget && { budget: autoFilled.budget }),
+                        ...(autoFilled.contact_phone && { contactPhone: autoFilled.contact_phone }),
+                        ...(autoFilled.contact_email && { contactEmail: autoFilled.contact_email }),
+                        ...(autoFilled.contact_website && { contactWebsite: autoFilled.contact_website }),
+                        ...(autoFilled.features && { features: autoFilled.features }),
+                      }));
+
+                      toast({
+                        title: 'Preenchimento concluído!',
+                        description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
+                      });
+                    } catch (error) {
+                      console.error('Erro ao preencher automaticamente:', error);
+                      toast({
+                        title: 'Erro',
+                        description: 'Não foi possível preencher automaticamente.',
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setAutoFilling(false);
+                    }
+                  }}
+                  disabled={autoFilling || !formData.title || !formData.location}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                >
+                  {autoFilling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Preenchendo...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Preencher Automaticamente
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="title" className="text-sm font-semibold text-slate-700 flex items-center gap-2">

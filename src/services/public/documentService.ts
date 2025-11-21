@@ -237,12 +237,49 @@ export class PublicDocumentService {
         .update({ analysis_status: 'processing' })
         .eq('id', documentId);
 
-      // TODO: Implementar processamento real com Gemini API
-      // Por enquanto, retornar análise simulada
+      // Importar serviço de análise dinamicamente
+      const { documentAnalysisService } = await import('@/services/ai/documentAnalysisService');
+      
+      // Obter URL do documento
+      const documentUrl = this.getDocumentUrl(document);
+      if (!documentUrl) {
+        throw new Error('Não foi possível obter URL do documento');
+      }
+
+      // Buscar arquivo do storage
+      const filePath = document.file_path;
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from(this.BUCKET_NAME)
+        .download(filePath);
+
+      if (downloadError || !fileData) {
+        throw new Error('Não foi possível baixar o arquivo para análise');
+      }
+
+      // Converter Blob para File
+      const file = new File([fileData], document.file_name || 'documento', {
+        type: document.mime_type || 'application/octet-stream',
+      });
+
+      // Processar com documentAnalysisService
+      const municipalityId = document.user_id; // Assumindo que user_id é o município
+      const insights = await documentAnalysisService.uploadAndAnalyze(
+        file,
+        document.category as any || 'other',
+        municipalityId
+      );
+
+      // Formatar resultado para salvar
       const analysisResult = {
-        summary: 'Análise do documento em processamento. Esta funcionalidade será implementada em breve.',
-        keyPoints: [],
-        recommendations: []
+        extracted_data: insights.analysis.extractedData,
+        summary: insights.analysis.summary,
+        key_points: insights.analysis.keyPoints,
+        recommendations: insights.analysis.recommendations,
+        confidence: insights.analysis.confidence,
+        document_type: insights.analysis.documentType,
+        extracted_metrics: insights.extractedMetrics,
+        comparison: insights.comparison,
+        storage_url: insights.storageUrl,
       };
 
       // Atualizar com resultado

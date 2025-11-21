@@ -687,6 +687,107 @@ const DocumentUploadPublic: React.FC = () => {
                     </ul>
                   </CardBox>
                 )}
+
+                {/* Métricas Extraídas */}
+                {selectedDocument.analysis_result.extracted_metrics && (
+                  <CardBox>
+                    <h3 className="font-semibold text-slate-800 mb-4">Métricas Extraídas</h3>
+                    <div className="space-y-4">
+                      {selectedDocument.analysis_result.extracted_metrics.numbers && 
+                       Array.isArray(selectedDocument.analysis_result.extracted_metrics.numbers) &&
+                       selectedDocument.analysis_result.extracted_metrics.numbers.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700 mb-2">Números</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedDocument.analysis_result.extracted_metrics.numbers.map((metric: any, index: number) => (
+                              <div key={index} className="p-2 bg-blue-50 rounded-lg">
+                                <p className="text-xs text-slate-600">{metric.label}</p>
+                                <p className="text-lg font-semibold text-blue-700">
+                                  {metric.value} {metric.unit || ''}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedDocument.analysis_result.extracted_metrics.percentages && 
+                       Array.isArray(selectedDocument.analysis_result.extracted_metrics.percentages) &&
+                       selectedDocument.analysis_result.extracted_metrics.percentages.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700 mb-2">Percentuais</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedDocument.analysis_result.extracted_metrics.percentages.map((metric: any, index: number) => (
+                              <div key={index} className="p-2 bg-green-50 rounded-lg">
+                                <p className="text-xs text-slate-600">{metric.label}</p>
+                                <p className="text-lg font-semibold text-green-700">{metric.value}%</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedDocument.analysis_result.extracted_metrics.totals && 
+                       Array.isArray(selectedDocument.analysis_result.extracted_metrics.totals) &&
+                       selectedDocument.analysis_result.extracted_metrics.totals.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700 mb-2">Totais</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedDocument.analysis_result.extracted_metrics.totals.map((metric: any, index: number) => (
+                              <div key={index} className="p-2 bg-purple-50 rounded-lg">
+                                <p className="text-xs text-slate-600">{metric.label}</p>
+                                <p className="text-lg font-semibold text-purple-700">{metric.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardBox>
+                )}
+
+                {/* Comparação com Dados do Sistema */}
+                {selectedDocument.analysis_result.comparison && (
+                  <CardBox>
+                    <h3 className="font-semibold text-slate-800 mb-4">Comparação com Dados do Sistema</h3>
+                    <div className="space-y-4">
+                      {selectedDocument.analysis_result.comparison.differences && 
+                       Array.isArray(selectedDocument.analysis_result.comparison.differences) &&
+                       selectedDocument.analysis_result.comparison.differences.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700 mb-2">Diferenças Encontradas</h4>
+                          <div className="space-y-2">
+                            {selectedDocument.analysis_result.comparison.differences.map((diff: any, index: number) => (
+                              <div key={index} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p className="text-sm font-medium text-slate-800">{diff.metric}</p>
+                                <div className="flex items-center gap-4 mt-1 text-xs">
+                                  <span className="text-slate-600">Documento: {diff.documentValue}</span>
+                                  <span className="text-slate-600">Sistema: {diff.systemValue}</span>
+                                  <span className={`font-semibold ${diff.difference > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    Diferença: {diff.difference > 0 ? '+' : ''}{diff.difference}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedDocument.analysis_result.comparison.suggestions && 
+                       Array.isArray(selectedDocument.analysis_result.comparison.suggestions) &&
+                       selectedDocument.analysis_result.comparison.suggestions.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-700 mb-2">Sugestões</h4>
+                          <ul className="space-y-1">
+                            {selectedDocument.analysis_result.comparison.suggestions.map((suggestion: string, index: number) => (
+                              <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                                <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <span>{suggestion}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardBox>
+                )}
               </div>
             </>
           )}

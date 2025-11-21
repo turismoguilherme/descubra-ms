@@ -28,14 +28,26 @@ import {
 } from 'lucide-react';
 import { format, subDays, subMonths, subYears } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { seturExportService } from '@/services/public/seturExportService';
+import { inventoryService } from '@/services/public/inventoryService';
+import { useToast } from '@/hooks/use-toast';
 
-type ReportType = 'all' | 'cats' | 'events' | 'inventory' | 'metrics';
+type ReportType = 'all' | 'cats' | 'events' | 'inventory' | 'metrics' | 'setur';
 
 const ReportGenerator: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportType, setReportType] = useState<ReportType>('all');
+  const [exportingSeTur, setExportingSeTur] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'json' | 'xml'>('json');
+  const [exportFilters, setExportFilters] = useState({
+    onlyActive: true,
+    onlyVerified: false,
+    onlySetur: false,
+  });
   const [reportConfig, setReportConfig] = useState<ReportOptions>({
     title: 'Relatório Municipal de Turismo',
     period: {
@@ -175,7 +187,7 @@ const ReportGenerator: React.FC = () => {
             <p className="text-sm text-slate-600">Selecione o tipo de relatório que deseja gerar</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <button
               type="button"
               onClick={() => handleReportTypeChange('all')}
@@ -265,6 +277,24 @@ const ReportGenerator: React.FC = () => {
                 <span className="text-xs text-gray-500 text-center">Apenas métricas</span>
               </div>
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleReportTypeChange('setur')}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'setur'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Download className={`h-6 w-6 ${reportType === 'setur' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'setur' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  SeTur
+                </span>
+                <span className="text-xs text-gray-500 text-center">Exportação SeTur</span>
+              </div>
+            </button>
           </div>
         </CardBox>
 
@@ -306,45 +336,183 @@ const ReportGenerator: React.FC = () => {
           </div>
         </CardBox>
 
-        {/* Botão de Geração */}
-        <CardBox className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-300 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-blue-900 mb-1 text-lg">
-                {reportConfig.title}
+        {/* Exportação SeTur */}
+        {reportType === 'setur' && (
+          <CardBox className="bg-gradient-to-br from-white to-purple-50/30 border-purple-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                <Download className="h-5 w-5 text-purple-600" />
+                Exportação SeTur
               </h3>
-              <p className="text-sm text-blue-700">
-                {reportType === 'all' && 'Inclui todas as seções: Métricas, CATs, Eventos, Inventário e Análises'}
-                {reportType === 'cats' && 'Inclui apenas dados dos Centros de Atendimento ao Turista'}
-                {reportType === 'events' && 'Inclui apenas eventos programados e realizados'}
-                {reportType === 'inventory' && 'Inclui apenas o inventário turístico (atrações e pontos de interesse)'}
-                {reportType === 'metrics' && 'Inclui apenas métricas e indicadores principais'}
+              <p className="text-sm text-slate-600">
+                Exporte o inventário turístico no formato padrão SeTur (Sistema de Informação Turística).
               </p>
             </div>
-            <Button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleGenerate();
-              }}
-              disabled={isGenerating}
-              className="ml-4 bg-blue-600 hover:bg-blue-700 text-white shadow-md px-6 py-3 h-auto"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Gerando...
-                </>
-              ) : (
-                <>
-                  <Download className="h-5 w-5 mr-2" />
-                  Baixar PDF
-                </>
-              )}
-            </Button>
-          </div>
-        </CardBox>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2 block">Formato de Exportação</Label>
+                <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as 'json' | 'xml')}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o formato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="json">JSON (JavaScript Object Notation)</SelectItem>
+                    <SelectItem value="xml">XML (eXtensible Markup Language)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2 block">Filtros de Exportação</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="setur-only-active" 
+                      checked={exportFilters.onlyActive}
+                      onCheckedChange={(checked) => setExportFilters(prev => ({ ...prev, onlyActive: checked as boolean }))}
+                    />
+                    <Label htmlFor="setur-only-active" className="text-sm text-slate-600 cursor-pointer">
+                      Apenas atrativos ativos
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="setur-only-verified" 
+                      checked={exportFilters.onlyVerified}
+                      onCheckedChange={(checked) => setExportFilters(prev => ({ ...prev, onlyVerified: checked as boolean }))}
+                    />
+                    <Label htmlFor="setur-only-verified" className="text-sm text-slate-600 cursor-pointer">
+                      Apenas atrativos verificados
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="setur-only-setur" 
+                      checked={exportFilters.onlySetur}
+                      onCheckedChange={(checked) => setExportFilters(prev => ({ ...prev, onlySetur: checked as boolean }))}
+                    />
+                    <Label htmlFor="setur-only-setur" className="text-sm text-slate-600 cursor-pointer">
+                      Apenas atrativos com código SeTur
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-200">
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    setExportingSeTur(true);
+                    try {
+                      // Buscar todas as atrações
+                      const attractions = await inventoryService.getAllAttractions();
+                      
+                      // Aplicar filtros
+                      let attractionsToExport = attractions;
+
+                      if (exportFilters.onlyActive) {
+                        attractionsToExport = attractionsToExport.filter(a => a.is_active);
+                      }
+                      if (exportFilters.onlyVerified) {
+                        attractionsToExport = attractionsToExport.filter(a => a.status === 'approved');
+                      }
+                      if (exportFilters.onlySetur) {
+                        attractionsToExport = attractionsToExport.filter(a => (a as any).setur_code);
+                      }
+
+                      const exportData = await seturExportService.exportToSeTurFormat(
+                        attractionsToExport as any[],
+                        exportFormat
+                      );
+                      
+                      // Download do arquivo
+                      const blob = new Blob([exportData.content], { type: exportData.mimeType });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = exportData.filename;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                      
+                      toast({
+                        title: 'Exportação realizada!',
+                        description: `${attractionsToExport.length} atrativo(s) exportado(s) com sucesso.`,
+                      });
+                    } catch (error) {
+                      console.error('Erro ao exportar SeTur:', error);
+                      toast({
+                        title: 'Erro',
+                        description: 'Não foi possível exportar os dados SeTur.',
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setExportingSeTur(false);
+                    }
+                  }}
+                  disabled={exportingSeTur}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  {exportingSeTur ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar SeTur
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardBox>
+        )}
+
+        {/* Botão de Geração */}
+        {reportType !== 'setur' && (
+          <CardBox className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-300 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900 mb-1 text-lg">
+                  {reportConfig.title}
+                </h3>
+                <p className="text-sm text-blue-700">
+                  {reportType === 'all' && 'Inclui todas as seções: Métricas, CATs, Eventos, Inventário e Análises'}
+                  {reportType === 'cats' && 'Inclui apenas dados dos Centros de Atendimento ao Turista'}
+                  {reportType === 'events' && 'Inclui apenas eventos programados e realizados'}
+                  {reportType === 'inventory' && 'Inclui apenas o inventário turístico (atrações e pontos de interesse)'}
+                  {reportType === 'metrics' && 'Inclui apenas métricas e indicadores principais'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleGenerate();
+                }}
+                disabled={isGenerating}
+                className="ml-4 bg-blue-600 hover:bg-blue-700 text-white shadow-md px-6 py-3 h-auto"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-5 w-5 mr-2" />
+                    Baixar PDF
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardBox>
+        )}
       </div>
     </SectionWrapper>
   );
