@@ -153,7 +153,7 @@ const ImprovedAdminDashboard: React.FC = () => {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>IA Consultora</CardTitle>
+                <CardTitle>Guilherme</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">

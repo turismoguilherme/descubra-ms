@@ -47,7 +47,7 @@ const OverflowOneFooter: React.FC = () => {
                 <Link to="/servicos" className="text-gray-300 hover:text-white transition-colors text-sm">
                   <div className="flex items-center gap-2">
                     <Brain className="h-4 w-4" />
-                    IA Guilherme
+                    Guilherme
                   </div>
                 </Link>
               </li>

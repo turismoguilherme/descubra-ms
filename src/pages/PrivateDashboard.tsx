@@ -461,7 +461,7 @@ const PrivateDashboard = () => {
                 }`}
               >
                 <Brain className="h-4 w-4" />
-                IA Conversacional
+                Guilherme
               </button>
               <button
                 onClick={() => setActiveSection('upload')}
@@ -868,7 +868,7 @@ const PrivateDashboard = () => {
             </ErrorBoundary>
           )}
 
-          {/* IA Conversacional */}
+          {/* Guilherme */}
           {activeSection === 'ai' && (
             <PrivateAIConversation businessType={userProfile?.business_type} />
           )}

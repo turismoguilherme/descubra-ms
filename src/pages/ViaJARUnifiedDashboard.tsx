@@ -326,7 +326,7 @@ export default function ViaJARUnifiedDashboard() {
             <CardBox>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-800 mb-1">IA Conversacional</h3>
+                  <h3 className="font-semibold text-slate-800 mb-1">Guilherme</h3>
                   <p className="text-sm text-slate-600">Assistente inteligente Guatá</p>
                 </div>
                 <Brain className="h-5 w-5 text-orange-500" />

@@ -1,6 +1,6 @@
 /**
  * Strategic AI Chat Component
- * Chat de IA estratégica especializado para secretarias de turismo
+ * Chat do Guilherme - Assistente IA especializado para secretarias de turismo
  * Layout padronizado conforme regras definitivas ViaJAR
  */
 
@@ -65,7 +65,7 @@ const StrategicAIChat: React.FC = () => {
     const welcomeMessage: Message = {
       id: Date.now().toString(),
       type: 'ai',
-      content: 'Olá! Sou sua IA Estratégica para o turismo municipal. Analiso os dados do seu município e forneço recomendações estratégicas baseadas em evidências. Como posso ajudar você hoje?',
+      content: 'Olá! Sou o Guilherme, sua IA estratégica para o turismo municipal. Analiso os dados do seu município e forneço recomendações estratégicas baseadas em evidências. Como posso ajudar você hoje?',
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -140,7 +140,7 @@ const StrategicAIChat: React.FC = () => {
   return (
     <SectionWrapper 
       variant="default" 
-      title="IA Estratégica"
+      title="Guilherme"
       subtitle="Assistente inteligente para estratégias e análises municipais"
       actions={
         <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 gap-1">
@@ -162,7 +162,7 @@ const StrategicAIChat: React.FC = () => {
                   </div>
                   <div className="flex-1 bg-blue-50 rounded-lg p-4">
                     <p className="text-slate-800 font-medium mb-1">
-                      Olá! Sou sua IA Estratégica da ViaJAR.
+                      Olá! Sou o Guilherme, sua IA estratégica da ViaJAR.
                     </p>
                     <p className="text-sm text-slate-600">
                       Analiso os dados do seu município e forneço recomendações estratégicas baseadas em evidências. Como posso ajudar você hoje?

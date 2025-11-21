@@ -49,7 +49,7 @@ const aiServices = [
   },
   {
     id: 'guilherme-ai',
-    title: 'IA Guilherme',
+    title: 'Guilherme',
     description: 'Assistente inteligente para análise de dados e suporte estratégico',
     icon: Brain,
     features: ['Chat inteligente 24/7', 'Análise de dados', 'Sugestões estratégicas'],

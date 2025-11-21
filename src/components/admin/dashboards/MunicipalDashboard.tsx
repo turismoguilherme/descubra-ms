@@ -65,7 +65,7 @@ const MunicipalDashboard = () => {
       { id: 'passport', label: 'Passaporte Digital', icon: Award, description: 'Gerenciar roteiros e gamificação', isNew: true },
       { id: 'heatmap', label: 'Mapas de Calor', icon: MapPin, description: 'Visualização de fluxos turísticos' },
       { id: 'community', label: 'Comunidade', icon: Users, description: 'Contribuições da comunidade' },
-      { id: 'ia-consultora', label: 'IA Consultora', icon: Brain, description: 'Assistente estratégico inteligente', isNew: true },
+      { id: 'ia-consultora', label: 'Guilherme', icon: Brain, description: 'Assistente estratégico inteligente', isNew: true },
       { id: 'settings', label: 'Configurações', icon: Settings, description: 'Ajustes e configurações do sistema' },
       { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Notificações e avisos importantes' }
     ];
@@ -149,7 +149,7 @@ const MunicipalDashboard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-3">
                 <Bot className="h-6 w-6 text-blue-500" />
-                Consultar IA Estratégica
+                Consultar Guilherme
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -162,7 +162,7 @@ const MunicipalDashboard = () => {
                 onClick={() => setActiveTab('ia-consultora')}
               >
                 <Brain className="h-4 w-4 mr-2" />
-                Abrir IA Consultora
+                Abrir Guilherme
               </Button>
             </CardContent>
           </Card>
@@ -225,7 +225,7 @@ const MunicipalDashboard = () => {
                 <Bot className="h-5 w-5 text-blue-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-blue-900">
-                    IA Consultora disponível!
+                    Guilherme disponível!
                   </p>
                   <p className="text-sm text-blue-700">
                     Faça perguntas estratégicas sobre o turismo da sua cidade e receba insights baseados em dados reais.
@@ -294,12 +294,12 @@ const MunicipalDashboard = () => {
 
     const renderAIConsultant = () => (
       <div className="space-y-6">
-        {/* Header da IA Consultora */}
+        {/* Header do Guilherme */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <Bot className="h-7 w-7 text-blue-500" />
-              IA Consultora Estratégica
+              Guilherme
             </h1>
             <p className="text-gray-600 mt-1">
               Análise inteligente de dados turísticos para {municipalData.cityName}
@@ -693,7 +693,7 @@ const MunicipalDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Insights da IA</p>
-                <p className="text-sm text-gray-500">Receba insights automáticos da IA Consultora</p>
+                <p className="text-sm text-gray-500">Receba insights automáticos do Guilherme</p>
               </div>
               <input type="checkbox" defaultChecked className="toggle" />
             </div>
@@ -703,7 +703,7 @@ const MunicipalDashboard = () => {
         {/* Configurações da IA */}
         <Card>
           <CardHeader>
-            <CardTitle>IA Consultora</CardTitle>
+            <CardTitle>Guilherme</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">

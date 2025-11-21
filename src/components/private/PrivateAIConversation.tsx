@@ -1,6 +1,6 @@
 /**
  * Private AI Conversation Component
- * Interface de IA conversacional para empresários do setor privado
+ * Interface do Guilherme - Assistente IA para empresários do setor privado
  * Baseado em CATAIInterface, adaptado para contexto de negócios
  */
 
@@ -183,7 +183,7 @@ const PrivateAIConversation: React.FC<PrivateAIConversationProps> = ({ businessT
   return (
     <SectionWrapper 
       variant="default" 
-      title="IA Conversacional"
+      title="Guilherme"
       subtitle="Assistente inteligente para estratégias e análises do seu negócio"
       actions={
         <Badge variant="secondary" className="rounded-full text-xs px-2 py-0.5 gap-1">
@@ -205,7 +205,7 @@ const PrivateAIConversation: React.FC<PrivateAIConversationProps> = ({ businessT
                   </div>
                   <div className="flex-1 bg-blue-50 rounded-lg p-4">
                     <p className="text-slate-800 font-medium mb-1">
-                      Olá! Sou sua assistente de IA da ViaJAR.
+                      Olá! Sou o Guilherme, sua IA da ViaJAR.
                     </p>
                     <p className="text-sm text-slate-600">
                       Posso ajudá-lo com estratégias de precificação, análise de métricas, comparação com concorrentes e recomendações para o seu negócio. Como posso ajudá-lo hoje?

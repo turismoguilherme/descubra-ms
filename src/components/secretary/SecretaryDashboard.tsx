@@ -46,6 +46,7 @@ import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
 import PublicSettingsModal from '@/components/secretary/PublicSettingsModal';
 import AttendantManagement from '@/components/secretary/AttendantManagement';
+import TouristServicesAnalytics from '@/components/secretary/TouristServicesAnalytics';
 import { format } from 'date-fns';
 import { Brain, FileText, FileBarChart, HelpCircle, Sparkles, Target } from 'lucide-react';
 import { dataInterpretationAIService } from '@/services/ai/dataInterpretationAIService';
@@ -420,7 +421,7 @@ export default function SecretaryDashboard() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Click em IA Estratégica');
+                  console.log('Click em Guilherme');
                   setActiveSection('ai-strategic');
                 }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
@@ -430,7 +431,7 @@ export default function SecretaryDashboard() {
                 }`}
               >
                 <Brain className="h-4 w-4" />
-                IA Estratégica
+                Guilherme
               </button>
               <button
                 type="button"
@@ -1284,7 +1285,9 @@ export default function SecretaryDashboard() {
 
           {/* Gestão de CATs */}
           {activeSection === 'cats' && (
-            <CATGeolocationManager />
+            <React.Suspense fallback={<div className="p-8"><Skeleton className="h-64 w-full" /></div>}>
+              <CATGeolocationManager />
+            </React.Suspense>
           )}
 
           {/* Atendimentos CAT */}
@@ -1311,7 +1314,7 @@ export default function SecretaryDashboard() {
             </SectionWrapper>
           )}
 
-          {/* IA Estratégica */}
+          {/* Guilherme */}
           {activeSection === 'ai-strategic' && (
             <StrategicAIChat />
           )}

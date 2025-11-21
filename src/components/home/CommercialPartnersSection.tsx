@@ -87,7 +87,7 @@ const CommercialPartnersSection = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-500" />
-                  <span>Assistente virtual IA Guilherme</span>
+                  <span>Assistente virtual Guilherme</span>
                 </li>
               </ul>
             </div>

@@ -50,7 +50,7 @@ const recentActivities = [
   },
   {
     type: "ai",
-    message: "IA Guilherme gerou 15 relatórios personalizados",
+    message: "Guilherme gerou 15 relatórios personalizados",
     time: "5 min atrás",
     icon: Bot
   },
@@ -95,7 +95,7 @@ export default function CommercialDashboard() {
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="partners">Parceiros</TabsTrigger>
             <TabsTrigger value="bi">Business Intelligence</TabsTrigger>
-            <TabsTrigger value="ai">IA Guilherme</TabsTrigger>
+            <TabsTrigger value="ai">Guilherme</TabsTrigger>
             <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
           </TabsList>
 
@@ -158,7 +158,7 @@ export default function CommercialDashboard() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <Bot className="h-4 w-4 text-purple-500" />
-                          <span className="text-sm font-medium">IA Guilherme</span>
+                          <span className="text-sm font-medium">Guilherme</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Progress value={78} className="w-20" />

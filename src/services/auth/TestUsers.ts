@@ -26,7 +26,7 @@ export const TEST_USERS: TestUser[] = [
     role: 'user',
     avatar: '🏨',
     description: 'Dono da Pousada do Sol em Bonito, MS',
-    features: ['Revenue Optimizer', 'Market Intelligence', 'IA Conversacional', 'Sistema de Reservas'],
+    features: ['Revenue Optimizer', 'Market Intelligence', 'Guilherme', 'Sistema de Reservas'],
     autoLogin: true
   },
   {
@@ -38,7 +38,7 @@ export const TEST_USERS: TestUser[] = [
     role: 'user',
     avatar: '🚌',
     description: 'Dona da agência Viagens & Cia em Campo Grande, MS',
-    features: ['Lead Generation', 'IA Conversacional', 'Market Intelligence', 'Sistema de Pacotes'],
+    features: ['Lead Generation', 'Guilherme', 'Market Intelligence', 'Sistema de Pacotes'],
     autoLogin: true
   },
   {
@@ -50,7 +50,7 @@ export const TEST_USERS: TestUser[] = [
     role: 'user',
     avatar: '🍽️',
     description: 'Dono do restaurante Sabores do MS em Corumbá, MS',
-    features: ['Sistema de Reservas', 'Menu Optimizer', 'IA Conversacional', 'Analytics'],
+    features: ['Sistema de Reservas', 'Menu Optimizer', 'Guilherme', 'Analytics'],
     autoLogin: true
   },
   {
@@ -62,7 +62,7 @@ export const TEST_USERS: TestUser[] = [
     role: 'user',
     avatar: '🎯',
     description: 'Dona do Parque das Cachoeiras em Bonito, MS',
-    features: ['Sistema de Ingressos', 'IA Conversacional', 'Market Intelligence', 'Analytics'],
+    features: ['Sistema de Ingressos', 'Guilherme', 'Market Intelligence', 'Analytics'],
     autoLogin: true
   },
   {

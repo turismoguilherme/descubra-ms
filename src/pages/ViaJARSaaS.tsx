@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe, Building2 } from 'lucide-react';
+import { ArrowRight, BarChart3, Map, Users, Brain, Shield, Globe, Building2, TrendingUp, Calendar, FileText, MapPin } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import CommercialSection from '@/components/commercial/CommercialSection';
@@ -64,8 +64,8 @@ const ViaJARSaaS = () => {
               Ecossistema inteligente de turismo
             </p>
             <p className="text-lg text-blue-200 mb-12 max-w-4xl mx-auto">
-              Transforme seu negócio turístico com inteligência artificial, 
-              análise de dados e soluções inovadoras para o setor.
+              Plataforma completa de gestão turística com inteligência artificial, 
+              analytics avançado e soluções inovadoras para setor privado e público.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/viajar/register">
@@ -102,86 +102,128 @@ const ViaJARSaaS = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* IA Guilherme */}
+            {/* Guilherme */}
             <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-8 rounded-2xl border border-blue-100 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-6">
                 <Brain className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">IA Guilherme</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Guilherme</h3>
               <p className="text-gray-600 mb-6">
-                Assistente inteligente especializado em turismo, oferecendo insights estratégicos e suporte personalizado.
+                Assistente IA estratégico especializado em turismo, oferecendo insights, análises e recomendações personalizadas para setor privado e público.
               </p>
-              <Link to="/servicos" className="text-cyan-600 hover:text-cyan-700 font-medium">
+              <Link to="/solucoes" className="text-cyan-600 hover:text-cyan-700 font-medium">
                 Saiba mais →
               </Link>
             </div>
 
-            {/* Relatórios Inteligentes */}
+            {/* Revenue Optimizer */}
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl border border-green-100 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-emerald-500 rounded-xl flex items-center justify-center mb-6">
+                <TrendingUp className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Revenue Optimizer</h3>
+              <p className="text-gray-600 mb-6">
+                Sistema de precificação dinâmica com IA que maximiza receita baseado em demanda, eventos e sazonalidade.
+              </p>
+              <Link to="/solucoes" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                Saiba mais →
+              </Link>
+            </div>
+
+            {/* Market Intelligence */}
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-8 rounded-2xl border border-purple-100 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-violet-500 rounded-xl flex items-center justify-center mb-6">
                 <BarChart3 className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Relatórios Inteligentes</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Market Intelligence</h3>
               <p className="text-gray-600 mb-6">
-                Análise de dados avançada com relatórios personalizados e insights para tomada de decisão.
+                Análise completa de mercado: origem dos turistas, perfil de clientes, ROI por canal e benchmarking competitivo.
               </p>
-              <Link to="/servicos" className="text-emerald-600 hover:text-emerald-700 font-medium">
+              <Link to="/solucoes" className="text-violet-600 hover:text-violet-700 font-medium">
                 Saiba mais →
               </Link>
             </div>
 
             {/* Inventário Turístico */}
-            <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-8 rounded-2xl border border-purple-100 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-violet-500 rounded-xl flex items-center justify-center mb-6">
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-8 rounded-2xl border border-orange-100 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-amber-500 rounded-xl flex items-center justify-center mb-6">
                 <Map className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Inventário Turístico</h3>
               <p className="text-gray-600 mb-6">
-                Gestão completa de ativos turísticos com mapas interativos e análise de performance.
+                Gestão completa de atrativos turísticos com padronização SeTur, validação inteligente e analytics integrado.
               </p>
-              <Link to="/servicos" className="text-violet-600 hover:text-violet-700 font-medium">
+              <Link to="/solucoes" className="text-amber-600 hover:text-amber-700 font-medium">
                 Saiba mais →
               </Link>
             </div>
 
-            {/* Análise de Mercado */}
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-8 rounded-2xl border border-orange-100 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-amber-500 rounded-xl flex items-center justify-center mb-6">
-                <Globe className="h-6 w-6 text-white" />
+            {/* Gestão de Eventos */}
+            <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-8 rounded-2xl border border-pink-100 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-rose-500 rounded-xl flex items-center justify-center mb-6">
+                <Calendar className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Análise de Mercado</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Gestão de Eventos</h3>
               <p className="text-gray-600 mb-6">
-                Insights sobre tendências do mercado turístico e oportunidades de crescimento.
+                Sistema completo para planejamento, execução e análise de eventos turísticos com IA preditiva.
               </p>
-              <Link to="/servicos" className="text-amber-600 hover:text-amber-700 font-medium">
+              <Link to="/solucoes" className="text-rose-600 hover:text-rose-700 font-medium">
                 Saiba mais →
               </Link>
             </div>
 
-            {/* Gestão de Parceiros */}
+            {/* Gestão de CATs */}
             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-8 rounded-2xl border border-indigo-100 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center mb-6">
-                <Users className="h-6 w-6 text-white" />
+                <Building2 className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Gestão de Parceiros</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Gestão de CATs</h3>
               <p className="text-gray-600 mb-6">
-                Plataforma completa para gerenciar parcerias e colaborações no setor turístico.
+                Controle completo de Centros de Atendimento ao Turista com GPS, ponto eletrônico e métricas em tempo real.
               </p>
-              <Link to="/parceiros" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              <Link to="/solucoes" className="text-indigo-600 hover:text-indigo-700 font-medium">
                 Saiba mais →
               </Link>
             </div>
 
-            {/* Segurança Avançada */}
+            {/* Analytics Municipal */}
+            <div className="bg-gradient-to-br from-cyan-50 to-teal-50 p-8 rounded-2xl border border-cyan-100 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-600 to-teal-500 rounded-xl flex items-center justify-center mb-6">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Analytics Municipal</h3>
+              <p className="text-gray-600 mb-6">
+                Dashboards com mapas de calor, análise de fluxo turístico e KPIs estratégicos para gestão pública.
+              </p>
+              <Link to="/solucoes" className="text-teal-600 hover:text-teal-700 font-medium">
+                Saiba mais →
+              </Link>
+            </div>
+
+            {/* Relatórios e Exportação */}
+            <div className="bg-gradient-to-br from-slate-50 to-gray-50 p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-r from-slate-600 to-gray-500 rounded-xl flex items-center justify-center mb-6">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Relatórios Inteligentes</h3>
+              <p className="text-gray-600 mb-6">
+                Relatórios executivos automatizados com exportação SeTur, análises comparativas e insights acionáveis.
+              </p>
+              <Link to="/solucoes" className="text-gray-600 hover:text-gray-700 font-medium">
+                Saiba mais →
+              </Link>
+            </div>
+
+            {/* Segurança e Conformidade */}
             <div className="bg-gradient-to-br from-red-50 to-pink-50 p-8 rounded-2xl border border-red-100 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-pink-500 rounded-xl flex items-center justify-center mb-6">
                 <Shield className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Segurança Avançada</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Segurança LGPD</h3>
               <p className="text-gray-600 mb-6">
-                Proteção de dados e conformidade com as melhores práticas de segurança.
+                Conformidade total com LGPD, criptografia end-to-end e integração oficial com CADASTUR.
               </p>
-              <Link to="/servicos" className="text-pink-600 hover:text-pink-700 font-medium">
+              <Link to="/solucoes" className="text-pink-600 hover:text-pink-700 font-medium">
                 Saiba mais →
               </Link>
             </div>
@@ -252,9 +294,9 @@ const ViaJARSaaS = () => {
                     demonstrando como a tecnologia ViaJAR pode revolucionar o turismo regional.
                   </p>
                   <p>
-                    Com <strong>IA Guatá</strong>, <strong>Passaporte Digital</strong>, 
+                    Com <strong>Guatá IA</strong>, <strong>Passaporte Digital</strong>, 
                     <strong>Mapas Interativos</strong> e <strong>Analytics Avançado</strong>, 
-                    transformamos Campo Grande em um destino turístico inteligente.
+                    transformamos Mato Grosso do Sul em um destino turístico inteligente.
                   </p>
                   <div className="grid grid-cols-2 gap-4 mt-8">
                     <div className="text-center">

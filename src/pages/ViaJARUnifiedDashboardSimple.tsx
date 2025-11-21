@@ -106,7 +106,7 @@ export default function ViaJARUnifiedDashboardSimple() {
             { id: 'revenue', label: 'Revenue Optimizer', icon: TrendingUp },
             { id: 'market', label: 'Market Intelligence', icon: BarChart3 },
             { id: 'competitive', label: 'Competitive Benchmark', icon: Target },
-            { id: 'ai', label: 'IA Conversacional', icon: Brain }
+            { id: 'ai', label: 'Guilherme', icon: Brain }
           ].map((tab) => (
             <Button
               key={tab.id}
@@ -207,7 +207,7 @@ export default function ViaJARUnifiedDashboardSimple() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>IA Conversacional</CardTitle>
+                <CardTitle>Guilherme</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">

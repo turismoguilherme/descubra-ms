@@ -67,7 +67,7 @@ const RECOMMENDATIONS_CONFIG = {
     marketing: [
       {
         id: 'ai-conversational',
-        name: 'IA Conversacional',
+        name: 'Guilherme',
         description: 'Atendimento automatizado 24/7 com IA',
         features: ['Chat inteligente', 'Reservas automáticas', 'Suporte multilíngue'],
         benefits: ['+30% satisfação', 'Redução de custos', 'Disponibilidade 24/7'],

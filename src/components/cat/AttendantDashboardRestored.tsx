@@ -216,7 +216,7 @@ const AttendantDashboardRestored: React.FC = () => {
                 }`}
               >
                 <Bot className="h-4 w-4" />
-                IA Guilherme
+                Guilherme
               </button>
               <button
                 onClick={() => setActiveTab('services')}
@@ -251,7 +251,7 @@ const AttendantDashboardRestored: React.FC = () => {
             <CATCheckInSection catName="CAT Centro" />
           )}
 
-          {/* IA Guilherme */}
+          {/* Guilherme */}
           {activeTab === 'ai' && (
             <CATAIInterface catId={undefined} />
           )}

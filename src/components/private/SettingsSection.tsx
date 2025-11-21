@@ -220,7 +220,7 @@ const SettingsSection: React.FC = () => {
         id: 'premium',
         name: 'Premium',
         price: 'R$ 199/mês',
-        features: ['Tudo do Básico', 'IA Conversacional', 'Análises avançadas', 'Integração ALUMIA', 'Suporte 24/7'],
+        features: ['Tudo do Básico', 'Guilherme', 'Análises avançadas', 'Integração ALUMIA', 'Suporte 24/7'],
         current: currentPlan === 'premium'
       },
       {

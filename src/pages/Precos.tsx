@@ -44,7 +44,7 @@ const Precos = () => {
       description: "Para hotéis e pousadas médios",
       features: [
         "Fotos ilimitadas",
-        "Intelligence IA básica",
+        "Guilherme básico",
         "Relatórios mensais",
         "Análise de concorrência",
         "Destaque nas buscas",
@@ -60,7 +60,7 @@ const Precos = () => {
       period: "/mês",
       description: "Para grandes hotéis e redes",
       features: [
-        "ViaJAR Intelligence Suite completa",
+        "ViaJAR Guilherme Suite completa",
         "Revenue Optimizer (IA)",
         "Market Intelligence",
         "Competitive Benchmark",
@@ -84,7 +84,7 @@ const Precos = () => {
         "Gestão de atendentes (ponto)",
         "Analytics estadual/municipal",
         "Mapas de calor (fluxo turístico)",
-        "IA Consultora Estratégica",
+        "Guilherme",
         "Relatórios consolidados",
         "Upload de arquivos oficiais",
         "Multi-usuários ilimitados",

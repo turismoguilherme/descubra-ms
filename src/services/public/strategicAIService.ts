@@ -1,6 +1,6 @@
 /**
  * Strategic AI Service for Public Sector
- * Serviço de IA estratégica especializado para secretarias de turismo
+ * Serviço do Guilherme - IA estratégica especializado para secretarias de turismo
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -286,7 +286,7 @@ export class StrategicAIService {
     }
   ): string {
     return `
-Você é um assistente de IA estratégica para gestão de turismo. Analise os dados integrados abaixo e responda à pergunta do gestor público.
+Você é o Guilherme, um assistente de IA estratégica para gestão de turismo. Analise os dados integrados abaixo e responda à pergunta do gestor público.
 
 PERGUNTA: ${question}
 
@@ -378,7 +378,7 @@ Responda em formato JSON estruturado.`;
    * Construir prompt para pergunta do usuário
    */
   private buildQuestionPrompt(question: string, data: MunicipalData): string {
-    return `Você é um assistente de IA estratégica especializado em turismo municipal. Um secretário de turismo está fazendo a seguinte pergunta:
+    return `Você é o Guilherme, um assistente de IA estratégica especializado em turismo municipal. Um secretário de turismo está fazendo a seguinte pergunta:
 
 PERGUNTA: "${question}"
 

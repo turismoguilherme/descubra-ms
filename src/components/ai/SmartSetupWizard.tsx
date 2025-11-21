@@ -335,7 +335,7 @@ const SmartSetupWizard: React.FC<SmartSetupWizardProps> = ({
           </div>
           <div className="space-y-2">
             <div className="text-sm text-muted-foreground">
-              Configurando IA Conversacional...
+              Configurando Guilherme...
             </div>
             <div className="text-sm text-muted-foreground">
               Integrando com seus canais...
@@ -440,7 +440,7 @@ const SmartSetupWizard: React.FC<SmartSetupWizardProps> = ({
 
   const getFeatureDescription = (feature: string): string => {
     const descriptions: Record<string, string> = {
-      'IA Conversacional': 'Atendimento automático 24/7',
+      'Guilherme': 'Atendimento automático 24/7',
       'WhatsApp Business Integration': 'IA integrada ao seu WhatsApp',
       'Website Chat Integration': 'Chat inteligente no seu site',
       'Facebook Messenger Integration': 'IA no Facebook Messenger',

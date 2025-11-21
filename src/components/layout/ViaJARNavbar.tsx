@@ -56,14 +56,13 @@ const ViaJARNavbar = () => {
     { name: "Soluções", path: "/solucoes" },
     { name: "Casos de Sucesso", path: "/casos-sucesso" },
     { name: "Preços", path: "/precos" },
-    { name: "Para Governos", path: "/governos" },
     { name: "Sobre", path: "/sobre" },
     { name: "Contato", path: "/contato" },
   ];
 
   const dashboardItems = [
     { name: "Dashboard", path: "/viajar/dashboard" },
-    { name: "Intelligence IA", path: "/viajar/intelligence" },
+    { name: "Guilherme", path: "/viajar/intelligence" },
     { name: "Inventário", path: "/viajar/inventario" },
     { name: "Relatórios", path: "/viajar/relatorios" },
     { name: "Leads", path: "/viajar/leads" },

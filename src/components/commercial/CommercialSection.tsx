@@ -14,7 +14,7 @@ const CommercialSection = () => {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Potencialize seu negócio turístico com nossas ferramentas avançadas de Business Intelligence, 
-            IA Guilherme e marketplace de dados.
+            Guilherme e marketplace de dados.
           </p>
         </div>
 
@@ -22,7 +22,7 @@ const CommercialSection = () => {
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <Brain className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <CardTitle>IA Guilherme</CardTitle>
+              <CardTitle>Guilherme</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">

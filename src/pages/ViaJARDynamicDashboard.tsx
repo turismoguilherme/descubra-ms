@@ -154,7 +154,7 @@ export default function ViaJARDynamicDashboard() {
               <TabsTrigger value="overview">Visão Geral</TabsTrigger>
               <TabsTrigger value="cats">Gestão de CATs</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="ai">IA Consultora</TabsTrigger>
+              <TabsTrigger value="ai">Guilherme</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-8">
@@ -250,7 +250,7 @@ export default function ViaJARDynamicDashboard() {
                   <Link to="/viajar/intelligence">
                     <Button className="w-full justify-start gap-3 h-12 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white border-0">
                       <Brain className="h-5 w-5" />
-                      IA Consultora
+                      Guilherme
                     </Button>
                   </Link>
                 </CardContent>
@@ -282,7 +282,7 @@ export default function ViaJARDynamicDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Brain className="h-5 w-5" />
-                    IA Consultora Estratégica
+                    Guilherme
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -290,7 +290,7 @@ export default function ViaJARDynamicDashboard() {
                     Acesse análises estratégicas e recomendações de IA para políticas públicas.
                   </p>
                   <Link to="/viajar/intelligence">
-                    <Button>Acessar IA Consultora</Button>
+                    <Button>Acessar Guilherme</Button>
                   </Link>
                 </CardContent>
               </Card>

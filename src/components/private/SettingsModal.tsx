@@ -367,7 +367,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       id: 'premium' as const,
       name: 'Premium',
       price: 'R$ 199/mês',
-      features: ['Tudo do Básico', 'IA Conversacional', 'Análises avançadas', 'Integração ALUMIA', 'Suporte 24/7'],
+      features: ['Tudo do Básico', 'Guilherme', 'Análises avançadas', 'Integração ALUMIA', 'Suporte 24/7'],
     },
     {
       id: 'enterprise' as const,

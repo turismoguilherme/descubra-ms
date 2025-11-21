@@ -29,7 +29,6 @@ import ViaJARSaaS from "@/pages/ViaJARSaaS";
 import Solucoes from "@/pages/Solucoes";
 import CasosSucesso from "@/pages/CasosSucesso";
 import Precos from "@/pages/Precos";
-import ParaGovernos from "@/pages/ParaGovernos";
 import Sobre from "@/pages/Sobre";
 import Contato from "@/pages/Contato";
 
@@ -101,7 +100,6 @@ function App() {
                             <Route path="/solucoes" element={<Solucoes />} />
                             <Route path="/casos-sucesso" element={<CasosSucesso />} />
                             <Route path="/precos" element={<Precos />} />
-                            <Route path="/governos" element={<ParaGovernos />} />
                             <Route path="/sobre" element={<Sobre />} />
                             <Route path="/contato" element={<Contato />} />
                             

@@ -47,7 +47,7 @@ const recentActivity = [
   {
     id: 1,
     type: 'ai',
-    message: 'IA Guilherme gerou relatório de análise de mercado',
+    message: 'Guilherme gerou relatório de análise de mercado',
     time: '2 min atrás',
     icon: Brain
   },
@@ -85,7 +85,7 @@ const services = [
   },
   {
     id: 'guilherme-ai',
-    name: 'IA Guilherme',
+    name: 'Guilherme',
     status: 'active',
     usage: 92,
     lastUsed: '2 min atrás',
@@ -206,7 +206,7 @@ const OverflowOneDashboard: React.FC = () => {
             <TabsTrigger value="leads">Leads & Parceiros</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="municipal">Gestão Municipal</TabsTrigger>
-            <TabsTrigger value="ai">IA Guilherme</TabsTrigger>
+            <TabsTrigger value="ai">Guilherme</TabsTrigger>
           </TabsList>
 
           {/* Visão Geral */}
@@ -377,7 +377,7 @@ const OverflowOneDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* IA Guilherme */}
+          {/* Guilherme */}
           <TabsContent value="ai">
             <IAGuilhermeInterface />
           </TabsContent>
