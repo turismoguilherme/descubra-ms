@@ -9,7 +9,8 @@ import {
   Clock, 
   Bot,
   BarChart3,
-  Settings
+  Settings,
+  UserCheck
 } from 'lucide-react';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,8 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import CATCheckInSection from './CATCheckInSection';
 import CATAIInterface from './CATAIInterface';
 import CATReportsSection from './CATReportsSection';
+import AttendantSettingsModal from './AttendantSettingsModal';
+import TouristServiceRegistration from './TouristServiceRegistration';
 
 const AttendantDashboardRestored: React.FC = () => {
   // Verificar se o AuthProvider está disponível
@@ -74,6 +77,7 @@ const AttendantDashboardRestored: React.FC = () => {
   });
 
   const [activeTab, setActiveTab] = useState('checkin');
+  const [showSettings, setShowSettings] = useState(false);
 
   // Forçar processamento de usuário de teste se necessário
   useEffect(() => {
@@ -173,7 +177,12 @@ const AttendantDashboardRestored: React.FC = () => {
               <p className="text-blue-100 mt-2">Bem-vindo, {user?.name || 'Atendente'}</p>
             </div>
             <div className="flex gap-4">
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
+              <Button 
+                variant="outline" 
+                className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-blue-600 backdrop-blur-sm"
+                onClick={() => setShowSettings(true)}
+                title="Configurações"
+              >
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
@@ -210,6 +219,17 @@ const AttendantDashboardRestored: React.FC = () => {
                 IA Guilherme
               </button>
               <button
+                onClick={() => setActiveTab('services')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeTab === 'services' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <UserCheck className="h-4 w-4" />
+                Atendimentos
+              </button>
+              <button
                 onClick={() => setActiveTab('reports')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeTab === 'reports' 
@@ -236,12 +256,20 @@ const AttendantDashboardRestored: React.FC = () => {
             <CATAIInterface catId={undefined} />
           )}
 
+          {/* Atendimentos */}
+          {activeTab === 'services' && (
+            <TouristServiceRegistration catName="CAT Centro" />
+          )}
+
           {/* Relatórios */}
           {activeTab === 'reports' && (
             <CATReportsSection catId={undefined} />
           )}
         </div>
       </div>
+
+      {/* Modal de Configurações */}
+      <AttendantSettingsModal open={showSettings} onOpenChange={setShowSettings} />
     </div>
   );
 };

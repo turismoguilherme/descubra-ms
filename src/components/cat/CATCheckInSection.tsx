@@ -34,6 +34,7 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState<Date | null>(null);
+  const [activeCheckin, setActiveCheckin] = useState<CATCheckin | null>(null);
   const [checkInHistory, setCheckInHistory] = useState<CATCheckin[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -61,16 +62,39 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
   }, []);
 
   useEffect(() => {
-    loadCheckInHistory();
+    if (user?.id) {
+      loadActiveCheckin();
+      loadCheckInHistory();
+    }
   }, [user]);
+
+  const loadActiveCheckin = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const active = await catCheckinService.getActiveCheckin(user.id);
+      if (active) {
+        setActiveCheckin(active);
+        setIsCheckedIn(true);
+        if (active.checkin_time) {
+          setCheckInTime(new Date(active.checkin_time));
+        }
+      } else {
+        setActiveCheckin(null);
+        setIsCheckedIn(false);
+        setCheckInTime(null);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar check-in ativo:', error);
+    }
+  };
 
   const loadCheckInHistory = async () => {
     if (!user?.id) return;
     
     try {
-      // TODO: Implementar busca de histórico do Supabase
-      // Por enquanto usar dados mockados
-      setCheckInHistory([]);
+      const history = await catCheckinService.getAttendantCheckins(user.id, 10);
+      setCheckInHistory(history);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
     }
@@ -112,6 +136,16 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
       return;
     }
 
+    // Verificar se já tem check-in ativo
+    if (isCheckedIn && activeCheckin) {
+      toast({
+        title: 'Aviso',
+        description: 'Você já possui um check-in ativo. Faça check-out primeiro.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsLoading(true);
     setLocationError(null);
 
@@ -119,45 +153,47 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
       const currentLocation = await getCurrentLocation();
       setLocation(currentLocation);
 
-      const catLocation = await catCheckinService.getCATLocation(catName);
-      if (!catLocation) {
-        throw new Error('CAT não encontrado');
+      // Obter precisão do GPS se disponível
+      let accuracy: number | undefined;
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+        accuracy = position.coords.accuracy ? Math.round(position.coords.accuracy) : undefined;
+      } catch (e) {
+        // Ignorar erro de precisão
       }
 
-      const distance = catCheckinService.calculateDistance(
+      // Usar método correto do service que valida via RPC
+      const result = await catCheckinService.registerCheckin(
+        user.id,
         currentLocation.lat,
         currentLocation.lng,
-        catLocation.latitude,
-        catLocation.longitude
+        accuracy
       );
 
-      const status = distance <= catLocation.radius_meters ? 'confirmado' : 'fora_da_area';
-
-      const checkinData: Omit<CATCheckin, 'id'> = {
-        attendant_id: user.id,
-        attendant_name: user.email || 'Atendente',
-        cat_name: catName,
-        latitude: currentLocation.lat,
-        longitude: currentLocation.lng,
-        status,
-        distance_from_cat: Math.round(distance),
-        device_info: navigator.userAgent
-      };
-
-      const result = await catCheckinService.registerCheckin(checkinData);
-
-      if (result && status === 'confirmado') {
+      if (result.success && result.data?.is_valid) {
+        setActiveCheckin(result.data);
         setIsCheckedIn(true);
-        setCheckInTime(new Date());
+        if (result.data.checkin_time) {
+          setCheckInTime(new Date(result.data.checkin_time));
+        }
         toast({
           title: 'Sucesso',
-          description: 'Check-in realizado com sucesso'
+          description: result.message || 'Check-in realizado com sucesso'
         });
         await loadCheckInHistory();
       } else {
+        // Check-in foi rejeitado pela validação
+        const errorMsg = result.message || 'Localização fora da área permitida ou fora do horário de trabalho';
+        setLocationError(errorMsg);
         toast({
-          title: 'Aviso',
-          description: `Você está ${Math.round(distance)}m do CAT. Verifique sua localização.`,
+          title: 'Check-in não autorizado',
+          description: errorMsg,
           variant: 'destructive'
         });
       }
@@ -184,22 +220,74 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      // TODO: Implementar check-out no Supabase
-      setIsCheckedIn(false);
-      setCheckInTime(null);
-      toast({
-        title: 'Sucesso',
-        description: 'Check-out realizado com sucesso'
-      });
-      await loadCheckInHistory();
-    } catch (error) {
-      console.error('Erro ao fazer check-out:', error);
+    if (!activeCheckin?.id) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível fazer check-out',
+        description: 'Nenhum check-in ativo encontrado',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setLocationError(null);
+
+    try {
+      // Obter localização atual para validar check-out
+      const currentLocation = await getCurrentLocation();
+      setLocation(currentLocation);
+
+      // Validar que está na área permitida (mesma validação do check-in)
+      const catLocation = await catCheckinService.getCATLocation(catName);
+      if (catLocation) {
+        const distance = catCheckinService.calculateDistance(
+          currentLocation.lat,
+          currentLocation.lng,
+          catLocation.latitude,
+          catLocation.longitude
+        );
+
+        if (distance > catLocation.allowed_radius) {
+          toast({
+            title: 'Check-out não autorizado',
+            description: `Você está ${Math.round(distance)}m do CAT. É necessário estar na área permitida para fazer check-out.`,
+            variant: 'destructive'
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Registrar check-out
+      const result = await catCheckinService.registerCheckout(
+        user.id,
+        activeCheckin.id,
+        currentLocation.lat,
+        currentLocation.lng
+      );
+
+      if (result.success) {
+        setIsCheckedIn(false);
+        setCheckInTime(null);
+        setActiveCheckin(null);
+        toast({
+          title: 'Sucesso',
+          description: result.message || 'Check-out realizado com sucesso'
+        });
+        await loadCheckInHistory();
+      } else {
+        toast({
+          title: 'Erro',
+          description: result.message || 'Não foi possível fazer check-out',
+          variant: 'destructive'
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao fazer check-out:', error);
+      setLocationError(error.message || 'Erro ao obter localização');
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível fazer check-out',
         variant: 'destructive'
       });
     } finally {
@@ -378,22 +466,23 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
               {checkInHistory.map((record) => (
                 <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${record.status === 'confirmado' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${record.is_valid ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <div>
                       <p className="text-sm font-medium">
-                        {record.status === 'confirmado' ? 'Check-in' : 'Check-out'}
+                        {record.checkout_time ? 'Check-out' : 'Check-in'}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {record.created_at ? new Date(record.created_at).toLocaleString('pt-BR') : 'Data não disponível'}
+                        {record.checkin_time ? new Date(record.checkin_time).toLocaleString('pt-BR') : 'Data não disponível'}
+                        {record.checkout_time && ` - ${new Date(record.checkout_time).toLocaleTimeString('pt-BR')}`}
                       </p>
                     </div>
                   </div>
                   <Badge className={
-                    record.status === 'confirmado' 
+                    record.is_valid 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }>
-                    {record.status === 'confirmado' ? 'Confirmado' : 'Fora da área'}
+                    {record.is_valid ? 'Válido' : 'Inválido'}
                   </Badge>
                 </div>
               ))}

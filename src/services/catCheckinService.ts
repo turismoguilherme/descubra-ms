@@ -56,6 +56,36 @@ class CATCheckinService {
     }
   }
 
+  // Obter localização de um CAT específico por nome
+  async getCATLocation(catName: string): Promise<CATLocation | null> {
+    try {
+      const { data, error } = await supabase
+        .from('attendant_allowed_locations')
+        .select('id, name, latitude, longitude, allowed_radius, address, working_hours')
+        .ilike('name', `%${catName}%`)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        name: data.name,
+        latitude: parseFloat(data.latitude.toString()),
+        longitude: parseFloat(data.longitude.toString()),
+        allowed_radius: data.allowed_radius,
+        address: data.address || undefined,
+        working_hours: data.working_hours as { start: string; end: string } | undefined,
+      };
+    } catch (error) {
+      console.error('Erro ao buscar localização do CAT:', error);
+      return null;
+    }
+  }
+
   // Obter localizações autorizadas para um atendente
   async getAttendantLocations(attendantId: string): Promise<CATLocation[]> {
     try {
