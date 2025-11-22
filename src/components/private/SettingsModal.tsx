@@ -835,11 +835,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
                                 onClick={() => {
                                   window.open(consentData.terms_pdf_url, '_blank');
                                 }}
-                                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                                className="border-blue-300 text-blue-700 hover:bg-blue-100 font-medium"
+                                size="default"
                               >
                                 <FileText className="h-4 w-4 mr-2" />
                                 Baixar PDF Assinado
                               </Button>
+                            )}
+                            {!consentData?.terms_pdf_url && consentData?.consent_given && (
+                              <p className="text-xs text-gray-500 mt-2">
+                                PDF será gerado após a assinatura do termo
+                              </p>
                             )}
                           </div>
                         </div>

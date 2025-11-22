@@ -61,6 +61,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { goalsAIService } from '@/services/ai/goalsAIService';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 const GoalsTracking: React.FC = () => {
   const { user } = useAuth();
@@ -72,6 +76,7 @@ const GoalsTracking: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<BusinessGoal | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [suggestingGoals, setSuggestingGoals] = useState(false);
   const [newGoal, setNewGoal] = useState({
     title: '',
     description: '',
@@ -229,7 +234,7 @@ const GoalsTracking: React.FC = () => {
 
   if (isLoading) {
     return (
-      <SectionWrapper variant="default" title="Metas e Acompanhamento">
+      <SectionWrapper variant="default" title="Metas e Objetivos">
         <CardBox>
           <div className="flex items-center justify-center py-8">
             <Clock className="h-8 w-8 animate-spin text-blue-600" />
@@ -239,10 +244,90 @@ const GoalsTracking: React.FC = () => {
     );
   }
 
+  const handleSuggestGoals = async () => {
+    if (!user?.id) return;
+
+    setSuggestingGoals(true);
+    try {
+      // Buscar dados do negócio
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('company_name, business_category, city, state')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const businessType = profile?.company_name || 'Negócio de Turismo';
+      const category = profile?.business_category || 'hotel';
+
+      // Buscar dados atuais se disponíveis
+      const currentData: any = {};
+      if (goals.length > 0) {
+        const revenueGoal = goals.find(g => g.category === 'revenue');
+        const occupancyGoal = goals.find(g => g.category === 'occupancy');
+        if (revenueGoal) currentData.revenue = revenueGoal.currentValue;
+        if (occupancyGoal) currentData.occupancy = occupancyGoal.currentValue;
+      }
+
+      const suggestedGoals = await goalsAIService.suggestGoals(
+        businessType,
+        category,
+        currentData
+      );
+
+      if (suggestedGoals.length === 0) {
+        toast({
+          title: 'Nenhuma sugestão',
+          description: 'Não foi possível gerar sugestões de metas. Tente criar manualmente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Mostrar preview das metas sugeridas
+      const preview = suggestedGoals.map(g => 
+        `• ${g.title} (${g.targetValue}${g.unit}) - Prazo: ${format(new Date(g.deadline), 'dd/MM/yyyy', { locale: ptBR })}`
+      ).join('\n');
+
+      if (confirm(`Sugestões de metas geradas:\n\n${preview}\n\nDeseja criar essas metas?`)) {
+        // Criar todas as metas sugeridas
+        for (const suggested of suggestedGoals) {
+          await goalsTrackingService.createGoal(user.id, {
+            title: suggested.title,
+            description: suggested.description,
+            category: suggested.category,
+            targetValue: suggested.targetValue,
+            currentValue: suggested.currentValue,
+            unit: suggested.unit,
+            deadline: suggested.deadline,
+            priority: suggested.priority,
+          });
+        }
+
+        toast({
+          title: 'Metas criadas com sucesso!',
+          description: `${suggestedGoals.length} metas foram criadas automaticamente.`,
+        });
+
+        // Recarregar metas
+        await loadGoals();
+        setIsDialogOpen(false);
+      }
+    } catch (error) {
+      console.error('Erro ao sugerir metas:', error);
+      toast({
+        title: 'Erro ao sugerir metas',
+        description: 'Não foi possível gerar sugestões. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSuggestingGoals(false);
+    }
+  };
+
   return (
     <SectionWrapper
       variant="default"
-      title="Metas e Acompanhamento"
+      title="Metas e Objetivos"
       subtitle="Defina e acompanhe seus objetivos de negócio"
       actions={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -269,6 +354,38 @@ const GoalsTracking: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Botão de Sugerir Metas com IA */}
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold text-slate-800 flex items-center gap-2 mb-1">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                      Sugerir Metas com IA
+                    </h4>
+                    <p className="text-sm text-slate-600">
+                      Deixe a IA sugerir metas realistas baseadas no seu tipo de negócio e dados atuais.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleSuggestGoals}
+                    disabled={suggestingGoals}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                  >
+                    {suggestingGoals ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sugerindo...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Sugerir Metas
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
               <div>
                 <Label htmlFor="title">Título *</Label>
                 <Input
@@ -405,6 +522,26 @@ const GoalsTracking: React.FC = () => {
         </CardBox>
       ) : (
         <div className="space-y-6">
+          {/* Explicação sobre Metas e Objetivos */}
+          <Alert className="bg-blue-50 border-blue-200">
+            <Target className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-900">
+              <strong>O que são Metas e Objetivos?</strong>
+              <p className="mt-2 text-sm">
+                Metas são objetivos mensuráveis que você define para o seu negócio. Elas ajudam você a:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                <li>Acompanhar o progresso do seu negócio de forma objetiva</li>
+                <li>Identificar áreas que precisam de melhoria</li>
+                <li>Tomar decisões baseadas em dados</li>
+                <li>Medir o sucesso das suas estratégias</li>
+              </ul>
+              <p className="mt-2 text-sm">
+                <strong>Exemplo:</strong> "Aumentar ocupação de 60% para 75% em 3 meses" - Esta é uma meta clara, mensurável e com prazo definido.
+              </p>
+            </AlertDescription>
+          </Alert>
+
           {/* Dashboard de Resumo */}
           {summary && (
             <>

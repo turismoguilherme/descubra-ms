@@ -46,6 +46,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { evolutionHistoryService } from '@/services/private/evolutionHistoryService';
 import { weeklyInsightsService } from '@/services/private/weeklyInsightsService';
+import { profileAIService } from '@/services/ai/profileAIService';
+import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const PrivateDashboard = () => {
   // Verificar se o AuthProvider está disponível
@@ -79,6 +82,8 @@ const PrivateDashboard = () => {
   const [isDiagnosticMinimized, setIsDiagnosticMinimized] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<string | undefined>(undefined);
+  const [hasMissingData, setHasMissingData] = useState(false);
+  const [autoFillingProfile, setAutoFillingProfile] = useState(false);
 
   // Verificar se deve abrir configurações com aba específica
   useEffect(() => {
@@ -137,6 +142,28 @@ const PrivateDashboard = () => {
     };
 
     loadDiagnosticData();
+
+    // Verificar dados faltantes do perfil
+    const checkMissingData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('description, phone, website, city, state, address')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          const missing = !profile.description || !profile.phone || !profile.city || !profile.state;
+          setHasMissingData(missing);
+        }
+      } catch (error) {
+        console.log('Erro ao verificar dados faltantes:', error);
+      }
+    };
+
+    checkMissingData();
 
     return () => {
       clearTimeout(loadingTimeout);
@@ -526,7 +553,7 @@ const PrivateDashboard = () => {
                 }`}
               >
                 <Target className="h-4 w-4" />
-                Metas e Acompanhamento
+                Metas e Objetivos
               </button>
             </nav>
           </div>
@@ -537,6 +564,117 @@ const PrivateDashboard = () => {
           {/* Visão Geral */}
           {activeSection === 'overview' && (
             <>
+              {/* Banner de Preenchimento Automático com IA */}
+              {hasMissingData && (
+                <Alert className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                  <AlertCircle className="h-4 w-4 text-purple-600" />
+                  <AlertDescription className="text-purple-900">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <strong>Dados faltantes no perfil</strong>
+                        <p className="text-sm mt-1">
+                          Seu perfil está incompleto. Use o preenchimento automático com IA para completar rapidamente.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={async () => {
+                          if (!user?.id) return;
+                          setAutoFillingProfile(true);
+                          try {
+                            // Buscar dados do perfil
+                            const { data: profile } = await supabase
+                              .from('user_profiles')
+                              .select('company_name, business_category, cnpj, city, state, address')
+                              .eq('user_id', user.id)
+                              .maybeSingle();
+
+                            if (!profile?.company_name) {
+                              toast({
+                                title: 'Dados insuficientes',
+                                description: 'Nome da empresa é necessário para o preenchimento automático.',
+                                variant: 'destructive',
+                              });
+                              return;
+                            }
+
+                            const autoFilled = await profileAIService.autoFillProfile(
+                              profile.company_name,
+                              profile.business_category || 'hotel',
+                              profile.cnpj,
+                              {
+                                city: profile.city,
+                                state: profile.state,
+                                address: profile.address,
+                              }
+                            );
+
+                            // Atualizar perfil
+                            const updates: any = {};
+                            if (autoFilled.description && !profile.description) {
+                              updates.description = autoFilled.description;
+                            }
+                            if (autoFilled.contactPhone && !profile.phone) {
+                              updates.phone = autoFilled.contactPhone;
+                            }
+                            if (autoFilled.website && !profile.website) {
+                              updates.website = autoFilled.website;
+                            }
+
+                            if (Object.keys(updates).length > 0) {
+                              await supabase
+                                .from('user_profiles')
+                                .update(updates)
+                                .eq('user_id', user.id);
+
+                              toast({
+                                title: 'Perfil atualizado!',
+                                description: 'Os dados foram preenchidos automaticamente com IA.',
+                              });
+
+                              // Verificar novamente
+                              const { data: updated } = await supabase
+                                .from('user_profiles')
+                                .select('description, phone, website, city, state')
+                                .eq('user_id', user.id)
+                                .maybeSingle();
+
+                              if (updated) {
+                                const stillMissing = !updated.description || !updated.phone || !updated.city || !updated.state;
+                                setHasMissingData(stillMissing);
+                              }
+                            }
+                          } catch (error) {
+                            console.error('Erro no preenchimento automático:', error);
+                            toast({
+                              title: 'Erro',
+                              description: 'Não foi possível preencher automaticamente. Tente novamente.',
+                              variant: 'destructive',
+                            });
+                          } finally {
+                            setAutoFillingProfile(false);
+                          }
+                        }}
+                        disabled={autoFillingProfile}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white ml-4"
+                      >
+                        {autoFillingProfile ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Preenchendo...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Preencher com IA
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {analysisResult ? (
                 <>
                   {/* Notificações Proativas */}
@@ -914,7 +1052,7 @@ const PrivateDashboard = () => {
             />
           )}
 
-          {/* Metas e Acompanhamento */}
+          {/* Metas e Objetivos */}
           {activeSection === 'goals' && (
             <GoalsTracking />
           )}

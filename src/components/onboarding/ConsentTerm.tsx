@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Shield, CheckCircle2, AlertCircle, FileText, Info } from 'lucide-react';
+import { Shield, CheckCircle2, AlertCircle, FileText, Info, Circle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { generateConsentPDF, saveConsentWithPDF } from '@/services/consentService';
 
@@ -181,6 +182,40 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Resumo Visual - O que você está aceitando? */}
+          <div className="p-5 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Shield className="h-6 w-6 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  O que você está aceitando?
+                </h3>
+                <p className="text-sm text-gray-700 mb-3">
+                  Este termo é <strong className="text-red-600">OBRIGATÓRIO</strong> para continuar. Ao aceitar, você autoriza:
+                </p>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span><strong>Compartilhamento automático</strong> de TODOS os seus dados agregados e anonimizados</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Uso dos dados para <strong>benchmarking</strong> e comparação com outras empresas</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span><strong>Geração de PDF assinado</strong> que ficará disponível nas suas configurações</span>
+                  </li>
+                </ul>
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-xs text-yellow-900">
+                    <strong>⚠️ Aviso:</strong> A ViaJAR é uma plataforma nova. Podem ocorrer erros técnicos. Ao aceitar, você reconhece isso e mesmo assim autoriza o compartilhamento.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Avisos Importantes */}
           <Alert className="bg-yellow-50 border-yellow-200">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
@@ -240,29 +275,36 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
           </div>
 
 
-          {/* Termo de consentimento - OBRIGATÓRIO */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start space-x-3">
+          {/* Termo de consentimento - OBRIGATÓRIO - MELHORADO */}
+          <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg shadow-sm">
+            <div className="flex items-start space-x-4">
               <Checkbox
                 id="read_terms"
                 checked={hasReadTerms}
                 onCheckedChange={(checked) => setHasReadTerms(checked as boolean)}
+                className="h-6 w-6 border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
               <div className="flex-1">
-                <Label htmlFor="read_terms" className="cursor-pointer">
-                  Li e aceito o{' '}
-                  <button
-                    type="button"
-                    onClick={() => setShowTermsDialog(true)}
-                    className="text-blue-600 hover:underline font-medium"
-                  >
-                    Termo de Consentimento para Benchmarking
-                  </button>
-                  {' '}(Obrigatório)
-                </Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Ao aceitar, você está assinando eletronicamente este termo. Um PDF será gerado e salvo para seus registros.
+                <div className="flex items-center gap-2 mb-2">
+                  <Label htmlFor="read_terms" className="cursor-pointer text-base font-semibold text-gray-900">
+                    Li e aceito o{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsDialog(true)}
+                      className="text-blue-600 hover:text-blue-700 hover:underline font-bold"
+                    >
+                      Termo de Consentimento para Benchmarking
+                    </button>
+                  </Label>
+                  <Badge variant="destructive" className="ml-2">OBRIGATÓRIO</Badge>
+                </div>
+                <p className="text-sm text-gray-700 mt-1">
+                  Ao aceitar, você está <strong>assinando eletronicamente</strong> este termo. Um PDF será gerado automaticamente e ficará disponível nas suas configurações para download.
                 </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
+                  <Info className="h-3 w-3" />
+                  <span>Você pode revisar o termo completo clicando no link acima</span>
+                </div>
               </div>
             </div>
           </div>
@@ -289,16 +331,45 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
             </div>
           )}
 
-          {/* Ações */}
-          <div className="flex gap-4 pt-4">
+          {/* Ações - MELHORADO */}
+          <div className="space-y-3 pt-4">
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-2">
+              <div className={`flex items-center gap-2 ${hasReadTerms ? 'text-green-600' : 'text-gray-400'}`}>
+                {hasReadTerms ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <Circle className="h-4 w-4" />
+                )}
+                <span>Passo 1: Ler e aceitar os termos</span>
+              </div>
+              <span className="text-gray-300">→</span>
+              <div className={`flex items-center gap-2 ${hasReadTerms ? 'text-blue-600' : 'text-gray-400'}`}>
+                <span>Passo 2: Confirmar e assinar</span>
+              </div>
+            </div>
             <Button
               onClick={handleSaveConsent}
               disabled={saving || !hasReadTerms}
-              className="flex-1"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 text-lg shadow-lg"
               size="lg"
             >
-              {saving ? 'Salvando e Gerando PDF...' : 'Confirmar e Assinar Termo'}
+              {saving ? (
+                <>
+                  <FileText className="h-5 w-5 mr-2 animate-pulse" />
+                  Salvando e Gerando PDF...
+                </>
+              ) : (
+                <>
+                  <Shield className="h-5 w-5 mr-2" />
+                  Confirmar e Assinar Termo
+                </>
+              )}
             </Button>
+            {!hasReadTerms && (
+              <p className="text-center text-sm text-red-600 font-medium">
+                ⚠️ Você deve ler e aceitar os termos para continuar
+              </p>
+            )}
           </div>
           <p className="text-xs text-center text-muted-foreground">
             Você pode revisar e alterar este consentimento a qualquer momento nas Configurações da sua conta.
@@ -306,9 +377,12 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
         </CardContent>
       </Card>
 
-      {/* Dialog com termos */}
+      {/* Dialog com termos - Overlay transparente para mostrar dashboard no fundo */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent 
+          className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white"
+          overlayClassName="bg-black/30"
+        >
           <DialogHeader>
             <DialogTitle>Termo de Consentimento para Benchmarking</DialogTitle>
             <DialogDescription>

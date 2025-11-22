@@ -3,7 +3,7 @@
  * Guia usuário para completar perfil com gamificação
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,9 +26,14 @@ import {
   Utensils,
   Sparkles,
   Gift,
-  Trophy
+  Trophy,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { profileAIService } from '@/services/ai/profileAIService';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileData {
   photos: File[];
@@ -64,6 +69,11 @@ interface CompletionStep {
 }
 
 export default function ProfileCompletion({ onComplete, initialData }: ProfileCompletionProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [autoFilling, setAutoFilling] = useState(false);
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+  
   const [profileData, setProfileData] = useState<ProfileData>({
     photos: [],
     description: '',
@@ -79,6 +89,29 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
     },
     ...initialData
   });
+
+  // Buscar dados do registro para preenchimento automático
+  useEffect(() => {
+    const registrationData = localStorage.getItem('registration_data');
+    if (registrationData) {
+      try {
+        const data = JSON.parse(registrationData);
+        // Preencher localização se disponível
+        if (data.city || data.state) {
+          setProfileData(prev => ({
+            ...prev,
+            location: {
+              ...prev.location,
+              city: data.city || prev.location.city,
+              state: data.state || prev.location.state,
+            }
+          }));
+        }
+      } catch (error) {
+        console.log('Erro ao ler dados de registro:', error);
+      }
+    }
+  }, []);
 
   const AVAILABLE_AMENITIES = [
     { id: 'wifi', name: 'Wi-Fi', icon: <Wifi className="h-4 w-4" /> },
@@ -175,6 +208,116 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
         ? prev.amenities.filter(id => id !== amenityId)
         : [...prev.amenities, amenityId]
     }));
+    // Remover badge IA se usuário editar
+    if (autoFilledFields.has('amenities')) {
+      setAutoFilledFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('amenities');
+        return newSet;
+      });
+    }
+  };
+
+  const handleAutoFill = async () => {
+    try {
+      // Buscar dados do registro
+      const registrationData = localStorage.getItem('registration_data');
+      if (!registrationData) {
+        toast({
+          title: 'Dados não encontrados',
+          description: 'Não foi possível encontrar os dados do cadastro. Preencha manualmente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const data = JSON.parse(registrationData);
+      const companyName = data.companyName || '';
+      const category = data.category || 'hotel';
+      const cnpj = data.cnpj || data.cnpjOrCadastur || '';
+
+      if (!companyName) {
+        toast({
+          title: 'Nome da empresa necessário',
+          description: 'Preencha o nome da empresa no cadastro para usar o preenchimento automático.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setAutoFilling(true);
+
+      // Buscar localização do perfil se disponível
+      let location = profileData.location;
+      if (user?.id) {
+        try {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('city, state, address')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (profile) {
+            location = {
+              address: profile.address || location.address,
+              city: profile.city || location.city || data.city || '',
+              state: profile.state || location.state || data.state || '',
+              zipCode: location.zipCode
+            };
+          }
+        } catch (error) {
+          console.log('Erro ao buscar localização:', error);
+        }
+      }
+
+      const autoFilled = await profileAIService.autoFillProfile(
+        companyName,
+        category,
+        cnpj,
+        location
+      );
+
+      // Aplicar dados preenchidos
+      setProfileData(prev => ({
+        ...prev,
+        description: autoFilled.description || prev.description,
+        phone: autoFilled.contactPhone || prev.phone,
+        website: autoFilled.website || prev.website,
+        openingHours: autoFilled.openingHours 
+          ? { open: '08:00', close: '18:00' } // Simplificar por enquanto
+          : prev.openingHours,
+        amenities: autoFilled.amenities && autoFilled.amenities.length > 0
+          ? autoFilled.amenities.map(a => a.toLowerCase().replace(/\s+/g, '_'))
+          : prev.amenities,
+        location: {
+          ...prev.location,
+          ...location
+        }
+      }));
+
+      // Marcar campos preenchidos
+      const newAutoFilled = new Set<string>();
+      if (autoFilled.description) newAutoFilled.add('description');
+      if (autoFilled.contactPhone) newAutoFilled.add('phone');
+      if (autoFilled.website) newAutoFilled.add('website');
+      if (autoFilled.openingHours) newAutoFilled.add('openingHours');
+      if (autoFilled.amenities && autoFilled.amenities.length > 0) newAutoFilled.add('amenities');
+      setAutoFilledFields(newAutoFilled);
+
+      toast({
+        title: 'Preenchimento automático concluído!',
+        description: 'Os campos foram preenchidos com IA. Revise e ajuste se necessário.',
+      });
+    } catch (error) {
+      console.error('Erro no preenchimento automático:', error);
+      toast({
+        title: 'Erro no preenchimento automático',
+        description: 'Não foi possível preencher automaticamente. Tente novamente ou preencha manualmente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAutoFilling(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -187,6 +330,39 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
     <div className="space-y-6">
       {/* Header com Progresso */}
       <div className="space-y-4">
+        {/* Botão de Preenchimento Automático com IA */}
+        <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-slate-800 flex items-center gap-2 mb-1">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                Preenchimento Automático com IA
+              </h4>
+              <p className="text-sm text-slate-600">
+                Preencha automaticamente descrição, serviços, comodidades e horários baseado nos dados do seu cadastro.
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={handleAutoFill}
+              disabled={autoFilling}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              {autoFilling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Preenchendo...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Preencher Automaticamente
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <h2 className="text-2xl font-bold">Complete Seu Perfil</h2>
@@ -344,15 +520,27 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="flex items-center gap-2">
               Mínimo 100 caracteres. Conte sobre seu estabelecimento, diferenciais e o que torna você especial.
+              {autoFilledFields.has('description') && (
+                <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">IA</Badge>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               placeholder="Ex: Localizado no centro de Bonito, nosso hotel oferece uma experiência única em ecoturismo..."
               value={profileData.description}
-              onChange={(e) => setProfileData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => {
+                setProfileData(prev => ({ ...prev, description: e.target.value }));
+                if (autoFilledFields.has('description')) {
+                  setAutoFilledFields(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete('description');
+                    return newSet;
+                  });
+                }
+              }}
               className="min-h-32"
             />
             <p className="text-xs text-muted-foreground mt-2">
@@ -375,21 +563,49 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Telefone</label>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Telefone
+                  {autoFilledFields.has('phone') && (
+                    <Badge className="text-xs bg-purple-100 text-purple-700">IA</Badge>
+                  )}
+                </label>
                 <Input
                   type="tel"
                   placeholder="(67) 99999-9999"
                   value={profileData.phone}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => {
+                    setProfileData(prev => ({ ...prev, phone: e.target.value }));
+                    if (autoFilledFields.has('phone')) {
+                      setAutoFilledFields(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete('phone');
+                        return newSet;
+                      });
+                    }
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Website (opcional)</label>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Website (opcional)
+                  {autoFilledFields.has('website') && (
+                    <Badge className="text-xs bg-purple-100 text-purple-700">IA</Badge>
+                  )}
+                </label>
                 <Input
                   type="url"
                   placeholder="https://seusite.com.br"
                   value={profileData.website}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, website: e.target.value }))}
+                  onChange={(e) => {
+                    setProfileData(prev => ({ ...prev, website: e.target.value }));
+                    if (autoFilledFields.has('website')) {
+                      setAutoFilledFields(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete('website');
+                        return newSet;
+                      });
+                    }
+                  }}
                 />
               </div>
             </div>
