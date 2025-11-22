@@ -109,11 +109,37 @@ export class RealWebSearchService {
 
   private async searchGoogle(query: string): Promise<WebSearchResult[]> {
     try {
+      // Verificar se API está configurada
+      if (!this.GOOGLE_CSE_API_KEY || !this.GOOGLE_CSE_ID) {
+        console.log('⚠️ Google Search API não configurada');
+        return [];
+      }
+
       const searchQuery = `${query} site:ms.gov.br OR site:visitms.com.br OR site:fundtur.ms.gov.br`;
       const url = `https://www.googleapis.com/customsearch/v1?key=${this.GOOGLE_CSE_API_KEY}&cx=${this.GOOGLE_CSE_ID}&q=${encodeURIComponent(searchQuery)}&num=5`;
       
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+        }
+        
+        // Log do erro mas não quebrar a aplicação
+        console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
+        return [];
+      }
+      
       const data = await response.json();
+      
+      if (data.error) {
+        console.warn(`⚠️ Google Search API error:`, data.error.message);
+        return [];
+      }
       
       if (!data.items) return [];
       

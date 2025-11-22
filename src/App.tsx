@@ -12,8 +12,8 @@ import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 // Removendo imports complexos temporariamente
-// import ErrorBoundary from "@/components/error/ErrorBoundary";
 // import DebugPanel from "@/components/debug/DebugPanel";
 // import { ErrorMonitorPanel } from "@/services/ErrorMonitor";
 
@@ -37,6 +37,7 @@ const ViaJARDashboard = lazy(() => import("@/pages/ViaJARDynamicDashboard"));
 const ViaJARUnifiedDashboard = lazy(() => import("@/pages/ViaJARUnifiedDashboard"));
 const ViaJARLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const ViaJARRegister = lazy(() => import("@/pages/OverflowOneRegister"));
+const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
 const ViaJARForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
 const ViaJARInventory = lazy(() => import("@/pages/OverflowOneInventory"));
 const ViaJARReports = lazy(() => import("@/pages/ReportsPage"));
@@ -113,6 +114,7 @@ function App() {
                             
                             {/* ViaJAR Onboarding & Pricing (públicas) */}
                             <Route path="/viajar/onboarding" element={<Suspense fallback={<LoadingFallback />}><ViaJAROnboarding /></Suspense>} />
+                            <Route path="/viajar/onboarding/success" element={<Suspense fallback={<LoadingFallback />}><PaymentSuccess /></Suspense>} />
                             <Route path="/viajar/smart-onboarding" element={<Suspense fallback={<LoadingFallback />}><SmartOnboarding /></Suspense>} />
                             <Route path="/viajar/pricing" element={<Suspense fallback={<LoadingFallback />}><ViaJARPricing /></Suspense>} />
                             <Route path="/viajar/diagnostico" element={<Suspense fallback={<LoadingFallback />}><DiagnosticPage /></Suspense>} />
@@ -132,7 +134,9 @@ function App() {
                             } />
                             <Route path="/private-dashboard" element={
                               <ProtectedRoute allowedRoles={['user', 'admin']}>
-                                <Suspense fallback={<LoadingFallback />}><PrivateDashboard /></Suspense>
+                                <ErrorBoundary>
+                                  <Suspense fallback={<LoadingFallback />}><PrivateDashboard /></Suspense>
+                                </ErrorBoundary>
                               </ProtectedRoute>
                             } />
                             <Route path="/unified" element={

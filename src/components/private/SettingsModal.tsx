@@ -3,11 +3,12 @@
  * Modal completo de configurações com abas: Perfil, Segurança, Plano, Notificações, Integrações, Privacidade
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -33,7 +34,8 @@ import {
   AlertCircle,
   Trash2,
   X,
-  Settings
+  Settings,
+  FileText
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -51,12 +53,20 @@ import { Switch } from '@/components/ui/switch';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: string; // Para abrir uma aba específica
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialTab }) => {
   const { user, userProfile, signOut } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(initialTab || 'profile');
+  
+  // Atualizar aba quando initialTab mudar
+  useEffect(() => {
+    if (initialTab && isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Estados para Perfil
@@ -100,6 +110,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     cookies: true,
   });
 
+  // Estados para Termo de Consentimento
+  const [consentData, setConsentData] = useState<any>(null);
+  const [loadingConsent, setLoadingConsent] = useState(false);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
+
   // Estados para Plano
   const [currentPlan, setCurrentPlan] = useState<'free' | 'basic' | 'premium' | 'enterprise'>('basic');
   const [deleteConfirm, setDeleteConfirm] = useState('');
@@ -114,12 +129,74 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen, userProfile]);
 
+  const loadConsentData = useCallback(async () => {
+    if (!user?.id) {
+      setLoadingConsent(false);
+      setConsentData(null);
+      return;
+    }
+    
+    try {
+      console.log('Carregando dados de consentimento para usuário:', user.id);
+      const { data, error } = await supabase
+        .from('data_sharing_consents')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        // PGRST116 = no rows returned (normal se não tem consentimento)
+        if (error.code !== 'PGRST116') {
+          console.error('Erro ao buscar consentimento:', error);
+          // Se a tabela não existir, apenas definir como null
+          if (error.message?.includes('does not exist') || error.code === '42P01') {
+            console.warn('Tabela data_sharing_consents não encontrada. Execute a migração.');
+          }
+        } else {
+          console.log('Nenhum consentimento encontrado (normal)');
+        }
+        setConsentData(null);
+      } else {
+        console.log('Dados de consentimento carregados:', data);
+        setConsentData(data || null);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar consentimento:', error);
+      setConsentData(null);
+    } finally {
+      // Garantir que o loading sempre seja resetado
+      console.log('Finalizando carregamento de consentimento');
+      setLoadingConsent(false);
+    }
+  }, [user?.id]);
+
+  // Carregar dados de consentimento quando abrir a aba
+  useEffect(() => {
+    if (isOpen && user?.id && activeTab === 'consent') {
+      // Resetar estado antes de carregar
+      setLoadingConsent(true);
+      loadConsentData();
+    } else if (activeTab !== 'consent') {
+      // Resetar loading quando sair da aba
+      setLoadingConsent(false);
+    }
+  }, [isOpen, user?.id, activeTab, loadConsentData]);
+
+  // Resetar loading quando modal fechar
+  useEffect(() => {
+    if (!isOpen) {
+      setLoadingConsent(false);
+      setConsentData(null);
+    }
+  }, [isOpen]);
+
   const tabs = [
     { id: 'profile', label: 'Perfil', icon: User },
     { id: 'security', label: 'Segurança', icon: Lock },
     { id: 'plan', label: 'Plano', icon: CreditCard },
     { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'privacy', label: 'Privacidade', icon: Shield },
+    { id: 'consent', label: 'Termo de Consentimento', icon: FileText },
   ];
 
   const handleSaveProfile = async () => {
@@ -700,6 +777,124 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           </div>
         );
 
+      case 'consent':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Termo de Consentimento para Benchmarking</h3>
+              {loadingConsent ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-slate-600">Carregando...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {consentData && consentData.consent_given && !consentData.revoked_at ? (
+                    <CardBox className="border-green-200 bg-green-50">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-green-900 mb-2">Consentimento Ativo</h4>
+                          <p className="text-sm text-green-800 mb-3">
+                            Você aceitou o termo de consentimento em{' '}
+                            {consentData.consent_date 
+                              ? new Date(consentData.consent_date).toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              : 'data não disponível'}
+                          </p>
+                          <p className="text-sm text-green-700 mb-4">
+                            <strong>Versão do termo:</strong> {consentData.consent_version || '1.0'}
+                          </p>
+                          {consentData.data_types_shared && consentData.data_types_shared.length > 0 && (
+                            <div className="mb-4">
+                              <p className="text-sm font-medium text-green-900 mb-2">Tipos de dados compartilhados:</p>
+                              <ul className="list-disc list-inside text-sm text-green-800 space-y-1">
+                                {consentData.data_types_shared.map((type: string) => (
+                                  <li key={type} className="capitalize">{type}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowConsentDialog(true)}
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Ver Termo Completo
+                            </Button>
+                            {consentData?.terms_pdf_url && (
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  window.open(consentData.terms_pdf_url, '_blank');
+                                }}
+                                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Baixar PDF Assinado
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardBox>
+                  ) : (
+                    <CardBox className="border-yellow-200 bg-yellow-50">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-yellow-900 mb-2">Consentimento Não Dado</h4>
+                          <p className="text-sm text-yellow-800 mb-4">
+                            Você ainda não aceitou o termo de consentimento para compartilhamento de dados para benchmarking.
+                            {consentData?.revoked_at && (
+                              <span className="block mt-2">
+                                Consentimento revogado em{' '}
+                                {new Date(consentData.revoked_at).toLocaleDateString('pt-BR')}
+                              </span>
+                            )}
+                          </p>
+                          <Button
+                            onClick={() => setShowConsentDialog(true)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Ver e Aceitar Termo
+                          </Button>
+                        </div>
+                      </div>
+                    </CardBox>
+                  )}
+
+                  <CardBox>
+                    <h4 className="font-semibold text-slate-800 mb-3">Informações sobre o Termo</h4>
+                    <div className="space-y-3 text-sm text-slate-600">
+                      <p>
+                        O termo de consentimento autoriza o compartilhamento de dados agregados e anonimizados 
+                        para fins de benchmarking e comparação com outras empresas/organizações do setor turístico.
+                      </p>
+                      <p>
+                        <strong>Importante:</strong> A ViaJAR é uma plataforma nova e em constante evolução. 
+                        Podem ocorrer erros técnicos ou inconsistências nos processos de agregação e análise de dados.
+                      </p>
+                      <p>
+                        Você pode revisar o termo completo a qualquer momento e revogar seu consentimento 
+                        através desta página.
+                      </p>
+                    </div>
+                  </CardBox>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
       case 'privacy':
         return (
           <div className="space-y-6">
@@ -859,6 +1054,112 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
       </DialogContent>
+
+      {/* Dialog com Termo de Consentimento Completo */}
+      <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Termo de Consentimento para Benchmarking</DialogTitle>
+            <DialogDescription>
+              {consentData?.consent_date 
+                ? `Termo completo aceito em ${new Date(consentData.consent_date).toLocaleDateString('pt-BR')}`
+                : 'Leia atentamente os termos antes de dar seu consentimento'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div>
+              <h3 className="font-semibold mb-2">1. Objetivo</h3>
+              <p className="text-muted-foreground">
+                Este termo autoriza o compartilhamento de dados agregados e anonimizados da sua empresa/organização
+                para fins de benchmarking e comparação com outras empresas/organizações do setor turístico.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">1.1. Aviso sobre Plataforma Nova</h3>
+              <p className="text-muted-foreground">
+                A ViaJAR é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos, 
+                inconsistências ou melhorias nos processos de agregação e análise de dados. Ao aceitar 
+                este termo, você reconhece e aceita que:
+              </p>
+              <ul className="list-disc list-inside ml-4 text-muted-foreground mt-2">
+                <li>A plataforma pode cometer erros no processamento de dados</li>
+                <li>Os dados compartilhados são agregados e anonimizados</li>
+                <li>Você aceita compartilhar seus dados mesmo com essas limitações</li>
+                <li>A plataforma se compromete a corrigir erros quando identificados</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">2. Dados Compartilhados</h3>
+              <p className="text-muted-foreground">
+                Apenas dados agregados e anonimizados serão compartilhados. Nenhum dado individual,
+                identificável ou confidencial será divulgado. Os dados são combinados com informações
+                de outras empresas para criar estatísticas e médias do mercado.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">3. Finalidade do Compartilhamento</h3>
+              <p className="text-muted-foreground">
+                Os dados serão utilizados exclusivamente para:
+              </p>
+              <ul className="list-disc list-inside ml-4 text-muted-foreground">
+                <li>Comparação de desempenho com o mercado</li>
+                <li>Geração de insights e recomendações</li>
+                <li>Análise de tendências do setor</li>
+                <li>Melhoria dos serviços da plataforma</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">4. Segurança e Privacidade</h3>
+              <p className="text-muted-foreground">
+                Todos os dados são tratados de acordo com a LGPD (Lei Geral de Proteção de Dados).
+                Implementamos medidas técnicas e organizacionais para garantir a segurança e
+                privacidade dos dados compartilhados.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">5. Direitos do Titular (LGPD)</h3>
+              <p className="text-muted-foreground">
+                Você tem o direito de:
+              </p>
+              <ul className="list-disc list-inside ml-4 text-muted-foreground">
+                <li>Revogar o consentimento a qualquer momento</li>
+                <li>Solicitar informações sobre como seus dados são utilizados</li>
+                <li>Escolher quais tipos de dados compartilhar</li>
+                <li>Solicitar exclusão dos dados compartilhados</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">6. Revogação do Consentimento</h3>
+              <p className="text-muted-foreground">
+                Você pode revogar seu consentimento a qualquer momento através desta interface.
+                Após a revogação, seus dados não serão mais utilizados para novos benchmarks,
+                mas dados já agregados podem permanecer em análises históricas.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConsentDialog(false)}>
+              Fechar
+            </Button>
+            {consentData?.terms_url && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  window.open(consentData.terms_url, '_blank');
+                }}
+              >
+                Ver Termo Completo (PDF)
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

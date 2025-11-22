@@ -771,86 +771,30 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
                   </CardBox>
                 ) : !hasConsent ? (
                   <CardBox className="p-8 bg-gradient-to-br from-blue-50 to-white border-blue-200">
-                    <div className="max-w-2xl mx-auto space-y-6">
-                      <div className="text-center">
-                        <ShieldCheck className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                          Consentimento para Benchmarking Competitivo
-                        </h3>
-                        <p className="text-slate-600">
-                          Para acessar o Competitive Benchmark, precisamos do seu consentimento para compartilhar dados agregados e anonimizados.
+                    <div className="max-w-2xl mx-auto space-y-6 text-center">
+                      <ShieldCheck className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                      <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                        Consentimento Necessário
+                      </h3>
+                      <p className="text-slate-600 mb-4">
+                        Para acessar o Competitive Benchmark, você precisa ter aceito o termo de consentimento durante o onboarding.
+                      </p>
+                      <p className="text-sm text-slate-500 mb-6">
+                        Se você ainda não aceitou o termo, acesse as Configurações da sua conta para revisar e aceitar o termo de consentimento.
+                      </p>
+                      <div className="space-y-3">
+                        <p className="text-sm text-slate-500">
+                          Acesse as Configurações da sua conta (ícone de engrenagem) para revisar e aceitar o termo de consentimento.
                         </p>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-lg border border-slate-200 space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-slate-800 mb-3">Selecione os tipos de dados que você permite compartilhar:</h4>
-                          <div className="space-y-2">
-                            {[
-                              { id: 'revenue', label: 'Receita (agregada e anonimizada)' },
-                              { id: 'occupancy', label: 'Taxa de Ocupação (agregada e anonimizada)' },
-                              { id: 'pricing', label: 'Preço Médio (agregado e anonimizado)' },
-                              { id: 'ratings', label: 'Avaliações (agregadas e anonimizadas)' },
-                              { id: 'stay_duration', label: 'Duração Média da Estadia (agregada e anonimizada)' },
-                            ].map((option) => (
-                              <div key={option.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`data-type-${option.id}`}
-                                  checked={selectedDataTypes.includes(option.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setSelectedDataTypes([...selectedDataTypes, option.id]);
-                                    } else {
-                                      setSelectedDataTypes(selectedDataTypes.filter(id => id !== option.id));
-                                    }
-                                  }}
-                                />
-                                <Label htmlFor={`data-type-${option.id}`} className="text-sm text-slate-700 cursor-pointer">
-                                  {option.label}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <Checkbox
-                            id="read-terms"
-                            checked={hasReadTerms}
-                            onCheckedChange={(checked) => setHasReadTerms(checked as boolean)}
-                          />
-                          <div className="flex-1">
-                            <Label htmlFor="read-terms" className="text-sm font-medium text-slate-700 cursor-pointer">
-                              Li e concordo com os{' '}
-                              <a href="/termos-consentimento-benchmarking" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                Termos de Consentimento para Benchmarking Competitivo
-                              </a>
-                            </Label>
-                            <p className="text-xs text-slate-600 mt-2">
-                              Seus dados serão utilizados de forma agregada e anonimizada para gerar insights de mercado e comparações competitivas, sempre em conformidade com a LGPD. Seus dados individuais nunca serão identificados ou compartilhados diretamente.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
-                          <Button
-                            onClick={handleSaveConsent}
-                            disabled={savingConsent || !hasReadTerms || selectedDataTypes.length === 0}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            {savingConsent ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Salvando...
-                              </>
-                            ) : (
-                              <>
-                                <ShieldCheck className="h-4 w-4 mr-2" />
-                                Aceitar e Continuar
-                              </>
-                            )}
-                          </Button>
-                        </div>
+                        <Button
+                          onClick={() => {
+                            // Redirecionar para dashboard abrindo configurações na aba de consentimento
+                            window.location.href = '/viajar/dashboard?settingsTab=consent';
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Ir para Configurações
+                        </Button>
                       </div>
                     </div>
                   </CardBox>

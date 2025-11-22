@@ -122,7 +122,25 @@ export class RegionalDataIntegrationService {
         try {
           const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCx}&q=${encodeURIComponent(query)}&num=5`;
           const response = await fetch(searchUrl);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+            }
+            console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
+            throw new Error(`API error: ${response.status}`);
+          }
+          
           const data = await response.json();
+          
+          if (data.error) {
+            console.warn(`⚠️ Google Search API error:`, data.error.message);
+            throw new Error(data.error.message);
+          }
           
           if (data.items && data.items.length > 0) {
             const extractedData = this.extractDataFromSearchResults(data.items, state);
@@ -134,8 +152,8 @@ export class RegionalDataIntegrationService {
               quality: 'GOOD'
             };
           }
-        } catch (apiError) {
-          console.warn('Erro ao buscar via Google Search API:', apiError);
+        } catch (apiError: any) {
+          console.warn('⚠️ Erro ao buscar via Google Search API:', apiError?.message || apiError);
         }
       }
       

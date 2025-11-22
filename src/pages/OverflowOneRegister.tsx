@@ -20,8 +20,7 @@ const OverflowOneRegister: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    cnpj: '',
-    cadastur: '',
+    cnpjOrCadastur: '', // Campo unificado para CNPJ ou CADASTUR
     category: 'hotel'
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +46,7 @@ const OverflowOneRegister: React.FC = () => {
     );
   }
   
-  const { signUp, signInWithProvider } = auth;
+  const { signUp } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -65,14 +64,24 @@ const OverflowOneRegister: React.FC = () => {
   }, [searchParams]);
 
   const handleInputChange = (field: string, value: string) => {
-    // Formatar CNPJ automaticamente
-    if (field === 'cnpj') {
-      value = value.replace(/\D/g, ''); // Remove tudo que não é dígito
-      if (value.length <= 14) {
-        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+    // Formatar CNPJ ou CADASTUR automaticamente
+    if (field === 'cnpjOrCadastur') {
+      const digitsOnly = value.replace(/\D/g, ''); // Remove tudo que não é dígito
+      
+      // Se tem 14 dígitos ou menos, formatar como CNPJ: 00.000.000/0000-00
+      if (digitsOnly.length <= 14) {
+        value = digitsOnly.replace(/^(\d{2})(\d)/, '$1.$2');
         value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
         value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
         value = value.replace(/(\d{4})(\d)/, '$1-$2');
+      } 
+      // Se tem 15 dígitos, formatar como CADASTUR: 00.000.000/0000-000
+      else if (digitsOnly.length <= 15) {
+        value = digitsOnly.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        // CADASTUR tem 3 dígitos finais após o hífen
       }
     }
     
@@ -100,12 +109,13 @@ const OverflowOneRegister: React.FC = () => {
       return;
     }
 
-    // Validar CNPJ ou CADASTUR (pelo menos um deve ser preenchido)
-    const hasCnpj = formData.cnpj && formData.cnpj.replace(/\D/g, '').length === 14;
-    const hasCadastur = formData.cadastur && formData.cadastur.length >= 6;
+    // Validar CNPJ ou CADASTUR
+    const digitsOnly = formData.cnpjOrCadastur.replace(/\D/g, '');
+    const isCnpj = digitsOnly.length === 14;
+    const isCadastur = digitsOnly.length === 15;
     
-    if (!hasCnpj && !hasCadastur) {
-      setError('Preencha pelo menos o CNPJ ou CADASTUR.');
+    if (!isCnpj && !isCadastur) {
+      setError('Preencha o CNPJ (14 dígitos) ou CADASTUR (15 dígitos).');
       setIsLoading(false);
       return;
     }
@@ -121,10 +131,15 @@ const OverflowOneRegister: React.FC = () => {
       if (error) {
         setError(error.message);
       } else {
+        // Determinar se é CNPJ ou CADASTUR
+        const digitsOnly = formData.cnpjOrCadastur.replace(/\D/g, '');
+        const isCnpj = digitsOnly.length === 14;
+        
         // Salvar dados temporários no localStorage para escolha de plano
         localStorage.setItem('registration_data', JSON.stringify({
-          cnpj: formData.cnpj,
-          cadastur: formData.cadastur,
+          cnpj: isCnpj ? formData.cnpjOrCadastur : '',
+          cadastur: !isCnpj ? formData.cnpjOrCadastur : '',
+          cnpjOrCadastur: formData.cnpjOrCadastur,
           category: formData.category,
           companyName: formData.companyName,
           contactPerson: formData.contactPerson,
@@ -155,23 +170,6 @@ const OverflowOneRegister: React.FC = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      await signInWithProvider('google');
-      // Após login com Google, redirecionar baseado no contexto
-      const currentPath = window.location.pathname;
-      if (currentPath.includes('/ms/')) {
-        navigate('/ms');
-      } else {
-        navigate('/viajar/onboarding');
-      }
-    } catch (err) {
-      setError('Erro ao fazer cadastro com Google');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
@@ -243,23 +241,27 @@ const OverflowOneRegister: React.FC = () => {
                 />
               </div>
 
-              {/* CNPJ */}
+              {/* CNPJ ou CADASTUR */}
               <div className="space-y-2">
-                <Label htmlFor="cnpj">
-                  CNPJ *
+                <Label htmlFor="cnpjOrCadastur">
+                  CNPJ ou CADASTUR *
                 </Label>
                 <Input
-                  id="cnpj"
+                  id="cnpjOrCadastur"
                   type="text"
-                  placeholder="00.000.000/0000-00"
-                  value={formData.cnpj}
-                  onChange={(e) => handleInputChange('cnpj', e.target.value)}
-                  maxLength={18}
+                  placeholder="00.000.000/0000-00 (CNPJ) ou 00.000.000/0000-000 (CADASTUR)"
+                  value={formData.cnpjOrCadastur}
+                  onChange={(e) => handleInputChange('cnpjOrCadastur', e.target.value)}
+                  maxLength={20}
                   required
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Será usado para verificação CADASTUR
+                  {formData.cnpjOrCadastur.replace(/\D/g, '').length === 14 
+                    ? 'CNPJ detectado (14 dígitos)' 
+                    : formData.cnpjOrCadastur.replace(/\D/g, '').length === 15
+                    ? 'CADASTUR detectado (15 dígitos)'
+                    : 'Digite o CNPJ (14 dígitos) ou CADASTUR (15 dígitos)'}
                 </p>
               </div>
 
@@ -385,46 +387,6 @@ const OverflowOneRegister: React.FC = () => {
                 <ArrowRight className="h-4 w-4" />
               </Button>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">
-                    Ou continue com
-                  </span>
-                </div>
-              </div>
-
-              {/* Google Sign In */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-              >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Cadastrar com Google
-              </Button>
             </form>
 
             {/* Login Link */}

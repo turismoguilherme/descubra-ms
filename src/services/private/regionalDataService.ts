@@ -204,13 +204,31 @@ export class RegionalDataService {
           const searchQuery = `${query} ${state} Brasil`;
           const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(searchQuery)}&num=5`;
           const response = await fetch(url);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+            }
+            console.warn(`⚠️ Erro ${response.status} ao buscar query "${query}":`, errorData?.error?.message || errorText);
+            continue; // Pular esta query e continuar com a próxima
+          }
+          
           const data = await response.json();
+          
+          if (data.error) {
+            console.warn(`⚠️ Erro na resposta para query "${query}":`, data.error.message);
+            continue;
+          }
           
           if (data.items && data.items.length > 0) {
             allResults.push(...data.items);
           }
-        } catch (error) {
-          console.warn(`Erro ao buscar query "${query}":`, error);
+        } catch (error: any) {
+          console.warn(`⚠️ Erro ao buscar query "${query}":`, error?.message || error);
         }
       }
 

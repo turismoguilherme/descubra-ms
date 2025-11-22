@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -66,6 +66,7 @@ const PrivateDashboard = () => {
   
   const { user, userProfile } = auth;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
@@ -77,18 +78,42 @@ const PrivateDashboard = () => {
   const [showDiagnosticSection, setShowDiagnosticSection] = useState(false);
   const [isDiagnosticMinimized, setIsDiagnosticMinimized] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<string | undefined>(undefined);
+
+  // Verificar se deve abrir configurações com aba específica
+  useEffect(() => {
+    const tab = searchParams.get('settingsTab');
+    if (tab) {
+      setSettingsTab(tab);
+      setIsSettingsDialogOpen(true);
+      // Limpar parâmetro da URL
+      navigate(window.location.pathname, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
+    // Timeout de segurança para evitar loading infinito
+    const loadingTimeout = setTimeout(() => {
+      console.warn('⚠️ PrivateDashboard: Timeout no carregamento, forçando renderização');
+      setIsLoading(false);
+    }, 10000); // 10 segundos
+
     // Carregar diagnóstico do Supabase
     const loadDiagnosticData = async () => {
       if (!user?.id) {
         setIsLoading(false);
+        clearTimeout(loadingTimeout);
         return;
       }
 
       try {
-        // Buscar último diagnóstico do usuário
-        const latestDiagnostic = await diagnosticService.getLatestDiagnosticResult(user.id);
+        // Buscar último diagnóstico do usuário com timeout
+        const diagnosticPromise = diagnosticService.getLatestDiagnosticResult(user.id);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout ao carregar diagnóstico')), 8000)
+        );
+        
+        const latestDiagnostic = await Promise.race([diagnosticPromise, timeoutPromise]) as any;
         
         if (latestDiagnostic) {
           setDiagnosticAnswers(latestDiagnostic.answers as QuestionnaireAnswers);
@@ -103,12 +128,19 @@ const PrivateDashboard = () => {
 
       } catch (error) {
         console.error('Erro ao carregar dados do diagnóstico:', error);
+        // Continuar mesmo com erro - não bloquear a interface
+        setShowDiagnosticSection(false);
       } finally {
         setIsLoading(false);
+        clearTimeout(loadingTimeout);
       }
     };
 
     loadDiagnosticData();
+
+    return () => {
+      clearTimeout(loadingTimeout);
+    };
   }, [user]);
 
 
@@ -891,7 +923,14 @@ const PrivateDashboard = () => {
       </div>
 
       {/* Modal de Configurações */}
-      <SettingsModal isOpen={isSettingsDialogOpen} onClose={() => setIsSettingsDialogOpen(false)} />
+      <SettingsModal 
+        isOpen={isSettingsDialogOpen} 
+        onClose={() => {
+          setIsSettingsDialogOpen(false);
+          setSettingsTab(undefined);
+        }}
+        initialTab={settingsTab}
+      />
 
       {/* Modal de Diagnóstico (Flutuante) */}
       <Dialog open={showDiagnosticSection} onOpenChange={(open) => {

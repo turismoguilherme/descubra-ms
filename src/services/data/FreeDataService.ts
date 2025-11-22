@@ -341,28 +341,78 @@ class GoogleSearchService {
   
   async getTourismData(region: string, type: string): Promise<any[]> {
     if (!this.apiKey || !this.searchEngineId) {
-      throw new Error('Google Search API não configurada');
+      console.warn('⚠️ Google Search API não configurada');
+      return [];
     }
     
-    const query = `tourism ${region} ${type}`;
-    const response = await fetch(
-      `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(query)}`
-    );
-    const data = await response.json();
-    return data.items || [];
+    try {
+      const query = `tourism ${region} ${type}`;
+      const response = await fetch(
+        `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(query)}`
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+        }
+        console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
+        return [];
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.warn(`⚠️ Google Search API error:`, data.error.message);
+        return [];
+      }
+      
+      return data.items || [];
+    } catch (error: any) {
+      console.warn(`⚠️ Erro ao buscar dados de turismo:`, error?.message || error);
+      return [];
+    }
   }
   
   async searchTourismInfo(query: string, region: string): Promise<any[]> {
     if (!this.apiKey || !this.searchEngineId) {
-      throw new Error('Google Search API não configurada');
+      console.warn('⚠️ Google Search API não configurada');
+      return [];
     }
     
-    const searchQuery = `${query} ${region} tourism`;
-    const response = await fetch(
-      `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(searchQuery)}`
-    );
-    const data = await response.json();
-    return data.items || [];
+    try {
+      const searchQuery = `${query} ${region} tourism`;
+      const response = await fetch(
+        `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(searchQuery)}`
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+        }
+        console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
+        return [];
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.warn(`⚠️ Google Search API error:`, data.error.message);
+        return [];
+      }
+      
+      return data.items || [];
+    } catch (error: any) {
+      console.warn(`⚠️ Erro ao buscar informações de turismo:`, error?.message || error);
+      return [];
+    }
   }
 }
 

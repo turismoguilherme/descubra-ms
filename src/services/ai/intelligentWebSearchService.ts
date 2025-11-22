@@ -698,10 +698,25 @@ Reserve com antecedência, especialmente em jul-set!`,
       const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+        }
+        
+        // Log do erro mas não quebrar a aplicação
+        console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
+        return this.performAlternativeWebSearch(query);
       }
       
       const data = await response.json();
+      
+      if (data.error) {
+        console.warn(`⚠️ Google Search API error:`, data.error.message);
+        return this.performAlternativeWebSearch(query);
+      }
       
       if (!data.items || data.items.length === 0) {
         console.log('🤔 Nenhum resultado encontrado no Google, usando busca alternativa');

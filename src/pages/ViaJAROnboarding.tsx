@@ -3,8 +3,8 @@
  * Fluxo completo de cadastro: Cadastro → CADASTUR → Plano → Pagamento → Perfil
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,12 +14,10 @@ import { cn } from '@/lib/utils';
 import CadastURVerification from '@/components/onboarding/CadastURVerification';
 import PlanSelector from '@/components/onboarding/PlanSelector';
 import ProfileCompletion from '@/components/onboarding/ProfileCompletion';
-import DiagnosticQuestionnaire from '@/components/diagnostic/DiagnosticQuestionnaire';
-import AIRecommendationEngine from '@/components/diagnostic/AIRecommendationEngine';
+import StripeCheckout from '@/components/onboarding/StripeCheckout';
+import ConsentTerm from '@/components/onboarding/ConsentTerm';
 import type { CadastURVerificationResult } from '@/services/cadasturService';
 import type { PlanTier, BillingPeriod } from '@/services/subscriptionService';
-import type { QuestionnaireAnswers } from '@/types/diagnostic';
-import type { AnalysisResult } from '@/services/diagnostic/analysisService';
 
 interface OnboardingStep {
   id: number;
@@ -30,6 +28,7 @@ interface OnboardingStep {
 
 export default function ViaJAROnboarding() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState({
     category: 'hotel', // Viria do registro
@@ -37,30 +36,28 @@ export default function ViaJAROnboarding() {
     cadastur: null as CadastURVerificationResult | null,
     plan: null as { planId: PlanTier; billingPeriod: BillingPeriod } | null,
     profile: null as any,
-    diagnostic: null as QuestionnaireAnswers | null,
-    analysis: null as AnalysisResult | null,
   });
 
   const steps: OnboardingStep[] = [
     {
       id: 1,
-      title: 'Diagnóstico Inteligente',
-      description: 'Personalize sua experiência',
-    },
-    {
-      id: 2,
       title: 'Verificação CADASTUR',
       description: 'Validação do registro turístico',
     },
     {
+      id: 2,
+      title: 'Escolher Plano',
+      description: 'Selecione o plano ideal',
+    },
+    {
       id: 3,
-      title: 'Plano Recomendado',
-      description: 'Baseado na sua análise',
+      title: 'Pagamento',
+      description: 'Configure seu método de pagamento',
     },
     {
       id: 4,
-      title: 'Pagamento',
-      description: 'Configure seu método de pagamento',
+      title: 'Termo de Consentimento',
+      description: 'Benchmarking e compartilhamento de dados',
     },
     {
       id: 5,
@@ -74,33 +71,38 @@ export default function ViaJAROnboarding() {
     },
   ];
 
-  const handleDiagnosticComplete = (answers: QuestionnaireAnswers) => {
-    setOnboardingData(prev => ({ ...prev, diagnostic: answers }));
-    setCurrentStep(2);
-  };
-
-  const handleAnalysisComplete = (result: AnalysisResult) => {
-    setOnboardingData(prev => ({ ...prev, analysis: result }));
-    setCurrentStep(3);
-  };
+  // Ler parâmetro step da URL para permitir redirecionamento após pagamento
+  useEffect(() => {
+    const stepParam = searchParams.get('step');
+    if (stepParam) {
+      const step = parseInt(stepParam, 10);
+      if (step >= 1 && step <= steps.length) {
+        setCurrentStep(step);
+      }
+    }
+  }, [searchParams, steps.length]);
 
   const handleCadastURVerified = (result: CadastURVerificationResult) => {
     setOnboardingData(prev => ({ ...prev, cadastur: result }));
-    setCurrentStep(3);
+    setCurrentStep(2); // Vai para escolher plano
   };
 
   const handlePlanSelected = (planId: PlanTier, billingPeriod: BillingPeriod) => {
     setOnboardingData(prev => ({ ...prev, plan: { planId, billingPeriod } }));
-    setCurrentStep(4);
+    setCurrentStep(3); // Vai para pagamento
   };
 
   const handlePaymentComplete = () => {
-    setCurrentStep(5);
+    setCurrentStep(4); // Vai para termo de consentimento
+  };
+
+  const handleConsentComplete = () => {
+    setCurrentStep(5); // Vai para completar perfil
   };
 
   const handleProfileComplete = (profileData: any) => {
     setOnboardingData(prev => ({ ...prev, profile: profileData }));
-    setCurrentStep(6);
+    setCurrentStep(6); // Vai para sucesso
   };
 
   const handleFinish = () => {
@@ -221,97 +223,47 @@ export default function ViaJAROnboarding() {
           )}
 
           {/* Step 3: Payment */}
-          {currentStep === 3 && (
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-bold">Configurar Pagamento</h2>
-                  <p className="text-muted-foreground">
-                    Plano selecionado:{" "}
-                    <strong>
-                      {onboardingData.plan?.planId === "freemium"
-                        ? "Freemium"
-                        : onboardingData.plan?.planId === "professional"
-                        ? "Professional"
-                        : onboardingData.plan?.planId === "enterprise"
-                        ? "Enterprise"
-                        : "Governo"}
-                    </strong>
-                  </p>
-                  {onboardingData.plan?.planId !== "freemium" && (
-                    <Badge variant="secondary">
-                      14 dias de teste grátis
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Payment Form (mockado) */}
-                <div className="max-w-md mx-auto space-y-4">
-                  {onboardingData.plan?.planId === "freemium" ? (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">
-                        Plano Freemium não requer pagamento
+          {currentStep === 3 && onboardingData.plan && (
+            <div className="max-w-4xl mx-auto">
+              {onboardingData.plan.planId === "freemium" ? (
+                <Card>
+                  <CardContent className="pt-6 space-y-6">
+                    <div className="text-center space-y-4">
+                      <h2 className="text-2xl font-bold">Plano Freemium</h2>
+                      <p className="text-muted-foreground">
+                        O plano Freemium não requer pagamento. Você pode começar a usar agora!
                       </p>
                       <Button size="lg" onClick={handlePaymentComplete}>
                         Continuar
                       </Button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="p-4 border rounded-lg bg-blue-50 border-blue-200">
-                        <p className="text-sm text-blue-900">
-                          🎁 <strong>Sem cobrança agora!</strong> Você tem 14
-                          dias grátis para testar todas as funcionalidades.
-                        </p>
-                      </div>
-
-                      <div className="space-y-4">
-                        <h3 className="font-semibold">
-                          Método de Pagamento (opcional agora)
-                        </h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button variant="outline" className="h-20">
-                            💳 Cartão de Crédito
-                          </Button>
-                          <Button variant="outline" className="h-20">
-                            📱 PIX
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">
-                          Você pode configurar o pagamento depois, dentro da
-                          plataforma
-                        </p>
-                      </div>
-
-                      <Button
-                        size="lg"
-                        className="w-full"
-                        onClick={handlePaymentComplete}
-                      >
-                        Pular e Configurar Depois
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-center pt-4">
-                  <Button variant="ghost" onClick={() => setCurrentStep(2)}>
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Voltar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ) : (
+                <StripeCheckout
+                  planId={onboardingData.plan.planId}
+                  billingPeriod={onboardingData.plan.billingPeriod}
+                  onSuccess={handlePaymentComplete}
+                  onCancel={() => setCurrentStep(2)}
+                />
+              )}
+            </div>
           )}
 
-          {/* Step 4: Profile Completion */}
+          {/* Step 4: Consent Term - OBRIGATÓRIO */}
           {currentStep === 4 && (
+            <ConsentTerm
+              onComplete={handleConsentComplete}
+            />
+          )}
+
+          {/* Step 5: Profile Completion */}
+          {currentStep === 5 && (
             <ProfileCompletion onComplete={handleProfileComplete} />
           )}
 
-          {/* Step 5: Success */}
-          {currentStep === 5 && (
+          {/* Step 6: Success */}
+          {currentStep === 6 && (
             <Card className="border-green-500">
               <CardContent className="pt-12 pb-12">
                 <div className="text-center space-y-6 max-w-2xl mx-auto">

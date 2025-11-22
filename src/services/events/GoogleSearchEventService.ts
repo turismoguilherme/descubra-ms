@@ -251,17 +251,46 @@ export class GoogleSearchEventService {
       this.logRequest();
 
       const response = await fetch(searchUrl);
-      const data = await response.json();
-
-      if (response.status === 429) {
+      
+      // Verificar status da resposta antes de parsear JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+        }
+        
+        if (response.status === 429) {
+          result.success = false;
+          result.errors.push("Limite de requisições da API atingido. Tente novamente mais tarde.");
+          console.warn("⚠️ ERRO 429: Limite atingido");
+          return result;
+        }
+        
+        if (response.status === 400) {
+          result.success = false;
+          const errorMsg = errorData?.error?.message || "Requisição inválida. Verifique as configurações da API.";
+          result.errors.push(errorMsg);
+          console.warn(`⚠️ ERRO 400: ${errorMsg} - Google Search API não configurada corretamente ou requisição inválida`);
+          return result;
+        }
+        
+        // Outros erros HTTP
         result.success = false;
-        result.errors.push("Limite de requisições da API atingido. Tente novamente mais tarde.");
+        const errorMsg = errorData?.error?.message || `Erro HTTP ${response.status}`;
+        result.errors.push(errorMsg);
+        console.warn(`⚠️ ERRO ${response.status}: ${errorMsg}`);
         return result;
       }
 
-      if (!response.ok || data.error) {
+      const data = await response.json();
+
+      if (data.error) {
         result.success = false;
         result.errors.push(data.error?.message || "Erro na busca");
+        console.warn(`⚠️ ERRO na resposta: ${data.error?.message}`);
         return result;
       }
 
@@ -343,14 +372,41 @@ export class GoogleSearchEventService {
       this.logRequest();
 
       const response = await fetch(searchUrl);
-      const data = await response.json();
-
-      if (response.status === 429) {
+      
+      // Verificar status da resposta antes de parsear JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
+        }
+        
+        if (response.status === 429) {
+          result.success = false;
+          result.errors.push("Limite de requisições do Google atingido. Usando cache.");
+          console.warn("⚠️ ERRO 429: Limite atingido - usando cache");
+          return result;
+        }
+        
+        if (response.status === 400) {
+          result.success = false;
+          const errorMsg = errorData?.error?.message || "Requisição inválida. Verifique as configurações da API.";
+          result.errors.push(errorMsg);
+          console.warn(`⚠️ ERRO 400: ${errorMsg} - Google Search API não configurada corretamente ou requisição inválida`);
+          return result;
+        }
+        
+        // Outros erros HTTP
         result.success = false;
-        result.errors.push("Limite de requisições do Google atingido. Usando cache.");
-        console.error("🚨 ERRO 429: Limite atingido");
+        const errorMsg = errorData?.error?.message || `Erro HTTP ${response.status}`;
+        result.errors.push(errorMsg);
+        console.warn(`⚠️ ERRO ${response.status}: ${errorMsg}`);
         return result;
       }
+
+      const data = await response.json();
 
       if (data.items && data.items.length > 0) {
         console.log(`✅ GOOGLE SEARCH: ${data.items.length} resultados encontrados`);
@@ -368,6 +424,8 @@ export class GoogleSearchEventService {
         this.setCachedData(cacheKey, result.eventos);
         
         console.log(`✅ GOOGLE SEARCH: ${result.total_encontrados} eventos processados e salvos em cache`);
+      } else {
+        console.log("ℹ️ GOOGLE SEARCH: Nenhum resultado encontrado");
       }
 
     } catch (error: any) {

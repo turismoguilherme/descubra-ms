@@ -68,7 +68,7 @@ export const ENV = {
 
     // Commercial integrations
     CRM_HUBSPOT_ENABLED: false,
-    BILLING_STRIPE_ENABLED: false
+    BILLING_STRIPE_ENABLED: true
   },
 
   RAG: {

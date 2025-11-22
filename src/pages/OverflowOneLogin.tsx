@@ -17,7 +17,6 @@ const OverflowOneLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [loginMethod, setLoginMethod] = useState<'cadastur' | 'cnpj' | 'email'>('cadastur');
   
   // Verificar se o AuthProvider está disponível
   let auth = null;
@@ -35,9 +34,56 @@ const OverflowOneLogin: React.FC = () => {
     );
   }
   
-  const { signIn, signInWithProvider } = auth;
+  const { signIn } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Detectar automaticamente o tipo de login (CADASTUR, CNPJ ou Email)
+  const detectLoginType = (value: string): 'cadastur' | 'cnpj' | 'email' => {
+    const digitsOnly = value.replace(/\D/g, '');
+    
+    // Se contém @, é email
+    if (value.includes('@')) {
+      return 'email';
+    }
+    
+    // Se tem 15 dígitos, é CADASTUR
+    if (digitsOnly.length === 15) {
+      return 'cadastur';
+    }
+    
+    // Se tem 14 dígitos, é CNPJ
+    if (digitsOnly.length === 14) {
+      return 'cnpj';
+    }
+    
+    // Por padrão, tentar como email se não conseguir detectar
+    return 'email';
+  };
+
+  const handleInputChange = (value: string) => {
+    // Formatar automaticamente se for CNPJ ou CADASTUR
+    const digitsOnly = value.replace(/\D/g, '');
+    
+    if (digitsOnly.length <= 14) {
+      // Formatar como CNPJ: 00.000.000/0000-00
+      let formatted = digitsOnly.replace(/^(\d{2})(\d)/, '$1.$2');
+      formatted = formatted.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+      formatted = formatted.replace(/\.(\d{3})(\d)/, '.$1/$2');
+      formatted = formatted.replace(/(\d{4})(\d)/, '$1-$2');
+      setLoginField(formatted);
+    } else if (digitsOnly.length <= 15) {
+      // Formatar como CADASTUR: 00.000.000/0000-000
+      let formatted = digitsOnly.replace(/^(\d{2})(\d)/, '$1.$2');
+      formatted = formatted.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+      formatted = formatted.replace(/\.(\d{3})(\d)/, '.$1/$2');
+      formatted = formatted.replace(/(\d{4})(\d)/, '$1-$2');
+      setLoginField(formatted);
+    } else {
+      // Email ou texto sem formatação
+      setLoginField(value);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,32 +91,37 @@ const OverflowOneLogin: React.FC = () => {
     setError('');
 
     try {
+      const loginType = detectLoginType(loginField);
       let loginEmail = loginField;
       
-      if (loginMethod === 'cadastur') {
+      if (loginType === 'cadastur') {
         // Buscar email pelo CADASTUR no banco
+        const cleanCadastur = loginField.replace(/\D/g, '');
         const { data: profile } = await supabase
           .from('profiles')
           .select('email')
-          .eq('cadastur', loginField)
-          .single();
+          .eq('cadastur', cleanCadastur)
+          .maybeSingle();
         
         if (!profile) {
           setError('CADASTUR não encontrado. Verifique o número ou cadastre-se.');
+          setIsLoading(false);
           return;
         }
         
         loginEmail = profile.email;
-      } else if (loginMethod === 'cnpj') {
+      } else if (loginType === 'cnpj') {
         // Buscar email pelo CNPJ no banco
+        const cleanCnpj = loginField.replace(/\D/g, '');
         const { data: profile } = await supabase
           .from('profiles')
           .select('email')
-          .eq('cnpj', loginField)
-          .single();
+          .eq('cnpj', cleanCnpj)
+          .maybeSingle();
         
         if (!profile) {
           setError('CNPJ não encontrado. Verifique o número ou cadastre-se.');
+          setIsLoading(false);
           return;
         }
         
@@ -98,16 +149,6 @@ const OverflowOneLogin: React.FC = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      await signInWithProvider('google');
-    } catch (err) {
-      setError('Erro ao fazer login com Google');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
@@ -148,73 +189,43 @@ const OverflowOneLogin: React.FC = () => {
                 </Alert>
               )}
 
-              {/* Método de Login */}
-              <div className="space-y-2">
-                <Label>Método de Login</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    type="button"
-                    variant={loginMethod === 'cadastur' ? 'default' : 'outline'}
-                    onClick={() => setLoginMethod('cadastur')}
-                    className="text-xs"
-                  >
-                    CADASTUR
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={loginMethod === 'cnpj' ? 'default' : 'outline'}
-                    onClick={() => setLoginMethod('cnpj')}
-                    className="text-xs"
-                  >
-                    CNPJ
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={loginMethod === 'email' ? 'default' : 'outline'}
-                    onClick={() => setLoginMethod('email')}
-                    className="text-xs"
-                  >
-                    Email
-                  </Button>
-                </div>
-              </div>
-
+              {/* Campo Unificado de Login */}
               <div className="space-y-2">
                 <Label htmlFor="loginField">
-                  {loginMethod === 'cadastur' ? 'CADASTUR' : 
-                   loginMethod === 'cnpj' ? 'CNPJ' : 'Email'}
+                  CNPJ, CADASTUR ou Email
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     id="loginField"
-                    type={loginMethod === 'email' ? 'email' : 'text'}
-                    placeholder={
-                      loginMethod === 'cadastur' ? '123456789' :
-                      loginMethod === 'cnpj' ? '12.345.678/0001-90' :
-                      'seu@email.com'
-                    }
+                    type="text"
+                    placeholder="00.000.000/0000-00, 00.000.000/0000-000 ou seu@email.com"
                     value={loginField}
-                    onChange={(e) => setLoginField(e.target.value)}
+                    onChange={(e) => handleInputChange(e.target.value)}
                     className="pl-10"
                     required
                   />
                 </div>
-                {loginMethod === 'cadastur' && (
-                  <p className="text-xs text-gray-500">
-                    Digite seu número CADASTUR (Cadastro de Prestadores de Serviços Turísticos)
-                  </p>
-                )}
-                {loginMethod === 'cnpj' && (
-                  <p className="text-xs text-gray-500">
-                    Digite seu CNPJ (com ou sem formatação)
-                  </p>
-                )}
-                {loginMethod === 'email' && (
-                  <p className="text-xs text-gray-500">
-                    Digite seu email de cadastro
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {(() => {
+                    const loginType = detectLoginType(loginField);
+                    const digitsOnly = loginField.replace(/\D/g, '');
+                    
+                    if (loginType === 'email') {
+                      return 'Email detectado';
+                    } else if (loginType === 'cnpj' && digitsOnly.length === 14) {
+                      return 'CNPJ detectado (14 dígitos)';
+                    } else if (loginType === 'cadastur' && digitsOnly.length === 15) {
+                      return 'CADASTUR detectado (15 dígitos)';
+                    } else if (digitsOnly.length > 0 && digitsOnly.length < 14) {
+                      return 'Digite o CNPJ completo (14 dígitos)';
+                    } else if (digitsOnly.length > 14 && digitsOnly.length < 15) {
+                      return 'Digite o CADASTUR completo (15 dígitos)';
+                    } else {
+                      return 'Digite seu CNPJ, CADASTUR ou email de cadastro';
+                    }
+                  })()}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -264,46 +275,6 @@ const OverflowOneLogin: React.FC = () => {
               </Button>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Ou continue com</span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                >
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  Continuar com Google
-                </Button>
-              </div>
-            </div>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
