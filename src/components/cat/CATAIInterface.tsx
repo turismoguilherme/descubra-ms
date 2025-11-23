@@ -165,13 +165,13 @@ const CATAIInterface: React.FC<CATAIInterfaceProps> = ({ catId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Guilherme - Layout Melhorado */}
+      {/* GUILHERME IA - Layout Melhorado */}
       <Card className="border-2 border-purple-200 bg-purple-50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-purple-900">
               <Bot className="h-5 w-5" />
-              Guilherme - Assistente Inteligente
+              GUILHERME IA - Assistente Inteligente
             </CardTitle>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${aiAssistantStatus === 'online' ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -193,7 +193,7 @@ const CATAIInterface: React.FC<CATAIInterfaceProps> = ({ catId }) => {
                   </div>
                   <div className="flex-1 bg-purple-50 rounded-lg p-4">
                     <p className="text-slate-800">
-                      Olá! Sou o Guilherme. Como posso ajudá-lo hoje?
+                      Olá! Sou o GUILHERME IA. Como posso ajudá-lo hoje?
                     </p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <Clock className="h-3 w-3" />

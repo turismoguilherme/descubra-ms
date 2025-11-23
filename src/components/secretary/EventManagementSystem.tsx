@@ -24,7 +24,6 @@ import {
   Trash2, 
   Eye,
   Share,
-  Download,
   Upload,
   Image,
   Star,
@@ -85,12 +84,6 @@ const EventManagementSystem: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TourismEvent | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json');
-  const [exportFilters, setExportFilters] = useState({
-    onlyActive: true,
-    onlyApproved: false,
-    onlyUpcoming: false,
-  });
   const [loading, setLoading] = useState(false);
   const [userState, setUserState] = useState<string | null>(null);
   const [isMSUser, setIsMSUser] = useState(false);
@@ -518,10 +511,9 @@ const EventManagementSystem: React.FC = () => {
       subtitle="Gerencie eventos turísticos e culturais"
     >
       <Tabs defaultValue="calendario" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="calendario">Calendário</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
         </TabsList>
 
         {/* Aba Calendário */}
@@ -818,158 +810,6 @@ const EventManagementSystem: React.FC = () => {
         {/* Aba Analytics */}
         <TabsContent value="analytics" className="mt-6">
           <EventAnalytics />
-        </TabsContent>
-
-        {/* Aba Relatórios */}
-        <TabsContent value="relatorios" className="mt-6">
-          <CardBox className="p-6">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-2">Exportação de Eventos</h3>
-                <p className="text-sm text-slate-600">
-                  Exporte eventos em diferentes formatos para relatórios e análises.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-slate-700 mb-2 block">Formato de Exportação</Label>
-                  <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as 'json' | 'csv')}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione o formato" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="json">JSON (JavaScript Object Notation)</SelectItem>
-                      <SelectItem value="csv">CSV (Comma Separated Values)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium text-slate-700 mb-2 block">Filtros de Exportação</Label>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="export-only-active" 
-                        checked={exportFilters.onlyActive}
-                        onChange={(e) => setExportFilters(prev => ({ ...prev, onlyActive: e.target.checked }))}
-                        className="rounded" 
-                      />
-                      <Label htmlFor="export-only-active" className="text-sm text-slate-600 cursor-pointer">
-                        Apenas eventos ativos
-                      </Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="export-only-approved" 
-                        checked={exportFilters.onlyApproved}
-                        onChange={(e) => setExportFilters(prev => ({ ...prev, onlyApproved: e.target.checked }))}
-                        className="rounded" 
-                      />
-                      <Label htmlFor="export-only-approved" className="text-sm text-slate-600 cursor-pointer">
-                        Apenas eventos aprovados
-                      </Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="export-upcoming" 
-                        checked={exportFilters.onlyUpcoming}
-                        onChange={(e) => setExportFilters(prev => ({ ...prev, onlyUpcoming: e.target.checked }))}
-                        className="rounded" 
-                      />
-                      <Label htmlFor="export-upcoming" className="text-sm text-slate-600 cursor-pointer">
-                        Apenas eventos futuros
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-200">
-                  <Button
-                    type="button"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      try {
-                        // Aplicar filtros
-                        let eventsToExport = filteredEvents;
-
-                        if (exportFilters.onlyActive) {
-                          eventsToExport = eventsToExport.filter(e => e.status === 'active' || e.status === 'planned');
-                        }
-                        if (exportFilters.onlyApproved) {
-                          eventsToExport = eventsToExport.filter(e => e.approval_status === 'approved');
-                        }
-                        if (exportFilters.onlyUpcoming) {
-                          const now = new Date();
-                          eventsToExport = eventsToExport.filter(e => e.date > now);
-                        }
-
-                        // Converter para formato de exportação
-                        const exportData = exportFormat === 'json'
-                          ? JSON.stringify(eventsToExport, null, 2)
-                          : eventsToExport.length > 0
-                          ? eventsToExport.map(e => ({
-                              Título: e.title,
-                              Descrição: e.description,
-                              Data: formatDate(e.date),
-                              'Data Fim': e.endDate ? formatDate(e.endDate) : '',
-                              Local: e.location,
-                              Categoria: e.category,
-                              'Público Esperado': e.expectedAudience,
-                              Orçamento: e.budget,
-                              Status: e.status,
-                            })).reduce((csv, row) => {
-                              const values = Object.values(row).map(v => `"${String(v)}"`).join(',');
-                              return csv + values + '\n';
-                            }, Object.keys(eventsToExport[0] || {}).join(',') + '\n')
-                          : '';
-
-                        // Download do arquivo
-                        const blob = new Blob([exportData], { type: exportFormat === 'json' ? 'application/json' : 'text/csv' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `eventos_${new Date().toISOString().split('T')[0]}.${exportFormat}`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        
-                        toast({
-                          title: 'Exportação realizada!',
-                          description: `${eventsToExport.length} evento(s) exportado(s) com sucesso.`,
-                        });
-                      } catch (error) {
-                        console.error('Erro ao exportar eventos:', error);
-                        toast({
-                          title: 'Erro',
-                          description: 'Não foi possível exportar os eventos.',
-                          variant: 'destructive',
-                        });
-                      }
-                    }}
-                    disabled={filteredEvents.length === 0}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Exportar Eventos
-                  </Button>
-                </div>
-
-                {filteredEvents.length > 0 && (
-                  <div className="pt-4 border-t border-slate-200">
-                    <p className="text-sm text-slate-600">
-                      <strong>{filteredEvents.length}</strong> evento(s) disponível(is) para exportação.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardBox>
         </TabsContent>
       </Tabs>
     </SectionWrapper>

@@ -32,7 +32,7 @@ const initialMessages: Message[] = [
   {
     id: '1',
     type: 'assistant',
-    content: 'Olá! Eu sou o Guilherme, seu assistente de inteligência empresarial. Estou aqui para ajudar você a interpretar dados, gerar insights e tomar decisões mais assertivas para seu negócio no turismo. Como posso ajudar hoje?',
+    content: 'Olá! Eu sou o GUILHERME IA, seu assistente de inteligência empresarial. Estou aqui para ajudar você a interpretar dados, gerar insights e tomar decisões mais assertivas para seu negócio no turismo. Como posso ajudar hoje?',
     timestamp: new Date(),
     suggestions: [
       "Analisar dados de ocupação",
@@ -144,7 +144,7 @@ export function IAGuilhermeInterface() {
               <AvatarFallback className="bg-primary text-primary-foreground">IG</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">IA Guilherme</h1>
+              <h1 className="text-3xl font-bold text-foreground">GUILHERME IA</h1>
               <p className="text-muted-foreground">Assistente de Inteligência Empresarial</p>
             </div>
             <Badge className="bg-green-100 text-green-700 border-green-200">Online</Badge>
@@ -157,7 +157,7 @@ export function IAGuilhermeInterface() {
               <CardHeader className="border-b">
                 <CardTitle className="flex items-center">
                   <Bot className="h-5 w-5 mr-2" />
-                  Conversa com IA Guilherme
+                  Conversa com GUILHERME IA
                 </CardTitle>
               </CardHeader>
               

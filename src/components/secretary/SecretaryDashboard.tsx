@@ -29,7 +29,6 @@ import {
   CheckCircle,
   XCircle,
   Star,
-  Map,
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
@@ -46,7 +45,6 @@ import DocumentUploadPublic from '@/components/secretary/DocumentUploadPublic';
 import ReportGenerator from '@/components/secretary/ReportGenerator';
 import PublicSettingsModal from '@/components/secretary/PublicSettingsModal';
 import AttendantManagement from '@/components/secretary/AttendantManagement';
-import TouristServicesAnalytics from '@/components/secretary/TouristServicesAnalytics';
 import { format } from 'date-fns';
 import { Brain, FileText, FileBarChart, HelpCircle, Sparkles, Target } from 'lucide-react';
 import { dataInterpretationAIService } from '@/services/ai/dataInterpretationAIService';
@@ -383,45 +381,12 @@ export default function SecretaryDashboard() {
               <Building2 className="h-4 w-4" />
               Gestão de CATs
             </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveSection('tourist-services');
-              }}
-              className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                activeSection === 'tourist-services' 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              Atendimentos CAT
-            </button>
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Click em Mapas de Calor');
-                  setActiveSection('heatmaps');
-                }}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'heatmaps' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <MapPin className="h-4 w-4" />
-                Mapas de Calor
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Click em Guilherme');
+                  console.log('Click em GUILHERME IA');
                   setActiveSection('ai-strategic');
                 }}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
@@ -431,7 +396,7 @@ export default function SecretaryDashboard() {
                 }`}
               >
                 <Brain className="h-4 w-4" />
-                Guilherme
+                GUILHERME IA
               </button>
               <button
                 type="button"
@@ -1290,31 +1255,9 @@ export default function SecretaryDashboard() {
             </React.Suspense>
           )}
 
-          {/* Atendimentos CAT */}
-          {activeSection === 'tourist-services' && (
-            <TouristServicesAnalytics />
-          )}
 
-          {/* Mapas de Calor */}
-          {activeSection === 'heatmaps' && (
-            <SectionWrapper 
-              variant="default" 
-              title="Mapas de Calor"
-              subtitle="Visualização geográfica do fluxo turístico"
-            >
-              <CardBox>
-                <div className="text-center py-12">
-                  <div className="p-4 bg-slate-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Map className="h-8 w-8 text-slate-400" />
-                  </div>
-                  <p className="text-slate-600 font-medium mb-1">Mapas de Calor</p>
-                  <p className="text-sm text-slate-500">Funcionalidade em desenvolvimento</p>
-                </div>
-              </CardBox>
-            </SectionWrapper>
-          )}
 
-          {/* Guilherme */}
+          {/* GUILHERME IA */}
           {activeSection === 'ai-strategic' && (
             <StrategicAIChat />
           )}

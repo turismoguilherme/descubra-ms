@@ -71,7 +71,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     const welcomeMessage: Message = {
       id: Date.now().toString(),
       type: 'ai',
-      content: 'Olá! Sou o Guilherme, sua IA estratégica para o turismo. Estou aqui para ajudar você a tomar decisões mais inteligentes com base em dados reais. Como posso ajudar hoje?',
+      content: 'Olá! Sou o GUILHERME IA, sua IA estratégica para o turismo. Estou aqui para ajudar você a tomar decisões mais inteligentes com base em dados reais. Como posso ajudar hoje?',
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -231,7 +231,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
               <Brain className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold mb-1">Guilherme</h2>
+              <h2 className="text-2xl font-bold mb-1">GUILHERME IA</h2>
               <p className="text-blue-100 text-sm">Seu assistente inteligente para decisões estratégicas em turismo</p>
             </div>
           </div>

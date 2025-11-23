@@ -7,11 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
-import { MapPin, Plus, Edit, Trash2, Navigation, CheckCircle, AlertCircle, Building2, Users } from 'lucide-react';
+import { MapPin, Plus, Edit, Trash2, Navigation, CheckCircle, AlertCircle, Building2, Users, BarChart3 } from 'lucide-react';
 import { useMultiTenantOverflowOne } from '@/hooks/useMultiTenantOverflowOne';
 import { catLocationService, CATLocation as ServiceCATLocation } from '@/services/public/catLocationService';
 import { useAuth } from '@/hooks/useAuth';
 import AttendantManagement from '@/components/secretary/AttendantManagement';
+import TouristServicesAnalytics from '@/components/secretary/TouristServicesAnalytics';
 
 interface CATLocation {
   id: string;
@@ -326,7 +327,7 @@ const CATGeolocationManager: React.FC = () => {
       subtitle="Cadastre e gerencie os Centros de Atendimento ao Turista com geolocalização"
     >
       <Tabs defaultValue="cats" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="cats" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             Gestão de CATs
@@ -334,6 +335,10 @@ const CATGeolocationManager: React.FC = () => {
           <TabsTrigger value="attendants" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Gestão de Atendentes
+          </TabsTrigger>
+          <TabsTrigger value="services" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Atendimentos
           </TabsTrigger>
         </TabsList>
 
@@ -697,6 +702,10 @@ const CATGeolocationManager: React.FC = () => {
 
         <TabsContent value="attendants" className="space-y-6">
           <AttendantManagement />
+        </TabsContent>
+
+        <TabsContent value="services" className="space-y-6">
+          <TouristServicesAnalytics />
         </TabsContent>
       </Tabs>
     </SectionWrapper>

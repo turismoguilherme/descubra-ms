@@ -1021,12 +1021,14 @@ const AttractionForm: React.FC<{
   };
 
   return (
-    <SectionWrapper
-      variant="default"
-      title={attraction ? 'Editar Atrativo' : 'Novo Atrativo'}
-      subtitle={attraction ? 'Atualize as informações do atrativo' : 'Preencha os dados do novo atrativo turístico'}
-    >
-      <CardBox className="max-w-2xl mx-auto shadow-lg bg-gradient-to-br from-white to-blue-50/30">
+    <div className="min-h-screen bg-gray-50 py-6">
+      <div className="max-w-4xl mx-auto px-4">
+        <SectionWrapper
+          variant="default"
+          title={attraction ? 'Editar Atrativo' : 'Novo Atrativo'}
+          subtitle={attraction ? 'Atualize as informações do atrativo' : 'Preencha os dados do novo atrativo turístico'}
+        >
+          <CardBox className="max-w-2xl mx-auto shadow-lg bg-white">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Botão de Preenchimento Automático */}
           {!attraction && (
@@ -1556,8 +1558,10 @@ const AttractionForm: React.FC<{
             </Button>
           </div>
         </form>
-      </CardBox>
-    </SectionWrapper>
+          </CardBox>
+        </SectionWrapper>
+      </div>
+    </div>
   );
 };
 
