@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthContext } from "@/hooks/auth/AuthContext";
 import { useSessionSecurity } from "@/hooks/useSessionSecurity";
 import { SessionTimeoutWarning } from "./SessionTimeoutWarning";
 
@@ -34,28 +34,19 @@ export const SecurityProvider = ({
   sessionTimeoutMinutes = 30,
   sessionWarningMinutes = 5,
 }: SecurityProviderProps) => {
-  // Usar try-catch para evitar erro quando não há AuthProvider
-  let user = null;
-  let sessionSecurityEnabled = false;
+  // Sempre chamar useContext para manter a ordem dos hooks consistente
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user ?? null;
+  const sessionSecurityEnabled = !!user;
   
-  try {
-    const auth = useAuth();
-    user = auth.user;
-    sessionSecurityEnabled = !!user;
-  } catch (error) {
-    // Se não há AuthProvider, continuar sem usuário
-    console.log("🔒 SecurityProvider: AuthProvider não disponível, continuando sem usuário");
-  }
-  
-  // Initialize session security monitoring apenas se há usuário
-  if (sessionSecurityEnabled) {
-    useSessionSecurity({
-      enabled: true,
-      timeoutMinutes: sessionTimeoutMinutes,
-      warningMinutes: sessionWarningMinutes,
-      trackActivity: true
-    });
-  }
+  // Sempre chamar useSessionSecurity para manter a ordem dos hooks consistente
+  // Mas desabilitar quando não há usuário
+  useSessionSecurity({
+    enabled: sessionSecurityEnabled,
+    timeoutMinutes: sessionTimeoutMinutes,
+    warningMinutes: sessionWarningMinutes,
+    trackActivity: sessionSecurityEnabled
+  });
 
   const contextValue: SecurityContextType = {
     isSecure: !!user,

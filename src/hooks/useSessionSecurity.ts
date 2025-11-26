@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useAuth } from "./useAuth";
+import { useEffect, useState, useCallback, useRef, useContext } from "react";
+import { AuthContext } from "@/hooks/auth/AuthContext";
 import { securityService } from "@/services/securityService";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -16,15 +16,9 @@ export const useSessionSecurity = ({
   warningMinutes = 5,
   trackActivity = true
 }: UseSessionSecurityOptions = {}) => {
-  // Usar try-catch para evitar erro quando não há AuthProvider
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth.user;
-  } catch (error) {
-    // Se não há AuthProvider, continuar sem usuário
-    console.log("🔒 useSessionSecurity: AuthProvider não disponível, continuando sem usuário");
-  }
+  // Sempre chamar useContext para manter a ordem dos hooks consistente
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user ?? null;
   
   const { toast } = useToast();
   const [sessionWarningShown, setSessionWarningShown] = useState(false);
