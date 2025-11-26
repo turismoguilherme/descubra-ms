@@ -109,3 +109,4 @@ O módulo agora mostra mensagens claras para diferentes tipos de erro:
 Cada tipo de erro tem tratamento específico e mensagem adequada para ajudar na resolução do problema.
 
 
+

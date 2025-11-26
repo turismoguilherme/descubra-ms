@@ -184,3 +184,4 @@ ALTER TABLE plano_diretor_documentos_anexos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE plano_diretor_historico ENABLE ROW LEVEL SECURITY;
 
 
+

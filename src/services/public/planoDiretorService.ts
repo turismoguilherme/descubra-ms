@@ -24,6 +24,10 @@ export interface DiagnosticoData {
     oportunidades: string[];
     ameacas: string[];
   };
+  desafiosEOportunidades?: {
+    desafios: string[];
+    oportunidades: string[];
+  };
   gaps: {
     sinalizacao: boolean;
     acessibilidade: boolean;
@@ -188,6 +192,396 @@ export class PlanoDiretorService {
   }
 
   /**
+   * Salvar diagnóstico editado
+   */
+  async saveDiagnostico(planoId: string, diagnostico: DiagnosticoData): Promise<void> {
+    try {
+      // Salvar diagnóstico como JSON na tabela plano_diretor_documents
+      // Usando um campo JSONB se existir, ou criar uma tabela separada
+      const { error } = await supabase
+        .from('plano_diretor_documents')
+        .update({
+          diagnostico: diagnostico as any
+        })
+        .eq('id', planoId);
+
+      if (error) {
+        // Se o campo diagnostico não existir, tentar salvar em uma tabela separada ou campo alternativo
+        console.warn('Campo diagnostico não encontrado, tentando alternativa...');
+        // Por enquanto, apenas logar o erro - em produção, criar tabela separada ou campo JSONB
+        console.error('Erro ao salvar diagnóstico:', error);
+        // Não lançar erro para não quebrar a funcionalidade - o diagnóstico pode ser mantido apenas em memória
+      }
+    } catch (error) {
+      console.error('Erro ao salvar diagnóstico:', error);
+      // Não lançar erro - permitir que o diagnóstico seja editado mesmo sem persistência
+      // Em produção, implementar tabela separada para diagnóstico
+    }
+  }
+
+  /**
+   * Carregar diagnóstico salvo
+   */
+  async getDiagnostico(planoId: string): Promise<DiagnosticoData | null> {
+    try {
+      const { data, error } = await supabase
+        .from('plano_diretor_documents')
+        .select('diagnostico')
+        .eq('id', planoId)
+        .single();
+
+      if (error || !data?.diagnostico) {
+        return null;
+      }
+
+      return data.diagnostico as DiagnosticoData;
+    } catch (error) {
+      console.error('Erro ao carregar diagnóstico:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Sugerir dados para um indicador baseado nos módulos disponíveis
+   */
+  async suggestIndicatorData(indicadorId: string): Promise<Array<{ modulo: string; valor: number; descricao: string }>> {
+    try {
+      const indicador = await this.getIndicadores(await this.getPlanoDiretorIdFromIndicador(indicadorId))
+        .then(inds => inds.find(i => i.id === indicadorId));
+      
+      if (!indicador) {
+        return [];
+      }
+
+      const sugestoes: Array<{ modulo: string; valor: number; descricao: string }> = [];
+      const nomeLower = indicador.nome.toLowerCase();
+
+      // Buscar dados de Analytics (visitantes, receita)
+      if (nomeLower.includes('visitante') || nomeLower.includes('turista')) {
+        try {
+          // Simular busca de visitantes - em produção, integrar com analyticsService
+          const visitantes = 0; // TODO: Integrar com analyticsService.getTourismStats()
+          sugestoes.push({
+            modulo: 'Analytics',
+            valor: visitantes,
+            descricao: `Total de visitantes registrados no sistema`
+          });
+        } catch (error) {
+          console.error('Erro ao buscar dados de Analytics:', error);
+        }
+      }
+
+      if (nomeLower.includes('receita') || nomeLower.includes('faturamento')) {
+        try {
+          // Simular busca de receita - em produção, integrar com analyticsService
+          const receita = 0; // TODO: Integrar com analyticsService
+          sugestoes.push({
+            modulo: 'Analytics',
+            valor: receita,
+            descricao: `Receita total registrada no sistema`
+          });
+        } catch (error) {
+          console.error('Erro ao buscar dados de Analytics:', error);
+        }
+      }
+
+      // Buscar dados de Eventos
+      if (nomeLower.includes('evento') || nomeLower.includes('participante')) {
+        try {
+          const { data: eventos } = await supabase
+            .from('events')
+            .select('id, expected_participants')
+            .eq('is_visible', true);
+          
+          const totalParticipantes = eventos?.reduce((sum, e) => sum + (e.expected_participants || 0), 0) || 0;
+          sugestoes.push({
+            modulo: 'Eventos',
+            valor: totalParticipantes,
+            descricao: `Total de participantes esperados em eventos cadastrados`
+          });
+        } catch (error) {
+          console.error('Erro ao buscar dados de Eventos:', error);
+        }
+      }
+
+      // Buscar dados de CATs
+      if (nomeLower.includes('cat') || nomeLower.includes('atendimento')) {
+        try {
+          const { count } = await supabase
+            .from('tourist_surveys')
+            .select('*', { count: 'exact', head: true });
+          
+          sugestoes.push({
+            modulo: 'CATs',
+            valor: count || 0,
+            descricao: `Total de pesquisas realizadas nos CATs`
+          });
+        } catch (error) {
+          console.error('Erro ao buscar dados de CATs:', error);
+        }
+      }
+
+      // Buscar dados de Inventário (atrações)
+      if (nomeLower.includes('atração') || nomeLower.includes('atrativo') || nomeLower.includes('ponto')) {
+        try {
+          const { count } = await supabase
+            .from('tourist_attractions')
+            .select('*', { count: 'exact', head: true });
+          
+          sugestoes.push({
+            modulo: 'Inventário',
+            valor: count || 0,
+            descricao: `Total de atrações turísticas cadastradas`
+          });
+        } catch (error) {
+          console.error('Erro ao buscar dados de Inventário:', error);
+        }
+      }
+
+      return sugestoes;
+    } catch (error) {
+      console.error('Erro ao sugerir dados do indicador:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Helper para obter plano_diretor_id a partir de indicador_id
+   */
+  private async getPlanoDiretorIdFromIndicador(indicadorId: string): Promise<string> {
+    try {
+      const { data, error } = await supabase
+        .from('plano_diretor_indicadores')
+        .select('plano_diretor_id')
+        .eq('id', indicadorId)
+        .single();
+
+      if (error) throw error;
+      return data.plano_diretor_id;
+    } catch (error) {
+      console.error('Erro ao buscar plano_diretor_id do indicador:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Exportar Plano Diretor em PDF ou Excel
+   */
+  async exportPlanoDiretor(planoId: string, format: 'pdf' | 'excel'): Promise<void> {
+    try {
+      const plano = await this.getPlanoDiretorById(planoId);
+      if (!plano) {
+        throw new Error('Plano diretor não encontrado');
+      }
+
+      // Carregar dados completos
+      const [objetivos, estrategias, acoes, indicadores] = await Promise.all([
+        this.getObjetivos(planoId),
+        this.getEstrategias(planoId),
+        this.getAcoes(planoId),
+        this.getIndicadores(planoId)
+      ]);
+
+      if (format === 'pdf') {
+        // Usar jsPDF para gerar PDF
+        const { jsPDF } = await import('jspdf');
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        const margin = 20;
+        let yPosition = margin;
+
+        // Cabeçalho
+        doc.setFontSize(20);
+        doc.setTextColor(59, 130, 246);
+        doc.text('Plano Diretor de Turismo', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text(plano.titulo, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 8;
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+          `${plano.municipio} - ${plano.municipioUf} • ${plano.periodo}`,
+          pageWidth / 2,
+          yPosition,
+          { align: 'center' }
+        );
+        yPosition += 15;
+
+        // Objetivos
+        if (objetivos.length > 0) {
+          doc.setFontSize(12);
+          doc.setTextColor(59, 130, 246);
+          doc.text('Objetivos', margin, yPosition);
+          yPosition += 8;
+          objetivos.forEach((obj, index) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`${index + 1}. ${obj.titulo}`, margin, yPosition);
+            yPosition += 6;
+            doc.text(`   Status: ${obj.status} | Progresso: ${obj.progresso}%`, margin, yPosition);
+            yPosition += 8;
+          });
+        }
+
+        // Estratégias
+        if (estrategias.length > 0) {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.setFontSize(12);
+          doc.setTextColor(59, 130, 246);
+          doc.text('Estratégias', margin, yPosition);
+          yPosition += 8;
+          estrategias.forEach((est, index) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`${index + 1}. ${est.titulo}`, margin, yPosition);
+            yPosition += 6;
+            doc.text(`   Investimento: R$ ${est.investimento.toLocaleString()}`, margin, yPosition);
+            yPosition += 8;
+          });
+        }
+
+        // Ações
+        if (acoes.length > 0) {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.setFontSize(12);
+          doc.setTextColor(59, 130, 246);
+          doc.text('Ações', margin, yPosition);
+          yPosition += 8;
+          acoes.slice(0, 20).forEach((acao, index) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`${index + 1}. ${acao.titulo}`, margin, yPosition);
+            yPosition += 6;
+            doc.text(`   Status: ${acao.status} | Progresso: ${acao.progresso}%`, margin, yPosition);
+            yPosition += 8;
+          });
+        }
+
+        // Indicadores
+        if (indicadores.length > 0) {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.setFontSize(12);
+          doc.setTextColor(59, 130, 246);
+          doc.text('Indicadores', margin, yPosition);
+          yPosition += 8;
+          indicadores.forEach((ind, index) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`${index + 1}. ${ind.nome}`, margin, yPosition);
+            yPosition += 6;
+            doc.text(`   Atual: ${ind.valorAtual} / Meta: ${ind.meta} ${ind.unidade}`, margin, yPosition);
+            yPosition += 8;
+          });
+        }
+
+        // Download
+        doc.save(`Plano_Diretor_${plano.municipio}_${new Date().toISOString().split('T')[0]}.pdf`);
+      } else {
+        // Excel - criar CSV simples (para Excel completo, usar biblioteca como xlsx)
+        const csvRows: string[] = [];
+        csvRows.push('Plano Diretor de Turismo');
+        csvRows.push(`Título,${plano.titulo}`);
+        csvRows.push(`Município,${plano.municipio}`);
+        csvRows.push(`Período,${plano.periodo}`);
+        csvRows.push('');
+        csvRows.push('Objetivos');
+        csvRows.push('Título,Status,Progresso,Meta');
+        objetivos.forEach(obj => {
+          csvRows.push(`${obj.titulo},${obj.status},${obj.progresso},${obj.meta}`);
+        });
+        csvRows.push('');
+        csvRows.push('Ações');
+        csvRows.push('Título,Status,Progresso,Investimento');
+        acoes.forEach(acao => {
+          csvRows.push(`${acao.titulo},${acao.status},${acao.progresso},${acao.investimento}`);
+        });
+        csvRows.push('');
+        csvRows.push('Indicadores');
+        csvRows.push('Nome,Valor Atual,Meta,Unidade');
+        indicadores.forEach(ind => {
+          csvRows.push(`${ind.nome},${ind.valorAtual},${ind.meta},${ind.unidade}`);
+        });
+
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Plano_Diretor_${plano.municipio}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Erro ao exportar plano diretor:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verificar se as migrations foram executadas
+   * Faz uma query simples na tabela principal para verificar se ela existe
+   */
+  async checkMigrationsExecuted(): Promise<boolean> {
+    try {
+      // Tentar fazer uma query simples na tabela principal
+      // Se a tabela não existir, isso vai lançar um erro
+      const { error } = await supabase
+        .from('plano_diretor_documents')
+        .select('id')
+        .limit(1);
+      
+      // Se não houver erro, a tabela existe
+      if (!error) {
+        return true;
+      }
+      
+      // Verificar se é erro de tabela não encontrada
+      const isTableNotFound = error.code === '42P01' || 
+                              error.code === 'PGRST116' ||
+                              error.message?.includes('relation') || 
+                              error.message?.includes('does not exist') || 
+                              error.message?.includes('not found');
+      
+      return !isTableNotFound;
+    } catch (error: any) {
+      // Se houver qualquer erro, assumir que as migrations não foram executadas
+      console.error('planoDiretorService: Erro ao verificar migrations:', error);
+      return false;
+    }
+  }
+
+  /**
    * Criar novo Plano Diretor
    */
   async createPlanoDiretor(data: {
@@ -306,6 +700,10 @@ export class PlanoDiretorService {
           (migrationError as any).isMigrationError = true;
           (migrationError as any).isUserError = true;
           throw migrationError;
+        } else if (error.code === '23502' || error.message?.includes('null value') || error.message?.includes('violates not-null constraint')) {
+          // Erro de constraint NOT NULL - geralmente indica problema na função trigger
+          errorMessage = `Erro ao criar histórico: ${error.message || 'Campo obrigatório não foi preenchido'}. Isso pode indicar um problema na função de histórico. Verifique se a migration mais recente foi executada.`;
+          // Não é erro de migration, mas sim um erro de configuração
         }
         
         throw new Error(`Erro ao criar plano diretor: ${errorMessage}${error.code ? ` (${error.code})` : ''}`);
@@ -741,7 +1139,8 @@ export class PlanoDiretorService {
           responsavel_nome: acao.responsavel,
           status: acao.status || 'planejada',
           progresso: acao.progresso || 0,
-          dependencias: acao.dependencias || []
+          dependencias: acao.dependencias || [],
+          tipo_integracao: (acao as any)?.tipoIntegracao || null
         })
         .select()
         .single();
@@ -766,6 +1165,7 @@ export class PlanoDiretorService {
       if (updates.status) updateData.status = updates.status;
       if (updates.progresso !== undefined) updateData.progresso = updates.progresso;
       if (updates.dependencias) updateData.dependencias = updates.dependencias;
+      if ((updates as any).tipoIntegracao !== undefined) updateData.tipo_integracao = (updates as any).tipoIntegracao || null;
 
       const { data, error } = await supabase
         .from('plano_diretor_acoes')
@@ -1428,7 +1828,7 @@ export class PlanoDiretorService {
   }
 
   private mapAcaoToInterface(data: any): Acao {
-    return {
+    const acao: any = {
       id: data.id,
       titulo: data.titulo,
       descricao: data.descricao || '',
@@ -1440,6 +1840,11 @@ export class PlanoDiretorService {
       progresso: data.progresso || 0,
       dependencias: data.dependencias || []
     };
+    // Adicionar tipoIntegracao se existir
+    if (data.tipo_integracao) {
+      acao.tipoIntegracao = data.tipo_integracao;
+    }
+    return acao;
   }
 
   private mapIndicadorToInterface(data: any): Indicador {

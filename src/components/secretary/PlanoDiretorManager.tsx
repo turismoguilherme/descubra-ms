@@ -15,14 +15,16 @@ import {
   CheckCircle, 
   TrendingUp, 
   Users, 
-  FileText,
   Plus,
   Sparkles,
   Loader2,
   ClipboardList,
   History,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  AlertCircle,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -33,7 +35,6 @@ import PlanoDiretorEstrategias from './PlanoDiretorEstrategias';
 import PlanoDiretorAcoes from './PlanoDiretorAcoes';
 import PlanoDiretorIndicadores from './PlanoDiretorIndicadores';
 import PlanoDiretorColaboradores from './PlanoDiretorColaboradores';
-import PlanoDiretorDocumentos from './PlanoDiretorDocumentos';
 import PlanoDiretorHistorico from './PlanoDiretorHistorico';
 
 interface PlanoDiretorManagerProps {
@@ -54,8 +55,30 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [migrationError, setMigrationError] = useState(false);
+  const [checkingMigrations, setCheckingMigrations] = useState(true);
+  const [objetivos, setObjetivos] = useState<any[]>([]);
+  const [acoes, setAcoes] = useState<any[]>([]);
 
   console.log('PlanoDiretorManager: Componente renderizado. user:', user, 'authLoading:', authLoading);
+
+  // Verificar migrations no início
+  useEffect(() => {
+    const checkMigrations = async () => {
+      try {
+        setCheckingMigrations(true);
+        const migrationsExecuted = await planoDiretorService.checkMigrationsExecuted();
+        setMigrationError(!migrationsExecuted);
+        console.log('PlanoDiretorManager: Migrations executadas:', migrationsExecuted);
+      } catch (error) {
+        console.error('PlanoDiretorManager: Erro ao verificar migrations:', error);
+        setMigrationError(true);
+      } finally {
+        setCheckingMigrations(false);
+      }
+    };
+
+    checkMigrations();
+  }, []);
 
   useEffect(() => {
     console.log('PlanoDiretorManager: useEffect disparado. user?.id:', user?.id, 'authLoading:', authLoading);
@@ -66,6 +89,12 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
       return;
     }
 
+    // Aguardar verificação de migrations
+    if (checkingMigrations) {
+      console.log('PlanoDiretorManager: Aguardando verificação de migrations...');
+      return;
+    }
+
     if (user?.id) {
       console.log('PlanoDiretorManager: Chamando loadPlanos para user.id:', user.id);
       loadPlanos();
@@ -73,13 +102,29 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
       console.log('PlanoDiretorManager: Usuário não autenticado, setLoading(false)');
       setLoading(false);
     }
-  }, [user?.id, authLoading]);
+  }, [user?.id, authLoading, checkingMigrations]);
 
   useEffect(() => {
     if (planoAtual?.id) {
       loadKPIs();
+      loadDashboardData();
     }
   }, [planoAtual?.id]);
+
+  const loadDashboardData = async () => {
+    if (!planoAtual?.id) return;
+    
+    try {
+      const [objetivosData, acoesData] = await Promise.all([
+        planoDiretorService.getObjetivos(planoAtual.id),
+        planoDiretorService.getAcoes(planoAtual.id)
+      ]);
+      setObjetivos(objetivosData);
+      setAcoes(acoesData);
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+    }
+  };
 
   const loadPlanos = async () => {
     if (!user?.id) {
@@ -94,6 +139,9 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
       const data = await planoDiretorService.listPlanosDiretores(user.id);
       console.log('PlanoDiretorManager: Planos carregados:', data.length, data);
       setPlanos(data);
+      
+      // Se chegou aqui, as migrations foram executadas com sucesso
+      setMigrationError(false);
       
       // Selecionar o primeiro plano ativo ou mais recente
       if (data.length > 0) {
@@ -115,7 +163,14 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
                                 error?.code === '42P01';
       
       if (isMigrationError) {
-        setMigrationError(true);
+        // Re-verificar se as migrations foram executadas
+        try {
+          const migrationsExecuted = await planoDiretorService.checkMigrationsExecuted();
+          setMigrationError(!migrationsExecuted);
+        } catch (checkError) {
+          setMigrationError(true);
+        }
+        
         toast({
           title: 'Migrations Não Executadas',
           description: 'As tabelas do Plano Diretor não foram criadas. Execute as migrations no Supabase antes de usar este módulo.',
@@ -195,6 +250,9 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
       await loadPlanoCompleto(novoPlano.id);
       setActiveTab('diagnostico');
       
+      // Se chegou aqui, as migrations foram executadas com sucesso
+      setMigrationError(false);
+      
       toast({
         title: 'Sucesso',
         description: 'Plano diretor criado com sucesso!',
@@ -216,7 +274,13 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
                           error?.code === '23503';
       
       if (isMigrationError) {
-        setMigrationError(true);
+        // Re-verificar se as migrations foram executadas
+        try {
+          const migrationsExecuted = await planoDiretorService.checkMigrationsExecuted();
+          setMigrationError(!migrationsExecuted);
+        } catch (checkError) {
+          setMigrationError(true);
+        }
       }
       
       // Se for erro de usuário, mostrar mensagem específica
@@ -265,12 +329,14 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
 
   console.log('PlanoDiretorManager: Renderizando. loading:', loading, 'planoAtual:', planoAtual);
 
-  if (loading) {
+  if (loading || checkingMigrations) {
     console.log('PlanoDiretorManager: Mostrando tela de loading');
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Carregando planos diretores...</span>
+        <span className="ml-2 text-gray-600">
+          {checkingMigrations ? 'Verificando migrations...' : 'Carregando planos diretores...'}
+        </span>
       </div>
     );
   }
@@ -306,13 +372,40 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={async () => {
                   console.log('PlanoDiretorManager: Clicou em "Entendi, continuar"');
-                  setMigrationError(false);
+                  // Re-verificar se as migrations foram executadas
+                  try {
+                    setCheckingMigrations(true);
+                    const migrationsExecuted = await planoDiretorService.checkMigrationsExecuted();
+                    setMigrationError(!migrationsExecuted);
+                    if (migrationsExecuted) {
+                      toast({
+                        title: 'Sucesso',
+                        description: 'Migrations detectadas! Recarregando...',
+                      });
+                      // Recarregar planos se o usuário estiver autenticado
+                      if (user?.id) {
+                        await loadPlanos();
+                      }
+                    }
+                  } catch (error) {
+                    console.error('PlanoDiretorManager: Erro ao re-verificar migrations:', error);
+                  } finally {
+                    setCheckingMigrations(false);
+                  }
                 }}
                 className="w-full sm:w-auto"
+                disabled={checkingMigrations}
               >
-                Entendi, continuar
+                {checkingMigrations ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  'Verificar novamente'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -334,21 +427,20 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
                 console.log('PlanoDiretorManager: Botão clicado!', { 
                   creating, 
                   migrationError, 
-                  user: user?.id,
-                  disabled: creating || migrationError
+                  user: user?.id
                 });
                 e.preventDefault();
                 e.stopPropagation();
                 
-                if (creating || migrationError) {
-                  console.warn('PlanoDiretorManager: Botão desabilitado, não executando');
+                if (creating) {
+                  console.warn('PlanoDiretorManager: Botão desabilitado (criando), não executando');
                   return;
                 }
                 
                 console.log('PlanoDiretorManager: Chamando handleCreatePlano...');
                 handleCreatePlano();
               }} 
-              disabled={creating || migrationError}
+              disabled={creating}
               className="w-full sm:w-auto"
               type="button"
             >
@@ -364,21 +456,6 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
                 </>
               )}
             </Button>
-            <div className="text-xs text-gray-500 mt-2 space-y-1">
-              <div>Debug: creating={creating ? 'true' : 'false'}, migrationError={migrationError ? 'true' : 'false'}, user={user?.id || 'null'}</div>
-              <div>Botão desabilitado: {(creating || migrationError) ? 'SIM' : 'NÃO'}</div>
-            </div>
-            {/* Botão de teste direto */}
-            <button
-              type="button"
-              onClick={() => {
-                console.log('PlanoDiretorManager: Botão de teste clicado!');
-                handleCreatePlano();
-              }}
-              className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              Teste Direto (sem Button component)
-            </button>
           </CardContent>
         </Card>
       </div>
@@ -436,7 +513,7 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
 
       {/* Tabs de navegação */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-1">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-1">
           <TabsTrigger value="dashboard" className="text-xs md:text-sm">
             <BarChart3 className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Dashboard</span>
@@ -465,10 +542,6 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
             <Users className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Colaboradores</span>
           </TabsTrigger>
-          <TabsTrigger value="documentos" className="text-xs md:text-sm">
-            <FileText className="h-4 w-4 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Documentos</span>
-          </TabsTrigger>
           <TabsTrigger value="historico" className="text-xs md:text-sm">
             <History className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Histórico</span>
@@ -476,68 +549,210 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Visão Geral do Plano</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {kpis ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <h3 className="font-semibold text-blue-900 mb-2">Visitantes</h3>
-                      <p className="text-3xl font-bold text-blue-600">
-                        {kpis.visitantes.atual.toLocaleString()} / {kpis.visitantes.meta.toLocaleString()}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {kpis.visitantes.percentual.toFixed(1)}% da meta
-                      </p>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <h3 className="font-semibold text-green-900 mb-2">Receita</h3>
-                      <p className="text-3xl font-bold text-green-600">
-                        R$ {(kpis.receita.atual / 1000000).toFixed(1)}M / R$ {(kpis.receita.meta / 1000000).toFixed(1)}M
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {kpis.receita.percentual.toFixed(1)}% da meta
-                      </p>
-                    </div>
+          <div className="space-y-6">
+            {/* Status do Plano */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  Status do Plano
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge className={`${getStatusColor(planoAtual.status)} text-white`}>
+                      {getStatusLabel(planoAtual.status)}
+                    </Badge>
+                    <p className="text-sm text-gray-600 mt-2">
+                      Versão {planoAtual.versao} • Período: {planoAtual.periodo}
+                    </p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-purple-50 rounded-lg">
-                      <h3 className="font-semibold text-purple-900 mb-2">Ações</h3>
-                      <p className="text-2xl font-bold text-purple-600">
-                        {kpis.acoes.concluidas} / {kpis.acoes.total}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {kpis.acoes.percentual.toFixed(1)}% concluídas
-                      </p>
-                    </div>
-                    <div className="p-4 bg-orange-50 rounded-lg">
-                      <h3 className="font-semibold text-orange-900 mb-2">Satisfação</h3>
-                      <p className="text-2xl font-bold text-orange-600">
-                        {kpis.satisfacao.atual.toFixed(1)} / {kpis.satisfacao.meta.toFixed(1)}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {kpis.satisfacao.percentual.toFixed(1)}% da meta
-                      </p>
-                    </div>
-                    <div className="p-4 bg-indigo-50 rounded-lg">
-                      <h3 className="font-semibold text-indigo-900 mb-2">Investimentos</h3>
-                      <p className="text-2xl font-bold text-indigo-600">
-                        R$ {(kpis.investimentos.realizado / 1000000).toFixed(1)}M
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {kpis.investimentos.percentual.toFixed(1)}% do planejado
-                      </p>
-                    </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">Criado em</p>
+                    <p className="text-sm font-medium">
+                      {new Date(planoAtual.dataCriacao).toLocaleDateString('pt-BR')}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <p className="text-gray-600">Carregando KPIs...</p>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Progresso Geral */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  Progresso Geral
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {objetivos.length > 0 ? (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">Objetivos Concluídos</span>
+                        <span className="font-semibold">
+                          {objetivos.filter(o => o.status === 'concluido').length} / {objetivos.length}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-blue-600 h-3 rounded-full transition-all"
+                          style={{ 
+                            width: `${objetivos.length > 0 ? (objetivos.filter(o => o.status === 'concluido').length / objetivos.length) * 100 : 0}%` 
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {objetivos.length > 0 ? ((objetivos.filter(o => o.status === 'concluido').length / objetivos.length) * 100).toFixed(0) : 0}% dos objetivos concluídos
+                      </p>
+                    </div>
+                    {kpis && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-blue-600">{kpis.acoes.percentual.toFixed(0)}%</p>
+                          <p className="text-xs text-gray-600">Ações</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-green-600">{kpis.visitantes.percentual.toFixed(0)}%</p>
+                          <p className="text-xs text-gray-600">Visitantes</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-purple-600">{kpis.receita.percentual.toFixed(0)}%</p>
+                          <p className="text-xs text-gray-600">Receita</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-orange-600">{kpis.satisfacao.percentual.toFixed(0)}%</p>
+                          <p className="text-xs text-gray-600">Satisfação</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-600 text-sm">Nenhum objetivo cadastrado ainda. Comece criando objetivos na aba "Objetivos".</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Ações em Andamento */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
+                  Ações em Andamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {acoes.length > 0 ? (
+                  <div className="space-y-3">
+                    {acoes
+                      .filter(a => a.status === 'em_execucao' || a.status === 'planejada')
+                      .slice(0, 5)
+                      .map((acao) => (
+                        <div key={acao.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{acao.titulo}</p>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(acao.prazo).toLocaleDateString('pt-BR')}
+                              </span>
+                              <span>Progresso: {acao.progresso.toFixed(0)}%</span>
+                            </div>
+                          </div>
+                          <Badge className={acao.status === 'em_execucao' ? 'bg-blue-500' : 'bg-gray-500'}>
+                            {acao.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      ))}
+                    {acoes.filter(a => a.status === 'em_execucao' || a.status === 'planejada').length === 0 && (
+                      <p className="text-gray-600 text-sm">Nenhuma ação em andamento no momento.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-600 text-sm">Nenhuma ação cadastrada ainda.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Alertas */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                  Alertas e Avisos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(() => {
+                    const alertas: Array<{ tipo: 'warning' | 'info'; mensagem: string }> = [];
+                    
+                    // Verificar ações atrasadas
+                    const acoesAtrasadas = acoes.filter(a => {
+                      const prazo = new Date(a.prazo);
+                      const hoje = new Date();
+                      return prazo < hoje && a.status !== 'concluida' && a.status !== 'cancelada';
+                    });
+                    
+                    if (acoesAtrasadas.length > 0) {
+                      alertas.push({
+                        tipo: 'warning',
+                        mensagem: `${acoesAtrasadas.length} ação(ões) com prazo vencido`
+                      });
+                    }
+
+                    // Verificar metas não alcançadas
+                    if (kpis) {
+                      if (kpis.visitantes.percentual < 80) {
+                        alertas.push({
+                          tipo: 'warning',
+                          mensagem: `Meta de visitantes em ${kpis.visitantes.percentual.toFixed(0)}% - abaixo do esperado`
+                        });
+                      }
+                      if (kpis.receita.percentual < 80) {
+                        alertas.push({
+                          tipo: 'warning',
+                          mensagem: `Meta de receita em ${kpis.receita.percentual.toFixed(0)}% - abaixo do esperado`
+                        });
+                      }
+                    }
+
+                    // Verificar objetivos sem progresso
+                    const objetivosSemProgresso = objetivos.filter(o => o.progresso === 0 && o.status !== 'concluido');
+                    if (objetivosSemProgresso.length > 0) {
+                      alertas.push({
+                        tipo: 'info',
+                        mensagem: `${objetivosSemProgresso.length} objetivo(s) ainda sem progresso`
+                      });
+                    }
+
+                    if (alertas.length === 0) {
+                      return (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle className="h-4 w-4" />
+                          <span className="text-sm">Tudo em dia! Nenhum alerta no momento.</span>
+                        </div>
+                      );
+                    }
+
+                    return alertas.map((alerta, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-2 p-2 rounded ${
+                          alerta.tipo === 'warning' ? 'bg-orange-50 text-orange-800' : 'bg-blue-50 text-blue-800'
+                        }`}
+                      >
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="text-sm">{alerta.mensagem}</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="diagnostico" className="mt-6">
@@ -579,13 +794,6 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
 
         <TabsContent value="colaboradores" className="mt-6">
           <PlanoDiretorColaboradores 
-            planoId={planoAtual.id}
-            onUpdate={loadPlanoCompleto}
-          />
-        </TabsContent>
-
-        <TabsContent value="documentos" className="mt-6">
-          <PlanoDiretorDocumentos 
             planoId={planoAtual.id}
             onUpdate={loadPlanoCompleto}
           />

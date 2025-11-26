@@ -68,3 +68,4 @@ supabase db push
 **Nota:** O método do Dashboard é mais rápido e não requer configuração adicional.
 
 
+

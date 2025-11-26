@@ -51,6 +51,10 @@ export class PlanoDiretorAIService {
           oportunidades: respostaIA.opportunities?.slice(0, 5) || [],
           ameacas: respostaIA.risks?.slice(0, 5) || []
         },
+        desafiosEOportunidades: {
+          desafios: respostaIA.risks?.slice(0, 3) || ['Melhorar infraestrutura turística', 'Aumentar divulgação'],
+          oportunidades: respostaIA.opportunities?.slice(0, 3) || ['Crescimento do turismo regional', 'Novos segmentos de mercado']
+        },
         gaps: {
           sinalizacao: dados.inventario?.total < 10,
           acessibilidade: dados.inventario?.total < 5,
@@ -341,6 +345,10 @@ export class PlanoDiretorAIService {
         fraquezas: this.getDefaultFraquezas(),
         oportunidades: [],
         ameacas: []
+      },
+      desafiosEOportunidades: {
+        desafios: ['Melhorar infraestrutura turística', 'Aumentar divulgação'],
+        oportunidades: ['Crescimento do turismo regional', 'Novos segmentos de mercado']
       },
       gaps: {
         sinalizacao: true,

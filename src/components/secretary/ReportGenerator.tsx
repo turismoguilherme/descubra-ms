@@ -32,8 +32,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { seturExportService } from '@/services/public/seturExportService';
 import { inventoryService } from '@/services/public/inventoryService';
 import { useToast } from '@/hooks/use-toast';
+import { planoDiretorService } from '@/services/public/planoDiretorService';
+import { Target } from 'lucide-react';
 
-type ReportType = 'all' | 'cats' | 'events' | 'inventory' | 'metrics' | 'setur';
+type ReportType = 'all' | 'cats' | 'events' | 'inventory' | 'metrics' | 'setur' | 'plano-diretor';
 
 const ReportGenerator: React.FC = () => {
   const { user } = useAuth();
@@ -48,6 +50,10 @@ const ReportGenerator: React.FC = () => {
     onlyVerified: false,
     onlySetur: false,
   });
+  const [exportingPlanoDiretor, setExportingPlanoDiretor] = useState(false);
+  const [planoDiretorFormat, setPlanoDiretorFormat] = useState<'pdf' | 'excel'>('pdf');
+  const [planosDiretores, setPlanosDiretores] = useState<any[]>([]);
+  const [selectedPlanoId, setSelectedPlanoId] = useState<string>('');
   const [reportConfig, setReportConfig] = useState<ReportOptions>({
     title: 'Relatório Municipal de Turismo',
     period: {
@@ -120,11 +126,31 @@ const ReportGenerator: React.FC = () => {
       cats: 'Relatório de CATs',
       events: 'Relatório de Eventos',
       inventory: 'Relatório de Inventário Turístico',
-      metrics: 'Relatório de Métricas'
+      metrics: 'Relatório de Métricas',
+      'plano-diretor': 'Exportar Plano Diretor'
     };
-    config.title = titles[type];
+    config.title = titles[type] || 'Relatório';
     
     setReportConfig(config);
+  };
+
+  const loadPlanosDiretores = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const planos = await planoDiretorService.listPlanosDiretores(user.id);
+      setPlanosDiretores(planos);
+      if (planos.length > 0 && !selectedPlanoId) {
+        setSelectedPlanoId(planos[0].id);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar planos diretores:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os planos diretores.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleGenerate = async () => {
@@ -144,6 +170,35 @@ const ReportGenerator: React.FC = () => {
       setError(errorMessage);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleExportPlanoDiretor = async () => {
+    if (!selectedPlanoId) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione um plano diretor para exportar.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setExportingPlanoDiretor(true);
+    try {
+      await planoDiretorService.exportPlanoDiretor(selectedPlanoId, planoDiretorFormat);
+      toast({
+        title: 'Sucesso',
+        description: `Plano diretor exportado em ${planoDiretorFormat.toUpperCase()} com sucesso!`,
+      });
+    } catch (error) {
+      console.error('Erro ao exportar plano diretor:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível exportar o plano diretor.',
+        variant: 'destructive'
+      });
+    } finally {
+      setExportingPlanoDiretor(false);
     }
   };
 
@@ -187,7 +242,7 @@ const ReportGenerator: React.FC = () => {
             <p className="text-sm text-slate-600">Selecione o tipo de relatório que deseja gerar</p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
             <button
               type="button"
               onClick={() => handleReportTypeChange('all')}
@@ -293,6 +348,27 @@ const ReportGenerator: React.FC = () => {
                   SeTur
                 </span>
                 <span className="text-xs text-gray-500 text-center">Exportação SeTur</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleReportTypeChange('plano-diretor');
+                loadPlanosDiretores();
+              }}
+              className={`p-4 rounded-lg border-2 transition-all ${
+                reportType === 'plano-diretor'
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Target className={`h-6 w-6 ${reportType === 'plano-diretor' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${reportType === 'plano-diretor' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  Plano Diretor
+                </span>
+                <span className="text-xs text-gray-500 text-center">Exportar Plano</span>
               </div>
             </button>
           </div>
@@ -472,8 +548,75 @@ const ReportGenerator: React.FC = () => {
           </CardBox>
         )}
 
+        {/* Exportação Plano Diretor */}
+        {reportType === 'plano-diretor' && (
+          <CardBox className="bg-gradient-to-br from-white to-blue-50/30 border-blue-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-600" />
+                Exportar Plano Diretor
+              </h3>
+              <p className="text-sm text-slate-600">
+                Exporte o Plano Diretor completo em PDF ou Excel.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2 block">Selecione o Plano Diretor</Label>
+                <Select value={selectedPlanoId} onValueChange={setSelectedPlanoId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um plano diretor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {planosDiretores.map((plano) => (
+                      <SelectItem key={plano.id} value={plano.id}>
+                        {plano.titulo} - {plano.municipio} ({plano.status})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2 block">Formato de Exportação</Label>
+                <Select value={planoDiretorFormat} onValueChange={(value) => setPlanoDiretorFormat(value as 'pdf' | 'excel')}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o formato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pdf">PDF (Portable Document Format)</SelectItem>
+                    <SelectItem value="excel">Excel (Microsoft Excel)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="pt-4 border-t border-slate-200">
+                <Button
+                  type="button"
+                  onClick={handleExportPlanoDiretor}
+                  disabled={exportingPlanoDiretor || !selectedPlanoId}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {exportingPlanoDiretor ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar Plano Diretor
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardBox>
+        )}
+
         {/* Botão de Geração */}
-        {reportType !== 'setur' && (
+        {reportType !== 'setur' && reportType !== 'plano-diretor' && (
           <CardBox className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-300 shadow-lg">
             <div className="flex items-center justify-between">
               <div className="flex-1">

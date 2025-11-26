@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, CheckCircle, Edit, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, Edit, Trash2, Calendar, Building2, MapPin, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { planoDiretorService, Acao, Estrategia } from '@/services/public/planoDiretorService';
 import AcaoForm from './AcaoForm';
+import { useNavigate } from 'react-router-dom';
 
 interface PlanoDiretorAcoesProps {
   planoId: string;
@@ -14,6 +15,7 @@ interface PlanoDiretorAcoesProps {
 
 const PlanoDiretorAcoes: React.FC<PlanoDiretorAcoesProps> = ({ planoId, onUpdate }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [acoes, setAcoes] = useState<Acao[]>([]);
   const [estrategias, setEstrategias] = useState<Estrategia[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,6 +104,57 @@ const PlanoDiretorAcoes: React.FC<PlanoDiretorAcoesProps> = ({ planoId, onUpdate
     return colors[status] || 'bg-gray-500';
   };
 
+  const detectIntegrationType = (acao: Acao): 'evento' | 'cat' | 'inventario' | null => {
+    // Primeiro verificar se há tipo de integração definido no formulário
+    const tipoIntegracao = (acao as any)?.tipoIntegracao;
+    if (tipoIntegracao && ['evento', 'cat', 'inventario'].includes(tipoIntegracao)) {
+      return tipoIntegracao as 'evento' | 'cat' | 'inventario';
+    }
+
+    // Se não houver, tentar detectar automaticamente pelo texto
+    const tituloLower = acao.titulo.toLowerCase();
+    const descricaoLower = acao.descricao?.toLowerCase() || '';
+    const texto = tituloLower + ' ' + descricaoLower;
+
+    if (texto.includes('evento') || texto.includes('festival') || texto.includes('feira') || texto.includes('show')) {
+      return 'evento';
+    }
+    if (texto.includes('cat') || texto.includes('centro de atendimento') || texto.includes('atendimento ao turista')) {
+      return 'cat';
+    }
+    if (texto.includes('atrativo') || texto.includes('atração') || texto.includes('ponto turístico') || texto.includes('inventário')) {
+      return 'inventario';
+    }
+    return null;
+  };
+
+  const handleCreateEvent = (acao: Acao) => {
+    toast({
+      title: 'Integração com Eventos',
+      description: `Redirecionando para criar evento baseado na ação: "${acao.titulo}"`,
+    });
+    // Navegar para gestão de eventos com dados pré-preenchidos
+    navigate('/secretary-dashboard?section=events&action=create&fromPlanoDiretor=true&titulo=' + encodeURIComponent(acao.titulo));
+  };
+
+  const handleImproveCAT = (acao: Acao) => {
+    toast({
+      title: 'Integração com CATs',
+      description: `Redirecionando para melhorar CAT baseado na ação: "${acao.titulo}"`,
+    });
+    // Navegar para gestão de CATs
+    navigate('/secretary-dashboard?section=cats&action=improve&fromPlanoDiretor=true&titulo=' + encodeURIComponent(acao.titulo));
+  };
+
+  const handleAddAttraction = (acao: Acao) => {
+    toast({
+      title: 'Integração com Inventário',
+      description: `Redirecionando para adicionar atrativo baseado na ação: "${acao.titulo}"`,
+    });
+    // Navegar para inventário turístico
+    navigate('/secretary-dashboard?section=inventory&action=create&fromPlanoDiretor=true&titulo=' + encodeURIComponent(acao.titulo));
+  };
+
   if (showForm) {
     return (
       <AcaoForm
@@ -169,6 +222,23 @@ const PlanoDiretorAcoes: React.FC<PlanoDiretorAcoesProps> = ({ planoId, onUpdate
                             <Badge className={getStatusColor(acao.status)}>
                               {acao.status.replace('_', ' ')}
                             </Badge>
+                            {(() => {
+                              const integrationType = detectIntegrationType(acao);
+                              if (integrationType) {
+                                const integrationLabels = {
+                                  evento: 'Integrado com Eventos',
+                                  cat: 'Integrado com CATs',
+                                  inventario: 'Integrado com Inventário'
+                                };
+                                return (
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    {integrationLabels[integrationType]}
+                                  </Badge>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                           {estrategia && (
                             <p className="text-xs text-gray-500 mb-2">
@@ -200,6 +270,55 @@ const PlanoDiretorAcoes: React.FC<PlanoDiretorAcoesProps> = ({ planoId, onUpdate
                               Depende de {acao.dependencias.length} ação(ões)
                             </p>
                           )}
+                          {/* Botões de Integração */}
+                          {(() => {
+                            const integrationType = detectIntegrationType(acao);
+                            if (!integrationType) return null;
+
+                            return (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <p className="text-xs text-gray-500 mb-2 font-medium">Integração com outros módulos:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {integrationType === 'evento' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleCreateEvent(acao)}
+                                      className="text-xs"
+                                    >
+                                      <Calendar className="h-3 w-3 mr-1" />
+                                      Criar Evento
+                                      <ExternalLink className="h-3 w-3 ml-1" />
+                                    </Button>
+                                  )}
+                                  {integrationType === 'cat' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleImproveCAT(acao)}
+                                      className="text-xs"
+                                    >
+                                      <Building2 className="h-3 w-3 mr-1" />
+                                      Melhorar CAT
+                                      <ExternalLink className="h-3 w-3 ml-1" />
+                                    </Button>
+                                  )}
+                                  {integrationType === 'inventario' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleAddAttraction(acao)}
+                                      className="text-xs"
+                                    >
+                                      <MapPin className="h-3 w-3 mr-1" />
+                                      Adicionar Atrativo
+                                      <ExternalLink className="h-3 w-3 ml-1" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                         <div className="flex gap-2 ml-4">
                           <Button

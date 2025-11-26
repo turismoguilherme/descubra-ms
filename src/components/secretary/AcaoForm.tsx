@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, Calendar, Building2, MapPin, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { planoDiretorService, Acao, Estrategia } from '@/services/public/planoDiretorService';
 import { PlanoDiretorAIService } from '@/services/ai/planoDiretorAIService';
@@ -44,7 +44,8 @@ const AcaoForm: React.FC<AcaoFormProps> = ({
     responsavel: acao?.responsavel || '',
     status: acao?.status || 'planejada',
     progresso: acao?.progresso || 0,
-    dependencias: acao?.dependencias || []
+    dependencias: acao?.dependencias || [],
+    tipoIntegracao: (acao as any)?.tipoIntegracao || ''
   });
 
   useEffect(() => {
@@ -255,6 +256,42 @@ const AcaoForm: React.FC<AcaoFormProps> = ({
             />
           </div>
 
+          <div>
+            <Label htmlFor="tipoIntegracao">Tipo de Integração (Opcional)</Label>
+            <Select
+              value={formData.tipoIntegracao}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, tipoIntegracao: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Nenhuma integração" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhuma integração</SelectItem>
+                <SelectItem value="evento">Evento</SelectItem>
+                <SelectItem value="cat">CAT (Centro de Atendimento ao Turista)</SelectItem>
+                <SelectItem value="inventario">Inventário (Atrativo Turístico)</SelectItem>
+              </SelectContent>
+            </Select>
+            {formData.tipoIntegracao && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    {formData.tipoIntegracao === 'evento' && (
+                      <p>Esta ação pode ser integrada com o módulo de Gestão de Eventos. Um botão "Criar Evento" aparecerá na visualização da ação.</p>
+                    )}
+                    {formData.tipoIntegracao === 'cat' && (
+                      <p>Esta ação pode ser integrada com o módulo de CATs. Um botão "Melhorar CAT" aparecerá na visualização da ação.</p>
+                    )}
+                    {formData.tipoIntegracao === 'inventario' && (
+                      <p>Esta ação pode ser integrada com o módulo de Inventário Turístico. Um botão "Adicionar Atrativo" aparecerá na visualização da ação.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {acoesDisponiveis.length > 0 && (
             <div>
               <Label>Dependências</Label>
@@ -296,5 +333,6 @@ const AcaoForm: React.FC<AcaoFormProps> = ({
 };
 
 export default AcaoForm;
+
 
 

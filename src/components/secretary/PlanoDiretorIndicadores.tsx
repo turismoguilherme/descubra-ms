@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { TrendingUp, Plus, Edit, Trash2, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { planoDiretorService, Indicador } from '@/services/public/planoDiretorService';
 
@@ -15,6 +16,9 @@ const PlanoDiretorIndicadores: React.FC<PlanoDiretorIndicadoresProps> = ({ plano
   const { toast } = useToast();
   const [indicadores, setIndicadores] = useState<Indicador[]>([]);
   const [loading, setLoading] = useState(false);
+  const [suggestingFor, setSuggestingFor] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ modulo: string; valor: number; descricao: string }>>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     loadIndicadores();
@@ -91,6 +95,58 @@ const PlanoDiretorIndicadores: React.FC<PlanoDiretorIndicadoresProps> = ({ plano
     return 'bg-red-500';
   };
 
+  const handleSuggestData = async (indicadorId: string) => {
+    try {
+      setSuggestingFor(indicadorId);
+      setLoadingSuggestions(true);
+      setSuggestions([]);
+
+      // Buscar sugestões de dados dos módulos
+      const sugestoes = await planoDiretorService.suggestIndicatorData(indicadorId);
+      setSuggestions(sugestoes);
+    } catch (error) {
+      console.error('Erro ao buscar sugestões:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível buscar sugestões de dados.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleAcceptSuggestion = async (sugestao: { modulo: string; valor: number; descricao: string }) => {
+    if (!suggestingFor) return;
+
+    try {
+      const indicador = indicadores.find(i => i.id === suggestingFor);
+      if (!indicador) return;
+
+      await planoDiretorService.updateIndicador(suggestingFor, {
+        ...indicador,
+        valorAtual: sugestao.valor
+      });
+
+      await loadIndicadores();
+      onUpdate?.();
+      setSuggestingFor(null);
+      setSuggestions([]);
+
+      toast({
+        title: 'Sucesso',
+        description: `Valor atualizado com dados de ${sugestao.modulo}.`,
+      });
+    } catch (error) {
+      console.error('Erro ao aceitar sugestão:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o indicador.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -121,18 +177,28 @@ const PlanoDiretorIndicadores: React.FC<PlanoDiretorIndicadoresProps> = ({ plano
                 return (
                   <Card key={indicador.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg mb-1">{indicador.nome}</h3>
                           <p className="text-sm text-gray-600 mb-3">{indicador.descricao}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(indicador.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSuggestData(indicador.id)}
+                            title="Sugerir dados dos módulos"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(indicador.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
@@ -177,6 +243,57 @@ const PlanoDiretorIndicadores: React.FC<PlanoDiretorIndicadoresProps> = ({ plano
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Sugestões */}
+      <Dialog open={suggestingFor !== null} onOpenChange={(open) => !open && setSuggestingFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sugerir Dados do Indicador</DialogTitle>
+            <DialogDescription>
+              Selecione uma fonte de dados para atualizar o valor atual do indicador.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingSuggestions ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Buscando sugestões...</span>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">
+              <p>Nenhuma sugestão de dados disponível no momento.</p>
+              <p className="text-sm mt-2">Os dados podem ser coletados dos módulos: Analytics, Inventário, Eventos e CATs.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {suggestions.map((sugestao, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleAcceptSuggestion(sugestao)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm mb-1">{sugestao.modulo}</h4>
+                        <p className="text-xs text-gray-600 mb-2">{sugestao.descricao}</p>
+                        <p className="text-lg font-bold text-blue-600">
+                          {sugestao.valor.toLocaleString()} {indicadores.find(i => i.id === suggestingFor)?.unidade || ''}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline">
+                        Usar este valor
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuggestingFor(null)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
