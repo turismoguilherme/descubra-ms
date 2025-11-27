@@ -528,32 +528,34 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   {/* Origem dos turistas */}
-                  <CardBox>
-                    <div className="flex items-center gap-2 mb-4">
+                  <CardBox className="relative">
+                    <div className="flex items-center gap-2 mb-2">
                       <MapPin className="h-5 w-5 text-blue-600" />
                       <h3 className="text-lg font-semibold text-slate-800">Origem dos Turistas</h3>
                     </div>
-                    <p className="text-sm text-slate-600 mb-4">
+                    <p className="text-sm text-slate-600 mb-3">
                       Dados coletados dos CATs (Centros de Atendimento ao Turista) via ALUMIA
                     </p>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={MOCK_MARKET_INTELLIGENCE.touristOrigin}
-                          dataKey="percentage"
-                          nameKey="state"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          label={(entry) => `${entry.state} (${entry.percentage}%)`}
-                        >
-                          {MOCK_MARKET_INTELLIGENCE.touristOrigin.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <div className="relative z-0">
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={MOCK_MARKET_INTELLIGENCE.touristOrigin}
+                            dataKey="percentage"
+                            nameKey="state"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            label={(entry) => `${entry.state} (${entry.percentage}%)`}
+                          >
+                            {MOCK_MARKET_INTELLIGENCE.touristOrigin.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
                   </CardBox>
 
                   {/* Perfil do turista - Expandido com dados locais e regionais */}

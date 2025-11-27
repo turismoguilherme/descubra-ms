@@ -26,6 +26,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Target, 
   Plus, 
@@ -77,6 +87,8 @@ const GoalsTracking: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<BusinessGoal | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [suggestingGoals, setSuggestingGoals] = useState(false);
+  const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false);
+  const [suggestedGoalsList, setSuggestedGoalsList] = useState<any[]>([]);
   const [newGoal, setNewGoal] = useState({
     title: '',
     description: '',
@@ -283,35 +295,9 @@ const GoalsTracking: React.FC = () => {
         return;
       }
 
-      // Mostrar preview das metas sugeridas
-      const preview = suggestedGoals.map(g => 
-        `• ${g.title} (${g.targetValue}${g.unit}) - Prazo: ${format(new Date(g.deadline), 'dd/MM/yyyy', { locale: ptBR })}`
-      ).join('\n');
-
-      if (confirm(`Sugestões de metas geradas:\n\n${preview}\n\nDeseja criar essas metas?`)) {
-        // Criar todas as metas sugeridas
-        for (const suggested of suggestedGoals) {
-          await goalsTrackingService.createGoal(user.id, {
-            title: suggested.title,
-            description: suggested.description,
-            category: suggested.category,
-            targetValue: suggested.targetValue,
-            currentValue: suggested.currentValue,
-            unit: suggested.unit,
-            deadline: suggested.deadline,
-            priority: suggested.priority,
-          });
-        }
-
-        toast({
-          title: 'Metas criadas com sucesso!',
-          description: `${suggestedGoals.length} metas foram criadas automaticamente.`,
-        });
-
-        // Recarregar metas
-        await loadGoals();
-        setIsDialogOpen(false);
-      }
+      // Mostrar dialog com sugestões
+      setSuggestedGoalsList(suggestedGoals);
+      setShowSuggestionsDialog(true);
     } catch (error) {
       console.error('Erro ao sugerir metas:', error);
       toast({
@@ -325,11 +311,12 @@ const GoalsTracking: React.FC = () => {
   };
 
   return (
-    <SectionWrapper
-      variant="default"
-      title="Metas e Objetivos"
-      subtitle="Defina e acompanhe seus objetivos de negócio"
-      actions={
+    <div className="h-full flex flex-col">
+      <SectionWrapper
+        variant="default"
+        title="Metas e Objetivos"
+        subtitle="Defina e acompanhe seus objetivos de negócio"
+        actions={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button 
@@ -501,6 +488,7 @@ const GoalsTracking: React.FC = () => {
         </Dialog>
       }
     >
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
       {goals.length === 0 ? (
         <CardBox>
           <div className="text-center py-8">
@@ -779,6 +767,7 @@ const GoalsTracking: React.FC = () => {
         </div>
         </div>
       )}
+      </div>
 
       {/* Dialog de Detalhes da Meta */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
@@ -923,7 +912,62 @@ const GoalsTracking: React.FC = () => {
           })()}
         </DialogContent>
       </Dialog>
-    </SectionWrapper>
+
+      {/* AlertDialog para sugestões de metas */}
+      <AlertDialog open={showSuggestionsDialog} onOpenChange={setShowSuggestionsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sugestões de metas geradas:</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 mt-4">
+                <ul className="list-disc list-inside space-y-1 text-sm text-left">
+                  {suggestedGoalsList.map((g, index) => (
+                    <li key={index}>
+                      {g.title} ({g.targetValue}{g.unit}) - Prazo: {format(new Date(g.deadline), 'dd/MM/yyyy', { locale: ptBR })}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 font-medium">Deseja criar essas metas?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                // Preencher formulário com a primeira sugestão
+                if (suggestedGoalsList.length > 0) {
+                  const firstSuggestion = suggestedGoalsList[0];
+                  setNewGoal({
+                    title: firstSuggestion.title,
+                    description: firstSuggestion.description || '',
+                    category: firstSuggestion.category,
+                    targetValue: firstSuggestion.targetValue,
+                    currentValue: firstSuggestion.currentValue,
+                    unit: firstSuggestion.unit,
+                    deadline: format(new Date(firstSuggestion.deadline), 'yyyy-MM-dd'),
+                    priority: firstSuggestion.priority,
+                  });
+                  
+                  // Fechar dialog de sugestões e abrir formulário
+                  setShowSuggestionsDialog(false);
+                  setIsDialogOpen(true);
+                  
+                  toast({
+                    title: 'Formulário preenchido',
+                    description: 'A primeira sugestão foi preenchida. Revise e edite antes de criar.',
+                  });
+                }
+                setSuggestedGoalsList([]);
+              }}
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </SectionWrapper>
+    </div>
   );
 };
 

@@ -13,6 +13,18 @@ import { planoDiretorService, Objetivo } from '@/services/public/planoDiretorSer
 import { PlanoDiretorAIService } from '@/services/ai/planoDiretorAIService';
 import ObjetivoForm from './ObjetivoForm';
 import PlanoDiretorComentarios from './PlanoDiretorComentarios';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const planoDiretorAIService = new PlanoDiretorAIService();
 
@@ -31,6 +43,8 @@ const PlanoDiretorObjetivos: React.FC<PlanoDiretorObjetivosProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [editingObjetivo, setEditingObjetivo] = useState<Objetivo | null>(null);
   const [suggesting, setSuggesting] = useState(false);
+  const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false);
+  const [suggestedObjetivosList, setSuggestedObjetivosList] = useState<any[]>([]);
 
   useEffect(() => {
     loadObjetivos();
@@ -67,18 +81,9 @@ const PlanoDiretorObjetivos: React.FC<PlanoDiretorObjetivosProps> = ({
       const sugestoes = await planoDiretorAIService.suggestObjetivos(diagnostico, plano.municipio);
       
       if (sugestoes.length > 0) {
-        // Criar os objetivos sugeridos automaticamente (usuário pode editar depois)
-        for (const sugestao of sugestoes) {
-          await planoDiretorService.createObjetivo(planoId, sugestao);
-        }
-        
-        await loadObjetivos();
-        onUpdate?.();
-        
-        toast({
-          title: 'Sugestões aplicadas',
-          description: `${sugestoes.length} objetivo(s) criado(s) com sugestões de IA. Você pode editar cada um.`,
-        });
+        // Mostrar dialog com sugestões
+        setSuggestedObjetivosList(sugestoes);
+        setShowSuggestionsDialog(true);
       } else {
         toast({
           title: 'Atenção',
@@ -265,6 +270,60 @@ const PlanoDiretorObjetivos: React.FC<PlanoDiretorObjetivosProps> = ({
         secao="objetivos"
         onUpdate={onUpdate}
       />
+
+      {/* AlertDialog para sugestões de objetivos */}
+      <AlertDialog open={showSuggestionsDialog} onOpenChange={setShowSuggestionsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sugestões de metas geradas:</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 mt-4">
+                <ul className="list-disc list-inside space-y-1 text-sm text-left">
+                  {suggestedObjetivosList.map((sugestao, index) => (
+                    <li key={index}>
+                      {sugestao.titulo} ({sugestao.meta}{sugestao.unidade}) - Prazo: {format(new Date(sugestao.prazo), 'dd/MM/yyyy', { locale: ptBR })}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 font-medium">Deseja criar essas metas?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  // Criar os objetivos sugeridos
+                  for (const sugestao of suggestedObjetivosList) {
+                    await planoDiretorService.createObjetivo(planoId, sugestao);
+                  }
+                  
+                  await loadObjetivos();
+                  onUpdate?.();
+                  
+                  toast({
+                    title: 'Sugestões aplicadas',
+                    description: `${suggestedObjetivosList.length} objetivo(s) criado(s) com sugestões de IA. Você pode editar cada um.`,
+                  });
+
+                  setShowSuggestionsDialog(false);
+                  setSuggestedObjetivosList([]);
+                } catch (error) {
+                  console.error('Erro ao criar objetivos:', error);
+                  toast({
+                    title: 'Erro',
+                    description: 'Não foi possível criar os objetivos.',
+                    variant: 'destructive'
+                  });
+                }
+              }}
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

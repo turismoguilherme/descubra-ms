@@ -380,16 +380,16 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
       {/* Dialog com termos - Overlay transparente para mostrar dashboard no fundo */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
         <DialogContent 
-          className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white"
+          className="max-w-3xl max-h-[85vh] bg-white p-0"
           overlayClassName="bg-black/30"
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle>Termo de Consentimento para Benchmarking</DialogTitle>
             <DialogDescription>
               Leia atentamente os termos antes de dar seu consentimento
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 text-sm">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 text-sm max-h-[calc(85vh-180px)]">
             <div>
               <h3 className="font-semibold mb-2">1. Objetivo</h3>
               <p className="text-muted-foreground">
@@ -466,17 +466,26 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
               </p>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={() => {
-              setHasReadTerms(true);
-              setShowTermsDialog(false);
-            }}>
-              Li e Aceito
-            </Button>
-            <Button variant="outline" onClick={() => setShowTermsDialog(false)}>
+          <div className="flex flex-row gap-3 justify-end items-center px-6 py-4 border-t bg-gray-50">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowTermsDialog(false)}
+              type="button"
+              className="min-w-[100px]"
+            >
               Fechar
             </Button>
-          </DialogFooter>
+            <Button 
+              onClick={() => {
+                setHasReadTerms(true);
+                setShowTermsDialog(false);
+              }}
+              type="button"
+              className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]"
+            >
+              Li e Aceito
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -75,6 +75,13 @@ const PrivateDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<QuestionnaireAnswers | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [businessMetrics, setBusinessMetrics] = useState<{
+    monthlyRevenue: number;
+    occupancyRate: number | null;
+  }>({
+    monthlyRevenue: 0,
+    occupancyRate: null,
+  });
   const [showIntelligence, setShowIntelligence] = useState(false);
   const [intelligenceTab, setIntelligenceTab] = useState('revenue');
   const [intelligenceKey, setIntelligenceKey] = useState(0); // Para forçar atualização
@@ -84,6 +91,7 @@ const PrivateDashboard = () => {
   const [settingsTab, setSettingsTab] = useState<string | undefined>(undefined);
   const [hasMissingData, setHasMissingData] = useState(false);
   const [autoFillingProfile, setAutoFillingProfile] = useState(false);
+  const [isFirstAccess, setIsFirstAccess] = useState(false);
 
   // Verificar se deve abrir configurações com aba específica
   useEffect(() => {
@@ -125,7 +133,17 @@ const PrivateDashboard = () => {
           setAnalysisResult(latestDiagnostic.analysis_result as AnalysisResult);
           // Se já tem diagnóstico, não mostrar modal automaticamente
           setShowDiagnosticSection(false);
+          setIsFirstAccess(false);
         } else {
+          // Verificar se é o primeiro acesso
+          const hasAccessedBefore = localStorage.getItem(`dashboard_accessed_${user.id}`);
+          if (!hasAccessedBefore) {
+            setIsFirstAccess(true);
+            // Marcar que já acessou
+            localStorage.setItem(`dashboard_accessed_${user.id}`, 'true');
+          } else {
+            setIsFirstAccess(false);
+          }
           // Se não houver diagnóstico, mostrar o modal automaticamente
           setShowDiagnosticSection(true);
           setIsDiagnosticMinimized(false);
@@ -143,20 +161,26 @@ const PrivateDashboard = () => {
 
     loadDiagnosticData();
 
-    // Verificar dados faltantes do perfil
+    // Verificar dados faltantes do perfil e buscar métricas do negócio
     const checkMissingData = async () => {
       if (!user?.id) return;
 
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('description, phone, website, city, state, address')
+          .select('description, phone, website, city, state, address, business_category')
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (profile) {
           const missing = !profile.description || !profile.phone || !profile.city || !profile.state;
           setHasMissingData(missing);
+          
+          // Buscar métricas do negócio (campos podem não existir na tabela)
+          setBusinessMetrics({
+            monthlyRevenue: 0, // Campo não existe na tabela user_profiles
+            occupancyRate: null, // Campo não existe na tabela user_profiles
+          });
         }
       } catch (error) {
         console.log('Erro ao verificar dados faltantes:', error);
@@ -534,17 +558,6 @@ const PrivateDashboard = () => {
                 Upload Documentos
               </button>
               <button
-                onClick={() => setActiveSection('reports')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'reports' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                Relatórios
-              </button>
-              <button
                 onClick={() => setActiveSection('goals')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                   activeSection === 'goals' 
@@ -554,6 +567,17 @@ const PrivateDashboard = () => {
               >
                 <Target className="h-4 w-4" />
                 Metas e Objetivos
+              </button>
+              <button
+                onClick={() => setActiveSection('reports')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'reports' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Relatórios
               </button>
             </nav>
           </div>
@@ -785,7 +809,7 @@ const PrivateDashboard = () => {
                     )}
 
                     {/* Cards de Métricas Principais */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                       <CardBox>
                         <div className="flex items-center gap-2 mb-2">
                           <Target className="h-4 w-4 text-blue-600" />
@@ -803,21 +827,36 @@ const PrivateDashboard = () => {
                       
                       <CardBox>
                         <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-slate-600">ROI Estimado</span>
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-slate-600">Receita Mensal</span>
                         </div>
                         <div className="text-3xl font-bold text-green-600 mb-1">
-                          +{analysisResult.estimatedROI}%
+                          {businessMetrics.monthlyRevenue > 0 
+                            ? `R$ ${(businessMetrics.monthlyRevenue / 1000).toFixed(1)}K`
+                            : 'N/A'}
                         </div>
-                        <div className="text-xs text-slate-500">Retorno sobre investimento</div>
+                        <div className="text-xs text-slate-500">Receita do último mês</div>
                       </CardBox>
+
+                      {businessMetrics.occupancyRate !== null && (
+                        <CardBox>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-slate-600">Taxa de Ocupação</span>
+                          </div>
+                          <div className="text-3xl font-bold text-purple-600 mb-1">
+                            {businessMetrics.occupancyRate}%
+                          </div>
+                          <div className="text-xs text-slate-500">Ocupação média</div>
+                        </CardBox>
+                      )}
                       
                       <CardBox>
                         <div className="flex items-center gap-2 mb-2">
-                          <Brain className="h-4 w-4 text-purple-600" />
+                          <Brain className="h-4 w-4 text-indigo-600" />
                           <span className="text-sm font-medium text-slate-600">Recomendações</span>
                         </div>
-                        <div className="text-3xl font-bold text-purple-600 mb-1">
+                        <div className="text-3xl font-bold text-indigo-600 mb-1">
                           {analysisResult.recommendations.length}
                         </div>
                         <div className="text-xs text-slate-500">Ações sugeridas</div>
@@ -982,25 +1021,107 @@ const PrivateDashboard = () => {
                     <EvolutionHistory />
                   </>
               ) : (
-                <SectionWrapper 
-                  variant="default" 
-                  title="Bem-vindo ao ViaJAR"
-                >
-                  <CardBox>
-                    <p className="text-gray-600 mb-4">
-                      Complete o diagnóstico para receber recomendações personalizadas para o seu negócio.
-                    </p>
-                    <Button 
-                      onClick={() => {
-                        setShowDiagnosticSection(true);
-                        setIsDiagnosticMinimized(false);
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                <>
+                  {/* Mostrar "Bem-vindo" apenas no primeiro acesso */}
+                  {isFirstAccess && (
+                    <SectionWrapper 
+                      variant="default" 
+                      title="Bem-vindo ao ViaJAR"
+                      subtitle="Complete o diagnóstico para receber recomendações personalizadas"
                     >
-                      Iniciar Diagnóstico
-                    </Button>
-                  </CardBox>
-                </SectionWrapper>
+                      <CardBox className="mb-6">
+                        <p className="text-gray-600 mb-4">
+                          Complete o diagnóstico para receber recomendações personalizadas para o seu negócio.
+                        </p>
+                        <Button 
+                          onClick={() => {
+                            setShowDiagnosticSection(true);
+                            setIsDiagnosticMinimized(false);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Iniciar Diagnóstico
+                        </Button>
+                      </CardBox>
+                    </SectionWrapper>
+                  )}
+                  
+                  {/* Cards de Métricas - Sempre mostrar, mesmo sem diagnóstico */}
+                  <SectionWrapper 
+                    variant="default" 
+                    title="Visão Geral do Negócio"
+                    subtitle={isFirstAccess ? "Complete o diagnóstico para ver seus dados" : "Resumo executivo das principais métricas"}
+                  >
+
+                    {/* Cards de Métricas Principais - Mesmo layout, mas sem dados */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      <CardBox>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-slate-600">Score Geral</span>
+                        </div>
+                        <div className="text-3xl font-bold text-slate-400 mb-1">
+                          --
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Complete o diagnóstico
+                        </div>
+                      </CardBox>
+                      
+                      <CardBox>
+                        <div className="flex items-center gap-2 mb-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-slate-600">Receita Mensal</span>
+                        </div>
+                        <div className="text-3xl font-bold text-green-600 mb-1">
+                          {businessMetrics.monthlyRevenue > 0 
+                            ? `R$ ${(businessMetrics.monthlyRevenue / 1000).toFixed(1)}K`
+                            : 'N/A'}
+                        </div>
+                        <div className="text-xs text-slate-500">Receita do último mês</div>
+                      </CardBox>
+
+                      {businessMetrics.occupancyRate !== null && (
+                        <CardBox>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-slate-600">Taxa de Ocupação</span>
+                          </div>
+                          <div className="text-3xl font-bold text-purple-600 mb-1">
+                            {businessMetrics.occupancyRate}%
+                          </div>
+                          <div className="text-xs text-slate-500">Ocupação média</div>
+                        </CardBox>
+                      )}
+                      
+                      <CardBox>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="h-4 w-4 text-indigo-600" />
+                          <span className="text-sm font-medium text-slate-600">Recomendações</span>
+                        </div>
+                        <div className="text-3xl font-bold text-slate-400 mb-1">
+                          --
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Complete o diagnóstico
+                        </div>
+                      </CardBox>
+
+                      <CardBox>
+                        <div className="flex items-center gap-2 mb-2">
+                          <BarChart3 className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm font-medium text-slate-600">Crescimento</span>
+                        </div>
+                        <div className="text-3xl font-bold text-slate-400 mb-1">
+                          --
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Complete o diagnóstico
+                        </div>
+                      </CardBox>
+                    </div>
+                  </SectionWrapper>
+                </>
               )}
             </>
           )}
