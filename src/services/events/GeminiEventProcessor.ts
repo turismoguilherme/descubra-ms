@@ -128,7 +128,12 @@ export class GeminiEventProcessor {
   /**
    * Melhora descrição do evento
    */
-  private improveDescription(descricao: string): string {
+  private improveDescription(descricao: string | undefined): string {
+    // Se não houver descrição, retornar uma descrição padrão
+    if (!descricao || typeof descricao !== 'string') {
+      return 'Um evento especial que você não pode perder.';
+    }
+
     // Simular melhoria de descrição
     const melhorias = [
       'Este evento promete ser uma experiência única',

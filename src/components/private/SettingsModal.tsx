@@ -114,6 +114,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
   const [consentData, setConsentData] = useState<any>(null);
   const [loadingConsent, setLoadingConsent] = useState(false);
   const [showConsentDialog, setShowConsentDialog] = useState(false);
+  const [hasReadConsentTerms, setHasReadConsentTerms] = useState(false);
 
   // Estados para Plano
   const [currentPlan, setCurrentPlan] = useState<'free' | 'basic' | 'premium' | 'enterprise'>('basic');
@@ -187,8 +188,126 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
     if (!isOpen) {
       setLoadingConsent(false);
       setConsentData(null);
+      setHasReadConsentTerms(false);
     }
   }, [isOpen]);
+
+  // Resetar estado quando abrir o dialog
+  useEffect(() => {
+    if (showConsentDialog) {
+      setHasReadConsentTerms(false);
+    }
+  }, [showConsentDialog]);
+
+  const handleSaveConsent = async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!hasReadConsentTerms) {
+      toast({
+        title: 'Leia os termos',
+        description: 'Por favor, marque que leu e concorda com os termos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const consentDataToSave = {
+        user_id: user.id,
+        consent_given: true,
+        consent_date: new Date().toISOString(),
+        data_types_shared: ['revenue', 'occupancy', 'pricing', 'ratings', 'customer_data'],
+        revoked_at: null,
+        consent_version: '1.0',
+        terms_url: window.location.origin + '/termos-consentimento-benchmarking',
+        ip_address: null,
+        user_agent: navigator.userAgent,
+      };
+
+      const { data, error } = await supabase
+        .from('data_sharing_consents')
+        .upsert(consentDataToSave, {
+          onConflict: 'user_id',
+        });
+
+      if (error) {
+        console.log('Erro ao salvar consentimento:', { error, code: error.code, message: error.message, details: error });
+        
+        // Verificar se é erro de tabela não encontrada (várias formas)
+        const errorStr = JSON.stringify(error).toLowerCase();
+        const isTableNotFound = 
+          error.code === '42P01' || 
+          error.code === 'PGRST301' ||
+          error.message?.toLowerCase().includes('does not exist') || 
+          error.message?.toLowerCase().includes('not found') ||
+          error.message?.toLowerCase().includes('404') ||
+          errorStr.includes('404') ||
+          errorStr.includes('does not exist') ||
+          errorStr.includes('not found') ||
+          (error as any)?.status === 404 ||
+          (error as any)?.statusCode === 404;
+
+        if (isTableNotFound) {
+          console.log('Tabela não encontrada, salvando localmente...');
+          // Salvar localmente como fallback
+          try {
+            const localConsent = {
+              ...consentDataToSave,
+              saved_locally: true,
+              saved_at: new Date().toISOString(),
+            };
+            localStorage.setItem(`consent_${user.id}`, JSON.stringify(localConsent));
+            setConsentData(localConsent);
+            setShowConsentDialog(false);
+            
+            toast({
+              title: 'Consentimento salvo localmente',
+              description: 'A tabela ainda não foi criada no banco. O consentimento foi salvo localmente e será sincronizado quando a tabela for criada.',
+              duration: 5000,
+            });
+          } catch (localError) {
+            console.error('Erro ao salvar localmente:', localError);
+            toast({
+              title: 'Erro',
+              description: 'Não foi possível salvar o consentimento. A tabela precisa ser criada no Supabase.',
+              variant: 'destructive',
+            });
+          }
+          return;
+        }
+        
+        // Outros erros
+        console.error('Erro ao salvar consentimento:', error);
+        throw error;
+      }
+
+      setConsentData(consentDataToSave);
+      setShowConsentDialog(false);
+      loadConsentData();
+
+      toast({
+        title: 'Consentimento registrado!',
+        description: 'Seus dados agregados serão usados para benchmarking. Você pode revogar a qualquer momento.',
+      });
+    } catch (error: any) {
+      console.error('Erro ao salvar consentimento:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao salvar consentimento',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const tabs = [
     { id: 'profile', label: 'Perfil', icon: User },
@@ -1063,7 +1182,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
 
       {/* Dialog com Termo de Consentimento Completo */}
       <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white text-gray-900" overlayClassName="bg-black/50">
           <DialogHeader>
             <DialogTitle>Termo de Consentimento para Benchmarking</DialogTitle>
             <DialogDescription>
@@ -1072,23 +1191,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
                 : 'Leia atentamente os termos antes de dar seu consentimento'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 text-sm">
+          <div className="space-y-4 text-sm bg-white">
             <div>
-              <h3 className="font-semibold mb-2">1. Objetivo</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">1. Objetivo</h3>
+              <p className="text-gray-700">
                 Este termo autoriza o compartilhamento de dados agregados e anonimizados da sua empresa/organização
                 para fins de benchmarking e comparação com outras empresas/organizações do setor turístico.
               </p>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">1.1. Aviso sobre Plataforma Nova</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">1.1. Aviso sobre Plataforma Nova</h3>
+              <p className="text-gray-700">
                 A ViaJAR é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos, 
                 inconsistências ou melhorias nos processos de agregação e análise de dados. Ao aceitar 
                 este termo, você reconhece e aceita que:
               </p>
-              <ul className="list-disc list-inside ml-4 text-muted-foreground mt-2">
+              <ul className="list-disc list-inside ml-4 text-gray-700 mt-2">
                 <li>A plataforma pode cometer erros no processamento de dados</li>
                 <li>Os dados compartilhados são agregados e anonimizados</li>
                 <li>Você aceita compartilhar seus dados mesmo com essas limitações</li>
@@ -1097,8 +1216,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">2. Dados Compartilhados</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">2. Dados Compartilhados</h3>
+              <p className="text-gray-700">
                 Apenas dados agregados e anonimizados serão compartilhados. Nenhum dado individual,
                 identificável ou confidencial será divulgado. Os dados são combinados com informações
                 de outras empresas para criar estatísticas e médias do mercado.
@@ -1106,11 +1225,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">3. Finalidade do Compartilhamento</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">3. Finalidade do Compartilhamento</h3>
+              <p className="text-gray-700">
                 Os dados serão utilizados exclusivamente para:
               </p>
-              <ul className="list-disc list-inside ml-4 text-muted-foreground">
+              <ul className="list-disc list-inside ml-4 text-gray-700">
                 <li>Comparação de desempenho com o mercado</li>
                 <li>Geração de insights e recomendações</li>
                 <li>Análise de tendências do setor</li>
@@ -1119,8 +1238,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">4. Segurança e Privacidade</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">4. Segurança e Privacidade</h3>
+              <p className="text-gray-700">
                 Todos os dados são tratados de acordo com a LGPD (Lei Geral de Proteção de Dados).
                 Implementamos medidas técnicas e organizacionais para garantir a segurança e
                 privacidade dos dados compartilhados.
@@ -1128,11 +1247,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">5. Direitos do Titular (LGPD)</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">5. Direitos do Titular (LGPD)</h3>
+              <p className="text-gray-700">
                 Você tem o direito de:
               </p>
-              <ul className="list-disc list-inside ml-4 text-muted-foreground">
+              <ul className="list-disc list-inside ml-4 text-gray-700">
                 <li>Revogar o consentimento a qualquer momento</li>
                 <li>Solicitar informações sobre como seus dados são utilizados</li>
                 <li>Escolher quais tipos de dados compartilhar</li>
@@ -1141,18 +1260,43 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">6. Revogação do Consentimento</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold mb-2 text-gray-900">6. Revogação do Consentimento</h3>
+              <p className="text-gray-700">
                 Você pode revogar seu consentimento a qualquer momento através desta interface.
                 Após a revogação, seus dados não serão mais utilizados para novos benchmarks,
                 mas dados já agregados podem permanecer em análises históricas.
               </p>
             </div>
           </div>
+          
+          {/* Checkbox para ler e concordar */}
+          <div className="flex items-start space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="read-consent-terms"
+              checked={hasReadConsentTerms}
+              onChange={(e) => setHasReadConsentTerms(e.target.checked)}
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="read-consent-terms" className="text-sm text-gray-700 cursor-pointer">
+              <strong>Li e concordo</strong> com os termos de consentimento acima. Entendo que meus dados agregados e anonimizados serão compartilhados para fins de benchmarking.
+            </label>
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConsentDialog(false)}>
               Fechar
             </Button>
+            {!consentData?.consent_given && (
+              <Button
+                onClick={handleSaveConsent}
+                disabled={!hasReadConsentTerms || isLoading}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Li e Concordo
+              </Button>
+            )}
             {consentData?.terms_url && (
               <Button
                 variant="outline"

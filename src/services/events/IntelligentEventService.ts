@@ -174,7 +174,12 @@ export class IntelligentEventService {
           .insert(eventData);
 
         if (error) {
-          console.error(`❌ INTELLIGENT EVENTS: Erro ao salvar evento "${eventData.name}":`, error);
+          // Erros de RLS (Row Level Security) são esperados em desenvolvimento
+          if (error.code === '42501' || error.code === 'PGRST301') {
+            console.log(`ℹ️ INTELLIGENT EVENTS: Evento "${eventData.name}" não salvo - RLS policy (esperado em dev)`);
+          } else {
+            console.warn(`⚠️ INTELLIGENT EVENTS: Erro ao salvar evento "${eventData.name}":`, error.message);
+          }
         } else {
           console.log(`✅ INTELLIGENT EVENTS: Evento "${eventData.name}" salvo com sucesso`);
         }

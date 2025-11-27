@@ -365,8 +365,19 @@ export class GoogleSearchEventService {
       // Fazer requisição (APENAS 1 QUERY)
       console.log("🔍 GOOGLE SEARCH: Fazendo busca (1 query apenas)...");
       
+      // Validar configuração antes de fazer requisição
+      const apiKey = API_CONFIG.GOOGLE.SEARCH_API_KEY?.trim();
+      const engineId = API_CONFIG.GOOGLE.SEARCH_ENGINE_ID?.trim();
+      
+      if (!apiKey || !engineId) {
+        result.success = false;
+        result.errors.push("Google Search API não configurada corretamente. Verifique VITE_GOOGLE_SEARCH_API_KEY e VITE_GOOGLE_SEARCH_ENGINE_ID.");
+        console.warn("⚠️ ERRO: Google Search API não configurada");
+        return result;
+      }
+      
       const query = 'eventos Campo Grande Mato Grosso do Sul 2025';
-      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${API_CONFIG.GOOGLE.SEARCH_API_KEY}&cx=${API_CONFIG.GOOGLE.SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}&num=10`;
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(query)}&num=10`;
 
       // Registrar requisição ANTES de fazer
       this.logRequest();

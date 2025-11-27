@@ -91,7 +91,12 @@ function App() {
                 >
                   <TooltipProvider>
                     <Toaster />
-                    <BrowserRouter>
+                    <BrowserRouter
+                      future={{
+                        v7_startTransition: true,
+                        v7_relativeSplatPath: true,
+                      }}
+                    >
                       <BrandProvider>
                         <div className="min-h-screen bg-background font-sans antialiased">
                           <Routes>

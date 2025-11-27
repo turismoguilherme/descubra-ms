@@ -4,8 +4,8 @@
 export const API_CONFIG = {
   // Google Custom Search API
   GOOGLE: {
-    SEARCH_API_KEY: import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '',
-    SEARCH_ENGINE_ID: import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '',
+    SEARCH_API_KEY: (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim(),
+    SEARCH_ENGINE_ID: (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim(),
     isConfigured: () => Boolean(API_CONFIG.GOOGLE.SEARCH_API_KEY && API_CONFIG.GOOGLE.SEARCH_ENGINE_ID)
   },
 

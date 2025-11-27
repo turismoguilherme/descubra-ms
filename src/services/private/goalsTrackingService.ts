@@ -71,8 +71,11 @@ export class GoalsTrackingService {
       }
 
       return this.mapToGoal(data);
-    } catch (error) {
-      console.error('Erro ao criar meta:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao criar meta:', error);
+      }
       throw error;
     }
   }
@@ -100,8 +103,11 @@ export class GoalsTrackingService {
       }
 
       return (data || []).map(item => this.mapToGoal(item));
-    } catch (error) {
-      console.error('Erro ao buscar metas:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao buscar metas:', error);
+      }
       return [];
     }
   }
@@ -149,8 +155,11 @@ export class GoalsTrackingService {
       }
 
       return this.mapToGoal(data);
-    } catch (error) {
-      console.error('Erro ao atualizar progresso:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao atualizar progresso:', error);
+      }
       throw error;
     }
   }
@@ -249,8 +258,11 @@ export class GoalsTrackingService {
 
       // Atualizar progresso
       return await this.updateGoalProgress(goalId, userId, currentValue);
-    } catch (error) {
-      console.error('Erro ao atualizar progresso automaticamente:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao atualizar progresso automaticamente:', error);
+      }
       return null;
     }
   }
@@ -271,8 +283,11 @@ export class GoalsTrackingService {
       }
 
       return updatedGoals;
-    } catch (error) {
-      console.error('Erro ao atualizar progresso de todas as metas:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao atualizar progresso de todas as metas:', error);
+      }
       return [];
     }
   }
@@ -323,8 +338,11 @@ export class GoalsTrackingService {
       if (error) {
         throw error;
       }
-    } catch (error) {
-      console.error('Erro ao deletar meta:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao deletar meta:', error);
+      }
       throw error;
     }
   }

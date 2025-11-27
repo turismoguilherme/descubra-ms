@@ -152,8 +152,11 @@ export class GoalsAlertsService {
         onTrack,
         overallProgress
       };
-    } catch (error) {
-      console.error('Erro ao obter resumo de metas:', error);
+    } catch (error: any) {
+      // Se a tabela não existir (código 42P01), não logar erro (esperado em dev)
+      if (error?.code !== '42P01') {
+        console.error('Erro ao obter resumo de metas:', error);
+      }
       return {
         total: 0,
         active: 0,

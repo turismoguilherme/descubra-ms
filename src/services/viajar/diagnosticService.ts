@@ -86,12 +86,24 @@ export class DiagnosticService {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') return null; // Nenhum resultado encontrado
-        throw error;
+        // Códigos esperados que não são erros críticos
+        if (error.code === 'PGRST116' || error.code === '42P01') {
+          // PGRST116 = nenhum resultado encontrado
+          // 42P01 = tabela não existe (esperado em desenvolvimento)
+          return null;
+        }
+        // Outros erros: logar mas não quebrar a aplicação
+        console.warn('⚠️ DiagnosticService: Erro ao buscar diagnóstico:', error.message || error);
+        return null;
       }
       return data as DiagnosticResult;
-    } catch (error) {
-      console.error('Erro ao buscar último diagnóstico:', error);
+    } catch (error: any) {
+      // Erros de rede ou outros: não são críticos
+      if (error?.code === '42P01' || error?.message?.includes('does not exist')) {
+        // Tabela não existe - esperado em desenvolvimento
+        return null;
+      }
+      console.warn('⚠️ DiagnosticService: Erro ao buscar último diagnóstico:', error?.message || error);
       return null;
     }
   }

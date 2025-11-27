@@ -16,7 +16,7 @@ export const SecurityHeaders = () => {
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.sympla.com.br https://maps.googleapis.com https://*.googleapis.com",
       "base-uri 'self'",
       "form-action 'self'",
-      "frame-ancestors 'none'", // Previne clickjacking
+      // frame-ancestors não funciona em meta tags, deve ser configurado no servidor
       "object-src 'none'" // Bloqueia plugins perigosos
     ].join('; ');
 

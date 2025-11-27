@@ -93,9 +93,9 @@ class GuataRealWebSearchService {
   private isConfigured: boolean = false;
 
   constructor() {
-    this.googleApiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '';
-    this.googleEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '';
-    this.serpApiKey = import.meta.env.VITE_SERPAPI_KEY || '';
+    this.googleApiKey = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
+    this.googleEngineId = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
+    this.serpApiKey = (import.meta.env.VITE_SERPAPI_KEY || '').trim();
     
     this.isConfigured = !!(this.googleApiKey && this.googleEngineId);
     console.log('🔍 Guatá Real Web Search:', this.isConfigured ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
@@ -113,7 +113,15 @@ class GuataRealWebSearchService {
     }
 
     try {
-      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${this.googleApiKey}&cx=${this.googleEngineId}&q=${encodeURIComponent(query)}&num=${maxResults}`;
+      const apiKey = this.googleApiKey.trim();
+      const engineId = this.googleEngineId.trim();
+      
+      if (!apiKey || !engineId) {
+        console.log('⚠️ Google Custom Search não configurado corretamente');
+        return [];
+      }
+      
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(query)}&num=${maxResults}`;
       
       console.log('🔍 Fazendo pesquisa REAL no Google...');
       const response = await fetch(searchUrl);

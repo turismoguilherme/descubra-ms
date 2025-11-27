@@ -21,8 +21,8 @@ export interface SearchConfig {
 }
 
 class IntelligentWebSearchService {
-  private readonly GOOGLE_SEARCH_API_KEY = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
-  private readonly GOOGLE_SEARCH_ENGINE_ID = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+  private readonly GOOGLE_SEARCH_API_KEY = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
+  private readonly GOOGLE_SEARCH_ENGINE_ID = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
   
   // Base de conhecimento inteligente e expansiva
   private readonly KNOWLEDGE_BASE = {
@@ -684,7 +684,10 @@ Reserve com antecedência, especialmente em jul-set!`,
    * Busca usando Google Custom Search API REAL
    */
   private async searchGoogleCustom(query: string): Promise<IntelligentSearchResult[]> {
-    if (!this.GOOGLE_SEARCH_API_KEY || !this.GOOGLE_SEARCH_ENGINE_ID) {
+    const apiKey = this.GOOGLE_SEARCH_API_KEY?.trim();
+    const engineId = this.GOOGLE_SEARCH_ENGINE_ID?.trim();
+    
+    if (!apiKey || !engineId) {
       console.log('⚠️ Google Search API não configurada, tentando busca alternativa...');
       return this.performAlternativeWebSearch(query);
     }
@@ -693,7 +696,7 @@ Reserve com antecedência, especialmente em jul-set!`,
       console.log('🔍 Executando busca REAL no Google Custom Search...');
       
       const searchQuery = `${query} Mato Grosso do Sul turismo`;
-      const url = `https://www.googleapis.com/customsearch/v1?key=${this.GOOGLE_SEARCH_API_KEY}&cx=${this.GOOGLE_SEARCH_ENGINE_ID}&q=${encodeURIComponent(searchQuery)}&num=5`;
+      const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(searchQuery)}&num=5`;
       
       const response = await fetch(url);
       

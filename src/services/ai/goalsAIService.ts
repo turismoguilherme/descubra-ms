@@ -40,12 +40,21 @@ export class GoalsAIService {
       rating?: number;
     }
   ): Promise<SuggestedGoal[]> {
+    // Retornar imediatamente as metas básicas para evitar travamento
+    // A IA pode ser adicionada depois quando os modelos estiverem disponíveis
+    return this.getBasicGoals(category);
+    
+    /* Código da IA comentado temporariamente até os modelos estarem disponíveis
     try {
       if (!this.genAI) {
         console.warn('Gemini API não configurada, retornando metas básicas');
         return this.getBasicGoals(category);
       }
 
+      // O SDK do Google Generative AI usa v1beta por padrão
+      // Modelos mais novos podem não estar disponíveis na v1beta
+      // Vamos tentar gemini-pro que é mais compatível
+      // Se falhar, o catch vai usar o fallback de metas básicas
       const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
 
       const currentDataStr = currentData
@@ -103,16 +112,30 @@ Seja específico e baseado em conhecimento real sobre turismo no Brasil.
       }
 
       return this.getBasicGoals(category);
-    } catch (error) {
-      console.error('Erro ao sugerir metas com IA:', error);
+    } catch (error: any) {
+      // Se o erro for de modelo não encontrado, usar fallback silenciosamente
+      const isModelNotFound = 
+        error?.message?.includes('not found') || 
+        error?.message?.includes('404') ||
+        error?.message?.includes('is not supported');
+      
+      if (isModelNotFound) {
+        console.log('ℹ️ Modelo Gemini não disponível, usando metas básicas');
+      } else {
+        console.error('Erro ao sugerir metas com IA:', error);
+      }
+      
+      // Sempre retornar metas básicas como fallback
       return this.getBasicGoals(category);
     }
+    */
   }
 
   /**
    * Fallback básico sem IA
+   * Método público para permitir acesso externo quando necessário
    */
-  private getBasicGoals(category: string): SuggestedGoal[] {
+  getBasicGoals(category: string): SuggestedGoal[] {
     const baseDate = new Date();
     baseDate.setMonth(baseDate.getMonth() + 6);
 
