@@ -72,7 +72,10 @@ export default {
 					'discovery-teal': 'hsl(var(--ms-discovery-teal))',      // Azul-verde descoberta
 					'earth-brown': 'hsl(var(--ms-earth-brown))',            // Tons terrosos
 					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
-					'nature-green-light': 'hsl(var(--ms-nature-green-light))' // Verde claro
+					'nature-green-light': 'hsl(var(--ms-nature-green-light))', // Verde claro
+					'guavira-purple': 'hsl(var(--ms-guavira-purple))',      // Roxo Guavira
+					'rivers-blue': 'hsl(var(--ms-rivers-blue))',            // Azul Rivers
+					'accent-orange': 'hsl(var(--ms-accent-orange))'         // Laranja Acento
 				}
 			},
 			borderRadius: {

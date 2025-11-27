@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import GuataHeader from "@/components/guata/GuataHeader";
 import GuataChat from "@/components/guata/GuataChat";
 import { useGuataConnection } from "@/hooks/useGuataConnection";
 import { useGuataInput } from "@/hooks/useGuataInput";
@@ -176,11 +175,6 @@ const ChatGuata = () => {
     >
       <main className="min-h-screen flex flex-col p-4 md:p-8">
         <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
-          <GuataHeader 
-            onClearConversation={handleLimparConversa}
-            mensagens={mensagens}
-          />
-          
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-4">
             <div className="lg:col-span-2 flex flex-col min-h-0">
               <GuataChat
