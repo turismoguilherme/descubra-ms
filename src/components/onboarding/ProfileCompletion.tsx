@@ -113,6 +113,39 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
     }
   }, []);
 
+  // Salvar cidade/estado imediatamente quando preenchidos
+  useEffect(() => {
+    const saveCityState = async () => {
+      if (!user?.id) return;
+      
+      // Só salva se cidade E estado estiverem preenchidos
+      if (profileData.location.city && profileData.location.state) {
+        try {
+          const { error } = await supabase
+            .from('user_profiles')
+            .upsert({
+              user_id: user.id,
+              city: profileData.location.city,
+              state: profileData.location.state,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id'
+            });
+
+          if (error) {
+            console.warn('Erro ao salvar cidade/estado:', error);
+          }
+        } catch (error) {
+          console.warn('Erro ao salvar cidade/estado:', error);
+        }
+      }
+    };
+
+    // Debounce para não salvar a cada keystroke
+    const timeoutId = setTimeout(saveCityState, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [profileData.location.city, profileData.location.state, user?.id]);
+
   const AVAILABLE_AMENITIES = [
     { id: 'wifi', name: 'Wi-Fi', icon: <Wifi className="h-4 w-4" /> },
     { id: 'breakfast', name: 'Café da Manhã', icon: <Coffee className="h-4 w-4" /> },
@@ -160,10 +193,10 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
     },
     {
       id: 'location',
-      title: 'Endereço Completo',
-      description: 'Para clientes te encontrarem',
+      title: 'Localização (Mínimo: Cidade/Estado)',
+      description: 'Cidade e estado são obrigatórios. Endereço completo pode ser preenchido depois.',
       icon: <MapPin className="h-5 w-5" />,
-      completed: profileData.location.address !== '' && profileData.location.city !== '',
+      completed: profileData.location.city !== '' && profileData.location.state !== '',
       required: true,
       weight: 15
     },
@@ -656,15 +689,52 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Endereço
-              {profileData.location.address && profileData.location.city && (
+              Localização
+              {profileData.location.city && profileData.location.state && (
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Obrigatório:</strong> Cidade e Estado são necessários para continuar. 
+                Endereço completo e CEP podem ser preenchidos depois.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Cidade <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="Bonito"
+                  value={profileData.location.city}
+                  onChange={(e) => setProfileData(prev => ({
+                    ...prev,
+                    location: { ...prev.location, city: e.target.value }
+                  }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Estado <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="MS"
+                  maxLength={2}
+                  value={profileData.location.state}
+                  onChange={(e) => setProfileData(prev => ({
+                    ...prev,
+                    location: { ...prev.location, state: e.target.value.toUpperCase() }
+                  }))}
+                  required
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Endereço</label>
+              <label className="text-sm font-medium text-gray-500">Endereço (opcional)</label>
               <Input
                 placeholder="Rua, número, complemento"
                 value={profileData.location.address}
@@ -674,41 +744,16 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
                 }))}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Cidade</label>
-                <Input
-                  placeholder="Bonito"
-                  value={profileData.location.city}
-                  onChange={(e) => setProfileData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, city: e.target.value }
-                  }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Estado</label>
-                <Input
-                  placeholder="MS"
-                  maxLength={2}
-                  value={profileData.location.state}
-                  onChange={(e) => setProfileData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, state: e.target.value.toUpperCase() }
-                  }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">CEP</label>
-                <Input
-                  placeholder="79290-000"
-                  value={profileData.location.zipCode}
-                  onChange={(e) => setProfileData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, zipCode: e.target.value }
-                  }))}
-                />
-              </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-500">CEP (opcional)</label>
+              <Input
+                placeholder="79290-000"
+                value={profileData.location.zipCode}
+                onChange={(e) => setProfileData(prev => ({
+                  ...prev,
+                  location: { ...prev.location, zipCode: e.target.value }
+                }))}
+              />
             </div>
           </CardContent>
         </Card>

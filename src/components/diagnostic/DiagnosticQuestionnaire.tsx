@@ -252,11 +252,43 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
     }
   }, [progress, onProgress]);
 
+  // Buscar cidade/estado do perfil ao carregar componente
+  useEffect(() => {
+    const fetchProfileLocation = async () => {
+      if (!user?.id) return;
+      
+      // Se já tiver cidade/estado de initialData ou registrationData, não buscar
+      if (initialData?.business_city || registrationData?.origin_state) {
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('city, state')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile?.city && profile?.state) {
+          setBasicInfo(prev => ({
+            ...prev,
+            city: profile.city || prev.city,
+            state: profile.state || prev.state
+          }));
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar localização do perfil:', error);
+      }
+    };
+
+    fetchProfileLocation();
+  }, [user?.id, initialData?.business_city, registrationData?.origin_state]);
+
   const handleBasicInfoNext = async () => {
-    if (!basicInfo.businessName || !basicInfo.businessType || !basicInfo.city) {
+    if (!basicInfo.businessName || !basicInfo.businessType || !basicInfo.city || !basicInfo.state) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos obrigatórios',
+        description: 'Preencha todos os campos obrigatórios (nome, tipo, cidade e estado)',
         variant: 'destructive'
       });
       return;
@@ -583,6 +615,16 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
                 </Select>
               </div>
 
+              {/* Mostrar aviso se cidade/estado vieram do perfil */}
+              {basicInfo.city && basicInfo.state && !initialData?.business_city && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Localização pré-preenchida:</strong> Usando cidade e estado do seu perfil. 
+                    Você pode alterar se necessário.
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="city" className="text-sm font-medium text-slate-700">
@@ -599,7 +641,7 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
 
                 <div>
                   <Label htmlFor="state" className="text-sm font-medium text-slate-700">
-                    Estado
+                    Estado *
                   </Label>
                   <Select
                     value={basicInfo.state}
@@ -628,7 +670,7 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
             <div className="flex justify-end pt-4 border-t">
               <Button
                 onClick={handleBasicInfoNext}
-                disabled={!basicInfo.businessName || !basicInfo.businessType || !basicInfo.city}
+                disabled={!basicInfo.businessName || !basicInfo.businessType || !basicInfo.city || !basicInfo.state}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Continuar

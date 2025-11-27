@@ -16,8 +16,10 @@ import PlanSelector from '@/components/onboarding/PlanSelector';
 import ProfileCompletion from '@/components/onboarding/ProfileCompletion';
 import StripeCheckout from '@/components/onboarding/StripeCheckout';
 import ConsentTerm from '@/components/onboarding/ConsentTerm';
+import DiagnosticQuestionnaire from '@/components/diagnostic/DiagnosticQuestionnaire';
 import type { CadastURVerificationResult } from '@/services/cadasturService';
 import type { PlanTier, BillingPeriod } from '@/services/subscriptionService';
+import type { QuestionnaireAnswers } from '@/types/diagnostic';
 
 interface OnboardingStep {
   id: number;
@@ -36,6 +38,7 @@ export default function ViaJAROnboarding() {
     cadastur: null as CadastURVerificationResult | null,
     plan: null as { planId: PlanTier; billingPeriod: BillingPeriod } | null,
     profile: null as any,
+    diagnostic: null as QuestionnaireAnswers | null,
   });
 
   const steps: OnboardingStep[] = [
@@ -66,6 +69,11 @@ export default function ViaJAROnboarding() {
     },
     {
       id: 6,
+      title: 'Diagnóstico Inicial',
+      description: 'Avalie seu negócio',
+    },
+    {
+      id: 7,
       title: 'Pronto!',
       description: 'Bem-vindo ao ViaJAR',
     },
@@ -102,7 +110,12 @@ export default function ViaJAROnboarding() {
 
   const handleProfileComplete = (profileData: any) => {
     setOnboardingData(prev => ({ ...prev, profile: profileData }));
-    setCurrentStep(6); // Vai para sucesso
+    setCurrentStep(6); // Vai para diagnóstico
+  };
+
+  const handleDiagnosticComplete = (diagnosticAnswers: QuestionnaireAnswers) => {
+    setOnboardingData(prev => ({ ...prev, diagnostic: diagnosticAnswers }));
+    setCurrentStep(7); // Vai para sucesso
   };
 
   const handleFinish = () => {
@@ -262,8 +275,18 @@ export default function ViaJAROnboarding() {
             <ProfileCompletion onComplete={handleProfileComplete} />
           )}
 
-          {/* Step 6: Success */}
+          {/* Step 6: Diagnostic Questionnaire */}
           {currentStep === 6 && (
+            <DiagnosticQuestionnaire
+              onComplete={handleDiagnosticComplete}
+              onProgress={(progress) => {
+                // Progress callback se necessário
+              }}
+            />
+          )}
+
+          {/* Step 7: Success */}
+          {currentStep === 7 && (
             <Card className="border-green-500">
               <CardContent className="pt-12 pb-12">
                 <div className="text-center space-y-6 max-w-2xl mx-auto">
