@@ -1,6 +1,8 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+// IMPORTANTE: Carregar zod primeiro para evitar erros de inicialização
+import 'zod'
 import App from './App.tsx'
 import './index.css'
 import '@/utils/elevateToAdmin'

@@ -19,53 +19,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          // Vendor chunks
-          if (id.includes('node_modules')) {
-            // React e React DOM - deve ser carregado primeiro
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
-            }
-            // Zod - separar em chunk próprio para evitar problemas de inicialização
-            if (id.includes('zod')) {
-              return 'vendor-zod';
-            }
-            // Supabase
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase';
-            }
-            // UI Components (Radix UI)
-            if (id.includes('@radix-ui')) {
-              return 'vendor-ui';
-            }
-            // Charts
-            if (id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            // PDF/Excel generation
-            if (id.includes('jspdf') || id.includes('xlsx')) {
-              return 'vendor-reports';
-            }
-            // AI/ML libraries
-            if (id.includes('@google/generative-ai')) {
-              return 'vendor-ai';
-            }
-            // Date utilities
-            if (id.includes('date-fns')) {
-              return 'vendor-dates';
-            }
-            // React Hook Form e resolvers - importante para formulários
-            if (id.includes('react-hook-form') || id.includes('@hookform')) {
-              return 'vendor-forms';
-            }
-            // Other vendor libraries
-            return 'vendor-other';
-          }
-        },
-      },
-    },
+    // Removido manualChunks para evitar problemas de ordem de inicialização no Vercel
+    // O Vite gerenciará automaticamente o chunking de forma mais segura
     chunkSizeWarningLimit: 1000, // Aumentar limite para 1MB
     commonjsOptions: {
       include: [/node_modules/],
@@ -73,7 +28,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'lucide-react'],
-    // xlsx será carregado dinamicamente, não precisa estar aqui
+    include: ['react', 'react-dom', 'lucide-react', 'zod', '@hookform/resolvers'],
+    // Garantir que zod seja pré-otimizado para evitar problemas de inicialização
   },
 }));
