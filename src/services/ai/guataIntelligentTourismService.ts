@@ -49,31 +49,33 @@ class GuataIntelligentTourismService {
    */
   async processQuestion(query: IntelligentTourismQuery): Promise<IntelligentTourismResponse> {
     const startTime = Date.now();
+    // Garantir que question seja sempre uma string
+    const question = String(query.question || '').trim();
     console.log('🦦 Guatá Intelligent Tourism: Processando pergunta...');
-    console.log('📝 Query:', query.question);
+    console.log('📝 Query:', question);
 
     try {
       // 1. Verificar se é APENAS um cumprimento simples (sem perguntas)
       // NÃO tratar como cumprimento se houver perguntas ou contexto adicional
-      if (this.isSimpleGreeting(query.question) && query.question.trim().length < 20) {
+      if (this.isSimpleGreeting(question) && question.trim().length < 20) {
         console.log('👋 Cumprimento simples detectado, respondendo naturalmente...');
-        return this.generateSimpleGreetingResponse(query.question);
+        return this.generateSimpleGreetingResponse(question);
       }
 
       // 1.5. Detectar perguntas de continuação ("sim, por favor", "ok", etc.)
-      if (this.isContinuationQuestion(query.question, query.conversationHistory || [])) {
+      if (this.isContinuationQuestion(question, query.conversationHistory || [])) {
         console.log('🔄 Pergunta de continuação detectada, respondendo baseado no contexto...');
-        return this.handleContinuationQuestion(query.question, query.conversationHistory || []);
+        return this.handleContinuationQuestion(question, query.conversationHistory || []);
       }
 
       // 2. Detectar categoria da pergunta
-      const category = this.detectQuestionCategory(query.question);
+      const category = this.detectQuestionCategory(question);
       console.log('🏷️ Categoria detectada:', category);
 
       // 3. SEMPRE fazer pesquisa web PRIMEIRO (antes de tudo)
       console.log('🔍 Fazendo pesquisa web PRIMEIRO (antes de tudo)...');
       const webSearchQuery: RealWebSearchQuery = {
-        question: query.question,
+        question: question,
         location: query.userLocation || 'Mato Grosso do Sul',
         category: category,
         maxResults: 5
@@ -88,12 +90,12 @@ class GuataIntelligentTourismService {
       
       // 4. VERIFICAR PARCEIROS (após pesquisa web)
       console.log('🤝 Verificando parceiros da plataforma...');
-      const partnersResult = await this.checkPartners(query.question, category);
+      const partnersResult = await this.checkPartners(question, category);
       console.log('🤝 Parceiros encontrados:', partnersResult.partnersFound?.length || 0);
       
       // 5. Gerar resposta inteligente combinando IA + dados reais + parceiros
       const intelligentAnswer = await this.generateIntelligentAnswer(
-        query.question,
+        question,
         webSearchResponse,
         query.conversationHistory || [],
         query.userPreferences || {},
@@ -107,7 +109,7 @@ class GuataIntelligentTourismService {
       let personalizedAnswer = intelligentAnswer;
       try {
         personalizedAnswer = await guataMLService.personalizeResponse(
-          query.question,
+          question,
           intelligentAnswer,
           query.userId,
           query.sessionId
@@ -120,7 +122,7 @@ class GuataIntelligentTourismService {
       // 5. Adicionar personalidade e contexto
       const finalAnswer = this.addPersonalityAndContext(
         personalizedAnswer,
-        query.question,
+        question,
         webSearchResponse.tourismData
       );
 
@@ -131,13 +133,13 @@ class GuataIntelligentTourismService {
       const learningInteraction: LearningInteraction = {
         userId: query.userId,
         sessionId: query.sessionId || `session-${Date.now()}`,
-        question: query.question,
+        question: question,
         answer: finalAnswer,
         sources: webSearchResponse.sources,
         confidence: webSearchResponse.usedRealSearch ? 0.95 : 0.8,
         timestamp: new Date(),
         metadata: {
-          queryType: this.detectQuestionCategory(query.question) as any,
+          queryType: this.detectQuestionCategory(question) as any,
           location: query.userLocation,
           conversationHistory: query.conversationHistory
         }
@@ -158,11 +160,11 @@ class GuataIntelligentTourismService {
         usedRealSearch: webSearchResponse.usedRealSearch,
         searchMethod: webSearchResponse.searchMethod,
         personality: this.personality.name,
-        emotionalState: this.determineEmotionalState(query.question),
-        followUpQuestions: this.generateFollowUpQuestions(query.question, webSearchResponse.tourismData),
-        learningInsights: this.generateLearningInsights(query.question, webSearchResponse),
+        emotionalState: this.determineEmotionalState(question),
+        followUpQuestions: this.generateFollowUpQuestions(question, webSearchResponse.tourismData),
+        learningInsights: this.generateLearningInsights(question, webSearchResponse),
         adaptiveImprovements: this.generateAdaptiveImprovements(webSearchResponse),
-        memoryUpdates: this.generateMemoryUpdates(query, webSearchResponse)
+        memoryUpdates: this.generateMemoryUpdates(question, webSearchResponse)
       };
 
     } catch (error) {
@@ -232,14 +234,19 @@ class GuataIntelligentTourismService {
    * Verifica se a pergunta é sobre serviços que podem ter parceiros
    */
   private isServiceRelatedQuestion(question: string): boolean {
-    const lowerQuestion = question.toLowerCase();
+    // Garantir que question seja sempre uma string
+    const questionStr = String(question || '').trim();
+    if (!questionStr) return false;
+    
+    const lowerQuestion = questionStr.toLowerCase();
     
     // Palavras-chave que indicam perguntas sobre serviços (hotéis, restaurantes, etc)
     const serviceKeywords = [
       'hotel', 'hospedagem', 'pousada', 'dormir', 'acomodação', 'onde ficar',
       'restaurante', 'comer', 'comida', 'gastronomia', 'lanchonete', 'onde comer',
       'passeio', 'tour', 'excursão', 'agência', 'operadora', 'onde fazer',
-      'tem hotel', 'tem restaurante', 'tem pousada', 'tem passeio'
+      'tem hotel', 'tem restaurante', 'tem pousada', 'tem passeio',
+      'melhor restaurante', 'melhor hotel', 'melhor pousada', 'melhor passeio'
     ];
     
     // Perguntas que NÃO devem ter parceiros (conceitos gerais)
@@ -253,6 +260,7 @@ class GuataIntelligentTourismService {
     // Se contém conceitos gerais, não usar parceiros
     for (const concept of generalConcepts) {
       if (lowerQuestion.includes(concept)) {
+        console.log(`🤝 Pergunta contém conceito geral "${concept}", não usando parceiros`);
         return false;
       }
     }
@@ -260,10 +268,12 @@ class GuataIntelligentTourismService {
     // Se contém palavras-chave de serviços, usar parceiros
     for (const keyword of serviceKeywords) {
       if (lowerQuestion.includes(keyword)) {
+        console.log(`🤝 Pergunta contém palavra-chave de serviço "${keyword}", verificando parceiros`);
         return true;
       }
     }
     
+    console.log(`🤝 Pergunta não contém palavras-chave de serviços, não usando parceiros`);
     return false;
   }
 
@@ -1370,11 +1380,11 @@ Com essas informações, vou montar um roteiro perfeito para você! 🚀`;
   /**
    * Gera atualizações de memória
    */
-  private generateMemoryUpdates(query: IntelligentTourismQuery, webSearchResponse: RealWebSearchResponse): any[] {
+  private generateMemoryUpdates(question: string, webSearchResponse: RealWebSearchResponse): any[] {
     return [
       {
         type: 'search_preference',
-        content: query.question,
+        content: question,
         confidence: 0.8,
         timestamp: new Date()
       },
