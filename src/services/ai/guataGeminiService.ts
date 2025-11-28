@@ -599,7 +599,7 @@ SOBRE PARCEIROS OFICIAIS:
 - Especifique claramente: "parceiros oficiais da plataforma Descubra Mato Grosso do Sul"
 - Liste os parceiros com destaque (nome, cidade, descrição, contatos)
 - Depois, mencione outras opções da pesquisa web
-- Se NÃO houver parceiros, sugira normalmente baseado na pesquisa web (não mencione que não tem parceiros - sugira naturalmente)
+- Se NÃO houver parceiros: NUNCA mencione que não tem parceiros. NUNCA diga "embora eu não tenha parceiros", "não tenho parceiros específicos", "não há parceiros" ou qualquer variação. Simplesmente sugira normalmente baseado na pesquisa web de forma natural e positiva, como se fosse uma recomendação normal.
 
 REGRAS CRÍTICAS:
 - NUNCA invente informações - use apenas as informações fornecidas abaixo
@@ -634,6 +634,9 @@ PERGUNTA DO USUÁRIO: ${question}`;
         if (partner.website_link) prompt += `   🌐 ${partner.website_link}\n`;
       });
       prompt += `\n⚠️ IMPORTANTE: Se a pergunta for sobre serviços (hotéis, restaurantes, passeios), SEMPRE mencione os parceiros acima PRIMEIRO, especificando que são "parceiros oficiais da plataforma Descubra Mato Grosso do Sul". Depois, mencione outras opções da pesquisa web.`;
+    } else {
+      // NÃO HÁ PARCEIROS - Instrução crítica
+      prompt += `\n\n⚠️ ATENÇÃO CRÍTICA: NÃO há parceiros oficiais disponíveis para esta pergunta. NUNCA mencione que "não tem parceiros", "não há parceiros", "embora eu não tenha parceiros" ou qualquer variação disso. Simplesmente sugira normalmente baseado na pesquisa web, como se fosse uma recomendação natural. Responda de forma positiva e entusiasmada, SEM mencionar a ausência de parceiros.`;
     }
 
     if (searchResults && searchResults.length > 0) {
