@@ -5,6 +5,7 @@ import { useGuataConnection } from "@/hooks/useGuataConnection";
 import { useGuataInput } from "@/hooks/useGuataInput";
 import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
 import { guataTrueApiService } from "@/services/ai";
+import { guataMLService } from "@/services/ai/ml/guataMLService";
 
 const ChatGuata = () => {
   const { toast } = useToast();
@@ -16,6 +17,8 @@ const ChatGuata = () => {
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
   const [userPreferences, setUserPreferences] = useState<any>({});
   const [learningInsights, setLearningInsights] = useState<any[]>([]);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
+  const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
 
   // Mensagem de boas-vindas inicial
   useEffect(() => {
@@ -86,6 +89,10 @@ const ChatGuata = () => {
       // Salvar insights de aprendizado
       setLearningInsights(prev => [...prev, response.learningInsights]);
       
+      const questionId = `question-${Date.now()}`;
+      setCurrentQuestionId(questionId);
+      setCurrentAnswer(response.answer);
+
       const novaMensagemBot = {
         id: Date.now() + 1,
         text: response.answer,
@@ -96,7 +103,8 @@ const ChatGuata = () => {
         processingTime: response.processingTime,
         learningInsights: response.learningInsights,
         adaptiveImprovements: response.adaptiveImprovements,
-        memoryUpdates: response.memoryUpdates
+        memoryUpdates: response.memoryUpdates,
+        questionId: questionId
       };
       
       setMensagens(prev => [...prev, novaMensagemBot]);
@@ -144,8 +152,45 @@ const ChatGuata = () => {
     setMensagens([mensagemBoasVindas]);
   };
 
-  const enviarFeedback = (positivo: boolean) => {
-    console.log("Feedback:", positivo ? "positivo" : "negativo");
+  const enviarFeedback = async (positivo: boolean) => {
+    if (!currentQuestionId || !currentAnswer) {
+      console.warn("⚠️ Não há pergunta/resposta atual para dar feedback");
+      return;
+    }
+
+    try {
+      const lastUserMessage = mensagens.filter(m => m.isUser).pop();
+      const question = lastUserMessage?.text || '';
+
+      const feedback = {
+        userId: 'publico',
+        sessionId: `session-${Date.now()}`,
+        questionId: currentQuestionId,
+        question: question,
+        answer: currentAnswer,
+        rating: positivo ? 'positive' as const : 'negative' as const
+      };
+
+      // Aprender de feedback (assíncrono)
+      await guataMLService.learnFromFeedback(feedback);
+
+      toast({
+        title: positivo ? "Obrigado pelo feedback positivo! 😊" : "Obrigado pelo feedback! Vou melhorar! 💪",
+        description: positivo 
+          ? "Seu feedback ajuda o Guatá a continuar oferecendo respostas excelentes!"
+          : "Estou aprendendo com seu feedback para melhorar minhas respostas futuras.",
+        variant: positivo ? "default" : "default"
+      });
+
+      console.log("✅ Feedback registrado e processado:", positivo ? "positivo" : "negativo");
+    } catch (error) {
+      console.error("❌ Erro ao processar feedback:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar seu feedback. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const { 

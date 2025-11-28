@@ -87,28 +87,66 @@ export interface RealWebSearchResponse {
 }
 
 class GuataRealWebSearchService {
+  // API KEY ESPECÍFICA DO GUATÁ - Google Search API
+  private readonly GUATA_GOOGLE_SEARCH_API_KEY = 'AIzaSyCOtohbdIu3iozNgtUqrWrbJWV6JXi6WHM';
+  // ENGINE ID ESPECÍFICO DO GUATÁ - Configurado pelo usuário
+  private readonly GUATA_ENGINE_ID = 'a3641e1665f7b4909';
+  
   private googleApiKey: string;
   private googleEngineId: string;
   private serpApiKey: string;
   private isConfigured: boolean = false;
+  
+  // Rate limiting para Google Search (100 requisições/dia no plano gratuito)
+  private readonly MAX_SEARCHES_PER_DAY = 100;
+  private searchCount: number = 0;
+  private searchResetTime: number = Date.now() + (24 * 60 * 60 * 1000); // 24 horas
+  private searchCache: Map<string, { results: WebSearchResult[]; timestamp: number }> = new Map();
+  private readonly SEARCH_CACHE_DURATION = 30 * 60 * 1000; // 30 minutos
 
   constructor() {
-    this.googleApiKey = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
-    this.googleEngineId = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
+    // Usar API Key específica do Guatá, com fallback para variável de ambiente
+    this.googleApiKey = this.GUATA_GOOGLE_SEARCH_API_KEY || (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
+    this.googleEngineId = this.GUATA_ENGINE_ID; // Usar Engine ID específico do Guatá
     this.serpApiKey = (import.meta.env.VITE_SERPAPI_KEY || '').trim();
     
     this.isConfigured = !!(this.googleApiKey && this.googleEngineId);
     console.log('🔍 Guatá Real Web Search:', this.isConfigured ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
-    console.log('🔑 Google API Key:', this.googleApiKey ? 'PRESENTE' : 'AUSENTE');
-    console.log('🔑 Google Engine ID:', this.googleEngineId ? 'PRESENTE' : 'AUSENTE');
+    console.log('🔑 Google API Key (Guatá):', this.googleApiKey ? 'PRESENTE' : 'AUSENTE');
+    console.log('🔑 Google Engine ID (Guatá):', this.googleEngineId);
   }
 
   /**
    * Pesquisa web REAL usando Google Custom Search API
+   * Com rate limiting e cache para evitar ultrapassar limites
    */
   private async searchWithGoogle(query: string, maxResults: number = 5): Promise<WebSearchResult[]> {
     if (!this.isConfigured) {
       console.log('⚠️ Google Custom Search não configurado');
+      return [];
+    }
+
+    // Verificar cache primeiro
+    const cacheKey = query.toLowerCase().trim();
+    const cached = this.searchCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < this.SEARCH_CACHE_DURATION) {
+      console.log('🔄 Usando resultados de busca em cache');
+      return cached.results;
+    }
+
+    // Verificar rate limiting diário
+    const now = Date.now();
+    if (now > this.searchResetTime) {
+      this.searchCount = 0;
+      this.searchResetTime = now + (24 * 60 * 60 * 1000);
+    }
+
+    if (this.searchCount >= this.MAX_SEARCHES_PER_DAY) {
+      console.warn('⚠️ Limite diário de buscas atingido. Usando cache ou resultados alternativos.');
+      // Tentar retornar cache mesmo que expirado
+      if (cached) {
+        return cached.results;
+      }
       return [];
     }
 
@@ -121,13 +159,35 @@ class GuataRealWebSearchService {
         return [];
       }
       
-      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(query)}&num=${maxResults}`;
+      // Adicionar contexto de MS para buscas mais relevantes
+      const searchQuery = `${query} Mato Grosso do Sul`;
+      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(searchQuery)}&num=${maxResults}`;
       
       console.log('🔍 Fazendo pesquisa REAL no Google...');
+      this.searchCount++;
+      console.log(`📊 Buscas hoje: ${this.searchCount}/${this.MAX_SEARCHES_PER_DAY}`);
+      
       const response = await fetch(searchUrl);
       
       if (!response.ok) {
-        throw new Error(`Google Search API error: ${response.status}`);
+        const errorText = await response.text();
+        
+        // Tratamento específico para erro 403 (API não habilitada)
+        if (response.status === 403) {
+          console.log('ℹ️ Google Search API não habilitada (403) - continuando com fallback');
+          // Retornar array vazio sem quebrar o fluxo
+          return [];
+        }
+        
+        // Se for rate limit, usar cache se disponível
+        if (response.status === 429 && cached) {
+          console.log('⏸️ Rate limit atingido, usando cache');
+          return cached.results;
+        }
+        
+        // Para outros erros, logar mas não quebrar
+        console.warn(`⚠️ Google Search API error: ${response.status}`, errorText);
+        return [];
       }
 
       const data = await response.json();
@@ -147,6 +207,15 @@ class GuataRealWebSearchService {
       }
 
       console.log(`✅ Google Search: ${results.length} resultados encontrados`);
+      
+      // Salvar no cache
+      if (results.length > 0) {
+        this.searchCache.set(cacheKey, {
+          results,
+          timestamp: Date.now()
+        });
+      }
+      
       return results;
 
     } catch (error) {
@@ -371,7 +440,7 @@ class GuataRealWebSearchService {
       results.push({
         title: "Bonito MS - Capital do Ecoturismo",
         snippet: "Bonito é conhecido mundialmente por suas águas cristalinas, grutas, cachoeiras e flutuação. Principais atrativos: Rio da Prata, Gruta do Lago Azul, Buraco das Araras, Aquário Natural.",
-        url: "https://descubrams.com.br/bonito",
+        url: "",
         source: "local_knowledge",
         confidence: 0.9,
         timestamp: new Date()
@@ -382,7 +451,7 @@ class GuataRealWebSearchService {
       results.push({
         title: "Pantanal - Maior Área Úmida do Mundo",
         snippet: "O Pantanal sul-mato-grossense é um santuário ecológico único, habitat de jacarés, capivaras, ariranhas e centenas de espécies de aves. Melhor época: maio a outubro.",
-        url: "https://descubrams.com.br/pantanal",
+        url: "",
         source: "local_knowledge",
         confidence: 0.9,
         timestamp: new Date()
@@ -393,7 +462,7 @@ class GuataRealWebSearchService {
       results.push({
         title: "Campo Grande - Capital de Mato Grosso do Sul",
         snippet: "Campo Grande, a 'Cidade Morena', oferece o Bioparque Pantanal (maior aquário de água doce do mundo), Parque das Nações Indígenas, Feira Central e rica gastronomia regional.",
-        url: "https://descubrams.com.br/campo-grande",
+        url: "",
         source: "local_knowledge",
         confidence: 0.9,
         timestamp: new Date()
@@ -404,7 +473,7 @@ class GuataRealWebSearchService {
       results.push({
         title: "Hospedagem em Mato Grosso do Sul",
         snippet: "MS oferece diversas opções de hospedagem: hotéis urbanos em Campo Grande, pousadas ecológicas em Bonito, fazendas no Pantanal e hospedagem rural em outras cidades.",
-        url: "https://descubrams.com.br/hospedagem",
+        url: "",
         source: "local_knowledge",
         confidence: 0.8,
         timestamp: new Date()
@@ -415,7 +484,7 @@ class GuataRealWebSearchService {
       results.push({
         title: "Gastronomia de Mato Grosso do Sul",
         snippet: "A culinária sul-mato-grossense é rica e diversificada: sobá, chipa, espetinho, churrasco pantaneiro, sopa paraguaia, tereré e pratos com influências indígenas e paraguaias.",
-        url: "https://descubrams.com.br/gastronomia",
+        url: "",
         source: "local_knowledge",
         confidence: 0.8,
         timestamp: new Date()
@@ -427,7 +496,7 @@ class GuataRealWebSearchService {
       results.push({
         title: "Mato Grosso do Sul - Portal Oficial de Turismo",
         snippet: "Descubra as maravilhas de MS: Pantanal, Bonito, Campo Grande e muito mais. Turismo, cultura e aventura.",
-        url: "https://descubrams.com.br",
+        url: "",
         source: "local_knowledge",
         confidence: 0.7,
         timestamp: new Date()

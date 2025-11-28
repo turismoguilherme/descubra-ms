@@ -1,10 +1,11 @@
 /**
  * 🦦 GUATÁ INTELLIGENT TOURISM SERVICE
  * Chatbot de turismo verdadeiramente inteligente
- * Combina IA + Pesquisa Web Real + Dados de Turismo
+ * Combina IA + Pesquisa Web Real + Dados de Turismo + Machine Learning
  */
 
 import { guataRealWebSearchService, RealWebSearchQuery, RealWebSearchResponse, TourismData } from './guataRealWebSearchService';
+import { guataMLService, LearningInteraction } from './ml/guataMLService';
 
 export interface IntelligentTourismQuery {
   question: string;
@@ -51,22 +52,25 @@ class GuataIntelligentTourismService {
     console.log('📝 Query:', query.question);
 
     try {
-      // 1. Verificar se é um cumprimento ou pergunta simples
-      if (this.isSimpleGreeting(query.question)) {
-        console.log('👋 Cumprimento detectado, respondendo naturalmente...');
+      // 1. Verificar se é APENAS um cumprimento simples (sem perguntas)
+      // NÃO tratar como cumprimento se houver perguntas ou contexto adicional
+      if (this.isSimpleGreeting(query.question) && query.question.trim().length < 20) {
+        console.log('👋 Cumprimento simples detectado, respondendo naturalmente...');
         return this.generateSimpleGreetingResponse(query.question);
+      }
+
+      // 1.5. Detectar perguntas de continuação ("sim, por favor", "ok", etc.)
+      if (this.isContinuationQuestion(query.question, query.conversationHistory || [])) {
+        console.log('🔄 Pergunta de continuação detectada, respondendo baseado no contexto...');
+        return this.handleContinuationQuestion(query.question, query.conversationHistory || []);
       }
 
       // 2. Detectar categoria da pergunta
       const category = this.detectQuestionCategory(query.question);
       console.log('🏷️ Categoria detectada:', category);
 
-      // 3. VERIFICAR PARCEIROS PRIMEIRO
-      console.log('🤝 Verificando parceiros...');
-      const partnersResult = await this.checkPartners(query.question, category);
-      
-      // 4. SEMPRE fazer pesquisa web para respostas dinâmicas
-      console.log('🔍 Fazendo pesquisa web para resposta dinâmica...');
+      // 3. SEMPRE fazer pesquisa web PRIMEIRO (antes de tudo)
+      console.log('🔍 Fazendo pesquisa web PRIMEIRO (antes de tudo)...');
       const webSearchQuery: RealWebSearchQuery = {
         question: query.question,
         location: query.userLocation || 'Mato Grosso do Sul',
@@ -81,24 +85,66 @@ class GuataIntelligentTourismService {
         pesquisaReal: webSearchResponse.usedRealSearch
       });
       
-      // 4. Gerar resposta inteligente combinando IA + dados reais
+      // 4. VERIFICAR PARCEIROS (após pesquisa web)
+      console.log('🤝 Verificando parceiros da plataforma...');
+      const partnersResult = await this.checkPartners(query.question, category);
+      console.log('🤝 Parceiros encontrados:', partnersResult.partnersFound?.length || 0);
+      
+      // 5. Gerar resposta inteligente combinando IA + dados reais + parceiros
       const intelligentAnswer = await this.generateIntelligentAnswer(
         query.question,
         webSearchResponse,
         query.conversationHistory || [],
         query.userPreferences || {},
-        partnersResult
+        partnersResult,
+        query.userId,
+        query.sessionId
       );
 
-      // 4. Adicionar personalidade e contexto
+      // 4. Personalizar resposta com Machine Learning
+      let personalizedAnswer = intelligentAnswer;
+      try {
+        personalizedAnswer = await guataMLService.personalizeResponse(
+          query.question,
+          intelligentAnswer,
+          query.userId,
+          query.sessionId
+        );
+        console.log('🧠 ML: Resposta personalizada aplicada');
+      } catch (error) {
+        console.warn('⚠️ ML: Erro ao personalizar resposta, usando resposta original:', error);
+      }
+
+      // 5. Adicionar personalidade e contexto
       const finalAnswer = this.addPersonalityAndContext(
-        intelligentAnswer,
+        personalizedAnswer,
         query.question,
         webSearchResponse.tourismData
       );
 
       const processingTime = Date.now() - startTime;
       console.log(`✅ Guatá Intelligent Tourism: Resposta gerada em ${processingTime}ms`);
+
+      // 6. Aprender automaticamente da interação (assíncrono, não bloqueia resposta)
+      const learningInteraction: LearningInteraction = {
+        userId: query.userId,
+        sessionId: query.sessionId || `session-${Date.now()}`,
+        question: query.question,
+        answer: finalAnswer,
+        sources: webSearchResponse.sources,
+        confidence: webSearchResponse.usedRealSearch ? 0.95 : 0.8,
+        timestamp: new Date(),
+        metadata: {
+          queryType: this.detectQuestionCategory(query.question) as any,
+          location: query.userLocation,
+          conversationHistory: query.conversationHistory
+        }
+      };
+
+      // Aprender em background (não esperar)
+      guataMLService.learnFromInteraction(learningInteraction).catch(err => {
+        console.warn('⚠️ ML: Erro ao aprender de interação:', err);
+      });
 
       return {
         answer: finalAnswer,
@@ -186,20 +232,20 @@ class GuataIntelligentTourismService {
   private isServiceRelatedQuestion(question: string): boolean {
     const lowerQuestion = question.toLowerCase();
     
-    // Palavras-chave que indicam perguntas sobre serviços
+    // Palavras-chave que indicam perguntas sobre serviços (hotéis, restaurantes, etc)
     const serviceKeywords = [
-      'hotel', 'hospedagem', 'pousada', 'dormir', 'acomodação',
-      'restaurante', 'comer', 'comida', 'gastronomia', 'lanchonete',
-      'passeio', 'tour', 'excursão', 'agência', 'operadora',
-      'melhor', 'recomenda', 'sugere', 'onde', 'qual'
+      'hotel', 'hospedagem', 'pousada', 'dormir', 'acomodação', 'onde ficar',
+      'restaurante', 'comer', 'comida', 'gastronomia', 'lanchonete', 'onde comer',
+      'passeio', 'tour', 'excursão', 'agência', 'operadora', 'onde fazer',
+      'tem hotel', 'tem restaurante', 'tem pousada', 'tem passeio'
     ];
     
     // Perguntas que NÃO devem ter parceiros (conceitos gerais)
     const generalConcepts = [
       'rota bioceânica', 'rota bioceanica', 'bioceanica',
-      'o que é', 'como funciona', 'quando', 'onde fica',
-      'história', 'cultura', 'turismo', 'destino',
-      'roteiro', 'itinerário', 'dias', 'moto', 'viagem'
+      'o que é', 'como funciona', 'quando', 'onde fica (localização)',
+      'história', 'cultura', 'turismo (conceito)', 'destino (conceito)',
+      'roteiro (planejamento)', 'itinerário (planejamento)', 'dias', 'moto', 'viagem (planejamento)'
     ];
     
     // Se contém conceitos gerais, não usar parceiros
@@ -220,7 +266,161 @@ class GuataIntelligentTourismService {
   }
 
   /**
-   * Verifica se é um cumprimento simples
+   * Verifica se é uma pergunta de continuação (resposta curta à pergunta anterior)
+   */
+  private isContinuationQuestion(question: string, conversationHistory: string[]): boolean {
+    const lowerQuestion = question.toLowerCase().trim();
+    const continuationWords = ['sim', 'sim por favor', 'sim, por favor', 'ok', 'okay', 'pode', 'pode sim', 'claro', 'quero', 'gostaria'];
+    
+    // Se a pergunta é muito curta e contém palavras de continuação
+    if (lowerQuestion.length < 20 && continuationWords.some(word => lowerQuestion.includes(word))) {
+      // Verificar se há histórico de conversa recente
+      if (conversationHistory.length > 0) {
+        const lastQuestion = conversationHistory[conversationHistory.length - 1].toLowerCase();
+        // Se a última pergunta mencionava roteiro, fazer, montar, etc.
+        if (lastQuestion.includes('roteiro') || lastQuestion.includes('montar') || 
+            lastQuestion.includes('fazer') || lastQuestion.includes('visitar')) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Lida com perguntas de continuação baseado no contexto
+   */
+  private handleContinuationQuestion(question: string, conversationHistory: string[]): IntelligentTourismResponse {
+    const lowerQuestion = question.toLowerCase().trim();
+    
+    // Buscar contexto da última pergunta
+    if (conversationHistory.length > 0) {
+      const lastQuestion = conversationHistory[conversationHistory.length - 1].toLowerCase();
+      
+      // Se a última pergunta era sobre roteiro em Campo Grande
+      if (lastQuestion.includes('campo grande') && (lastQuestion.includes('roteiro') || lastQuestion.includes('montar') || lastQuestion.includes('dias'))) {
+        const daysMatch = lastQuestion.match(/(\d+)\s*dias?/);
+        const numDays = daysMatch ? parseInt(daysMatch[1]) : 3;
+        
+        return {
+          answer: this.generateCampoGrandeItinerary(numDays),
+          confidence: 0.95,
+          sources: ['conhecimento_local'],
+          processingTime: 50,
+          webSearchResults: [],
+          tourismData: {},
+          usedRealSearch: false,
+          searchMethod: 'contextual',
+          personality: this.personality.name,
+          emotionalState: 'excited',
+          followUpQuestions: [
+            'Quer detalhes sobre hospedagem em Campo Grande?',
+            'Posso te ajudar com restaurantes e gastronomia?'
+          ],
+          learningInsights: {},
+          adaptiveImprovements: ['Resposta contextual baseada em continuação'],
+          memoryUpdates: []
+        };
+      }
+      
+      // Se a última pergunta era sobre fazer algo em Campo Grande
+      if (lastQuestion.includes('campo grande') && lastQuestion.includes('fazer')) {
+        return {
+          answer: this.formatCampoGrandeResponse([]),
+          confidence: 0.95,
+          sources: ['conhecimento_local'],
+          processingTime: 50,
+          webSearchResults: [],
+          tourismData: {},
+          usedRealSearch: false,
+          searchMethod: 'contextual',
+          personality: this.personality.name,
+          emotionalState: 'excited',
+          followUpQuestions: [],
+          learningInsights: {},
+          adaptiveImprovements: [],
+          memoryUpdates: []
+        };
+      }
+    }
+    
+    // Resposta genérica para continuação sem contexto claro
+    return {
+      answer: "🦦 Que alegria! Estou aqui para te ajudar! Pode me dizer mais especificamente o que você gostaria de saber? Por exemplo: roteiros, hospedagem, restaurantes, atrações... O que mais te interessa? ✨",
+      confidence: 0.8,
+      sources: ['conhecimento_local'],
+      processingTime: 50,
+      webSearchResults: [],
+      tourismData: {},
+      usedRealSearch: false,
+      searchMethod: 'contextual',
+      personality: this.personality.name,
+      emotionalState: 'helpful',
+      followUpQuestions: [],
+      learningInsights: {},
+      adaptiveImprovements: [],
+      memoryUpdates: []
+    };
+  }
+
+  /**
+   * Gera roteiro detalhado para Campo Grande
+   */
+  private generateCampoGrandeItinerary(days: number): string {
+    if (days === 3) {
+      return `🦦 Que alegria te ajudar a montar um roteiro de 3 dias em Campo Grande! É uma experiência incrível! 🚀
+
+📅 ROTEIRO DE 3 DIAS EM CAMPO GRANDE:
+
+DIA 1 - Conhecendo a Cidade Morena
+• Manhã: Bioparque Pantanal - Maior aquário de água doce do mundo! É impressionante ver peixes de todos os continentes! 🐠
+• Tarde: Parque das Nações Indígenas - Cultura e natureza juntas! Um lugar mágico! ✨
+• Noite: Feira Central - Comida boa, artesanato, música ao vivo! É a alma da cidade! 🎵
+
+DIA 2 - Natureza e Cultura
+• Manhã: Parque Horto Florestal - Um pedacinho da Amazônia no coração da cidade! 🌿
+• Tarde: Orla Morena - Perfeita para ver o pôr do sol e relaxar! 🌅
+• Noite: Praça Ary Coelho - O coração pulsante de Campo Grande! 💓
+
+DIA 3 - Experiências Únicas
+• Manhã: Mercadão Municipal - Comida típica e artesanato local! 🛍️
+• Tarde: Memorial da Cultura Indígena - Conheça a história dos povos originários! 🏛️
+• Noite: Aproveite a gastronomia local - Sobá, chipa, churrasco pantaneiro! 🍽️
+
+🎯 Dicas do Guatá:
+• Reserve ingressos do Bioparque com antecedência
+• Use protetor solar - o sol de MS é forte!
+• Experimente o sobá - prato típico único!
+• Leve câmera - lugares lindos para fotografar!
+
+Quer que eu detalhe algum dia específico ou te ajude com hospedagem e restaurantes? Estou aqui para te ajudar! 🦦`;
+    } else if (days === 2) {
+      return `🦦 Que legal! Um roteiro de 2 dias em Campo Grande é perfeito para conhecer o essencial! 
+
+📅 ROTEIRO DE 2 DIAS EM CAMPO GRANDE:
+
+DIA 1 - Principais Atrações
+• Manhã: Bioparque Pantanal - Imperdível! 🐠
+• Tarde: Parque das Nações Indígenas + Horto Florestal
+• Noite: Feira Central - Experiência única! 🎵
+
+DIA 2 - Cultura e Natureza
+• Manhã: Orla Morena - Pôr do sol incrível! 🌅
+• Tarde: Mercadão Municipal + Praça Ary Coelho
+• Noite: Gastronomia local - Sobá, chipa! 🍽️
+
+Quer mais detalhes sobre algum lugar específico? 🦦`;
+    } else {
+      return `🦦 Nossa, que roteiro incrível! Com ${days} dias você vai conhecer Campo Grande profundamente! 
+
+Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (cultura, natureza, gastronomia) ou prefere um roteiro cronológico? 🚀`;
+    }
+  }
+
+  /**
+   * Verifica se é APENAS um cumprimento simples (sem perguntas adicionais)
+   * Muito restritivo para não classificar perguntas reais como cumprimentos
    */
   private isSimpleGreeting(question: string): boolean {
     const lowerQuestion = question.toLowerCase().trim();
@@ -230,11 +430,37 @@ class GuataIntelligentTourismService {
       'tudo bem', 'como vai', 'e aí', 'eai'
     ];
     
-    // Verificar se é apenas um cumprimento simples
-    const isOnlyGreeting = greetings.some(greeting => lowerQuestion === greeting);
-    const isGreetingStart = greetings.some(greeting => lowerQuestion.startsWith(greeting) && lowerQuestion.length <= greeting.length + 3);
+    // Se tem mais de 20 caracteres, provavelmente tem pergunta ou contexto
+    if (lowerQuestion.length > 20) {
+      return false;
+    }
     
-    return isOnlyGreeting || isGreetingStart;
+    // Se contém palavras de pergunta, NÃO é cumprimento simples
+    const questionWords = ['quem', 'o que', 'onde', 'como', 'quando', 'por que', 'qual', 'quais', 'tem', 'há', 'existe', 'você', 'vc'];
+    const hasQuestion = questionWords.some(word => lowerQuestion.includes(word));
+    if (hasQuestion) {
+      return false;
+    }
+    
+    // Verificar se é EXATAMENTE um cumprimento (sem nada mais)
+    const isExactGreeting = greetings.some(greeting => {
+      const trimmed = lowerQuestion.trim();
+      return trimmed === greeting || trimmed === `${greeting}!` || trimmed === `${greeting}.`;
+    });
+    
+    if (isExactGreeting) {
+      return true;
+    }
+    
+    // Verificar se começa com cumprimento mas é muito curto (apenas cumprimento + pontuação)
+    const isGreetingStart = greetings.some(greeting => {
+      const startsWith = lowerQuestion.startsWith(greeting);
+      const afterGreeting = lowerQuestion.substring(greeting.length).trim();
+      // Permitir apenas pontuação ou espaços após o cumprimento
+      return startsWith && (afterGreeting === '' || afterGreeting === '!' || afterGreeting === '.' || afterGreeting.length <= 2);
+    });
+    
+    return isGreetingStart;
   }
 
   /**
@@ -321,7 +547,9 @@ class GuataIntelligentTourismService {
     webSearchResponse: RealWebSearchResponse,
     conversationHistory: string[],
     userPreferences: any,
-    partnersResult?: any
+    partnersResult?: any,
+    userId?: string,
+    sessionId?: string
   ): Promise<string> {
     let answer = "";
 
@@ -336,28 +564,62 @@ class GuataIntelligentTourismService {
         answer += this.formatWebSearchResults(webSearchResponse.results, question);
       }
     } else {
-      // USAR GEMINI + PESQUISA WEB PARA RESPOSTA DINÂMICA
+      // USAR GEMINI + PESQUISA WEB + PARCEIROS PARA RESPOSTA DINÂMICA
       try {
         const { guataGeminiService } = await import('./guataGeminiService');
-        console.log('🧠 Usando Gemini + pesquisa web para resposta dinâmica...');
+        console.log('🧠 Usando Gemini + pesquisa web + parceiros para resposta dinâmica...');
         
-        const geminiResponse = await guataGeminiService.processQuestion({
+        const geminiQuery: any = {
           question,
           context: `Localização: Mato Grosso do Sul`,
           userLocation: 'Mato Grosso do Sul',
           searchResults: webSearchResponse.results
-        });
+        };
+        
+        // Passar informações de parceiros para o Gemini
+        if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+          geminiQuery.partnersInfo = partnersResult.partnersFound.map((p: any) => ({
+            name: p.name,
+            city: p.city,
+            segment: p.segment,
+            description: p.description,
+            contact_email: p.contact_email,
+            contact_whatsapp: p.contact_whatsapp,
+            website_link: p.website_link
+          }));
+          console.log('🤝 Passando informações de parceiros para o Gemini:', geminiQuery.partnersInfo.length);
+        }
+        
+        // Passar userId e sessionId para cache individual
+        if (userId) geminiQuery.userId = userId;
+        if (sessionId) geminiQuery.sessionId = sessionId;
+        
+        const geminiResponse = await guataGeminiService.processQuestion(geminiQuery);
         
         if (geminiResponse.usedGemini) {
-          console.log('🧠 Gemini gerou resposta dinâmica');
+          console.log('🧠 Gemini gerou resposta dinâmica com pesquisa web e parceiros');
           answer = geminiResponse.answer;
         } else {
           console.log('🔄 Gemini não funcionou, usando formatação inteligente da pesquisa web');
-          answer = this.formatWebSearchResults(webSearchResponse.results, question);
+          // Se tiver parceiros, formatar com eles primeiro
+          if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+            answer = this.formatPartnersResponse(partnersResult, question);
+            answer += "\n\n🌐 Outras opções encontradas:\n";
+            answer += this.formatWebSearchResults(webSearchResponse.results, question);
+          } else {
+            answer = this.formatWebSearchResults(webSearchResponse.results, question);
+          }
         }
       } catch (error) {
         console.error('❌ Erro no Gemini, usando formatação inteligente da pesquisa web:', error);
-        answer = this.formatWebSearchResults(webSearchResponse.results, question);
+        // Se tiver parceiros, formatar com eles primeiro
+        if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+          answer = this.formatPartnersResponse(partnersResult, question);
+          answer += "\n\n🌐 Outras opções encontradas:\n";
+          answer += this.formatWebSearchResults(webSearchResponse.results, question);
+        } else {
+          answer = this.formatWebSearchResults(webSearchResponse.results, question);
+        }
       }
     }
 
@@ -373,10 +635,10 @@ class GuataIntelligentTourismService {
    * Formata informações de hotéis
    */
   private formatHotelInformation(hotels: any[], question: string): string {
-    let response = "🏨 **Hotéis Recomendados:**\n\n";
+    let response = "🏨 Hotéis Recomendados:\n\n";
     
     hotels.slice(0, 3).forEach((hotel, index) => {
-      response += `**${index + 1}. ${hotel.name}**\n`;
+      response += `${index + 1}. ${hotel.name}\n`;
       response += `📍 ${hotel.address}\n`;
       response += `💰 ${hotel.price}\n`;
       response += `⭐ ${hotel.rating}/5\n`;
@@ -387,7 +649,7 @@ class GuataIntelligentTourismService {
       response += `\n`;
     });
 
-    response += `*Dados atualizados em tempo real*`;
+    response += `Dados atualizados em tempo real`;
     return response;
   }
 
@@ -395,17 +657,17 @@ class GuataIntelligentTourismService {
    * Formata informações de eventos
    */
   private formatEventInformation(events: any[], question: string): string {
-    let response = "🎉 **Eventos Recomendados:**\n\n";
+    let response = "🎉 Eventos Recomendados:\n\n";
     
     events.slice(0, 3).forEach((event, index) => {
-      response += `**${index + 1}. ${event.name}**\n`;
+      response += `${index + 1}. ${event.name}\n`;
       response += `📅 ${event.date}\n`;
       response += `📍 ${event.location}\n`;
       response += `💰 ${event.price}\n`;
       response += `📝 ${event.description}\n\n`;
     });
 
-    response += `*Informações atualizadas*`;
+    response += `Informações atualizadas`;
     return response;
   }
 
@@ -413,10 +675,10 @@ class GuataIntelligentTourismService {
    * Formata informações de restaurantes
    */
   private formatRestaurantInformation(restaurants: any[], question: string): string {
-    let response = "🍽️ **Restaurantes Recomendados:**\n\n";
+    let response = "🍽️ Restaurantes Recomendados:\n\n";
     
     restaurants.slice(0, 3).forEach((restaurant, index) => {
-      response += `**${index + 1}. ${restaurant.name}**\n`;
+      response += `${index + 1}. ${restaurant.name}\n`;
       response += `🍴 ${restaurant.cuisine}\n`;
       response += `⭐ ${restaurant.rating}/5\n`;
       response += `📍 ${restaurant.address}\n`;
@@ -460,11 +722,23 @@ class GuataIntelligentTourismService {
     }
 
     // Detectar tipo de pergunta para formatação específica
-    const lowerQuestion = question.toLowerCase();
+    const lowerQuestion = question.toLowerCase().trim();
+    
+    // Detectar perguntas sobre identidade do Guatá
+    if (lowerQuestion.includes('quem é você') || lowerQuestion.includes('quem voce') || 
+        lowerQuestion === 'quem é você' || lowerQuestion === 'quem voce' ||
+        lowerQuestion.includes('você é') || lowerQuestion.includes('voce e')) {
+      const variations = [
+        "🦦 Oi! Que alegria te ver aqui! Eu sou o Guatá, sua capivara guia de turismo de Mato Grosso do Sul! Estou aqui para te ajudar a descobrir as maravilhas do nosso estado. Temos o Pantanal (maior santuário ecológico do mundo!), Bonito (águas cristalinas de outro planeta!), Campo Grande (nossa capital cheia de história!) e muito mais! O que você gostaria de saber?",
+        "🦦 Nossa, que bom te ver por aqui! Sou o Guatá e estou super animado para te ajudar a conhecer Mato Grosso do Sul! 🚀 Temos destinos que vão te deixar de queixo caído! Me conta, o que mais te chama atenção? O Pantanal com seus jacarés? Bonito com suas águas cristalinas? Campo Grande com sua cultura?",
+        "🦦 Olá, bem-vindo à nossa terra! Eu sou o Guatá, seu guia virtual de MS! 🌟 Posso te contar sobre destinos incríveis, eventos imperdíveis, comidas deliciosas e muito mais! Temos o Pantanal (maior área úmida do mundo!), Bonito (capital do ecoturismo!), Campo Grande (cidade morena cheia de charme!) e Corumbá (portal do Pantanal!). Por onde você quer começar nossa conversa?"
+      ];
+      return variations[Math.floor(Math.random() * variations.length)];
+    }
     
     // Detectar roteiros/itinerários PRIMEIRO
-    if (lowerQuestion.includes('roteiro') || lowerQuestion.includes('itinerário') || lowerQuestion.includes('dias') || lowerQuestion.includes('moto') || lowerQuestion.includes('viagem')) {
-      return this.formatItineraryResponse(results[0]?.snippet || '', results[0]?.title || '');
+    if (lowerQuestion.includes('roteiro') || lowerQuestion.includes('itinerário') || lowerQuestion.includes('dias') || lowerQuestion.includes('moto') || lowerQuestion.includes('viagem') || lowerQuestion.includes('montar')) {
+      return this.formatItineraryResponse(results[0]?.snippet || '', results[0]?.title || '', question);
     }
     
     if (lowerQuestion.includes('campo grande') && (lowerQuestion.includes('fazer') || lowerQuestion.includes('visitar'))) {
@@ -531,7 +805,7 @@ class GuataIntelligentTourismService {
     response += "• Buraco das Araras - observação de aves\n";
     response += "• Rio da Prata - flutuação e mergulho\n\n";
     
-    response += "🎯 **Dicas do Guatá:**\n";
+    response += "🎯 Dicas do Guatá:\n";
     response += "• Reserve com antecedência - é muito procurado!\n";
     response += "• Leve protetor solar e repelente\n";
     response += "• Aproveite a gastronomia local\n\n";
@@ -544,16 +818,16 @@ class GuataIntelligentTourismService {
    * Formata resposta para hotéis
    */
   private formatHotelResponse(results: any[]): string {
-    let response = "🏨 Sobre hospedagem em Mato Grosso do Sul, posso te dar algumas orientações gerais!\n\n";
+    let response = "🦦 Que alegria te ajudar com hospedagem! 🏨\n\n";
     
-    // Extrair informações principais dos resultados
+    // Extrair informações principais dos resultados da pesquisa web
     const mainInfo = this.extractMainInformation(results);
     
     if (mainInfo) {
       response += mainInfo;
     } else {
       // Formatação conversacional para hotéis - SEM dados falsos
-      response += "Para encontrar a melhor hospedagem, recomendo:\n\n";
+      response += "Sobre hospedagem em Mato Grosso do Sul, posso te dar algumas orientações gerais baseadas no que sei:\n\n";
       response += "🏨 Tipos de hospedagem em MS:\n";
       response += "• Hotéis urbanos em Campo Grande\n";
       response += "• Pousadas ecológicas em Bonito\n";
@@ -643,16 +917,22 @@ class GuataIntelligentTourismService {
    * Formata resposta com parceiros priorizados
    */
   private formatPartnersResponse(partnersResult: any, question: string): string {
-    let response = "🦦 Nossa, que sorte! Encontrei nossos parceiros oficiais para você! 🤩\n\n";
+    let response = "🦦 Que alegria! Encontrei nossos parceiros oficiais da plataforma Descubra Mato Grosso do Sul para você! 🤩\n\n";
     
     if (partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
-      response += "🎯 **Nossos parceiros oficiais com condições especiais:**\n\n";
+      response += "🎯 Nossos parceiros oficiais (sempre damos preferência a eles!):\n\n";
       
       partnersResult.partnersFound.slice(0, 3).forEach((partner: any, index: number) => {
-        response += `**${index + 1}. ${partner.name}**\n`;
-        response += `📍 ${partner.city || 'Mato Grosso do Sul'}\n`;
-        response += `🏷️ ${partner.segment || 'Turismo'}\n`;
-        response += `💡 ${partner.description || 'Parceiro oficial da plataforma'}\n`;
+        response += `${index + 1}. ${partner.name}\n`;
+        if (partner.city) {
+          response += `📍 ${partner.city}\n`;
+        }
+        if (partner.segment) {
+          response += `🏷️ ${partner.segment}\n`;
+        }
+        if (partner.description) {
+          response += `💡 ${partner.description}\n`;
+        }
         
         if (partner.contact_email) {
           response += `📧 ${partner.contact_email}\n`;
@@ -667,7 +947,7 @@ class GuataIntelligentTourismService {
         response += `\n`;
       });
       
-      response += "✨ *Estes são nossos parceiros oficiais com condições especiais! Entre em contato e mencione que conheceu através do Guatá!*\n";
+      response += "✨ Estes são nossos parceiros oficiais da plataforma! Entre em contato e mencione que conheceu através do Guatá!\n";
     }
     
     return response;
@@ -684,6 +964,23 @@ class GuataIntelligentTourismService {
     
     if (mainInfo) {
       response += mainInfo;
+    } else if (results.length > 0) {
+      // Se temos resultados mas não conseguimos extrair info específica, usar o primeiro resultado de forma conversacional
+      const firstResult = results[0];
+      const snippet = firstResult.snippet || firstResult.description || '';
+      const title = firstResult.title || '';
+      
+      if (snippet && snippet.length > 50) {
+        response += `Que legal que você quer saber sobre isso! `;
+        response += `Encontrei algumas informações: ${snippet.substring(0, 300)}...\n\n`;
+        response += `Quer saber mais detalhes específicos? Posso te ajudar com outras informações sobre Mato Grosso do Sul! ✨`;
+      } else if (title) {
+        response += `Sobre ${title.toLowerCase()}, posso te contar que é uma informação interessante sobre nossa região. `;
+        response += `Que detalhes específicos você gostaria de saber? Estou aqui para te ajudar! 🦦`;
+      } else {
+        response += "Com base nas informações que tenho, posso te ajudar com detalhes específicos sobre sua pergunta. ";
+        response += "Que aspecto você gostaria de saber mais? Posso te dar informações mais detalhadas ou te ajudar com outras questões sobre Mato Grosso do Sul!";
+      }
     } else {
       // NUNCA mostrar dados brutos - sempre transformar em resposta conversacional
       response += "Com base nas informações que tenho, posso te ajudar com detalhes específicos sobre sua pergunta. ";
@@ -781,9 +1078,76 @@ A cidade está recebendo investimentos públicos, privados e internacionais para
   /**
    * Formata resposta para roteiros/itinerários
    */
-  private formatItineraryResponse(snippet: string, title: string): string {
+  private formatItineraryResponse(snippet: string, title: string, question?: string): string {
+    const lowerQuestion = (question || '').toLowerCase();
+    const lowerSnippet = snippet.toLowerCase();
+    
+    // Detectar roteiro de Campo Grande (com ou sem dias específicos)
+    if ((lowerQuestion.includes('campo grande') || lowerSnippet.includes('campo grande')) && 
+        (lowerQuestion.includes('roteiro') || lowerQuestion.includes('itinerário') || lowerQuestion.includes('dias'))) {
+      
+      // Detectar número de dias
+      const daysMatch = lowerQuestion.match(/(\d+)\s*dias?/);
+      const numDays = daysMatch ? parseInt(daysMatch[1]) : 3;
+      
+      if (numDays === 3) {
+        return `🦦 Que alegria te ajudar a montar um roteiro de 3 dias em Campo Grande! É uma experiência incrível! 🚀
+
+📅 ROTEIRO DE 3 DIAS EM CAMPO GRANDE:
+
+DIA 1 - Conhecendo a Cidade Morena
+• Manhã: Bioparque Pantanal - Maior aquário de água doce do mundo! É impressionante ver peixes de todos os continentes! 🐠
+• Tarde: Parque das Nações Indígenas - Cultura e natureza juntas! Um lugar mágico! ✨
+• Noite: Feira Central - Comida boa, artesanato, música ao vivo! É a alma da cidade! 🎵
+
+DIA 2 - Natureza e Cultura
+• Manhã: Parque Horto Florestal - Um pedacinho da Amazônia no coração da cidade! 🌿
+• Tarde: Orla Morena - Perfeita para ver o pôr do sol e relaxar! 🌅
+• Noite: Praça Ary Coelho - O coração pulsante de Campo Grande! 💓
+
+DIA 3 - Experiências Únicas
+• Manhã: Mercadão Municipal - Comida típica e artesanato local! 🛍️
+• Tarde: Memorial da Cultura Indígena - Conheça a história dos povos originários! 🏛️
+• Noite: Aproveite a gastronomia local - Sobá, chipa, churrasco pantaneiro! 🍽️
+
+🎯 Dicas do Guatá:
+• Reserve ingressos do Bioparque com antecedência
+• Use protetor solar - o sol de MS é forte!
+• Experimente o sobá - prato típico único!
+• Leve câmera - lugares lindos para fotografar!
+
+Quer que eu detalhe algum dia específico ou te ajude com hospedagem e restaurantes? Estou aqui para te ajudar! 🦦`;
+      } else if (numDays === 2) {
+        return `🦦 Que legal! Um roteiro de 2 dias em Campo Grande é perfeito para conhecer o essencial! 
+
+📅 ROTEIRO DE 2 DIAS EM CAMPO GRANDE:
+
+DIA 1 - Principais Atrações
+• Manhã: Bioparque Pantanal - Imperdível! 🐠
+• Tarde: Parque das Nações Indígenas + Horto Florestal
+• Noite: Feira Central - Experiência única! 🎵
+
+DIA 2 - Cultura e Natureza
+• Manhã: Orla Morena - Pôr do sol incrível! 🌅
+• Tarde: Mercadão Municipal + Praça Ary Coelho
+• Noite: Gastronomia local - Sobá, chipa! 🍽️
+
+Quer mais detalhes sobre algum lugar específico? 🦦`;
+      } else if (numDays >= 4) {
+        return `🦦 Nossa, que roteiro incrível! Com ${numDays} dias você vai conhecer Campo Grande profundamente! 
+
+📅 **ROTEIRO DE ${numDays} DIAS EM CAMPO GRANDE:**
+
+**DIA 1-2:** Principais atrações (Bioparque, Parques, Feira Central)
+**DIA 3:** Cultura e história (Museus, Memorial Indígena)
+**DIA 4+:** Experiências únicas (Gastronomia, Artesanato, Vida noturna)
+
+Posso te montar um roteiro detalhado dia a dia! O que mais te interessa? 🦦`;
+      }
+    }
+    
     // Detectar se é sobre Campo Grande para Porto Murtinho
-    if (snippet.toLowerCase().includes('campo grande') && snippet.toLowerCase().includes('porto murtinho')) {
+    if (lowerSnippet.includes('campo grande') && lowerSnippet.includes('porto murtinho')) {
       return `Que aventura incrível! Um roteiro de Campo Grande para Porto Murtinho de moto é uma experiência única!
 
 🛣️ **Roteiro de 3 dias Campo Grande → Porto Murtinho:**
@@ -812,7 +1176,14 @@ A cidade está recebendo investimentos públicos, privados e internacionais para
 Quer que eu detalhe algum dia específico ou te ajude com outras informações sobre o roteiro?`;
     }
     
-    return `Sobre roteiros em MS: ${snippet.substring(0, 200)}... Posso te ajudar a montar um roteiro personalizado!`;
+    return `🦦 Que legal que você quer montar um roteiro! Posso te ajudar a criar um roteiro personalizado para Mato Grosso do Sul! 
+
+Me conta:
+• Quantos dias você tem disponível?
+• Quais cidades te interessam mais? (Campo Grande, Bonito, Pantanal, etc.)
+• Que tipo de experiência você busca? (Aventura, cultura, natureza, gastronomia)
+
+Com essas informações, vou montar um roteiro perfeito para você! 🚀`;
   }
 
   /**
