@@ -45,8 +45,10 @@ class GuataTrueApiService {
 
   async processQuestion(query: TrueApiQuery): Promise<TrueApiResponse> {
     const startTime = Date.now();
+    // Garantir que question seja sempre uma string
+    const question = String(query.question || '').trim();
     console.log('🦦 Guatá True API: Processando pergunta...');
-    console.log('📝 Query:', query.question);
+    console.log('📝 Query:', question);
     
     try {
       // NOVO: Usar o sistema inteligente de turismo
@@ -55,7 +57,7 @@ class GuataTrueApiService {
       console.log('🚀 Usando Guatá Intelligent Tourism Service...');
       
       const intelligentResponse = await guataIntelligentTourismService.processQuestion({
-        question: query.question,
+        question: question,
         userId: query.userId,
         sessionId: query.sessionId,
         userLocation: query.userLocation,
@@ -94,10 +96,10 @@ class GuataTrueApiService {
       
       // Fallback para sistema local
       console.log('🔄 Usando fallback local...');
-      const question = query.question.toLowerCase();
+      const lowerQuestion = question.toLowerCase();
       
       return {
-        answer: this.generateIntelligentLocalResponse(query.question),
+        answer: this.generateIntelligentLocalResponse(question),
         confidence: 0.7,
         sources: ['conhecimento_local'],
         processingTime: Date.now() - startTime,
@@ -123,7 +125,8 @@ class GuataTrueApiService {
     }
   }
 
-  private generateIntelligentLocalResponse(question: string): string {
+  private generateIntelligentLocalResponse(questionStr: string): string {
+    const question = String(questionStr || '').trim();
     const lowerQuestion = question.toLowerCase();
     
     // Apresentação

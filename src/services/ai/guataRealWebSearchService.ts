@@ -303,27 +303,28 @@ class GuataRealWebSearchService {
   /**
    * Busca dados específicos de turismo
    */
-  private async searchTourismData(query: RealWebSearchQuery): Promise<TourismData> {
+  private async searchTourismData(query: RealWebSearchQuery, question: string): Promise<TourismData> {
     const tourismData: TourismData = {};
 
     try {
       // Buscar hotéis se a pergunta for sobre hospedagem
-      if (query.category === 'hotels' || query.question.toLowerCase().includes('hotel') || query.question.toLowerCase().includes('hospedagem')) {
+      const lowerQuestion = question.toLowerCase();
+      if (query.category === 'hotels' || lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem')) {
         tourismData.hotels = await this.searchHotels(query.location || 'Mato Grosso do Sul');
       }
 
       // Buscar eventos se a pergunta for sobre eventos
-      if (query.category === 'events' || query.question.toLowerCase().includes('evento') || query.question.toLowerCase().includes('festa')) {
+      if (query.category === 'events' || lowerQuestion.includes('evento') || lowerQuestion.includes('festa')) {
         tourismData.events = await this.searchEvents(query.location || 'Mato Grosso do Sul');
       }
 
       // Buscar restaurantes se a pergunta for sobre comida
-      if (query.category === 'restaurants' || query.question.toLowerCase().includes('restaurante') || query.question.toLowerCase().includes('comida')) {
+      if (query.category === 'restaurants' || lowerQuestion.includes('restaurante') || lowerQuestion.includes('comida')) {
         tourismData.restaurants = await this.searchRestaurants(query.location || 'Mato Grosso do Sul');
       }
 
       // Buscar clima se a pergunta for sobre tempo
-      if (query.question.toLowerCase().includes('clima') || query.question.toLowerCase().includes('tempo')) {
+      if (lowerQuestion.includes('clima') || lowerQuestion.includes('tempo')) {
         tourismData.weather = await this.searchWeather(query.location || 'Mato Grosso do Sul');
       }
 
@@ -381,8 +382,10 @@ class GuataRealWebSearchService {
    */
   async searchRealTime(query: RealWebSearchQuery): Promise<RealWebSearchResponse> {
     const startTime = Date.now();
+    // Garantir que question seja sempre uma string
+    const question = String(query.question || '').trim();
     console.log('🔍 Guatá Real Web Search: Iniciando pesquisa...');
-    console.log('📝 Query:', query.question);
+    console.log('📝 Query:', question);
     console.log('📍 Localização:', query.location || 'Mato Grosso do Sul');
     console.log('🏷️ Categoria:', query.category || 'geral');
 
@@ -394,7 +397,7 @@ class GuataRealWebSearchService {
       // 1. Tentar Google Custom Search primeiro
       if (this.isConfigured) {
         console.log('🔍 Tentando Google Custom Search...');
-        const googleResults = await this.searchWithGoogle(query.question, query.maxResults || 5);
+        const googleResults = await this.searchWithGoogle(question, query.maxResults || 5);
         if (googleResults.length > 0) {
           results = googleResults;
           searchMethod = 'google';
@@ -406,7 +409,7 @@ class GuataRealWebSearchService {
       // 2. Se Google falhar, tentar SerpAPI
       if (results.length === 0 && this.serpApiKey) {
         console.log('🔍 Tentando SerpAPI...');
-        const serpResults = await this.searchWithSerpAPI(query.question, query.maxResults || 5);
+        const serpResults = await this.searchWithSerpAPI(question, query.maxResults || 5);
         if (serpResults.length > 0) {
           results = serpResults;
           searchMethod = 'serpapi';
@@ -417,12 +420,12 @@ class GuataRealWebSearchService {
 
       // 3. Buscar dados específicos de turismo
       console.log('🏨 Buscando dados específicos de turismo...');
-      const tourismData = await this.searchTourismData(query);
+      const tourismData = await this.searchTourismData(query, question);
 
       // 4. Se nenhuma pesquisa web funcionou, usar dados locais
       if (results.length === 0) {
         console.log('⚠️ Nenhuma pesquisa web funcionou, usando dados locais...');
-        results = this.generateLocalSearchResults(query.question);
+        results = this.generateLocalSearchResults(question);
         searchMethod = 'tourism_apis';
         usedRealSearch = false;
       }
@@ -447,7 +450,7 @@ class GuataRealWebSearchService {
       console.error('❌ Erro no Guatá Real Web Search:', error);
       
       return {
-        results: this.generateLocalSearchResults(query.question),
+        results: this.generateLocalSearchResults(question),
         tourismData: {},
         confidence: 0.5,
         sources: ['local_fallback'],
