@@ -5,7 +5,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus } from "lucide-react";
-import * as z from "zod";
+import { z } from "zod";
 import { UseFormReturn } from "react-hook-form";
 import { msRegions, regionCities } from "@/data/msRegions";
 import { useEffect } from "react";

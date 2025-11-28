@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { z } from "zod";
 import { 
   RefreshCcw, 
   AlertCircle, 

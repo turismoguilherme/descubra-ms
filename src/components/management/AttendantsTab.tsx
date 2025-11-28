@@ -12,7 +12,7 @@ import { User, Clock, MapPin, Check, UserPlus, Navigation } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import * as z from "zod";
+import { z } from "zod";
 import CATAttendantGeolocation from "./CATAttendantGeolocation";
 
 // Schema for attendant form validation

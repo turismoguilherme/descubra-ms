@@ -24,9 +24,13 @@ export default defineConfig(({ mode }) => ({
         manualChunks: (id) => {
           // Vendor chunks
           if (id.includes('node_modules')) {
-            // React e React DOM
+            // React e React DOM - deve ser carregado primeiro
             if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react';
+            }
+            // Zod - separar em chunk próprio para evitar problemas de inicialização
+            if (id.includes('zod')) {
+              return 'vendor-zod';
             }
             // Supabase
             if (id.includes('@supabase')) {
@@ -52,6 +56,10 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('date-fns')) {
               return 'vendor-dates';
             }
+            // React Hook Form e resolvers - importante para formulários
+            if (id.includes('react-hook-form') || id.includes('@hookform')) {
+              return 'vendor-forms';
+            }
             // Other vendor libraries
             return 'vendor-other';
           }
@@ -59,6 +67,10 @@ export default defineConfig(({ mode }) => ({
       },
     },
     chunkSizeWarningLimit: 1000, // Aumentar limite para 1MB
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'lucide-react'],
