@@ -80,7 +80,8 @@ const Guata = () => {
         sessionId: `session-${Date.now()}`,
         userLocation: 'Mato Grosso do Sul',
         conversationHistory: conversationHistory,
-        userPreferences: userPreferences
+        userPreferences: userPreferences,
+        isTotemVersion: false // Versão do site: não usar "Olá" após primeira mensagem
       });
       
       console.log("✅ Guatá True API: Resposta gerada em", response.processingTime, "ms");

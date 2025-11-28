@@ -34,8 +34,8 @@ const ChatGuata = () => {
   }, [mensagens.length]);
 
   const enviarMensagem = async (mensagem?: string) => {
-    const mensagemParaEnviar = mensagem || inputMensagem;
-    if (mensagemParaEnviar.trim() === "") return;
+    const mensagemParaEnviar = String(mensagem || inputMensagem || "").trim();
+    if (mensagemParaEnviar === "") return;
     
     // Adiciona a mensagem do usuário
     const novaMensagemUsuario = {
@@ -61,7 +61,8 @@ const ChatGuata = () => {
         sessionId: `session-${Date.now()}`,
         userLocation: 'Mato Grosso do Sul',
         conversationHistory: conversationHistory,
-        userPreferences: userPreferences
+        userPreferences: userPreferences,
+        isTotemVersion: true // Versão totem: pode usar "Olá" normalmente
       });
       
       console.log("✅ Guatá True API: Resposta gerada em", response.processingTime, "ms");

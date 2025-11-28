@@ -1,3 +1,4 @@
+
 /**
  * 🧠 GUATÁ GEMINI SERVICE - Integração com Gemini AI
  * Processa respostas inteligentes e empolgantes
@@ -12,6 +13,7 @@ export interface GeminiQuery {
   userLocation?: string;
   conversationHistory?: string[];
   searchResults?: any[];
+  isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
 }
 
 export interface GeminiResponse {
@@ -57,7 +59,9 @@ interface IndividualCacheEntry extends CacheEntry {
 class GuataGeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   // API KEY ESPECÍFICA DO GUATÁ - Gemini API
-  private readonly GUATA_API_KEY = 'AIzaSyD2fV0XhJZ0eYcDVFUcVpepUJJq-NPxoXg';
+  // Prioridade: 1) Variável de ambiente, 2) Chave hardcoded (fallback)
+  private readonly GUATA_API_KEY = 
+    (import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyD2fV0XhJZ0eYcDVFUcVpepUJJq-NPxoXg').trim();
   private isConfigured: boolean = false;
   
   // Rate limiting: máximo 8 requisições por minuto GLOBAL (margem de segurança para plano gratuito)
@@ -68,10 +72,10 @@ class GuataGeminiService {
   // Rate limit por usuário/sessão
   private userRateLimits: Map<string, UserRateLimit> = new Map();
   
-  // Cache: 10 minutos para respostas similares, 15 minutos para perguntas muito comuns
-  private readonly CACHE_DURATION = 10 * 60 * 1000; // 10 minutos
-  private readonly COMMON_QUESTIONS_CACHE_DURATION = 15 * 60 * 1000; // 15 minutos para perguntas comuns
-  private readonly SIMILARITY_THRESHOLD = 0.6; // 60% de palavras em comum (configuração escolhida)
+  // Cache semântico otimizado: 24 horas para reutilização de respostas entre usuários
+  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas (respostas sobre turismo mudam pouco)
+  private readonly COMMON_QUESTIONS_CACHE_DURATION = 48 * 60 * 60 * 1000; // 48 horas para perguntas muito comuns
+  private readonly SIMILARITY_THRESHOLD = 0.75; // 75% de similaridade para reutilizar (mais preciso)
   
   // Cache híbrido: compartilhado + individual
   private sharedCache: Map<string, SharedCacheEntry> = new Map(); // Perguntas comuns
@@ -139,12 +143,14 @@ class GuataGeminiService {
       };
     }
 
-    // 3. VERIFICAR CACHE POR SIMILARIDADE (60% palavras em comum)
+    // 3. VERIFICAR CACHE POR SIMILARIDADE SEMÂNTICA (75% similaridade)
     const similarityCacheResult = this.getFromSimilarityCache(query);
     if (similarityCacheResult) {
-      console.log('✅ Cache por similaridade: Resposta imediata');
+      console.log('✅ Cache semântico: Reutilizando resposta de outro usuário');
+      // Adaptar resposta para o contexto atual
+      const adaptedResponse = this.adaptResponse(similarityCacheResult.response, query);
       return {
-        answer: similarityCacheResult.response,
+        answer: adaptedResponse,
         confidence: 0.85,
         processingTime: Date.now() - startTime,
         usedGemini: true,
@@ -179,7 +185,7 @@ class GuataGeminiService {
         
         console.log('✅ Gemini respondeu com sucesso!');
         
-        // Salvar no cache compartilhado
+        // Salvar no cache compartilhado (para reutilização por outros usuários)
         const cacheKey = this.generateCacheKey(query);
         this.sharedCache.set(cacheKey, {
           response: geminiAnswer,
@@ -187,6 +193,8 @@ class GuataGeminiService {
           usedBy: 1,
           question: query.question
         });
+        
+        console.log('💾 Resposta salva no cache compartilhado para reutilização');
 
         // Salvar no cache individual se houver userId/sessionId
         if (userId || sessionId) {
@@ -438,52 +446,113 @@ class GuataGeminiService {
   }
 
   /**
-   * Obtém resposta do cache por similaridade (60% palavras em comum)
+   * Obtém resposta do cache por similaridade semântica (75% similaridade)
+   * Reutiliza respostas de outros usuários para reduzir chamadas à API
    */
   private getFromSimilarityCache(query: GeminiQuery): SharedCacheEntry | null {
     const questionWords = this.extractWords(query.question);
+    let bestMatch: SharedCacheEntry | null = null;
+    let bestSimilarity = 0;
     
+    // Buscar a melhor correspondência no cache
     for (const [key, cached] of this.sharedCache.entries()) {
       // Verificar se não expirou
-      if (Date.now() - cached.timestamp > this.CACHE_DURATION) {
+      const age = Date.now() - cached.timestamp;
+      const cacheDuration = cached.usedBy >= 5 ? this.COMMON_QUESTIONS_CACHE_DURATION : this.CACHE_DURATION;
+      
+      if (age > cacheDuration) {
         continue;
       }
 
       const cachedWords = this.extractWords(cached.question);
       const similarity = this.calculateSimilarity(questionWords, cachedWords);
       
-      if (similarity >= this.SIMILARITY_THRESHOLD) {
-        console.log(`🔍 Similaridade detectada: ${(similarity * 100).toFixed(0)}%`);
-        cached.usedBy++;
-        return cached;
+      // Encontrar a melhor correspondência (maior similaridade)
+      if (similarity >= this.SIMILARITY_THRESHOLD && similarity > bestSimilarity) {
+        bestSimilarity = similarity;
+        bestMatch = cached;
       }
+    }
+    
+    if (bestMatch) {
+      console.log(`🔍 Cache semântico: Similaridade ${(bestSimilarity * 100).toFixed(0)}% - Reutilizando resposta`);
+      bestMatch.usedBy++;
+      return bestMatch;
     }
     
     return null;
   }
 
   /**
-   * Extrai palavras de uma pergunta
+   * Extrai palavras de uma pergunta (normalizado para comparação semântica)
    */
   private extractWords(text: string): string[] {
     return text.toLowerCase()
       .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
       .split(/\s+/)
-      .filter(word => word.length > 2); // Remover palavras muito curtas
+      .filter(word => word.length > 2) // Remover palavras muito curtas
+      .filter(word => !['que', 'qual', 'quais', 'onde', 'como', 'quando'].includes(word)); // Remover algumas stopwords comuns
   }
 
   /**
-   * Calcula similaridade entre duas listas de palavras (60% = similar)
+   * Calcula similaridade semântica melhorada entre duas listas de palavras (75% = similar)
+   * Usa algoritmo Jaccard melhorado com peso para palavras importantes
    */
   private calculateSimilarity(words1: string[], words2: string[]): number {
     if (words1.length === 0 || words2.length === 0) return 0;
     
+    // Palavras importantes (não stopwords) têm mais peso
+    const stopWords = new Set(['que', 'qual', 'quais', 'onde', 'como', 'quando', 'por', 'para', 'com', 'de', 'em', 'a', 'o', 'e', 'do', 'da', 'no', 'na']);
+    const importantWords1 = words1.filter(w => !stopWords.has(w));
+    const importantWords2 = words2.filter(w => !stopWords.has(w));
+    
+    // Calcular similaridade de palavras importantes (peso 0.7)
+    const commonImportant = importantWords1.filter(word => importantWords2.includes(word));
+    const importantSimilarity = importantWords1.length > 0 && importantWords2.length > 0
+      ? commonImportant.length / Math.max(importantWords1.length, importantWords2.length)
+      : 0;
+    
+    // Calcular similaridade geral (peso 0.3)
     const commonWords = words1.filter(word => words2.includes(word));
     const totalUniqueWords = new Set([...words1, ...words2]).size;
+    const generalSimilarity = totalUniqueWords > 0 ? commonWords.length / totalUniqueWords : 0;
     
-    if (totalUniqueWords === 0) return 0;
+    // Similaridade ponderada (palavras importantes têm mais peso)
+    return (importantSimilarity * 0.7) + (generalSimilarity * 0.3);
+  }
+
+  /**
+   * Adapta uma resposta reutilizada para o contexto atual do usuário
+   * Ajusta pronomes, personaliza quando possível
+   */
+  private adaptResponse(originalResponse: string, query: GeminiQuery): string {
+    let adapted = originalResponse;
     
-    return commonWords.length / totalUniqueWords;
+    // Substituir pronomes para personalizar
+    // Se a resposta menciona "ele/ela", pode manter ou adaptar conforme contexto
+    adapted = adapted.replace(/\bele\b/gi, 'você');
+    adapted = adapted.replace(/\bela\b/gi, 'você');
+    
+    // Se houver localização do usuário, pode adicionar contexto
+    if (query.userLocation && !adapted.includes(query.userLocation)) {
+      // Não adicionar automaticamente, apenas se fizer sentido
+      // A resposta original já deve ser adequada
+    }
+    
+    // Variar ligeiramente a abertura para não parecer robótico
+    const openings = [
+      '🦦 Que legal que você quer saber sobre isso!',
+      '🦦 Que alegria te ajudar com isso!',
+      '🦦 Imagina só, que pergunta interessante!'
+    ];
+    
+    // Se a resposta começa com algo genérico, pode variar
+    if (adapted.startsWith('🦦 Olá') || adapted.startsWith('🦦 Oi')) {
+      // Manter a resposta original, já está boa
+    }
+    
+    return adapted;
   }
 
   private buildPrompt(query: GeminiQuery): string {
@@ -581,6 +650,10 @@ PERGUNTA DO USUÁRIO: ${question}`;
       prompt += `\n\n⚠️ ATENÇÃO: Não há resultados de busca web disponíveis. Use apenas seu conhecimento geral sobre Mato Grosso do Sul. NÃO invente informações específicas como preços, horários ou detalhes que não tem certeza.`;
     }
 
+    // Verificar se deve evitar "Olá" (versão do site com histórico de conversa)
+    const isTotemVersion = (query as any).isTotemVersion ?? true; // Default: true (comportamento atual)
+    const hasConversationHistory = query.conversationHistory && query.conversationHistory.length > 0;
+    
     prompt += `\n\n🎯 INSTRUÇÕES FINAIS:
 - Responda de forma natural, conversacional e inteligente (como ChatGPT/Gemini)
 - Entenda o contexto completo da pergunta - seja específico e personalizado
@@ -590,9 +663,14 @@ PERGUNTA DO USUÁRIO: ${question}`;
 - Varie sempre - nunca repita estruturas ou palavras exatas
 - NUNCA use formatação markdown (asteriscos, negrito, etc.) na resposta - apenas texto puro com emojis
 - NUNCA mencione URLs ou sites que não foram fornecidos nas informações acima
-- Responda como se já soubesse tudo - não mencione que "pesquisou" ou "encontrou"
+- Responda como se já soubesse tudo - não mencione que "pesquisou" ou "encontrou"`;
 
-Responda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
+    // Regra especial: versão do site não deve usar "Olá" após primeira mensagem
+    if (!isTotemVersion && hasConversationHistory) {
+      prompt += `\n\n⚠️ IMPORTANTE: Esta NÃO é a primeira mensagem da conversa. NÃO comece sua resposta com "Olá", "Oi" ou outros cumprimentos. Responda diretamente à pergunta de forma natural e entusiasmada, mas sem cumprimentos iniciais.`;
+    }
+
+    prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
 
     return prompt;
   }
@@ -676,6 +754,7 @@ Responda em português brasileiro de forma natural, inteligente e conversacional
   private generateFallbackResponse(query: GeminiQuery): GeminiResponse {
     const { question, searchResults } = query;
     const lowerQuestion = question.toLowerCase().trim();
+    const partnersInfo = (query as any).partnersInfo;
     
     // Detectar perguntas sobre identidade do Guatá
     if (lowerQuestion.includes('quem é você') || lowerQuestion.includes('quem voce') || 
@@ -708,8 +787,35 @@ Responda em português brasileiro de forma natural, inteligente e conversacional
     const randomStart = starts[Math.floor(Math.random() * starts.length)];
     let answer = `${randomStart} `;
     
-    // Se temos resultados de pesquisa, usar eles de forma inteligente e entusiasmada
-    if (searchResults && searchResults.length > 0) {
+    // PRIORIDADE 1: Se temos parceiros, mencionar PRIMEIRO
+    if (partnersInfo && partnersInfo.length > 0) {
+      answer = "🦦 Que alegria! Encontrei nossos parceiros oficiais da plataforma Descubra Mato Grosso do Sul para você! 🤩\n\n";
+      answer += "🎯 Nossos parceiros oficiais (sempre damos preferência a eles!):\n\n";
+      
+      partnersInfo.slice(0, 3).forEach((partner: any, index: number) => {
+        answer += `${index + 1}. ${partner.name}\n`;
+        if (partner.city) answer += `   📍 ${partner.city}\n`;
+        if (partner.segment) answer += `   🏷️ ${partner.segment}\n`;
+        if (partner.description) answer += `   💡 ${partner.description}\n`;
+        if (partner.contact_email) answer += `   📧 ${partner.contact_email}\n`;
+        if (partner.contact_whatsapp) answer += `   📱 WhatsApp: ${partner.contact_whatsapp}\n`;
+        if (partner.website_link) answer += `   🌐 ${partner.website_link}\n`;
+        answer += `\n`;
+      });
+      
+      answer += "✨ Estes são nossos parceiros oficiais da plataforma! Entre em contato e mencione que conheceu através do Guatá!\n\n";
+      
+      // Depois dos parceiros, adicionar outras opções se houver
+      if (searchResults && searchResults.length > 0) {
+        answer += "🌐 Também encontrei outras opções que podem te interessar:\n";
+        const firstResult = searchResults[0];
+        const snippet = firstResult.snippet || firstResult.description || '';
+        if (snippet && snippet.length > 50) {
+          answer += `${snippet.substring(0, 200)}...\n\n`;
+        }
+      }
+    } else if (searchResults && searchResults.length > 0) {
+      // Se temos resultados de pesquisa, usar eles de forma inteligente e entusiasmada
       console.log('🔄 Usando resultados de pesquisa no fallback');
       const firstResult = searchResults[0];
       const snippet = firstResult.snippet || firstResult.description || '';

@@ -12,6 +12,7 @@ export interface TrueApiQuery {
   userLocation?: string;
   conversationHistory?: string[];
   userPreferences?: any;
+  isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
 }
 
 export interface TrueApiResponse {
@@ -59,7 +60,8 @@ class GuataTrueApiService {
         sessionId: query.sessionId,
         userLocation: query.userLocation,
         conversationHistory: query.conversationHistory,
-        userPreferences: query.userPreferences
+        userPreferences: query.userPreferences,
+        isTotemVersion: query.isTotemVersion ?? true // Passar flag para controlar uso de "Olá"
       });
       
       console.log('✅ Guatá Intelligent Tourism: Resposta gerada em', intelligentResponse.processingTime, 'ms');

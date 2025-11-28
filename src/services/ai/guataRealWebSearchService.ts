@@ -88,9 +88,13 @@ export interface RealWebSearchResponse {
 
 class GuataRealWebSearchService {
   // API KEY ESPECÍFICA DO GUATÁ - Google Search API
-  private readonly GUATA_GOOGLE_SEARCH_API_KEY = 'AIzaSyAjh12gRofCgSf6-y1-ckvrDyT7ICuW7XY';
+  // Prioridade: 1) Variável de ambiente, 2) Chave hardcoded
+  private readonly GUATA_GOOGLE_SEARCH_API_KEY = 
+    (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || 'AIzaSyAjh12gRofCgSf6-y1-ckvrDyT7ICuW7XY').trim();
   // ENGINE ID ESPECÍFICO DO GUATÁ - Configurado pelo usuário
-  private readonly GUATA_ENGINE_ID = 'a3641e1665f7b4909';
+  // Prioridade: 1) Variável de ambiente, 2) Engine ID hardcoded
+  private readonly GUATA_ENGINE_ID = 
+    (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || 'a3641e1665f7b4909').trim();
   
   private googleApiKey: string;
   private googleEngineId: string;
@@ -183,6 +187,34 @@ class GuataRealWebSearchService {
         if (response.status === 429 && cached) {
           console.log('⏸️ Rate limit atingido, usando cache');
           return cached.results;
+        }
+        
+        // Tratamento específico para erro 400 (API key inválida)
+        if (response.status === 400) {
+          try {
+            const errorData = JSON.parse(errorText);
+            if (errorData.error?.reason === 'API_KEY_INVALID' || errorData.error?.message?.includes('API key not valid')) {
+              console.error('❌ Google Search API: Chave de API inválida ou sem permissões');
+              console.error('💡 PASSO A PASSO PARA CORRIGIR:');
+              console.error('   1. Acesse: https://console.cloud.google.com/apis/credentials');
+              console.error('   2. Encontre a chave:', this.googleApiKey.substring(0, 20) + '...');
+              console.error('   3. Clique em "Editar" (ícone de lápis)');
+              console.error('   4. Em "Restrições de API":');
+              console.error('      - Se estiver vazio: Adicione "Custom Search API"');
+              console.error('      - Se tiver restrições: Certifique-se que "Custom Search API" está na lista');
+              console.error('   5. Em "Restrições de aplicativo": Deixe vazio ou configure corretamente');
+              console.error('   6. Clique em "Salvar"');
+              console.error('   7. Aguarde 1-2 minutos e teste novamente');
+              console.error('');
+              console.error('🔗 Links úteis:');
+              console.error('   - Credenciais: https://console.cloud.google.com/apis/credentials');
+              console.error('   - APIs habilitadas: https://console.cloud.google.com/apis/library/customsearch.googleapis.com');
+            }
+          } catch (e) {
+            console.error('❌ Google Search API error: 400 - Chave de API inválida');
+            console.error('💡 Acesse: https://console.cloud.google.com/apis/credentials para verificar a chave');
+          }
+          return [];
         }
         
         // Para outros erros, logar mas não quebrar

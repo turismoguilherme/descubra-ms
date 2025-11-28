@@ -14,6 +14,7 @@ export interface IntelligentTourismQuery {
   userLocation?: string;
   conversationHistory?: string[];
   userPreferences?: any;
+  isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
 }
 
 export interface IntelligentTourismResponse {
@@ -573,7 +574,9 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           question,
           context: `Localização: Mato Grosso do Sul`,
           userLocation: 'Mato Grosso do Sul',
-          searchResults: webSearchResponse.results
+          searchResults: webSearchResponse.results,
+          conversationHistory: conversationHistory,
+          isTotemVersion: (query as any).isTotemVersion ?? true // Passar flag para controlar uso de "Olá"
         };
         
         // Passar informações de parceiros para o Gemini
