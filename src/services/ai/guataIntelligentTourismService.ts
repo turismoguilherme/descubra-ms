@@ -15,6 +15,7 @@ export interface IntelligentTourismQuery {
   conversationHistory?: string[];
   userPreferences?: any;
   isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
+  isFirstUserMessage?: boolean; // true = primeira mensagem do usuário (já teve mensagem de boas-vindas)
 }
 
 export interface IntelligentTourismResponse {
@@ -50,7 +51,7 @@ class GuataIntelligentTourismService {
   async processQuestion(query: IntelligentTourismQuery): Promise<IntelligentTourismResponse> {
     const startTime = Date.now();
     // Garantir que question seja sempre uma string
-    const question = String(query.question || '').trim();
+    let question = String(query.question || '').trim();
     console.log('🦦 Guatá Intelligent Tourism: Processando pergunta...');
     console.log('📝 Query:', question);
 
@@ -68,6 +69,24 @@ class GuataIntelligentTourismService {
         return this.handleContinuationQuestion(question, query.conversationHistory || []);
       }
 
+      // 1.5.5. Detectar resposta apenas com cidade após esclarecimento
+      const cityContext = this.detectCityOnlyResponse(question, query.conversationHistory || []);
+      if (cityContext.shouldCombine) {
+        console.log('🏙️ Resposta apenas com cidade detectada, combinando com contexto anterior...');
+        const originalQuestion = question;
+        question = `${cityContext.serviceType} em ${cityContext.city}`;
+        console.log(`🔄 Pergunta combinada: "${originalQuestion}" → "${question}"`);
+        // Atualizar query.question para que o resto do código use a pergunta combinada
+        query.question = question;
+      }
+
+      // 1.6. Detectar perguntas genéricas que precisam de esclarecimento
+      const needsClarification = this.needsClarification(question);
+      if (needsClarification.needs) {
+        console.log('❓ Pergunta genérica detectada, pedindo esclarecimento...');
+        return this.generateClarificationResponse(question, needsClarification);
+      }
+
       // 2. Detectar categoria da pergunta
       const category = this.detectQuestionCategory(question);
       console.log('🏷️ Categoria detectada:', category);
@@ -81,12 +100,28 @@ class GuataIntelligentTourismService {
         maxResults: 5
       };
       
+      console.log('🔍 [DEBUG] Iniciando pesquisa web com query:', webSearchQuery);
       const webSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
-      console.log('✅ Pesquisa web concluída:', {
+      console.log('✅ [RESULTADO] Pesquisa web concluída:', {
         resultados: webSearchResponse.results.length,
         metodo: webSearchResponse.searchMethod,
-        pesquisaReal: webSearchResponse.usedRealSearch
+        pesquisaReal: webSearchResponse.usedRealSearch,
+        confidence: webSearchResponse.confidence
       });
+      
+      // Log detalhado dos resultados
+      if (webSearchResponse.results.length > 0) {
+        console.log('📊 [DEBUG] Primeiros resultados da pesquisa:');
+        webSearchResponse.results.slice(0, 3).forEach((result, index) => {
+          console.log(`   ${index + 1}. ${result.title}`, {
+            snippet: result.snippet?.substring(0, 100),
+            source: result.source,
+            confidence: result.confidence
+          });
+        });
+      } else {
+        console.warn('⚠️ [AVISO] Nenhum resultado da pesquisa web! O Gemini receberá dados vazios.');
+      }
       
       // 4. VERIFICAR PARCEIROS (após pesquisa web)
       console.log('🤝 Verificando parceiros da plataforma...');
@@ -102,7 +137,8 @@ class GuataIntelligentTourismService {
         partnersResult,
         query.userId,
         query.sessionId,
-        query.isTotemVersion
+        query.isTotemVersion,
+        query.isFirstUserMessage
       );
 
       // 4. Personalizar resposta com Machine Learning
@@ -278,6 +314,106 @@ class GuataIntelligentTourismService {
   }
 
   /**
+   * Detecta se a pergunta é genérica e precisa de esclarecimento
+   */
+  private needsClarification(question: string): { needs: boolean; type: 'city' | 'service' | 'none'; missingInfo: string } {
+    const lowerQuestion = question.toLowerCase().trim();
+    
+    // Padrões de perguntas genéricas que precisam de cidade
+    const genericPatterns = [
+      { pattern: /onde\s+(comer|dormir|ficar|hospedar|passear|fazer|visitar)\s+em\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
+      { pattern: /o\s+que\s+(comer|fazer|visitar|ver)\s+em\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
+      { pattern: /melhor\s+(hotel|restaurante|pousada|passeio)\s+em\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
+      { pattern: /onde\s+(comer|dormir|ficar|hospedar)\s+no\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
+      { pattern: /quais\s+(hotéis|restaurantes|pousadas|passeios)\s+em\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
+      { pattern: /onde\s+(comer|dormir|ficar|hospedar)\s+em\s+mato\s+grosso\s+do\s+sul/i, type: 'city' as const, missingInfo: 'cidade' },
+    ];
+    
+    // Verificar se a pergunta menciona uma cidade específica
+    const cities = [
+      'campo grande', 'bonito', 'corumbá', 'corumba', 'dourados', 'três lagoas',
+      'pontaporã', 'naviraí', 'nova andradina', 'aquidauana', 'paranaíba', 'coxim',
+      'miranda', 'bodoquena', 'ladário', 'bataguassu', 'rio brilhante', 'sidrolândia'
+    ];
+    
+    const hasCity = cities.some(city => lowerQuestion.includes(city));
+    
+    // Se não tem cidade e bate com padrões genéricos, precisa de esclarecimento
+    for (const { pattern, type, missingInfo } of genericPatterns) {
+      if (pattern.test(question) && !hasCity) {
+        return { needs: true, type, missingInfo };
+      }
+    }
+    
+    return { needs: false, type: 'none', missingInfo: '' };
+  }
+
+  /**
+   * Gera resposta pedindo esclarecimento
+   */
+  private generateClarificationResponse(question: string, clarification: { type: string; missingInfo: string }): IntelligentTourismResponse {
+    const lowerQuestion = question.toLowerCase();
+    
+    let clarificationQuestion = '';
+    let followUpQuestions: string[] = [];
+    
+    if (clarification.type === 'city') {
+      if (lowerQuestion.includes('comer') || lowerQuestion.includes('restaurante') || lowerQuestion.includes('gastronomia')) {
+        clarificationQuestion = '🦦 Que legal que você quer conhecer a gastronomia de Mato Grosso do Sul! 😊 Para te dar as melhores recomendações, qual cidade você tem interesse? Campo Grande, Corumbá, Bonito ou outra?';
+        followUpQuestions = [
+          'Onde comer em Campo Grande?',
+          'Onde comer em Corumbá?',
+          'Onde comer em Bonito?'
+        ];
+      } else if (lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem') || lowerQuestion.includes('dormir') || lowerQuestion.includes('ficar')) {
+        clarificationQuestion = '🦦 Que alegria te ajudar a encontrar hospedagem! 😊 Para te dar as melhores opções, qual cidade você tem interesse? Campo Grande, Bonito, Corumbá ou outra?';
+        followUpQuestions = [
+          'Hotéis em Campo Grande',
+          'Hotéis em Bonito',
+          'Hotéis em Corumbá'
+        ];
+      } else if (lowerQuestion.includes('fazer') || lowerQuestion.includes('visitar') || lowerQuestion.includes('passeio') || lowerQuestion.includes('ver')) {
+        clarificationQuestion = '🦦 Que demais que você quer explorar Mato Grosso do Sul! 🤩 Para te dar as melhores sugestões, qual cidade você tem interesse? Campo Grande, Bonito, Corumbá ou outra?';
+        followUpQuestions = [
+          'O que fazer em Campo Grande?',
+          'O que fazer em Bonito?',
+          'O que fazer em Corumbá?'
+        ];
+      } else {
+        clarificationQuestion = '🦦 Que legal! 😊 Para te ajudar melhor, qual cidade de Mato Grosso do Sul você tem interesse? Campo Grande, Bonito, Corumbá ou outra?';
+        followUpQuestions = [
+          'O que fazer em Campo Grande?',
+          'O que fazer em Bonito?',
+          'O que fazer em Corumbá?'
+        ];
+      }
+    }
+    
+    return {
+      answer: clarificationQuestion,
+      confidence: 0.95,
+      sources: ['interactive_clarification'],
+      processingTime: 50,
+      webSearchResults: [],
+      tourismData: {},
+      usedRealSearch: false,
+      searchMethod: 'interactive',
+      personality: this.personality.name,
+      emotionalState: 'helpful',
+      followUpQuestions: followUpQuestions,
+      learningInsights: {
+        questionType: 'clarification_needed',
+        userIntent: 'information_seeking',
+        behaviorPattern: 'explorer',
+        conversationFlow: 'interactive',
+        predictiveAccuracy: 0.8
+      },
+      adaptiveImprovements: [],
+      memoryUpdates: []
+    };
+  }
+
+  /**
    * Verifica se é uma pergunta de continuação (resposta curta à pergunta anterior)
    */
   private isContinuationQuestion(question: string, conversationHistory: string[]): boolean {
@@ -298,6 +434,96 @@ class GuataIntelligentTourismService {
     }
     
     return false;
+  }
+
+  /**
+   * Detecta se a resposta é apenas uma cidade e deve combinar com contexto anterior
+   */
+  private detectCityOnlyResponse(question: string, conversationHistory: string[]): { 
+    shouldCombine: boolean; 
+    city: string; 
+    serviceType: string;
+  } {
+    const lowerQuestion = question.toLowerCase().trim();
+    
+    // Verificar se a pergunta é curta (1-3 palavras) e não contém palavras de pergunta
+    const words = lowerQuestion.split(/\s+/).filter(w => w.length > 0);
+    if (words.length > 3) {
+      return { shouldCombine: false, city: '', serviceType: '' };
+    }
+    
+    // Verificar se contém palavras de pergunta (não é apenas resposta)
+    const questionWords = ['qual', 'quais', 'onde', 'como', 'quando', 'por que', 'porque', 'o que', 'que'];
+    if (questionWords.some(qw => lowerQuestion.includes(qw))) {
+      return { shouldCombine: false, city: '', serviceType: '' };
+    }
+    
+    // Lista de cidades conhecidas de MS
+    const cities = [
+      'campo grande', 'bonito', 'corumbá', 'corumba', 'dourados', 'três lagoas', 'tres lagoas',
+      'pontaporã', 'naviraí', 'navirai', 'nova andradina', 'aquidauana', 'paranaíba', 'paranaiba',
+      'coxim', 'miranda', 'bodoquena', 'ladário', 'ladario', 'bataguassu', 'rio brilhante',
+      'sidrolândia', 'sidrolandia', 'maracaju', 'chapadão do sul', 'chapadao do sul',
+      'cassilândia', 'cassilandia', 'angélica', 'angelica', 'iguatemi', 'sete quedas'
+    ];
+    
+    // Verificar se a pergunta é apenas uma cidade conhecida
+    let detectedCity = '';
+    for (const city of cities) {
+      if (lowerQuestion === city || lowerQuestion === city.toUpperCase() || 
+          lowerQuestion.includes(city) && words.length <= 2) {
+        detectedCity = city;
+        break;
+      }
+    }
+    
+    if (!detectedCity) {
+      return { shouldCombine: false, city: '', serviceType: '' };
+    }
+    
+    // Verificar se há histórico recente (última pergunta)
+    if (conversationHistory.length === 0) {
+      return { shouldCombine: false, city: '', serviceType: '' };
+    }
+    
+    const lastQuestion = conversationHistory[conversationHistory.length - 1].toLowerCase();
+    
+    // Verificar se a última pergunta era genérica (sem cidade) e tinha palavras-chave de serviços
+    const hasCityInLast = cities.some(city => lastQuestion.includes(city));
+    if (hasCityInLast) {
+      // Última pergunta já tinha cidade, não combinar
+      return { shouldCombine: false, city: '', serviceType: '' };
+    }
+    
+    // Extrair tipo de serviço da última pergunta
+    let serviceType = '';
+    if (lastQuestion.includes('restaurante') || lastQuestion.includes('comer') || 
+        lastQuestion.includes('comida') || lastQuestion.includes('gastronomia')) {
+      serviceType = 'restaurantes';
+    } else if (lastQuestion.includes('hotel') || lastQuestion.includes('hospedagem') || 
+               lastQuestion.includes('pousada') || lastQuestion.includes('dormir') || 
+               lastQuestion.includes('ficar') || lastQuestion.includes('onde ficar')) {
+      serviceType = 'hotéis';
+    } else if (lastQuestion.includes('passeio') || lastQuestion.includes('fazer') || 
+               lastQuestion.includes('visitar') || lastQuestion.includes('ver') ||
+               lastQuestion.includes('o que fazer') || lastQuestion.includes('atrações')) {
+      serviceType = 'passeios';
+    } else if (lastQuestion.includes('roteiro') || lastQuestion.includes('itinerário') || 
+               lastQuestion.includes('itinerario')) {
+      serviceType = 'roteiros';
+    }
+    
+    // Se encontrou tipo de serviço, combinar
+    if (serviceType) {
+      console.log(`🔗 Combinando contexto: "${serviceType}" + "${detectedCity}"`);
+      return { 
+        shouldCombine: true, 
+        city: detectedCity, 
+        serviceType: serviceType 
+      };
+    }
+    
+    return { shouldCombine: false, city: '', serviceType: '' };
   }
 
   /**
@@ -562,7 +788,8 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     partnersResult?: any,
     userId?: string,
     sessionId?: string,
-    isTotemVersion?: boolean
+    isTotemVersion?: boolean,
+    isFirstUserMessage?: boolean
   ): Promise<string> {
     let answer = "";
 
@@ -582,14 +809,37 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
         const { guataGeminiService } = await import('./guataGeminiService');
         console.log('🧠 Usando Gemini + pesquisa web + parceiros para resposta dinâmica...');
         
+        console.log('🧠 [DEBUG] Preparando query para Gemini...');
+        console.log('🧠 [DEBUG] Dados que serão enviados ao Gemini:', {
+          question: question,
+          searchResultsCount: webSearchResponse.results.length,
+          hasSearchResults: webSearchResponse.results.length > 0,
+          conversationHistoryLength: conversationHistory.length,
+          isTotemVersion: isTotemVersion ?? true,
+          isFirstUserMessage: isFirstUserMessage ?? false
+        });
+        
         const geminiQuery: any = {
           question,
           context: `Localização: Mato Grosso do Sul`,
           userLocation: 'Mato Grosso do Sul',
           searchResults: webSearchResponse.results,
           conversationHistory: conversationHistory,
-          isTotemVersion: isTotemVersion ?? true // Passar flag para controlar uso de "Olá"
+          isTotemVersion: isTotemVersion ?? true, // Passar flag para controlar uso de "Olá"
+          isFirstUserMessage: isFirstUserMessage ?? false // Passar flag para primeira mensagem do usuário
         };
+        
+        // Log dos resultados de pesquisa que serão enviados
+        if (webSearchResponse.results.length > 0) {
+          console.log('📊 [DEBUG] Resultados de pesquisa que serão enviados ao Gemini:');
+          webSearchResponse.results.forEach((result, index) => {
+            console.log(`   ${index + 1}. ${result.title}: ${result.snippet?.substring(0, 80)}...`);
+          });
+        } else {
+          console.warn('⚠️ [AVISO CRÍTICO] Nenhum resultado de pesquisa será enviado ao Gemini!');
+          console.warn('⚠️ [AVISO CRÍTICO] O Gemini não terá dados específicos para responder!');
+          console.warn('⚠️ [AVISO CRÍTICO] A resposta será genérica baseada apenas no conhecimento pré-treinado!');
+        }
         
         // Passar informações de parceiros para o Gemini
         if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {

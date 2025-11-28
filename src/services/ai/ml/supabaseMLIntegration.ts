@@ -9,6 +9,14 @@ import { UserPreferences } from './preferenceLearningService';
 
 export class SupabaseMLIntegration {
   /**
+   * Valida se uma string é um UUID válido
+   */
+  private isValidUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  }
+
+  /**
    * Salva interação no Supabase
    */
   async saveInteraction(interaction: LearningInteraction): Promise<void> {
@@ -46,22 +54,28 @@ export class SupabaseMLIntegration {
    */
   async saveFeedback(feedback: FeedbackData): Promise<void> {
     try {
+      // Validar userId: deve ser UUID válido ou null (não aceita strings como 'publico')
+      const userId = feedback.userId && feedback.userId !== 'publico' 
+        ? (this.isValidUUID(feedback.userId) ? feedback.userId : null)
+        : null;
+      
+      // Mapear FeedbackData para a estrutura da tabela guata_feedback
       const { error } = await supabase
         .from('guata_feedback')
         .insert({
           session_id: feedback.sessionId,
-          user_id: feedback.userId || null,
-          question_id: feedback.questionId,
-          original_question: feedback.question,
-          original_answer: feedback.answer,
-          rating: feedback.rating,
-          comment: feedback.comment || null,
+          user_id: userId, // Sempre null para usuários públicos ou UUID inválido
+          question: feedback.question, // Usar 'question' (não 'original_question')
+          answer: feedback.answer, // Usar 'answer' (não 'original_answer')
+          positive: feedback.rating === 'positive', // Converter rating para boolean
           correction: feedback.correction || null,
-          learning_patterns: {
+          meta: {
+            questionId: feedback.questionId,
+            comment: feedback.comment || null,
+            rating: feedback.rating,
             hasCorrection: !!feedback.correction,
             correctionLength: feedback.correction?.length || 0
-          },
-          applied_corrections: {}
+          }
         });
 
       if (error) {

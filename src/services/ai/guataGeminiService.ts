@@ -14,6 +14,7 @@ export interface GeminiQuery {
   conversationHistory?: string[];
   searchResults?: any[];
   isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
+  isFirstUserMessage?: boolean; // true = primeira mensagem do usuário (já teve mensagem de boas-vindas)
 }
 
 export interface GeminiResponse {
@@ -59,9 +60,9 @@ interface IndividualCacheEntry extends CacheEntry {
 class GuataGeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   // API KEY ESPECÍFICA DO GUATÁ - Gemini API
-  // Prioridade: 1) Variável de ambiente, 2) Chave hardcoded (fallback)
+  // Prioridade: Variável de ambiente (.env)
   private readonly GUATA_API_KEY = 
-    (import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyD2fV0XhJZ0eYcDVFUcVpepUJJq-NPxoXg').trim();
+    (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
   private isConfigured: boolean = false;
   
   // Rate limiting: máximo 8 requisições por minuto GLOBAL (margem de segurança para plano gratuito)
@@ -579,6 +580,16 @@ SEU ESTILO:
 - Se a pergunta menciona um lugar específico, fale sobre AQUELE lugar, não sobre outros
 - Se a pergunta pede algo específico (roteiro de 3 dias, hotel perto do centro), responda especificamente isso
 
+INTERATIVIDADE E ESCLARECIMENTO:
+- Se a pergunta for muito genérica (ex: "onde comer em MS?" sem mencionar cidade), você DEVE perguntar qual cidade o usuário tem interesse antes de responder
+- Seja proativo: pergunte "qual cidade você tem interesse?" quando a pergunta for genérica sobre MS
+- Exemplos de perguntas genéricas que precisam de esclarecimento:
+  * "onde comer em MS?" → perguntar: "qual cidade você tem interesse? Campo Grande, Corumbá, Bonito?"
+  * "melhor hotel em MS?" → perguntar: "qual cidade você tem interesse?"
+  * "o que fazer em MS?" → perguntar: "qual cidade você tem interesse?"
+- NÃO responda de forma genérica quando a pergunta é genérica - SEMPRE peça esclarecimento primeiro
+- Se a pergunta já menciona uma cidade específica, responda diretamente sem pedir esclarecimento
+
 EXEMPLOS DE CONVERSAÇÃO NATURAL:
 
 Usuário: "oi, quem é você?"
@@ -640,9 +651,16 @@ PERGUNTA DO USUÁRIO: ${question}`;
     }
 
     if (searchResults && searchResults.length > 0) {
+      console.log(`📊 [DEBUG] Adicionando ${searchResults.length} resultados de pesquisa ao prompt do Gemini`);
       prompt += `\n\n🌐 INFORMAÇÕES DA PESQUISA WEB (USE APENAS ESTAS INFORMAÇÕES REAIS):\n`;
       searchResults.forEach((result, index) => {
-        prompt += `\n${index + 1}. ${result.title}\n   ${result.snippet || result.description || ''}\n   Fonte: ${result.url || result.source || 'web'}\n`;
+        const snippet = result.snippet || result.description || '';
+        console.log(`📊 [DEBUG] Resultado ${index + 1} no prompt:`, {
+          title: result.title,
+          snippetLength: snippet.length,
+          hasUrl: !!result.url
+        });
+        prompt += `\n${index + 1}. ${result.title}\n   ${snippet}\n   Fonte: ${result.url || result.source || 'web'}\n`;
       });
       if (partnersInfo && partnersInfo.length > 0) {
         prompt += `\n⚠️ IMPORTANTE: Se houver parceiros acima, mencione-os PRIMEIRO. Depois, use as informações da pesquisa web como opções adicionais.`;
@@ -650,18 +668,24 @@ PERGUNTA DO USUÁRIO: ${question}`;
         prompt += `\n⚠️ IMPORTANTE: Use APENAS as informações acima. Se algo não estiver nos resultados, NÃO invente. Seja honesto se não souber algo específico.`;
       }
     } else {
-      prompt += `\n\n⚠️ ATENÇÃO: Não há resultados de busca web disponíveis. Use apenas seu conhecimento geral sobre Mato Grosso do Sul. NÃO invente informações específicas como preços, horários ou detalhes que não tem certeza.`;
+      console.warn('⚠️ [AVISO CRÍTICO] Nenhum resultado de pesquisa web disponível!');
+      console.warn('⚠️ [AVISO CRÍTICO] O Gemini receberá apenas conhecimento pré-treinado!');
+      console.warn('⚠️ [AVISO CRÍTICO] A resposta será genérica e não específica!');
+      prompt += `\n\n⚠️ ATENÇÃO: Não há resultados de busca web disponíveis. Use seu conhecimento geral sobre Mato Grosso do Sul, mas seja ESPECÍFICO na resposta. Se a pergunta pede algo específico (hotel perto do aeroporto, restaurante em uma cidade), mencione opções conhecidas ou seja honesto sobre não ter informações atualizadas, mas ainda ofereça alternativas relacionadas. NÃO invente informações específicas como preços, horários ou detalhes que não tem certeza.`;
     }
 
     // Verificar se deve evitar "Olá" (versão do site com histórico de conversa)
     const isTotemVersion = (query as any).isTotemVersion ?? true; // Default: true (comportamento atual)
     const hasConversationHistory = query.conversationHistory && query.conversationHistory.length > 0;
+    const isFirstUserMessage = (query as any).isFirstUserMessage ?? (!hasConversationHistory || query.conversationHistory?.length === 0);
     
     prompt += `\n\n🎯 INSTRUÇÕES FINAIS:
 - Responda de forma natural, conversacional e inteligente (como ChatGPT/Gemini)
-- Entenda o contexto completo da pergunta - seja específico e personalizado
+- Entenda o contexto completo da pergunta - seja ESPECÍFICO e personalizado
+- Se a pergunta pede algo específico (hotel perto do aeroporto, restaurante no centro), responda EXATAMENTE isso
 - Se houver parceiros, mencione-os PRIMEIRO especificando que são oficiais da plataforma Descubra Mato Grosso do Sul
-- Se não houver parceiros, sugira normalmente baseado na pesquisa web
+- Se não houver parceiros, sugira normalmente baseado na pesquisa web ou conhecimento local
+- Se não tiver informações específicas sobre o que foi pedido, seja honesto mas ainda ofereça alternativas relacionadas
 - Seja honesto, entusiasmado e útil
 - Varie sempre - nunca repita estruturas ou palavras exatas
 - NUNCA use formatação markdown (asteriscos, negrito, etc.) na resposta - apenas texto puro com emojis
@@ -669,7 +693,8 @@ PERGUNTA DO USUÁRIO: ${question}`;
 - Responda como se já soubesse tudo - não mencione que "pesquisou" ou "encontrou"`;
 
     // Regra especial: versão do site não deve usar "Olá" após primeira mensagem
-    if (!isTotemVersion && hasConversationHistory) {
+    // Na versão /guata (website), já há uma mensagem de boas-vindas inicial, então a primeira mensagem do usuário já tem contexto
+    if (!isTotemVersion && !isFirstUserMessage) {
       prompt += `\n\n⚠️ IMPORTANTE: Esta NÃO é a primeira mensagem da conversa. NÃO comece sua resposta com "Olá", "Oi" ou outros cumprimentos. Responda diretamente à pergunta de forma natural e entusiasmada, mas sem cumprimentos iniciais.`;
     }
 
@@ -680,8 +705,14 @@ PERGUNTA DO USUÁRIO: ${question}`;
 
   private async callGeminiAPI(prompt: string): Promise<string> {
     if (!this.genAI) {
+      console.error('❌ [ERRO CRÍTICO] Gemini não configurado!');
+      console.error('💡 [DIAGNÓSTICO] Verifique se VITE_GEMINI_API_KEY está configurada no .env');
       throw new Error('Gemini não configurado');
     }
+
+    console.log('🧠 [DEBUG] Iniciando chamada ao Gemini API');
+    console.log('🧠 [DEBUG] Tamanho do prompt:', prompt.length, 'caracteres');
+    console.log('🧠 [DEBUG] Primeiros 200 chars do prompt:', prompt.substring(0, 200));
 
     try {
       // Tentar modelos em ordem de preferência (usando modelos corretos da API)
@@ -704,17 +735,25 @@ PERGUNTA DO USUÁRIO: ${question}`;
       
       for (const modelName of modelsToTry) {
         try {
-          console.log(`🧠 Tentando modelo: ${modelName}`);
+          console.log(`🧠 [DEBUG] Tentando modelo: ${modelName}`);
           const model = this.genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-          console.log(`✅ Modelo ${modelName} funcionou!`);
-      return text;
+          console.log(`🧠 [DEBUG] Modelo criado, gerando conteúdo...`);
+          const result = await model.generateContent(prompt);
+          const response = await result.response;
+          const text = response.text();
+          console.log(`✅ [SUCESSO] Modelo ${modelName} funcionou!`);
+          console.log(`✅ [DEBUG] Resposta do Gemini (primeiros 200 chars):`, text.substring(0, 200));
+          console.log(`✅ [DEBUG] Tamanho da resposta:`, text.length, 'caracteres');
+          return text;
         } catch (modelError: any) {
-          console.log(`⚠️ Modelo ${modelName} falhou:`, modelError.message);
+          console.warn(`⚠️ [AVISO] Modelo ${modelName} falhou:`, {
+            message: modelError.message,
+            name: modelError.name,
+            stack: modelError.stack?.substring(0, 200)
+          });
           // Se não for erro de modelo não encontrado, propagar o erro
           if (!modelError.message?.includes('not found') && !modelError.message?.includes('404')) {
+            console.error(`❌ [ERRO] Erro não é de modelo não encontrado, propagando erro`);
             throw modelError;
           }
           // Continuar para próximo modelo

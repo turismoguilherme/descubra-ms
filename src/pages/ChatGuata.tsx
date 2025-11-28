@@ -46,8 +46,26 @@ const ChatGuata = () => {
     mensagemParaEnviar = mensagemParaEnviar.trim();
     
     // Validar que não seja um objeto serializado ou texto do console
-    if (mensagemParaEnviar.startsWith('{') || mensagemParaEnviar.includes('questionType') || mensagemParaEnviar.includes('Insights de aprendizado')) {
-      console.warn('⚠️ Mensagem parece ser um objeto ou texto do console, ignorando...');
+    const invalidPatterns = [
+      '{questionType',
+      'Insights de aprendizado',
+      'Melhorias implementadas',
+      'questionType:',
+      'userIntent:',
+      'behaviorPattern:',
+      'ChatGuata.tsx:',
+      'guataTrueApiService.ts:',
+      '📝 Query:',
+      '💡 Melhorias',
+      '[object Object]',
+      '[object',
+      'object Object'
+    ];
+    
+    const isInvalid = invalidPatterns.some(pattern => mensagemParaEnviar.includes(pattern));
+    
+    if (mensagemParaEnviar.startsWith('{') || isInvalid || mensagemParaEnviar.length > 500) {
+      console.warn('⚠️ Mensagem parece ser um objeto ou texto do console, ignorando...', mensagemParaEnviar.substring(0, 100));
       return;
     }
     
@@ -73,7 +91,7 @@ const ChatGuata = () => {
       // Usar o serviço com APIs reais configuradas (Gemini + Google Search)
       const response = await guataTrueApiService.processQuestion({
         question: mensagemParaEnviar,
-        userId: 'publico',
+        userId: undefined, // Usuário público não tem UUID
         sessionId: `session-${Date.now()}`,
         userLocation: 'Mato Grosso do Sul',
         conversationHistory: conversationHistory,
@@ -180,7 +198,7 @@ const ChatGuata = () => {
       const question = lastUserMessage?.text || '';
 
       const feedback = {
-        userId: 'publico',
+        userId: undefined, // Usuário público não tem UUID - será null no banco
         sessionId: `session-${Date.now()}`,
         questionId: currentQuestionId,
         question: question,
@@ -229,6 +247,11 @@ const ChatGuata = () => {
     enviarMensagem(pergunta);
   };
 
+  // Wrapper para evitar que o evento do botão seja passado como mensagem
+  const handleEnviarClick = () => {
+    enviarMensagem();
+  };
+
   // Interface principal do Guatá - Tela cheia tipo totem
   return (
     <div 
@@ -243,7 +266,7 @@ const ChatGuata = () => {
                 mensagens={mensagens}
                 inputMensagem={inputMensagem}
                 setInputMensagem={setInputMensagem}
-                enviarMensagem={enviarMensagem}
+                enviarMensagem={handleEnviarClick}
                 onClearConversation={handleLimparConversa}
                 isGravandoAudio={isGravandoAudio}
                 toggleMicrofone={toggleMicrofone}

@@ -88,9 +88,9 @@ export interface RealWebSearchResponse {
 
 class GuataRealWebSearchService {
   // API KEY ESPECÍFICA DO GUATÁ - Google Search API
-  // Prioridade: 1) Variável de ambiente, 2) Chave hardcoded
+  // Prioridade: Variável de ambiente (.env)
   private readonly GUATA_GOOGLE_SEARCH_API_KEY = 
-    (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || 'AIzaSyAjh12gRofCgSf6-y1-ckvrDyT7ICuW7XY').trim();
+    (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
   // ENGINE ID ESPECÍFICO DO GUATÁ - Configurado pelo usuário
   // Prioridade: 1) Variável de ambiente, 2) Engine ID hardcoded
   private readonly GUATA_ENGINE_ID = 
@@ -117,7 +117,29 @@ class GuataRealWebSearchService {
     this.isConfigured = !!(this.googleApiKey && this.googleEngineId);
     console.log('🔍 Guatá Real Web Search:', this.isConfigured ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
     console.log('🔑 Google API Key (Guatá):', this.googleApiKey ? 'PRESENTE' : 'AUSENTE');
+    
+    // Log detalhado da chave (primeiros e últimos caracteres para segurança)
+    if (this.googleApiKey) {
+      const keyPreview = this.googleApiKey.length > 20 
+        ? `${this.googleApiKey.substring(0, 10)}...${this.googleApiKey.substring(this.googleApiKey.length - 10)}`
+        : '***';
+      console.log('🔑 [DEBUG] Chave sendo usada (preview):', keyPreview);
+      console.log('🔑 [DEBUG] Tamanho da chave:', this.googleApiKey.length, 'caracteres');
+      console.log('🔑 [DEBUG] Fonte da chave:', 
+        import.meta.env.VITE_GOOGLE_SEARCH_API_KEY ? 'Variável de ambiente (.env)' : 'Hardcoded (fallback)');
+    }
+    
     console.log('🔑 Google Engine ID (Guatá):', this.googleEngineId);
+    
+    // Verificação de compatibilidade
+    if (this.googleApiKey && this.googleEngineId) {
+      console.log('✅ [VERIFICAÇÃO] Chave e Engine ID configurados');
+      console.log('💡 [VERIFICAÇÃO] Certifique-se que:');
+      console.log('   1. A chave pertence ao projeto onde Custom Search API está ATIVADA');
+      console.log('   2. O projeto correto é: gen-lang-client-0847008941 (GuataIA)');
+      console.log('   3. A Custom Search API está habilitada nesse projeto');
+      console.log('   4. A chave não tem restrições que bloqueiem a API');
+    }
   }
 
   /**
@@ -171,13 +193,57 @@ class GuataRealWebSearchService {
       this.searchCount++;
       console.log(`📊 Buscas hoje: ${this.searchCount}/${this.MAX_SEARCHES_PER_DAY}`);
       
+      console.log('🔍 [DEBUG] URL da busca:', searchUrl.replace(apiKey, 'API_KEY_HIDDEN').replace(engineId, 'ENGINE_ID_HIDDEN'));
+      console.log('🔍 [DEBUG] API Key presente:', !!apiKey, 'Tamanho:', apiKey.length);
+      console.log('🔍 [DEBUG] Engine ID presente:', !!engineId, 'Valor:', engineId);
+      
       const response = await fetch(searchUrl);
+      
+      console.log('🔍 [DEBUG] Status da resposta:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ [DEBUG] Erro completo da API:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText.substring(0, 500) // Limitar tamanho do log
+        });
+        
+        // Tentar parsear erro JSON para mais detalhes
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error('❌ [DEBUG] Erro JSON detalhado:', {
+            error: errorJson.error,
+            message: errorJson.error?.message,
+            reason: errorJson.error?.reason,
+            domain: errorJson.error?.domain
+          });
+        } catch (e) {
+          console.error('❌ [DEBUG] Erro não é JSON válido');
+        }
         
         // Tratamento específico para erro 403 (API não habilitada)
         if (response.status === 403) {
+          console.error('❌ [ERRO CRÍTICO] Google Search API retornou 403 Forbidden!');
+          console.error('💡 [DIAGNÓSTICO] Possíveis causas:');
+          console.error('   1. API Key inválida ou expirada');
+          console.error('   2. Custom Search API não está habilitada no projeto da chave');
+          console.error('   3. API Key pertence a projeto DIFERENTE de onde a API está ativada');
+          console.error('   4. API Key não tem permissões para Custom Search API');
+          console.error('   5. Restrições de API bloqueando a requisição');
+          console.error('💡 [SOLUÇÃO PASSO A PASSO]:');
+          console.error('   PASSO 1: Verifique qual projeto a chave pertence');
+          console.error('      - Acesse: https://console.cloud.google.com/apis/credentials');
+          console.error('      - Encontre a chave que começa com:', apiKey.substring(0, 10) + '...');
+          console.error('      - Verifique o projeto ao qual ela pertence');
+          console.error('   PASSO 2: Verifique se a API está ativada no projeto da chave');
+          console.error('      - O projeto deve ser: gen-lang-client-0847008941 (GuataIA)');
+          console.error('      - Acesse: https://console.cloud.google.com/apis/library/customsearch.googleapis.com?project=gen-lang-client-0847008941');
+          console.error('      - Deve mostrar "API ativada" (como na sua imagem)');
+          console.error('   PASSO 3: Se a chave está em outro projeto:');
+          console.error('      - Opção A: Copie a chave do projeto gen-lang-client-0847008941 e atualize o .env');
+          console.error('      - Opção B: Ative Custom Search API no projeto da chave atual');
+          console.error('   PASSO 4: Aguarde 2-5 minutos após mudanças');
           console.log('ℹ️ Google Search API não habilitada (403) - continuando com fallback');
           // Retornar array vazio sem quebrar o fluxo
           return [];
@@ -424,10 +490,16 @@ class GuataRealWebSearchService {
 
       // 4. Se nenhuma pesquisa web funcionou, usar dados locais
       if (results.length === 0) {
-        console.log('⚠️ Nenhuma pesquisa web funcionou, usando dados locais...');
+        console.warn('⚠️ [FALLBACK] Nenhuma pesquisa web funcionou!');
+        console.warn('⚠️ [FALLBACK] Motivos possíveis:');
+        console.warn('   - Google Search API retornou 403 (API não habilitada)');
+        console.warn('   - Google Search API retornou erro');
+        console.warn('   - Nenhum resultado encontrado');
+        console.warn('⚠️ [FALLBACK] Usando dados locais genéricos (menos específicos)...');
         results = this.generateLocalSearchResults(question);
         searchMethod = 'tourism_apis';
         usedRealSearch = false;
+        console.warn(`⚠️ [FALLBACK] Gerados ${results.length} resultados locais genéricos`);
       }
 
       const processingTime = Date.now() - startTime;
@@ -504,7 +576,18 @@ class GuataRealWebSearchService {
       });
     }
     
-    if (lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem')) {
+    // Hotéis próximos ao aeroporto de Campo Grande
+    if ((lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem')) && 
+        (lowerQuestion.includes('aeroporto') || lowerQuestion.includes('campo grande'))) {
+      results.push({
+        title: "Hotéis Próximos ao Aeroporto de Campo Grande",
+        snippet: "Hotéis próximos ao Aeroporto Internacional de Campo Grande (CGR): Hotel MS Executive (5km, transfer gratuito), Hotel Nacional (7km, centro), Grand Park Hotel (8km, luxo), Hotel Bristol Brasil (6km, executivo). Região do Aero Rancho e Vila Sobrinho concentram opções econômicas a 3-5km do aeroporto. Táxi/Uber: R$ 25-40. Maioria oferece transfer gratuito.",
+        url: "",
+        source: "local_knowledge",
+        confidence: 0.9,
+        timestamp: new Date()
+      });
+    } else if (lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem')) {
       results.push({
         title: "Hospedagem em Mato Grosso do Sul",
         snippet: "MS oferece diversas opções de hospedagem: hotéis urbanos em Campo Grande, pousadas ecológicas em Bonito, fazendas no Pantanal e hospedagem rural em outras cidades.",
