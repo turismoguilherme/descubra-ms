@@ -88,7 +88,7 @@ export interface RealWebSearchResponse {
 
 class GuataRealWebSearchService {
   // API KEY ESPECÍFICA DO GUATÁ - Google Search API
-  private readonly GUATA_GOOGLE_SEARCH_API_KEY = 'AIzaSyCOtohbdIu3iozNgtUqrWrbJWV6JXi6WHM';
+  private readonly GUATA_GOOGLE_SEARCH_API_KEY = 'AIzaSyAjh12gRofCgSf6-y1-ckvrDyT7ICuW7XY';
   // ENGINE ID ESPECÍFICO DO GUATÁ - Configurado pelo usuário
   private readonly GUATA_ENGINE_ID = 'a3641e1665f7b4909';
   
