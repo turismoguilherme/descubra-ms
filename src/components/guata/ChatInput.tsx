@@ -68,7 +68,10 @@ const ChatInput = ({
         </motion.div>
         <motion.div whileTap={{ scale: 0.9 }}>
           <Button 
-            onClick={enviarMensagem}
+            onClick={(e) => {
+              e.preventDefault();
+              enviarMensagem();
+            }}
             className={cn(
               "bg-ms-guavira-purple text-white p-2 rounded-full",
               "hover:bg-ms-guavira-purple/90 disabled:opacity-50 disabled:cursor-not-allowed",

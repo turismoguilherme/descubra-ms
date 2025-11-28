@@ -135,3 +135,4 @@ descubra-ms/
 - Verifique se não há espaços extras na chave
 - Use `console.log(import.meta.env.VITE_GEMINI_API_KEY)` para debugar
 
+

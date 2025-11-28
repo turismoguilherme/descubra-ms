@@ -74,6 +74,8 @@ const Guata = () => {
       console.log("🔍 Verificando se processQuestion existe:", !!guataTrueApiService?.processQuestion);
       
       // Usar o serviço com APIs reais configuradas (Gemini + Google Search)
+      // Na versão /guata, já há uma mensagem de boas-vindas, então a primeira mensagem do usuário já tem contexto
+      const isFirstUserMessage = conversationHistory.length === 0;
       const response = await guataTrueApiService.processQuestion({
         question: mensagemParaEnviar,
         userId: user?.id || 'convidado',
@@ -81,7 +83,8 @@ const Guata = () => {
         userLocation: 'Mato Grosso do Sul',
         conversationHistory: conversationHistory,
         userPreferences: userPreferences,
-        isTotemVersion: false // Versão do site: não usar "Olá" após primeira mensagem
+        isTotemVersion: false, // Versão do site: não usar "Olá" após primeira mensagem
+        isFirstUserMessage: isFirstUserMessage // Flag para indicar se é a primeira mensagem do usuário
       });
       
       console.log("✅ Guatá True API: Resposta gerada em", response.processingTime, "ms");

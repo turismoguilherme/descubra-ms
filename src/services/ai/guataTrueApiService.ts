@@ -13,6 +13,7 @@ export interface TrueApiQuery {
   conversationHistory?: string[];
   userPreferences?: any;
   isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
+  isFirstUserMessage?: boolean; // true = primeira mensagem do usuário (já teve mensagem de boas-vindas)
 }
 
 export interface TrueApiResponse {
@@ -63,7 +64,8 @@ class GuataTrueApiService {
         userLocation: query.userLocation,
         conversationHistory: query.conversationHistory,
         userPreferences: query.userPreferences,
-        isTotemVersion: query.isTotemVersion ?? true // Passar flag para controlar uso de "Olá"
+        isTotemVersion: query.isTotemVersion ?? true, // Passar flag para controlar uso de "Olá"
+        isFirstUserMessage: query.isFirstUserMessage ?? false // Passar flag para primeira mensagem do usuário
       });
       
       console.log('✅ Guatá Intelligent Tourism: Resposta gerada em', intelligentResponse.processingTime, 'ms');

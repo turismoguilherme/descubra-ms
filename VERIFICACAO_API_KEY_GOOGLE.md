@@ -132,3 +132,4 @@ Após fazer as correções:
 3. **Verifique se há quotas excedidas** no Google Cloud Console
 4. **Crie uma nova chave** se necessário
 
+

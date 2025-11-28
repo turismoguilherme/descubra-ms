@@ -140,9 +140,6 @@ export class SupabaseMLIntegration {
       
       // Mesclar com preferências existentes
       const mergedPreferences: UserPreferences = {
-        preferred_destinations: [],
-        interests: [],
-        accessibility_needs: [],
         ...existing,
         ...preferences,
         // Mesclar arrays
