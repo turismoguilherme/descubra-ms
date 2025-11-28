@@ -1363,16 +1363,18 @@ Com essas informações, vou montar um roteiro perfeito para você! 🚀`;
   private generateAdaptiveImprovements(webSearchResponse: RealWebSearchResponse): string[] {
     const improvements: string[] = [];
     
-    if (!webSearchResponse.usedRealSearch) {
+    // Só sugerir melhorias se realmente houver necessidade
+    if (!webSearchResponse.usedRealSearch && webSearchResponse.results.length === 0) {
       improvements.push('Configurar APIs de pesquisa web para dados mais atualizados');
     }
     
-    if (webSearchResponse.results.length === 0) {
+    if (webSearchResponse.results.length === 0 && !webSearchResponse.usedRealSearch) {
       improvements.push('Expandir base de conhecimento local');
     }
     
-    improvements.push('Sistema de verificação de informações implementado');
-    improvements.push('Pesquisa web real integrada');
+    // Remover melhorias que são sempre verdadeiras (não são mais "melhorias", são características do sistema)
+    // improvements.push('Sistema de verificação de informações implementado');
+    // improvements.push('Pesquisa web real integrada');
     
     return improvements;
   }

@@ -34,7 +34,23 @@ const ChatGuata = () => {
   }, [mensagens.length]);
 
   const enviarMensagem = async (mensagem?: string) => {
-    const mensagemParaEnviar = String(mensagem || inputMensagem || "").trim();
+    // Garantir que seja sempre uma string válida
+    let mensagemParaEnviar = mensagem || inputMensagem || "";
+    
+    // Se for um objeto, tentar extrair string ou usar valor padrão
+    if (typeof mensagemParaEnviar !== 'string') {
+      console.warn('⚠️ Mensagem não é string, convertendo...', typeof mensagemParaEnviar);
+      mensagemParaEnviar = String(mensagemParaEnviar).trim();
+    }
+    
+    mensagemParaEnviar = mensagemParaEnviar.trim();
+    
+    // Validar que não seja um objeto serializado ou texto do console
+    if (mensagemParaEnviar.startsWith('{') || mensagemParaEnviar.includes('questionType') || mensagemParaEnviar.includes('Insights de aprendizado')) {
+      console.warn('⚠️ Mensagem parece ser um objeto ou texto do console, ignorando...');
+      return;
+    }
+    
     if (mensagemParaEnviar === "") return;
     
     // Adiciona a mensagem do usuário
