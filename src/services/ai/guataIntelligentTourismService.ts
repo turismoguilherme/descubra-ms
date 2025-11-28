@@ -99,7 +99,8 @@ class GuataIntelligentTourismService {
         query.userPreferences || {},
         partnersResult,
         query.userId,
-        query.sessionId
+        query.sessionId,
+        query.isTotemVersion
       );
 
       // 4. Personalizar resposta com Machine Learning
@@ -550,7 +551,8 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     userPreferences: any,
     partnersResult?: any,
     userId?: string,
-    sessionId?: string
+    sessionId?: string,
+    isTotemVersion?: boolean
   ): Promise<string> {
     let answer = "";
 
@@ -576,7 +578,7 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           userLocation: 'Mato Grosso do Sul',
           searchResults: webSearchResponse.results,
           conversationHistory: conversationHistory,
-          isTotemVersion: (query as any).isTotemVersion ?? true // Passar flag para controlar uso de "Olá"
+          isTotemVersion: isTotemVersion ?? true // Passar flag para controlar uso de "Olá"
         };
         
         // Passar informações de parceiros para o Gemini
