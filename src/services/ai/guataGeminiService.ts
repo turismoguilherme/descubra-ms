@@ -95,6 +95,20 @@ class GuataGeminiService {
     // Usar API key específica do Guatá
     this.isConfigured = !!this.GUATA_API_KEY;
     
+    // Logs de diagnóstico para ambiente de produção (Vercel)
+    if (typeof window !== 'undefined') {
+      const env = import.meta.env.MODE || 'unknown';
+      const isProd = env === 'production' || window.location.hostname.includes('vercel.app');
+      
+      if (isProd) {
+        console.log('🔍 [DIAGNÓSTICO VERCEL] Ambiente:', env);
+        console.log('🔍 [DIAGNÓSTICO VERCEL] Hostname:', window.location.hostname);
+        console.log('🔍 [DIAGNÓSTICO VERCEL] VITE_GEMINI_API_KEY existe?', !!import.meta.env.VITE_GEMINI_API_KEY);
+        console.log('🔍 [DIAGNÓSTICO VERCEL] Tamanho da chave:', this.GUATA_API_KEY ? this.GUATA_API_KEY.length : 0);
+        console.log('🔍 [DIAGNÓSTICO VERCEL] Chave configurada?', this.isConfigured);
+      }
+    }
+    
     if (this.isConfigured) {
       try {
         this.genAI = new GoogleGenerativeAI(this.GUATA_API_KEY);
@@ -104,7 +118,13 @@ class GuataGeminiService {
         this.isConfigured = false;
       }
     } else {
-      console.log('🧠 Guatá Gemini Service: NÃO CONFIGURADO - API Key ausente');
+      console.error('❌ [ERRO CRÍTICO] Guatá Gemini Service: NÃO CONFIGURADO - API Key ausente');
+      console.error('💡 [SOLUÇÃO] Configure VITE_GEMINI_API_KEY no painel do Vercel:');
+      console.error('   1. Acesse: https://vercel.com/dashboard');
+      console.error('   2. Settings → Environment Variables');
+      console.error('   3. Adicione: VITE_GEMINI_API_KEY');
+      console.error('   4. Marque: Production, Preview, Development');
+      console.error('   5. Faça um redeploy');
     }
   }
 
@@ -113,6 +133,13 @@ class GuataGeminiService {
     
     console.log('🧠 Gemini Service: Processando pergunta...');
     console.log('🔑 API Key configurada:', this.isConfigured);
+    
+    // Log adicional se não estiver configurado (para debug no Vercel)
+    if (!this.isConfigured) {
+      console.error('❌ [ERRO] Tentativa de usar Gemini sem API key configurada');
+      console.error('💡 [DIAGNÓSTICO] Verifique se VITE_GEMINI_API_KEY está configurada no Vercel');
+      return this.generateFallbackResponse(query);
+    }
     
     // 1. VERIFICAR CACHE COMPARTILHADO (perguntas comuns)
     const sharedCacheResult = this.getFromSharedCache(query);
@@ -605,6 +632,23 @@ Guatá: [Analisa contexto completo: "hotel" + "perto do centro" = precisa de hot
 Usuário: "onde fica corguinho?"
 Guatá: [Analisa contexto: pergunta sobre localização específica de "corguinho". Se não souber exatamente, é honesto mas ainda ajuda com informações relacionadas sobre MS]
 
+EXEMPLOS DE CONVERSA COM CONTEXTO (use o histórico para entender perguntas ambíguas):
+
+Usuário: "hotel em bonito"
+Guatá: "🦦 Que legal! Encontrei alguns hotéis em Bonito: [lista hotéis]"
+Usuário: "onde fica?"
+Guatá: "Os hotéis que mencionei ficam em Bonito, MS. Quer saber a localização específica de algum deles?"
+
+Usuário: "rio da prata"
+Guatá: "🦦 O Rio da Prata é um passeio incrível em Bonito! Você flutua em águas cristalinas..."
+Usuário: "quanto custa?"
+Guatá: "O passeio do Rio da Prata custa aproximadamente R$ [valor] por pessoa..."
+
+Usuário: "pantanal"
+Guatá: "🦦 O Pantanal é o maior santuário ecológico do mundo! É incrível..."
+Usuário: "e bonito?"
+Guatá: "Ah, você quer comparar Pantanal e Bonito? Ambos são destinos únicos! O Pantanal é mais focado em observação de animais, enquanto Bonito é mais sobre ecoturismo e águas cristalinas..."
+
 SOBRE PARCEIROS OFICIAIS:
 - Se houver parceiros oficiais da plataforma, SEMPRE mencione PRIMEIRO
 - Especifique claramente: "parceiros oficiais da plataforma Descubra Mato Grosso do Sul"
@@ -622,6 +666,21 @@ REGRAS CRÍTICAS:
 - Se a pergunta menciona um lugar, fale sobre AQUELE lugar específico, não sobre lugares genéricos
 
 PERGUNTA DO USUÁRIO: ${question}`;
+
+    // NOVO: Adicionar histórico de conversa se existir (melhora contexto e continuidade)
+    if (query.conversationHistory && query.conversationHistory.length > 0) {
+      prompt += `\n\n💬 HISTÓRICO DA CONVERSA (use este contexto para entender perguntas ambíguas ou de follow-up):\n`;
+      // Adicionar últimas mensagens do histórico (máximo 6 para não exceder tokens)
+      const recentHistory = query.conversationHistory.slice(-6);
+      recentHistory.forEach((message, index) => {
+        prompt += `\n${index + 1}. ${message}`;
+      });
+      prompt += `\n\n⚠️ IMPORTANTE SOBRE CONTEXTO:
+- Se a pergunta atual for ambígua (ex: "onde fica?", "quanto custa?", "qual o melhor?"), use o histórico acima para entender do que o usuário está falando
+- Se a pergunta menciona algo do histórico (ex: "e bonito?" após falar de Pantanal), conecte as informações
+- Mantenha a continuidade natural da conversa - não repita informações já ditas, apenas referencie quando necessário
+- Se a pergunta é sobre algo mencionado anteriormente, responda no contexto daquela conversa anterior`;
+    }
 
     if (userLocation) {
       prompt += `\n\n📍 LOCALIZAÇÃO DO USUÁRIO: ${userLocation}`;
@@ -679,6 +738,15 @@ PERGUNTA DO USUÁRIO: ${question}`;
     const hasConversationHistory = query.conversationHistory && query.conversationHistory.length > 0;
     const isFirstUserMessage = (query as any).isFirstUserMessage ?? (!hasConversationHistory || query.conversationHistory?.length === 0);
     
+    // NOVO: Instruções sobre continuidade e contexto (antes das instruções finais)
+    prompt += `\n\n🧠 ENTENDIMENTO DE CONTEXTO E CONTINUIDADE:
+- Se houver histórico de conversa acima, SEMPRE use-o para entender perguntas ambíguas ou de follow-up
+- Perguntas curtas como "onde fica?", "quanto custa?", "qual o melhor?" geralmente se referem ao tópico da conversa anterior
+- Mantenha a continuidade: se o usuário perguntar sobre algo relacionado ao que foi dito antes, conecte as informações naturalmente
+- Seja inteligente ao interpretar contexto: "e bonito?" após falar de Pantanal = comparação entre os dois destinos
+- Não peça esclarecimento se o contexto anterior já deixar claro do que o usuário está falando
+- Responda de forma natural e conversacional, como se estivesse tendo uma conversa real com o usuário`;
+
     prompt += `\n\n🎯 INSTRUÇÕES FINAIS:
 - Responda de forma natural, conversacional e inteligente (como ChatGPT/Gemini)
 - Entenda o contexto completo da pergunta - seja ESPECÍFICO e personalizado
