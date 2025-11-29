@@ -819,6 +819,19 @@ PERGUNTA DO USUÁRIO: ${question}`;
             name: modelError.name,
             stack: modelError.stack?.substring(0, 200)
           });
+          
+          // Tratamento específico para erro 400 (chave expirada)
+          if (modelError.message?.includes('expired') || modelError.message?.includes('expirada') || modelError.message?.includes('API key expired')) {
+            console.error('❌ [ERRO CRÍTICO] Gemini API Key EXPIRADA!');
+            console.error('💡 [SOLUÇÃO]:');
+            console.error('   1. Acesse: https://aistudio.google.com/app/apikey');
+            console.error('   2. Crie uma NOVA chave de API');
+            console.error('   3. Atualize VITE_GEMINI_API_KEY no Vercel e localmente');
+            console.error('   4. Revogue a chave antiga expirada');
+            // Não tentar outros modelos se a chave está expirada
+            throw new Error('API key expired. Please renew the API key.');
+          }
+          
           // Se não for erro de modelo não encontrado, propagar o erro
           if (!modelError.message?.includes('not found') && !modelError.message?.includes('404')) {
             console.error(`❌ [ERRO] Erro não é de modelo não encontrado, propagando erro`);
