@@ -20,7 +20,7 @@ serve(async (req) => {
     
     console.log('🔑 API Key length:', apiKey.length)
     console.log('🔑 API Key preview:', apiKey.substring(0, 10) + '...')
-    console.log('🔑 API Key completa:', apiKey)
+    // REMOVIDO: Log que expunha a chave completa - SEGURANÇA
     
     const prompt = "Olá! Você é o Guatá, assistente de turismo do Mato Grosso do Sul. Responda em português brasileiro de forma amigável: 'Qual é a capital do Mato Grosso do Sul?'"
     
@@ -31,7 +31,8 @@ serve(async (req) => {
       'Authorization': `Bearer ${apiKey}`
     }
     
-    console.log('📤 Headers sendo enviados:', JSON.stringify(headers, null, 2))
+    // REMOVIDO: Log que expunha headers com chave - SEGURANÇA
+    console.log('📤 Headers configurados (chave oculta por segurança)')
     console.log('📤 URL da API:', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent')
     
     const requestBody = {
