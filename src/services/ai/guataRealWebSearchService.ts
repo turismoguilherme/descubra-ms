@@ -118,16 +118,30 @@ class GuataRealWebSearchService {
     console.log('🔍 Guatá Real Web Search:', this.isConfigured ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
     console.log('🔑 Google API Key (Guatá):', this.googleApiKey ? 'PRESENTE' : 'AUSENTE');
     
-    // Log detalhado da chave (primeiros e últimos caracteres para segurança)
-    if (this.googleApiKey) {
-      const keyPreview = this.googleApiKey.length > 20 
-        ? `${this.googleApiKey.substring(0, 10)}...${this.googleApiKey.substring(this.googleApiKey.length - 10)}`
-        : '***';
-      console.log('🔑 [DEBUG] Chave sendo usada (preview):', keyPreview);
-      console.log('🔑 [DEBUG] Tamanho da chave:', this.googleApiKey.length, 'caracteres');
-      console.log('🔑 [DEBUG] Fonte da chave:', 
-        import.meta.env.VITE_GOOGLE_SEARCH_API_KEY ? 'Variável de ambiente (.env)' : 'Hardcoded (fallback)');
-    }
+      // Log detalhado da chave (primeiros e últimos caracteres para segurança)
+      if (this.googleApiKey) {
+        const keyPreview = this.googleApiKey.length > 20 
+          ? `${this.googleApiKey.substring(0, 10)}...${this.googleApiKey.substring(this.googleApiKey.length - 10)}`
+          : '***';
+        console.log('🔑 [DEBUG] Chave sendo usada (preview):', keyPreview);
+        console.log('🔑 [DEBUG] Tamanho da chave:', this.googleApiKey.length, 'caracteres');
+        console.log('🔑 [DEBUG] Fonte da chave:', 
+          import.meta.env.VITE_GOOGLE_SEARCH_API_KEY ? 'Variável de ambiente (.env)' : 'Hardcoded (fallback)');
+        
+        // Log adicional para diagnóstico no Vercel
+        if (typeof window !== 'undefined') {
+          const isVercel = window.location.hostname.includes('vercel.app');
+          if (isVercel) {
+            console.log('🔍 [DIAGNÓSTICO VERCEL] Ambiente de produção detectado');
+            console.log('🔍 [DIAGNÓSTICO VERCEL] Chave presente:', !!this.googleApiKey);
+            console.log('🔍 [DIAGNÓSTICO VERCEL] Primeiros 10 chars:', this.googleApiKey.substring(0, 10));
+            console.log('💡 [DIAGNÓSTICO] Se a chave for diferente da local, verifique:');
+            console.log('   1. Se a chave no Vercel é EXATAMENTE a mesma do .env local');
+            console.log('   2. Se há restrições de domínio na chave que bloqueiam *.vercel.app');
+            console.log('   3. Se a chave pertence ao projeto correto do Google Cloud');
+          }
+        }
+      }
     
     console.log('🔑 Google Engine ID (Guatá):', this.googleEngineId);
     
@@ -210,8 +224,9 @@ class GuataRealWebSearchService {
         });
         
         // Tentar parsear erro JSON para mais detalhes
+        let errorJson: any = null;
         try {
-          const errorJson = JSON.parse(errorText);
+          errorJson = JSON.parse(errorText);
           console.error('❌ [DEBUG] Erro JSON detalhado:', {
             error: errorJson.error,
             message: errorJson.error?.message,
@@ -220,6 +235,22 @@ class GuataRealWebSearchService {
           });
         } catch (e) {
           console.error('❌ [DEBUG] Erro não é JSON válido');
+        }
+        
+        // Tratamento específico para erro 400 (chave expirada)
+        if (response.status === 400) {
+          const errorMessage = errorJson?.error?.message || errorText;
+          if (errorMessage?.includes('expired') || errorMessage?.includes('expirada')) {
+            console.error('❌ [ERRO CRÍTICO] Google Search API Key EXPIRADA!');
+            console.error('💡 [SOLUÇÃO]:');
+            console.error('   1. Acesse: https://console.cloud.google.com/apis/credentials');
+            console.error('   2. Encontre a chave que começa com:', apiKey.substring(0, 10) + '...');
+            console.error('   3. Crie uma NOVA chave de API');
+            console.error('   4. Atualize VITE_GOOGLE_SEARCH_API_KEY no Vercel e localmente');
+            console.error('   5. Revogue a chave antiga expirada');
+            console.log('ℹ️ Google Search API key expirada (400) - continuando com fallback');
+            return [];
+          }
         }
         
         // Tratamento específico para erro 403 (API não habilitada)
