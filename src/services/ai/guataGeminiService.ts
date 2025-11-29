@@ -80,6 +80,18 @@ class GuataGeminiService {
   private readonly COMMON_QUESTIONS_CACHE_DURATION = 48 * 60 * 60 * 1000; // 48 horas para perguntas muito comuns
   private readonly SIMILARITY_THRESHOLD = 0.75; // 75% de similaridade para reutilizar (mais preciso)
   
+  // Cache especial para perguntas de sugestão (balões): reduzido para permitir variação
+  private readonly SUGGESTION_QUESTIONS = [
+    "Quais são os melhores passeios em Bonito?",
+    "Melhor época para visitar o Pantanal?",
+    "Me conte sobre a comida típica de MS",
+    "O que fazer em Corumbá?",
+    "O que fazer em Campo Grande?",
+    "Quais são os principais pontos turísticos de Campo Grande?"
+  ];
+  private readonly SUGGESTION_SHARED_CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 horas (em vez de 24h)
+  private readonly SUGGESTION_INDIVIDUAL_CACHE_DURATION = 5 * 60 * 1000; // 5 minutos (apenas anti-spam)
+  
   // Cache híbrido: compartilhado + individual
   private sharedCache: Map<string, SharedCacheEntry> = new Map(); // Perguntas comuns
   private individualCache: Map<string, Map<string, IndividualCacheEntry>> = new Map(); // Por usuário/sessão
@@ -421,6 +433,20 @@ class GuataGeminiService {
   }
 
   /**
+   * Verifica se a pergunta é uma das sugestões (balões)
+   */
+  private isSuggestionQuestion(question: string): boolean {
+    const normalizedQuestion = question.toLowerCase().trim();
+    return this.SUGGESTION_QUESTIONS.some(suggestion => {
+      const normalizedSuggestion = suggestion.toLowerCase().trim();
+      // Verificar se é exatamente igual ou muito similar (permite pequenas variações)
+      return normalizedQuestion === normalizedSuggestion || 
+             normalizedQuestion.includes(normalizedSuggestion.substring(0, 20)) ||
+             normalizedSuggestion.includes(normalizedQuestion.substring(0, 20));
+    });
+  }
+
+  /**
    * Obtém resposta do cache compartilhado
    */
   private getFromSharedCache(query: GeminiQuery): SharedCacheEntry | null {
@@ -429,8 +455,16 @@ class GuataGeminiService {
     
     if (cached) {
       const age = Date.now() - cached.timestamp;
-      // Perguntas muito comuns (usadas 5+ vezes) têm cache mais longo
-      const cacheDuration = cached.usedBy >= 5 ? this.COMMON_QUESTIONS_CACHE_DURATION : this.CACHE_DURATION;
+      // Para perguntas de sugestão: cache reduzido (3 horas) para permitir variação
+      // Para outras: cache normal (24h) ou mais longo se muito comum (48h)
+      const isSuggestion = this.isSuggestionQuestion(query.question);
+      let cacheDuration: number;
+      
+      if (isSuggestion) {
+        cacheDuration = this.SUGGESTION_SHARED_CACHE_DURATION; // 3 horas
+      } else {
+        cacheDuration = cached.usedBy >= 5 ? this.COMMON_QUESTIONS_CACHE_DURATION : this.CACHE_DURATION;
+      }
       
       if (age < cacheDuration) {
         cached.usedBy++;
@@ -459,8 +493,20 @@ class GuataGeminiService {
     const cacheKey = this.generateCacheKey(query);
     const cached = userCache.get(cacheKey);
     
-    if (cached && (Date.now() - cached.timestamp) < this.CACHE_DURATION) {
-      return cached;
+    if (cached) {
+      // Para perguntas de sugestão: cache muito curto (5 minutos) para permitir variação
+      // Para outras: cache normal (24h)
+      const isSuggestion = this.isSuggestionQuestion(query.question);
+      const cacheDuration = isSuggestion 
+        ? this.SUGGESTION_INDIVIDUAL_CACHE_DURATION // 5 minutos
+        : this.CACHE_DURATION; // 24 horas
+      
+      if ((Date.now() - cached.timestamp) < cacheDuration) {
+        return cached;
+      } else {
+        // Cache expirado, remover
+        userCache.delete(cacheKey);
+      }
     }
     
     return null;
@@ -505,7 +551,10 @@ class GuataGeminiService {
     for (const [key, cached] of this.sharedCache.entries()) {
       // Verificar se não expirou
       const age = Date.now() - cached.timestamp;
-      const cacheDuration = cached.usedBy >= 5 ? this.COMMON_QUESTIONS_CACHE_DURATION : this.CACHE_DURATION;
+      const isSuggestion = this.isSuggestionQuestion(query.question);
+      const cacheDuration = isSuggestion 
+        ? this.SUGGESTION_SHARED_CACHE_DURATION // 3 horas para sugestões
+        : (cached.usedBy >= 5 ? this.COMMON_QUESTIONS_CACHE_DURATION : this.CACHE_DURATION);
       
       if (age > cacheDuration) {
         continue;
@@ -631,6 +680,10 @@ SEU ESTILO:
 - Seja entusiasmado mas natural, não forçado
 - Entenda o contexto COMPLETO da pergunta - analise toda a frase, não apenas palavras-chave isoladas
 - Cada pergunta é única - personalize sua resposta, nunca use respostas prontas ou genéricas
+- IMPORTANTE: SEMPRE varie sua forma de expressar, mesmo que a informação seja similar
+- Use diferentes palavras, estruturas de frase, exemplos e abordagens em cada resposta
+- Seja criativo e natural, como se estivesse conversando com um amigo diferente a cada vez
+- NUNCA repita exatamente a mesma resposta - sempre encontre uma nova forma de expressar a mesma informação
 - Use emojis moderadamente (2-3 por resposta, sempre relevantes)
 - NUNCA use formatação markdown (asteriscos, negrito, etc.) - responda em texto puro
 - Seja específico e direto - responda exatamente o que foi perguntado, não informações genéricas
@@ -838,22 +891,39 @@ PERGUNTA DO USUÁRIO: ${question}`;
       const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
         body: {
           prompt,
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.0-flash-exp', // Usar modelo que funciona
           temperature: 0.7,
           maxOutputTokens: 2000
         }
       });
 
-      if (!error && data?.text) {
+      // Verificar se há erro na resposta (mesmo com status 200)
+      if (data?.error || !data?.success) {
+        if (isDev) {
+          console.error('[Guatá] ❌ Edge Function retornou erro:', data);
+        }
+      } else if (!error && data?.text) {
         if (isDev) {
           console.log('[Guatá] ✅ Edge Function funcionou! (chaves protegidas)');
         }
         return data.text;
       }
 
-      // Se Edge Function falhou, logar mas continuar para fallback
-      if (isDev && error) {
-        console.warn('[Guatá] Edge Function falhou, usando método antigo como fallback:', error.message);
+      // Se Edge Function falhou, logar detalhes mas continuar para fallback
+      if (error) {
+        if (isDev) {
+          console.warn('[Guatá] Edge Function falhou:', {
+            message: error.message,
+            status: error.status,
+            data: data,
+            error: error
+          });
+        }
+      } else if (data && !data.text) {
+        // Edge Function retornou dados mas sem texto
+        if (isDev) {
+          console.warn('[Guatá] Edge Function retornou dados inválidos:', data);
+        }
       }
     } catch (edgeFunctionError: any) {
       // Edge Function não disponível ou falhou - usar método antigo
@@ -872,15 +942,16 @@ PERGUNTA DO USUÁRIO: ${question}`;
     try {
       // Tentar modelos em ordem de preferência (usando modelos mais estáveis primeiro)
       // Começar com modelos mais básicos e conhecidos
+      // Modelos válidos do Gemini (atualizado para modelos disponíveis)
       const modelsToTry = [
-        'gemini-1.5-flash',                // Modelo mais estável e amplamente disponível
-        'models/gemini-1.5-flash',         // Com prefixo
-        'gemini-1.5-pro',                  // Pro versão estável
-        'models/gemini-1.5-pro',           // Com prefixo
-        'gemini-2.0-flash-exp',            // Experimental mais recente
+        'gemini-2.0-flash-exp',            // Experimental mais recente (funcionando)
         'models/gemini-2.0-flash-exp',     // Com prefixo
         'gemini-2.0-flash-001',            // Versão específica
-        'models/gemini-2.0-flash-001',    // Com prefixo
+        'models/gemini-2.0-flash-001',     // Com prefixo
+        'gemini-1.5-flash-latest',         // Versão latest
+        'models/gemini-1.5-flash-latest',  // Com prefixo
+        'gemini-1.5-pro-latest',           // Pro versão latest
+        'models/gemini-1.5-pro-latest',    // Com prefixo
       ];
       
       for (const modelName of modelsToTry) {
@@ -1143,11 +1214,7 @@ PERGUNTA DO USUÁRIO: ${question}`;
       ];
       answer += variations[Math.floor(Math.random() * variations.length)];
     } else if (lowerQuestion.includes('campo grande') || lowerQuestion.includes('campo-grande')) {
-      const variations = [
-        "Campo Grande, nossa capital 'Cidade Morena'! 🏛️ Que lugar incrível!\n\nPrincipais atrações que você não pode perder:\n• Bioparque Pantanal - Maior aquário de água doce do mundo (é impressionante!)\n• Parque das Nações Indígenas - Cultura e natureza juntas\n• Feira Central - Comida boa, artesanato, música ao vivo\n• Parque Horto Florestal - Um pedacinho da Amazônia no coração da cidade\n• Orla Morena - Perfeita para ver o pôr do sol\n\nÉ uma cidade que combina urbanização com natureza de forma única! O que mais te interessa conhecer? 🌟",
-        "Nossa, Campo Grande é demais! É nossa capital e tem tanta coisa legal! 🦦\n\nO que mais me empolga:\n• Bioparque Pantanal - Simplesmente gigante!\n• Parque das Nações Indígenas - Cultura viva\n• Feira Central - Sabor e arte\n• Horto Florestal - Natureza no centro\n• Orla Morena - Pôr do sol de tirar o fôlego\n\nÉ uma experiência única! O que você quer descobrir primeiro? ✨"
-      ];
-      answer += variations[Math.floor(Math.random() * variations.length)];
+      answer = "🦦 Ahh, você vai adorar essa cidade! Campo Grande é cheia de cantinhos especiais que fazem qualquer visita valer a pena! Olha só o que te espera:\n\n🌊 **Bioparque Pantanal**\nSério, você vai ficar de boca aberta! É o maior aquário de água doce do mundo — é cada peixe mais incrível que o outro! Um passeio obrigatório!\n\n🌳 **Parque das Nações Indígenas**\nImagina um parque gigante, com lago, capivaras passeando e aquele clima tranquilo? É perfeito pra caminhar, relaxar e tirar fotos lindas!\n\n🍜 **Feira Central**\nSe prepare: aqui você come o famoso sobá, sente o cheiro das comidas típicas, vê artesanato e ainda curte aquele clima de cidade acolhedora. É impossível visitar e não se apaixonar!\n\n🌅 **Orla Morena**\nQuer ver um pôr do sol inesquecível? Esse é o lugar! Dá pra caminhar, andar de bike ou simplesmente sentar e curtir o clima.\n\n🌿 **Horto Florestal**\nUm pedacinho de paz no meio da cidade! Ótimo pra quem quer natureza sem precisar fazer esforço. Você entra e já sente outra energia!\n\nÉ uma cidade que vai te surpreender! O que mais te interessa conhecer?";
     } else if (lowerQuestion.includes('corumbá') || lowerQuestion.includes('corumba')) {
       answer += "Corumbá... imagina só, é o portal do Pantanal! 🚪\n\nÉ a cidade que te leva direto para o maior santuário ecológico do mundo! De lá você parte para safáris fotográficos, pesca esportiva e observação de animais. É a porta de entrada para uma aventura única! 🐊";
     } else if (lowerQuestion.includes('dourados')) {
