@@ -80,6 +80,26 @@ class GuataIntelligentTourismService {
         query.question = question;
       }
 
+      // 1.5.6. Detectar perguntas com pronomes vagos que dependem do contexto anterior
+      const pronounContext = this.detectPronounReference(question, query.conversationHistory || []);
+      if (pronounContext.shouldRewrite) {
+        console.log('🔗 Pergunta com pronome detectada, reescrevendo com base no contexto anterior...');
+        console.log(`   Pergunta original: "${question}"`);
+        console.log(`   Pergunta reescrita: "${pronounContext.rewrittenQuestion}"`);
+        question = pronounContext.rewrittenQuestion;
+        query.question = question;
+      }
+
+      // 1.5.7. Detectar perguntas curtas e ambíguas (ex: "qual o nome do presidente?")
+      const implicitContext = this.detectImplicitReference(question, query.conversationHistory || []);
+      if (implicitContext.shouldRewrite) {
+        console.log('🧩 Pergunta ambígua detectada, usando foco da conversa anterior...');
+        console.log(`   Pergunta original: "${question}"`);
+        console.log(`   Pergunta reescrita: "${implicitContext.rewrittenQuestion}"`);
+        question = implicitContext.rewrittenQuestion;
+        query.question = question;
+      }
+
       // 1.6. Detectar perguntas genéricas que precisam de esclarecimento
       const needsClarification = this.needsClarification(question);
       if (needsClarification.needs) {
@@ -311,6 +331,160 @@ class GuataIntelligentTourismService {
     
     console.log(`🤝 Pergunta não contém palavras-chave de serviços, não usando parceiros`);
     return false;
+  }
+
+  /**
+   * Detecta quando a pergunta atual usa pronomes vagos ("ela", "ele", "isso")
+   * e tenta reescrever usando o assunto da última pergunta do usuário.
+   *
+   * Exemplo:
+   *  - Anterior: "quem é tia eva?"
+   *  - Atual:    "ela fundou campo grande?"
+   *  - Saída:    "tia eva fundou campo grande?"
+   */
+  private detectPronounReference(
+    question: string,
+    conversationHistory: string[]
+  ): { shouldRewrite: boolean; rewrittenQuestion: string } {
+    const lowerQuestion = question.toLowerCase().trim();
+
+    // Se a pergunta é muito longa, provavelmente já tem contexto suficiente
+    if (lowerQuestion.length > 120) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    const pronouns = [
+      'ela',
+      'ele',
+      'eles',
+      'elas',
+      'isso',
+      'isso aí',
+      'isso ai',
+      'esse lugar',
+      'essa cidade',
+      'lá',
+      'la'
+    ];
+
+    const hasPronoun = pronouns.some(p => lowerQuestion.includes(p));
+    if (!hasPronoun) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    if (!conversationHistory || conversationHistory.length === 0) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    const lastQuestionRaw = String(conversationHistory[conversationHistory.length - 1] || '').trim();
+    if (!lastQuestionRaw) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    const lastQuestionLower = lastQuestionRaw.toLowerCase();
+
+    let subject = '';
+
+    // Padrões típicos de identificação de sujeito: "quem é X", "quem foi X"
+    const whoMatch =
+      lastQuestionRaw.match(/quem\s+é\s+(.+?)[\?]?$/i) ||
+      lastQuestionRaw.match(/quem\s+foi\s+(.+?)[\?]?$/i);
+    if (whoMatch && whoMatch[1]) {
+      subject = whoMatch[1].trim();
+    }
+
+    // Se não encontrou via regex, tentar usar a última pergunta inteira como assunto (casos como "rio da prata", "pantanal")
+    if (!subject && lastQuestionRaw.length > 0 && lastQuestionRaw.length < 120) {
+      subject = lastQuestionRaw.replace(/\?+$/, '').trim();
+    }
+
+    if (!subject) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    // Substituir pronomes pelo assunto identificado
+    let rewritten = question;
+    pronouns.forEach(p => {
+      const pattern = new RegExp(`\\b${p}\\b`, 'gi');
+      rewritten = rewritten.replace(pattern, subject);
+    });
+
+    // Se não houve substituição efetiva, adicionar contexto como prefixo
+    if (rewritten === question) {
+      rewritten = `Sobre ${subject}: ${question}`;
+    }
+
+    return { shouldRewrite: true, rewrittenQuestion: rewritten };
+  }
+
+  /**
+   * Detecta perguntas curtas e ambíguas (sem pronome claro), como:
+   *  - "qual o nome do presidente?"
+   *  - "como é o nome do presidente?"
+   *  - "qual o nome dele?" (já pode ter sido tratada por detectPronounReference)
+   * Usa o último foco da conversa (normalmente a resposta anterior do Guatá)
+   * para reescrever a pergunta com mais contexto.
+   */
+  private detectImplicitReference(
+    question: string,
+    conversationHistory: string[]
+  ): { shouldRewrite: boolean; rewrittenQuestion: string } {
+    const lowerQuestion = question.toLowerCase().trim();
+
+    // Só tratar perguntas relativamente curtas para evitar interferir em perguntas completas
+    if (lowerQuestion.length === 0 || lowerQuestion.length > 80) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    // Evitar casos em que o usuário já especificou claramente o alvo
+    const explicitMarkers = ['do brasil', 'da assembleia', 'da assembleia legislativa', 'do tre', 'do senado'];
+    if (explicitMarkers.some(marker => lowerQuestion.includes(marker))) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    if (!conversationHistory || conversationHistory.length === 0) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    // Usar a última entrada do histórico como "foco" da conversa.
+    // Com a mudança no front, isso normalmente será a última resposta do Guatá.
+    const lastEntryRaw = String(conversationHistory[conversationHistory.length - 1] || '').trim();
+    const lastEntryLower = lastEntryRaw.toLowerCase();
+    if (!lastEntryRaw) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    // Caso específico: perguntas sobre "presidente" sem especificação
+    const asksForPresident =
+      (lowerQuestion.includes('presidente') && !lowerQuestion.includes('da ') && !lowerQuestion.includes('do ')) ||
+      lowerQuestion.match(/^como\s+é\s+o\s+nome\s+do\s+presidente\??$/) !== null ||
+      lowerQuestion.match(/^qual\s+é\s+o\s+nome\s+do\s+presidente\??$/) !== null ||
+      lowerQuestion.match(/^qual\s+o\s+nome\s+do\s+presidente\??$/) !== null;
+
+    if (!asksForPresident) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    // Tentar extrair "presidente da/ do X" da resposta anterior
+    let entity = '';
+    const presidentMatchDa = lastEntryRaw.match(/presidente\s+da\s+([^\.!\n]+)/i);
+    const presidentMatchDo = lastEntryRaw.match(/presidente\s+do\s+([^\.!\n]+)/i);
+
+    if (presidentMatchDa && presidentMatchDa[1]) {
+      entity = presidentMatchDa[1].trim();
+    } else if (presidentMatchDo && presidentMatchDo[1]) {
+      entity = presidentMatchDo[1].trim();
+    }
+
+    // Se não conseguir identificar entidade, não reescrever
+    if (!entity) {
+      return { shouldRewrite: false, rewrittenQuestion: question };
+    }
+
+    // Construir pergunta mais específica
+    const rewritten = `qual é o nome do presidente da ${entity}?`;
+
+    return { shouldRewrite: true, rewrittenQuestion: rewritten };
   }
 
   /**

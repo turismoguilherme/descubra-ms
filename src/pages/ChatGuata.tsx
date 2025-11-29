@@ -34,42 +34,8 @@ const ChatGuata = () => {
   }, [mensagens.length]);
 
   const enviarMensagem = async (mensagem?: string) => {
-    // Garantir que seja sempre uma string válida
-    let mensagemParaEnviar = mensagem || inputMensagem || "";
-    
-    // Se for um objeto, tentar extrair string ou usar valor padrão
-    if (typeof mensagemParaEnviar !== 'string') {
-      console.warn('⚠️ Mensagem não é string, convertendo...', typeof mensagemParaEnviar);
-      mensagemParaEnviar = String(mensagemParaEnviar).trim();
-    }
-    
-    mensagemParaEnviar = mensagemParaEnviar.trim();
-    
-    // Validar que não seja um objeto serializado ou texto do console
-    const invalidPatterns = [
-      '{questionType',
-      'Insights de aprendizado',
-      'Melhorias implementadas',
-      'questionType:',
-      'userIntent:',
-      'behaviorPattern:',
-      'ChatGuata.tsx:',
-      'guataTrueApiService.ts:',
-      '📝 Query:',
-      '💡 Melhorias',
-      '[object Object]',
-      '[object',
-      'object Object'
-    ];
-    
-    const isInvalid = invalidPatterns.some(pattern => mensagemParaEnviar.includes(pattern));
-    
-    if (mensagemParaEnviar.startsWith('{') || isInvalid || mensagemParaEnviar.length > 500) {
-      console.warn('⚠️ Mensagem parece ser um objeto ou texto do console, ignorando...', mensagemParaEnviar.substring(0, 100));
-      return;
-    }
-    
-    if (mensagemParaEnviar === "") return;
+    const mensagemParaEnviar = mensagem || inputMensagem;
+    if (mensagemParaEnviar.trim() === "") return;
     
     // Adiciona a mensagem do usuário
     const novaMensagemUsuario = {
@@ -91,12 +57,12 @@ const ChatGuata = () => {
       // Usar o serviço com APIs reais configuradas (Gemini + Google Search)
       const response = await guataTrueApiService.processQuestion({
         question: mensagemParaEnviar,
-        userId: undefined, // Usuário público não tem UUID
+        userId: 'publico',
         sessionId: `session-${Date.now()}`,
         userLocation: 'Mato Grosso do Sul',
+        // Enviar histórico completo (perguntas e respostas) para melhor contexto
         conversationHistory: conversationHistory,
-        userPreferences: userPreferences,
-        isTotemVersion: true // Versão totem: pode usar "Olá" normalmente
+        userPreferences: userPreferences
       });
       
       console.log("✅ Guatá True API: Resposta gerada em", response.processingTime, "ms");
@@ -143,6 +109,8 @@ const ChatGuata = () => {
       };
       
       setMensagens(prev => [...prev, novaMensagemBot]);
+      // Adicionar resposta do bot ao histórico de conversa para melhorar contexto em perguntas futuras
+      setConversationHistory(prev => [...prev, response.answer]);
       
     } catch (error) {
       console.error("❌ Erro no Guatá True API:", error);
@@ -198,7 +166,7 @@ const ChatGuata = () => {
       const question = lastUserMessage?.text || '';
 
       const feedback = {
-        userId: undefined, // Usuário público não tem UUID - será null no banco
+        userId: 'publico',
         sessionId: `session-${Date.now()}`,
         questionId: currentQuestionId,
         question: question,
@@ -247,11 +215,6 @@ const ChatGuata = () => {
     enviarMensagem(pergunta);
   };
 
-  // Wrapper para evitar que o evento do botão seja passado como mensagem
-  const handleEnviarClick = () => {
-    enviarMensagem();
-  };
-
   // Interface principal do Guatá - Tela cheia tipo totem
   return (
     <div 
@@ -266,7 +229,7 @@ const ChatGuata = () => {
                 mensagens={mensagens}
                 inputMensagem={inputMensagem}
                 setInputMensagem={setInputMensagem}
-                enviarMensagem={handleEnviarClick}
+                enviarMensagem={enviarMensagem}
                 onClearConversation={handleLimparConversa}
                 isGravandoAudio={isGravandoAudio}
                 toggleMicrofone={toggleMicrofone}

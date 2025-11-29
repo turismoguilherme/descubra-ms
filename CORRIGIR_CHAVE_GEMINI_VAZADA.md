@@ -110,3 +110,4 @@ Se ainda aparecer erro, verifique:
 O sistema está funcionando com fallback (pesquisa web), mas as respostas serão melhores após corrigir a chave do Gemini.
 
 
+
