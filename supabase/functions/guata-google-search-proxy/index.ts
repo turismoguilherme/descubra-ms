@@ -4,7 +4,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 }
 
@@ -26,11 +26,14 @@ interface GoogleSearchResult {
 serve(async (req) => {
   console.log("🔵 guata-google-search-proxy: request received", { method: req.method, url: req.url });
   
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - IMPORTANTE: retornar 200 OK
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
-      headers: corsHeaders 
+      headers: {
+        ...corsHeaders,
+        'Content-Length': '0'
+      } 
     });
   }
 

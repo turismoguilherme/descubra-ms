@@ -116,9 +116,7 @@ class GuataGeminiService {
     if (isDev) {
       console.log('[DIAGNÓSTICO] Verificando chave Gemini:');
       console.log('  - Variável existe?', !!rawKey);
-      console.log('  - Tamanho da chave:', this.GUATA_API_KEY.length);
-      console.log('  - Primeiros 10 caracteres:', this.GUATA_API_KEY.substring(0, 10) + '...');
-      console.log('  - Últimos 10 caracteres:', '...' + this.GUATA_API_KEY.substring(Math.max(0, this.GUATA_API_KEY.length - 10)));
+      // NUNCA logar informações sobre a chave (tamanho, caracteres, etc)
       console.log('  - Configurado?', this.isConfigured);
     }
     
@@ -126,7 +124,7 @@ class GuataGeminiService {
       try {
         this.genAI = new GoogleGenerativeAI(this.GUATA_API_KEY);
         if (isDev) {
-          console.log(`[Guatá Gemini] ✅ Configurado - Chave carregada (${this.GUATA_API_KEY.length} caracteres)`);
+          console.log(`[Guatá Gemini] ✅ Configurado`);
         }
       } catch (error) {
         console.error('[ERRO] Erro ao inicializar Gemini:', error);
