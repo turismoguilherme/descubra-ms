@@ -7,6 +7,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@/utils/logger";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface GeminiQuery {
   question: string;
@@ -828,15 +829,47 @@ PERGUNTA DO USUÁRIO: ${question}`;
   }
 
   private async callGeminiAPI(prompt: string): Promise<string> {
+    const isDev = import.meta.env.DEV;
+
+    // NOVO: Tentar usar Edge Function primeiro (chaves protegidas no servidor)
+    try {
+      if (isDev) {
+        console.log('[Guatá] Tentando usar Edge Function (chaves protegidas)...');
+      }
+      
+      const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
+        body: {
+          prompt,
+          model: 'gemini-1.5-flash',
+          temperature: 0.7,
+          maxOutputTokens: 2000
+        }
+      });
+
+      if (!error && data?.text) {
+        if (isDev) {
+          console.log('[Guatá] ✅ Edge Function funcionou! (chaves protegidas)');
+        }
+        return data.text;
+      }
+
+      // Se Edge Function falhou, logar mas continuar para fallback
+      if (isDev && error) {
+        console.warn('[Guatá] Edge Function falhou, usando método antigo como fallback:', error.message);
+      }
+    } catch (edgeFunctionError: any) {
+      // Edge Function não disponível ou falhou - usar método antigo
+      if (isDev) {
+        console.warn('[Guatá] Edge Function não disponível, usando método direto:', edgeFunctionError.message);
+      }
+    }
+
+    // FALLBACK: Método antigo (direto do frontend) - manter para compatibilidade
     if (!this.genAI) {
       console.error('❌ [ERRO CRÍTICO] Gemini não configurado!');
       console.error('💡 [DIAGNÓSTICO] Verifique se VITE_GEMINI_API_KEY está configurada no .env');
       throw new Error('Gemini não configurado');
     }
-
-    const isDev = import.meta.env.DEV;
-    
-        // Log removido para reduzir verbosidade
 
     try {
       // Tentar modelos em ordem de preferência (usando modelos mais estáveis primeiro)

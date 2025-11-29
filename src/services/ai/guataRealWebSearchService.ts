@@ -136,17 +136,59 @@ class GuataRealWebSearchService {
    * Com rate limiting e cache para evitar ultrapassar limites
    */
   private async searchWithGoogle(query: string, maxResults: number = 5): Promise<WebSearchResult[]> {
-    if (!this.isConfigured) {
-      console.log('⚠️ Google Custom Search não configurado');
-      return [];
-    }
-
     // Verificar cache primeiro
     const cacheKey = query.toLowerCase().trim();
     const cached = this.searchCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < this.SEARCH_CACHE_DURATION) {
       console.log('🔄 Usando resultados de busca em cache');
       return cached.results;
+    }
+
+    const isDev = import.meta.env.DEV;
+
+    // NOVO: Tentar usar Edge Function primeiro (chaves protegidas no servidor)
+    try {
+      if (isDev) {
+        console.log('[Web Search] Tentando usar Edge Function (chaves protegidas)...');
+      }
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
+        body: {
+          query,
+          maxResults,
+          location: 'Mato Grosso do Sul'
+        }
+      });
+
+      if (!error && data?.results && Array.isArray(data.results) && data.results.length > 0) {
+        // Salvar no cache
+        this.searchCache.set(cacheKey, {
+          results: data.results,
+          timestamp: Date.now()
+        });
+
+        if (isDev) {
+          console.log('[Web Search] ✅ Edge Function funcionou! (chaves protegidas)');
+        }
+        return data.results;
+      }
+
+      // Se Edge Function falhou, logar mas continuar para fallback
+      if (isDev && error) {
+        console.warn('[Web Search] Edge Function falhou, usando método antigo como fallback:', error.message);
+      }
+    } catch (edgeFunctionError: any) {
+      // Edge Function não disponível ou falhou - usar método antigo
+      if (isDev) {
+        console.warn('[Web Search] Edge Function não disponível, usando método direto:', edgeFunctionError.message);
+      }
+    }
+
+    // FALLBACK: Método antigo (direto do frontend) - manter para compatibilidade
+    if (!this.isConfigured) {
+      console.log('⚠️ Google Custom Search não configurado');
+      return [];
     }
 
     // Verificar rate limiting diário
