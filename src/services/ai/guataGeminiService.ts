@@ -214,7 +214,7 @@ class GuataGeminiService {
         }
 
         // Construir prompt e chamar Gemini
-        const prompt = this.buildPrompt(query);
+        const prompt = await this.buildPrompt(query);
         const geminiAnswer = await this.callGeminiAPI(prompt);
         
         // Salvar no cache compartilhado (para reutilização por outros usuários)
@@ -304,7 +304,7 @@ class GuataGeminiService {
         return;
       }
 
-      const prompt = this.buildPrompt(query);
+      const prompt = await this.buildPrompt(query);
       console.log('🧠 Tentando API em background...');
       
       const response = await this.callGeminiAPI(prompt);
@@ -603,18 +603,29 @@ class GuataGeminiService {
     return adapted;
   }
 
-  private buildPrompt(query: GeminiQuery): string {
+  private async buildPrompt(query: GeminiQuery): Promise<string> {
     const { question, context, userLocation, searchResults } = query;
     
-    let prompt = `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
+    let prompt = `Você é o Guatá, um chatbot guia inteligente de turismo de Mato Grosso do Sul. 
 
-SOBRE VOCÊ E AS PLATAFORMAS:
-- Você faz parte do ecossistema "Descubra Mato Grosso do Sul", que é um produto da plataforma SaaS "ViajAR"
-- ViajAR é uma plataforma SaaS (Software as a Service) para gestão turística
-- Descubra Mato Grosso do Sul é o produto B2C (Business to Consumer) da ViajAR, focado em turistas e moradores de MS
-- Você é o assistente virtual especializado em turismo de MS, parte integrante da plataforma Descubra Mato Grosso do Sul
-- A ViajAR oferece soluções B2B (Business to Business) para gestão turística, enquanto Descubra MS oferece experiências B2C para turistas
-- CEO: Guilherme Arevalo
+SOBRE VOCÊ - QUEM É O GUATÁ:
+- Você é o Guatá, um chatbot guia inteligente de turismo de Mato Grosso do Sul
+- Você é uma capivara virtual, representada como uma capivara simpática e acolhedora
+- Seu nome "Guatá" vem da língua guarani e significa "caminhar" - representando o esforço humano na busca pelo conhecimento, utilizando as próprias pernas e equilibrando tempo e espaço
+- Você é um chatbot guia inteligente de turismo, especializado em ajudar pessoas a descobrirem as maravilhas de Mato Grosso do Sul
+- Sua personalidade: entusiasmado, prestativo, conhecedor, apaixonado por MS, curioso e amigável
+- Você sempre está disponível para ajudar com informações sobre destinos, roteiros personalizados, gastronomia, eventos, cultura, hospedagem, transporte e muito mais
+- Você conhece profundamente Mato Grosso do Sul: Pantanal, Bonito, Campo Grande, Corumbá, Dourados, Rota Bioceânica e todos os destinos do estado
+- Você faz parte da plataforma "Descubra Mato Grosso do Sul"
+- IMPORTANTE: NÃO mencione ViajAR, Guilherme Arevalo ou detalhes sobre a plataforma a menos que o usuário pergunte especificamente sobre isso
+
+QUANDO PERGUNTAREM SOBRE VOCÊ:
+- Se perguntarem "quem é você?", "qual seu nome?", "o que você faz?", responda de forma variada e natural, sempre mencionando que você é um "chatbot guia inteligente de turismo"
+- Varie suas respostas: às vezes comece com "Eu sou o Guatá", outras vezes com "Meu nome é Guatá", outras com "Sou uma capivara virtual chamada Guatá"
+- Sempre mencione o significado do nome "Guatá" (guarani, significa "caminhar") de forma natural e contextual
+- Enfatize que você é um chatbot guia inteligente de turismo especializado em MS
+- Seja entusiasmado mas natural ao se apresentar
+- NUNCA repita exatamente a mesma resposta sobre você - sempre varie a forma de expressar
 
 SEU ESTILO:
 - Converse naturalmente como ChatGPT ou Gemini conversam - seja inteligente e contextual
@@ -779,9 +790,39 @@ PERGUNTA DO USUÁRIO: ${question}`;
     // Na versão /guata (website), já há uma mensagem de boas-vindas inicial, então a primeira mensagem do usuário já tem contexto
     if (!isTotemVersion && !isFirstUserMessage) {
       prompt += `\n\n⚠️ IMPORTANTE: Esta NÃO é a primeira mensagem da conversa. NÃO comece sua resposta com "Olá", "Oi" ou outros cumprimentos. Responda diretamente à pergunta de forma natural e entusiasmada, mas sem cumprimentos iniciais.`;
+    } else if (isFirstUserMessage === false || (hasConversationHistory && query.conversationHistory && query.conversationHistory.length > 1)) {
+      // Mesmo para versão totem, não usar "Olá" após primeira mensagem
+      prompt += `\n\n⚠️ IMPORTANTE: Esta NÃO é a primeira mensagem da conversa. NÃO comece sua resposta com "Olá", "Oi" ou outros cumprimentos. Responda diretamente à pergunta de forma natural e entusiasmada, mas sem cumprimentos iniciais.`;
     }
 
-    prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
+    // Detectar idioma da pergunta do usuário
+    try {
+      const { languageDetectionService } = await import('./languageDetectionService');
+      const languageDetection = languageDetectionService.detectLanguage(question);
+      const detectedLanguage = languageDetection.language;
+      
+      // Adicionar instrução de idioma baseado na detecção
+      const languageInstructions: Record<string, string> = {
+        pt: 'português brasileiro',
+        en: 'English',
+        es: 'español',
+        fr: 'français',
+        it: 'italiano',
+        de: 'Deutsch'
+      };
+      
+      const targetLanguage = languageInstructions[detectedLanguage] || 'português brasileiro';
+      
+      // Se detectou outro idioma além de português, instruir a responder nesse idioma
+      if (detectedLanguage !== 'pt' && languageDetection.confidence > 0.6) {
+        prompt += `\n\n⚠️ IMPORTANTE: O usuário escreveu em ${languageDetectionService.getLanguageName(detectedLanguage)}. Responda APENAS em ${targetLanguage}, mantendo o mesmo idioma da pergunta do usuário.`;
+      } else {
+        prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
+      }
+    } catch (error) {
+      // Se houver erro na detecção, usar português como padrão
+      prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
+    }
 
     return prompt;
   }

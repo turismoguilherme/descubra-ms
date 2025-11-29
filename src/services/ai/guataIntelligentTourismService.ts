@@ -894,6 +894,28 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
   }
 
   /**
+   * Detecta o idioma da pergunta e retorna resposta no mesmo idioma
+   */
+  private async detectAndRespondInLanguage(question: string, answer: string): Promise<string> {
+    try {
+      const { languageDetectionService } = await import('./languageDetectionService');
+      const detection = languageDetectionService.detectLanguage(question);
+      
+      // Se detectou outro idioma além de português com boa confiança
+      if (detection.language !== 'pt' && detection.confidence > 0.6) {
+        // A resposta já deve vir no idioma correto do Gemini (que recebe instrução)
+        // Mas podemos adicionar uma nota se necessário
+        return answer;
+      }
+      
+      return answer;
+    } catch (error) {
+      // Se houver erro na detecção, retornar resposta original
+      return answer;
+    }
+  }
+
+  /**
    * Gera resposta para cumprimentos simples
    */
   private generateSimpleGreetingResponse(question: string): IntelligentTourismResponse {

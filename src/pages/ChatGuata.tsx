@@ -200,8 +200,8 @@ const ChatGuata = () => {
   };
 
   const handleSuggestionClick = (pergunta: string) => {
-    setInputMensagem(pergunta);
     enviarMensagem(pergunta);
+    setInputMensagem(""); // Limpar o campo após enviar
   };
 
   // Interface principal do Guatá - Tela cheia tipo totem
