@@ -467,5 +467,5 @@ export const enhancedSecurityService = new EnhancedSecurityService();
 // Simplified cleanup - remove automatic intervals
 if (typeof window !== 'undefined') {
   // Clean up expired entries only when needed, not automatically
-  console.log('Enhanced security service initialized');
+  // Log removido para reduzir verbosidade
 }

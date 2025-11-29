@@ -50,9 +50,7 @@ const ChatGuata = () => {
     setIsLoading(true);
     
     try {
-      console.log("🦦 Guatá True API: Processando pergunta...");
-      console.log("🔍 Verificando se guataTrueApiService existe:", !!guataTrueApiService);
-      console.log("🔍 Verificando se processQuestion existe:", !!guataTrueApiService?.processQuestion);
+      const isDev = import.meta.env.DEV;
       
       // Usar o serviço com APIs reais configuradas (Gemini + Google Search)
       const response = await guataTrueApiService.processQuestion({
@@ -65,16 +63,7 @@ const ChatGuata = () => {
         userPreferences: userPreferences
       });
       
-      console.log("✅ Guatá True API: Resposta gerada em", response.processingTime, "ms");
-      console.log("📊 Fontes utilizadas:", response.sources);
-      console.log("🌐 Usou web search:", response.usedWebSearch);
-      console.log("🧠 Fonte do conhecimento:", response.knowledgeSource);
-      console.log("🎓 Insights de aprendizado:", response.learningInsights);
-      console.log("💡 Melhorias implementadas:", response.adaptiveImprovements);
-      console.log("💾 Atualizações de memória:", response.memoryUpdates.length);
-      console.log("😊 Personalidade:", response.personality);
-      console.log("🎭 Estado emocional:", response.emotionalState);
-      console.log("❓ Perguntas de seguimento:", response.followUpQuestions?.length || 0);
+      // Logs removidos para reduzir verbosidade
       
       // Atualizar preferências do usuário baseado no aprendizado
       if (response.memoryUpdates.length > 0) {

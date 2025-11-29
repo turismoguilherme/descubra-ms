@@ -52,8 +52,7 @@ class GuataIntelligentTourismService {
     const startTime = Date.now();
     // Garantir que question seja sempre uma string
     let question = String(query.question || '').trim();
-    console.log('🦦 Guatá Intelligent Tourism: Processando pergunta...');
-    console.log('📝 Query:', question);
+    // Processando pergunta (logs removidos)
 
     try {
       // 1. Verificar se é APENAS um cumprimento simples (sem perguntas)
@@ -108,13 +107,12 @@ class GuataIntelligentTourismService {
       }
 
       // 1.7. CONSULTAR KNOWLEDGE BASE PERSISTENTE (antes de web search)
-      console.log('📚 Consultando Knowledge Base persistente...');
       try {
         const { guataKnowledgeBaseService } = await import('./guataKnowledgeBaseService');
         const kbResult = await guataKnowledgeBaseService.searchKnowledgeBase(question, { minSimilarity: 0.75 });
 
         if (kbResult.found && kbResult.answer) {
-          console.log('✅ Resposta encontrada na Knowledge Base!');
+          console.log('✅ [KB] Resposta encontrada na Knowledge Base!');
           return {
             answer: kbResult.answer,
             confidence: kbResult.confidence || 0.95,
@@ -137,18 +135,25 @@ class GuataIntelligentTourismService {
             memoryUpdates: []
           };
         }
-        console.log('📚 Knowledge Base não encontrou resposta, continuando fluxo normal...');
-      } catch (error) {
-        console.warn('⚠️ Erro ao consultar Knowledge Base (continuando fluxo normal):', error);
+        // Não logar quando não encontra (comportamento normal)
+      } catch (error: any) {
+        // Erros esperados (tabela não existe, etc) não devem ser logados
+        const isExpectedError = 
+          error?.message?.includes('does not exist') ||
+          error?.message?.includes('relation') ||
+          error?.code === '42P01';
+        
+        if (!isExpectedError) {
+          console.warn('⚠️ [KB] Erro inesperado ao consultar Knowledge Base:', error);
+        }
         // Em caso de erro, continuar fluxo normal sem quebrar
       }
 
       // 2. Detectar categoria da pergunta
       const category = this.detectQuestionCategory(question);
-      console.log('🏷️ Categoria detectada:', category);
+      // Log removido para reduzir verbosidade
 
       // 3. SEMPRE fazer pesquisa web PRIMEIRO (antes de tudo)
-      console.log('🔍 Fazendo pesquisa web PRIMEIRO (antes de tudo)...');
       const webSearchQuery: RealWebSearchQuery = {
         question: question,
         location: query.userLocation || 'Mato Grosso do Sul',
@@ -156,33 +161,10 @@ class GuataIntelligentTourismService {
         maxResults: 5
       };
       
-      console.log('🔍 [DEBUG] Iniciando pesquisa web com query:', webSearchQuery);
       const webSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
-      console.log('✅ [RESULTADO] Pesquisa web concluída:', {
-        resultados: webSearchResponse.results.length,
-        metodo: webSearchResponse.searchMethod,
-        pesquisaReal: webSearchResponse.usedRealSearch,
-        confidence: webSearchResponse.confidence
-      });
-      
-      // Log detalhado dos resultados
-      if (webSearchResponse.results.length > 0) {
-        console.log('📊 [DEBUG] Primeiros resultados da pesquisa:');
-        webSearchResponse.results.slice(0, 3).forEach((result, index) => {
-          console.log(`   ${index + 1}. ${result.title}`, {
-            snippet: result.snippet?.substring(0, 100),
-            source: result.source,
-            confidence: result.confidence
-          });
-        });
-      } else {
-        console.warn('⚠️ [AVISO] Nenhum resultado da pesquisa web! O Gemini receberá dados vazios.');
-      }
       
       // 4. VERIFICAR PARCEIROS (após pesquisa web)
-      console.log('🤝 Verificando parceiros da plataforma...');
       const partnersResult = await this.checkPartners(question, category);
-      console.log('🤝 Parceiros encontrados:', partnersResult.partnersFound?.length || 0);
       
       // 5. Gerar resposta inteligente combinando IA + dados reais + parceiros
       const intelligentAnswer = await this.generateIntelligentAnswer(
@@ -206,7 +188,7 @@ class GuataIntelligentTourismService {
           query.userId,
           query.sessionId
         );
-        console.log('🧠 ML: Resposta personalizada aplicada');
+        // ML: Resposta personalizada aplicada (log removido)
       } catch (error) {
         console.warn('⚠️ ML: Erro ao personalizar resposta, usando resposta original:', error);
       }
@@ -219,7 +201,7 @@ class GuataIntelligentTourismService {
       );
 
       const processingTime = Date.now() - startTime;
-      console.log(`✅ Guatá Intelligent Tourism: Resposta gerada em ${processingTime}ms`);
+        // Resposta gerada (log removido)
 
       // 6. Aprender automaticamente da interação (assíncrono, não bloqueia resposta)
       const learningInteraction: LearningInteraction = {
@@ -1017,17 +999,10 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       // USAR GEMINI + PESQUISA WEB + PARCEIROS PARA RESPOSTA DINÂMICA
       try {
         const { guataGeminiService } = await import('./guataGeminiService');
-        console.log('🧠 Usando Gemini + pesquisa web + parceiros para resposta dinâmica...');
-        
-        console.log('🧠 [DEBUG] Preparando query para Gemini...');
-        console.log('🧠 [DEBUG] Dados que serão enviados ao Gemini:', {
-          question: question,
-          searchResultsCount: webSearchResponse.results.length,
-          hasSearchResults: webSearchResponse.results.length > 0,
-          conversationHistoryLength: conversationHistory.length,
-          isTotemVersion: isTotemVersion ?? true,
-          isFirstUserMessage: isFirstUserMessage ?? false
-        });
+        const isDev = import.meta.env.DEV;
+        if (isDev) {
+          console.log('[Guatá] Preparando resposta com Gemini + pesquisa web');
+        }
         
         const geminiQuery: any = {
           question,
@@ -1035,21 +1010,9 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           userLocation: 'Mato Grosso do Sul',
           searchResults: webSearchResponse.results,
           conversationHistory: conversationHistory,
-          isTotemVersion: isTotemVersion ?? true, // Passar flag para controlar uso de "Olá"
-          isFirstUserMessage: isFirstUserMessage ?? false // Passar flag para primeira mensagem do usuário
+          isTotemVersion: isTotemVersion ?? true,
+          isFirstUserMessage: isFirstUserMessage ?? false
         };
-        
-        // Log dos resultados de pesquisa que serão enviados
-        if (webSearchResponse.results.length > 0) {
-          console.log('📊 [DEBUG] Resultados de pesquisa que serão enviados ao Gemini:');
-          webSearchResponse.results.forEach((result, index) => {
-            console.log(`   ${index + 1}. ${result.title}: ${result.snippet?.substring(0, 80)}...`);
-          });
-        } else {
-          console.warn('⚠️ [AVISO CRÍTICO] Nenhum resultado de pesquisa será enviado ao Gemini!');
-          console.warn('⚠️ [AVISO CRÍTICO] O Gemini não terá dados específicos para responder!');
-          console.warn('⚠️ [AVISO CRÍTICO] A resposta será genérica baseada apenas no conhecimento pré-treinado!');
-        }
         
         // Passar informações de parceiros para o Gemini
         if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
@@ -1062,7 +1025,6 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
             contact_whatsapp: p.contact_whatsapp,
             website_link: p.website_link
           }));
-          console.log('🤝 Passando informações de parceiros para o Gemini:', geminiQuery.partnersInfo.length);
         }
         
         // Passar userId e sessionId para cache individual
@@ -1072,11 +1034,53 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
         const geminiResponse = await guataGeminiService.processQuestion(geminiQuery);
         
         if (geminiResponse.usedGemini) {
-          console.log('🧠 Gemini gerou resposta dinâmica com pesquisa web e parceiros');
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.log('[Guatá] Gemini gerou resposta com pesquisa web');
+          }
           answer = geminiResponse.answer;
         } else {
-          console.log('🔄 Gemini não funcionou, usando formatação inteligente da pesquisa web');
-          // Se tiver parceiros, formatar com eles primeiro
+          // Fallback: usar pesquisa web formatada de forma inteligente
+          // SEMPRE usar os resultados da pesquisa web quando Gemini não está disponível
+          if (webSearchResponse.results && webSearchResponse.results.length > 0) {
+            // Priorizar parceiros se houver
+            if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+              answer = this.formatPartnersResponse(partnersResult, question);
+              answer += "\n\n🌐 Outras informações encontradas:\n\n";
+              answer += this.formatWebSearchResults(webSearchResponse.results, question);
+            } else {
+              // Usar apenas pesquisa web formatada de forma inteligente
+              answer = this.formatWebSearchResults(webSearchResponse.results, question);
+            }
+          } else {
+            // Se não há resultados de pesquisa web, usar conhecimento local
+            answer = this.generateLocalKnowledgeResponse(question);
+          }
+        }
+      } catch (error: any) {
+        // Tratamento específico para API key vazada
+        if (error.message?.includes('API_KEY_LEAKED') || error.message?.includes('leaked')) {
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.warn('[Guatá] API Key vazada detectada, usando fallback com pesquisa web');
+          }
+          // Usar pesquisa web como fallback principal
+          if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+            answer = this.formatPartnersResponse(partnersResult, question);
+            answer += "\n\n🌐 Outras opções encontradas:\n";
+            answer += this.formatWebSearchResults(webSearchResponse.results, question);
+          } else if (webSearchResponse.results.length > 0) {
+            answer = this.formatWebSearchResults(webSearchResponse.results, question);
+          } else {
+            // Último fallback: conhecimento local
+            answer = this.generateLocalKnowledgeResponse(question);
+          }
+        } else {
+          // Outros erros: usar pesquisa web
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.warn('[Guatá] Erro no Gemini, usando pesquisa web:', error.message);
+          }
           if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
             answer = this.formatPartnersResponse(partnersResult, question);
             answer += "\n\n🌐 Outras opções encontradas:\n";
@@ -1084,16 +1088,6 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           } else {
             answer = this.formatWebSearchResults(webSearchResponse.results, question);
           }
-        }
-      } catch (error) {
-        console.error('❌ Erro no Gemini, usando formatação inteligente da pesquisa web:', error);
-        // Se tiver parceiros, formatar com eles primeiro
-        if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
-          answer = this.formatPartnersResponse(partnersResult, question);
-          answer += "\n\n🌐 Outras opções encontradas:\n";
-          answer += this.formatWebSearchResults(webSearchResponse.results, question);
-        } else {
-          answer = this.formatWebSearchResults(webSearchResponse.results, question);
         }
       }
     }
@@ -1211,7 +1205,19 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       return variations[Math.floor(Math.random() * variations.length)];
     }
     
-    // Detectar roteiros/itinerários PRIMEIRO
+    // Detectar perguntas específicas sobre aquário PRIMEIRO
+    if (lowerQuestion.includes('aquário') && (lowerQuestion.includes('água doce') || lowerQuestion.includes('agua doce') || lowerQuestion.includes('maior') || lowerQuestion.includes('maior'))) {
+      return this.formatAquarioResponse(results, question);
+    }
+    
+    // Detectar perguntas específicas sobre aquário PRIMEIRO
+    if ((lowerQuestion.includes('aquário') || lowerQuestion.includes('aquario')) && 
+        (lowerQuestion.includes('água doce') || lowerQuestion.includes('agua doce') || 
+         lowerQuestion.includes('maior') || lowerQuestion.includes('maior'))) {
+      return this.formatAquarioResponse(results, question);
+    }
+    
+    // Detectar roteiros/itinerários
     if (lowerQuestion.includes('roteiro') || lowerQuestion.includes('itinerário') || lowerQuestion.includes('dias') || lowerQuestion.includes('moto') || lowerQuestion.includes('viagem') || lowerQuestion.includes('montar')) {
       return this.formatItineraryResponse(results[0]?.snippet || '', results[0]?.title || '', question);
     }
@@ -1429,6 +1435,40 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
   }
 
   /**
+   * Formata resposta específica para perguntas sobre aquário
+   */
+  private formatAquarioResponse(results: any[], question: string): string {
+    // Procurar informações sobre Bioparque Pantanal nos resultados
+    const bioparqueResult = results.find(r => 
+      (r.title?.toLowerCase().includes('bioparque') || r.snippet?.toLowerCase().includes('bioparque')) ||
+      (r.title?.toLowerCase().includes('aquário') && (r.snippet?.toLowerCase().includes('água doce') || r.snippet?.toLowerCase().includes('agua doce')))
+    );
+    
+    if (bioparqueResult) {
+      const snippet = bioparqueResult.snippet || bioparqueResult.description || '';
+      let response = "🦦 Que pergunta incrível! 🐠\n\n";
+      response += "**O maior aquário de água doce do mundo é o Bioparque Pantanal, localizado em Campo Grande, Mato Grosso do Sul!**\n\n";
+      
+      if (snippet.length > 50) {
+        // Extrair informações relevantes do snippet
+        const relevantInfo = snippet.substring(0, 300);
+        response += `${relevantInfo}...\n\n`;
+      } else {
+        response += "É um complexo impressionante com dezenove mil metros quadrados que abriga peixes de água doce de todos os continentes! Você vai ver espécies do Pantanal, da Amazônia, de rios da África, Ásia e muito mais! 🐟\n\n";
+      }
+      
+      response += "📍 **Localização:** Campo Grande, MS\n";
+      response += "🌐 É uma experiência única que você não pode perder quando visitar nossa capital!\n\n";
+      response += "Quer saber mais sobre o Bioparque Pantanal ou sobre outras atrações de Campo Grande?";
+      
+      return response;
+    }
+    
+    // Se não encontrou nos resultados, usar conhecimento local
+    return "🦦 Que pergunta incrível! 🐠\n\n**O maior aquário de água doce do mundo é o Bioparque Pantanal, localizado em Campo Grande, Mato Grosso do Sul!**\n\nÉ um complexo impressionante com dezenove mil metros quadrados que abriga peixes de água doce de todos os continentes! Você vai ver espécies do Pantanal, da Amazônia, de rios da África, Ásia e muito mais! É uma experiência única que você não pode perder quando visitar nossa capital! 🌟\n\nQuer saber mais sobre o Bioparque Pantanal ou sobre outras atrações de Campo Grande?";
+  }
+
+  /**
    * Formatação geral para outras perguntas
    */
   private formatGeneralResponse(results: any[]): string {
@@ -1446,8 +1486,23 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       const title = firstResult.title || '';
       
       if (snippet && snippet.length > 50) {
+        // Usar o snippet de forma mais inteligente e conversacional
+        const cleanSnippet = snippet.replace(/\.\.\./g, '').trim();
         response += `Que legal que você quer saber sobre isso! `;
-        response += `Encontrei algumas informações: ${snippet.substring(0, 300)}...\n\n`;
+        
+        // Combinar informações dos primeiros resultados para resposta mais completa
+        if (results.length > 1) {
+          const secondSnippet = results[1]?.snippet || '';
+          if (secondSnippet.length > 30) {
+            response += `${cleanSnippet.substring(0, 250)}...\n\n`;
+            response += `Além disso, ${secondSnippet.substring(0, 150)}...\n\n`;
+          } else {
+            response += `${cleanSnippet.substring(0, 350)}...\n\n`;
+          }
+        } else {
+          response += `${cleanSnippet.substring(0, 350)}...\n\n`;
+        }
+        
         response += `Quer saber mais detalhes específicos? Posso te ajudar com outras informações sobre Mato Grosso do Sul! ✨`;
       } else if (title) {
         response += `Sobre ${title.toLowerCase()}, posso te contar que é uma informação interessante sobre nossa região. `;
@@ -1474,6 +1529,12 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     const firstResult = results[0];
     const snippet = firstResult.snippet || "";
     const title = firstResult.title || "";
+    
+    // Detectar perguntas sobre aquário PRIMEIRO
+    if ((snippet.toLowerCase().includes('aquário') || snippet.toLowerCase().includes('aquario') || title.toLowerCase().includes('aquário') || title.toLowerCase().includes('aquario')) && 
+        (snippet.toLowerCase().includes('água doce') || snippet.toLowerCase().includes('agua doce') || snippet.toLowerCase().includes('maior') || snippet.toLowerCase().includes('bioparque') || title.toLowerCase().includes('bioparque'))) {
+      return `🦦 Que pergunta incrível! 🐠\n\n**O maior aquário de água doce do mundo é o Bioparque Pantanal, localizado em Campo Grande, Mato Grosso do Sul!**\n\n${snippet.substring(0, 300)}...\n\n📍 **Localização:** Campo Grande, MS\n🌐 É uma experiência única que você não pode perder quando visitar nossa capital!\n\nQuer saber mais sobre o Bioparque Pantanal ou sobre outras atrações de Campo Grande?`;
+    }
     
     // Detectar se é sobre Porto Murtinho e Rota Bioceânica
     if (snippet.toLowerCase().includes('porto murtinho') && snippet.toLowerCase().includes('rota bioceânica')) {

@@ -6,6 +6,7 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { logger } from "@/utils/logger";
 
 export interface GeminiQuery {
   question: string;
@@ -61,9 +62,9 @@ class GuataGeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   // API KEY ESPECÍFICA DO GUATÁ - Gemini API
   // Prioridade: Variável de ambiente (.env)
-  private readonly GUATA_API_KEY = 
-    (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+  private readonly GUATA_API_KEY: string;
   private isConfigured: boolean = false;
+  private hasLoggedExpiredKey: boolean = false; // Para evitar logs repetidos
   
   // Rate limiting: máximo 8 requisições por minuto GLOBAL (margem de segurança para plano gratuito)
   private readonly MAX_REQUESTS_PER_MINUTE = 8; // Reduzido de 10 para 8 (mais conservador)
@@ -91,60 +92,69 @@ class GuataGeminiService {
     resolve: (value: GeminiResponse) => void 
   }> = [];
 
+  private lastApiKey: string = ''; // Para detectar mudanças na chave
+
   constructor() {
     // Usar API key específica do Guatá
-    this.isConfigured = !!this.GUATA_API_KEY;
+    const rawKey = import.meta.env.VITE_GEMINI_API_KEY;
+    this.GUATA_API_KEY = (rawKey || '').trim();
+    this.isConfigured = !!this.GUATA_API_KEY && this.GUATA_API_KEY.length > 0;
     
-    // Logs de diagnóstico para ambiente de produção (Vercel)
-    if (typeof window !== 'undefined') {
-      const env = import.meta.env.MODE || 'unknown';
-      const isProd = env === 'production' || window.location.hostname.includes('vercel.app');
-      
-      if (isProd) {
-        console.log('🔍 [DIAGNÓSTICO VERCEL] Ambiente:', env);
-        console.log('🔍 [DIAGNÓSTICO VERCEL] Hostname:', window.location.hostname);
-        console.log('🔍 [DIAGNÓSTICO VERCEL] VITE_GEMINI_API_KEY existe?', !!import.meta.env.VITE_GEMINI_API_KEY);
-        console.log('🔍 [DIAGNÓSTICO VERCEL] Tamanho da chave:', this.GUATA_API_KEY ? this.GUATA_API_KEY.length : 0);
-        console.log('🔍 [DIAGNÓSTICO VERCEL] Chave configurada?', this.isConfigured);
+    // Se a chave mudou, resetar flag de erro
+    if (this.lastApiKey && this.lastApiKey !== this.GUATA_API_KEY) {
+      this.hasLoggedExpiredKey = false; // Reset quando chave muda
+      const isDev = import.meta.env.DEV;
+      if (isDev) {
+        console.log('[INFO] Nova chave Gemini detectada, resetando flags de erro');
       }
+    }
+    this.lastApiKey = this.GUATA_API_KEY;
+    
+    const isDev = import.meta.env.DEV;
+    
+    if (isDev) {
+      console.log('[DIAGNÓSTICO] Verificando chave Gemini:');
+      console.log('  - Variável existe?', !!rawKey);
+      console.log('  - Tamanho da chave:', this.GUATA_API_KEY.length);
+      console.log('  - Primeiros 10 caracteres:', this.GUATA_API_KEY.substring(0, 10) + '...');
+      console.log('  - Últimos 10 caracteres:', '...' + this.GUATA_API_KEY.substring(Math.max(0, this.GUATA_API_KEY.length - 10)));
+      console.log('  - Configurado?', this.isConfigured);
     }
     
     if (this.isConfigured) {
       try {
         this.genAI = new GoogleGenerativeAI(this.GUATA_API_KEY);
-        console.log('🧠 Guatá Gemini Service: CONFIGURADO com API key específica do Guatá');
+        if (isDev) {
+          console.log(`[Guatá Gemini] ✅ Configurado - Chave carregada (${this.GUATA_API_KEY.length} caracteres)`);
+        }
       } catch (error) {
-        console.error('❌ Erro ao inicializar Gemini:', error);
+        console.error('[ERRO] Erro ao inicializar Gemini:', error);
         this.isConfigured = false;
       }
     } else {
-      console.error('❌ [ERRO CRÍTICO] Guatá Gemini Service: NÃO CONFIGURADO - API Key ausente');
-      console.error('💡 [SOLUÇÃO] Configure VITE_GEMINI_API_KEY no painel do Vercel:');
-      console.error('   1. Acesse: https://vercel.com/dashboard');
-      console.error('   2. Settings → Environment Variables');
-      console.error('   3. Adicione: VITE_GEMINI_API_KEY');
-      console.error('   4. Marque: Production, Preview, Development');
-      console.error('   5. Faça um redeploy');
+      // Log apenas em desenvolvimento
+      if (isDev) {
+        console.error('[ERRO] [Guatá Gemini] ❌ NÃO configurado!');
+        console.error('  - Verifique se VITE_GEMINI_API_KEY está no .env');
+        console.error('  - Verifique se o servidor foi reiniciado após atualizar o .env');
+        console.error('  - Verifique se não há espaços ou aspas na chave');
+      }
     }
   }
 
   async processQuestion(query: GeminiQuery): Promise<GeminiResponse> {
     const startTime = Date.now();
-    
-    console.log('🧠 Gemini Service: Processando pergunta...');
-    console.log('🔑 API Key configurada:', this.isConfigured);
+    const isDev = import.meta.env.DEV;
     
     // Log adicional se não estiver configurado (para debug no Vercel)
     if (!this.isConfigured) {
-      console.error('❌ [ERRO] Tentativa de usar Gemini sem API key configurada');
-      console.error('💡 [DIAGNÓSTICO] Verifique se VITE_GEMINI_API_KEY está configurada no Vercel');
+      console.error('[ERRO] Gemini não configurado - Verifique VITE_GEMINI_API_KEY');
       return this.generateFallbackResponse(query);
     }
     
     // 1. VERIFICAR CACHE COMPARTILHADO (perguntas comuns)
     const sharedCacheResult = this.getFromSharedCache(query);
     if (sharedCacheResult) {
-      console.log('✅ Cache compartilhado: Resposta imediata');
       return {
         answer: sharedCacheResult.response,
         confidence: 0.85,
@@ -160,7 +170,6 @@ class GuataGeminiService {
     const sessionId = (query as any).sessionId || 'anonymous';
     const individualCacheResult = this.getFromIndividualCache(query, userId, sessionId);
     if (individualCacheResult) {
-      console.log('✅ Cache individual: Resposta imediata');
       return {
         answer: individualCacheResult.response,
         confidence: 0.85,
@@ -174,7 +183,6 @@ class GuataGeminiService {
     // 3. VERIFICAR CACHE POR SIMILARIDADE SEMÂNTICA (75% similaridade)
     const similarityCacheResult = this.getFromSimilarityCache(query);
     if (similarityCacheResult) {
-      console.log('✅ Cache semântico: Reutilizando resposta de outro usuário');
       // Adaptar resposta para o contexto atual
       const adaptedResponse = this.adaptResponse(similarityCacheResult.response, query);
       return {
@@ -190,28 +198,24 @@ class GuataGeminiService {
     // 4. TENTAR GEMINI API PRIMEIRO (não usar fallback imediato)
     if (this.isConfigured) {
       try {
-        console.log('🧠 Tentando Gemini API para processar pergunta...');
-        
         // Verificar rate limit por usuário primeiro
         const userKey = userId || sessionId || 'anonymous';
         const canProceedUser = this.checkUserRateLimit(userKey);
         if (!canProceedUser) {
-          console.log(`⏸️ Rate limit do usuário atingido (${userKey}), usando fallback`);
+          if (isDev) console.log(`[RATE LIMIT] Usuário ${userKey} atingiu limite, usando fallback`);
           return this.generateFallbackResponse(query);
         }
 
         // Verificar rate limit global
         const canProceedGlobal = await this.checkRateLimitNonBlocking();
         if (!canProceedGlobal) {
-          console.log('⏸️ Rate limit global atingido, usando fallback');
-      return this.generateFallbackResponse(query);
-    }
+          if (isDev) console.log('[RATE LIMIT] Limite global atingido, usando fallback');
+          return this.generateFallbackResponse(query);
+        }
 
         // Construir prompt e chamar Gemini
-      const prompt = this.buildPrompt(query);
+        const prompt = this.buildPrompt(query);
         const geminiAnswer = await this.callGeminiAPI(prompt);
-        
-        console.log('✅ Gemini respondeu com sucesso!');
         
         // Salvar no cache compartilhado (para reutilização por outros usuários)
         const cacheKey = this.generateCacheKey(query);
@@ -221,30 +225,46 @@ class GuataGeminiService {
           usedBy: 1,
           question: query.question
         });
-        
-        console.log('💾 Resposta salva no cache compartilhado para reutilização');
 
         // Salvar no cache individual se houver userId/sessionId
         if (userId || sessionId) {
           this.saveToIndividualCache(query, userId, sessionId, geminiAnswer);
         }
       
-      return {
+        return {
           answer: this.cleanMarkdown(geminiAnswer),
           confidence: 0.95,
-        processingTime: Date.now() - startTime,
-        usedGemini: true,
-        personality: 'Guatá',
-        emotionalState: 'excited'
-      };
-    } catch (error) {
-        console.error('❌ Erro ao chamar Gemini API:', error);
-        console.log('🔄 Usando fallback devido ao erro');
+          processingTime: Date.now() - startTime,
+          usedGemini: true,
+          personality: 'Guatá',
+          emotionalState: 'excited'
+        };
+      } catch (error: any) {
+        // Tratamento específico para API key vazada - usar fallback silenciosamente
+        if (error.message?.includes('API_KEY_LEAKED') || error.message?.includes('leaked') || 
+            (error.message?.includes('403') && error.message?.includes('leaked'))) {
+          // Logar apenas em desenvolvimento
+          if (isDev) {
+            console.warn('[Guatá] API Key vazada detectada, usando fallback com pesquisa web');
+          }
+          // Retornar fallback em vez de propagar erro
+          return this.generateFallbackResponse(query);
+        }
+        
+        // Tratamento para chave expirada - apenas se for erro específico
+        if (error.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
+          logger.dev('[Guatá] API Key expirada, usando fallback');
+          return this.generateFallbackResponse(query);
+        }
+        
+        // Outros erros: logar apenas em desenvolvimento
+        if (isDev) {
+          console.warn('[Guatá] Erro no Gemini, usando fallback:', error.message);
+        }
         // Se falhar, usar fallback
         return this.generateFallbackResponse(query);
       }
     } else {
-      console.log('⚠️ Gemini não configurado, usando fallback');
       return this.generateFallbackResponse(query);
     }
   }
@@ -710,15 +730,9 @@ PERGUNTA DO USUÁRIO: ${question}`;
     }
 
     if (searchResults && searchResults.length > 0) {
-      console.log(`📊 [DEBUG] Adicionando ${searchResults.length} resultados de pesquisa ao prompt do Gemini`);
       prompt += `\n\n🌐 INFORMAÇÕES DA PESQUISA WEB (USE APENAS ESTAS INFORMAÇÕES REAIS):\n`;
       searchResults.forEach((result, index) => {
         const snippet = result.snippet || result.description || '';
-        console.log(`📊 [DEBUG] Resultado ${index + 1} no prompt:`, {
-          title: result.title,
-          snippetLength: snippet.length,
-          hasUrl: !!result.url
-        });
         prompt += `\n${index + 1}. ${result.title}\n   ${snippet}\n   Fonte: ${result.url || result.source || 'web'}\n`;
       });
       if (partnersInfo && partnersInfo.length > 0) {
@@ -727,9 +741,10 @@ PERGUNTA DO USUÁRIO: ${question}`;
         prompt += `\n⚠️ IMPORTANTE: Use APENAS as informações acima. Se algo não estiver nos resultados, NÃO invente. Seja honesto se não souber algo específico.`;
       }
     } else {
-      console.warn('⚠️ [AVISO CRÍTICO] Nenhum resultado de pesquisa web disponível!');
-      console.warn('⚠️ [AVISO CRÍTICO] O Gemini receberá apenas conhecimento pré-treinado!');
-      console.warn('⚠️ [AVISO CRÍTICO] A resposta será genérica e não específica!');
+      // Logar apenas em desenvolvimento
+      if (import.meta.env.DEV) {
+        console.warn('[AVISO] Nenhum resultado de pesquisa web disponível');
+      }
       prompt += `\n\n⚠️ ATENÇÃO: Não há resultados de busca web disponíveis. Use seu conhecimento geral sobre Mato Grosso do Sul, mas seja ESPECÍFICO na resposta. Se a pergunta pede algo específico (hotel perto do aeroporto, restaurante em uma cidade), mencione opções conhecidas ou seja honesto sobre não ter informações atualizadas, mas ainda ofereça alternativas relacionadas. NÃO invente informações específicas como preços, horários ou detalhes que não tem certeza.`;
     }
 
@@ -778,75 +793,170 @@ PERGUNTA DO USUÁRIO: ${question}`;
       throw new Error('Gemini não configurado');
     }
 
-    console.log('🧠 [DEBUG] Iniciando chamada ao Gemini API');
-    console.log('🧠 [DEBUG] Tamanho do prompt:', prompt.length, 'caracteres');
-    console.log('🧠 [DEBUG] Primeiros 200 chars do prompt:', prompt.substring(0, 200));
+    const isDev = import.meta.env.DEV;
+    
+        // Log removido para reduzir verbosidade
 
     try {
-      // Tentar modelos em ordem de preferência (usando modelos corretos da API)
-      // Ordem: mais estável e rápido primeiro
-      // Tentar com e sem prefixo "models/" para compatibilidade
+      // Tentar modelos em ordem de preferência (usando modelos mais estáveis primeiro)
+      // Começar com modelos mais básicos e conhecidos
       const modelsToTry = [
-        'models/gemini-2.0-flash-001',      // Versão estável (janeiro 2025) - mais rápido
-        'gemini-2.0-flash-001',            // Sem prefixo
-        'models/gemini-2.5-flash',         // Versão estável mais recente
-        'gemini-2.5-flash',                // Sem prefixo
-        'models/gemini-2.0-flash',         // Fallback estável
-        'gemini-2.0-flash',                // Sem prefixo
-        'models/gemini-flash-latest',      // Última versão flash
-        'gemini-flash-latest',             // Sem prefixo
-        'models/gemini-2.5-pro',           // Se precisar de mais capacidade
-        'gemini-2.5-pro',                  // Sem prefixo
-        'models/gemini-pro-latest',        // Fallback pro
-        'gemini-pro-latest'                // Sem prefixo
+        'gemini-1.5-flash',                // Modelo mais estável e amplamente disponível
+        'models/gemini-1.5-flash',         // Com prefixo
+        'gemini-1.5-pro',                  // Pro versão estável
+        'models/gemini-1.5-pro',           // Com prefixo
+        'gemini-2.0-flash-exp',            // Experimental mais recente
+        'models/gemini-2.0-flash-exp',     // Com prefixo
+        'gemini-2.0-flash-001',            // Versão específica
+        'models/gemini-2.0-flash-001',    // Com prefixo
       ];
       
       for (const modelName of modelsToTry) {
         try {
-          console.log(`🧠 [DEBUG] Tentando modelo: ${modelName}`);
+          // Tentando modelo (log removido)
           const model = this.genAI.getGenerativeModel({ model: modelName });
-          console.log(`🧠 [DEBUG] Modelo criado, gerando conteúdo...`);
           const result = await model.generateContent(prompt);
           const response = await result.response;
           const text = response.text();
-          console.log(`✅ [SUCESSO] Modelo ${modelName} funcionou!`);
-          console.log(`✅ [DEBUG] Resposta do Gemini (primeiros 200 chars):`, text.substring(0, 200));
-          console.log(`✅ [DEBUG] Tamanho da resposta:`, text.length, 'caracteres');
+          if (isDev) {
+            console.log(`[SUCESSO] Modelo ${modelName} funcionou, resposta:`, text.length, 'caracteres');
+          }
           return text;
         } catch (modelError: any) {
-          console.warn(`⚠️ [AVISO] Modelo ${modelName} falhou:`, {
-            message: modelError.message,
-            name: modelError.name,
-            stack: modelError.stack?.substring(0, 200)
-          });
+          // Log detalhado do erro para diagnóstico
+          const errorDetails = {
+            model: modelName,
+            status: modelError.status || modelError.code || modelError.statusCode,
+            message: modelError.message || String(modelError),
+            fullError: modelError
+          };
           
-          // Tratamento específico para erro 400 (chave expirada)
-          if (modelError.message?.includes('expired') || modelError.message?.includes('expirada') || modelError.message?.includes('API key expired')) {
-            console.error('❌ [ERRO CRÍTICO] Gemini API Key EXPIRADA!');
-            console.error('💡 [SOLUÇÃO]:');
-            console.error('   1. Acesse: https://aistudio.google.com/app/apikey');
-            console.error('   2. Crie uma NOVA chave de API');
-            console.error('   3. Atualize VITE_GEMINI_API_KEY no Vercel e localmente');
-            console.error('   4. Revogue a chave antiga expirada');
-            // Não tentar outros modelos se a chave está expirada
-            throw new Error('API key expired. Please renew the API key.');
+          // Erro no modelo (log removido para reduzir verbosidade)
+          
+          // Tratamento específico para erro 403 (API key leaked/inválida)
+          if (modelError.message?.includes('leaked') || 
+              (modelError.status === 403 && modelError.message?.toLowerCase().includes('api'))) {
+            if (isDev) {
+              console.error('[ERRO] Gemini API Key foi reportada como vazada!');
+            }
+            throw new Error('API_KEY_LEAKED_USE_FALLBACK');
           }
           
-          // Se não for erro de modelo não encontrado, propagar o erro
-          if (!modelError.message?.includes('not found') && !modelError.message?.includes('404')) {
-            console.error(`❌ [ERRO] Erro não é de modelo não encontrado, propagando erro`);
-            throw modelError;
+          // Tratamento específico para erro 401 (não autorizado - chave inválida/expirada)
+          if (modelError.status === 401) {
+            logger.error('[ERRO] Gemini API Key inválida ou expirada (401)');
+            logger.dev('Verifique VITE_GEMINI_API_KEY em https://aistudio.google.com/app/apikey');
+            throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
           }
-          // Continuar para próximo modelo
+          
+          // Tratamento para erro 400 - verificar se a mensagem menciona API key expirada
+          const errorMessage = (modelError.message || '').toLowerCase();
+          const errorString = JSON.stringify(modelError).toLowerCase();
+          
+          // Verificar se a mensagem contém "api key expired" - apenas se for EXPLICITAMENTE mencionado
+          // Ser mais restritivo para evitar falsos positivos
+          const hasExplicitExpiredMessage = (
+            errorMessage.includes('api key expired') && 
+            (errorMessage.includes('please renew') || errorMessage.includes('renew the api key'))
+          ) || errorString.includes('"api key expired"') || errorString.includes("'api key expired'");
+          
+          const isApiKeyExpired = (
+            modelError.status === 400 && hasExplicitExpiredMessage
+          );
+          
+          // Verificar se é erro de API key inválida (mas não expirada) - apenas se for EXPLICITO
+          const hasExplicitInvalidMessage = (
+            errorMessage.includes('invalid api key') ||
+            (errorMessage.includes('api key') && errorMessage.includes('not valid') && errorMessage.includes('invalid'))
+          );
+          
+          const isApiKeyInvalid = (
+            modelError.status === 400 &&
+            !isApiKeyExpired &&
+            hasExplicitInvalidMessage
+          );
+          
+          if (isApiKeyExpired) {
+            // Log apenas uma vez por sessão para evitar spam
+            if (!this.hasLoggedExpiredKey) {
+              logger.error('[ERRO] Gemini API Key EXPIRADA');
+              logger.dev('Atualize VITE_GEMINI_API_KEY no .env e reinicie o servidor');
+              this.hasLoggedExpiredKey = true;
+            }
+            throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
+          }
+          
+          if (isApiKeyInvalid) {
+            if (!this.hasLoggedExpiredKey) {
+              logger.error('[ERRO] Gemini API Key inválida (400)');
+              logger.dev('Verifique VITE_GEMINI_API_KEY em https://aistudio.google.com/app/apikey');
+              this.hasLoggedExpiredKey = true;
+            }
+            throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
+          }
+          
+          // Se for erro 404 (modelo não encontrado), tentar próximo modelo
+          if (modelError.status === 404 || 
+              modelError.message?.includes('not found') || 
+              modelError.message?.includes('404')) {
+            if (isDev) {
+              console.log(`[INFO] Modelo ${modelName} não encontrado, tentando próximo...`);
+            }
+            continue; // Tentar próximo modelo
+          }
+          
+          // Para outros erros 400 (pode ser modelo inválido, prompt inválido, etc), tentar próximo modelo
+          if (modelError.status === 400) {
+            if (isDev) {
+              console.warn(`[AVISO] Modelo ${modelName} retornou erro 400, tentando próximo modelo...`);
+            }
+            continue; // Tentar próximo modelo
+          }
+          
+          // Para outros erros, propagar
+          if (isDev) {
+            console.warn(`[AVISO] Modelo ${modelName} falhou:`, modelError.message);
+          }
+          throw modelError;
         }
       }
       
       // Se nenhum modelo funcionou, lançar erro
       throw new Error('Nenhum modelo Gemini disponível');
-    } catch (error) {
-      console.error('❌ Erro na chamada do Gemini:', error);
-      throw error;
-    }
+      } catch (error: any) {
+        // Log detalhado do erro final
+        if (isDev) {
+          console.error('[ERRO] Erro na chamada do Gemini:', {
+            status: error.status || error.code || error.statusCode,
+            message: error.message || String(error),
+            error: error
+          });
+        }
+        
+        // Tratamento específico para erro de API key vazada (403)
+        if (error.status === 403 || error.message?.includes('API_KEY_LEAKED_USE_FALLBACK')) {
+          logger.error('[ERRO] API Key do Gemini reportada como vazada');
+          logger.dev('Revogue e crie nova chave em https://aistudio.google.com/app/apikey');
+          throw new Error('API_KEY_LEAKED_USE_FALLBACK');
+        }
+        
+        // Tratamento para chave expirada - apenas se for erro específico
+        if (error.status === 401 || error.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
+          // Log apenas uma vez por sessão
+          if (!this.hasLoggedExpiredKey) {
+            logger.error('[ERRO] API Key do Gemini inválida ou expirada');
+            logger.dev('Atualize VITE_GEMINI_API_KEY no .env e reinicie o servidor');
+            this.hasLoggedExpiredKey = true;
+          }
+          throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
+        }
+        
+        // Para outros erros, usar fallback silenciosamente
+        if (isDev) {
+          console.warn('[AVISO] Gemini não disponível, usando fallback');
+        }
+        throw error;
+      }
   }
 
   /**
@@ -939,7 +1049,6 @@ PERGUNTA DO USUÁRIO: ${question}`;
       }
     } else if (searchResults && searchResults.length > 0) {
       // Se temos resultados de pesquisa, usar eles de forma inteligente e entusiasmada
-      console.log('🔄 Usando resultados de pesquisa no fallback');
       const firstResult = searchResults[0];
       const snippet = firstResult.snippet || firstResult.description || '';
       if (snippet && snippet.length > 50) {

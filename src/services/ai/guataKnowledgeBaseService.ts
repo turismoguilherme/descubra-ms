@@ -88,8 +88,6 @@ class GuataKnowledgeBaseService {
     }
 
     try {
-      console.log('📚 [KB] Buscando na Knowledge Base:', normalizedQuestion);
-      
       // 1. Tentar match exato primeiro (mais rápido)
       const { data: exactMatch, error: exactError } = await supabase
         .from('guata_knowledge_base')
@@ -98,18 +96,37 @@ class GuataKnowledgeBaseService {
         .eq('ativo', true)
         .limit(1);
 
+      // Tratar erros silenciosamente (tabela pode não existir ou RLS bloqueando)
       if (exactError) {
-        console.error('❌ [KB] Erro ao buscar match exato:', exactError);
+        // Erros esperados: tabela não existe, RLS bloqueando, não autenticado
+        // Não logar esses erros para não poluir o console
+        const isExpectedError = 
+          exactError.code === 'PGRST116' || 
+          exactError.code === 'PGRST301' || 
+          exactError.code === '42P01' || // relation does not exist
+          exactError.status === 404 || 
+          exactError.status === 401 ||
+          exactError.message?.includes('does not exist') ||
+          exactError.message?.includes('relation');
+        
+        if (isExpectedError) {
+          // Erro esperado, continuar fluxo normalmente sem logar
+          return { found: false };
+        }
+        // Outros erros inesperados: logar apenas em desenvolvimento
+        if (import.meta.env.DEV) {
+          console.warn('⚠️ [KB] Erro inesperado ao buscar match exato:', exactError.message);
+        }
+        return { found: false };
       }
 
       if (exactMatch && exactMatch.length > 0) {
         const entry = exactMatch[0] as KnowledgeBaseEntry;
-        console.log('✅ [KB] Match exato encontrado!');
         
         // Incrementar contador de uso (assíncrono, não bloqueia)
-        this.incrementUsage(entry.id).catch(err => 
-          console.warn('⚠️ [KB] Erro ao incrementar uso:', err)
-        );
+        this.incrementUsage(entry.id).catch(() => {
+          // Erro não crítico, ignorar silenciosamente
+        });
         
         return {
           found: true,
@@ -121,20 +138,33 @@ class GuataKnowledgeBaseService {
       }
 
       // 2. Se não encontrou match exato, buscar por similaridade
-      console.log('📚 [KB] Match exato não encontrado, buscando por similaridade...');
-      
       const { data: allEntries, error: similarityError } = await supabase
         .from('guata_knowledge_base')
         .select('*')
         .eq('ativo', true);
 
+      // Tratar erros silenciosamente
       if (similarityError) {
-        console.error('❌ [KB] Erro ao buscar todas as entradas:', similarityError);
+        const isExpectedError = 
+          similarityError.code === 'PGRST116' || 
+          similarityError.code === 'PGRST301' || 
+          similarityError.code === '42P01' ||
+          similarityError.status === 404 || 
+          similarityError.status === 401 ||
+          similarityError.message?.includes('does not exist') ||
+          similarityError.message?.includes('relation');
+        
+        if (isExpectedError) {
+          return { found: false };
+        }
+        // Outros erros inesperados: logar apenas em desenvolvimento
+        if (import.meta.env.DEV) {
+          console.warn('⚠️ [KB] Erro inesperado ao buscar entradas:', similarityError.message);
+        }
         return { found: false };
       }
 
       if (!allEntries || allEntries.length === 0) {
-        console.log('📚 [KB] Nenhuma entrada ativa na Knowledge Base');
         return { found: false };
       }
 
@@ -155,12 +185,10 @@ class GuataKnowledgeBaseService {
       }
 
       if (bestMatch) {
-        console.log(`✅ [KB] Match por similaridade encontrado! (${(bestSimilarity * 100).toFixed(0)}%)`);
-        
         // Incrementar contador de uso (assíncrono, não bloqueia)
-        this.incrementUsage(bestMatch.id).catch(err => 
-          console.warn('⚠️ [KB] Erro ao incrementar uso:', err)
-        );
+        this.incrementUsage(bestMatch.id).catch(() => {
+          // Erro não crítico, ignorar silenciosamente
+        });
         
         return {
           found: true,
@@ -171,12 +199,19 @@ class GuataKnowledgeBaseService {
         };
       }
 
-      console.log('📚 [KB] Nenhuma entrada encontrada na Knowledge Base');
       return { found: false };
 
-    } catch (error) {
-      console.error('❌ [KB] Erro ao buscar na Knowledge Base:', error);
+    } catch (error: any) {
       // Em caso de erro, retornar "não encontrado" para continuar fluxo normal
+      // Não logar erros esperados (tabela não existe, etc)
+      const isExpectedError = 
+        error?.message?.includes('does not exist') ||
+        error?.message?.includes('relation') ||
+        error?.code === '42P01';
+      
+      if (!isExpectedError && import.meta.env.DEV) {
+        console.warn('⚠️ [KB] Erro inesperado ao buscar na Knowledge Base:', error);
+      }
       return { found: false };
     }
   }

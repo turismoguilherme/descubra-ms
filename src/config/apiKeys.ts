@@ -96,7 +96,7 @@ export const API_SETUP_INSTRUCTIONS = {
   }
 };
 
-console.log('🔑 API Config carregada:', getAPIStatus());
+// API Config carregada (log removido para reduzir verbosidade)
 
 
 

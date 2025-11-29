@@ -71,7 +71,7 @@ export class GoogleSearchEventService {
       if (stored) {
         const cacheData = JSON.parse(stored);
         this.cache = new Map(Object.entries(cacheData));
-        console.log("📦 CACHE: Cache carregado do localStorage");
+        // Cache carregado do localStorage (log removido)
       }
     } catch (error) {
       console.error("Erro ao carregar cache:", error);

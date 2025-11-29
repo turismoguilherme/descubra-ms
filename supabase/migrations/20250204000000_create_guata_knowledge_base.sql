@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS guata_knowledge_base (
     usado_por INTEGER DEFAULT 0
 );
 
--- Create indexes for efficient searching
+-- Create unique constraint to prevent duplicate questions (only for active entries)
+-- Note: We'll handle duplicates manually in the application layer for active entries
 CREATE INDEX IF NOT EXISTS idx_guata_kb_pergunta_normalizada ON guata_knowledge_base(pergunta_normalizada);
 CREATE INDEX IF NOT EXISTS idx_guata_kb_tipo ON guata_knowledge_base(tipo);
 CREATE INDEX IF NOT EXISTS idx_guata_kb_ativo ON guata_knowledge_base(ativo) WHERE ativo = true;
@@ -45,7 +46,10 @@ BEGIN
     SET usado_por = usado_por + 1
     WHERE id = kb_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permission to public (for anonymous access)
+GRANT EXECUTE ON FUNCTION increment_guata_kb_usage(UUID) TO anon, authenticated;
 
 -- Enable RLS (Row Level Security)
 ALTER TABLE guata_knowledge_base ENABLE ROW LEVEL SECURITY;

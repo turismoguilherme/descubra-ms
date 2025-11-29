@@ -14,13 +14,13 @@ export const ViaJARAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     // Temporariamente desabilitado devido a erros de tipo
-    console.log("ViaJARAuthProvider: fetchUserProfile temporariamente desabilitado");
+    // fetchUserProfile temporariamente desabilitado
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("🔄 ViaJARAuthProvider: Auth state changed:", event);
+        // Auth state changed
         
         if (session?.user) {
           setUser(session.user);

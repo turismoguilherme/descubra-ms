@@ -53,7 +53,7 @@ export const useSessionSecurity = ({
   // Enhanced logout with cleanup
   const performSecureLogout = useCallback(async () => {
     try {
-      console.log('🚪 SESSION SECURITY: Performing secure logout');
+      // Logout silencioso
       await securityService.logSecurityEvent({
         action: 'automatic_session_timeout',
         user_id: user?.id,
@@ -78,7 +78,7 @@ export const useSessionSecurity = ({
   // Show session timeout warning
   const showSessionWarning = useCallback(() => {
     if (!sessionWarningShown) {
-      console.log('⚠️ SESSION SECURITY: Showing session warning');
+      // Mostrar aviso de sessão
       setSessionWarningShown(true);
       toast({
         title: "⚠️ Sessão expirando",
@@ -91,7 +91,6 @@ export const useSessionSecurity = ({
 
   // Reset activity timers
   const resetActivityTimers = useCallback(() => {
-    console.log('🔄 SESSION SECURITY: Resetting activity timers');
     const now = Date.now();
     setLastActivity(now);
     setSessionWarningShown(false);
@@ -115,8 +114,6 @@ export const useSessionSecurity = ({
   useEffect(() => {
     if (!enabled || !user) return;
 
-    console.log('🔍 SESSION SECURITY: Session started for user:', user.email);
-
     // Log session start
     securityService.logSecurityEvent({
       action: 'session_started',
@@ -131,7 +128,6 @@ export const useSessionSecurity = ({
 
     // Log session end on unmount
     return () => {
-      console.log('🔍 SESSION SECURITY: Session ended for user:', user.email);
       securityService.logSecurityEvent({
         action: 'session_ended',
         user_id: user.id,
@@ -144,7 +140,7 @@ export const useSessionSecurity = ({
   useEffect(() => {
     if (!enabled || !user || !trackActivity) return;
 
-    console.log('🖱️ SESSION SECURITY: Setting up activity tracking for user:', user.email);
+    // Configurar rastreamento de atividade
     
     activityCountRef.current = 0;
     const deviceFingerprint = generateDeviceFingerprint();
@@ -167,7 +163,7 @@ export const useSessionSecurity = ({
       
       // Log activity every 50 interactions to avoid spam
       if (activityCountRef.current % 50 === 0) {
-        console.log('📊 SESSION SECURITY: Activity count:', activityCountRef.current);
+        // Contador de atividade (log removido para reduzir verbosidade)
         securityService.logSecurityEvent({
           action: 'user_activity_tracked',
           user_id: user.id,
@@ -191,7 +187,7 @@ export const useSessionSecurity = ({
     resetActivityTimers();
 
     return () => {
-      console.log('🧹 SESSION SECURITY: Cleaning up activity tracking');
+      // Limpar rastreamento de atividade
       events.forEach(event => {
         document.removeEventListener(event, logActivity);
       });

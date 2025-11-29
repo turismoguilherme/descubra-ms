@@ -26,12 +26,10 @@ export class AutoEventActivator {
    */
   public async activateEventSystem(): Promise<void> {
     if (this.isActivated) {
-      console.log("🎯 AUTO ACTIVATOR: Sistema de eventos já ativado");
       return;
     }
 
     try {
-      console.log("🎯 AUTO ACTIVATOR: Ativando sistema de eventos...");
 
       // Configurar sistema com limpeza automática ativa
       const config = {
@@ -65,16 +63,11 @@ export class AutoEventActivator {
       
       if (result.success) {
         this.isActivated = true;
-        console.log("✅ AUTO ACTIVATOR: Sistema de eventos ativado com sucesso!");
-        console.log(`📊 AUTO ACTIVATOR: ${result.servicesStarted.length} serviços iniciados`);
         
         // Executar limpeza imediata
-        console.log("🧹 AUTO ACTIVATOR: Executando limpeza inicial...");
         const cleanupResult = await eventManagementService.performManualCleanup();
         
-        if (cleanupResult.success) {
-          console.log(`✅ AUTO ACTIVATOR: Limpeza inicial concluída - ${cleanupResult.eventsArchived} arquivados, ${cleanupResult.eventsRemoved} removidos`);
-        } else {
+        if (!cleanupResult.success) {
           console.warn("⚠️ AUTO ACTIVATOR: Limpeza inicial com erros:", cleanupResult.errors);
         }
         
@@ -104,7 +97,6 @@ export class AutoEventActivator {
    * Executa limpeza imediata
    */
   public async performImmediateCleanup(): Promise<any> {
-    console.log("🎯 AUTO ACTIVATOR: Executando limpeza imediata...");
     return await eventManagementService.performManualCleanup();
   }
 }
@@ -114,7 +106,7 @@ export const autoEventActivator = AutoEventActivator.getInstance();
 
 // Auto-ativação imediata (reativada)
 if (typeof window !== 'undefined' && true) { // Reativado
-  console.log("🎯 AUTO ACTIVATOR: Iniciando ativação automática...");
+  // Iniciando ativação automática (log removido)
   
   // Aguardar um pouco para garantir que a aplicação esteja carregada
   setTimeout(() => {

@@ -40,9 +40,24 @@ export class SupabaseMLIntegration {
         });
 
       if (error) {
-        console.warn('⚠️ Erro ao salvar interação no Supabase:', error);
+        // Erros de RLS e 401 são esperados em desenvolvimento quando não há autenticação
+        // Mas agora devem funcionar com as novas políticas RLS
+        const isRLSError = error.code === '42501' || error.code === 'PGRST301' || 
+                          error.message?.includes('permission denied') ||
+                          error.message?.includes('new row violates row-level security');
+        
+        const isUnauthorizedError = error.status === 401 || error.statusCode === 401;
+        
+        if (!isRLSError && !isUnauthorizedError) {
+          // Apenas logar erros inesperados
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.warn('⚠️ Erro ao salvar interação no Supabase:', error);
+          }
+        }
+        // Erros esperados (RLS/401) são ignorados silenciosamente
       } else {
-        console.log('✅ Interação salva no Supabase');
+        // Log removido para reduzir verbosidade
       }
     } catch (error) {
       console.warn('⚠️ Erro ao salvar interação:', error);
@@ -79,12 +94,40 @@ export class SupabaseMLIntegration {
         });
 
       if (error) {
-        console.warn('⚠️ Erro ao salvar feedback no Supabase:', error);
+        // Erros de RLS (Row Level Security) e 401 são esperados em desenvolvimento
+        // quando não há usuário autenticado - não logar para não poluir console
+        const isRLSError = error.code === '42501' || error.code === 'PGRST301' || 
+                          error.message?.includes('permission denied') ||
+                          error.message?.includes('new row violates row-level security');
+        
+        const isUnauthorizedError = error.status === 401 || error.statusCode === 401;
+        
+        if (!isRLSError && !isUnauthorizedError) {
+          // Apenas logar erros inesperados
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.warn('⚠️ Erro ao salvar feedback no Supabase:', error);
+          }
+        }
+        // Erros esperados (RLS/401) são ignorados silenciosamente
       } else {
-        console.log('✅ Feedback salvo no Supabase');
+        // Log removido para reduzir verbosidade
       }
-    } catch (error) {
-      console.warn('⚠️ Erro ao salvar feedback:', error);
+    } catch (error: any) {
+      // Apenas logar erros inesperados
+      const isRLSError = error?.code === '42501' || error?.code === 'PGRST301' || 
+                        error?.message?.includes('permission denied') ||
+                        error?.message?.includes('new row violates row-level security');
+      
+      const isUnauthorizedError = error?.status === 401 || error?.statusCode === 401;
+      
+      if (!isRLSError && !isUnauthorizedError) {
+        const isDev = import.meta.env.DEV;
+        if (isDev) {
+          console.warn('⚠️ Erro ao salvar feedback:', error);
+        }
+      }
+      // Erros esperados (RLS/401) são ignorados silenciosamente
     }
   }
 
@@ -173,7 +216,7 @@ export class SupabaseMLIntegration {
       if (error) {
         console.warn('⚠️ Erro ao salvar preferências:', error);
       } else {
-        console.log('✅ Preferências salvas no Supabase');
+        // Preferências salvas (log removido)
       }
     } catch (error) {
       console.warn('⚠️ Erro ao salvar preferências:', error);

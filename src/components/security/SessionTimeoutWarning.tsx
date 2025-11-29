@@ -34,7 +34,8 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Reset activity and timers
   const resetTimers = useCallback(() => {
-    console.log('🔄 SessionTimeoutWarning: resetTimers called, count:', ++resetCountRef.current);
+    // Log removido para reduzir verbosidade
+    ++resetCountRef.current;
     
     const now = Date.now();
     setLastActivity(now);
@@ -54,7 +55,6 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
     // Set new warning timer
     const warningDelay = (timeoutMinutes - warningTimeMinutes) * 60 * 1000;
     const newWarningTimer = setTimeout(() => {
-      console.log('⚠️ SessionTimeoutWarning: Warning timer triggered');
       setShowWarning(true);
       startCountdown();
     }, warningDelay);
@@ -63,7 +63,6 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
     // Set new logout timer
     const logoutDelay = timeoutMinutes * 60 * 1000;
     const newLogoutTimer = setTimeout(() => {
-      console.log('🚪 SessionTimeoutWarning: Logout timer triggered');
       handleAutoLogout();
     }, logoutDelay);
     logoutTimerRef.current = newLogoutTimer;
@@ -71,7 +70,6 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Start countdown when warning is shown
   const startCountdown = useCallback(() => {
-    console.log('⏰ SessionTimeoutWarning: Starting countdown');
     const countdown = setInterval(() => {
       setRemainingTime(prev => {
         if (prev <= 1) {
@@ -88,7 +86,6 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Handle automatic logout
   const handleAutoLogout = useCallback(async () => {
-    console.log('🚪 SessionTimeoutWarning: Auto logout triggered');
     try {
       await enhancedSecurityService.logSecurityEvent({
         action: 'session_timeout_auto_logout',
@@ -116,7 +113,6 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Extend session
   const handleExtendSession = useCallback(async () => {
-    console.log('⏰ SessionTimeoutWarning: Extending session');
     try {
       await enhancedSecurityService.logSecurityEvent({
         action: 'session_extended',
@@ -141,13 +137,11 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   // Activity tracking - FIXED: Removed problematic dependencies
   useEffect(() => {
-    console.log('🔍 SessionTimeoutWarning: useEffect triggered, user:', !!user);
     if (!user) return;
 
     const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     const handleActivity = () => {
-      console.log('🖱️ SessionTimeoutWarning: Activity detected');
       resetTimers();
     };
 
@@ -170,7 +164,6 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
     resetTimers();
 
     return () => {
-      console.log('🧹 SessionTimeoutWarning: Cleanup effect');
       activityEvents.forEach(event => {
         document.removeEventListener(event, throttledHandleActivity);
       });

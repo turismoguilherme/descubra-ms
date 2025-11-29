@@ -95,7 +95,7 @@ export class PreferenceLearningService {
         preferences.accessibility_needs?.length > 0;
 
       if (hasPreferences) {
-        console.log('🎯 Preferências detectadas:', preferences);
+        // Preferências detectadas (log removido)
         return true;
       }
 

@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { InteractionData } from './types';
+import { logger } from '@/utils/logger';
 
 class InteractionTrackerService {
   private static instance: InteractionTrackerService;
@@ -9,7 +10,7 @@ class InteractionTrackerService {
 
   private constructor() {
     this.sessionId = this.getSessionId();
-    console.log(`📡 InteractionTrackerService inicializado com Session ID: ${this.sessionId}`);
+    logger.dev(`📡 InteractionTrackerService inicializado com Session ID: ${this.sessionId}`);
   }
 
   public static getInstance(): InteractionTrackerService {

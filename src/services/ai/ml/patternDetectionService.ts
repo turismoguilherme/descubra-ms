@@ -43,7 +43,7 @@ export class PatternDetectionService {
         }
         
         this.patterns.set(similarPattern.id, similarPattern);
-        console.log(`🔍 Padrão atualizado: ${similarPattern.pattern} (freq: ${similarPattern.frequency})`);
+        // Padrão atualizado (log removido)
         return true;
       } else {
         // Criar novo padrão
@@ -82,7 +82,7 @@ export class PatternDetectionService {
       if (pattern) {
         pattern.optimizedAnswer = correction;
         this.patterns.set(pattern.id, pattern);
-        console.log('✅ Padrão atualizado com correção');
+        // Padrão atualizado (log removido)
       }
     } catch (error) {
       console.error('❌ Erro ao atualizar padrão com correção:', error);

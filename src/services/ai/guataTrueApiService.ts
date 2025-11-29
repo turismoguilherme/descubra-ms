@@ -48,14 +48,13 @@ class GuataTrueApiService {
     const startTime = Date.now();
     // Garantir que question seja sempre uma string
     const question = String(query.question || '').trim();
-    console.log('🦦 Guatá True API: Processando pergunta...');
-    console.log('📝 Query:', question);
+    // Processando pergunta (logs removidos)
     
     try {
       // NOVO: Usar o sistema inteligente de turismo
       const { guataIntelligentTourismService } = await import('./guataIntelligentTourismService');
       
-      console.log('🚀 Usando Guatá Intelligent Tourism Service...');
+      // Usando Intelligent Tourism Service (log removido)
       
       const intelligentResponse = await guataIntelligentTourismService.processQuestion({
         question: question,
@@ -68,11 +67,7 @@ class GuataTrueApiService {
         isFirstUserMessage: query.isFirstUserMessage ?? false // Passar flag para primeira mensagem do usuário
       });
       
-      console.log('✅ Guatá Intelligent Tourism: Resposta gerada em', intelligentResponse.processingTime, 'ms');
-      console.log('📊 Fontes utilizadas:', intelligentResponse.sources);
-      console.log('🌐 Usou web search:', intelligentResponse.usedRealSearch);
-      console.log('🔍 Método de busca:', intelligentResponse.searchMethod);
-      console.log('🏨 Dados de turismo:', Object.keys(intelligentResponse.tourismData).length, 'categorias');
+      // Resposta gerada (logs removidos para reduzir verbosidade)
       
       // Converter resposta para formato compatível
       return {

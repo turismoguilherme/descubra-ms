@@ -25,12 +25,10 @@ export class IntelligentEventActivator {
    */
   public async activateIntelligentSystem(): Promise<void> {
     if (this.isActivated) {
-      console.log("🎯 INTELLIGENT ACTIVATOR: Sistema já ativado");
       return;
     }
 
     try {
-      console.log("🎯 INTELLIGENT ACTIVATOR: Ativando sistema inteligente de eventos...");
 
       // Configurar sistema inteligente
       const config = {
@@ -59,8 +57,6 @@ export class IntelligentEventActivator {
       
       if (result.success) {
         this.isActivated = true;
-        console.log("✅ INTELLIGENT ACTIVATOR: Sistema inteligente ativado com sucesso!");
-        console.log(`📊 INTELLIGENT ACTIVATOR: ${result.servicesStarted.length} serviços iniciados`);
         
         if (result.errors.length > 0) {
           console.warn("⚠️ INTELLIGENT ACTIVATOR: Alguns erros encontrados:", result.errors);
@@ -91,7 +87,6 @@ export class IntelligentEventActivator {
    * Executa busca manual de eventos
    */
   public async performManualSearch(): Promise<any> {
-    console.log("🎯 INTELLIGENT ACTIVATOR: Executando busca manual...");
     return await intelligentEventService.getEvents();
   }
 }
@@ -101,7 +96,7 @@ export const intelligentEventActivator = IntelligentEventActivator.getInstance()
 
 // Auto-ativação imediata
 if (typeof window !== 'undefined') {
-  console.log("🎯 INTELLIGENT ACTIVATOR: Iniciando ativação automática...");
+  // Iniciando ativação automática (log removido)
   
   // Aguardar um pouco para garantir que a aplicação esteja carregada
   setTimeout(() => {

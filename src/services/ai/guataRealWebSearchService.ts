@@ -115,44 +115,19 @@ class GuataRealWebSearchService {
     this.serpApiKey = (import.meta.env.VITE_SERPAPI_KEY || '').trim();
     
     this.isConfigured = !!(this.googleApiKey && this.googleEngineId);
-    console.log('🔍 Guatá Real Web Search:', this.isConfigured ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
-    console.log('🔑 Google API Key (Guatá):', this.googleApiKey ? 'PRESENTE' : 'AUSENTE');
     
-      // Log detalhado da chave (primeiros e últimos caracteres para segurança)
-      if (this.googleApiKey) {
-        const keyPreview = this.googleApiKey.length > 20 
-          ? `${this.googleApiKey.substring(0, 10)}...${this.googleApiKey.substring(this.googleApiKey.length - 10)}`
-          : '***';
-        console.log('🔑 [DEBUG] Chave sendo usada (preview):', keyPreview);
-        console.log('🔑 [DEBUG] Tamanho da chave:', this.googleApiKey.length, 'caracteres');
-        console.log('🔑 [DEBUG] Fonte da chave:', 
-          import.meta.env.VITE_GOOGLE_SEARCH_API_KEY ? 'Variável de ambiente (.env)' : 'Hardcoded (fallback)');
-        
-        // Log adicional para diagnóstico no Vercel
-        if (typeof window !== 'undefined') {
-          const isVercel = window.location.hostname.includes('vercel.app');
-          if (isVercel) {
-            console.log('🔍 [DIAGNÓSTICO VERCEL] Ambiente de produção detectado');
-            console.log('🔍 [DIAGNÓSTICO VERCEL] Chave presente:', !!this.googleApiKey);
-            console.log('🔍 [DIAGNÓSTICO VERCEL] Primeiros 10 chars:', this.googleApiKey.substring(0, 10));
-            console.log('💡 [DIAGNÓSTICO] Se a chave for diferente da local, verifique:');
-            console.log('   1. Se a chave no Vercel é EXATAMENTE a mesma do .env local');
-            console.log('   2. Se há restrições de domínio na chave que bloqueiam *.vercel.app');
-            console.log('   3. Se a chave pertence ao projeto correto do Google Cloud');
-          }
-        }
+    // Log apenas em desenvolvimento e sem expor informações sensíveis
+    const isDev = import.meta.env.DEV;
+    if (isDev) {
+      console.log('[Guatá Web Search] Configurado:', this.isConfigured);
+      if (this.isConfigured) {
+        console.log('[Guatá Web Search] Engine ID:', this.googleEngineId);
       }
+    }
     
-    console.log('🔑 Google Engine ID (Guatá):', this.googleEngineId);
-    
-    // Verificação de compatibilidade
-    if (this.googleApiKey && this.googleEngineId) {
-      console.log('✅ [VERIFICAÇÃO] Chave e Engine ID configurados');
-      console.log('💡 [VERIFICAÇÃO] Certifique-se que:');
-      console.log('   1. A chave pertence ao projeto onde Custom Search API está ATIVADA');
-      console.log('   2. O projeto correto é: gen-lang-client-0847008941 (GuataIA)');
-      console.log('   3. A Custom Search API está habilitada nesse projeto');
-      console.log('   4. A chave não tem restrições que bloqueiem a API');
+    // Verificação silenciosa (sem logs que expõem informações)
+    if (!this.isConfigured && isDev) {
+      console.warn('[Guatá Web Search] Não configurado - Verifique VITE_GOOGLE_SEARCH_API_KEY e VITE_GOOGLE_SEARCH_ENGINE_ID');
     }
   }
 
@@ -207,8 +182,11 @@ class GuataRealWebSearchService {
       this.searchCount++;
       console.log(`📊 Buscas hoje: ${this.searchCount}/${this.MAX_SEARCHES_PER_DAY}`);
       
-      console.log('🔍 [DEBUG] URL da busca:', searchUrl.replace(apiKey, 'API_KEY_HIDDEN').replace(engineId, 'ENGINE_ID_HIDDEN'));
-      console.log('🔍 [DEBUG] API Key presente:', !!apiKey, 'Tamanho:', apiKey.length);
+      // Nunca logar informações sobre a chave, mesmo parcialmente
+      const isDev = import.meta.env.DEV;
+      if (isDev) {
+        console.log('[Web Search] Buscando:', searchQuery.substring(0, 50) + '...');
+      }
       console.log('🔍 [DEBUG] Engine ID presente:', !!engineId, 'Valor:', engineId);
       
       const response = await fetch(searchUrl);
@@ -244,7 +222,7 @@ class GuataRealWebSearchService {
             console.error('❌ [ERRO CRÍTICO] Google Search API Key EXPIRADA!');
             console.error('💡 [SOLUÇÃO]:');
             console.error('   1. Acesse: https://console.cloud.google.com/apis/credentials');
-            console.error('   2. Encontre a chave que começa com:', apiKey.substring(0, 10) + '...');
+            console.error('   2. Revogue a chave atual e crie uma nova');
             console.error('   3. Crie uma NOVA chave de API');
             console.error('   4. Atualize VITE_GOOGLE_SEARCH_API_KEY no Vercel e localmente');
             console.error('   5. Revogue a chave antiga expirada');
@@ -265,7 +243,7 @@ class GuataRealWebSearchService {
           console.error('💡 [SOLUÇÃO PASSO A PASSO]:');
           console.error('   PASSO 1: Verifique qual projeto a chave pertence');
           console.error('      - Acesse: https://console.cloud.google.com/apis/credentials');
-          console.error('      - Encontre a chave que começa com:', apiKey.substring(0, 10) + '...');
+          console.error('      - Revogue a chave atual e crie uma nova');
           console.error('      - Verifique o projeto ao qual ela pertence');
           console.error('   PASSO 2: Verifique se a API está ativada no projeto da chave');
           console.error('      - O projeto deve ser: gen-lang-client-0847008941 (GuataIA)');
@@ -294,7 +272,7 @@ class GuataRealWebSearchService {
               console.error('❌ Google Search API: Chave de API inválida ou sem permissões');
               console.error('💡 PASSO A PASSO PARA CORRIGIR:');
               console.error('   1. Acesse: https://console.cloud.google.com/apis/credentials');
-              console.error('   2. Encontre a chave:', this.googleApiKey.substring(0, 20) + '...');
+              console.error('   2. Revogue a chave atual e crie uma nova');
               console.error('   3. Clique em "Editar" (ícone de lápis)');
               console.error('   4. Em "Restrições de API":');
               console.error('      - Se estiver vazio: Adicione "Custom Search API"');

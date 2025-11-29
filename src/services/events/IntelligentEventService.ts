@@ -175,13 +175,28 @@ export class IntelligentEventService {
 
         if (error) {
           // Erros de RLS (Row Level Security) são esperados em desenvolvimento
-          if (error.code === '42501' || error.code === 'PGRST301') {
-            console.log(`ℹ️ INTELLIGENT EVENTS: Evento "${eventData.name}" não salvo - RLS policy (esperado em dev)`);
+          // Erro 401 também é esperado quando não há usuário autenticado
+          const isRLSError = error.code === '42501' || error.code === 'PGRST301' || 
+                            error.message?.includes('permission denied') ||
+                            error.message?.includes('new row violates row-level security');
+          
+          const isUnauthorizedError = error.status === 401 || error.statusCode === 401;
+          
+          if (isRLSError || isUnauthorizedError) {
+            // Log silencioso em dev - erro esperado quando não há autenticação
+            // Não logar para não poluir o console
           } else {
-            console.warn(`⚠️ INTELLIGENT EVENTS: Erro ao salvar evento "${eventData.name}":`, error.message);
+            // Apenas logar erros inesperados
+            const isDev = import.meta.env.DEV;
+            if (isDev) {
+              console.warn(`⚠️ INTELLIGENT EVENTS: Erro ao salvar evento "${eventData.name}":`, error.message);
+            }
           }
         } else {
-          console.log(`✅ INTELLIGENT EVENTS: Evento "${eventData.name}" salvo com sucesso`);
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.log(`✅ INTELLIGENT EVENTS: Evento "${eventData.name}" salvo com sucesso`);
+          }
         }
       } catch (error) {
         console.error(`❌ INTELLIGENT EVENTS: Erro ao processar evento:`, error);
@@ -215,12 +230,42 @@ export class IntelligentEventService {
 
         const { error } = await supabase
           .from('events')
-          .insert(eventData);
+          .insert(eventData)
+          .select(); // Adicionar select para evitar erro silencioso
 
-        if (error) throw error;
-        console.log(`✅ INTELLIGENT EVENTS: Evento salvo: ${evento.titulo}`);
-      } catch (error) {
-        console.error(`❌ INTELLIGENT EVENTS: Erro ao salvar evento:`, error);
+        if (error) {
+          // Erros de RLS e 401 são esperados em desenvolvimento quando não há autenticação
+          const isRLSError = error.code === '42501' || error.code === 'PGRST301' || 
+                            error.message?.includes('permission denied') ||
+                            error.message?.includes('new row violates row-level security');
+          
+          const isUnauthorizedError = error.status === 401 || error.statusCode === 401;
+          
+          if (!isRLSError && !isUnauthorizedError) {
+            // Apenas lançar erros inesperados
+            throw error;
+          }
+          // Erros esperados (RLS/401) são ignorados silenciosamente
+        } else {
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.log(`✅ INTELLIGENT EVENTS: Evento salvo: ${evento.titulo}`);
+          }
+        }
+      } catch (error: any) {
+        // Apenas logar erros inesperados
+        const isRLSError = error?.code === '42501' || error?.code === 'PGRST301' || 
+                          error?.message?.includes('permission denied') ||
+                          error?.message?.includes('new row violates row-level security');
+        
+        const isUnauthorizedError = error?.status === 401 || error?.statusCode === 401;
+        
+        if (!isRLSError && !isUnauthorizedError) {
+          const isDev = import.meta.env.DEV;
+          if (isDev) {
+            console.error(`❌ INTELLIGENT EVENTS: Erro ao salvar evento:`, error);
+          }
+        }
       }
     }
   }

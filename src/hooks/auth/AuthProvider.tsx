@@ -5,6 +5,7 @@ import { UserProfile } from "@/types/auth";
 import { AuthContext, AuthContextType } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentTestUser, type TestUser } from "@/services/auth/TestUsers";
+import { logger } from "@/utils/logger";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -15,7 +16,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log("🔄 AuthProvider: Buscando perfil para userId:", userId);
+      logger.dev("🔄 AuthProvider: Buscando perfil para userId:", userId);
       // Buscar perfil do usuário
       const { data: profileData } = await supabase
         .from("user_profiles")
@@ -40,18 +41,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setUserProfile(profile);
-      console.log("✅ AuthProvider: Perfil do usuário definido como:", profile);
+      logger.dev("✅ AuthProvider: Perfil do usuário definido");
     } catch (error) {
       console.error("❌ AuthProvider: Erro ao buscar perfil:", error);
     }
   };
 
   useEffect(() => {
-    console.log("🔄 AuthProvider: useEffect iniciado");
-    
     // Função para configurar usuário de teste
     const setupTestUser = (testUser: any) => {
-      console.log("🧪 AuthProvider: Configurando usuário de teste:", testUser);
+      logger.dev("🧪 AuthProvider: Configurando usuário de teste");
       
       // Criar usuário simulado
       const simulatedUser = {
@@ -70,19 +69,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal'
       };
       
-      console.log("🧪 AuthProvider: Usuário simulado:", simulatedUser);
-      console.log("🧪 AuthProvider: Perfil simulado:", testProfile);
-      
       setSession(null);
       setUser(simulatedUser);
       setUserProfile(testProfile);
       setLoading(false);
-      console.log("✅ AuthProvider: Perfil de teste definido com sucesso");
+      logger.dev("✅ AuthProvider: Perfil de teste definido");
     };
     
     // Verificar usuário de teste imediatamente
     const testUser = getCurrentTestUser();
-    console.log("🧪 AuthProvider: Verificando usuário de teste:", testUser);
     
     if (testUser) {
       setupTestUser(testUser);
@@ -90,7 +85,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     // Se não há usuário de teste, configurar Supabase
-    console.log("🧪 AuthProvider: Nenhum usuário de teste encontrado, configurando Supabase");
     setLoading(false);
   }, []);
 
@@ -98,10 +92,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'test_user_id' && e.newValue) {
-        console.log("🧪 AuthProvider: localStorage mudou, verificando usuário de teste...");
+        logger.dev("🧪 AuthProvider: localStorage mudou, verificando usuário de teste");
         const testUser = getCurrentTestUser();
         if (testUser) {
-          console.log("🧪 AuthProvider: Usuário de teste encontrado após mudança no localStorage:", testUser);
+          logger.dev("🧪 AuthProvider: Usuário de teste encontrado após mudança no localStorage");
           
           // Criar usuário simulado
           const simulatedUser = {
@@ -124,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(simulatedUser);
           setUserProfile(testProfile);
           setLoading(false);
-          console.log("✅ AuthProvider: Perfil de teste atualizado após mudança no localStorage");
+          logger.dev("✅ AuthProvider: Perfil de teste atualizado");
         }
       }
     };
@@ -133,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const handleLocalStorageChange = () => {
       const testUser = getCurrentTestUser();
       if (testUser && !user) {
-        console.log("🧪 AuthProvider: Usuário de teste detectado via polling:", testUser);
+        logger.dev("🧪 AuthProvider: Usuário de teste detectado via polling");
         
         // Criar usuário simulado
         const simulatedUser = {
@@ -156,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(simulatedUser);
         setUserProfile(testProfile);
         setLoading(false);
-        console.log("✅ AuthProvider: Perfil de teste detectado e configurado");
+        logger.dev("✅ AuthProvider: Perfil de teste detectado e configurado");
       }
     };
 
@@ -174,7 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event, "Sessão:", session);
+        logger.dev("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event);
         
         // Usar dados reais do Supabase
         setSession(session);
@@ -211,7 +205,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const testToken = localStorage.getItem('supabase.auth.token');
       
       if (testUserData && testToken === 'test-token') {
-        console.log("🧪 AuthProvider: Dados de teste encontrados no carregamento inicial");
+        logger.dev("🧪 AuthProvider: Dados de teste encontrados no carregamento inicial");
         const testData = JSON.parse(testUserData);
         
         // Criar usuário simulado
@@ -235,7 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(testUser);
         setUserProfile(testProfile);
         setLoading(false);
-        console.log("✅ AuthProvider: Perfil de teste carregado:", testProfile);
+        logger.dev("✅ AuthProvider: Perfil de teste carregado");
       }
     };
     
@@ -308,7 +302,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       if (testUsers[email as keyof typeof testUsers] && testUsers[email as keyof typeof testUsers].password === password) {
-        console.log("🧪 AuthProvider: Login com usuário de teste:", email);
+        logger.dev("🧪 AuthProvider: Login com usuário de teste:", email);
         
         // Criar usuário simulado
         const testUser = {
@@ -360,7 +354,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
       });
       
-      console.log("🔍 AuthProvider (signIn): Dados de login:", data);
+      logger.dev("🔍 AuthProvider (signIn): Dados de login recebidos");
 
       if (error) throw error;
 
@@ -406,7 +400,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      console.log("🔍 AuthProvider (signInWithOAuth): Dados de login:", data);
+      logger.dev("🔍 AuthProvider (signInWithOAuth): Dados de login recebidos");
 
       if (error) throw error;
       return { data, error: null };

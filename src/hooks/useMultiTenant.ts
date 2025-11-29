@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import { logger } from '@/utils/logger';
 
 export const useMultiTenant = () => {
   const location = useLocation();
@@ -19,15 +20,12 @@ export const useMultiTenant = () => {
     userProfile = auth.userProfile;
     authLoading = auth.loading;
   } catch (error) {
-    console.log("🔍 useMultiTenant: AuthProvider não disponível, continuando sem usuário");
+    logger.dev("🔍 useMultiTenant: AuthProvider não disponível, continuando sem usuário");
   }
 
   useEffect(() => {
     const detectAndLoadTenant = async () => {
-      console.log("🔍 useMultiTenant: Início do detectAndLoadTenant. authLoading:", authLoading, "userProfile:", userProfile, "current location.pathname:", location.pathname);
-
       if (authLoading) {
-        console.log("🔍 useMultiTenant: authLoading é true, aguardando userProfile carregar. authLoading:", authLoading, "userProfile:", userProfile);
         return; // Aguarda o userProfile carregar
       }
 
@@ -47,12 +45,9 @@ export const useMultiTenant = () => {
         }
       }
 
-      console.log("🔍 useMultiTenant: Tenant detectado do URL:", detectedTenantCode);
-      console.log("🔍 useMultiTenant: userProfile no momento da requisição:", userProfile);
-
       if (detectedTenantCode) {
         try {
-          console.log("🔍 useMultiTenant: Buscando tenant no Supabase com código:", detectedTenantCode.toUpperCase());
+          logger.dev("🔍 useMultiTenant: Buscando tenant no Supabase com código:", detectedTenantCode.toUpperCase());
           const { data, error: dbError } = await supabase
             .from('states')
             .select('*')
@@ -60,37 +55,28 @@ export const useMultiTenant = () => {
             .eq('is_active', true)
             .maybeSingle();
 
-                  console.log("✅ useMultiTenant: Dados recebidos do Supabase para states:", data);
-        console.log("❌ useMultiTenant: Erro recebido do Supabase para states:", dbError);
-
           if (dbError) {
-            console.error("❌ useMultiTenant: Erro ao buscar configuração do tenant:", dbError);
+            logger.error("❌ useMultiTenant: Erro ao buscar configuração do tenant:", dbError);
             setError(dbError.message);
           } else if (data) {
             setTenantConfig(data);
             setCurrentTenant(detectedTenantCode);
-            console.log("✅ useMultiTenant: Tenant configurado:", data);
-            console.log("🔍 useMultiTenant: tenantConfig.logo_url:", (data as any).logo_url);
-            console.log("🔍 useMultiTenant: tenantConfig.name:", (data as any).name);
+            logger.dev("✅ useMultiTenant: Tenant configurado");
           } else {
-            console.warn("⚠️ useMultiTenant: Tenant não encontrado ou inativo no DB.");
+            logger.warn("⚠️ useMultiTenant: Tenant não encontrado ou inativo no DB.");
             setError(`Tenant '${detectedTenantCode}' não encontrado ou inativo.`);
           }
         } catch (err: any) {
-          console.error("❌ useMultiTenant: Erro inesperado ao buscar configuração do tenant:", err);
+          logger.error("❌ useMultiTenant: Erro inesperado ao buscar configuração do tenant:", err);
           setError(err.message);
         } finally {
           setLoading(false);
-          console.log("🏁 useMultiTenant: Finalizado carregamento de tenant. Loading:", false, "Tenant Config:", tenantConfig);
         }
       } else {
         // Se não há tenant detectado, assume-se um modo padrão ou global.
-        // Você pode carregar uma configuração padrão aqui ou definir como nulo/vazio.
-        console.log("🔍 useMultiTenant: Nenhum tenant detectado na URL. Definindo como padrão/global.");
         setTenantConfig(null);
         setCurrentTenant(null);
         setLoading(false);
-        console.log("🏁 useMultiTenant: Finalizado carregamento de tenant. Loading:", false, "Tenant Config:", null);
       }
     };
 

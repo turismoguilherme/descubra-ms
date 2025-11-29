@@ -75,7 +75,6 @@ import AuthPage from "@/pages/AuthPage";
 const queryClient = new QueryClient();
 
 function App() {
-  console.log("🚀 APP: Componente App sendo renderizado");
   
   return (
     <QueryClientProvider client={queryClient}>

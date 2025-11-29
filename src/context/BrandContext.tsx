@@ -120,29 +120,17 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   const detectTenantFromPath = (): 'ms' | 'overflow-one' => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
-      console.log("🔍 detectTenantFromPath: pathname:", path);
       if (path.startsWith('/ms')) {
-        console.log("🔍 detectTenantFromPath: Detectado MS");
         return 'ms';
       }
     }
-    console.log("🔍 detectTenantFromPath: Fallback para overflow-one");
     return 'overflow-one';
   };
 
   // Determinar configuração baseada no tenant com useMemo para otimização
   const config = useMemo((): BrandConfig => {
-    console.log("🔍 BrandContext: Calculando config.", {
-      isMultiTenantMode: !!currentTenant,
-      currentTenant,
-      tenantConfig,
-      tenantLoading
-    });
-
     // Se estamos no modo multi-tenant e temos um tenant carregado
     if (currentTenant && tenantConfig && !tenantLoading) {
-      console.log("✅ BrandContext: Modo Multi-tenant ATIVO, aplicando overrides do tenantConfig do Supabase.");
-      
       // Usar a configuração base do MS e aplicar overrides do Supabase
       const baseConfig = msConfig;
       
@@ -161,21 +149,17 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
         }
       };
 
-      console.log("Generated dynamicConfig:", dynamicConfig);
       return dynamicConfig;
     }
 
     // Detectar tenant do path se não estivermos no modo multi-tenant
     const detectedTenant = detectTenantFromPath();
-    console.log("🔍 BrandContext: Path detectado:", detectedTenant, "pathname:", window.location.pathname);
     
     if (detectedTenant === 'ms') {
-      console.log("🔍 BrandContext: Usando msConfig para MS");
       return msConfig;
     }
 
     // Fallback para Overflow One
-    console.log("🔍 BrandContext: Usando overflowOneConfig como fallback");
     return overflowOneConfig;
   }, [currentTenant, tenantConfig, tenantLoading]);
   const isOverflowOne = config.brand === 'overflow-one';

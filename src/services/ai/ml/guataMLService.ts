@@ -66,7 +66,7 @@ class GuataMLService {
     this.supabaseIntegration = new SupabaseMLIntegration();
     this.cacheService = new MLCacheService();
     
-    console.log('🧠 Guatá ML Service: Inicializado');
+    // Guatá ML Service inicializado (log removido)
   }
 
   /**
@@ -74,14 +74,12 @@ class GuataMLService {
    */
   async learnFromInteraction(interaction: LearningInteraction): Promise<void> {
     try {
-      console.log('🧠 ML: Aprendendo de interação...');
       this.metrics.totalInteractions++;
 
       // 1. Aprender preferências do usuário
       const preferencesLearned = await this.preferenceLearning.learnFromInteraction(interaction);
       if (preferencesLearned) {
         this.metrics.preferencesLearned++;
-        console.log('✅ ML: Preferências aprendidas');
         
         // Salvar preferências no Supabase
         const extractedPreferences = this.preferenceLearning.extractPreferences(interaction);
@@ -98,17 +96,14 @@ class GuataMLService {
       const patternDetected = await this.patternDetection.detectPattern(interaction);
       if (patternDetected) {
         this.metrics.patternsDetected++;
-        console.log('✅ ML: Padrão detectado');
       }
 
       // 3. Salvar no Supabase (assíncrono, não bloqueia)
-      this.supabaseIntegration.saveInteraction(interaction).catch(err => {
-        console.warn('⚠️ ML: Erro ao salvar interação no Supabase:', err);
+      this.supabaseIntegration.saveInteraction(interaction).catch(() => {
+        // Erro silencioso - não crítico
       });
-
-      console.log('✅ ML: Aprendizado da interação concluído');
     } catch (error) {
-      console.error('❌ ML: Erro ao aprender de interação:', error);
+      // Erro silencioso - não crítico para o funcionamento
     }
   }
 
@@ -117,14 +112,13 @@ class GuataMLService {
    */
   async learnFromFeedback(feedback: FeedbackData): Promise<void> {
     try {
-      console.log('🧠 ML: Aprendendo de feedback...');
       this.metrics.feedbackReceived++;
 
       // 1. Aprender melhorias de qualidade
       const qualityImproved = await this.qualityLearning.learnFromFeedback(feedback);
       if (qualityImproved) {
         this.metrics.qualityImprovements++;
-        console.log('✅ ML: Qualidade melhorada');
+        // Qualidade melhorada (log removido)
       }
 
       // 2. Atualizar padrões se houver correção
@@ -142,9 +136,9 @@ class GuataMLService {
       // 4. Invalidar cache relevante
       this.cacheService.invalidateUserCache(feedback.userId || feedback.sessionId);
 
-      console.log('✅ ML: Aprendizado de feedback concluído');
+      // Aprendizado de feedback concluído (log removido)
     } catch (error) {
-      console.error('❌ ML: Erro ao aprender de feedback:', error);
+      // Erro silencioso
     }
   }
 

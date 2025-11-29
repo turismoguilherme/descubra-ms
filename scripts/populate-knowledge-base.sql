@@ -4,22 +4,28 @@
 -- Limpar entradas existentes (opcional - descomente se quiser resetar)
 -- DELETE FROM guata_knowledge_base;
 
+-- Usar INSERT com verificação de existência para evitar duplicatas
+-- Se já existir uma entrada ativa com a mesma pergunta normalizada, não inserir
+
 -- Inserir conceitos importantes sobre Mato Grosso do Sul
 
 -- 1. Turismólogo
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'O que é turismólogo?',
   'o que e turismologo',
   '🦦 Que pergunta interessante! Um turismólogo é um profissional especializado em turismo, com formação acadêmica na área. Ele estuda e trabalha com planejamento, gestão, desenvolvimento e promoção de atividades turísticas. O turismólogo pode atuar em diversas áreas como: planejamento de roteiros, gestão de hotéis e pousadas, organização de eventos, marketing turístico, consultoria, e muito mais! É uma profissão essencial para o desenvolvimento do turismo em Mato Grosso do Sul e no Brasil! 😊',
   'conceito',
   ARRAY['profissão', 'turismo', 'educação'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'o que e turismologo' AND ativo = true
+);
 
 -- 2. Rota Bioceânica
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'O que é a Rota Bioceânica?',
   'o que e a rota bioceanica',
   '🦦 A Rota Bioceânica é uma estrada de 2.396 quilômetros que vai conectar o Oceano Atlântico ao Pacífico, passando por Mato Grosso do Sul! 🛣️
@@ -36,11 +42,14 @@ O que isso significa para nós:
   'conceito',
   ARRAY['rota bioceânica', 'infraestrutura', 'desenvolvimento', 'turismo'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'o que e a rota bioceanica' AND ativo = true
+);
 
 -- 3. Pantanal
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'O que é o Pantanal?',
   'o que e o pantanal',
   '🦦 O Pantanal é a maior área úmida do planeta, localizada em Mato Grosso do Sul! É o lugar mais mágico do mundo para observação da vida selvagem. 🐊
@@ -63,11 +72,14 @@ Dica quente do Guatá: Reserve com antecedência, porque todo mundo quer conhece
   'local',
   ARRAY['pantanal', 'natureza', 'ecoturismo', 'fauna', 'flora'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'o que e o pantanal' AND ativo = true
+);
 
 -- 4. Bonito
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'O que é Bonito?',
   'o que e bonito',
   '🌊 Bonito é mundialmente reconhecida como a Capital do Ecoturismo! É um lugar mágico com águas cristalinas que parecem de outro mundo. 
@@ -88,11 +100,14 @@ Cada lugar tem sua própria magia! Quer saber mais sobre algum passeio específi
   'local',
   ARRAY['bonito', 'ecoturismo', 'águas cristalinas', 'passeios', 'natureza'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'o que e bonito' AND ativo = true
+);
 
 -- 5. Campo Grande
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'O que é Campo Grande?',
   'o que e campo grande',
   '🦦 Campo Grande é a capital de Mato Grosso do Sul, conhecida como a "Cidade Morena"! 😊
@@ -109,11 +124,14 @@ VALUES (
   'local',
   ARRAY['campo grande', 'capital', 'cidade morena', 'atrações', 'turismo urbano'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'o que e campo grande' AND ativo = true
+);
 
 -- 6. Fundtur
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'O que é a Fundtur?',
   'o que e a fundtur',
   '🦦 A Fundtur (Fundação de Turismo de Mato Grosso do Sul) é a instituição responsável por promover e desenvolver o turismo no nosso estado! 
@@ -128,18 +146,24 @@ A Fundtur é essencial para o crescimento do turismo em nosso estado! 😊',
   'conceito',
   ARRAY['fundtur', 'turismo', 'governo', 'políticas públicas'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'o que e a fundtur' AND ativo = true
+);
 
 -- 7. Tia Eva
 INSERT INTO guata_knowledge_base (pergunta, pergunta_normalizada, resposta, tipo, tags, fonte)
-VALUES (
+SELECT 
   'Quem é Tia Eva?',
   'quem e tia eva',
   '🦦 Tia Eva foi uma figura importante na história de Campo Grande! Ela foi uma das primeiras moradoras da cidade e é conhecida por ter sido uma das fundadoras de Campo Grande. Tia Eva é uma personagem histórica que representa a força e a determinação das mulheres que ajudaram a construir nossa cidade! 😊',
   'pessoa',
   ARRAY['tia eva', 'história', 'campo grande', 'fundadores'],
   'manual'
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM guata_knowledge_base 
+  WHERE pergunta_normalizada = 'quem e tia eva' AND ativo = true
+);
 
 -- Verificar entradas inseridas
 SELECT 
@@ -151,4 +175,3 @@ SELECT
 FROM guata_knowledge_base
 WHERE fonte = 'manual'
 ORDER BY criado_em DESC;
-
