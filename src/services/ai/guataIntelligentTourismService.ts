@@ -107,6 +107,42 @@ class GuataIntelligentTourismService {
         return this.generateClarificationResponse(question, needsClarification);
       }
 
+      // 1.7. CONSULTAR KNOWLEDGE BASE PERSISTENTE (antes de web search)
+      console.log('📚 Consultando Knowledge Base persistente...');
+      try {
+        const { guataKnowledgeBaseService } = await import('./guataKnowledgeBaseService');
+        const kbResult = await guataKnowledgeBaseService.searchKnowledgeBase(question, { minSimilarity: 0.75 });
+
+        if (kbResult.found && kbResult.answer) {
+          console.log('✅ Resposta encontrada na Knowledge Base!');
+          return {
+            answer: kbResult.answer,
+            confidence: kbResult.confidence || 0.95,
+            sources: ['knowledge_base', ...(kbResult.source ? [kbResult.source] : [])],
+            processingTime: Date.now() - startTime,
+            webSearchResults: [],
+            tourismData: {},
+            usedRealSearch: false,
+            searchMethod: 'knowledge_base',
+            personality: this.personality.name,
+            emotionalState: 'helpful',
+            followUpQuestions: this.generateFollowUpQuestions(question, {}),
+            learningInsights: {
+              questionType: this.detectQuestionCategory(question),
+              userIntent: 'information_seeking',
+              knowledgeSource: 'kb',
+              kbMatch: true
+            },
+            adaptiveImprovements: [],
+            memoryUpdates: []
+          };
+        }
+        console.log('📚 Knowledge Base não encontrou resposta, continuando fluxo normal...');
+      } catch (error) {
+        console.warn('⚠️ Erro ao consultar Knowledge Base (continuando fluxo normal):', error);
+        // Em caso de erro, continuar fluxo normal sem quebrar
+      }
+
       // 2. Detectar categoria da pergunta
       const category = this.detectQuestionCategory(question);
       console.log('🏷️ Categoria detectada:', category);
