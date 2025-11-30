@@ -80,10 +80,8 @@ const msConfig: BrandConfig = {
     { name: 'Eventos', path: '/descubramatogrossodosul/eventos' },
     { name: 'Parceiros', path: '/descubramatogrossodosul/parceiros' },
     { name: 'Sobre', path: '/descubramatogrossodosul/sobre' },
-    { name: 'Entrar', path: '/descubramatogrossodosul/login' }
   ],
   authenticatedNavigation: [
-    { name: 'Home', path: '/descubramatogrossodosul' },
     { name: 'Guatá IA', path: '/descubramatogrossodosul/guata' },
     { name: 'Passaporte Digital', path: '/descubramatogrossodosul/passaporte' },
   ],

@@ -132,11 +132,6 @@ const UniversalNavbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/descubramatogrossodosul/login">
-                      <Button variant="ghost" size="sm">
-                        {config.cta.secondary}
-                      </Button>
-                    </Link>
                     <Link to="/descubramatogrossodosul/register">
                       <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
                         {config.cta.primary}
@@ -224,11 +219,6 @@ const UniversalNavbar = () => {
                       </>
                     ) : (
                       <>
-                        <Link to="/descubramatogrossodosul/login" onClick={() => setIsOpen(false)}>
-                          <Button variant="ghost" size="sm" className="w-full justify-start">
-                            {config.cta.secondary}
-                          </Button>
-                        </Link>
                         <Link to="/descubramatogrossodosul/register" onClick={() => setIsOpen(false)}>
                           <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
                             {config.cta.primary}
