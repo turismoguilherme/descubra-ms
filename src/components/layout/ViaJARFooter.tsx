@@ -4,8 +4,32 @@ import { Mail, Facebook, Instagram, Linkedin, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const ViaJARFooter: React.FC = () => {
-  const { userProfile } = useAuth();
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'master_admin' || userProfile?.role === 'tech';
+  const { userProfile, user, loading } = useAuth();
+  
+  // Verificar se é admin - considerar diferentes formatos de role
+  const userRole = userProfile?.role?.toLowerCase() || '';
+  const isAdmin = !loading && 
+                  user && 
+                  userProfile && 
+                  (userRole === 'admin' || 
+                   userRole === 'master_admin' || 
+                   userRole === 'tech' ||
+                   userRole === 'master admin' ||
+                   userRole === 'tech admin');
+
+  // Debug temporário - remover depois
+  React.useEffect(() => {
+    if (user) {
+      console.log('🔍 Footer Debug:', {
+        user: user?.email,
+        userProfile,
+        role: userProfile?.role,
+        userRole,
+        isAdmin,
+        loading
+      });
+    }
+  }, [user, userProfile, userRole, isAdmin, loading]);
 
   return (
     <footer className="bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
@@ -45,18 +69,15 @@ const ViaJARFooter: React.FC = () => {
               >
                 Cookies
               </Link>
-              {isAdmin && (
-                <>
-                  <span className="text-gray-300">|</span>
-                  <Link 
-                    to="/viajar/master-dashboard" 
-                    className="text-gray-500 hover:text-cyan-600 transition-colors flex items-center gap-1"
-                  >
-                    <Shield className="h-3 w-3" />
-                    Dashboard Master
-                  </Link>
-                </>
-              )}
+              <span className="text-gray-300">|</span>
+              <Link 
+                to="/viajar/admin" 
+                className="text-gray-500 hover:text-cyan-600 transition-colors text-xs flex items-center gap-1"
+                title="Área Administrativa"
+              >
+                <Shield className="h-3 w-3" />
+                <span>Admin</span>
+              </Link>
             </div>
 
             {/* Separador */}

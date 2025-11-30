@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const ViaJARNavbar = () => {
@@ -31,9 +31,20 @@ const ViaJARNavbar = () => {
     );
   }
   
-  const { user } = auth;
+  const { user, userProfile, loading } = auth;
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Verificar se é admin
+  const userRole = userProfile?.role?.toLowerCase() || '';
+  const isAdmin = !loading && 
+                  user && 
+                  userProfile && 
+                  (userRole === 'admin' || 
+                   userRole === 'master_admin' || 
+                   userRole === 'tech' ||
+                   userRole === 'master admin' ||
+                   userRole === 'tech admin');
 
   // Fechar dropdown quando clicar fora
   useEffect(() => {
@@ -126,6 +137,23 @@ const ViaJARNavbar = () => {
                         {item.name}
                       </Link>
                     ))}
+                    {isAdmin && (
+                      <>
+                        <div className="border-t my-1"></div>
+                        <Link
+                          to="/viajar/admin"
+                          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${
+                            isActivePath('/viajar/admin') 
+                              ? 'bg-cyan-50 text-cyan-600' 
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                          onClick={() => setIsDashboardOpen(false)}
+                        >
+                          <Shield className="h-4 w-4" />
+                          Área Administrativa
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -195,6 +223,23 @@ const ViaJARNavbar = () => {
                         {item.name}
                       </Link>
                     ))}
+                    {isAdmin && (
+                      <>
+                        <div className="border-t my-2"></div>
+                        <Link 
+                          to="/viajar/admin" 
+                          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors rounded-md ${
+                            isActivePath('/viajar/admin') 
+                              ? "text-cyan-600 bg-cyan-50" 
+                              : "text-gray-700 hover:text-cyan-600 hover:bg-gray-50"
+                          }`} 
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Shield className="h-4 w-4" />
+                          Área Administrativa
+                        </Link>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
