@@ -51,6 +51,35 @@ class GuataTrueApiService {
     // Processando pergunta (logs removidos)
     
     try {
+      // 0. Validar escopo de turismo e conteúdo inapropriado (fallback adicional)
+      const { TourismScopeValidator } = await import('./validation/tourismScopeValidator');
+      const validator = new TourismScopeValidator();
+      const validation = validator.validateQuestion(question);
+      
+      if (validation.shouldBlock) {
+        return {
+          answer: validation.redirectResponse || '🦦 Olá! Eu sou o Guatá, seu guia inteligente de turismo de Mato Grosso do Sul! 😊\n\nPosso te ajudar com informações sobre destinos, atrações, gastronomia, hospedagem, eventos e roteiros turísticos em MS.\n\nO que você gostaria de saber sobre turismo em Mato Grosso do Sul? 🌟',
+          confidence: 0.9,
+          sources: ['validation'],
+          processingTime: Date.now() - startTime,
+          learningInsights: {
+            questionType: validation.isInappropriate ? 'inappropriate' : 'off_scope',
+            userIntent: 'blocked',
+            reason: validation.reason
+          },
+          adaptiveImprovements: [],
+          memoryUpdates: [],
+          personality: this.personality.name,
+          emotionalState: 'helpful',
+          followUpQuestions: this.getFollowUpQuestions(question),
+          usedWebSearch: false,
+          knowledgeSource: 'local',
+          partnerSuggestion: undefined,
+          partnersFound: [],
+          partnerPriority: 0
+        };
+      }
+
       // NOVO: Usar o sistema inteligente de turismo
       const { guataIntelligentTourismService } = await import('./guataIntelligentTourismService');
       

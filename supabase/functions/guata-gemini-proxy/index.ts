@@ -3,9 +3,10 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
   'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Credentials': 'true',
 }
 
 interface GeminiRequest {
@@ -27,12 +28,9 @@ serve(async (req) => {
   
   // Handle CORS preflight requests - IMPORTANTE: retornar 200 OK
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
+    return new Response('ok', { 
       status: 200,
-      headers: {
-        ...corsHeaders,
-        'Content-Length': '0'
-      } 
+      headers: corsHeaders
     });
   }
 
@@ -42,25 +40,44 @@ serve(async (req) => {
     try {
       const raw = await req.text();
       if (!raw) {
+        console.error('❌ guata-gemini-proxy: Empty request body');
         return new Response(
           JSON.stringify({ error: 'Empty request body' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       body = JSON.parse(raw);
+      console.log('🔵 guata-gemini-proxy: Body parsed successfully, prompt length:', body.prompt?.length || 0);
     } catch (parseError) {
       console.error('❌ guata-gemini-proxy: JSON parse error:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        JSON.stringify({ error: 'Invalid JSON in request body', details: String(parseError) }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { prompt, model = 'gemini-1.5-flash', temperature = 0.7, maxOutputTokens = 2000 } = body;
+    const { prompt, model = 'gemini-2.0-flash-exp', temperature = 0.3, maxOutputTokens = 2000 } = body;
     
-    if (!prompt || typeof prompt !== 'string') {
+    if (!prompt) {
+      console.error('❌ guata-gemini-proxy: Missing prompt field');
       return new Response(
-        JSON.stringify({ error: 'Missing or invalid prompt field' }),
+        JSON.stringify({ error: 'Missing prompt field' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (typeof prompt !== 'string') {
+      console.error('❌ guata-gemini-proxy: Invalid prompt type:', typeof prompt);
+      return new Response(
+        JSON.stringify({ error: 'Invalid prompt field - must be a string', receivedType: typeof prompt }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (prompt.length === 0) {
+      console.error('❌ guata-gemini-proxy: Empty prompt string');
+      return new Response(
+        JSON.stringify({ error: 'Prompt cannot be empty' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -69,16 +86,30 @@ serve(async (req) => {
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
       console.error('❌ GEMINI_API_KEY não configurada no Supabase');
+      // Retornar status 200 com erro para que o cliente possa ver os detalhes
       return new Response(
         JSON.stringify({ 
           error: 'API key not configured',
-          message: 'GEMINI_API_KEY não está configurada nas variáveis de ambiente do Supabase'
+          message: 'GEMINI_API_KEY não está configurada nas variáveis de ambiente do Supabase',
+          success: false
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log("🔵 guata-gemini-proxy: calling Gemini API with model:", model);
+    // Verificar tamanho do prompt (limite do Gemini é ~1M tokens, mas vamos limitar a 100k caracteres para segurança)
+    if (prompt.length > 100000) {
+      console.error('❌ guata-gemini-proxy: Prompt too large:', prompt.length, 'characters');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Prompt too large',
+          message: `Prompt excede o limite de 100.000 caracteres (recebido: ${prompt.length})`
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log("🔵 guata-gemini-proxy: calling Gemini API with model:", model, "prompt length:", prompt.length);
 
     // Call Gemini API
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -86,9 +117,9 @@ serve(async (req) => {
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature,
+        temperature: temperature || 0.5, // Default mais baixo para seguir instruções melhor
         maxOutputTokens,
-        topP: 0.9,
+        topP: 0.8, // Reduzido de 0.9 para ser mais determinístico
         topK: 40
       }
     };
@@ -156,20 +187,33 @@ serve(async (req) => {
       JSON.stringify({ 
         text: generatedText,
         model: model,
-        usage: data.usageMetadata || {}
+        usage: data.usageMetadata || {},
+        success: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
-    console.error('❌ guata-gemini-proxy: handler error:', { message: error?.message, stack: error?.stack });
+    console.error('❌ guata-gemini-proxy: handler error:', { 
+      message: error?.message, 
+      stack: error?.stack,
+      name: error?.name,
+      cause: error?.cause
+    });
+    
+    // Retornar erro detalhado para debug (status 200 para que o cliente possa ver)
+    const errorDetails = {
+      error: 'Internal server error',
+      message: error?.message || String(error),
+      type: error?.name || 'UnknownError',
+      success: false,
+      ...(import.meta.env.DEV && { stack: error?.stack })
+    };
+    
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error?.message || String(error) 
-      }),
+      JSON.stringify(errorDetails),
       { 
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

@@ -55,6 +55,38 @@ class GuataIntelligentTourismService {
     // Processando pergunta (logs removidos)
 
     try {
+      // 0. Validar escopo de turismo e conteúdo inapropriado
+      const { TourismScopeValidator } = await import('./validation/tourismScopeValidator');
+      const validator = new TourismScopeValidator();
+      const validation = validator.validateQuestion(question);
+      
+      if (validation.shouldBlock) {
+        return {
+          answer: validation.redirectResponse || '🦦 Olá! Eu sou o Guatá, seu guia inteligente de turismo de Mato Grosso do Sul! 😊\n\nPosso te ajudar com informações sobre destinos, atrações, gastronomia, hospedagem, eventos e roteiros turísticos em MS.\n\nO que você gostaria de saber sobre turismo em Mato Grosso do Sul? 🌟',
+          confidence: 0.9,
+          sources: ['validation'],
+          processingTime: Date.now() - startTime,
+          webSearchResults: [],
+          tourismData: {},
+          usedRealSearch: false,
+          searchMethod: 'validation',
+          personality: this.personality.name,
+          emotionalState: 'helpful',
+          followUpQuestions: [
+            'Quais são os melhores passeios em Bonito?',
+            'Me conte sobre a comida típica de MS',
+            'O que fazer em Campo Grande?'
+          ],
+          learningInsights: {
+            questionType: validation.isInappropriate ? 'inappropriate' : 'off_scope',
+            userIntent: 'blocked',
+            reason: validation.reason
+          },
+          adaptiveImprovements: [],
+          memoryUpdates: []
+        };
+      }
+
       // 1. Verificar se é APENAS um cumprimento simples (sem perguntas)
       // NÃO tratar como cumprimento se houver perguntas ou contexto adicional
       if (this.isSimpleGreeting(question) && question.trim().length < 20) {
@@ -507,11 +539,29 @@ class GuataIntelligentTourismService {
 
   /**
    * Detecta se a pergunta é genérica e precisa de esclarecimento
+   * IMPORTANTE: NÃO pede esclarecimento se a cidade já está mencionada
    */
   private needsClarification(question: string): { needs: boolean; type: 'city' | 'service' | 'none'; missingInfo: string } {
     const lowerQuestion = question.toLowerCase().trim();
     
-    // Padrões de perguntas genéricas que precisam de cidade
+    // Verificar PRIMEIRO se a pergunta menciona uma cidade específica
+    const cities = [
+      'campo grande', 'bonito', 'corumbá', 'corumba', 'dourados', 'três lagoas', 'tres lagoas',
+      'pontaporã', 'pontapora', 'naviraí', 'navirai', 'nova andradina', 'aquidauana', 'paranaíba', 'paranaiba',
+      'coxim', 'miranda', 'bodoquena', 'ladário', 'ladario', 'bataguassu', 'rio brilhante',
+      'sidrolândia', 'sidrolandia', 'maracaju', 'chapadão do sul', 'chapadao do sul',
+      'cassilândia', 'cassilandia', 'angélica', 'angelica', 'iguatemi', 'sete quedas',
+      'porto murtinho', 'paranaíba', 'paranaiba'
+    ];
+    
+    const hasCity = cities.some(city => lowerQuestion.includes(city));
+    
+    // Se TEM cidade mencionada, NUNCA pedir esclarecimento
+    if (hasCity) {
+      return { needs: false, type: 'none', missingInfo: '' };
+    }
+    
+    // Padrões de perguntas genéricas que precisam de cidade (apenas se NÃO tem cidade)
     const genericPatterns = [
       { pattern: /onde\s+(comer|dormir|ficar|hospedar|passear|fazer|visitar)\s+em\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
       { pattern: /o\s+que\s+(comer|fazer|visitar|ver)\s+em\s+ms/i, type: 'city' as const, missingInfo: 'cidade' },
@@ -521,17 +571,29 @@ class GuataIntelligentTourismService {
       { pattern: /onde\s+(comer|dormir|ficar|hospedar)\s+em\s+mato\s+grosso\s+do\s+sul/i, type: 'city' as const, missingInfo: 'cidade' },
     ];
     
-    // Verificar se a pergunta menciona uma cidade específica
-    const cities = [
-      'campo grande', 'bonito', 'corumbá', 'corumba', 'dourados', 'três lagoas',
-      'pontaporã', 'naviraí', 'nova andradina', 'aquidauana', 'paranaíba', 'coxim',
-      'miranda', 'bodoquena', 'ladário', 'bataguassu', 'rio brilhante', 'sidrolândia'
+    // Padrões de perguntas ambíguas que precisam de esclarecimento (sem cidade mencionada)
+    const ambiguousPatterns = [
+      // Hotéis perto de algo (shopping, aeroporto, centro, etc.) sem cidade
+      { pattern: /(hotel|hospedagem|pousada).*perto\s+(do|da|de)\s+(shopping|centro|aeroporto|praça|parque|estádio|estadio)/i, type: 'city' as const, missingInfo: 'cidade' },
+      // Restaurantes perto de algo sem cidade
+      { pattern: /(restaurante|comida|gastronomia).*perto\s+(do|da|de)\s+(shopping|centro|praça|parque)/i, type: 'city' as const, missingInfo: 'cidade' },
+      // Hotéis no centro sem cidade
+      { pattern: /(hotel|hospedagem|pousada).*(no|no centro|centro)/i, type: 'city' as const, missingInfo: 'cidade' },
+      // Restaurantes no centro sem cidade
+      { pattern: /(restaurante|comida|gastronomia).*(no|no centro|centro)/i, type: 'city' as const, missingInfo: 'cidade' },
+      // Shopping sem cidade
+      { pattern: /(hotel|restaurante|comida).*(shopping|mall)/i, type: 'city' as const, missingInfo: 'cidade' },
     ];
-    
-    const hasCity = cities.some(city => lowerQuestion.includes(city));
     
     // Se não tem cidade e bate com padrões genéricos, precisa de esclarecimento
     for (const { pattern, type, missingInfo } of genericPatterns) {
+      if (pattern.test(question) && !hasCity) {
+        return { needs: true, type, missingInfo };
+      }
+    }
+    
+    // Se não tem cidade e bate com padrões ambíguos, precisa de esclarecimento
+    for (const { pattern, type, missingInfo } of ambiguousPatterns) {
       if (pattern.test(question) && !hasCity) {
         return { needs: true, type, missingInfo };
       }
@@ -550,7 +612,24 @@ class GuataIntelligentTourismService {
     let followUpQuestions: string[] = [];
     
     if (clarification.type === 'city') {
-      if (lowerQuestion.includes('comer') || lowerQuestion.includes('restaurante') || lowerQuestion.includes('gastronomia')) {
+      // Casos específicos: hotéis/restaurantes perto de shopping, centro, etc.
+      if ((lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem') || lowerQuestion.includes('pousada')) && 
+          (lowerQuestion.includes('shopping') || lowerQuestion.includes('centro') || lowerQuestion.includes('perto'))) {
+        clarificationQuestion = '🦦 Que alegria te ajudar a encontrar hospedagem! 😊 Para te dar as melhores opções, você quer hotéis perto do shopping ou centro de qual cidade? Campo Grande, Dourados, Corumbá ou outra?';
+        followUpQuestions = [
+          'Hotéis perto do shopping em Campo Grande',
+          'Hotéis no centro de Campo Grande',
+          'Hotéis perto do shopping em Dourados'
+        ];
+      } else if ((lowerQuestion.includes('restaurante') || lowerQuestion.includes('comida') || lowerQuestion.includes('gastronomia')) && 
+                 (lowerQuestion.includes('shopping') || lowerQuestion.includes('centro') || lowerQuestion.includes('perto'))) {
+        clarificationQuestion = '🦦 Que legal que você quer conhecer a gastronomia! 😊 Para te dar as melhores recomendações, você quer restaurantes perto do shopping ou centro de qual cidade? Campo Grande, Dourados, Corumbá ou outra?';
+        followUpQuestions = [
+          'Restaurantes perto do shopping em Campo Grande',
+          'Restaurantes no centro de Campo Grande',
+          'Restaurantes perto do shopping em Dourados'
+        ];
+      } else if (lowerQuestion.includes('comer') || lowerQuestion.includes('restaurante') || lowerQuestion.includes('gastronomia')) {
         clarificationQuestion = '🦦 Que legal que você quer conhecer a gastronomia de Mato Grosso do Sul! 😊 Para te dar as melhores recomendações, qual cidade você tem interesse? Campo Grande, Corumbá, Bonito ou outra?';
         followUpQuestions = [
           'Onde comer em Campo Grande?',
@@ -1252,12 +1331,28 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       return this.formatBonitoResponse(results);
     }
     
+    // Detectar restaurantes, comida e gastronomia (ANTES de hotéis)
+    if (lowerQuestion.includes('restaurante') || lowerQuestion.includes('comer') || 
+        lowerQuestion.includes('gastronomia') || lowerQuestion.includes('comida') ||
+        lowerQuestion.includes('onde comer') || lowerQuestion.includes('melhor restaurante') ||
+        lowerQuestion.includes('restaurantes')) {
+      return this.formatRestaurantResponse(results, question);
+    }
+    
     if (lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem')) {
       return this.formatHotelResponse(results);
     }
     
     if (lowerQuestion.includes('evento') || lowerQuestion.includes('festa')) {
       return this.formatEventResponse(results);
+    }
+    
+    // Detectar perguntas sobre guias de turismo, passeios, tours
+    if (lowerQuestion.includes('guia') || lowerQuestion.includes('tour') || 
+        lowerQuestion.includes('passeio') || lowerQuestion.includes('atração') ||
+        lowerQuestion.includes('ponto turístico') || lowerQuestion.includes('ponto turistico') ||
+        lowerQuestion.includes('recomenda') && (lowerQuestion.includes('guia') || lowerQuestion.includes('tour'))) {
+      return this.formatTourismGuideResponse(results, question);
     }
     
     if (lowerQuestion.includes('rota bioceânica') || lowerQuestion.includes('rota bioceanica') || lowerQuestion.includes('bioceanica')) {
@@ -1345,6 +1440,191 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       response += "Posso te ajudar com informações sobre destinos e atrações em MS?";
     }
     
+    return response;
+  }
+
+  /**
+   * Formata resposta para restaurantes
+   */
+  private formatRestaurantResponse(results: any[], question: string): string {
+    let response = "🦦 Que alegria te ajudar com gastronomia! 🍽️\n\n";
+    
+    const lowerQuestion = question.toLowerCase();
+    const hasCity = lowerQuestion.includes('campo grande') || lowerQuestion.includes('bonito') || 
+                    lowerQuestion.includes('corumbá') || lowerQuestion.includes('corumba') ||
+                    lowerQuestion.includes('dourados');
+    
+    // Extrair informações principais dos resultados da pesquisa web
+    const mainInfo = this.extractMainInformation(results);
+    
+    if (mainInfo && results.length > 0) {
+      // Usar informações da pesquisa web
+      response += mainInfo;
+      
+      // Adicionar informações específicas dos resultados
+      if (results.length > 0) {
+        response += "\n\n🍽️ **Recomendações encontradas:**\n\n";
+        
+        results.slice(0, 5).forEach((result, index) => {
+          const title = result.title || '';
+          const snippet = result.snippet || result.description || '';
+          
+          // Extrair nome do restaurante do título ou snippet
+          let restaurantName = title;
+          if (title.includes(' - ')) {
+            restaurantName = title.split(' - ')[0];
+          } else if (title.includes('|')) {
+            restaurantName = title.split('|')[0];
+          }
+          
+          response += `${index + 1}. ${restaurantName}\n`;
+          
+          // Extrair informações do snippet
+          if (snippet.length > 50) {
+            const cleanSnippet = snippet.substring(0, 200).replace(/\.\.\./g, '');
+            response += `   ${cleanSnippet}...\n`;
+          }
+          
+          if (result.url) {
+            response += `   🔗 [Saiba mais](${result.url})\n`;
+          }
+          response += `\n`;
+        });
+      }
+    } else {
+      // Formatação conversacional para restaurantes baseada em conhecimento local
+      if (hasCity) {
+        const city = lowerQuestion.includes('campo grande') ? 'Campo Grande' :
+                     lowerQuestion.includes('bonito') ? 'Bonito' :
+                     lowerQuestion.includes('corumbá') || lowerQuestion.includes('corumba') ? 'Corumbá' :
+                     lowerQuestion.includes('dourados') ? 'Dourados' : 'Mato Grosso do Sul';
+        
+        response += `Sobre gastronomia em ${city}, posso te dar algumas orientações:\n\n`;
+        
+        if (city === 'Campo Grande') {
+          response += "🍽️ **Gastronomia em Campo Grande:**\n";
+          response += "• Feira Central - lugar imperdível para experimentar o sobá (prato típico único!)\n";
+          response += "• Restaurantes de comida regional - pintado, pacu, churrasco pantaneiro\n";
+          response += "• Gastronomia diversificada - desde comida japonesa até churrascarias\n";
+          response += "• Praças de alimentação nos shoppings\n\n";
+        } else if (city === 'Bonito') {
+          response += "🍽️ **Gastronomia em Bonito:**\n";
+          response += "• Restaurantes com foco em comida regional e peixes\n";
+          response += "• Opções próximas aos atrativos turísticos\n";
+          response += "• Gastronomia que combina com o ecoturismo\n\n";
+        } else {
+          response += "🍽️ **Gastronomia em MS:**\n";
+          response += "• Comida regional única - sobá, chipa, churrasco pantaneiro\n";
+          response += "• Peixes do Pantanal - pintado, pacu, dourado\n";
+          response += "• Influências indígenas e paraguaias\n\n";
+        }
+      } else {
+        response += "Sobre gastronomia em Mato Grosso do Sul, posso te dar algumas orientações:\n\n";
+        response += "🍽️ **Gastronomia Sul-Mato-Grossense:**\n";
+        response += "• Sobá - macarrão de origem japonesa, prato único de Campo Grande\n";
+        response += "• Chipa - pão de queijo paraguaio\n";
+        response += "• Peixes do Pantanal - pintado, pacu, dourado\n";
+        response += "• Churrasco pantaneiro - carne bovina de qualidade\n";
+        response += "• Sopa Paraguaia - torta salgada deliciosa\n";
+        response += "• Tereré - bebida gelada tradicional\n\n";
+      }
+      
+      response += "💡 **Dicas importantes:**\n";
+      response += "• Experimente o sobá na Feira Central de Campo Grande\n";
+      response += "• Prove os peixes do Pantanal quando visitar a região\n";
+      response += "• Não deixe de experimentar a chipa e o tereré\n\n";
+      
+      if (!hasCity) {
+        response += "Para recomendações específicas, me diga qual cidade você tem interesse! Campo Grande, Bonito, Corumbá ou outra?";
+      } else {
+        response += "⚠️ **Importante:** Para informações específicas sobre restaurantes, horários e preços, recomendo consultar sites especializados como TripAdvisor, Google Maps ou contatar diretamente os estabelecimentos.\n\n";
+        response += "Posso te ajudar com outras informações sobre turismo em MS?";
+      }
+    }
+    
+    return response;
+  }
+
+  /**
+   * Formata resposta para guias de turismo, tours e passeios
+   */
+  private formatTourismGuideResponse(results: any[], question: string): string {
+    let response = "🦦 Que legal que você quer conhecer mais sobre turismo em MS! 🗺️\n\n";
+    
+    const lowerQuestion = question.toLowerCase();
+    
+    // Detectar se pergunta sobre guia específico
+    if (lowerQuestion.includes('guia') && (lowerQuestion.includes('recomenda') || lowerQuestion.includes('qual'))) {
+      response += "Sobre guias de turismo em Mato Grosso do Sul, posso te ajudar de várias formas:\n\n";
+      response += "🦦 **Eu sou o Guatá!**\n";
+      response += "Sou seu guia virtual inteligente de turismo de MS! Posso te ajudar com:\n";
+      response += "• Informações sobre destinos e atrações\n";
+      response += "• Roteiros personalizados\n";
+      response += "• Recomendações de hospedagem, restaurantes e passeios\n";
+      response += "• Dicas de viagem e melhores épocas para visitar\n";
+      response += "• Informações atualizadas sobre eventos e atrações\n\n";
+      
+      if (results.length > 0) {
+        response += "🌐 **Também encontrei estas informações na web:**\n\n";
+        results.slice(0, 3).forEach((result, index) => {
+          response += `${index + 1}. ${result.title || 'Informação sobre turismo'}\n`;
+          if (result.snippet) {
+            response += `   ${result.snippet.substring(0, 150)}...\n`;
+          }
+          if (result.url) {
+            response += `   🔗 [Saiba mais](${result.url})\n`;
+          }
+          response += `\n`;
+        });
+      }
+      
+      response += "💡 Posso te ajudar a montar um roteiro personalizado! Me diga quantos dias você tem e quais cidades te interessam!";
+      return response;
+    }
+    
+    // Detectar se pergunta sobre passeios/tours
+    if (lowerQuestion.includes('passeio') || lowerQuestion.includes('tour') || lowerQuestion.includes('atração')) {
+      response += "Sobre passeios e atrações em Mato Grosso do Sul:\n\n";
+      
+      if (results.length > 0) {
+        results.slice(0, 5).forEach((result, index) => {
+          response += `${index + 1}. ${result.title || 'Atração turística'}\n`;
+          if (result.snippet) {
+            response += `   ${result.snippet.substring(0, 200)}...\n`;
+          }
+          if (result.url) {
+            response += `   🔗 [Saiba mais](${result.url})\n`;
+          }
+          response += `\n`;
+        });
+      } else {
+        response += "🏞️ **Principais tipos de passeios em MS:**\n";
+        response += "• Ecoturismo em Bonito - flutuação, grutas, cachoeiras\n";
+        response += "• Observação de animais no Pantanal\n";
+        response += "• Turismo cultural em Campo Grande\n";
+        response += "• Aventura e esportes aquáticos\n";
+        response += "• Gastronomia e cultura regional\n\n";
+        response += "Me diga qual cidade ou tipo de passeio te interessa mais!";
+      }
+      
+      return response;
+    }
+    
+    // Resposta genérica para outras perguntas de turismo
+    response += "Posso te ajudar com informações sobre turismo em Mato Grosso do Sul!\n\n";
+    
+    if (results.length > 0) {
+      response += "🌐 **Informações encontradas:**\n\n";
+      results.slice(0, 3).forEach((result, index) => {
+        response += `${index + 1}. ${result.title || 'Informação sobre turismo'}\n`;
+        if (result.snippet) {
+          response += `   ${result.snippet.substring(0, 150)}...\n`;
+        }
+        response += `\n`;
+      });
+    }
+    
+    response += "💡 O que você gostaria de saber especificamente? Destinos, hospedagem, gastronomia, eventos?";
     return response;
   }
 
@@ -1587,9 +1867,22 @@ A cidade está recebendo investimentos públicos, privados e internacionais para
       return `Sobre turismo em MS: ${snippet.substring(0, 200)}... Nossa região tem tantas opções incríveis para explorar!`;
     }
     
-    // Detectar informações sobre gastronomia
-    if (snippet.toLowerCase().includes('comida') || snippet.toLowerCase().includes('gastronomia') || snippet.toLowerCase().includes('restaurante')) {
+    // Detectar informações sobre gastronomia e restaurantes
+    if (snippet.toLowerCase().includes('comida') || snippet.toLowerCase().includes('gastronomia') || 
+        snippet.toLowerCase().includes('restaurante') || snippet.toLowerCase().includes('comer')) {
+      // Extrair informações específicas de restaurantes
+      const restaurantInfo = this.extractRestaurantInfo(snippet, title);
+      if (restaurantInfo) {
+        return restaurantInfo;
+      }
       return `Sobre gastronomia em MS: ${snippet.substring(0, 200)}... A culinária sul-mato-grossense é uma verdadeira delícia!`;
+    }
+    
+    // Detectar informações sobre guias de turismo, tours, passeios
+    if (snippet.toLowerCase().includes('guia') || snippet.toLowerCase().includes('tour') || 
+        snippet.toLowerCase().includes('passeio') || snippet.toLowerCase().includes('atração') ||
+        snippet.toLowerCase().includes('ponto turístico') || snippet.toLowerCase().includes('ponto turistico')) {
+      return `Sobre turismo em MS: ${snippet.substring(0, 250)}... Nossa região tem opções incríveis para explorar!`;
     }
     
     // Detectar perguntas sobre roteiros
@@ -1620,12 +1913,12 @@ A cidade está recebendo investimentos públicos, privados e internacionais para
         if (cleanSnippet.toLowerCase().includes('porto murtinho') || cleanSnippet.toLowerCase().includes('rota bioceânica') || cleanSnippet.toLowerCase().includes('rota bioceanica')) {
           info = `Sim! Porto Murtinho será sim uma das portas de entrada da Rota Bioceânica no Brasil. A cidade está se preparando para ser um hub logístico importante, com a Ponte Internacional da Rota Bioceânica já atingindo 75% de execução e prevista para ser entregue no segundo semestre de 2026. É uma transformação incrível para a região!`;
         } else {
-          // Resposta genérica inteligente
-          info = `Com base nas informações disponíveis, posso te ajudar com detalhes específicos sobre sua pergunta. Que aspecto você gostaria de saber mais?`;
+          // Resposta genérica inteligente - usar informações da pesquisa web
+          info = `${cleanSnippet}... Com base nas informações encontradas, posso te ajudar com mais detalhes específicos sobre sua pergunta. O que você gostaria de saber mais?`;
         }
       }
     } else if (title) {
-      info = `Sobre ${title.toLowerCase()}, posso te contar que é uma informação interessante sobre nossa região. Que detalhes específicos você gostaria de saber?`;
+      info = `Sobre ${title.toLowerCase()}, encontrei informações relevantes sobre nossa região. Que detalhes específicos você gostaria de saber?`;
     } else {
       info = "Encontrei algumas informações relevantes sobre sua pergunta. Posso te ajudar com mais detalhes específicos!";
     }
@@ -1742,6 +2035,46 @@ Me conta:
 • Que tipo de experiência você busca? (Aventura, cultura, natureza, gastronomia)
 
 Com essas informações, vou montar um roteiro perfeito para você! 🚀`;
+  }
+
+  /**
+   * Extrai informações específicas de restaurantes dos resultados da pesquisa
+   */
+  private extractRestaurantInfo(snippet: string, title: string): string | null {
+    const lowerSnippet = snippet.toLowerCase();
+    const lowerTitle = title.toLowerCase();
+    
+    // Detectar se é sobre restaurantes específicos
+    if (lowerSnippet.includes('restaurante') || lowerTitle.includes('restaurante')) {
+      // Extrair nome do restaurante
+      let restaurantName = '';
+      if (lowerTitle.includes('restaurante')) {
+        restaurantName = title.split(/restaurante|Restaurante/i)[0].trim();
+      }
+      
+      // Extrair informações relevantes
+      let info = '';
+      if (restaurantName) {
+        info = `Sobre ${restaurantName}: `;
+      }
+      
+      // Extrair tipo de comida, localização, avaliações
+      if (lowerSnippet.includes('campo grande')) {
+        info += `Restaurante em Campo Grande. `;
+      } else if (lowerSnippet.includes('bonito')) {
+        info += `Restaurante em Bonito. `;
+      } else if (lowerSnippet.includes('corumbá') || lowerSnippet.includes('corumba')) {
+        info += `Restaurante em Corumbá. `;
+      }
+      
+      // Adicionar informações do snippet
+      const cleanSnippet = snippet.substring(0, 250).replace(/\.\.\./g, '');
+      info += cleanSnippet;
+      
+      return info;
+    }
+    
+    return null;
   }
 
   /**

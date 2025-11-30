@@ -77,3 +77,5 @@ Mas para usar o Gemini AI (respostas mais inteligentes), a API key precisa estar
 **Status**: Aguardando confirmação de funcionamento
 **Última Atualização**: Janeiro 2025
 
+
+

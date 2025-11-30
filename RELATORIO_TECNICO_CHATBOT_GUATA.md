@@ -849,3 +849,5 @@ O sistema está em constante evolução, aprendendo com cada interação para me
 **Versão**: 1.0
 **Sistema**: Descubra MS - Chatbot Guatá
 
+
+

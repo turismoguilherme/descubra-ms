@@ -166,3 +166,5 @@ const { data } = await supabase.functions.invoke('guata-ai', {
 **Data**: Janeiro 2025
 **Prioridade**: CRÍTICA
 
+
+

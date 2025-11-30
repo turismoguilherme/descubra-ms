@@ -153,30 +153,82 @@ class GuataRealWebSearchService {
       }
 
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
-        body: {
-          query,
-          maxResults,
-          location: 'Mato Grosso do Sul'
-        }
-      });
-
-      if (!error && data?.results && Array.isArray(data.results) && data.results.length > 0) {
-        // Salvar no cache
-        this.searchCache.set(cacheKey, {
-          results: data.results,
-          timestamp: Date.now()
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
+          body: {
+            query,
+            maxResults,
+            location: 'Mato Grosso do Sul'
+          }
         });
 
+        // Log completo da resposta para debug
         if (isDev) {
-          console.log('[Web Search] ✅ Edge Function funcionou! (chaves protegidas)');
+          console.log('[Web Search] Resposta completa da Edge Function:', {
+            hasError: !!error,
+            hasData: !!data,
+            error: error,
+            data: data
+          });
         }
-        return data.results;
-      }
 
-      // Se Edge Function falhou, logar mas continuar para fallback
-      if (isDev && error) {
-        console.warn('[Web Search] Edge Function falhou, usando método antigo como fallback:', error.message);
+        // Verificar se há erro na resposta (mesmo com status 200)
+        if (data?.error || !data?.success) {
+          if (isDev) {
+            console.error('[Web Search] ❌ Edge Function retornou erro:', data);
+          }
+        } else if (!error && data?.results && Array.isArray(data.results) && data.results.length > 0) {
+          // Salvar no cache
+          this.searchCache.set(cacheKey, {
+            results: data.results,
+            timestamp: Date.now()
+          });
+
+          if (isDev) {
+            console.log('[Web Search] ✅ Edge Function funcionou! (chaves protegidas)');
+          }
+          return data.results;
+        }
+
+        // Se Edge Function falhou, logar detalhes mas continuar para fallback
+        if (error) {
+          if (isDev) {
+            console.error('[Web Search] ❌ Edge Function falhou:', {
+              message: error.message,
+              status: error.status,
+              context: error.context,
+              data: data,
+              error: error,
+              errorString: JSON.stringify(error, null, 2)
+            });
+            
+            // Tentar extrair detalhes do erro se disponível
+            if (data && typeof data === 'object') {
+              console.error('[Web Search] Detalhes do erro da Edge Function:', JSON.stringify(data, null, 2));
+            }
+          }
+        } else if (data) {
+          // Edge Function retornou dados mas sem resultados válidos
+          if (isDev) {
+            console.warn('[Web Search] Edge Function retornou dados inválidos:', JSON.stringify(data, null, 2));
+            if (data.error) {
+              console.error('[Web Search] Erro na resposta:', data.error, data.message);
+            }
+          }
+        } else {
+          if (isDev) {
+            console.warn('[Web Search] Edge Function retornou resposta vazia');
+          }
+        }
+      } catch (invokeError: any) {
+        if (isDev) {
+          console.error('[Web Search] ❌ Erro ao invocar Edge Function:', {
+            message: invokeError.message,
+            stack: invokeError.stack,
+            error: invokeError
+          });
+        }
       }
     } catch (edgeFunctionError: any) {
       // Edge Function não disponível ou falhou - usar método antigo

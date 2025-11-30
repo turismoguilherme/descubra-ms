@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import GuataChat from "@/components/guata/GuataChat";
 import { useGuataConnection } from "@/hooks/useGuataConnection";
@@ -8,6 +9,8 @@ import { guataTrueApiService } from "@/services/ai";
 import { guataMLService } from "@/services/ai/ml/guataMLService";
 
 const ChatGuata = () => {
+  const location = useLocation();
+  const isChatGuataRoute = location.pathname === '/chatguata';
   const { toast } = useToast();
   const { isConnected, connectionChecking } = useGuataConnection();
 
@@ -60,7 +63,9 @@ const ChatGuata = () => {
         userLocation: 'Mato Grosso do Sul',
         // Enviar histórico completo (perguntas e respostas) para melhor contexto
         conversationHistory: conversationHistory,
-        userPreferences: userPreferences
+        userPreferences: userPreferences,
+        isTotemVersion: isChatGuataRoute, // true = /chatguata (não mencionar "Descubra Mato Grosso do Sul")
+        isFirstUserMessage: mensagens.length === 1 // primeira mensagem do usuário após boas-vindas
       });
       
       // Logs removidos para reduzir verbosidade

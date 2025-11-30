@@ -3,9 +3,10 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
   'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Credentials': 'true',
 }
 
 interface GoogleSearchRequest {
@@ -28,12 +29,9 @@ serve(async (req) => {
   
   // Handle CORS preflight requests - IMPORTANTE: retornar 200 OK
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
+    return new Response('ok', { 
       status: 200,
-      headers: {
-        ...corsHeaders,
-        'Content-Length': '0'
-      } 
+      headers: corsHeaders
     });
   }
 
@@ -70,15 +68,21 @@ serve(async (req) => {
     const apiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY');
     const engineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
     
+    console.log('🔵 guata-google-search-proxy: API Key present:', !!apiKey, 'Engine ID present:', !!engineId);
+    
     if (!apiKey || !engineId) {
       console.error('❌ Google Search API keys não configuradas no Supabase');
+      console.error('   GOOGLE_SEARCH_API_KEY:', apiKey ? 'present' : 'missing');
+      console.error('   GOOGLE_SEARCH_ENGINE_ID:', engineId ? 'present' : 'missing');
+      // Retornar status 200 com erro para que o cliente possa ver os detalhes
       return new Response(
         JSON.stringify({ 
           error: 'API keys not configured',
           message: 'GOOGLE_SEARCH_API_KEY e GOOGLE_SEARCH_ENGINE_ID não estão configuradas nas variáveis de ambiente do Supabase',
-          results: []
+          results: [],
+          success: false
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -90,6 +94,8 @@ serve(async (req) => {
     // Call Google Custom Search API
     const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(searchQuery)}&num=${maxResults}`;
 
+    console.log('🔵 guata-google-search-proxy: Calling Google Search API with URL:', url.replace(apiKey, '***'));
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -97,8 +103,15 @@ serve(async (req) => {
       }
     });
 
+    console.log('🔵 guata-google-search-proxy: Google Search API response status:', response.status);
+
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = '';
+      try {
+        errorText = await response.text();
+      } catch (e) {
+        errorText = 'Unable to read error response';
+      }
       console.error('❌ Google Search API error:', response.status, errorText);
       
       // Handle specific errors
@@ -135,7 +148,22 @@ serve(async (req) => {
       );
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('❌ guata-google-search-proxy: Failed to parse JSON response:', jsonError);
+      // Retornar status 200 com erro para que o cliente possa ver os detalhes
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON response from Google Search API',
+          message: String(jsonError),
+          results: [],
+          success: false
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Transform Google Search results to our format
     const results: GoogleSearchResult[] = (data.items || []).map((item: any) => ({
@@ -152,21 +180,34 @@ serve(async (req) => {
       JSON.stringify({ 
         results,
         totalResults: data.searchInformation?.totalResults || results.length,
-        searchTime: data.searchInformation?.searchTime || 0
+        searchTime: data.searchInformation?.searchTime || 0,
+        success: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
-    console.error('❌ guata-google-search-proxy: handler error:', { message: error?.message, stack: error?.stack });
+    console.error('❌ guata-google-search-proxy: handler error:', { 
+      message: error?.message, 
+      stack: error?.stack,
+      name: error?.name,
+      cause: error?.cause
+    });
+    
+    // Retornar erro detalhado para debug (status 200 para que o cliente possa ver)
+    const errorDetails = {
+      error: 'Internal server error',
+      message: error?.message || String(error),
+      type: error?.name || 'UnknownError',
+      results: [],
+      success: false,
+      ...(import.meta.env.DEV && { stack: error?.stack })
+    };
+    
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error?.message || String(error),
-        results: []
-      }),
+      JSON.stringify(errorDetails),
       { 
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

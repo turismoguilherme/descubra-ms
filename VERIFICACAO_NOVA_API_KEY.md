@@ -183,3 +183,5 @@ VITE_GEMINI_API_KEY=sua_nova_chave_aqui
 **Última Atualização**: Janeiro 2025
 **Status**: Aguardando verificação do usuário
 
+
+

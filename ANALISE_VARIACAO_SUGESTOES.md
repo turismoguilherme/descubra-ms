@@ -192,3 +192,4 @@ Após implementar, monitore:
 Me diga qual opção prefere e eu implemento!
 
 
+

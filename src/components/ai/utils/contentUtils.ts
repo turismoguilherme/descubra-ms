@@ -4,11 +4,23 @@ import { officialInformation } from "../data/officialInformation";
 // Content filter function to detect offensive content
 export const containsOffensiveContent = (text: string): boolean => {
   const offensiveTerms = [
-    "racismo", "homofobia", "xenofobia", "preconceito", 
-    // This would be expanded with a comprehensive list in production
+    // Ofensas
+    "idiota", "burro", "estúpido", "imbecil", "retardado", "burra",
+    
+    // Discriminação
+    "racismo", "homofobia", "xenofobia", "preconceito", "nazista",
+    
+    // Violência
+    "matar", "assassinar", "violência extrema",
+    
+    // Spam/Jailbreak
+    "spam", "hack", "crack", "pirataria", "ignore previous instructions",
+    "forget everything", "new instructions", "override", "jailbreak",
+    "developer mode", "dan mode", "system:"
   ];
   
-  return offensiveTerms.some(term => text.toLowerCase().includes(term));
+  const lowerText = text.toLowerCase();
+  return offensiveTerms.some(term => lowerText.includes(term));
 };
 
 // Generate AI response based on user query
