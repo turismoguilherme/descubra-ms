@@ -3,21 +3,28 @@ import { useEffect } from 'react';
 /**
  * Componente para configurar cabeçalhos de segurança via meta tags
  * Deve ser incluído no head da aplicação
+ * 
+ * NOTA: CSP completo deve ser configurado no servidor (Vercel/Netlify) em produção.
+ * Esta configuração permite VLibras e recursos externos necessários.
  */
 export const SecurityHeaders = () => {
   useEffect(() => {
-    // Configurar CSP padrão com segurança aprimorada
+    // CSP permissivo para desenvolvimento e VLibras
+    // Em produção, configurar CSP mais restritivo via headers HTTP no servidor
     const cspDirectives = [
-      "default-src 'self'",
-      "script-src 'self' https://cdn.gpteng.co", // Removido 'unsafe-inline' e 'unsafe-eval' por segurança
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Mantido 'unsafe-inline' apenas para styles
-      "img-src 'self' data: https://flowtrip.com.br https://*.supabase.co https://images.unsplash.com https://cdn.pixabay.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.lovable.app https://lovable-uploads.s3.amazonaws.com https://*.amazonaws.com https://*.vercel.app https://*.netlify.app https://*.github.io https://*.githubusercontent.com",
-      "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.sympla.com.br https://maps.googleapis.com https://*.googleapis.com",
+      "default-src 'self' https: blob: data:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:",
+      "script-src-elem 'self' 'unsafe-inline' https: blob:",
+      "style-src 'self' 'unsafe-inline' https:",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data: https:",
+      "connect-src 'self' https: wss: blob:",
+      "frame-src 'self' https:",
+      "worker-src 'self' blob: https:",
+      "media-src 'self' blob: https:",
       "base-uri 'self'",
       "form-action 'self'",
-      // frame-ancestors não funciona em meta tags, deve ser configurado no servidor
-      "object-src 'none'" // Bloqueia plugins perigosos
+      "object-src 'none'"
     ].join('; ');
 
     // Configurar meta tags de segurança

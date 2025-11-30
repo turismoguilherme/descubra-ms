@@ -278,7 +278,7 @@ class ServerSideSecurityService {
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://flowtrip.com.br; font-src 'self' https:; connect-src 'self' https://*.supabase.co https://vlibras.gov.br https://api.sympla.com.br;",
+      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vlibras.gov.br https://www.vlibras.gov.br; style-src 'self' 'unsafe-inline' https://vlibras.gov.br https://www.vlibras.gov.br; img-src 'self' data: blob: https: https://vlibras.gov.br https://www.vlibras.gov.br; font-src 'self' https: https://vlibras.gov.br https://www.vlibras.gov.br; connect-src 'self' https://*.supabase.co https://vlibras.gov.br https://www.vlibras.gov.br https://api.sympla.com.br; frame-src 'self' https://vlibras.gov.br https://www.vlibras.gov.br; worker-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br; media-src 'self' blob: https://vlibras.gov.br https://www.vlibras.gov.br;",
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
     };

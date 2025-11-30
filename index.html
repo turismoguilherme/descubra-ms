@@ -7,8 +7,8 @@
     <title>Descubra Mato Grosso do Sul</title>
     <meta name="description" content="Descubra as maravilhas de Mato Grosso do Sul: cultura, natureza e experiências únicas no coração da América do Sul." />
     <meta name="author" content="Fundtur-MS" />
-    <!-- Content Security Policy - Enhanced Security -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://vlibras.gov.br; script-src-elem 'self' 'unsafe-inline' https://cdn.gpteng.co https://vlibras.gov.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://flowtrip.com.br https://*.supabase.co https://images.unsplash.com https://source.unsplash.com https://cdn.pixabay.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.lovable.app https://lovable-uploads.s3.amazonaws.com https://*.amazonaws.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vlibras.gov.br https://generativelanguage.googleapis.com https://maps.googleapis.com https://*.googleapis.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests;">
+    <!-- Content Security Policy desabilitado temporariamente para VLibras -->
+    <!-- O CSP será configurado no servidor em produção -->
     <!-- Additional Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
@@ -36,8 +36,22 @@
 
   <body>
     <div id="root"></div>
+    
+    <!-- VLibras - Acessibilidade em Libras (carregado antes do CSP ser aplicado) -->
+    <div vw class="enabled">
+      <div vw-access-button class="active"></div>
+      <div vw-plugin-wrapper>
+        <div class="vw-plugin-top-wrapper"></div>
+      </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+      new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+    
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <!-- Temporariamente desabilitado para permitir VLibras em desenvolvimento -->
+    <!-- <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script> -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

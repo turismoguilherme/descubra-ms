@@ -13,6 +13,7 @@ import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
+import VLibrasWidget from "@/components/accessibility/VLibrasWidget";
 // Removendo imports complexos temporariamente
 // import DebugPanel from "@/components/debug/DebugPanel";
 // import { ErrorMonitorPanel } from "@/services/ErrorMonitor";
@@ -104,6 +105,8 @@ function App() {
                       }}
                     >
                       <BrandProvider>
+                        {/* VLibras - Controle de visibilidade por rota */}
+                        <VLibrasWidget />
                         <div className="min-h-screen bg-background font-sans antialiased">
                           <Routes>
                             {/* ViaJAR SaaS Routes */}
