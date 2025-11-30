@@ -68,10 +68,12 @@ import GuataTest from "@/pages/GuataTest";
 import ChatGuata from "@/pages/ChatGuata";
 import EventosMS from "@/pages/ms/EventosMS";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
+import PassportDigital from "@/pages/PassportDigital";
 import DestinoDetalhes from "@/pages/DestinoDetalhes";
 import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
 import AuthPage from "@/pages/AuthPage";
+import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -216,6 +218,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
                             <Route path="/descubramatogrossodosul/guata-test" element={<GuataTest />} />
                             <Route path="/descubramatogrossodosul/passaporte" element={<PassaporteLista />} />
+                            <Route path="/descubramatogrossodosul/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                             <Route path="/descubramatogrossodosul/profile" element={<ProfilePageFixed />} />
                             
                             {/* Descubra MS Auth Routes */}
@@ -226,7 +229,10 @@ function App() {
                             <Route path="/descubramatogrossodosul/*" element={<MSIndex />} />
                             
                             {/* Redirecionamentos legados de /ms para /descubramatogrossodosul */}
-                            <Route path="/ms" element={<Navigate to="/descubramatogrossodosul" replace />} />
+                            <Route path="/ms/login" element={<AuthPage />} />
+                            <Route path="/ms/register" element={<Register />} />
+                            {/* Callback OAuth - processar antes de redirecionar */}
+                            <Route path="/ms" element={<Suspense fallback={<LoadingFallback />}><OAuthCallback /></Suspense>} />
                             <Route path="/ms/*" element={<Navigate to="/descubramatogrossodosul" replace />} />
                             
                             {/* Fallback */}

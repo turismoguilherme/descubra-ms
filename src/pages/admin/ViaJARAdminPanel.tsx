@@ -27,6 +27,7 @@ const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
 const AISuggestions = lazy(() => import('@/components/admin/ai/AISuggestions'));
 const AIActionsQueue = lazy(() => import('@/components/admin/ai/AIActionsQueue'));
+const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
@@ -117,6 +118,11 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/settings" element={
               <Suspense fallback={<LoadingFallback />}>
                 <PlatformSettings />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/passport" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PassportAdmin />
               </Suspense>
             } />
             

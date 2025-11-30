@@ -165,10 +165,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user]);
 
+  // Processar hash da URL após callback OAuth
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      console.log('🔐 [AuthProvider] Token OAuth detectado no hash da URL, processando...');
+      // O Supabase deve processar automaticamente com detectSessionInUrl: true
+      // Mas vamos garantir que a sessão seja obtida
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          console.log('✅ [AuthProvider] Sessão OAuth processada com sucesso');
+          // Limpar hash da URL após processar
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         logger.dev("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event);
+        console.log('🔐 [AuthProvider] Evento de autenticação:', event, 'Session:', session ? 'presente' : 'ausente');
         
         // Usar dados reais do Supabase
         setSession(session);
@@ -177,6 +195,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
           await fetchUserProfile(session.user.id);
+          
+          // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
+          if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
+            console.log('🔄 [AuthProvider] Login OAuth bem-sucedido, redirecionando...');
+            // Limpar hash da URL
+            const currentPath = window.location.pathname;
+            const redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/') 
+              ? '/descubramatogrossodosul' 
+              : currentPath;
+            window.history.replaceState(null, '', redirectPath);
+            // Forçar reload para garantir que o estado seja atualizado
+            setTimeout(() => {
+              window.location.href = redirectPath;
+            }, 100);
+          }
         } else {
           console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
           setUserProfile(null);
@@ -379,18 +412,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: 'google' | 'facebook') => {
     try {
-      // Detectar tenant do path atual para manter contexto
-      const currentPath = window.location.pathname;
-      const pathSegments = currentPath.split('/').filter(Boolean);
-      const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
-      const isTenantPath = currentTenant && currentTenant.length === 2;
-      
-      console.log("🏛️ SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "Current Path:", currentPath);
-      
-      // Redirecionar mantendo contexto do tenant e usando URL específica para produção
-      const isProduction = window.location.hostname === 'flow-trip.vercel.app';
-      const baseUrl = isProduction ? 'https://flow-trip.vercel.app' : window.location.origin;
-      const redirectPath = isTenantPath ? `${baseUrl}/${currentTenant}` : `${baseUrl}/ms`;
+      // Redirecionar para /ms que processa o callback OAuth
+      // O componente OAuthCallback processará o token e redirecionará para /descubramatogrossodosul
+      const redirectPath = `${window.location.origin}/ms`;
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
       
       const { data, error } = await supabase.auth.signInWithOAuth({

@@ -54,6 +54,7 @@ const sidebarItems: SidebarItem[] = [
       { label: 'Conteúdo', path: '/viajar/admin/descubra-ms/content', icon: FileText },
       { label: 'Menus', path: '/viajar/admin/descubra-ms/menus', icon: Menu },
       { label: 'Usuários', path: '/viajar/admin/descubra-ms/users', icon: UserCog },
+      { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', icon: FileCheck },
       { label: 'Configurações', path: '/viajar/admin/descubra-ms/settings', icon: Settings },
     ],
   },

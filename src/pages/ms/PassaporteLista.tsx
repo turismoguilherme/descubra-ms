@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import {
   Compass
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+// Removido useRouteManagement - usando query direta
 
 interface PassaporteRoute {
   id: string;
@@ -102,19 +104,159 @@ const PassaporteLista = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  // Buscar rotas diretamente, sem usar o hook
   useEffect(() => {
-    console.log("📱 PASSAPORTE LISTA: Carregando rotas...");
-    
-    // Simular carregamento
-    const timer = setTimeout(() => {
-      setRoutes(mockRoutes);
-      setLoading(false);
-      console.log("📱 PASSAPORTE LISTA: Rotas carregadas:", mockRoutes.length);
-    }, 1000);
+    const loadRoutesDirectly = async () => {
+      try {
+        console.log("📱 PASSAPORTE LISTA: Carregando rotas diretamente...");
+        setLoading(true);
+        
+        // Usar fetch diretamente para contornar problemas com o cliente Supabase
+        const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+        
+        console.log("📱 PASSAPORTE LISTA: Fazendo fetch direto na API REST...");
+        
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/routes?is_active=eq.true&order=name`,
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
 
-    return () => clearTimeout(timer);
-  }, []);
+        console.log("📱 PASSAPORTE LISTA: Resposta recebida, status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("❌ PASSAPORTE LISTA: Erro na resposta:", response.status, errorText);
+          throw new Error(`Erro ${response.status}: ${errorText}`);
+        }
+
+        const routesData = await response.json();
+
+        console.log("📱 PASSAPORTE LISTA: Resultado da query:", {
+          routesCount: routesData?.length || 0,
+          routes: routesData?.map((r: any) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
+        });
+        
+        const routesError = null;
+
+        if (routesError) {
+          console.error("❌ PASSAPORTE LISTA: Erro ao buscar rotas:", routesError);
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar rotas: " + routesError.message,
+            variant: "destructive",
+          });
+          setRoutes([]);
+          setLoading(false);
+          return;
+        }
+
+        if (!routesData || routesData.length === 0) {
+          console.log("📱 PASSAPORTE LISTA: Nenhuma rota encontrada");
+          setRoutes([]);
+      setLoading(false);
+          return;
+        }
+
+        // Converter rotas do banco para formato PassaporteRoute
+        const formattedRoutes: PassaporteRoute[] = routesData.map(route => {
+          // Converter difficulty de inglês para português
+          let difficultyText = 'Fácil';
+          if (route.difficulty === 'easy') difficultyText = 'Fácil';
+          else if (route.difficulty === 'medium') difficultyText = 'Média';
+          else if (route.difficulty === 'hard') difficultyText = 'Difícil';
+
+          // Converter estimated_duration de interval para string
+          let durationText = 'N/A';
+          if (route.estimated_duration) {
+            const durationStr = route.estimated_duration.toString();
+            if (durationStr.includes('day')) {
+              const days = parseInt(durationStr) || 1;
+              const hours = days * 24;
+              durationText = `${hours}h`;
+            } else if (durationStr.includes(':')) {
+              const parts = durationStr.split(':');
+              const hours = parseInt(parts[0]) || 0;
+              const minutes = parseInt(parts[1]) || 0;
+              if (hours > 0) {
+                durationText = minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+              } else {
+                durationText = `${minutes}min`;
+              }
+            }
+          }
+
+          return {
+            id: route.id,
+            name: route.name,
+            description: route.description || '',
+            image: route.image_url || '/images/default-route.jpg',
+            difficulty: difficultyText,
+            duration: durationText,
+            checkpoints: 0, // Será preenchido depois
+            completed: false,
+            progress: 0,
+          };
+        });
+
+        // Buscar checkpoints para cada rota usando fetch direto
+        console.log("📱 PASSAPORTE LISTA: Buscando checkpoints para cada rota...");
+        
+        const routesWithCheckpoints = await Promise.all(
+          formattedRoutes.map(async (route) => {
+            try {
+              const checkpointResponse = await fetch(
+                `${SUPABASE_URL}/rest/v1/route_checkpoints?route_id=eq.${route.id}&select=id`,
+                {
+                  headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'count=exact'
+                  }
+                }
+              );
+              
+              if (!checkpointResponse.ok) {
+                console.warn(`⚠️ Erro ao buscar checkpoints para ${route.name}`);
+                return { ...route, checkpoints: 0 };
+              }
+              
+              const checkpoints = await checkpointResponse.json();
+              return {
+                ...route,
+                checkpoints: checkpoints?.length || 0,
+              };
+            } catch (e) {
+              console.warn(`⚠️ Erro ao buscar checkpoints para ${route.name}:`, e);
+              return { ...route, checkpoints: 0 };
+            }
+          })
+        );
+
+        console.log("✅ PASSAPORTE LISTA: Rotas carregadas com sucesso:", routesWithCheckpoints.length);
+        setRoutes(routesWithCheckpoints);
+        setLoading(false);
+      } catch (error: any) {
+        console.error("❌ PASSAPORTE LISTA: Erro geral:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar rotas: " + (error?.message || 'Erro desconhecido'),
+          variant: "destructive",
+        });
+        setRoutes([]);
+        setLoading(false);
+      }
+    };
+
+    loadRoutesDirectly();
+  }, [toast]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -156,6 +298,23 @@ const PassaporteLista = () => {
           </div>
 
           {/* Routes Grid */}
+          {routes.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-lg shadow-lg p-8">
+              <div className="text-6xl mb-4">🗺️</div>
+              <h2 className="text-2xl font-bold mb-4">Nenhuma Rota Disponível</h2>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Não há rotas de passaporte configuradas no momento. 
+                Configure rotas através do painel administrativo para começar a usar o sistema de passaporte digital.
+              </p>
+              <Button 
+                onClick={() => navigate('/viajar/admin/descubra-ms/passport')}
+                className="mt-4"
+              >
+                Ir para Painel Administrativo
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {routes.map((route) => (
               <Card key={route.id} className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -202,20 +361,29 @@ const PassaporteLista = () => {
                     </div>
                     
                     <Button 
-                      asChild 
                       className="w-full mt-4"
                       variant={route.completed ? "outline" : "default"}
+                      onClick={() => {
+                        console.log('🔍 [PassaporteLista] Botão clicado - Rota:', route.id);
+                        try {
+                          const targetUrl = `/descubramatogrossodosul/passaporte/${route.id}`;
+                          console.log('✅ [PassaporteLista] Navegando para:', targetUrl);
+                          navigate(targetUrl);
+                        } catch (err) {
+                          console.error('❌ [PassaporteLista] Erro:', err);
+                          window.location.href = `/descubramatogrossodosul/passaporte/${route.id}`;
+                        }
+                      }}
                     >
-                      <Link to={`/descubramatogrossodosul/passaporte/${route.id}`}>
                         {route.completed ? 'Ver Detalhes' : 'Iniciar Rota'}
                         <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+          )}
 
           {/* Stats Section */}
           <div className="mt-16 bg-white rounded-lg shadow-lg p-8">

@@ -19,41 +19,129 @@ export const useRouteManagement = (userRegion?: string) => {
   const loadRoutes = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('routes')
-        .select('*')
-        .eq('is_active', true);
+      console.log('🔍 [useRouteManagement] ========== INÍCIO loadRoutes ==========');
+      console.log('🔍 [useRouteManagement] Buscando rotas no banco...');
+      
+      let data, error;
+      try {
+        console.log('🔍 [useRouteManagement] Executando query Supabase...');
+        const result = await supabase
+          .from('routes')
+          .select('*')
+          .eq('is_active', true);
+        
+        console.log('🔍 [useRouteManagement] Resultado recebido:', {
+          hasResult: !!result,
+          hasData: !!result?.data,
+          dataLength: result?.data?.length,
+          hasError: !!result?.error,
+          errorCode: result?.error?.code,
+          errorMessage: result?.error?.message
+        });
+        
+        data = result.data;
+        error = result.error;
+        console.log('✅ [useRouteManagement] Query executada com sucesso');
+      } catch (queryError: any) {
+        console.error('❌ [useRouteManagement] Erro na execução da query:', queryError);
+        error = queryError;
+        data = null;
+      }
 
-      if (error) throw error;
+      // Log imediato após a query
+      console.log('🔍 [useRouteManagement] Query executada. Status:', {
+        hasData: !!data,
+        dataType: Array.isArray(data) ? 'array' : typeof data,
+        dataLength: data?.length ?? 'null',
+        hasError: !!error,
+        errorCode: error?.code,
+        errorMessage: error?.message,
+        errorDetails: error?.details,
+        errorHint: error?.hint
+      });
+
+      console.log('🔍 [useRouteManagement] Resultado da busca:', {
+        dataCount: data?.length || 0,
+        data: data?.map(r => ({ id: r.id, name: r.name, difficulty: r.difficulty, is_active: r.is_active })),
+        error: error ? { code: error.code, message: error.message, details: error.details, hint: error.hint } : null
+      });
+
+      if (error) {
+        console.error('❌ [useRouteManagement] Erro ao buscar rotas:', error);
+        throw error;
+      }
+      
+      console.log('✅ [useRouteManagement] Rotas encontradas:', data?.length || 0);
       
       // Map routes data to TouristRoute format
-      const formattedRoutes: TouristRoute[] = (data || []).map(route => ({
-        id: route.id,
-        name: route.name || '',
-        description: route.description,
-        region: route.region,
-        difficulty_level: (route.difficulty || 'facil') as "facil" | "medio" | "dificil",
-        estimated_duration: route.estimated_duration ? parseInt(route.estimated_duration.toString()) : 60,
-        promotional_text: route.description,
-        video_url: '',
-        is_active: route.is_active || true
-      }));
+      const formattedRoutes: TouristRoute[] = (data || []).map(route => {
+        // Converter difficulty de inglês para português
+        let difficulty_level: "facil" | "medio" | "dificil" = "facil";
+        if (route.difficulty === 'easy') difficulty_level = 'facil';
+        else if (route.difficulty === 'medium') difficulty_level = 'medio';
+        else if (route.difficulty === 'hard') difficulty_level = 'dificil';
+        
+        // Converter estimated_duration de interval para minutos
+        let estimated_duration = 60; // default
+        if (route.estimated_duration) {
+          // Se for string no formato '2 days' ou '48:00:00', converter para minutos
+          const durationStr = route.estimated_duration.toString();
+          if (durationStr.includes('day')) {
+            const days = parseInt(durationStr) || 1;
+            estimated_duration = days * 24 * 60; // converter dias para minutos
+          } else if (durationStr.includes(':')) {
+            // Formato HH:MM:SS
+            const parts = durationStr.split(':');
+            const hours = parseInt(parts[0]) || 0;
+            const minutes = parseInt(parts[1]) || 0;
+            estimated_duration = hours * 60 + minutes;
+          } else {
+            // Tentar parse direto
+            estimated_duration = parseInt(durationStr) || 60;
+          }
+        }
+        
+        return {
+          id: route.id,
+          name: route.name || '',
+          description: route.description,
+          region: route.region,
+          difficulty_level,
+          estimated_duration,
+          promotional_text: route.description,
+          video_url: route.video_url || '',
+          is_active: route.is_active !== false
+        };
+      });
       
       // Filtrar por região se necessário
       const filteredRoutes = userRegion && userRegion !== "all" 
         ? formattedRoutes.filter(route => route.region === userRegion)
         : formattedRoutes;
       
+      console.log('✅ [useRouteManagement] Rotas formatadas:', {
+        total: formattedRoutes.length,
+        filtradas: filteredRoutes.length,
+        rotas: filteredRoutes.map(r => ({ id: r.id, name: r.name, difficulty: r.difficulty_level }))
+      });
+      
       setRoutes(filteredRoutes);
-    } catch (error) {
-      console.error("Erro ao carregar roteiros:", error);
+    } catch (error: any) {
+      console.error("❌ [useRouteManagement] Erro ao carregar roteiros:", {
+        error,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
       toast({
         title: "Erro",
-        description: "Erro ao carregar roteiros",
+        description: error?.message || "Erro ao carregar roteiros",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      console.log('🏁 [useRouteManagement] Carregamento finalizado');
     }
   }, [userRegion, toast]);
 

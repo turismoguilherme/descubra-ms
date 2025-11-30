@@ -9,9 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
-import { useAuth } from '@/hooks/useAuth';
 
 const AuthPage = () => {
+  console.log('🔐 [AuthPage] ========== COMPONENTE RENDERIZADO ==========');
+  console.log('🔐 [AuthPage] URL atual:', window.location.pathname);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,46 +21,77 @@ const AuthPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
-  const { signInWithProvider } = useAuth();
+  
+  console.log('🔐 [AuthPage] Estado inicial:', {
+    isAuthenticated,
+    authLoading,
+    email: email ? 'preenchido' : 'vazio',
+    password: password ? 'preenchido' : 'vazio'
+  });
 
   // Redirecionar se já autenticado
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/ms', { replace: true });
+      console.log('✅ [AuthPage] Usuário já autenticado, redirecionando...');
+      navigate('/descubramatogrossodosul', { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  const cleanupAuthState = () => {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-  };
-
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
-    console.log(`🔐 SOCIAL LOGIN: Tentativa de login com ${provider}`);
+    console.log(`🔐 [AuthPage] SOCIAL LOGIN: Tentativa de login com ${provider}`);
     
     try {
-      await signInWithProvider(provider);
-      toast({
-        title: "Sucesso",
-        description: `Login com ${provider} realizado com sucesso!`,
+      setLoading(true);
+      
+      // Detectar tenant do path atual
+      const currentPath = window.location.pathname;
+      const pathSegments = currentPath.split('/').filter(Boolean);
+      const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
+      const isTenantPath = currentTenant && (currentTenant.length === 2 || currentTenant === 'descubramatogrossodosul');
+      
+      console.log("🏛️ [AuthPage] SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      
+      // Redirecionar para /ms que processa o callback OAuth
+      // O componente OAuthCallback processará o token e redirecionará para /descubramatogrossodosul
+      const redirectPath = '/ms';
+      
+      console.log("🔄 [AuthPage] SOCIAL LOGIN: Redirecionando para:", redirectPath);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}${redirectPath}`,
+        },
       });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ [AuthPage] SOCIAL LOGIN: Redirecionamento iniciado');
     } catch (error: any) {
-      console.error(`❌ SOCIAL LOGIN: Erro no login com ${provider}:`, error);
+      console.error(`❌ [AuthPage] SOCIAL LOGIN: Erro no login com ${provider}:`, error);
+      setLoading(false);
       toast({
         title: "Erro no Login",
-        description: `Erro ao fazer login com ${provider}`,
+        description: `Erro ao fazer login com ${provider}: ${error?.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('🔐 [AuthPage] ========== INÍCIO LOGIN ==========');
+    console.log('🔐 [AuthPage] Event:', e);
+    console.log('🔐 [AuthPage] Email:', email);
+    console.log('🔐 [AuthPage] Password:', password ? '***' : 'vazio');
+    console.log('🔐 [AuthPage] Loading:', loading);
     
     if (!email || !password) {
+      console.warn('⚠️ [AuthPage] Campos vazios');
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos",
@@ -67,45 +100,77 @@ const AuthPage = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      // Limpar estado anterior
-      cleanupAuthState();
-      
-      // Tentar fazer logout global primeiro
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continuar mesmo se falhar
-      }
+    if (loading) {
+      console.warn('⚠️ [AuthPage] Já está processando login');
+      return;
+    }
 
-      // Fazer login
+    console.log('🔐 [AuthPage] Campos preenchidos, iniciando login...');
+    setLoading(true);
+    
+    try {
+      console.log('🔐 [AuthPage] Chamando supabase.auth.signInWithPassword...');
+      
+      // Fazer login diretamente com Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
+      console.log('🔐 [AuthPage] Resultado do login:', {
+        hasUser: !!data?.user,
+        userId: data?.user?.id,
+        error: error ? {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        } : null
+      });
+
       if (error) {
+        console.error('❌ [AuthPage] Erro do Supabase:', error);
         throw error;
       }
 
-      if (data.user) {
+      if (data?.user) {
+        console.log('✅ [AuthPage] Login bem-sucedido!');
+        console.log('✅ [AuthPage] User ID:', data.user.id);
+        console.log('✅ [AuthPage] User Email:', data.user.email);
+        
         toast({
           title: "Sucesso",
           description: "Login realizado com sucesso!",
         });
         
-        // Forçar redirecionamento
-        window.location.href = '/ms';
+        // Aguardar um pouco para garantir que a sessão foi estabelecida
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Redirecionar para /descubramatogrossodosul
+        const redirectPath = '/descubramatogrossodosul';
+        console.log('✅ [AuthPage] Redirecionando para:', redirectPath);
+        window.location.href = redirectPath;
+      } else {
+        console.error('❌ [AuthPage] Login retornou sem usuário');
+        throw new Error('Login retornou sem dados do usuário');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('❌ [AuthPage] Erro no login:', {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
       
       let errorMessage = "Erro ao fazer login";
-      if (error.message?.includes('Invalid login credentials')) {
+      if (error?.message?.includes('Invalid login credentials') || 
+          error?.message?.includes('invalid_credentials') ||
+          error?.status === 400) {
         errorMessage = "Email ou senha incorretos";
-      } else if (error.message?.includes('Email not confirmed')) {
+      } else if (error?.message?.includes('Email not confirmed') || 
+                 error?.message?.includes('email_not_confirmed')) {
         errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
       
       toast({
@@ -114,7 +179,9 @@ const AuthPage = () => {
         variant: "destructive",
       });
     } finally {
+      console.log('🔐 [AuthPage] Finalizando (setLoading false)');
       setLoading(false);
+      console.log('🔐 [AuthPage] ========== FIM LOGIN ==========');
     }
   };
 
@@ -156,7 +223,17 @@ const AuthPage = () => {
               </p>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form 
+                onSubmit={(e) => {
+                  console.log('🔐 [AuthPage] ========== FORM SUBMIT DISPARADO ==========');
+                  console.log('🔐 [AuthPage] Event:', e);
+                  console.log('🔐 [AuthPage] Target:', e.target);
+                  handleLogin(e);
+                }} 
+                className="space-y-4"
+                noValidate
+                id="login-form"
+              >
                 <div>
                   <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
                   <Input
@@ -202,9 +279,45 @@ const AuthPage = () => {
                 </div>
 
                 <Button 
-                  type="submit" 
+                  type="button"
                   className="w-full bg-yellow-500 text-blue-900 hover:bg-yellow-400 font-semibold py-2.5 mt-6"
-                  disabled={loading}
+                  disabled={loading || !email || !password}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log('🔐 [AuthPage] ========== BOTÃO CLICADO ==========');
+                    console.log('🔐 [AuthPage] Estado:', { 
+                      email, 
+                      hasPassword: !!password, 
+                      loading,
+                      disabled: loading || !email || !password
+                    });
+                    
+                    if (!email || !password) {
+                      console.warn('⚠️ [AuthPage] Campos vazios');
+                      toast({
+                        title: "Erro",
+                        description: "Por favor, preencha todos os campos",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    if (loading) {
+                      console.warn('⚠️ [AuthPage] Já está processando');
+                      return;
+                    }
+                    
+                    // Chamar handleLogin diretamente
+                    console.log('✅ [AuthPage] Chamando handleLogin diretamente');
+                    const fakeEvent = {
+                      preventDefault: () => {},
+                      stopPropagation: () => {},
+                    } as React.FormEvent<HTMLFormElement>;
+                    
+                    await handleLogin(fakeEvent);
+                  }}
                 >
                   {loading ? (
                     <>
@@ -240,7 +353,7 @@ const AuthPage = () => {
                   Não tem uma conta?{' '}
                   <button
                     type="button"
-                    onClick={() => navigate('/ms/register')}
+                    onClick={() => navigate('/descubramatogrossodosul/register')}
                     className="text-blue-600 hover:text-blue-500 font-medium"
                   >
                     Criar conta
