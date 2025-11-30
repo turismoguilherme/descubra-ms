@@ -19,8 +19,8 @@ import {
   ListChecks,
   ChevronDown,
   Calendar,
-  Handshake,
-  Stamp
+  Users2,
+  Ticket
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
@@ -58,8 +58,8 @@ const sidebarItems: SidebarItem[] = [
       { label: 'Menus', path: '/viajar/admin/descubra-ms/menus', icon: Menu },
       { label: 'Usuários', path: '/viajar/admin/descubra-ms/users', icon: UserCog },
       { label: 'Eventos', path: '/viajar/admin/descubra-ms/events', icon: Calendar },
-      { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners', icon: Handshake },
-      { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', icon: Stamp },
+      { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners', icon: Users2 },
+      { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', icon: Ticket },
       { label: 'Configurações', path: '/viajar/admin/descubra-ms/settings', icon: Settings },
     ],
   },
