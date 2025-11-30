@@ -78,7 +78,8 @@ export default function EmployeesManagement() {
               }}
             />
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="bg-white border border-gray-200 shadow-sm">

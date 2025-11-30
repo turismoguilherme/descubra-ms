@@ -1826,6 +1826,129 @@ export type Database = {
         }
         Relationships: []
       }
+      guata_knowledge_base: {
+        Row: {
+          ativo: boolean
+          criado_em: string | null
+          fonte: string
+          id: string
+          pergunta: string
+          pergunta_normalizada: string
+          resposta: string
+          tags: string[] | null
+          tipo: string
+          ultima_atualizacao: string | null
+          usado_por: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          criado_em?: string | null
+          fonte?: string
+          id?: string
+          pergunta: string
+          pergunta_normalizada: string
+          resposta: string
+          tags?: string[] | null
+          tipo?: string
+          ultima_atualizacao?: string | null
+          usado_por?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          criado_em?: string | null
+          fonte?: string
+          id?: string
+          pergunta?: string
+          pergunta_normalizada?: string
+          resposta?: string
+          tags?: string[] | null
+          tipo?: string
+          ultima_atualizacao?: string | null
+          usado_por?: number | null
+        }
+        Relationships: []
+      }
+      guata_response_cache: {
+        Row: {
+          answer: string
+          cache_type: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_suggestion: boolean | null
+          question: string
+          question_hash: string
+          session_id: string | null
+          updated_at: string | null
+          used_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          answer: string
+          cache_type?: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_suggestion?: boolean | null
+          question: string
+          question_hash: string
+          session_id?: string | null
+          updated_at?: string | null
+          used_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          answer?: string
+          cache_type?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_suggestion?: boolean | null
+          question?: string
+          question_hash?: string
+          session_id?: string | null
+          updated_at?: string | null
+          used_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      guata_user_memory: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          memory_key: string
+          memory_type: string
+          memory_value: Json | null
+          session_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          memory_key: string
+          memory_type: string
+          memory_value?: Json | null
+          session_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          memory_key?: string
+          memory_type?: string
+          memory_value?: Json | null
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       institutional_content: {
         Row: {
           content_key: string
@@ -2111,6 +2234,184 @@ export type Database = {
         }
         Relationships: []
       }
+      offline_checkins: {
+        Row: {
+          accuracy: number | null
+          checkpoint_id: string
+          created_at: string | null
+          device_info: string | null
+          id: string
+          latitude: number
+          longitude: number
+          photo_metadata: Json | null
+          photo_url: string | null
+          route_id: string
+          synced: boolean | null
+          synced_at: string | null
+          user_id: string
+          validated: boolean | null
+          validation_error: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          checkpoint_id: string
+          created_at?: string | null
+          device_info?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          photo_metadata?: Json | null
+          photo_url?: string | null
+          route_id: string
+          synced?: boolean | null
+          synced_at?: string | null
+          user_id: string
+          validated?: boolean | null
+          validation_error?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          checkpoint_id?: string
+          created_at?: string | null
+          device_info?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          photo_metadata?: Json | null
+          photo_url?: string | null
+          route_id?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          user_id?: string
+          validated?: boolean | null
+          validation_error?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_checkins_checkpoint_id_fkey"
+            columns: ["checkpoint_id"]
+            isOneToOne: false
+            referencedRelation: "route_checkpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offline_checkins_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_configurations: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          map_config: Json | null
+          route_id: string
+          stamp_fragments: number
+          stamp_theme: string
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          map_config?: Json | null
+          route_id: string
+          stamp_fragments?: number
+          stamp_theme: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          map_config?: Json | null
+          route_id?: string
+          stamp_fragments?: number
+          stamp_theme?: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_configurations_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: true
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_rewards: {
+        Row: {
+          created_at: string | null
+          discount_percentage: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          partner_address: string | null
+          partner_email: string | null
+          partner_name: string
+          partner_phone: string | null
+          reward_code_prefix: string | null
+          reward_description: string | null
+          reward_type: string
+          route_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          partner_address?: string | null
+          partner_email?: string | null
+          partner_name: string
+          partner_phone?: string | null
+          reward_code_prefix?: string | null
+          reward_description?: string | null
+          reward_type: string
+          route_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          partner_address?: string | null
+          partner_email?: string | null
+          partner_name?: string
+          partner_phone?: string | null
+          reward_code_prefix?: string | null
+          reward_description?: string | null
+          reward_type?: string
+          route_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_rewards_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passport_stamps: {
         Row: {
           activity_type: string | null
@@ -2211,6 +2512,519 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      plano_diretor_acoes: {
+        Row: {
+          created_at: string | null
+          dependencias: string[] | null
+          descricao: string | null
+          estrategia_id: string
+          id: string
+          investimento: number | null
+          ordem: number | null
+          prazo: string | null
+          progresso: number | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dependencias?: string[] | null
+          descricao?: string | null
+          estrategia_id: string
+          id?: string
+          investimento?: number | null
+          ordem?: number | null
+          prazo?: string | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dependencias?: string[] | null
+          descricao?: string | null
+          estrategia_id?: string
+          id?: string
+          investimento?: number | null
+          ordem?: number | null
+          prazo?: string | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_acoes_estrategia_id_fkey"
+            columns: ["estrategia_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_estrategias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_colaboradores: {
+        Row: {
+          ativo: boolean | null
+          convidado_por: string
+          created_at: string | null
+          data_aceite: string | null
+          data_convite: string | null
+          email: string
+          id: string
+          nivel_acesso: string | null
+          nome: string | null
+          permissoes: Json | null
+          plano_diretor_id: string
+          tipo_ator: string | null
+          token_convite: string | null
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          convidado_por: string
+          created_at?: string | null
+          data_aceite?: string | null
+          data_convite?: string | null
+          email: string
+          id?: string
+          nivel_acesso?: string | null
+          nome?: string | null
+          permissoes?: Json | null
+          plano_diretor_id: string
+          tipo_ator?: string | null
+          token_convite?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          convidado_por?: string
+          created_at?: string | null
+          data_aceite?: string | null
+          data_convite?: string | null
+          email?: string
+          id?: string
+          nivel_acesso?: string | null
+          nome?: string | null
+          permissoes?: Json | null
+          plano_diretor_id?: string
+          tipo_ator?: string | null
+          token_convite?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_colaboradores_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_comentarios: {
+        Row: {
+          autor_id: string
+          comentario: string
+          created_at: string | null
+          data_resolucao: string | null
+          id: string
+          plano_diretor_id: string
+          resolvido: boolean | null
+          resolvido_por: string | null
+          secao: string
+          secao_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          autor_id: string
+          comentario: string
+          created_at?: string | null
+          data_resolucao?: string | null
+          id?: string
+          plano_diretor_id: string
+          resolvido?: boolean | null
+          resolvido_por?: string | null
+          secao: string
+          secao_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          autor_id?: string
+          comentario?: string
+          created_at?: string | null
+          data_resolucao?: string | null
+          id?: string
+          plano_diretor_id?: string
+          resolvido?: boolean | null
+          resolvido_por?: string | null
+          secao?: string
+          secao_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_comentarios_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_documentos_anexos: {
+        Row: {
+          arquivo_url: string
+          created_at: string | null
+          id: string
+          plano_diretor_id: string
+          status: string | null
+          tamanho_bytes: number | null
+          tipo: string | null
+          titulo: string
+          uploader_id: string
+          versao: string | null
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string | null
+          id?: string
+          plano_diretor_id: string
+          status?: string | null
+          tamanho_bytes?: number | null
+          tipo?: string | null
+          titulo: string
+          uploader_id: string
+          versao?: string | null
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string | null
+          id?: string
+          plano_diretor_id?: string
+          status?: string | null
+          tamanho_bytes?: number | null
+          tipo?: string | null
+          titulo?: string
+          uploader_id?: string
+          versao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_documentos_anexos_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_documents: {
+        Row: {
+          aprovado_por: string | null
+          created_at: string | null
+          criador_id: string
+          data_aprovacao: string | null
+          id: string
+          metadata: Json | null
+          municipio_nome: string
+          municipio_uf: string
+          periodo_fim: string
+          periodo_inicio: string
+          status: string | null
+          titulo: string
+          updated_at: string | null
+          versao: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          created_at?: string | null
+          criador_id: string
+          data_aprovacao?: string | null
+          id?: string
+          metadata?: Json | null
+          municipio_nome: string
+          municipio_uf: string
+          periodo_fim: string
+          periodo_inicio: string
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+          versao?: string
+        }
+        Update: {
+          aprovado_por?: string | null
+          created_at?: string | null
+          criador_id?: string
+          data_aprovacao?: string | null
+          id?: string
+          metadata?: Json | null
+          municipio_nome?: string
+          municipio_uf?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+          versao?: string
+        }
+        Relationships: []
+      }
+      plano_diretor_estrategias: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          investimento: number | null
+          objetivo_id: string
+          ordem: number | null
+          plano_diretor_id: string
+          prazo: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          roi_esperado: number | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          investimento?: number | null
+          objetivo_id: string
+          ordem?: number | null
+          plano_diretor_id: string
+          prazo?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          roi_esperado?: number | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          investimento?: number | null
+          objetivo_id?: string
+          ordem?: number | null
+          plano_diretor_id?: string
+          prazo?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          roi_esperado?: number | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_estrategias_objetivo_id_fkey"
+            columns: ["objetivo_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_objetivos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_diretor_estrategias_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_historico: {
+        Row: {
+          alteracoes: Json | null
+          autor_id: string
+          comentarios: string | null
+          created_at: string | null
+          id: string
+          plano_diretor_id: string
+          secao: string | null
+          secao_id: string | null
+          tipo_alteracao: string
+          versao: string
+        }
+        Insert: {
+          alteracoes?: Json | null
+          autor_id: string
+          comentarios?: string | null
+          created_at?: string | null
+          id?: string
+          plano_diretor_id: string
+          secao?: string | null
+          secao_id?: string | null
+          tipo_alteracao: string
+          versao: string
+        }
+        Update: {
+          alteracoes?: Json | null
+          autor_id?: string
+          comentarios?: string | null
+          created_at?: string | null
+          id?: string
+          plano_diretor_id?: string
+          secao?: string | null
+          secao_id?: string | null
+          tipo_alteracao?: string
+          versao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_historico_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_indicadores: {
+        Row: {
+          atualizacao_automatica: boolean | null
+          created_at: string | null
+          descricao: string | null
+          fonte: string | null
+          fonte_dados: string | null
+          frequencia: string | null
+          id: string
+          meta: number | null
+          nome: string
+          objetivo_id: string | null
+          plano_diretor_id: string
+          ultima_atualizacao: string | null
+          unidade: string | null
+          updated_at: string | null
+          valor_atual: number | null
+        }
+        Insert: {
+          atualizacao_automatica?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          fonte?: string | null
+          fonte_dados?: string | null
+          frequencia?: string | null
+          id?: string
+          meta?: number | null
+          nome: string
+          objetivo_id?: string | null
+          plano_diretor_id: string
+          ultima_atualizacao?: string | null
+          unidade?: string | null
+          updated_at?: string | null
+          valor_atual?: number | null
+        }
+        Update: {
+          atualizacao_automatica?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          fonte?: string | null
+          fonte_dados?: string | null
+          frequencia?: string | null
+          id?: string
+          meta?: number | null
+          nome?: string
+          objetivo_id?: string | null
+          plano_diretor_id?: string
+          ultima_atualizacao?: string | null
+          unidade?: string | null
+          updated_at?: string | null
+          valor_atual?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_indicadores_objetivo_id_fkey"
+            columns: ["objetivo_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_objetivos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_diretor_indicadores_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_diretor_objetivos: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          meta: number | null
+          ordem: number | null
+          plano_diretor_id: string
+          prazo: string | null
+          progresso: number | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: string | null
+          titulo: string
+          unidade: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          meta?: number | null
+          ordem?: number | null
+          plano_diretor_id: string
+          prazo?: string | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          titulo: string
+          unidade?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          meta?: number | null
+          ordem?: number | null
+          plano_diretor_id?: string
+          prazo?: string | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          titulo?: string
+          unidade?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_diretor_objetivos_plano_diretor_id_fkey"
+            columns: ["plano_diretor_id"]
+            isOneToOne: false
+            referencedRelation: "plano_diretor_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_performance_metrics: {
         Row: {
@@ -2348,37 +3162,46 @@ export type Database = {
           created_at: string | null
           description: string | null
           destination_id: string | null
+          geofence_radius: number | null
           id: string
           is_mandatory: boolean | null
           latitude: number | null
           longitude: number | null
           name: string
           order_sequence: number
+          requires_photo: boolean | null
           route_id: string
+          stamp_fragment_number: number | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           destination_id?: string | null
+          geofence_radius?: number | null
           id?: string
           is_mandatory?: boolean | null
           latitude?: number | null
           longitude?: number | null
           name: string
           order_sequence: number
+          requires_photo?: boolean | null
           route_id: string
+          stamp_fragment_number?: number | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
           destination_id?: string | null
+          geofence_radius?: number | null
           id?: string
           is_mandatory?: boolean | null
           latitude?: number | null
           longitude?: number | null
           name?: string
           order_sequence?: number
+          requires_photo?: boolean | null
           route_id?: string
+          stamp_fragment_number?: number | null
         }
         Relationships: [
           {
@@ -2410,6 +3233,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           name: string
+          passport_number_prefix: string | null
           region: string | null
           state_id: string | null
           updated_at: string | null
@@ -2428,6 +3252,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name: string
+          passport_number_prefix?: string | null
           region?: string | null
           state_id?: string | null
           updated_at?: string | null
@@ -2446,6 +3271,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name?: string
+          passport_number_prefix?: string | null
           region?: string | null
           state_id?: string | null
           updated_at?: string | null
@@ -2856,6 +3682,30 @@ export type Database = {
           },
         ]
       }
+      user_passports: {
+        Row: {
+          created_at: string | null
+          id: string
+          passport_number: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          passport_number: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          passport_number?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           accessibility_preference: string | null
@@ -2951,6 +3801,54 @@ export type Database = {
           wants_to_collaborate?: boolean | null
         }
         Relationships: []
+      }
+      user_rewards: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_used: boolean | null
+          reward_id: string
+          route_id: string
+          used_at: string | null
+          user_id: string
+          voucher_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          reward_id: string
+          route_id: string
+          used_at?: string | null
+          user_id: string
+          voucher_code: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          reward_id?: string
+          route_id?: string
+          used_at?: string | null
+          user_id?: string
+          voucher_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rewards_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "passport_rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_rewards_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -3058,15 +3956,46 @@ export type Database = {
         Returns: boolean
       }
       auto_expire_events: { Args: never; Returns: undefined }
+      calculate_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      calculate_objetivo_progress: {
+        Args: { objetivo_uuid: string }
+        Returns: number
+      }
       calculate_user_level: { Args: { points: number }; Returns: Json }
       can_access_document: {
         Args: { p_document_id: string; p_user_id?: string }
+        Returns: boolean
+      }
+      check_checkin_rate_limit: {
+        Args: {
+          p_max_checkins?: number
+          p_user_id: string
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_colaborador_permission: {
+        Args: { colaborador_uuid: string; required_permission: string }
+        Returns: boolean
+      }
+      check_geofence: {
+        Args: {
+          checkpoint_lat: number
+          checkpoint_lon: number
+          radius_meters?: number
+          user_lat: number
+          user_lon: number
+        }
         Returns: boolean
       }
       check_partner_registration_rate_limit: {
         Args: { user_id_input: string }
         Returns: boolean
       }
+      clean_expired_guata_cache: { Args: never; Returns: number }
       cleanup_old_ai_logs: { Args: never; Returns: undefined }
       create_attendant_user: {
         Args: {
@@ -3109,6 +4038,7 @@ export type Database = {
       elevate_to_admin: { Args: { user_email: string }; Returns: undefined }
       ensure_admin_exists: { Args: never; Returns: boolean }
       fix_incomplete_profiles: { Args: never; Returns: undefined }
+      generate_passport_number: { Args: { prefix?: string }; Returns: string }
       get_ai_consultant_stats: {
         Args: {
           p_city_id?: string
@@ -3171,6 +4101,10 @@ export type Database = {
           user_type: string
         }[]
       }
+      has_plano_diretor_access: {
+        Args: { plano_id: string; required_permission: string; user_id: string }
+        Returns: boolean
+      }
       has_state_role: {
         Args: {
           check_state_id: string
@@ -3179,8 +4113,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_guata_cache_usage: {
+        Args: { cache_id: string }
+        Returns: undefined
+      }
+      increment_guata_kb_usage: { Args: { kb_id: string }; Returns: undefined }
       is_admin_user: { Args: { check_user_id: string }; Returns: boolean }
       is_manager: { Args: { check_user_id: string }; Returns: boolean }
+      is_plano_diretor_colaborador: {
+        Args: { plano_id: string; required_permission: string; user_id: string }
+        Returns: boolean
+      }
+      is_plano_diretor_creator: {
+        Args: { plano_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_valid_uuid: { Args: { uuid_text: string }; Returns: boolean }
       log_document_access: {
         Args: {
           p_access_type: string
@@ -3238,6 +4186,13 @@ export type Database = {
           target_user_id: string
         }
         Returns: boolean
+      }
+      unlock_rewards: {
+        Args: { p_route_id: string; p_user_id: string }
+        Returns: {
+          reward_id: string
+          voucher_code: string
+        }[]
       }
       update_user_points: {
         Args: { p_points: number; p_state_id: string; p_user_id: string }
