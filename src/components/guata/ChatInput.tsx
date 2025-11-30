@@ -71,6 +71,7 @@ const ChatInput = ({
             onClick={(e) => {
               e.preventDefault();
               enviarMensagem();
+              setInputMensagem(""); // Limpar o campo após enviar
             }}
             className={cn(
               "bg-ms-guavira-purple text-white p-2 rounded-full",
