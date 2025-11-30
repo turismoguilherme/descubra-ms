@@ -4,12 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePassport } from '@/hooks/usePassport';
-import { Play, MapPin, Clock, TrendingUp } from 'lucide-react';
-import StampProgress from './StampProgress';
-import PassportMap from './PassportMap';
-import RewardsPanel from './RewardsPanel';
+import { TrendingUp } from 'lucide-react';
+import PassportRouteView from './PassportRouteView';
 import OfflineIndicator from './OfflineIndicator';
-import PassportDestinationSearch from './PassportDestinationSearch';
 
 interface PassportDocumentProps {
   routeId?: string;
@@ -106,84 +103,7 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
         </CardHeader>
         <CardContent className="pt-6">
           {activeRoute ? (
-            <>
-              {/* Roteiro Ativo */}
-              <div className="space-y-4 mb-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">{activeRoute.name}</h3>
-                    {activeRoute.description && (
-                      <p className="text-muted-foreground mb-4">{activeRoute.description}</p>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      {activeRoute.difficulty && (
-                        <Badge variant="outline">
-                          Dificuldade: {activeRoute.difficulty === 'easy' ? 'Fácil' : activeRoute.difficulty === 'medium' ? 'Média' : 'Difícil'}
-                        </Badge>
-                      )}
-                      {activeRoute.estimated_duration && (
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {activeRoute.estimated_duration}
-                        </Badge>
-                      )}
-                      {activeRoute.distance_km && (
-                        <Badge variant="outline">
-                          {activeRoute.distance_km} km
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  {activeRoute.video_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(activeRoute.video_url!, '_blank')}
-                      className="flex items-center gap-2"
-                    >
-                      <Play className="h-4 w-4" />
-                      Ver Vídeo
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Progresso do Carimbo */}
-              {progress && (
-                <div className="mb-6">
-                  <StampProgress progress={progress} />
-                </div>
-              )}
-
-              {/* Mapa Interativo */}
-              {activeRoute.checkpoints && activeRoute.checkpoints.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Mapa do Roteiro
-                  </h4>
-                  <PassportMap
-                    route={activeRoute}
-                    checkpoints={activeRoute.checkpoints}
-                    progress={progress}
-                  />
-                </div>
-              )}
-
-              {/* Recompensas */}
-              {activeRoute.rewards && activeRoute.rewards.length > 0 && (
-                <div className="mb-6">
-                  <RewardsPanel routeId={activeRoute.id} />
-                </div>
-              )}
-
-              {/* Pesquisa Web - Informações sobre Destinos */}
-              {activeRoute.name && (
-                <div className="mb-6">
-                  <PassportDestinationSearch destinationName={activeRoute.name} />
-                </div>
-              )}
-            </>
+            <PassportRouteView route={activeRoute} progress={progress || undefined} />
           ) : routeId ? (
             <div className="text-center py-8">
               <div className="text-yellow-600 mb-2 text-4xl">⚠️</div>
