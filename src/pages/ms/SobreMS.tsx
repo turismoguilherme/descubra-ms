@@ -21,13 +21,13 @@ const SobreMS = () => {
             </div>
             <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
               Sobre o Descubra MS
-            </h1>
+              </h1>
             <p className="text-white/95 text-xl max-w-3xl mx-auto leading-relaxed">
               Sua plataforma completa para explorar as maravilhas do estado mais biodiverso do Brasil.
               Do Pantanal ao Cerrado, conectamos você às experiências mais autênticas.
-            </p>
+              </p>
+            </div>
           </div>
-        </div>
 
         {/* Missão e Visão */}
         <div className="ms-container py-12">
@@ -174,9 +174,9 @@ const SobreMS = () => {
                   </p>
                 </div>
               </div>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* CTA Final */}
         <div className="bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-16">

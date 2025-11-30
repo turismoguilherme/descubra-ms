@@ -1,268 +1,222 @@
 /**
  * Componente de Calendário de Eventos
- * 
- * FUNCIONALIDADE: Exibe eventos como um calendário do estado
- * SEGURANÇA: Interface limpa para usuários finais
+ * Cards em grid com eventos patrocinados em destaque
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   Calendar, 
   MapPin, 
-  Clock, 
-  ExternalLink,
-  ChevronLeft,
-  ChevronRight,
   Play,
   Globe,
-  Ticket,
   Phone,
-  Mail,
   Search,
-  Filter
+  Filter,
+  Star,
+  Megaphone,
+  ExternalLink,
+  Clock
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { EventoCompleto } from '@/types/events';
-import { eventService, TourismEvent } from '@/services/public/eventService';
 
 interface EventCalendarProps {
-  events?: EventoCompleto[];
-  loading?: boolean;
   autoLoad?: boolean;
 }
 
-const EventCalendar: React.FC<EventCalendarProps> = ({ 
-  events: propEvents, 
-  loading: propLoading = false, 
-  autoLoad = true 
-}) => {
-  const [events, setEvents] = useState<EventoCompleto[]>(propEvents || []);
-  const [loading, setLoading] = useState(propLoading);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
-  const [selectedEvent, setSelectedEvent] = useState<EventoCompleto | null>(null);
+interface EventItem {
+  id: string;
+  name: string;
+  description: string;
+  start_date: string;
+  end_date?: string;
+  start_time?: string;
+  end_time?: string;
+  location: string;
+  image_url?: string;
+  is_sponsored: boolean;
+  site_oficial?: string;
+  video_url?: string;
+  organizador_telefone?: string;
+  organizador_email?: string;
+  organizador_nome?: string;
+}
+
+const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
+  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [filteredEvents, setFilteredEvents] = useState<EventoCompleto[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
-  // Carregar eventos automaticamente
   useEffect(() => {
     if (autoLoad) {
-      loadEvents();
+      loadAllEvents();
     }
   }, [autoLoad]);
 
-  // Carregar eventos aprovados do Supabase
-  const loadEvents = async () => {
+  const loadAllEvents = async () => {
     setLoading(true);
     try {
-      console.log("📅 EVENT CALENDAR: Carregando eventos aprovados...");
-      
-      // Buscar apenas eventos aprovados (do ViaJAR e Descubra MS)
-      const dbEvents = await eventService.getEvents({
-        approval_status: 'approved',
-        is_public: true,
-      });
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('is_visible', true)
+        .order('is_sponsored', { ascending: false })
+        .order('start_date', { ascending: true });
 
-      // Converter para formato EventoCompleto
-      const convertedEvents: EventoCompleto[] = dbEvents.map((event: TourismEvent) => ({
+      if (error) {
+        console.error("Erro ao carregar eventos:", error);
+        return;
+      }
+
+      const events: EventItem[] = (data || []).map((event: any) => ({
         id: event.id,
-        titulo: event.title || event.name || 'Evento sem título',
-        descricao_resumida: event.description?.substring(0, 150) || 'Sem descrição',
-        descricao_completa: event.description || 'Sem descrição completa',
-        data_inicio: event.start_date || event.date || new Date().toISOString(),
-        data_fim: event.end_date,
-        local: event.location || 'Local não informado',
-        cidade: event.city || 'MS',
-        estado: event.state || 'MS',
-        endereco_completo: event.location || '',
-        categoria: (event.category || 'cultural') as any,
-        tipo_entrada: 'gratuito', // Default, pode ser melhorado
-        publico_alvo: 'geral',
-        status: (event.status === 'active' ? 'ativo' : event.status === 'completed' ? 'finalizado' : 'ativo') as any,
-        visibilidade: event.is_public !== false,
-        destaque: false,
-        organizador: 'Organizador não informado',
-        fonte: 'manual' as const,
-        processado_por_ia: false,
-        confiabilidade: 100,
-        ultima_atualizacao: event.updated_at || event.created_at || new Date().toISOString(),
-        tags: [],
-        palavras_chave: [],
-        relevancia: 80,
-        imagem_principal: event.images?.[0] || event.image_url,
-        galeria_imagens: event.images || [],
-        contato: {
-          telefone: event.contact_phone,
-          email: event.contact_email,
-          site: event.contact_website,
-        },
+        name: event.name,
+        description: event.description || '',
+        start_date: event.start_date,
+        end_date: event.end_date,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        location: event.location || '',
+        image_url: event.image_url,
+        is_sponsored: event.is_sponsored && event.sponsor_payment_status === 'paid',
+        site_oficial: event.site_oficial,
+        video_url: event.video_url,
+        organizador_telefone: event.organizador_telefone,
+        organizador_email: event.organizador_email,
+        organizador_nome: event.organizador_nome,
       }));
 
-      setEvents(convertedEvents);
-      setFilteredEvents(convertedEvents);
-      console.log(`📅 EVENT CALENDAR: ${convertedEvents.length} eventos aprovados carregados`);
-      
+      setAllEvents(events);
     } catch (error) {
-      console.error("📅 EVENT CALENDAR: Erro ao carregar eventos:", error);
-      setEvents([]);
-      setFilteredEvents([]);
+      console.error("Erro:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtrar eventos
-  useEffect(() => {
-    let filtered = events;
+  const filteredEvents = allEvents.filter(event => {
+    const matchesSearch = !searchTerm || 
+      event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
 
-    // Filtro de busca
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(event =>
-        event.titulo.toLowerCase().includes(searchLower) ||
-        event.descricao_resumida.toLowerCase().includes(searchLower) ||
-        event.local.toLowerCase().includes(searchLower) ||
-        event.cidade.toLowerCase().includes(searchLower)
-      );
-    }
+  const sponsoredEvents = filteredEvents.filter(e => e.is_sponsored);
+  const regularEvents = filteredEvents.filter(e => !e.is_sponsored);
 
-    // Filtro de categoria
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(event => event.categoria === selectedCategory);
-    }
-
-    setFilteredEvents(filtered);
-  }, [events, searchTerm, selectedCategory]);
-
-  // Agrupar eventos por data
-  const eventsByDate = events.reduce((acc, event) => {
-    const date = new Date(event.data_inicio).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(event);
-    return acc;
-  }, {} as Record<string, EventoCompleto[]>);
-
-  // Obter eventos do mês atual
-  const getEventsForMonth = () => {
-    const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-    
-    return events.filter(event => {
-      const eventDate = new Date(event.data_inicio);
-      return eventDate >= startOfMonth && eventDate <= endOfMonth;
-    });
-  };
-
-  const formatEventDate = (startDate: string, endDate?: string) => {
-    const start = new Date(startDate);
-    if (endDate) {
-      const end = new Date(endDate);
-      if (start.getFullYear() !== end.getFullYear()) {
-        return `${format(start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(end, 'dd/MM/yyyy', { locale: ptBR })}`;
-      }
-      return `${format(start, 'dd/MM', { locale: ptBR })} a ${format(end, 'dd/MM', { locale: ptBR })}`;
-    }
-    return format(start, 'dd/MM/yyyy', { locale: ptBR });
-  };
-
-  const getEventStatus = (event: EventoCompleto) => {
-    const now = new Date();
-    const startDate = new Date(event.data_inicio);
-    const endDate = event.data_fim ? new Date(event.data_fim) : startDate;
-    
-    if (now < startDate) {
-      return { label: 'Em Breve', variant: 'default' as const, color: 'bg-blue-500' };
-    } else if (now >= startDate && now <= endDate) {
-      return { label: 'Acontecendo', variant: 'default' as const, color: 'bg-green-500' };
-    } else {
-      return { label: 'Finalizado', variant: 'secondary' as const, color: 'bg-gray-500' };
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    } catch {
+      return dateStr;
     }
   };
 
-  const getCategoryColor = (categoria: string) => {
-    const colors = {
-      'cultural': 'bg-purple-500',
-      'esportivo': 'bg-green-500',
-      'gastronomico': 'bg-orange-500',
-      'turismo': 'bg-blue-500',
-      'oficial': 'bg-red-500',
-      'educativo': 'bg-indigo-500',
-      'religioso': 'bg-yellow-500'
-    };
-    return colors[categoria as keyof typeof colors] || 'bg-gray-500';
+  const formatShortDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
+    } catch {
+      return dateStr;
+    }
   };
 
-  const getCategoryLabel = (categoria: string) => {
-    const labels = {
-      'cultural': 'Cultural',
-      'esportivo': 'Esportivo',
-      'gastronomico': 'Gastronômico',
-      'turismo': 'Turismo',
-      'oficial': 'Oficial',
-      'educativo': 'Educativo',
-      'religioso': 'Religioso'
-    };
-    return labels[categoria as keyof typeof labels] || 'Geral';
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (!url) return null;
+    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null;
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-ms-primary-blue"></div>
-      </div>
-    );
-  }
 
   const categories = [
     { value: 'all', label: 'Todas' },
     { value: 'cultural', label: 'Cultural' },
-    { value: 'gastronomic', label: 'Gastronômico' },
-    { value: 'sports', label: 'Esportivo' },
-    { value: 'religious', label: 'Religioso' },
-    { value: 'entertainment', label: 'Entretenimento' },
-    { value: 'business', label: 'Negócios' },
+    { value: 'gastronomico', label: 'Gastronômico' },
+    { value: 'musical', label: 'Musical' },
+    { value: 'esportivo', label: 'Esportivo' },
   ];
 
-  return (
-    <div className="space-y-6">
-      {/* Header com controles */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-ms-primary-blue">Calendário de Eventos</h2>
-          <p className="text-gray-600">Eventos aprovados de Mato Grosso do Sul</p>
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-ms-primary-blue border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  const EventCard = ({ event, showBadge = false }: { event: EventItem; showBadge?: boolean }) => (
+    <Card 
+      className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group ${
+        showBadge ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
+      }`}
+      onClick={() => setSelectedEvent(event)}
+    >
+      {/* Badge Destaque */}
+      {showBadge && (
+        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-2 flex items-center gap-2">
+          <Star className="w-4 h-4 text-white" />
+          <span className="text-white text-sm font-semibold">Em Destaque</span>
+        </div>
+      )}
+      
+      {/* Imagem */}
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal">
+        {event.image_url ? (
+          <img 
+            src={event.image_url} 
+            alt={event.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Calendar className="w-16 h-16 text-white/50" />
+          </div>
+        )}
+        {/* Indicador de vídeo */}
+        {event.video_url && (
+          <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+            <Play className="w-3 h-3" />
+            Vídeo
+          </div>
+        )}
         </div>
         
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setViewMode('list')}
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-          >
-            Lista
-          </Button>
-          <Button
-            onClick={() => setViewMode('calendar')}
-            variant={viewMode === 'calendar' ? 'default' : 'outline'}
-            size="sm"
-          >
-            Calendário
-          </Button>
-        </div>
+      <CardContent className="p-5">
+        {/* Título */}
+        <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-ms-primary-blue transition-colors line-clamp-2">
+          {event.name}
+        </h3>
+        
+        {/* Data */}
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <Calendar className="w-4 h-4 text-ms-primary-blue flex-shrink-0" />
+          <span>{formatShortDate(event.start_date)}</span>
       </div>
 
-      {/* Filtros */}
+        {/* Local */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <MapPin className="w-4 h-4 text-ms-primary-blue flex-shrink-0" />
+          <span className="line-clamp-1">{event.location}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Filtros - PRIMEIRO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Buscar eventos..."
             value={searchTerm}
@@ -285,337 +239,168 @@ const EventCalendar: React.FC<EventCalendarProps> = ({
         </Select>
       </div>
 
-      {/* Lista de Eventos */}
-      {viewMode === 'list' && (
-        <div className="space-y-4">
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => {
-              const status = getEventStatus(event);
-              return (
-                <Card key={event.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-4">
-                      {/* Imagem do evento */}
-                      {event.imagem_principal && (
-                        <div className="md:w-1/3 h-48 md:h-auto overflow-hidden rounded-lg">
-                          <img 
-                            src={event.imagem_principal} 
-                            alt={event.titulo}
-                            className="w-full h-full object-cover"
-                          />
+      {/* CTA Promover Evento */}
+      <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="bg-white/20 p-3 rounded-full">
+            <Megaphone className="w-6 h-6 text-white" />
                         </div>
-                      )}
-                      
-                      {/* Conteúdo do evento */}
-                      <div className="w-full">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between mb-3">
-                          <div>
-                            <h3 className="text-xl font-semibold text-ms-pantanal-green mb-2">
-                              {event.titulo}
-                            </h3>
-                            <div className="flex flex-wrap gap-2 text-sm text-gray-600 mb-2">
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1" />
-                                {formatEventDate(event.data_inicio, event.data_fim)}
-                              </div>
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {event.local}, {event.cidade}
+          <div className="text-white">
+            <h3 className="font-bold text-lg">Quer destacar seu evento?</h3>
+            <p className="text-white/80 text-sm">Promova para milhares de turistas</p>
                               </div>
                             </div>
+        <Link to="/descubramatogrossodosul/promover-evento">
+          <Button className="bg-white text-ms-primary-blue hover:bg-white/90 font-semibold">
+            <Star className="w-4 h-4 mr-2" />
+            Promover Evento
+          </Button>
+        </Link>
                           </div>
                           
-                          <div className="flex flex-col items-end gap-2">
-                            <div className="flex gap-2">
-                              <Badge 
-                                variant={status.variant}
-                                className={`${status.color} text-white`}
-                              >
-                                {status.label}
-                              </Badge>
-                              <Badge 
-                                variant="outline"
-                                className={`${getCategoryColor(event.categoria)} text-white`}
-                              >
-                                {getCategoryLabel(event.categoria)}
-                              </Badge>
+      {/* Eventos em Destaque */}
+      {sponsoredEvents.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-500" />
+            <h3 className="text-xl font-bold text-ms-primary-blue">Eventos em Destaque</h3>
                             </div>
-                            {event.fonte && (
-                              <span className="text-xs text-gray-500">
-                                Fonte: {event.fonte}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-gray-700 mb-4 line-clamp-3">
-                          {event.descricao_resumida}
-                        </p>
-                        
-                        {/* Tags */}
-                        {event.tags && event.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-4">
-                            {event.tags.slice(0, 5).map((tag, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sponsoredEvents.map((event) => (
+              <EventCard key={event.id} event={event} showBadge={true} />
                             ))}
                           </div>
-                        )}
-                        
-                        <div className="flex flex-wrap gap-2">
-                          <Button 
-                            onClick={() => setSelectedEvent(event)}
-                            variant="outline" 
-                            size="sm"
-                          >
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Ver Detalhes
-                          </Button>
-                          
-                          {event.video_promocional && (
-                            <Button 
-                              onClick={() => window.open(event.video_promocional, '_blank')}
-                              variant="outline" 
-                              size="sm"
-                            >
-                              <Play className="h-4 w-4 mr-2" />
-                              Vídeo
-                            </Button>
-                          )}
-                          
-                          {event.site_oficial && (
-                            <Button 
-                              onClick={() => window.open(event.site_oficial, '_blank')}
-                              variant="outline" 
-                              size="sm"
-                            >
-                              <Globe className="h-4 w-4 mr-2" />
-                              Site Oficial
-                            </Button>
-                          )}
-                          
-                          {event.link_inscricao && (
-                            <Button 
-                              onClick={() => window.open(event.link_inscricao, '_blank')}
-                              variant="default" 
-                              size="sm"
-                              className="bg-ms-pantanal-green hover:bg-ms-pantanal-green/90"
-                            >
-                              <Ticket className="h-4 w-4 mr-2" />
-                              Inscrições
-                            </Button>
+        </div>
+      )}
+
+      {/* Todos os Eventos */}
+      <div className="space-y-4">
+        {regularEvents.length === 0 && sponsoredEvents.length === 0 ? (
+          <Card className="p-12 text-center">
+            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">Nenhum evento encontrado</h3>
+            <p className="text-gray-500">Não há eventos programados para este período.</p>
+        </Card>
+        ) : regularEvents.length > 0 && (
+          <>
+            <h3 className="text-xl font-bold text-gray-800">Todos os Eventos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {regularEvents.map((event) => (
+                <EventCard key={event.id} event={event} showBadge={false} />
+                            ))}
+                          </div>
+          </>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          ) : (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  Nenhum evento encontrado
-                </h3>
-                <p className="text-gray-500">
-                  Não há eventos programados para este período.
-                </p>
-                <Button 
-                  onClick={loadEvents}
-                  variant="outline" 
-                  className="mt-4"
-                >
-                  Recarregar Eventos
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
 
-      {/* Vista de Calendário (implementação futura) */}
-      {viewMode === 'calendar' && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              Vista de Calendário
-            </h3>
-            <p className="text-gray-500">
-              Esta funcionalidade será implementada em breve.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Modal de Detalhes do Evento */}
+      {/* Modal de Detalhes - MODERNO */}
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-2xl [&>button]:hidden">
       {selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-2xl font-bold text-ms-pantanal-green">
-                  {selectedEvent.titulo}
-                </CardTitle>
-                <Button 
-                  onClick={() => setSelectedEvent(null)}
-                  variant="ghost"
-                  size="sm"
-                >
-                  ✕
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Imagem principal */}
-              {selectedEvent.imagem_principal && (
-                <div className="aspect-video overflow-hidden rounded-lg">
+            <div className="relative max-h-[90vh] overflow-y-auto">
+              {/* Header com imagem/vídeo */}
+              <div className="relative h-64 bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal flex-shrink-0">
+                {selectedEvent.video_url && getYouTubeEmbedUrl(selectedEvent.video_url) ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(selectedEvent.video_url)!}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="Vídeo do evento"
+                  />
+                ) : selectedEvent.image_url ? (
                   <img 
-                    src={selectedEvent.imagem_principal} 
-                    alt={selectedEvent.titulo}
+                    src={selectedEvent.image_url} 
+                    alt={selectedEvent.name}
                     className="w-full h-full object-cover"
                   />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Calendar className="w-24 h-24 text-white/30" />
                 </div>
               )}
 
-              {/* Informações básicas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-gray-600" />
-                  <div>
-                    <p className="font-medium">Data e Horário</p>
-                    <p className="text-sm text-gray-600">
-                      {formatEventDate(selectedEvent.data_inicio, selectedEvent.data_fim)}
-                    </p>
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {/* Badge destaque no modal */}
+                {selectedEvent.is_sponsored && (
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-3 py-1">
+                      <Star className="w-3 h-3 mr-1" />
+                      Em Destaque
+                    </Badge>
                   </div>
+                )}
                 </div>
                 
-                <div className="flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-gray-600" />
-                  <div>
-                    <p className="font-medium">Local</p>
-                    <p className="text-sm text-gray-600">
-                      {selectedEvent.local}, {selectedEvent.cidade}
-                    </p>
+              {/* Conteúdo */}
+              <div className="p-6 space-y-5">
+                {/* Título */}
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedEvent.name}
+                </h2>
+                
+                {/* Data, Hora e Local */}
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 bg-blue-50 text-ms-primary-blue px-4 py-2 rounded-full">
+                    <Calendar className="w-4 h-4" />
+                    <span className="font-medium text-sm">{formatDate(selectedEvent.start_date)}</span>
                   </div>
+                  {selectedEvent.start_time && (
+                    <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full">
+                      <Clock className="w-4 h-4" />
+                      <span className="font-medium text-sm">
+                        {selectedEvent.start_time}
+                        {selectedEvent.end_time && ` - ${selectedEvent.end_time}`}
+                      </span>
                 </div>
+                  )}
               </div>
 
-              {/* Categorias e status */}
-              <div className="flex flex-wrap gap-2">
-                <Badge 
-                  variant="outline"
-                  className={`${getCategoryColor(selectedEvent.categoria)} text-white`}
-                >
-                  {getCategoryLabel(selectedEvent.categoria)}
-                </Badge>
-                <Badge variant="outline">
-                  {selectedEvent.tipo_entrada === 'gratuito' ? 'Gratuito' : 'Pago'}
-                </Badge>
-                <Badge variant="outline">
-                  {selectedEvent.publico_alvo}
-                </Badge>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <MapPin className="w-5 h-5 text-ms-primary-blue" />
+                  <span className="font-medium">{selectedEvent.location}</span>
               </div>
 
-              {/* Descrição completa */}
-              <div>
-                <h4 className="font-semibold mb-2">Sobre o Evento</h4>
-                <p className="text-gray-700 leading-relaxed">
-                  {selectedEvent.descricao_completa}
-                </p>
-              </div>
-
-              {/* Tags */}
-              {selectedEvent.tags && selectedEvent.tags.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-2">Tags</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedEvent.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                {/* Descrição */}
+                {selectedEvent.description && (
+                  <div className="border-t pt-5">
+                    <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
                 </div>
               )}
 
-              {/* Vídeo promocional */}
-              {selectedEvent.video_promocional && (
-                <div>
-                  <h4 className="font-semibold mb-2">Vídeo Promocional</h4>
-                  <Button 
-                    onClick={() => window.open(selectedEvent.video_promocional, '_blank')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Assistir Vídeo
-                  </Button>
+                {/* Contato */}
+                {selectedEvent.organizador_nome && (
+                  <div className="text-sm text-gray-500">
+                    Organizado por: <span className="font-medium text-gray-700">{selectedEvent.organizador_nome}</span>
                 </div>
               )}
 
-              {/* Links e contato */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Botões de Ação */}
+                <div className="flex flex-wrap gap-3 pt-2">
                 {selectedEvent.site_oficial && (
-                  <Button 
-                    onClick={() => window.open(selectedEvent.site_oficial, '_blank')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Globe className="h-4 w-4 mr-2" />
-                    Site Oficial
+                    <Button asChild size="lg" className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full">
+                      <a href={selectedEvent.site_oficial} target="_blank" rel="noopener noreferrer">
+                        <Globe className="w-4 h-4 mr-2" />
+                        Visitar Site Oficial
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </a>
                   </Button>
                 )}
-                
-                {selectedEvent.link_inscricao && (
-                  <Button 
-                    onClick={() => window.open(selectedEvent.link_inscricao, '_blank')}
-                    variant="default"
-                    className="w-full bg-ms-pantanal-green hover:bg-ms-pantanal-green/90"
-                  >
-                    <Ticket className="h-4 w-4 mr-2" />
-                    Fazer Inscrição
-                  </Button>
-                )}
-                
-                {selectedEvent.contato?.telefone && (
-                  <Button 
-                    onClick={() => window.open(`tel:${selectedEvent.contato?.telefone}`, '_blank')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    {selectedEvent.contato?.telefone}
-                  </Button>
-                )}
-                
-                {selectedEvent.contato?.email && (
-                  <Button 
-                    onClick={() => window.open(`mailto:${selectedEvent.contato?.email}`, '_blank')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    {selectedEvent.contato?.email}
+                  {selectedEvent.organizador_telefone && (
+                    <Button variant="outline" size="lg" asChild className="rounded-full border-2">
+                      <a href={`https://wa.me/55${selectedEvent.organizador_telefone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                        <Phone className="w-4 h-4 mr-2" />
+                        WhatsApp
+                      </a>
                   </Button>
                 )}
               </div>
-
-              {/* Informações da fonte */}
-              <div className="text-xs text-gray-500 border-t pt-4">
-                <p>Fonte: {selectedEvent.fonte}</p>
-                {selectedEvent.processado_por_ia && (
-                  <p>Processado por IA (Confiança: {selectedEvent.confiabilidade}%)</p>
-                )}
-                <p>Última atualização: {new Date(selectedEvent.ultima_atualizacao).toLocaleString()}</p>
               </div>
-            </CardContent>
-          </Card>
         </div>
       )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

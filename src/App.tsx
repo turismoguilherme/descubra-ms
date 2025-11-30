@@ -75,6 +75,7 @@ import Register from "@/pages/Register";
 import AuthPage from "@/pages/AuthPage";
 import SobreMS from "@/pages/ms/SobreMS";
 import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
+import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
@@ -216,6 +217,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/destinos" element={<Destinos />} />
                             <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
                             <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />
+                            <Route path="/descubramatogrossodosul/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/sobre" element={<SobreMS />} />

@@ -56,18 +56,18 @@ export const usePartners = (status?: string) => {
       console.log("📦 usePartners: Data:", data);
       
       const mapped = (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        logo_url: item.logo_url,
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    logo_url: item.logo_url,
         website_url: item.website_url,
-        contact_email: item.contact_email,
+    contact_email: item.contact_email,
         contact_phone: item.contact_phone,
         is_active: item.is_active,
         partner_type: item.partner_type,
-        status: item.status || 'pending',
-        created_at: item.created_at,
-        updated_at: item.updated_at,
+    status: item.status || 'pending',
+    created_at: item.created_at,
+    updated_at: item.updated_at,
         gallery_images: item.gallery_images || [],
         youtube_url: item.youtube_url,
         discount_offer: item.discount_offer,
@@ -91,10 +91,10 @@ export const usePartners = (status?: string) => {
     fetchPartners();
   }, [status]);
 
-  return {
-    partners,
-    isLoading,
-    error,
+    return {
+        partners,
+        isLoading,
+        error,
     refetch: fetchPartners,
-  };
+    };
 };
