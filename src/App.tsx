@@ -218,6 +218,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
                             <Route path="/descubramatogrossodosul/sobre" element={<SobreMS />} />
                             <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
+                            <Route path="/descubramatogrossodosul/chatguata" element={<ChatGuata />} />
                             <Route path="/descubramatogrossodosul/guata-test" element={<GuataTest />} />
                             <Route path="/descubramatogrossodosul/passaporte" element={<PassaporteLista />} />
                             <Route path="/descubramatogrossodosul/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
