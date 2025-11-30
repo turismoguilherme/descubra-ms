@@ -176,8 +176,8 @@ serve(async (req) => {
       html: template.html(data),
     };
 
-    // Verificar se Resend está configurado
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    // Verificar se Resend está configurado (aceita ambos os nomes)
+    const resendApiKey = Deno.env.get('RESEND_API_KEY') || Deno.env.get('RESEND_KEY');
 
     if (resendApiKey) {
       // Enviar via Resend
