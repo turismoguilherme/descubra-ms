@@ -1,94 +1,158 @@
-
 import React, { useState } from "react";
 import UniversalLayout from "@/components/layout/UniversalLayout";
-import { usePartners } from "@/hooks/usePartners";
+import { usePartners, Partner } from "@/hooks/usePartners";
 import { PartnerCard } from "@/components/partners/PartnerCard";
+import { PartnerDetailModal } from "@/components/partners/PartnerDetailModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { Users } from "lucide-react";
+import { Users, Search } from "lucide-react";
 
 const Partners = () => {
-    console.log("🤝 PARTNERS: Componente Partners sendo renderizado - CACHE FORCE RELOAD");
-    
-    const { partners, isLoading, error } = usePartners('approved');
+    const { partners, isLoading } = usePartners('approved');
     const [search, setSearch] = useState('');
-    const [category, setCategory] = useState<'all' | 'local' | 'regional' | 'estadual'>('all');
-    
-    console.log("🤝 PARTNERS: Estado - isLoading:", isLoading, "partners.length:", partners.length, "error:", error);
+    const [partnerType, setPartnerType] = useState<string>('all');
+    const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
+
+    const partnerTypes = [
+        { value: 'all', label: 'Todos os tipos' },
+        { value: 'hotel', label: 'Hotel' },
+        { value: 'pousada', label: 'Pousada' },
+        { value: 'resort', label: 'Resort' },
+        { value: 'restaurante', label: 'Restaurante' },
+        { value: 'atrativo_turistico', label: 'Atrativo Turístico' },
+        { value: 'agencia_turismo', label: 'Agência de Turismo' },
+        { value: 'transporte', label: 'Transporte' },
+    ];
 
     const filtered = partners.filter(p => {
         const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-                            (p.city || '').toLowerCase().includes(search.toLowerCase()) ||
-                            (p.segment || '').toLowerCase().includes(search.toLowerCase());
-        const matchCat = category === 'all' || p.category === category;
-        return matchSearch && matchCat;
+                            (p.description || '').toLowerCase().includes(search.toLowerCase()) ||
+                            (p.address || '').toLowerCase().includes(search.toLowerCase());
+        const matchType = partnerType === 'all' || p.partner_type === partnerType;
+        return matchSearch && matchType;
     });
 
-    console.log("🔍 Partners Component: isLoading", isLoading, "partners.length", partners.length, "error", error);
+    const handleViewMore = (partner: Partner) => {
+        setSelectedPartner(partner);
+        setModalOpen(true);
+    };
 
     return (
         <UniversalLayout>
             <main className="flex-grow">
-                <div className="bg-gray-50">
-                    <div className="ms-container py-16 text-center">
-                        <h1 className="text-4xl font-bold text-ms-primary-blue">Nossos Parceiros</h1>
-                        <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-                            Conheça as empresas e organizações que apoiam o turismo em Mato Grosso do Sul e ajudam a fortalecer nosso destino.
+                {/* Hero */}
+                <div className="bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-16">
+                    <div className="ms-container text-center">
+                        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                            Nossos Parceiros
+                        </h1>
+                        <p className="text-white/90 text-lg max-w-2xl mx-auto">
+                            Conheça as empresas que fazem parte da rede Descubra MS
                         </p>
                     </div>
                 </div>
 
-                <div className="ms-container py-12">
-                    <div className="flex flex-col md:flex-row gap-4 mb-6">
-                        <Input placeholder="Buscar por nome, cidade ou segmento..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                        <Select value={category} onValueChange={(v) => setCategory(v as any)}>
-                            <SelectTrigger className="w-full md:w-[220px]">
-                                <SelectValue placeholder="Categoria" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas as categorias</SelectItem>
-                                <SelectItem value="local">Local</SelectItem>
-                                <SelectItem value="regional">Regional</SelectItem>
-                                <SelectItem value="estadual">Estadual</SelectItem>
-                            </SelectContent>
-                        </Select>
+                {/* Filtros */}
+                <div className="bg-white border-b sticky top-0 z-10">
+                    <div className="ms-container py-4">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Input 
+                                    placeholder="Buscar parceiro..." 
+                                    value={search} 
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+                            <Select value={partnerType} onValueChange={setPartnerType}>
+                                <SelectTrigger className="w-full sm:w-[200px]">
+                                    <SelectValue placeholder="Tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {partnerTypes.map(t => (
+                                        <SelectItem key={t.value} value={t.value}>
+                                            {t.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    {isLoading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {Array.from({ length: 8 }).map((_, i) => (
-                                <Skeleton key={i} className="h-60 w-full" />
-                            ))}
-                        </div>
-                    ) : filtered.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filtered.map(partner => (
-                                <PartnerCard key={partner.id} partner={partner} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20 border-2 border-dashed rounded-lg bg-gray-50">
-                            <Users className="mx-auto h-12 w-12 text-gray-400" />
-                            <h2 className="mt-4 text-xl font-semibold text-gray-800">Nenhum parceiro encontrado.</h2>
-                            <p className="text-muted-foreground mt-2">Tente alterar os filtros ou a busca.</p>
-                        </div>
-                    )}
                 </div>
 
-                <div className="bg-ms-secondary-yellow/10">
+                {/* Lista */}
+                <div className="bg-gray-50 min-h-[400px]">
+                    <div className="ms-container py-10">
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {Array.from({ length: 8 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-72 rounded-2xl" />
+                                ))}
+                            </div>
+                        ) : filtered.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filtered.map(partner => (
+                                    <PartnerCard 
+                                        key={partner.id} 
+                                        partner={partner}
+                                        onViewMore={() => handleViewMore(partner)}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16">
+                                <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                                    Nenhum parceiro encontrado
+                                </h2>
+                                <Button 
+                                    variant="outline"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setPartnerType('all');
+                                    }}
+                                >
+                                    Limpar filtros
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* CTA */}
+                <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal">
                     <div className="ms-container py-16 text-center">
-                        <h2 className="text-3xl font-bold">Quer ser um parceiro?</h2>
-                        <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-                            Junte-se a nós e ajude a promover as maravilhas de Mato Grosso do Sul. Sua marca em destaque para milhares de turistas.
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            Quer fazer parte dessa rede?
+                        </h2>
+                        <p className="text-white/90 text-lg max-w-2xl mx-auto mb-8">
+                            Cadastre seu empreendimento e alcance milhares de turistas que visitam 
+                            Mato Grosso do Sul. Ofereça descontos exclusivos pelo Passaporte Digital!
                         </p>
-                        <Button asChild size="lg" className="mt-8 bg-ms-secondary-yellow text-black hover:bg-ms-secondary-yellow/90 font-bold shadow-lg">
-                            <Link to="/seja-um-parceiro">Quero ser um parceiro</Link>
+                        <Button 
+                            asChild 
+                            size="lg" 
+                            className="bg-ms-secondary-yellow text-black hover:bg-ms-secondary-yellow/90 font-bold shadow-lg px-8"
+                        >
+                            <Link to="/descubramatogrossodosul/seja-um-parceiro">
+                                Quero ser um parceiro
+                            </Link>
                         </Button>
                     </div>
                 </div>
             </main>
+
+            {/* Modal */}
+            <PartnerDetailModal 
+                partner={selectedPartner}
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+            />
         </UniversalLayout>
     );
 }

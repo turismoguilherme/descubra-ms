@@ -1,132 +1,100 @@
-
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 export interface Partner {
   id: string;
   name: string;
   description?: string;
   logo_url?: string;
-  segment?: string;
-  city?: string;
-  category: 'local' | 'regional' | 'estadual';
-  website_link?: string;
+  website_url?: string;
   contact_email?: string;
+  contact_phone?: string;
+  is_active?: boolean;
+  partner_type?: string;
   status: string;
   created_at?: string;
   updated_at?: string;
-  tier?: string;
-  contact_whatsapp?: string;
-  message?: string;
-  approved_at?: string;
-  website_url?: string;
-  cnpj?: string; // Novo campo
-  contact_person?: string; // Novo campo
-  partnership_interest?: 'destaque_plataforma' | 'patrocinio_evento' | 'conteudo_colaborativo' | 'outro'; // Novo campo
+  gallery_images?: string[];
+  youtube_url?: string;
+  discount_offer?: string;
+  address?: string;
 }
 
-export interface NewPartner {
-  name: string;
-  description?: string; // Pode vir da mensagem ou ser preenchido no backend
-  logo_url?: string;
-  segment: string;
-  city: string;
-  category: 'local' | 'regional' | 'estadual';
-  website_link?: string;
-  contact_email?: string;
-  contact_whatsapp?: string;
-  message?: string;
-  status: string;
-  cnpj?: string; // Novo campo
-  contact_person?: string; // Novo campo
-  partnership_interest: 'destaque_plataforma' | 'patrocinio_evento' | 'conteudo_colaborativo' | 'outro'; // Novo campo
-}
-
-// Refatorado: buscar parceiros por status
-const fetchPartnersByStatus = async (status?: string): Promise<Partner[]> => {
-  console.log(`🔍 usePartners: Iniciando fetchPartnersByStatus para status: ${status || 'todos'}...`);
-  let query = supabase.from("institutional_partners").select("*").order("name");
-
-  if (status) {
-    query = query.eq('status', status);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("❌ usePartners: Erro ao buscar parceiros:", error);
-    throw new Error(error.message);
-  }
-  console.log(`✅ usePartners: Dados de parceiros (${status || 'todos'}) recebidos:`, data);
-  return (data || []).map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    logo_url: item.logo_url,
-    website_link: item.website_link || item.website_url,
-    contact_email: item.contact_email,
-    category: item.category as 'local' | 'regional' | 'estadual',
-    city: item.city || '',
-    segment: item.segment || '',
-    tier: item.tier || '',
-    status: item.status || 'pending',
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-    contact_whatsapp: item.contact_whatsapp,
-    message: item.message,
-    cnpj: item.cnpj,
-    contact_person: item.contact_person,
-    partnership_interest: item.partnership_interest,
-    approved_at: item.approved_at,
-  }));
-};
-
-// Submit a partnership request
-const submitPartnershipRequest = async (partnerData: NewPartner) => {
-    const { error } = await supabase
-        .from('institutional_partners')
-        .insert([partnerData]);
-
-    if (error) {
-        console.error("Supabase insert error:", error);
-        throw new Error(`Erro ao enviar solicitação: ${error.message}`);
-    }
-};
+const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
 
 export const usePartners = (status?: string) => {
-    const queryClient = useQueryClient();
-    const { toast } = useToast();
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-    const { data: partners = [], isLoading, error } = useQuery<Partner[]>({
-        queryKey: ["partners", status],
-        queryFn: () => fetchPartnersByStatus(status),
-    });
-
-    const mutation = useMutation({
-        mutationFn: submitPartnershipRequest,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["partners"] }); // Invalida todas as queries de parceiros
-            toast({
-                title: "Solicitação enviada!",
-                description: "Sua solicitação de parceria foi enviada com sucesso e será analisada pela nossa equipe.",
-            });
+  const fetchPartners = async () => {
+    console.log("🔍 usePartners: Iniciando fetch...");
+    setIsLoading(true);
+    
+    try {
+      const url = status 
+        ? `${SUPABASE_URL}/rest/v1/institutional_partners?status=eq.${status}&order=name`
+        : `${SUPABASE_URL}/rest/v1/institutional_partners?order=name`;
+      
+      console.log("🔍 usePartners: URL:", url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
         },
-        onError: (error: Error) => {
-            toast({
-                title: "Erro ao enviar solicitação",
-                description: error.message,
-                variant: "destructive",
-            });
-        },
-    });
+      });
 
-    return {
-        partners,
-        isLoading,
-        error,
-        submitRequest: mutation.mutate,
-        isSubmitting: mutation.isPending,
-        refetch: () => queryClient.invalidateQueries({ queryKey: ["partners", status] }), // Adiciona refetch explícito
-    };
+      console.log("📦 usePartners: Response status:", response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("📦 usePartners: Data:", data);
+      
+      const mapped = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        logo_url: item.logo_url,
+        website_url: item.website_url,
+        contact_email: item.contact_email,
+        contact_phone: item.contact_phone,
+        is_active: item.is_active,
+        partner_type: item.partner_type,
+        status: item.status || 'pending',
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        gallery_images: item.gallery_images || [],
+        youtube_url: item.youtube_url,
+        discount_offer: item.discount_offer,
+        address: item.address,
+      }));
+      
+      console.log(`✅ usePartners: ${mapped.length} parceiros carregados`);
+      setPartners(mapped);
+      setError(null);
+      
+    } catch (err: any) {
+      console.error("💥 usePartners: Erro:", err);
+      setError(err);
+      setPartners([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPartners();
+  }, [status]);
+
+  return {
+    partners,
+    isLoading,
+    error,
+    refetch: fetchPartners,
+  };
 };

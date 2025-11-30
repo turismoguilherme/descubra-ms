@@ -74,6 +74,7 @@ import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
 import AuthPage from "@/pages/AuthPage";
 import SobreMS from "@/pages/ms/SobreMS";
+import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
@@ -216,6 +217,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
                             <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />
                             <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
+                            <Route path="/descubramatogrossodosul/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/sobre" element={<SobreMS />} />
                             <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
                             <Route path="/descubramatogrossodosul/chatguata" element={<ChatGuata />} />
