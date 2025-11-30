@@ -29,21 +29,19 @@ function sanitizeInput(input: string, maxLength: number = 100000): string {
 function validateOrigin(origin: string | null): boolean {
   if (!origin) return false;
   
+  // Allow any localhost origin (any port) for development
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    return true;
+  }
+  
   const allowedOrigins = [
-    'https://descubra-ms.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:8080'
+    'https://www.viajartur.com',
+    'https://viajartur.com',
+    'https://descubra-ms.vercel.app'
   ];
   
-  // Check exact match or subdomain
-  return allowedOrigins.some(allowed => {
-    if (allowed.startsWith('http://localhost') || allowed.startsWith('http://127.0.0.1')) {
-      return origin.startsWith(allowed);
-    }
-    return origin === allowed || origin.endsWith('.vercel.app');
-  });
+  // Check exact match or Vercel subdomain
+  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
 }
 
 interface GeminiRequest {

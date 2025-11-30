@@ -27,20 +27,19 @@ function sanitizeInput(input: string, maxLength: number = 500): string {
 function validateOrigin(origin: string | null): boolean {
   if (!origin) return false;
   
+  // Allow any localhost origin (any port) for development
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    return true;
+  }
+  
   const allowedOrigins = [
-    'https://descubra-ms.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:8080'
+    'https://www.viajartur.com',
+    'https://viajartur.com',
+    'https://descubra-ms.vercel.app'
   ];
   
-  return allowedOrigins.some(allowed => {
-    if (allowed.startsWith('http://localhost') || allowed.startsWith('http://127.0.0.1')) {
-      return origin.startsWith(allowed);
-    }
-    return origin === allowed || origin.endsWith('.vercel.app');
-  });
+  // Check exact match or Vercel subdomain
+  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
 }
 
 interface GoogleSearchRequest {
@@ -66,9 +65,10 @@ serve(async (req) => {
   if (req.method !== 'OPTIONS' && !validateOrigin(origin)) {
     console.warn('⚠️ guata-google-search-proxy: Origin não permitida:', origin);
     console.warn('   Origins permitidas:', [
+      'https://www.viajartur.com',
+      'https://viajartur.com',
       'https://descubra-ms.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:8080',
+      'http://localhost:*',
       '*.vercel.app'
     ]);
     // Em desenvolvimento, permitir mesmo com origem inválida (mas logar)

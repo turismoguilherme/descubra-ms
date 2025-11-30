@@ -12,13 +12,22 @@ const getAllowedOrigins = (): string[] => {
   
   // Default allowed origins - should be configured via environment variables
   return [
+    // Produção
+    'https://www.viajartur.com',
+    'https://viajartur.com',
     'https://descubra-ms.vercel.app',
     'https://*.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:8080'
+    // Desenvolvimento - aceita portas dinâmicas
+    'http://localhost',
+    'http://127.0.0.1'
   ];
+};
+
+/**
+ * Check if origin matches localhost with any port
+ */
+const isLocalhostOrigin = (origin: string): boolean => {
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 };
 
 /**
@@ -27,15 +36,21 @@ const getAllowedOrigins = (): string[] => {
 const isOriginAllowed = (origin: string | null): boolean => {
   if (!origin) return false;
   
+  // Allow any localhost origin (any port)
+  if (isLocalhostOrigin(origin)) {
+    return true;
+  }
+  
   const allowedOrigins = getAllowedOrigins();
   
   return allowedOrigins.some(allowed => {
     // Support wildcard subdomains
     if (allowed.startsWith('https://*.') || allowed.startsWith('http://*.')) {
-      const domain = allowed.replace(/^https?:\/\*\./, '');
+      const domain = allowed.replace(/^https?:\/\/\*\./, '');
       return origin.endsWith(domain);
     }
     
+    // Exact match
     return origin === allowed;
   });
 };
