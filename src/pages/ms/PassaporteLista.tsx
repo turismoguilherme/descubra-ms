@@ -206,7 +206,7 @@ const PassaporteLista = () => {
                       className="w-full mt-4"
                       variant={route.completed ? "outline" : "default"}
                     >
-                      <Link to={`/ms/passaporte/${route.id}`}>
+                      <Link to={`/descubramatogrossodosul/passaporte/${route.id}`}>
                         {route.completed ? 'Ver Detalhes' : 'Iniciar Rota'}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>

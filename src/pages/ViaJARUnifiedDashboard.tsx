@@ -333,7 +333,7 @@ export default function ViaJARUnifiedDashboard() {
               </div>
               <Button 
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                onClick={() => window.location.href = '/ms/guata'}
+                onClick={() => window.location.href = '/descubramatogrossodosul/guata'}
               >
                 Acessar
               </Button>

@@ -188,7 +188,7 @@ export function ProtectedRoute({
                          location.pathname.startsWith('/secretary-dashboard') || 
                          location.pathname.startsWith('/private-dashboard') || 
                          location.pathname.startsWith('/unified');
-    const loginPath = isViaJARRoute ? '/viajar/login' : '/ms/login';
+    const loginPath = isViaJARRoute ? '/viajar/login' : '/descubramatogrossodosul/login';
     console.warn('🔐 ProtectedRoute: usuário não autenticado. Redirecionando para', loginPath, { from: location.pathname });
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
@@ -201,7 +201,7 @@ export function ProtectedRoute({
                          location.pathname.startsWith('/secretary-dashboard') || 
                          location.pathname.startsWith('/private-dashboard') || 
                          location.pathname.startsWith('/unified');
-    const loginPath = isViaJARRoute ? '/viajar/login' : '/ms/login';
+    const loginPath = isViaJARRoute ? '/viajar/login' : '/descubramatogrossodosul/login';
     console.warn('🔐 ProtectedRoute: userProfile ausente. Redirecionando para', loginPath, { from: location.pathname });
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
@@ -228,7 +228,7 @@ export function ProtectedRoute({
                            location.pathname.startsWith('/secretary-dashboard') || 
                            location.pathname.startsWith('/private-dashboard') || 
                            location.pathname.startsWith('/unified');
-      const loginPath = isViaJARRoute ? '/viajar/login' : '/ms/login';
+      const loginPath = isViaJARRoute ? '/viajar/login' : '/descubramatogrossodosul/login';
       console.warn('🔐 ProtectedRoute: role não permitida.', { 
         userRole, 
         allowedRoles, 
@@ -241,8 +241,8 @@ export function ProtectedRoute({
 
   // Verificar região se necessário
   if (requireRegion && !userProfile.region_id) {
-    console.warn('🔐 ProtectedRoute: requireRegion habilitado e region_id ausente. Redirecionando para /ms/select-region', { from: location.pathname });
-    return <Navigate to="/ms/select-region" replace />;
+    console.warn('🔐 ProtectedRoute: requireRegion habilitado e region_id ausente. Redirecionando para /descubramatogrossodosul/select-region', { from: location.pathname });
+    return <Navigate to="/descubramatogrossodosul/select-region" replace />;
   }
 
   // Verificar cidade se necessário

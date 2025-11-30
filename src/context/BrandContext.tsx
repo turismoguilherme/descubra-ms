@@ -75,16 +75,16 @@ const msConfig: BrandConfig = {
     fallback: 'Descubra MS'
   },
   navigation: [
-    { name: 'Destinos', path: '/ms/destinos' },
-    { name: 'Eventos', path: '/ms/eventos' },
-    { name: 'Parceiros', path: '/ms/parceiros' },
-    { name: 'Sobre', path: '/ms/sobre' },
-    { name: 'Entrar', path: '/ms/login' }
+    { name: 'Destinos', path: '/descubramatogrossodosul/destinos' },
+    { name: 'Eventos', path: '/descubramatogrossodosul/eventos' },
+    { name: 'Parceiros', path: '/descubramatogrossodosul/parceiros' },
+    { name: 'Sobre', path: '/descubramatogrossodosul/sobre' },
+    { name: 'Entrar', path: '/descubramatogrossodosul/login' }
   ],
   authenticatedNavigation: [
-    { name: 'Home', path: '/ms' }, // Adicionado link para a Home do tenant logado
-    { name: 'Guatá IA', path: '/ms/guata' },
-    { name: 'Passaporte Digital', path: '/ms/passaporte' },
+    { name: 'Home', path: '/descubramatogrossodosul' },
+    { name: 'Guatá IA', path: '/descubramatogrossodosul/guata' },
+    { name: 'Passaporte Digital', path: '/descubramatogrossodosul/passaporte' },
   ],
   cta: {
     primary: 'Cadastrar',
@@ -94,9 +94,9 @@ const msConfig: BrandConfig = {
     title: 'Descubra Mato Grosso do Sul',
     subtitle: 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul',
     buttons: {
-      primary: { text: 'Descubra Agora', path: '/ms/welcome' },
-      secondary: { text: 'Passaporte Digital', path: '/ms/passaporte' },
-      tertiary: { text: 'Converse com o Guatá', path: '/ms/guata' }
+      primary: { text: 'Descubra Agora', path: '/descubramatogrossodosul/welcome' },
+      secondary: { text: 'Passaporte Digital', path: '/descubramatogrossodosul/passaporte' },
+      tertiary: { text: 'Converse com o Guatá', path: '/descubramatogrossodosul/guata' }
     }
   }
 };
@@ -120,7 +120,7 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   const detectTenantFromPath = (): 'ms' | 'overflow-one' => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/ms')) {
+      if (path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms')) {
         return 'ms';
       }
     }

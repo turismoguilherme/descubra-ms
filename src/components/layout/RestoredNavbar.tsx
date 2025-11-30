@@ -26,7 +26,7 @@ const RestoredNavbar = () => {
   };
 
   // Detectar se estamos no contexto FlowTrip (página principal) ou MS
-  const isFlowTrip = !location.pathname.startsWith('/ms');
+  const isFlowTrip = !location.pathname.startsWith('/descubramatogrossodosul') && !location.pathname.startsWith('/ms');
 
   console.log("🧭 NAVBAR: Renderizando navbar, isFlowTrip:", isFlowTrip);
 

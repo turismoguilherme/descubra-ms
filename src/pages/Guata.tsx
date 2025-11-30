@@ -223,7 +223,7 @@ const Guata = () => {
             <p className="text-xl mb-6">Faça login para conversar com o Guatá.</p>
             <div className="space-y-3">
               <button 
-                onClick={() => navigate("/ms/login")}
+                onClick={() => navigate("/descubramatogrossodosul/login")}
                 className="bg-ms-accent-orange hover:bg-ms-accent-orange/90 text-white px-8 py-3 rounded-lg font-semibold mr-3"
               >
                 Fazer Login
@@ -254,7 +254,7 @@ const Guata = () => {
             <p className="text-sm">
               🎭 Modo Convidado - 
               <button 
-                onClick={() => navigate("/ms/login")}
+                onClick={() => navigate("/descubramatogrossodosul/login")}
                 className="underline hover:no-underline ml-1"
               >
                 Faça login para uma experiência completa

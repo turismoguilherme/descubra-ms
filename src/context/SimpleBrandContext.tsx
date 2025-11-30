@@ -83,16 +83,16 @@ const msConfig: BrandConfig = {
     fallback: 'Descubra MS'
   },
   navigation: [
-    { name: 'Início', path: '/ms' },
-    { name: 'Destinos', path: '/ms/destinos' },
-    { name: 'Eventos', path: '/ms/eventos' },
-    { name: 'Roteiros', path: '/ms/roteiros' },
-    { name: 'Sobre', path: '/ms/sobre' }
+    { name: 'Início', path: '/descubramatogrossodosul' },
+    { name: 'Destinos', path: '/descubramatogrossodosul/destinos' },
+    { name: 'Eventos', path: '/descubramatogrossodosul/eventos' },
+    { name: 'Roteiros', path: '/descubramatogrossodosul/roteiros' },
+    { name: 'Sobre', path: '/descubramatogrossodosul/sobre' }
   ],
   authenticatedNavigation: [
-    { name: 'Dashboard', path: '/ms/dashboard' },
-    { name: 'Perfil', path: '/ms/profile' },
-    { name: 'Admin', path: '/ms/admin' }
+    { name: 'Dashboard', path: '/descubramatogrossodosul/dashboard' },
+    { name: 'Perfil', path: '/descubramatogrossodosul/profile' },
+    { name: 'Admin', path: '/descubramatogrossodosul/admin' }
   ],
   cta: {
     primary: 'Explorar MS',
@@ -102,9 +102,9 @@ const msConfig: BrandConfig = {
     title: 'Descubra Mato Grosso do Sul',
     subtitle: 'A beleza natural do Pantanal e muito mais',
     buttons: {
-      primary: { text: 'Explorar Destinos', path: '/ms/destinos' },
-      secondary: { text: 'Ver Roteiros', path: '/ms/roteiros' },
-      tertiary: { text: 'Criar Conta', path: '/ms/register' }
+      primary: { text: 'Explorar Destinos', path: '/descubramatogrossodosul/destinos' },
+      secondary: { text: 'Ver Roteiros', path: '/descubramatogrossodosul/roteiros' },
+      tertiary: { text: 'Criar Conta', path: '/descubramatogrossodosul/register' }
     }
   }
 };
@@ -113,7 +113,7 @@ export const SimpleBrandProvider = ({ children }: { children: React.ReactNode })
   const location = useLocation();
   
   const config = useMemo(() => {
-    const isMS = location.pathname.startsWith('/ms');
+    const isMS = location.pathname.startsWith('/descubramatogrossodosul') || location.pathname.startsWith('/ms');
     return isMS ? msConfig : overflowOneConfig;
   }, [location.pathname]);
 

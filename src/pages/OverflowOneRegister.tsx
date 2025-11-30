@@ -156,7 +156,7 @@ const OverflowOneRegister: React.FC = () => {
         // Redirecionar para escolha de plano (com plano pré-selecionado se houver)
         // Redirecionar baseado no contexto (MS ou ViaJAR)
         const currentPath = window.location.pathname;
-        if (currentPath.includes('/ms/')) {
+        if (currentPath.includes('/descubramatogrossodosul/') || currentPath.includes('/ms/')) {
           navigate('/ms');
         } else {
           const pricingUrl = selectedPlan ? `/viajar/pricing?plan=${selectedPlan}&billing=${selectedBilling}` : '/viajar/pricing';

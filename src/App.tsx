@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { ViaJARAuthProvider } from "@/hooks/auth/ViaJARAuthProvider";
 import { OverflowOneAuthProvider } from "@/hooks/auth/OverflowOneAuthProvider";
@@ -207,23 +207,27 @@ function App() {
                               </ProtectedRoute>
                             } />
                             
-                            {/* MS Routes */}
-                            <Route path="/ms" element={<MSIndex />} />
-                            <Route path="/ms/destinos" element={<Destinos />} />
-                            <Route path="/ms/destinos/:id" element={<DestinoDetalhes />} />
-                            <Route path="/ms/eventos" element={<EventosMS />} />
-                            <Route path="/ms/parceiros" element={<Partners />} />
-                            <Route path="/ms/guata" element={<Guata />} />
-                            <Route path="/ms/guata-test" element={<GuataTest />} />
-                            <Route path="/ms/passaporte" element={<PassaporteLista />} />
-                            <Route path="/ms/profile" element={<ProfilePageFixed />} />
+                            {/* Descubra Mato Grosso do Sul Routes */}
+                            <Route path="/descubramatogrossodosul" element={<MSIndex />} />
+                            <Route path="/descubramatogrossodosul/destinos" element={<Destinos />} />
+                            <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
+                            <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />
+                            <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
+                            <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
+                            <Route path="/descubramatogrossodosul/guata-test" element={<GuataTest />} />
+                            <Route path="/descubramatogrossodosul/passaporte" element={<PassaporteLista />} />
+                            <Route path="/descubramatogrossodosul/profile" element={<ProfilePageFixed />} />
                             
-                            {/* MS Auth Routes - usando sistema original do Descubra MS */}
-                            <Route path="/ms/login" element={<AuthPage />} />
-                            <Route path="/ms/register" element={<Register />} />
-                            <Route path="/ms/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
+                            {/* Descubra MS Auth Routes */}
+                            <Route path="/descubramatogrossodosul/login" element={<AuthPage />} />
+                            <Route path="/descubramatogrossodosul/register" element={<Register />} />
+                            <Route path="/descubramatogrossodosul/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
                             
-                            <Route path="/ms/*" element={<MSIndex />} />
+                            <Route path="/descubramatogrossodosul/*" element={<MSIndex />} />
+                            
+                            {/* Redirecionamentos legados de /ms para /descubramatogrossodosul */}
+                            <Route path="/ms" element={<Navigate to="/descubramatogrossodosul" replace />} />
+                            <Route path="/ms/*" element={<Navigate to="/descubramatogrossodosul" replace />} />
                             
                             {/* Fallback */}
                             <Route path="*" element={<ViaJARSaaS />} />
