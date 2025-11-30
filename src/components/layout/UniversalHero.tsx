@@ -95,8 +95,8 @@ const UniversalHero = () => {
         </div>
       </div>
       
-      {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent"></div>
+      {/* Bottom Gradient - Transição suave para próxima seção */}
+      <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-white from-20% via-white/60 via-60% to-transparent"></div>
     </div>
   );
 };

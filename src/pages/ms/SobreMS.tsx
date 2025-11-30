@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Target, Eye, Award, Users, MapPin, Compass, Heart, TreePine, Sparkles, Star, ArrowRight } from 'lucide-react';
+import { Target, Eye, Award, Users, MapPin, Compass, Heart, TreePine, Star, ArrowRight } from 'lucide-react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 
 const SobreMS = () => {
@@ -13,9 +13,11 @@ const SobreMS = () => {
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative ms-container text-center">
             <div className="flex justify-center mb-6">
-              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-full">
-                <Sparkles size={56} className="text-white" />
-              </div>
+              <img 
+                src="/images/logo-descubra-ms.png" 
+                alt="Descubra Mato Grosso do Sul" 
+                className="h-20 w-auto drop-shadow-lg"
+              />
             </div>
             <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
               Sobre o Descubra MS
@@ -142,8 +144,8 @@ const SobreMS = () => {
               <div className="group flex items-start gap-4 p-6 rounded-xl hover:bg-blue-50 transition-colors">
                 <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-3 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform">
                   <Award className="w-6 h-6 text-white" />
-                </div>
-                <div>
+              </div>
+              <div>
                   <h3 className="font-bold text-ms-primary-blue text-lg mb-2">Excelência</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Buscamos oferecer as melhores experiências turísticas com qualidade e inovação constante.
@@ -153,8 +155,8 @@ const SobreMS = () => {
               <div className="group flex items-start gap-4 p-6 rounded-xl hover:bg-green-50 transition-colors">
                 <div className="bg-gradient-to-r from-ms-pantanal-green to-ms-discovery-teal p-3 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform">
                   <TreePine className="w-6 h-6 text-white" />
-                </div>
-                <div>
+              </div>
+              <div>
                   <h3 className="font-bold text-ms-pantanal-green text-lg mb-2">Sustentabilidade</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Promovemos o turismo responsável que preserva nossos recursos naturais e culturais.
@@ -164,8 +166,8 @@ const SobreMS = () => {
               <div className="group flex items-start gap-4 p-6 rounded-xl hover:bg-orange-50 transition-colors">
                 <div className="bg-gradient-to-r from-ms-accent-orange to-yellow-500 p-3 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform">
                   <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
+              </div>
+              <div>
                   <h3 className="font-bold text-ms-accent-orange text-lg mb-2">Comunidade</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Valorizamos as comunidades locais e trabalhamos para o desenvolvimento regional.
@@ -194,14 +196,14 @@ const SobreMS = () => {
                 </Button>
               </Link>
               <Link to="/descubramatogrossodosul/passaporte">
-                <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8">
+                <Button size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white/20 font-semibold px-8">
                   <Star className="mr-2 w-5 h-5" />
                   Passaporte Digital
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
+      </div>
       </main>
     </UniversalLayout>
   );
