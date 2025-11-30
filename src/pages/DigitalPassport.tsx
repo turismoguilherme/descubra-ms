@@ -117,7 +117,7 @@ const DigitalPassport = () => {
 
             {/* Call to Action */}
             <div className="space-y-6 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/ms/roteiros">
+              <Link to="/descubramatogrossodosul/roteiros">
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
@@ -127,7 +127,7 @@ const DigitalPassport = () => {
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </Link>
-              <Link to="/ms/enhanced-passport">
+              <Link to="/descubramatogrossodosul/enhanced-passport">
                 <Button 
                   variant="outline" 
                   size="lg" 

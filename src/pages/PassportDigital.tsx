@@ -39,10 +39,10 @@ const PassportDigital: React.FC = () => {
               Você precisa fazer login para acessar seu passaporte digital.
             </p>
             <div className="flex gap-2 justify-center">
-              <Link to="/ms/login">
+              <Link to="/descubramatogrossodosul/login">
                 <Button>Fazer Login</Button>
               </Link>
-              <Link to="/ms/register">
+              <Link to="/descubramatogrossodosul/register">
                 <Button variant="outline">Criar Conta</Button>
               </Link>
             </div>

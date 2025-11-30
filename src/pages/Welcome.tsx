@@ -54,12 +54,12 @@ const Welcome = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in delay-500">
-              <Link to="/register">
+              <Link to="/descubramatogrossodosul/register">
                 <Button className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-black text-lg px-8 py-6 transform hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-ms-secondary-yellow/20">
                   Cadastre-se <ArrowRight className="ml-2" />
                 </Button>
               </Link>
-              <Link to="/ms/login">
+              <Link to="/descubramatogrossodosul/login">
                 <Button className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white text-lg px-8 py-6 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                   Já tenho conta
                 </Button>

@@ -247,7 +247,7 @@ const RegisterForm = ({ onRegister, onSocialLogin, loading }: RegisterFormProps)
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">
                 Já tem uma conta?{" "}
-                <Link to="/ms/login" className="text-ms-primary-blue hover:underline font-medium">
+                <Link to="/descubramatogrossodosul/login" className="text-ms-primary-blue hover:underline font-medium">
                   Fazer login
                 </Link>
               </p>

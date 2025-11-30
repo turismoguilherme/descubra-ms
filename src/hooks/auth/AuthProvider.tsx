@@ -281,13 +281,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Detectar tenant do path atual para manter contexto
       const currentPath = window.location.pathname;
       const pathSegments = currentPath.split('/').filter(Boolean);
-      const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
-      const isTenantPath = currentTenant && currentTenant.length === 2;
+      const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
+      const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
+      const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
       
-      console.log("🏛️ SIGNUP: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      console.log("🏛️ SIGNUP: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
       
-      // Redirecionar mantendo contexto do tenant
-      const redirectUrl = isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/ms`;
+      // Redirecionar mantendo contexto do tenant (para Descubra MS, usar sempre 'descubramatogrossodosul')
+      const redirectUrl = isDescubraMS 
+        ? `${window.location.origin}/descubramatogrossodosul` 
+        : (isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/descubramatogrossodosul`);
       console.log("🔄 SIGNUP: Redirecionando para:", redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({

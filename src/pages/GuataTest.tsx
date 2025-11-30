@@ -322,7 +322,7 @@ const GuataTest = () => {
           {/* Botão de Volta */}
           <div className="text-center mt-8">
             <button
-              onClick={() => navigate('/ms/guata')}
+              onClick={() => navigate('/descubramatogrossodosul/guata')}
               className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               ← Voltar para o Guatá

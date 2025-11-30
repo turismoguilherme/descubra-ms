@@ -87,7 +87,7 @@ const DestaquesSection = () => {
         
         <div className="mt-16 text-center">
           <Link 
-            to="/ms/destinos" 
+            to="/descubramatogrossodosul/destinos" 
             className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
           >
             Ver Todos os Destinos

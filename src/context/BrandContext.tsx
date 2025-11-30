@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useMultiTenant } from '../hooks/useMultiTenant';
 import logoDescubraMS from '@/assets/images/logo-descubra-ms-v2.png';
 
@@ -115,20 +116,22 @@ interface BrandProviderProps {
 
 export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   const { currentTenant, tenantConfig, loading: tenantLoading } = useMultiTenant();
+  const location = useLocation();
 
   // Função para detectar o tenant baseado no path atual
-  const detectTenantFromPath = (): 'ms' | 'overflow-one' => {
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms')) {
-        return 'ms';
-      }
+  const detectTenantFromPath = (pathname: string): 'ms' | 'overflow-one' => {
+    const path = pathname.toLowerCase();
+    if (path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms')) {
+      return 'ms';
     }
     return 'overflow-one';
   };
 
   // Determinar configuração baseada no tenant com useMemo para otimização
+  // IMPORTANTE: Inclui location.pathname como dependência para reagir às mudanças de rota
   const config = useMemo((): BrandConfig => {
+    console.log('🎨 BRAND: Recalculando config para path:', location.pathname);
+    
     // Se estamos no modo multi-tenant e temos um tenant carregado
     if (currentTenant && tenantConfig && !tenantLoading) {
       // Usar a configuração base do MS e aplicar overrides do Supabase
@@ -153,7 +156,8 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
     }
 
     // Detectar tenant do path se não estivermos no modo multi-tenant
-    const detectedTenant = detectTenantFromPath();
+    const detectedTenant = detectTenantFromPath(location.pathname);
+    console.log('🎨 BRAND: Tenant detectado:', detectedTenant);
     
     if (detectedTenant === 'ms') {
       return msConfig;
@@ -161,9 +165,12 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
 
     // Fallback para Overflow One
     return overflowOneConfig;
-  }, [currentTenant, tenantConfig, tenantLoading]);
+  }, [currentTenant, tenantConfig, tenantLoading, location.pathname]);
+  
   const isOverflowOne = config.brand === 'overflow-one';
   const isMS = config.brand === 'ms';
+  
+  console.log('🎨 BRAND: isMS:', isMS, 'isOverflowOne:', isOverflowOne, 'path:', location.pathname);
 
   return (
     <BrandContext.Provider value={{ config, isOverflowOne, isMS }}>

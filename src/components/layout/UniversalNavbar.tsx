@@ -54,7 +54,7 @@ const UniversalNavbar = () => {
       <div className="ms-container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={isOverflowOne ? "/" : "/ms"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
+          <Link to={isOverflowOne ? "/" : "/descubramatogrossodosul"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img 
                 key={`logo-${Date.now()}-${Math.random()}`}
@@ -124,7 +124,7 @@ const UniversalNavbar = () => {
                         {config.cta.primary}
                       </Button>
                     </Link>
-                    <Link to="/ms">
+                    <Link to="/descubramatogrossodosul">
                       <Button variant="outline" size="sm">
                         {config.cta.secondary}
                       </Button>
@@ -132,12 +132,12 @@ const UniversalNavbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/ms/login">
+                    <Link to="/descubramatogrossodosul/login">
                       <Button variant="ghost" size="sm">
                         {config.cta.secondary}
                       </Button>
                     </Link>
-                    <Link to="/ms/register">
+                    <Link to="/descubramatogrossodosul/register">
                       <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
                         {config.cta.primary}
                       </Button>
@@ -216,7 +216,7 @@ const UniversalNavbar = () => {
                             {config.cta.primary}
                           </Button>
                         </Link>
-                        <Link to="/ms" onClick={() => setIsOpen(false)}>
+                        <Link to="/descubramatogrossodosul" onClick={() => setIsOpen(false)}>
                           <Button variant="outline" size="sm" className="w-full">
                             {config.cta.secondary}
                           </Button>
@@ -224,12 +224,12 @@ const UniversalNavbar = () => {
                       </>
                     ) : (
                       <>
-                        <Link to="/ms/login" onClick={() => setIsOpen(false)}>
+                        <Link to="/descubramatogrossodosul/login" onClick={() => setIsOpen(false)}>
                           <Button variant="ghost" size="sm" className="w-full justify-start">
                             {config.cta.secondary}
                           </Button>
                         </Link>
-                        <Link to="/ms/register" onClick={() => setIsOpen(false)}>
+                        <Link to="/descubramatogrossodosul/register" onClick={() => setIsOpen(false)}>
                           <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
                             {config.cta.primary}
                           </Button>

@@ -21,7 +21,7 @@ const TourismDescription = () => {
             Cadastre-se para explorar mais e ajudar a melhorar o turismo local!
           </p>
           
-          <Link to="/ms/register">
+          <Link to="/descubramatogrossodosul/register">
             <Button className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-black font-medium px-8 py-6 text-lg">
               Cadastre-se
             </Button>

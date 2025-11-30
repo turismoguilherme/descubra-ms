@@ -36,7 +36,7 @@ const HomePage = () => {
           }}>
             <h2>🏠 Página Principal</h2>
             <p>Bem-vindo à plataforma de turismo de Mato Grosso do Sul!</p>
-            <a href="/ms" style={{ 
+            <a href="/descubramatogrossodosul" style={{ 
               color: '#007bff', 
               textDecoration: 'none',
               fontWeight: 'bold'
@@ -53,7 +53,7 @@ const HomePage = () => {
           }}>
             <h2>🤖 Guatá IA</h2>
             <p>Chatbot inteligente para turismo</p>
-            <a href="/ms/guata" style={{ 
+            <a href="/descubramatogrossodosul/guata" style={{ 
               color: '#007bff', 
               textDecoration: 'none',
               fontWeight: 'bold'
@@ -70,7 +70,7 @@ const HomePage = () => {
           }}>
             <h2>🗺️ Destinos</h2>
             <p>Explore os melhores destinos de MS</p>
-            <a href="/ms/destinos" style={{ 
+            <a href="/descubramatogrossodosul/destinos" style={{ 
               color: '#007bff', 
               textDecoration: 'none',
               fontWeight: 'bold'
@@ -87,7 +87,7 @@ const HomePage = () => {
           }}>
             <h2>🎉 Eventos</h2>
             <p>Descubra eventos incríveis</p>
-            <a href="/ms/eventos" style={{ 
+            <a href="/descubramatogrossodosul/eventos" style={{ 
               color: '#007bff', 
               textDecoration: 'none',
               fontWeight: 'bold'
@@ -154,7 +154,7 @@ const MSPage = () => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
           gap: '20px'
         }}>
-          <a href="/ms/guata" style={{ 
+          <a href="/descubramatogrossodosul/guata" style={{ 
             backgroundColor: '#17a2b8', 
             color: 'white', 
             padding: '20px', 
@@ -167,7 +167,7 @@ const MSPage = () => {
             <p>Chatbot inteligente</p>
           </a>
 
-          <a href="/ms/destinos" style={{ 
+          <a href="/descubramatogrossodosul/destinos" style={{ 
             backgroundColor: '#ffc107', 
             color: 'black', 
             padding: '20px', 
@@ -180,7 +180,7 @@ const MSPage = () => {
             <p>Explore MS</p>
           </a>
 
-          <a href="/ms/eventos" style={{ 
+          <a href="/descubramatogrossodosul/eventos" style={{ 
             backgroundColor: '#dc3545', 
             color: 'white', 
             padding: '20px', 
@@ -257,7 +257,7 @@ const WorkingPlatform = () => {
           }}>
             <h1>🤖 Guatá IA</h1>
             <p>Chatbot inteligente em desenvolvimento...</p>
-            <a href="/ms" style={{ color: '#007bff' }}>← Voltar para MS</a>
+            <a href="/descubramatogrossodosul" style={{ color: '#007bff' }}>← Voltar para MS</a>
           </div>
         } />
         <Route path="/ms/destinos" element={
@@ -269,7 +269,7 @@ const WorkingPlatform = () => {
           }}>
             <h1>🗺️ Destinos</h1>
             <p>Página de destinos em desenvolvimento...</p>
-            <a href="/ms" style={{ color: '#007bff' }}>← Voltar para MS</a>
+            <a href="/descubramatogrossodosul" style={{ color: '#007bff' }}>← Voltar para MS</a>
           </div>
         } />
         <Route path="/ms/eventos" element={
@@ -281,7 +281,7 @@ const WorkingPlatform = () => {
           }}>
             <h1>🎉 Eventos</h1>
             <p>Página de eventos em desenvolvimento...</p>
-            <a href="/ms" style={{ color: '#007bff' }}>← Voltar para MS</a>
+            <a href="/descubramatogrossodosul" style={{ color: '#007bff' }}>← Voltar para MS</a>
           </div>
         } />
         <Route path="*" element={<NotFound />} />

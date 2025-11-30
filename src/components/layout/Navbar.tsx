@@ -12,18 +12,28 @@ const Navbar = () => {
   
   // Detectar tenant do path atual
   const pathSegments = location.pathname.split('/').filter(Boolean);
-  const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
-  const isTenantPath = currentTenant && currentTenant.length === 2;
+  const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
   
-  console.log("🏛️ NAVBAR: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+  // Verificar se é um path do Descubra MS (aceita 'ms' ou 'descubramatogrossodosul')
+  const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
+  // Aceita também outros tenants de 2 caracteres para compatibilidade
+  const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
+  
+  console.log("🏛️ NAVBAR: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
   
   const isActivePath = (path: string) => {
     // Considerar tenant no path ativo
-    const fullPath = isTenantPath ? `/${currentTenant}${path}` : path;
+    // Para Descubra MS, usar sempre 'descubramatogrossodosul' como prefixo
+    const tenantPrefix = isDescubraMS ? 'descubramatogrossodosul' : currentTenant;
+    const fullPath = isTenantPath ? `/${tenantPrefix}${path}` : path;
     return location.pathname === fullPath;
   };
   
   const getPathWithTenant = (path: string) => {
+    // Para Descubra MS, usar sempre 'descubramatogrossodosul' como prefixo
+    if (isDescubraMS) {
+      return `/descubramatogrossodosul${path}`;
+    }
     return isTenantPath ? `/${currentTenant}${path}` : path;
   };
   

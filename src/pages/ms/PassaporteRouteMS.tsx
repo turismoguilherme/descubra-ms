@@ -142,7 +142,7 @@ const PassaporteRouteMS = () => {
   };
 
   const handleRouteComplete = () => {
-    navigate('/ms/passaporte', { 
+    navigate('/descubramatogrossodosul/passaporte', { 
       state: { 
         newStamp: route?.name,
         totalPoints: totalPoints + 50 // Bonus points for completion
@@ -178,7 +178,7 @@ const PassaporteRouteMS = () => {
             <div className="flex items-center justify-between text-white mb-4">
               <Button
                 variant="ghost"
-                onClick={() => navigate(`/ms/roteiros/${routeId}`)}
+                onClick={() => navigate(`/descubramatogrossodosul/roteiros/${routeId}`)}
                 className="text-white hover:bg-white/10"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />

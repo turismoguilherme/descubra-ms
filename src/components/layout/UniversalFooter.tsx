@@ -129,22 +129,22 @@ const UniversalFooter = () => {
               <h3 className="text-sm font-semibold mb-3 text-white">Explore</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/ms" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul" className="text-blue-100 hover:text-white text-sm transition-colors">
                     Início
                   </Link>
                 </li>
                 <li>
-                  <Link to="/ms/destinos" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul/destinos" className="text-blue-100 hover:text-white text-sm transition-colors">
                     Destinos
                   </Link>
                 </li>
                 <li>
-                  <Link to="/ms/eventos" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul/eventos" className="text-blue-100 hover:text-white text-sm transition-colors">
                     Eventos
                   </Link>
                 </li>
                 <li>
-                  <Link to="/ms/parceiros" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul/parceiros" className="text-blue-100 hover:text-white text-sm transition-colors">
                     Parceiros
                   </Link>
                 </li>

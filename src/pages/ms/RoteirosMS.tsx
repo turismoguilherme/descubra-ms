@@ -34,11 +34,11 @@ const RoteirosMS = () => {
   });
 
   const handleViewRoute = (route: TouristRoute) => {
-    navigate(`/ms/roteiros/${route.id}`);
+    navigate(`/descubramatogrossodosul/roteiros/${route.id}`);
   };
 
   const handleStartRoute = (route: TouristRoute) => {
-    navigate(`/ms/passaporte/${route.id}`);
+    navigate(`/descubramatogrossodosul/passaporte/${route.id}`);
   };
 
   const toggleFavorite = (routeId: string) => {

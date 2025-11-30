@@ -19,10 +19,11 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // Detectar tenant do path atual
       const pathSegments = location.pathname.split('/').filter(Boolean);
-      const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
-      const isTenantPath = currentTenant && currentTenant.length === 2;
+      const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
+      const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
+      const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
       
-      console.log("🏛️ PROFILE CHECKER: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      console.log("🏛️ PROFILE CHECKER: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
 
       // Rotas que não precisam de perfil completo
       const allowedPaths = [

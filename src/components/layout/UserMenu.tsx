@@ -31,10 +31,13 @@ const UserMenu = () => {
   
   // Detectar tenant do path atual
   const pathSegments = location.pathname.split('/').filter(Boolean);
-  const currentTenant = pathSegments[0]; // 'ms', 'mt', etc.
-  const isTenantPath = currentTenant && currentTenant.length === 2;
+  const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
   
-  console.log("🏛️ USERMENU: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+  // Verificar se é um path do Descubra MS
+  const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
+  const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
+  
+  console.log("🏛️ USERMENU: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
 
   if (!user) return null;
 
@@ -70,6 +73,9 @@ const UserMenu = () => {
   };
   
   const getPathWithTenant = (path: string) => {
+    if (isDescubraMS) {
+      return `/descubramatogrossodosul${path}`;
+    }
     return isTenantPath ? `/${currentTenant}${path}` : path;
   };
 
