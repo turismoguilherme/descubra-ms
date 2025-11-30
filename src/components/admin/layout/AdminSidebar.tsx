@@ -17,7 +17,10 @@ import {
   Bot,
   Lightbulb,
   ListChecks,
-  ChevronDown
+  ChevronDown,
+  Calendar,
+  Handshake,
+  Stamp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
@@ -54,7 +57,9 @@ const sidebarItems: SidebarItem[] = [
       { label: 'Conteúdo', path: '/viajar/admin/descubra-ms/content', icon: FileText },
       { label: 'Menus', path: '/viajar/admin/descubra-ms/menus', icon: Menu },
       { label: 'Usuários', path: '/viajar/admin/descubra-ms/users', icon: UserCog },
-      { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', icon: FileCheck },
+      { label: 'Eventos', path: '/viajar/admin/descubra-ms/events', icon: Calendar },
+      { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners', icon: Handshake },
+      { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', icon: Stamp },
       { label: 'Configurações', path: '/viajar/admin/descubra-ms/settings', icon: Settings },
     ],
   },

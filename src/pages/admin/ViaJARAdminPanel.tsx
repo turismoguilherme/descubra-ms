@@ -18,6 +18,8 @@ const ContentEditor = lazy(() => import('@/components/admin/descubra_ms/ContentE
 const MenuManager = lazy(() => import('@/components/admin/descubra_ms/MenuManager'));
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
 const PlatformSettings = lazy(() => import('@/components/admin/descubra_ms/PlatformSettings'));
+const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
+const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
 const Reconciliation = lazy(() => import('@/components/admin/financial/Reconciliation'));
 const FinancialReports = lazy(() => import('@/components/admin/financial/FinancialReports'));
@@ -113,6 +115,16 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/users" element={
               <Suspense fallback={<LoadingFallback />}>
                 <UsersManagement />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/events" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <EventsManagement />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/partners" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PartnersManagement />
               </Suspense>
             } />
             <Route path="descubra-ms/settings" element={

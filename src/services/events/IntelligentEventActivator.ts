@@ -30,20 +30,20 @@ export class IntelligentEventActivator {
 
     try {
 
-      // Configurar sistema inteligente
+      // Sistema automático DESATIVADO - apenas eventos cadastrados manualmente
       const config = {
         googleSearch: {
-          enabled: true,
-          searchInterval: 24, // 24 horas
+          enabled: false, // DESATIVADO
+          searchInterval: 24,
           maxResults: 20
         },
         geminiAI: {
-          enabled: true,
-          processNewEvents: true,
-          improveDescriptions: true
+          enabled: false, // DESATIVADO
+          processNewEvents: false,
+          improveDescriptions: false
         },
         googleCalendar: {
-          enabled: false, // Desabilitado por padrão
+          enabled: false,
           syncInterval: 6
         },
         autoCleanup: {
@@ -52,8 +52,8 @@ export class IntelligentEventActivator {
         }
       };
 
-      // Inicializar sistema
-      const result = await intelligentEventService.initialize();
+      // Inicializar sistema com a config desativada
+      const result = await intelligentEventService.initialize(config);
       
       if (result.success) {
         this.isActivated = true;

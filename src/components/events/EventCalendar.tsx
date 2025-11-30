@@ -55,6 +55,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
   useEffect(() => {
@@ -66,17 +67,26 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const loadAllEvents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('is_visible', true)
-        .order('is_sponsored', { ascending: false })
-        .order('start_date', { ascending: true });
-
-      if (error) {
-        console.error("Erro ao carregar eventos:", error);
+      // Usar fetch direto (workaround para problema com cliente Supabase)
+      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+      
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error("Erro ao carregar eventos");
         return;
       }
+      
+      const data = await response.json();
 
       const events: EventItem[] = (data || []).map((event: any) => ({
         id: event.id,
@@ -96,9 +106,16 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         organizador_nome: event.organizador_nome,
       }));
 
+      // Ordenar: patrocinados primeiro, depois por data
+      events.sort((a, b) => {
+        if (a.is_sponsored && !b.is_sponsored) return -1;
+        if (!a.is_sponsored && b.is_sponsored) return 1;
+        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+      });
+
       setAllEvents(events);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro ao carregar eventos:", error);
     } finally {
       setLoading(false);
     }
@@ -109,7 +126,17 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    
+    // Filtro por região turística
+    let matchesRegion = selectedRegion === 'all';
+    if (!matchesRegion && selectedRegion in regionCities) {
+      const cities = regionCities[selectedRegion];
+      matchesRegion = cities.some(city => 
+        event.location.toLowerCase().includes(city.toLowerCase())
+      );
+    }
+    
+    return matchesSearch && matchesRegion;
   });
 
   const sponsoredEvents = filteredEvents.filter(e => e.is_sponsored);
@@ -144,6 +171,33 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     { value: 'musical', label: 'Musical' },
     { value: 'esportivo', label: 'Esportivo' },
   ];
+
+  // Regiões Turísticas Oficiais de MS
+  const regions = [
+    { value: 'all', label: 'Todas as Regiões' },
+    { value: 'bonito-serra-bodoquena', label: '🏔️ Bonito-Serra da Bodoquena' },
+    { value: 'caminho-ipes', label: '🌸 Caminho dos Ipês' },
+    { value: 'caminhos-fronteira', label: '🌎 Caminhos da Fronteira' },
+    { value: 'costa-leste', label: '🌊 Costa Leste' },
+    { value: 'grande-dourados', label: '🌾 Grande Dourados' },
+    { value: 'pantanal', label: '🐊 Pantanal' },
+    { value: 'rota-norte', label: '🧭 Rota Norte' },
+    { value: 'vale-aguas', label: '💧 Vale das Águas' },
+    { value: 'vale-apore', label: '🏞️ Vale do Aporé' },
+  ];
+
+  // Cidades por região para filtro
+  const regionCities: Record<string, string[]> = {
+    'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+    'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+    'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+    'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+    'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina'],
+    'pantanal': ['corumbá', 'aquidauana', 'miranda', 'ladário', 'anastácio', 'pantanal'],
+    'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+    'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+    'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+  };
 
   if (loading) {
     return (
@@ -214,7 +268,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   return (
     <div className="space-y-8">
       {/* Filtros - PRIMEIRO */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -224,6 +278,19 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             className="pl-10"
           />
         </div>
+        <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+          <SelectTrigger>
+            <MapPin className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Região Turística" />
+          </SelectTrigger>
+          <SelectContent>
+            {regions.map(region => (
+              <SelectItem key={region.value} value={region.value}>
+                {region.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger>
             <Filter className="h-4 w-4 mr-2" />
@@ -239,21 +306,21 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         </Select>
       </div>
 
-      {/* CTA Promover Evento */}
+      {/* CTA Cadastrar Evento */}
       <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="bg-white/20 p-3 rounded-full">
             <Megaphone className="w-6 h-6 text-white" />
                         </div>
           <div className="text-white">
-            <h3 className="font-bold text-lg">Quer destacar seu evento?</h3>
-            <p className="text-white/80 text-sm">Promova para milhares de turistas</p>
+            <h3 className="font-bold text-lg">Tem um evento para divulgar?</h3>
+            <p className="text-white/80 text-sm">Cadastre gratuitamente ou destaque seu evento</p>
                               </div>
                             </div>
-        <Link to="/descubramatogrossodosul/promover-evento">
+        <Link to="/descubramatogrossodosul/cadastrar-evento">
           <Button className="bg-white text-ms-primary-blue hover:bg-white/90 font-semibold">
-            <Star className="w-4 h-4 mr-2" />
-            Promover Evento
+            <Calendar className="w-4 h-4 mr-2" />
+            Cadastrar Evento
           </Button>
         </Link>
                           </div>

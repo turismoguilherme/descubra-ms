@@ -45,12 +45,12 @@ export class IntelligentEventService {
     }
     this.config = {
       googleSearch: {
-        enabled: true,
+        enabled: false, // DESATIVADO - eventos manuais
         searchInterval: 24, // 24 horas
         maxResults: 20
       },
       geminiAI: {
-        enabled: true,
+        enabled: false, // DESATIVADO - eventos manuais
         processNewEvents: true,
         improveDescriptions: true
       },
@@ -69,11 +69,27 @@ export class IntelligentEventService {
   /**
    * Inicializa o serviço inteligente
    */
-  public async initialize(): Promise<{
+  public async initialize(customConfig?: Partial<IntelligentEventConfig>): Promise<{
     success: boolean;
     servicesStarted: string[];
     errors: string[];
   }> {
+    // Aplicar configuração customizada se fornecida
+    if (customConfig) {
+      if (customConfig.googleSearch) {
+        this.config.googleSearch = { ...this.config.googleSearch, ...customConfig.googleSearch };
+      }
+      if (customConfig.geminiAI) {
+        this.config.geminiAI = { ...this.config.geminiAI, ...customConfig.geminiAI };
+      }
+      if (customConfig.googleCalendar) {
+        this.config.googleCalendar = { ...this.config.googleCalendar, ...customConfig.googleCalendar };
+      }
+      if (customConfig.autoCleanup) {
+        this.config.autoCleanup = { ...this.config.autoCleanup, ...customConfig.autoCleanup };
+      }
+    }
+
     const result = {
       success: true,
       servicesStarted: [] as string[],
