@@ -6,11 +6,9 @@ export const signInWithProviderService = async (provider: 'google' | 'facebook')
   try {
     console.log(`🔗 SOCIAL LOGIN: Iniciando login com ${provider.toUpperCase()}`);
     
-    // Configurar URL de redirecionamento específica para produção
-    const isProduction = window.location.hostname === 'flow-trip.vercel.app';
-    const redirectUrl = isProduction 
-      ? 'https://flow-trip.vercel.app/auth/callback'
-      : `${window.location.origin}/auth/callback`;
+    // Configurar URL de redirecionamento baseada na origem atual
+    // Funciona automaticamente em qualquer domínio (localhost, vercel, viajartur.com)
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
     console.log("🔗 SOCIAL LOGIN: URL de redirecionamento:", redirectUrl);
     

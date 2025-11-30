@@ -8,13 +8,25 @@ export const config = {
   }
 };
 
+// Detectar ambiente automaticamente
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Em produção, usar a URL atual
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return window.location.origin;
+    }
+  }
+  // Em desenvolvimento, usar localhost
+  return 'http://localhost:8080';
+};
+
 export const ENV = {
   // API Keys - SECURITY: All API keys moved to secure edge functions
   // No API keys stored in frontend for security
   
-  // URLs base
-  BASE_URL: 'http://localhost:8080',
-  API_URL: 'http://localhost:8080/api',
+  // URLs base - detectadas automaticamente
+  BASE_URL: getBaseUrl(),
+  API_URL: `${getBaseUrl()}/api`,
   
   // Configurações do Supabase - SECURITY: Use environment variables only
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || '',
