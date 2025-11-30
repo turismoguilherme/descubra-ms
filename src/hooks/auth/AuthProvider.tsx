@@ -16,32 +16,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      logger.dev("🔄 AuthProvider: Buscando perfil para userId:", userId);
-      // Buscar perfil do usuário
-      const { data: profileData } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      // Buscar role do usuário
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role, city_id, region_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      // Criar perfil combinado
+      // Buscar role diretamente via REST API (mais estável que o cliente Supabase)
+      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+      
+      const roleResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${userId}&select=role,city_id,region_id`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          }
+        }
+      );
+      
+      const roleData = await roleResponse.json();
+      
+      // Criar perfil com role
       const profile: UserProfile = {
         user_id: userId,
-        full_name: profileData?.full_name || '',
-        role: roleData?.role || 'user',
-        city_id: roleData?.city_id || null,
-        region_id: roleData?.region_id || null
+        full_name: '',
+        role: roleData?.[0]?.role || 'user',
+        city_id: roleData?.[0]?.city_id || null,
+        region_id: roleData?.[0]?.region_id || null
       };
-
+      
       setUserProfile(profile);
-      logger.dev("✅ AuthProvider: Perfil do usuário definido");
     } catch (error) {
       console.error("❌ AuthProvider: Erro ao buscar perfil:", error);
     }
