@@ -8,6 +8,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@/utils/logger";
 import { supabase } from "@/integrations/supabase/client";
+import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 
 export interface GeminiQuery {
   question: string;
@@ -163,26 +164,19 @@ class GuataGeminiService {
       return this.generateFallbackResponse(query);
     }
     
-    // 1. VERIFICAR CACHE COMPARTILHADO (perguntas comuns)
-    const sharedCacheResult = this.getFromSharedCache(query);
-    if (sharedCacheResult) {
-      return {
-        answer: sharedCacheResult.response,
-        confidence: 0.85,
-        processingTime: Date.now() - startTime,
-        usedGemini: true,
-        personality: 'Guatá',
-        emotionalState: 'excited'
-      };
-    }
-
-    // 2. VERIFICAR CACHE INDIVIDUAL (personalizado)
+    // 1. VERIFICAR CACHE PERSISTENTE COMPARTILHADO (perguntas comuns)
     const userId = (query as any).userId;
     const sessionId = (query as any).sessionId || 'anonymous';
-    const individualCacheResult = this.getFromIndividualCache(query, userId, sessionId);
-    if (individualCacheResult) {
+    const isSuggestion = this.isSuggestionQuestion(query.question);
+    
+    const sharedCacheResult = await guataResponseCacheService.getFromSharedCache({
+      question: query.question,
+      isSuggestion
+    });
+    if (sharedCacheResult.found && sharedCacheResult.answer) {
+      if (isDev) console.log('✅ Cache compartilhado encontrado (persistente)');
       return {
-        answer: individualCacheResult.response,
+        answer: sharedCacheResult.answer,
         confidence: 0.85,
         processingTime: Date.now() - startTime,
         usedGemini: true,
@@ -191,13 +185,63 @@ class GuataGeminiService {
       };
     }
 
-    // 3. VERIFICAR CACHE POR SIMILARIDADE SEMÂNTICA (75% similaridade)
-    const similarityCacheResult = this.getFromSimilarityCache(query);
-    if (similarityCacheResult) {
+    // 2. VERIFICAR CACHE PERSISTENTE INDIVIDUAL (personalizado)
+    const individualCacheResult = await guataResponseCacheService.getFromIndividualCache({
+      question: query.question,
+      userId,
+      sessionId,
+      isSuggestion
+    });
+    if (individualCacheResult.found && individualCacheResult.answer) {
+      if (isDev) console.log('✅ Cache individual encontrado (persistente)');
+      return {
+        answer: individualCacheResult.answer,
+        confidence: 0.85,
+        processingTime: Date.now() - startTime,
+        usedGemini: true,
+        personality: 'Guatá',
+        emotionalState: 'excited'
+      };
+    }
+
+    // 3. VERIFICAR CACHE PERSISTENTE POR SIMILARIDADE SEMÂNTICA (75% similaridade)
+    const similarityCacheResult = await guataResponseCacheService.getFromSimilarityCache({
+      question: query.question,
+      isSuggestion
+    });
+    if (similarityCacheResult.found && similarityCacheResult.answer) {
       // Adaptar resposta para o contexto atual
-      const adaptedResponse = this.adaptResponse(similarityCacheResult.response, query);
+      const adaptedResponse = this.adaptResponse(similarityCacheResult.answer, query);
+      if (isDev) console.log('✅ Cache semântico encontrado (persistente)');
       return {
         answer: adaptedResponse,
+        confidence: 0.85,
+        processingTime: Date.now() - startTime,
+        usedGemini: true,
+        personality: 'Guatá',
+        emotionalState: 'excited'
+      };
+    }
+
+    // 4. FALLBACK: Verificar cache em memória (compatibilidade durante transição)
+    const memorySharedCache = this.getFromSharedCache(query);
+    if (memorySharedCache) {
+      if (isDev) console.log('✅ Cache em memória encontrado (fallback)');
+      return {
+        answer: memorySharedCache.response,
+        confidence: 0.85,
+        processingTime: Date.now() - startTime,
+        usedGemini: true,
+        personality: 'Guatá',
+        emotionalState: 'excited'
+      };
+    }
+
+    const memoryIndividualCache = this.getFromIndividualCache(query, userId, sessionId);
+    if (memoryIndividualCache) {
+      if (isDev) console.log('✅ Cache individual em memória encontrado (fallback)');
+      return {
+        answer: memoryIndividualCache.response,
         confidence: 0.85,
         processingTime: Date.now() - startTime,
         usedGemini: true,
@@ -235,7 +279,15 @@ class GuataGeminiService {
         
         const geminiAnswer = await this.callGeminiAPI(prompt);
         
-        // Salvar no cache compartilhado (para reutilização por outros usuários)
+        // Salvar no cache persistente compartilhado (para reutilização por outros usuários)
+        await guataResponseCacheService.saveToSharedCache(query.question, geminiAnswer);
+
+        // Salvar no cache persistente individual se houver userId/sessionId
+        if (userId || sessionId) {
+          await guataResponseCacheService.saveToIndividualCache(query.question, geminiAnswer, userId, sessionId);
+        }
+
+        // Manter cache em memória também (compatibilidade durante transição)
         const cacheKey = this.generateCacheKey(query);
         this.sharedCache.set(cacheKey, {
           response: geminiAnswer,
@@ -244,7 +296,6 @@ class GuataGeminiService {
           question: query.question
         });
 
-        // Salvar no cache individual se houver userId/sessionId
         if (userId || sessionId) {
           this.saveToIndividualCache(query, userId, sessionId, geminiAnswer);
         }

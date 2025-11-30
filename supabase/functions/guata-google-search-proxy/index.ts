@@ -62,13 +62,28 @@ serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
   
-  // Validate origin for security
+  // Validate origin for security (mais permissivo para debug)
   if (req.method !== 'OPTIONS' && !validateOrigin(origin)) {
-    console.warn('⚠️ guata-google-search-proxy: Invalid origin:', origin);
-    return new Response(
-      JSON.stringify({ error: 'Origin not allowed', results: [] }),
-      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.warn('⚠️ guata-google-search-proxy: Origin não permitida:', origin);
+    console.warn('   Origins permitidas:', [
+      'https://descubra-ms.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:8080',
+      '*.vercel.app'
+    ]);
+    // Em desenvolvimento, permitir mesmo com origem inválida (mas logar)
+    const isDev = Deno.env.get('ENVIRONMENT') === 'development' || !origin;
+    if (!isDev) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Origin not allowed', 
+          message: `Origin "${origin}" não está na lista de permitidas`,
+          results: [],
+          success: false
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
   }
   
   console.log("🔵 guata-google-search-proxy: request received", { method: req.method, url: req.url, origin });
@@ -114,6 +129,9 @@ serve(async (req) => {
     const query = sanitizeInput(rawQuery, 500);
     const location = sanitizeInput(rawLocation, 100);
     
+    console.log('🔵 guata-google-search-proxy: Query recebida:', query.substring(0, 100));
+    console.log('🔵 guata-google-search-proxy: Location:', location);
+    
     if (query.length === 0) {
       return new Response(
         JSON.stringify({ error: 'Query cannot be empty after sanitization', results: [] }),
@@ -125,20 +143,43 @@ serve(async (req) => {
     const safeMaxResults = Math.max(1, Math.min(10, maxResults || 5));
 
     // Get API keys from environment (server-side only - never exposed to client)
-    const apiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY');
-    const engineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
+    // Tentar múltiplos nomes de variáveis para compatibilidade
+    const apiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY') || 
+                   Deno.env.get('GOOGLE_API_KEY') || 
+                   Deno.env.get('VITE_GOOGLE_SEARCH_API_KEY');
+    const engineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || 
+                     Deno.env.get('GOOGLE_CSE_ID') || 
+                     Deno.env.get('VITE_GOOGLE_SEARCH_ENGINE_ID') ||
+                     'a3641e1665f7b4909'; // Fallback para engine ID hardcoded
     
-    console.log('🔵 guata-google-search-proxy: API Key present:', !!apiKey, 'Engine ID present:', !!engineId);
+    console.log('🔵 guata-google-search-proxy: Verificando configuração...');
+    console.log('   GOOGLE_SEARCH_API_KEY:', apiKey ? '✅ present' : '❌ missing');
+    console.log('   GOOGLE_SEARCH_ENGINE_ID:', engineId ? '✅ present' : '❌ missing');
     
-    if (!apiKey || !engineId) {
-      console.error('❌ Google Search API keys não configuradas no Supabase');
-      console.error('   GOOGLE_SEARCH_API_KEY:', apiKey ? 'present' : 'missing');
-      console.error('   GOOGLE_SEARCH_ENGINE_ID:', engineId ? 'present' : 'missing');
+    if (!apiKey) {
+      console.error('❌ Google Search API Key não configurada no Supabase');
+      console.error('💡 Configure o secret: GOOGLE_SEARCH_API_KEY');
+      console.error('   Dashboard → Settings → Edge Functions → Secrets');
       // Retornar status 200 com erro para que o cliente possa ver os detalhes
       return new Response(
         JSON.stringify({ 
           error: 'API keys not configured',
-          message: 'GOOGLE_SEARCH_API_KEY e GOOGLE_SEARCH_ENGINE_ID não estão configuradas nas variáveis de ambiente do Supabase',
+          message: 'GOOGLE_SEARCH_API_KEY não está configurada nas variáveis de ambiente do Supabase. Configure em: Settings → Edge Functions → Secrets',
+          results: [],
+          success: false,
+          help: 'Acesse o Supabase Dashboard → Settings → Edge Functions → Secrets e adicione GOOGLE_SEARCH_API_KEY'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!engineId) {
+      console.error('❌ Google Search Engine ID não configurado no Supabase');
+      console.error('💡 Configure o secret: GOOGLE_SEARCH_ENGINE_ID');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Engine ID not configured',
+          message: 'GOOGLE_SEARCH_ENGINE_ID não está configurado. Usando fallback.',
           results: [],
           success: false
         }),

@@ -175,9 +175,13 @@ class GuataRealWebSearchService {
 
         // Verificar se há erro na resposta (mesmo com status 200)
         if (data?.error || !data?.success) {
-          if (isDev) {
-            console.error('[Web Search] ❌ Edge Function retornou erro:', data);
-          }
+          console.error('[Web Search] ❌ Edge Function retornou erro:', {
+            error: data?.error,
+            message: data?.message,
+            help: data?.help,
+            fullData: data
+          });
+          // Continuar para fallback
         } else if (!error && data?.results && Array.isArray(data.results) && data.results.length > 0) {
           // Salvar no cache
           this.searchCache.set(cacheKey, {
@@ -193,33 +197,35 @@ class GuataRealWebSearchService {
 
         // Se Edge Function falhou, logar detalhes mas continuar para fallback
         if (error) {
-          if (isDev) {
-            console.error('[Web Search] ❌ Edge Function falhou:', {
-              message: error.message,
-              status: error.status,
-              context: error.context,
-              data: data,
-              error: error,
-              errorString: JSON.stringify(error, null, 2)
-            });
-            
-            // Tentar extrair detalhes do erro se disponível
-            if (data && typeof data === 'object') {
-              console.error('[Web Search] Detalhes do erro da Edge Function:', JSON.stringify(data, null, 2));
-            }
+          console.error('[Web Search] ❌ Edge Function falhou:', {
+            message: error.message,
+            status: error.status,
+            context: error.context,
+            data: data,
+            error: error
+          });
+          
+          // Tentar extrair detalhes do erro se disponível
+          if (data && typeof data === 'object') {
+            console.error('[Web Search] Detalhes do erro da Edge Function:', JSON.stringify(data, null, 2));
           }
         } else if (data) {
           // Edge Function retornou dados mas sem resultados válidos
-          if (isDev) {
-            console.warn('[Web Search] Edge Function retornou dados inválidos:', JSON.stringify(data, null, 2));
-            if (data.error) {
-              console.error('[Web Search] Erro na resposta:', data.error, data.message);
-            }
+          console.warn('[Web Search] Edge Function retornou dados inválidos:', {
+            hasResults: !!data.results,
+            resultsType: Array.isArray(data.results) ? 'array' : typeof data.results,
+            resultsLength: Array.isArray(data.results) ? data.results.length : 'N/A',
+            success: data.success,
+            error: data.error,
+            message: data.message,
+            fullData: data
+          });
+          
+          if (data.error) {
+            console.error('[Web Search] Erro na resposta:', data.error, data.message);
           }
         } else {
-          if (isDev) {
-            console.warn('[Web Search] Edge Function retornou resposta vazia');
-          }
+          console.warn('[Web Search] Edge Function retornou resposta vazia (sem data e sem error)');
         }
       } catch (invokeError: any) {
         if (isDev) {
