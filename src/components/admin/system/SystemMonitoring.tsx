@@ -35,7 +35,7 @@ export default function SystemMonitoring() {
       
       if (viajarConfig) {
         systemsData.push({
-          platform: 'ViaJAR',
+          platform: 'ViajARTur',
           status: viajarConfig.status,
           lastCheck: viajarConfig.last_check || new Date().toISOString(),
         });

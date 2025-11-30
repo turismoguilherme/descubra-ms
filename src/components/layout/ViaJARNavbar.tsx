@@ -89,7 +89,7 @@ const ViaJARNavbar = () => {
           <Link to="/" className="flex items-center">
             <div className="text-2xl font-bold">
               <span className="text-blue-900">Viaj</span>
-              <span className="text-cyan-500">AR</span>
+              <span className="text-cyan-500">ARTur</span>
             </div>
           </Link>
 

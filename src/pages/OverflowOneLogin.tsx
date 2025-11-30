@@ -161,7 +161,7 @@ const OverflowOneLogin: React.FC = () => {
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               <span className="text-white">Entrar na</span>
-              <span className="text-cyan-300"> ViaJAR</span>
+              <span className="text-cyan-300"> ViajARTur</span>
           </h1>
             <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
               Acesse sua conta empresarial e continue transformando seu negócio turístico
@@ -175,7 +175,7 @@ const OverflowOneLogin: React.FC = () => {
         <Card className="shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Entrar na ViaJAR
+              Entrar na ViajARTur
             </CardTitle>
             <p className="text-sm text-gray-600 mt-2">
               Acesse sua conta empresarial

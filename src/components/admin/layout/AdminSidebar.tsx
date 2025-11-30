@@ -39,7 +39,7 @@ const sidebarItems: SidebarItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: 'Gestão ViaJAR',
+    label: 'Gestão ViajARTur',
     path: '/viajar/admin/viajar',
     icon: Building2,
     children: [
@@ -122,7 +122,7 @@ export default function AdminSidebar() {
     <div className="w-64 bg-white border-r border-gray-200 min-h-screen p-4 shadow-lg">
       <div className="mb-6 pb-4 border-b border-gray-200">
         <h2 className="text-base font-bold text-gray-900">Área Admin</h2>
-        <p className="text-xs text-gray-500 mt-1">ViaJAR & Descubra MS</p>
+        <p className="text-xs text-gray-500 mt-1">ViajARTur & Descubra MS</p>
       </div>
 
       <nav className="space-y-1">

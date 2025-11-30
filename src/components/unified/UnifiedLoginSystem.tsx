@@ -195,7 +195,7 @@ const UnifiedLoginSystem = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Bem-vindo à viajAR</CardTitle>
+            <CardTitle className="text-2xl font-bold">Bem-vindo à ViajARTur</CardTitle>
             <p className="text-gray-600">Redirecionando para seu dashboard...</p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -225,7 +225,7 @@ const UnifiedLoginSystem = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">viajAR</CardTitle>
+          <CardTitle className="text-2xl font-bold">ViajARTur</CardTitle>
           <p className="text-gray-600">Plataforma unificada para turismo</p>
         </CardHeader>
         <CardContent>

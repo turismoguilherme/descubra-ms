@@ -23,7 +23,7 @@ export default function AdminHeader() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-gray-900">Painel Administrativo</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Gerenciamento ViaJAR & Descubra MS</p>
+          <p className="text-xs text-gray-500 mt-0.5">Gerenciamento ViajARTur & Descubra MS</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">

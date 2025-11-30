@@ -1005,7 +1005,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
                         para fins de benchmarking e comparação com outras empresas/organizações do setor turístico.
                       </p>
                       <p>
-                        <strong>Importante:</strong> A ViaJAR é uma plataforma nova e em constante evolução. 
+                        <strong>Importante:</strong> A ViajARTur é uma plataforma nova e em constante evolução. 
                         Podem ocorrer erros técnicos ou inconsistências nos processos de agregação e análise de dados.
                       </p>
                       <p>
@@ -1203,7 +1203,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
             <div>
               <h3 className="font-semibold mb-2 text-gray-900">1.1. Aviso sobre Plataforma Nova</h3>
               <p className="text-gray-700">
-                A ViaJAR é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos, 
+                A ViajARTur é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos, 
                 inconsistências ou melhorias nos processos de agregação e análise de dados. Ao aceitar 
                 este termo, você reconhece e aceita que:
               </p>

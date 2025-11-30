@@ -173,7 +173,7 @@ export default function ViaJARUnifiedDashboard() {
           <div className="container mx-auto px-6">
             <div className="flex justify-between items-center">
               <div>
-              <h1 className="text-3xl font-bold">Dashboard ViaJAR</h1>
+              <h1 className="text-3xl font-bold">Dashboard ViajARTur</h1>
               <p className="text-blue-100 mt-2">Bem-vindo ao sistema unificado</p>
               </div>
               <div className="flex gap-4">
@@ -194,7 +194,7 @@ export default function ViaJARUnifiedDashboard() {
         <SectionWrapper 
           variant="default" 
           title="Visão Geral do Sistema"
-          subtitle="Métricas principais do ViaJAR"
+          subtitle="Métricas principais do ViajARTur"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <CardBox>
@@ -241,11 +241,11 @@ export default function ViaJARUnifiedDashboard() {
         {/* Mensagem de Boas-vindas */}
         <SectionWrapper 
           variant="default" 
-          title="Bem-vindo ao ViaJAR Dashboard"
+          title="Bem-vindo ao ViajARTur Dashboard"
         >
           <CardBox>
             <p className="text-slate-600 mb-4">
-              Este é o dashboard unificado do sistema ViaJAR. 
+              Este é o dashboard unificado do sistema ViajARTur. 
               Selecione seu perfil de usuário para acessar funcionalidades específicas.
             </p>
             {userRole && (

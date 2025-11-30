@@ -86,7 +86,7 @@ export default function CompanySettings() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Configurações da Empresa</h2>
-          <p className="text-gray-600 mt-1">Configure informações da ViaJAR</p>
+          <p className="text-gray-600 mt-1">Configure informações da ViajARTur</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />

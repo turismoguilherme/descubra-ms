@@ -64,7 +64,7 @@ export default function AdminLogin() {
               <Shield className="h-8 w-8 text-gray-700" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Área Administrativa</h1>
-            <p className="text-sm text-gray-500 mt-2">ViaJAR & Descubra MS</p>
+            <p className="text-sm text-gray-500 mt-2">ViajARTur & Descubra MS</p>
           </div>
 
           {/* Form */}

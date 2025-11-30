@@ -337,7 +337,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
               <div className="flex items-center gap-2">
                 <Brain className="h-8 w-8 text-purple-600" />
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  ViaJAR Intelligence Suite
+                  ViajARTur Intelligence Suite
                 </h1>
               </div>
               <p className="text-muted-foreground">

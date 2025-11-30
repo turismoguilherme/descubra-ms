@@ -113,7 +113,7 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
         );
 
         // Criar metadados da assinatura
-        const termText = `Termo de Consentimento ViaJAR - ${new Date().toISOString()}`;
+        const termText = `Termo de Consentimento ViajARTur - ${new Date().toISOString()}`;
         const documentHash = btoa(termText).substring(0, 32);
         
         signatureData = {
@@ -209,7 +209,7 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
                 </ul>
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                   <p className="text-xs text-yellow-900">
-                    <strong>⚠️ Aviso:</strong> A ViaJAR é uma plataforma nova. Podem ocorrer erros técnicos. Ao aceitar, você reconhece isso e mesmo assim autoriza o compartilhamento.
+                    <strong>⚠️ Aviso:</strong> A ViajARTur é uma plataforma nova. Podem ocorrer erros técnicos. Ao aceitar, você reconhece isso e mesmo assim autoriza o compartilhamento.
                   </p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
             <AlertDescription className="text-yellow-900">
               <strong>Avisos Importantes:</strong>
               <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                <li>A ViaJAR é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos ou inconsistências nos processos de agregação e análise de dados.</li>
+                <li>A ViajARTur é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos ou inconsistências nos processos de agregação e análise de dados.</li>
                 <li>Ao aceitar este termo, você reconhece que a plataforma pode cometer erros e mesmo assim aceita compartilhar seus dados agregados e anonimizados.</li>
                 <li>A plataforma se compromete a corrigir erros quando identificados e a manter a segurança dos dados compartilhados.</li>
               </ul>
@@ -401,7 +401,7 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
             <div>
               <h3 className="font-semibold mb-2">1.1. Aviso sobre Plataforma Nova</h3>
               <p className="text-muted-foreground">
-                A ViaJAR é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos, 
+                A ViajARTur é uma plataforma nova e em constante evolução. Podem ocorrer erros técnicos, 
                 inconsistências ou melhorias nos processos de agregação e análise de dados. Ao aceitar 
                 este termo, você reconhece e aceita que:
               </p>

@@ -202,7 +202,7 @@ function DashboardOverview() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Administrativo</h2>
-        <p className="text-sm text-gray-600">Visão geral das plataformas ViaJAR e Descubra MS</p>
+        <p className="text-sm text-gray-600">Visão geral das plataformas ViajARTur e Descubra MS</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -267,7 +267,7 @@ function DashboardOverview() {
           <CardContent className="space-y-2">
             <Link to="/viajar/admin/viajar/employees" className="block p-3 rounded-md hover:bg-gray-50 border border-gray-200 transition-colors">
               <div className="font-medium text-gray-900">Gerenciar Funcionários</div>
-              <div className="text-xs text-gray-500 mt-1">Adicionar e editar funcionários ViaJAR</div>
+              <div className="text-xs text-gray-500 mt-1">Adicionar e editar funcionários ViajARTur</div>
             </Link>
             <Link to="/viajar/admin/descubra-ms/content" className="block p-3 rounded-md hover:bg-gray-50 border border-gray-200 transition-colors">
               <div className="font-medium text-gray-900">Editar Conteúdo</div>

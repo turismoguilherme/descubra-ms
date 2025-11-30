@@ -1,6 +1,6 @@
 /**
  * Etapa de Boas-vindas do Onboarding
- * Introduz o usuário ao viajAR e explica o processo
+ * Introduz o usuário ao ViajARTur e explica o processo
  */
 
 import React from 'react';
@@ -52,7 +52,7 @@ const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
       <div className="text-center space-y-4">
         <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
           <Sparkles className="h-4 w-4" />
-          <span>Bem-vindo ao viajAR</span>
+          <span>Bem-vindo ao ViajARTur</span>
         </div>
         
         <h2 className="text-3xl font-bold text-gray-800">
@@ -60,7 +60,7 @@ const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
         </h2>
         
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          O viajAR é uma plataforma inteligente que ajuda empresas de turismo a 
+          O ViajARTur é uma plataforma inteligente que ajuda empresas de turismo a 
           otimizar seu desempenho através de diagnósticos personalizados e 
           recomendações baseadas em IA.
         </p>

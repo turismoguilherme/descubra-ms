@@ -75,7 +75,7 @@ export default function ViaJAROnboarding() {
     {
       id: 7,
       title: 'Pronto!',
-      description: 'Bem-vindo ao ViaJAR',
+      description: 'Bem-vindo ao ViajARTur',
     },
   ];
 
@@ -299,7 +299,7 @@ export default function ViaJAROnboarding() {
                       🎉 Tudo Pronto!
                     </h2>
                     <p className="text-lg text-muted-foreground">
-                      Sua conta ViaJAR está configurada e pronta para uso
+                      Sua conta ViajARTur está configurada e pronta para uso
                     </p>
                   </div>
 
@@ -324,7 +324,7 @@ export default function ViaJAROnboarding() {
                         <li className="flex items-start gap-2">
                           <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                           <span>
-                            Usar ViaJAR Intelligence Suite (IA)
+                            Usar ViajARTur Intelligence Suite (IA)
                           </span>
                         </li>
                       )}

@@ -39,11 +39,11 @@ const ViaJARFooter: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="text-xl font-bold">
               <span className="text-blue-900">Viaj</span>
-              <span className="text-cyan-500">AR</span>
+              <span className="text-cyan-500">ARTur</span>
             </div>
             <span className="text-gray-400 hidden md:inline">•</span>
             <span className="text-gray-500 text-sm">
-              © 2025 ViaJAR. Todos os direitos reservados.
+              © 2025 ViajARTur. Todos os direitos reservados.
             </span>
           </div>
 
@@ -111,11 +111,11 @@ const ViaJARFooter: React.FC = () => {
             {/* Contato */}
             <div className="flex items-center gap-3 text-sm">
               <a 
-                href="mailto:contato@viajar.com.br" 
+                href="mailto:contato@viajartur.com.br" 
                 className="text-gray-500 hover:text-cyan-600 transition-colors flex items-center gap-1"
               >
                 <Mail className="h-3 w-3" />
-                <span className="hidden lg:inline">contato@viajar.com.br</span>
+                <span className="hidden lg:inline">contato@viajartur.com.br</span>
               </a>
             </div>
           </div>

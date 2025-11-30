@@ -58,7 +58,7 @@ const ViaJARSaaS = () => {
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               <span className="text-white">Viaj</span>
-              <span className="text-cyan-300">AR</span>
+              <span className="text-cyan-300">ARTur</span>
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
               Ecossistema inteligente de turismo
@@ -238,7 +238,7 @@ const ViaJARSaaS = () => {
             Pronto para Transformar seu Negócio?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            Junte-se a centenas de empresas que já confiam na ViaJAR para impulsionar seus resultados.
+            Junte-se a centenas de empresas que já confiam na ViajARTur para impulsionar seus resultados.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/viajar/register">
@@ -264,7 +264,7 @@ const ViaJARSaaS = () => {
               Nosso Case de Sucesso
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              O Descubra MS é nosso produto estrela, demonstrando o poder da ViaJAR
+              O Descubra MS é nosso produto estrela, demonstrando o poder da ViajARTur
             </p>
           </div>
           
@@ -291,7 +291,7 @@ const ViaJARSaaS = () => {
                 <div className="space-y-4 text-gray-600">
                   <p>
                     O <strong>Descubra MS</strong> é nossa primeira implementação completa, 
-                    demonstrando como a tecnologia ViaJAR pode revolucionar o turismo regional.
+                    demonstrando como a tecnologia ViajARTur pode revolucionar o turismo regional.
                   </p>
                   <p>
                     Com <strong>Guatá IA</strong>, <strong>Passaporte Digital</strong>, 

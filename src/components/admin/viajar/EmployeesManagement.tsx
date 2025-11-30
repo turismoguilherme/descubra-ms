@@ -52,7 +52,7 @@ export default function EmployeesManagement() {
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Funcionários ViaJAR</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Funcionários ViajARTur</h2>
             <p className="text-sm text-gray-600 mt-1">Gerencie funcionários e colaboradores da empresa</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
