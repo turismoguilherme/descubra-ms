@@ -1,13 +1,56 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getCorsHeaders } from "../_shared/cors.ts"
 
-// Limites (plano gratuito)
-const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get('RATE_LIMIT_PER_MIN') ?? '8')
-const DAILY_BUDGET_CALLS = parseInt(Deno.env.get('DAILY_BUDGET_CALLS') ?? '200')
+// Limites (plano gratuito) - mais restritivos para segurança
+const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get('RATE_LIMIT_PER_MIN') ?? '5') // Reduzido de 8 para 5
+const DAILY_BUDGET_CALLS = parseInt(Deno.env.get('DAILY_BUDGET_CALLS') ?? '100') // Reduzido de 200 para 100
+const MAX_QUESTION_LENGTH = 5000 // Limite de caracteres para perguntas
 
 // Memória local (edge) – suficiente para conter picos
 const minuteWindow: Map<string, { count: number; ts: number }> = new Map()
 const dailyWindow: Map<string, { count: number; day: string }> = new Map()
+
+/**
+ * Sanitize input to prevent injection attacks
+ */
+function sanitizeInput(input: string, maxLength: number = MAX_QUESTION_LENGTH): string {
+  if (typeof input !== 'string') return '';
+  
+  let sanitized = input
+    .replace(/[<>]/g, '') // Remove HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .trim();
+  
+  if (sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength);
+  }
+  
+  return sanitized;
+}
+
+/**
+ * Validate request origin
+ */
+function validateOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  
+  const allowedOrigins = [
+    'https://descubra-ms.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:8080',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:8080'
+  ];
+  
+  return allowedOrigins.some(allowed => {
+    if (allowed.startsWith('http://localhost') || allowed.startsWith('http://127.0.0.1')) {
+      return origin.startsWith(allowed);
+    }
+    return origin === allowed || origin.endsWith('.vercel.app');
+  });
+}
 
 function checkRateLimit(key: string): { ok: boolean; reason?: string } {
   const now = Date.now()
@@ -75,17 +118,24 @@ interface LearningData {
   user_correction?: string
 }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
 // Cache simples em memória para Edge Function
 const responseCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 const DEFAULT_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (eventos)
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
+  // Validate origin for security
+  if (req.method !== 'OPTIONS' && !validateOrigin(origin)) {
+    console.warn('⚠️ guata-web-rag: Invalid origin:', origin);
+    return new Response(
+      JSON.stringify({ error: 'Origin not allowed' }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -94,6 +144,8 @@ serve(async (req) => {
     const body = await req.json() as RAGQuery
     const ip = req.headers.get('x-forwarded-for') || 'ip-unknown'
     const userKey = body.user_id || body.session_id || ip
+    
+    // Rate limiting
     const rl = checkRateLimit(userKey)
     if (!rl.ok) {
       const msg = rl.reason === 'RATE_MIN'
@@ -102,7 +154,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: msg }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const { question, state_code = 'MS', user_id, session_id, location } = body
+    // Sanitize inputs
+    const rawQuestion = body.question || '';
+    const question = sanitizeInput(rawQuestion, MAX_QUESTION_LENGTH);
+    
+    if (question.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Question cannot be empty after sanitization' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Validate state_code (only allow valid state codes)
+    const validStateCodes = ['MS', 'MT', 'SP', 'RJ', 'PR', 'SC', 'RS', 'MG', 'BA', 'GO', 'DF'];
+    const state_code = validStateCodes.includes(body.state_code || 'MS') ? (body.state_code || 'MS') : 'MS';
+    
+    // Sanitize other inputs
+    const user_id = body.user_id ? sanitizeInput(body.user_id, 100) : undefined;
+    const session_id = body.session_id ? sanitizeInput(body.session_id, 100) : undefined;
+    const location = body.location ? sanitizeInput(body.location, 200) : undefined;
     
     console.log(`🔍 RAG Query iniciada: "${question}" for state: ${state_code}`)
     console.log(`👤 User ID: ${user_id}`)

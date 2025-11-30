@@ -1,12 +1,49 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-  'Access-Control-Max-Age': '86400',
-  'Access-Control-Allow-Credentials': 'true',
+/**
+ * Sanitize input to prevent injection attacks
+ */
+function sanitizeInput(input: string, maxLength: number = 100000): string {
+  if (typeof input !== 'string') return '';
+  
+  // Remove potentially dangerous characters
+  let sanitized = input
+    .replace(/[<>]/g, '') // Remove HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .trim();
+  
+  // Limit length
+  if (sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength);
+  }
+  
+  return sanitized;
+}
+
+/**
+ * Validate request origin
+ */
+function validateOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  
+  const allowedOrigins = [
+    'https://descubra-ms.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:8080',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:8080'
+  ];
+  
+  // Check exact match or subdomain
+  return allowedOrigins.some(allowed => {
+    if (allowed.startsWith('http://localhost') || allowed.startsWith('http://127.0.0.1')) {
+      return origin.startsWith(allowed);
+    }
+    return origin === allowed || origin.endsWith('.vercel.app');
+  });
 }
 
 interface GeminiRequest {
@@ -24,9 +61,21 @@ interface GeminiRequest {
 }
 
 serve(async (req) => {
-  console.log("🔵 guata-gemini-proxy: request received", { method: req.method, url: req.url });
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
-  // Handle CORS preflight requests - IMPORTANTE: retornar 200 OK
+  // Validate origin for security
+  if (req.method !== 'OPTIONS' && !validateOrigin(origin)) {
+    console.warn('⚠️ guata-gemini-proxy: Invalid origin:', origin);
+    return new Response(
+      JSON.stringify({ error: 'Origin not allowed' }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  console.log("🔵 guata-gemini-proxy: request received", { method: req.method, url: req.url, origin });
+  
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { 
       status: 200,
@@ -56,9 +105,9 @@ serve(async (req) => {
       );
     }
 
-    const { prompt, model = 'gemini-2.0-flash-exp', temperature = 0.3, maxOutputTokens = 2000 } = body;
+    const { prompt: rawPrompt, model = 'gemini-2.0-flash-exp', temperature = 0.3, maxOutputTokens = 2000 } = body;
     
-    if (!prompt) {
+    if (!rawPrompt) {
       console.error('❌ guata-gemini-proxy: Missing prompt field');
       return new Response(
         JSON.stringify({ error: 'Missing prompt field' }),
@@ -66,21 +115,32 @@ serve(async (req) => {
       );
     }
 
-    if (typeof prompt !== 'string') {
-      console.error('❌ guata-gemini-proxy: Invalid prompt type:', typeof prompt);
+    if (typeof rawPrompt !== 'string') {
+      console.error('❌ guata-gemini-proxy: Invalid prompt type:', typeof rawPrompt);
       return new Response(
-        JSON.stringify({ error: 'Invalid prompt field - must be a string', receivedType: typeof prompt }),
+        JSON.stringify({ error: 'Invalid prompt field - must be a string', receivedType: typeof rawPrompt }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Sanitize prompt input
+    const prompt = sanitizeInput(rawPrompt, 100000);
+    
     if (prompt.length === 0) {
-      console.error('❌ guata-gemini-proxy: Empty prompt string');
+      console.error('❌ guata-gemini-proxy: Empty prompt string after sanitization');
       return new Response(
         JSON.stringify({ error: 'Prompt cannot be empty' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    // Validate model name to prevent injection
+    const allowedModels = ['gemini-2.0-flash-exp', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.0-flash-exp';
+    
+    // Validate temperature and maxOutputTokens
+    const safeTemperature = Math.max(0, Math.min(1, temperature || 0.3));
+    const safeMaxOutputTokens = Math.max(1, Math.min(8192, maxOutputTokens || 2000));
 
     // Get API key from environment (server-side only - never exposed to client)
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -109,17 +169,17 @@ serve(async (req) => {
       );
     }
 
-    console.log("🔵 guata-gemini-proxy: calling Gemini API with model:", model, "prompt length:", prompt.length);
+    console.log("🔵 guata-gemini-proxy: calling Gemini API with model:", safeModel, "prompt length:", prompt.length);
 
     // Call Gemini API
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${safeModel}:generateContent?key=${apiKey}`;
     
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: temperature || 0.5, // Default mais baixo para seguir instruções melhor
-        maxOutputTokens,
-        topP: 0.8, // Reduzido de 0.9 para ser mais determinístico
+        temperature: safeTemperature,
+        maxOutputTokens: safeMaxOutputTokens,
+        topP: 0.8,
         topK: 40
       }
     };
@@ -183,10 +243,13 @@ serve(async (req) => {
 
     console.log('✅ Gemini response generated:', generatedText.substring(0, 100) + '...');
     
+    // Sanitize response before sending
+    const sanitizedText = sanitizeInput(generatedText, 50000);
+    
     return new Response(
       JSON.stringify({ 
-        text: generatedText,
-        model: model,
+        text: sanitizedText,
+        model: safeModel,
         usage: data.usageMetadata || {},
         success: true
       }),
