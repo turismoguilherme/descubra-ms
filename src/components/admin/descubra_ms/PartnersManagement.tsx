@@ -19,6 +19,7 @@ import {
   Video
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { notifyPartnerApproved, notifyPartnerRejected } from '@/services/email/notificationEmailService';
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,9 @@ export default function PartnersManagement() {
 
   const updatePartnerStatus = async (partnerId: string, status: string) => {
     try {
+      // Buscar dados do parceiro para o email
+      const partner = partners.find(p => p.id === partnerId);
+
       const { error } = await supabase
         .from('institutional_partners')
         .update({ status, is_active: status === 'approved' })
@@ -86,14 +90,29 @@ export default function PartnersManagement() {
 
       if (error) throw error;
 
+      // Enviar email de notificação
+      if (partner?.contact_email) {
+        if (status === 'approved') {
+          notifyPartnerApproved({
+            partnerEmail: partner.contact_email,
+            partnerName: partner.name,
+          }).catch(err => console.error('Erro ao enviar email:', err));
+        } else if (status === 'rejected') {
+          notifyPartnerRejected({
+            partnerEmail: partner.contact_email,
+            partnerName: partner.name,
+          }).catch(err => console.error('Erro ao enviar email:', err));
+        }
+      }
+
       const messages: Record<string, { title: string; description: string }> = {
         approved: {
           title: 'Parceiro aprovado!',
-          description: 'O parceiro agora está visível na plataforma.',
+          description: 'O parceiro agora está visível na plataforma. Email de notificação enviado.',
         },
         rejected: {
           title: 'Parceiro rejeitado',
-          description: 'A solicitação foi rejeitada.',
+          description: 'A solicitação foi rejeitada. Email de notificação enviado.',
         },
         suspended: {
           title: 'Parceiro suspenso',

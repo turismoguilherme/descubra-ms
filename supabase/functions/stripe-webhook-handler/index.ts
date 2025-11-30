@@ -50,7 +50,13 @@ serve(async (req) => {
     // Processar diferentes tipos de eventos
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, supabase);
+        const session = event.data.object as Stripe.Checkout.Session;
+        // Verificar se é pagamento de evento ou assinatura
+        if (session.metadata?.type === 'event_sponsorship') {
+          await handleEventPaymentCompleted(session, supabase);
+        } else {
+          await handleCheckoutCompleted(session, supabase);
+        }
         break;
       case 'customer.subscription.created':
         await handleSubscriptionCreated(event.data.object as Stripe.Subscription, supabase);
@@ -85,6 +91,72 @@ serve(async (req) => {
 });
 
 // Funções de manipulação de eventos
+
+// Handler específico para pagamento de eventos em destaque
+async function handleEventPaymentCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Pagamento de evento em destaque completado:', session.id);
+  
+  try {
+    const metadata = session.metadata || {};
+    const eventId = metadata.event_id;
+    const eventName = metadata.event_name;
+    const organizerEmail = metadata.organizer_email;
+
+    if (!eventId) {
+      console.error('Event ID faltando no metadata');
+      return;
+    }
+
+    // Atualizar evento para patrocinado
+    const { error } = await supabase
+      .from('events')
+      .update({
+        is_sponsored: true,
+        is_visible: true,
+        sponsor_tier: 'destaque',
+        sponsor_payment_status: 'paid',
+        sponsor_start_date: new Date().toISOString().split('T')[0],
+        // Destaque válido por 30 dias
+        sponsor_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      })
+      .eq('id', eventId);
+
+    if (error) {
+      console.error('Erro ao atualizar evento:', error);
+    } else {
+      console.log(`Evento ${eventId} marcado como patrocinado`);
+      
+      // Enviar email de confirmação para o organizador
+      try {
+        const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR');
+        
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-notification-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'event_payment_confirmed',
+            to: organizerEmail,
+            data: {
+              organizerName: metadata.organizer_name,
+              eventName: eventName,
+              validUntil: validUntil,
+            },
+          }),
+        });
+        console.log('Email de confirmação enviado');
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError);
+      }
+    }
+
+  } catch (error) {
+    console.error('Erro ao processar pagamento de evento:', error);
+  }
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabase: any) {
   console.log('Checkout completado:', session.id);
   

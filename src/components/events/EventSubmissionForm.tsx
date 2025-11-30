@@ -25,8 +25,10 @@ import {
   CheckCircle2,
   Loader2,
   Megaphone,
-  Gift
+  Gift,
+  CreditCard
 } from "lucide-react";
+import { redirectToEventCheckout } from "@/services/stripe/eventCheckoutService";
 
 const eventSchema = z.object({
   // Tipo de cadastro
@@ -116,13 +118,14 @@ export const EventSubmissionForm: React.FC = () => {
         sponsor_amount: data.tipo === "destaque" ? 499.90 : null,
       };
 
+      // Criar evento no banco
       const response = await fetch(`${SUPABASE_URL}/rest/v1/events`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=representation'
         },
         body: JSON.stringify(eventData)
       });
@@ -131,18 +134,39 @@ export const EventSubmissionForm: React.FC = () => {
         throw new Error('Erro ao enviar evento');
       }
 
+      const createdEvents = await response.json();
+      const eventId = createdEvents[0]?.id;
+
+      // Se for evento em destaque, redirecionar para checkout Stripe
+      if (data.tipo === "destaque" && eventId) {
+        toast({
+          title: "Redirecionando para pagamento...",
+          description: "Você será redirecionado para a página de pagamento seguro.",
+        });
+
+        // Pequeno delay para mostrar o toast
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        await redirectToEventCheckout({
+          eventId,
+          eventName: data.titulo,
+          organizerEmail: data.organizador_email,
+          organizerName: data.organizador_nome,
+        });
+        return; // Não mostra tela de sucesso, vai redirecionar
+      }
+
+      // Evento gratuito - mostra sucesso
       setSubmitSuccess(true);
       toast({
         title: "Evento enviado com sucesso!",
-        description: data.tipo === "destaque" 
-          ? "Entraremos em contato para confirmar o pagamento."
-          : "Seu evento será analisado e publicado em breve.",
+        description: "Seu evento será analisado e publicado em breve.",
       });
     } catch (error: any) {
       console.error('Erro ao enviar evento:', error);
       toast({
         title: "Erro ao enviar evento",
-        description: "Tente novamente mais tarde.",
+        description: error.message || "Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {

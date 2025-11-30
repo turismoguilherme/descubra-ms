@@ -19,6 +19,7 @@ import {
   Building2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { notifyEventApproved, notifyEventRejected } from '@/services/email/notificationEmailService';
 import {
   Dialog,
   DialogContent,
@@ -88,6 +89,9 @@ export default function EventsManagement() {
 
   const approveEvent = async (eventId: string) => {
     try {
+      // Buscar dados do evento para o email
+      const event = events.find(e => e.id === eventId);
+      
       const { error } = await supabase
         .from('events')
         .update({ is_visible: true })
@@ -95,9 +99,20 @@ export default function EventsManagement() {
 
       if (error) throw error;
 
+      // Enviar email de notificação
+      if (event?.organizador_email) {
+        notifyEventApproved({
+          organizerEmail: event.organizador_email,
+          organizerName: event.organizador_nome,
+          eventName: event.name,
+          eventDate: formatDate(event.start_date),
+          eventLocation: event.location,
+        }).catch(err => console.error('Erro ao enviar email:', err));
+      }
+
       toast({
         title: 'Evento aprovado!',
-        description: 'O evento agora está visível na plataforma.',
+        description: 'O evento agora está visível na plataforma. Email de notificação enviado.',
       });
       loadEvents();
     } catch (error: any) {
@@ -109,8 +124,11 @@ export default function EventsManagement() {
     }
   };
 
-  const rejectEvent = async (eventId: string) => {
+  const rejectEvent = async (eventId: string, reason?: string) => {
     try {
+      // Buscar dados do evento para o email
+      const event = events.find(e => e.id === eventId);
+
       const { error } = await supabase
         .from('events')
         .delete()
@@ -118,9 +136,19 @@ export default function EventsManagement() {
 
       if (error) throw error;
 
+      // Enviar email de notificação
+      if (event?.organizador_email) {
+        notifyEventRejected({
+          organizerEmail: event.organizador_email,
+          organizerName: event.organizador_nome,
+          eventName: event.name,
+          reason: reason,
+        }).catch(err => console.error('Erro ao enviar email:', err));
+      }
+
       toast({
         title: 'Evento rejeitado',
-        description: 'O evento foi removido.',
+        description: 'O evento foi removido. Email de notificação enviado.',
       });
       loadEvents();
     } catch (error: any) {
