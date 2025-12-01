@@ -78,6 +78,8 @@ import SobreMS from "@/pages/ms/SobreMS";
 import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
 import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
+import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
+import TermosUsoMS from "@/pages/ms/TermosUsoMS";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
@@ -237,6 +239,10 @@ function App() {
                             <Route path="/descubramatogrossodosul/login" element={<AuthPage />} />
                             <Route path="/descubramatogrossodosul/register" element={<Register />} />
                             <Route path="/descubramatogrossodosul/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
+                            
+                            {/* Descubra MS - Políticas */}
+                            <Route path="/descubramatogrossodosul/privacidade" element={<PrivacidadeMS />} />
+                            <Route path="/descubramatogrossodosul/termos" element={<TermosUsoMS />} />
                             
                             <Route path="/descubramatogrossodosul/*" element={<MSIndex />} />
                             

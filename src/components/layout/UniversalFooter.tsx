@@ -92,59 +92,55 @@ const UniversalFooter = () => {
   return (
     <footer className="bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green text-white">
       <div className="ms-container">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
-          {/* Coluna Esquerda - Logo e Descrição */}
-          <div>
-            <div className="flex items-center mb-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-6">
+          {/* Coluna Esquerda - Logo, Descrição e Redes */}
+          <div className="text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start mb-2">
               <img 
                 src="/images/logo-descubra-ms.png?v=3" 
                 alt="Descubra Mato Grosso do Sul" 
-                className="h-10 w-auto mr-3"
+                className="h-10 w-auto"
               />
-              <div>
-                <h3 className="text-lg font-bold text-white" style={{ position: 'relative', zIndex: 1, display: 'none' }}>DESCUBRA</h3>
-                <h4 className="text-sm font-semibold text-white" style={{ position: 'relative', zIndex: 1, display: 'none' }}>MATO GROSSO DO SUL</h4>
-              </div>
             </div>
-            <p className="text-blue-100 text-sm mb-4">
+            <p className="text-blue-100 text-xs mb-3">
               Descubra as maravilhas do Pantanal, Cerrado e muito mais.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-blue-200 hover:text-white transition-colors">
+            <div className="flex space-x-3 justify-center lg:justify-start">
+              <a href="#" className="text-blue-200 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="#" className="text-blue-200 hover:text-white transition-colors">
+              <a href="#" className="text-blue-200 hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram className="h-4 w-4" />
               </a>
-              <a href="#" className="text-blue-200 hover:text-white transition-colors">
+              <a href="#" className="text-blue-200 hover:text-white transition-colors" aria-label="Twitter">
                 <Twitter className="h-4 w-4" />
               </a>
             </div>
           </div>
 
-          {/* Coluna Direita - Links e Contato */}
-          <div className="grid grid-cols-2 gap-6">
-            {/* Links */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-white">Explore</h3>
-              <ul className="space-y-2">
+          {/* Coluna Direita - Links em 3 Colunas */}
+          <div className="grid grid-cols-3 gap-3 lg:gap-4 items-start">
+            {/* Explore */}
+            <div className="text-center lg:text-left">
+              <h3 className="text-xs font-semibold mb-2 text-white">Explore</h3>
+              <ul className="space-y-1.5">
                 <li>
-                  <Link to="/descubramatogrossodosul" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Início
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/destinos" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul/destinos" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Destinos
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/eventos" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul/eventos" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Eventos
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/parceiros" className="text-blue-100 hover:text-white text-sm transition-colors">
+                  <Link to="/descubramatogrossodosul/parceiros" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Parceiros
                   </Link>
                 </li>
@@ -152,16 +148,43 @@ const UniversalFooter = () => {
             </div>
 
             {/* Contato */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-white">Contato</h3>
+            <div className="text-center lg:text-left">
+              <h3 className="text-xs font-semibold mb-2 text-white">Contato</h3>
               <ul className="space-y-2">
-                <li className="flex items-center gap-2 text-blue-100 text-sm">
-                  <Mail className="h-3 w-3" />
-                  contato@descubramsconline.com.br
+                <li className="text-blue-100 text-xs">
+                  <div className="flex items-start justify-center lg:justify-start gap-1.5 max-w-full">
+                    <Mail className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span className="break-words leading-relaxed hyphens-auto" style={{ wordBreak: 'break-word', maxWidth: '100%' }}>
+                      contato@descubramsconline.com.br
+                    </span>
+                  </div>
                 </li>
-                <li className="flex items-center gap-2 text-blue-100 text-sm">
-                  <Phone className="h-3 w-3" />
-                  (67) 3318-7600
+                <li className="flex items-center justify-center lg:justify-start gap-1.5 text-blue-100 text-xs">
+                  <Phone className="h-3 w-3 flex-shrink-0" />
+                  <span>(67) 3318-7600</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div className="text-center lg:text-left">
+              <h3 className="text-xs font-semibold mb-2 text-white">Legal</h3>
+              <ul className="space-y-1.5">
+                <li>
+                  <Link 
+                    to="/descubramatogrossodosul/privacidade" 
+                    className="text-blue-100 hover:text-white text-xs transition-colors block"
+                  >
+                    Política de Privacidade
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/descubramatogrossodosul/termos" 
+                    className="text-blue-100 hover:text-white text-xs transition-colors block"
+                  >
+                    Termos de Uso
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -169,9 +192,9 @@ const UniversalFooter = () => {
         </div>
 
         {/* Linha separadora e Copyright */}
-        <div className="border-t border-blue-300 pt-4">
+        <div className="border-t border-blue-300/30 pt-3 mt-4">
           <div className="text-center">
-            <p className="text-blue-200 text-sm">
+            <p className="text-blue-200 text-xs">
               © 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.
             </p>
           </div>
