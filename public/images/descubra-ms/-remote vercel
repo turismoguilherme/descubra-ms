@@ -1,0 +1,15 @@
+* [33m8049a3c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: downgrade zod para 3.23.3 e adicionar configuração NODE_ENV para Vercel
+* [33mf655741[m fix: remover manualChunks para resolver erro de inicialização do zod no Vercel
+* [33mcf9c1a6[m fix: padronizar imports do zod e ajustar chunking do Vite para resolver erro de inicialização
+* [33mcc56dde[m fix: corrigir duplicações que causavam erro no build do Vercel
+* [33m92e94c0[m feat: Implementar sistema de memória de contexto para perguntas genéricas - Melhorar detecção de resposta apenas com cidade após esclarecimento - Combinar contexto anterior (serviço) com cidade informada - Remover chaves de API hardcoded (usar apenas variáveis de ambiente) - Corrigir erro de feedback no Supabase (userId público)
+* [33m494f397[m Corrigir: validar que pergunta seja sempre string válida e ajustar melhorias implementadas
+* [33m745858a[m Corrigir: garantir que question seja sempre string em guataTrueApiService e guataRealWebSearchService
+* [33mdc42587[m Corrigir: Gemini não deve mencionar ausência de parceiros - reforçar instruções no prompt
+* [33mff743f4[m Corrigir detecção de parceiros: garantir que question seja sempre string e melhorar logs de debug
+* [33m6a31742[m Corrigir erro: ReferenceError query is not defined em generateIntelligentAnswer
+* [33mb320385[m Melhorias no Guatá: cache semântico, controle de 'Olá' por versão e parceiros no fallback
+* [33m6c9c236[m Atualizar chave de API do Google Custom Search para projeto GuataIA
+* [33m03ea044[m Remover seção sobre prompt e código do Guatá
+* [33m90170e1[m Corrigir informações ViajAR: remover OverFlow One, adicionar instruções sobre prompt
+* [33m5f69d4e[m Melhorias Guatá: remover asteriscos, adicionar conhecimento ViajAR/Descubra MS, rate limiting por usuário, melhorar contexto
