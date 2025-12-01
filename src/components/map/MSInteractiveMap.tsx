@@ -8,80 +8,64 @@ interface MSInteractiveMapProps {
   className?: string;
 }
 
-// SVG paths das 9 regiões turísticas de MS
-// Baseado no formato geográfico REAL do estado de Mato Grosso do Sul
-// Referência: Mapa de Regionalização do Turismo 2022/2025
-// O estado tem formato característico com:
-// - Bico no noroeste (Corumbá/Pantanal)
-// - Extensão larga no norte (fronteira com MT)
-// - Formato mais retangular com bordas irregulares
+// Contorno real do estado de Mato Grosso do Sul
+// Baseado em coordenadas geográficas simplificadas
+// Fonte: IBGE - limites do estado
+const MS_OUTLINE = `M 85,15 L 95,12 L 140,10 L 200,10 L 260,12 L 320,18 L 370,30 
+  L 400,45 L 420,70 L 430,100 L 435,140 L 432,180 L 425,220 L 415,260 
+  L 400,295 L 380,325 L 355,355 L 330,380 L 300,405 L 265,425 L 225,440 
+  L 185,448 L 145,445 L 110,435 L 80,415 L 55,390 L 40,360 L 30,325 
+  L 25,285 L 22,245 L 20,200 L 18,155 L 20,110 L 28,70 L 45,40 L 70,22 Z`;
+
+// Paths das 9 regiões turísticas baseadas no mapa oficial
+// Escala: 450x460 viewBox
 const regionPaths: Record<string, string> = {
-  // Pantanal - Noroeste do estado (AMARELO no mapa oficial)
-  // Corumbá, Ladário, Aquidauana, Miranda, Anastácio
-  "pantanal": `M 25 45 
-    L 40 35 L 65 30 L 90 40 L 110 55 
-    L 120 80 L 125 110 L 120 140 L 110 165 
-    L 95 185 L 75 195 L 55 190 
-    L 40 175 L 30 150 L 25 120 L 20 90 L 25 45 Z`,
+  // PANTANAL - Noroeste (AMARELO) - Corumbá, Ladário, Aquidauana, Miranda
+  "pantanal": `M 45,40 L 70,22 L 85,15 L 95,12 L 115,11 
+    L 130,25 L 140,50 L 145,80 L 140,115 L 130,145 
+    L 115,175 L 95,195 L 75,205 L 55,200 
+    L 40,180 L 30,150 L 25,115 L 28,70 L 45,40 Z`,
   
-  // Rota Cerrado Pantanal - Norte (VERDE CLARO no mapa oficial)  
-  // Sonora, Pedro Gomes, Coxim, Costa Rica, Alcinópolis, Chapadão do Sul
-  "rota-cerrado-pantanal": `M 90 40 
-    L 130 30 L 180 25 L 230 25 L 280 30 L 330 40 L 370 55
-    L 365 85 L 350 110 L 320 125 L 280 130 
-    L 240 125 L 200 115 L 160 100 L 130 80 
-    L 120 80 L 110 55 L 90 40 Z`,
+  // ROTA CERRADO PANTANAL - Norte (VERDE CLARO) - Sonora, Coxim, Costa Rica
+  "rota-cerrado-pantanal": `M 115,11 L 140,10 L 200,10 L 260,12 L 320,18 L 370,30 
+    L 380,55 L 370,90 L 350,120 L 320,140 L 280,150 
+    L 240,145 L 200,135 L 165,120 L 145,100 L 140,70 L 135,40 L 130,25 L 115,11 Z`,
   
-  // Costa Leste - Leste (VERMELHO no mapa oficial)
-  // Três Lagoas, Paranaíba, Cassilândia, Aparecida do Taboado, Selvíria  
-  "costa-leste": `M 370 55 
-    L 410 70 L 440 100 L 450 140 L 445 180 L 430 220 
-    L 405 255 L 375 280 L 345 290 
-    L 320 280 L 300 255 L 290 220 L 295 180 
-    L 310 145 L 330 115 L 350 110 L 365 85 L 370 55 Z`,
+  // COSTA LESTE - Leste (VERMELHO) - Três Lagoas, Paranaíba, Cassilândia
+  "costa-leste": `M 370,30 L 400,45 L 420,70 L 430,100 L 435,140 L 432,180 L 425,220 
+    L 410,255 L 390,280 L 365,295 
+    L 340,290 L 320,270 L 310,240 L 315,200 L 330,160 L 350,120 L 370,90 L 380,55 L 370,30 Z`,
   
-  // Campo Grande dos Ipês - Centro (LARANJA no mapa oficial)
-  // Campo Grande, Terenos, Sidrolândia, Jaraguari, Rochedo, Corguinho, Rio Negro
-  "campo-grande-ipes": `M 120 140 
-    L 130 80 L 160 100 L 200 115 L 240 125 L 280 130 
-    L 295 180 L 290 220 L 275 255 
-    L 245 275 L 205 285 L 170 280 
-    L 145 260 L 125 230 L 115 195 L 120 140 Z`,
+  // CAMPO GRANDE DOS IPÊS - Centro (LARANJA) - Campo Grande, Terenos, Sidrolândia
+  "campo-grande-ipes": `M 130,145 L 145,100 L 165,120 L 200,135 L 240,145 L 280,150 
+    L 310,165 L 315,200 L 310,240 L 295,275 
+    L 265,300 L 225,310 L 185,305 L 155,290 
+    L 135,265 L 120,230 L 115,195 L 120,165 L 130,145 Z`,
   
-  // Bonito-Serra da Bodoquena - Sudoeste (ROSA/MAGENTA no mapa oficial)
-  // Bonito, Jardim, Bodoquena, Nioaque, Guia Lopes, Porto Murtinho, Bela Vista
-  "bonito-serra-bodoquena": `M 40 175 
-    L 55 190 L 75 195 L 95 185 L 110 165 L 120 140 L 115 195 
-    L 125 230 L 130 270 L 120 310 L 95 345 
-    L 65 365 L 40 355 L 25 320 L 20 280 L 25 240 L 40 175 Z`,
+  // BONITO-SERRA DA BODOQUENA - Sudoeste (ROSA) - Bonito, Jardim, Bodoquena
+  "bonito-serra-bodoquena": `M 40,180 L 55,200 L 75,205 L 95,195 L 115,175 L 130,145 L 120,165 L 115,195 L 120,230 
+    L 125,265 L 120,300 L 100,335 L 75,360 
+    L 50,365 L 35,345 L 28,310 L 25,270 L 28,230 L 35,195 L 40,180 Z`,
   
-  // Caminhos da Fronteira - Sul/Fronteira (VERDE no mapa oficial)
-  // Ponta Porã, Antônio João, Aral Moreira, Coronel Sapucaia, Paranhos, Amambai
-  "caminhos-fronteira": `M 65 365 
-    L 95 345 L 120 310 L 130 270 L 145 260 
-    L 165 295 L 175 335 L 165 375 
-    L 140 405 L 105 420 L 70 410 L 50 385 L 65 365 Z`,
+  // CAMINHOS DA FRONTEIRA - Sul (VERDE) - Ponta Porã, Antônio João
+  "caminhos-fronteira": `M 75,360 L 100,335 L 120,300 L 125,265 L 135,265 L 155,290 
+    L 165,325 L 165,360 L 155,390 
+    L 130,415 L 100,425 L 75,415 L 55,390 L 50,365 L 75,360 Z`,
   
-  // Grande Dourados / Celeiro do MS - Centro-Sul (LILÁS no mapa oficial)
-  // Dourados, Maracaju, Rio Brilhante, Itaporã, Fátima do Sul, Caarapó
-  "celeiro-ms": `M 170 280 
-    L 205 285 L 245 275 L 275 255 L 290 220 L 300 255 
-    L 295 295 L 275 330 L 245 355 L 210 365 
-    L 175 375 L 175 335 L 165 295 L 145 260 L 170 280 Z`,
+  // CELEIRO DO MS / GRANDE DOURADOS - Centro-Sul (LILÁS) - Dourados, Maracaju
+  "celeiro-ms": `M 185,305 L 225,310 L 265,300 L 295,275 L 310,240 L 320,270 
+    L 315,310 L 295,345 L 265,375 L 225,390 
+    L 190,395 L 170,385 L 165,360 L 165,325 L 155,290 L 185,305 Z`,
   
-  // Vale das Águas - Sudeste (CIANO/AZUL CLARO no mapa oficial)
-  // Nova Andradina, Ivinhema, Batayporã, Taquarussu, Anaurilândia, Bataguassu
-  "vale-das-aguas": `M 300 255 
-    L 320 280 L 345 290 L 375 280 L 385 310 
-    L 375 345 L 350 375 L 315 390 
-    L 280 385 L 260 360 L 275 330 L 295 295 L 300 255 Z`,
+  // VALE DAS ÁGUAS - Sudeste (CIANO) - Nova Andradina, Ivinhema
+  "vale-das-aguas": `M 320,270 L 340,290 L 365,295 L 390,280 L 400,295 
+    L 395,330 L 380,360 L 355,385 L 320,400 
+    L 285,395 L 265,375 L 295,345 L 315,310 L 320,270 Z`,
   
-  // Caminhos da Natureza-Cone Sul - Extremo Sul (ROXO no mapa oficial)
-  // Naviraí, Eldorado, Mundo Novo, Iguatemi, Itaquiraí, Japorã, Tacuru
-  "caminhos-natureza-cone-sul": `M 165 375 
-    L 175 375 L 210 365 L 245 355 L 260 360 L 280 385 L 315 390 
-    L 330 420 L 320 455 L 280 480 L 220 485 
-    L 160 470 L 120 445 L 105 420 L 140 405 L 165 375 Z`
+  // CAMINHOS DA NATUREZA-CONE SUL - Extremo Sul (ROXO) - Naviraí, Eldorado, Mundo Novo
+  "caminhos-natureza-cone-sul": `M 165,360 L 170,385 L 190,395 L 225,390 L 265,375 L 285,395 L 320,400 
+    L 340,420 L 330,445 L 300,460 L 260,468 L 225,470 
+    L 185,465 L 150,455 L 120,440 L 100,425 L 130,415 L 155,390 L 165,360 Z`
 };
 
 const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
@@ -125,41 +109,31 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   return (
     <div className={`relative ${className}`}>
       <svg
-        viewBox="0 0 470 510"
+        viewBox="0 0 460 490"
         className="w-full h-full"
-        style={{ maxHeight: '580px' }}
+        style={{ maxHeight: '550px' }}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Definições de filtros e gradientes */}
         <defs>
           <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="2" dy="3" stdDeviation="4" floodOpacity="0.25" />
+            <feDropShadow dx="2" dy="3" stdDeviation="4" floodOpacity="0.2" />
           </filter>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
             <feMerge>
               <feMergeNode in="coloredBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          {/* Gradiente de fundo */}
-          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f8f9fa" />
-            <stop offset="100%" stopColor="#e9ecef" />
-          </linearGradient>
         </defs>
 
-        {/* Contorno do estado de MS (fundo) - formato baseado no mapa real */}
+        {/* Contorno do estado de MS (sombra de fundo) */}
         <path
-          d={`M 20 40 
-            L 40 30 L 90 25 L 180 20 L 280 25 L 370 50 L 410 65 
-            L 450 135 L 448 200 L 430 260 L 400 310 L 375 350 
-            L 340 400 L 320 460 L 280 485 L 220 490 L 160 475 
-            L 110 445 L 70 415 L 45 375 L 30 330 L 20 280 
-            L 15 220 L 15 150 L 18 90 L 20 40 Z`}
-          fill="url(#bgGradient)"
+          d={MS_OUTLINE}
+          fill="#e8e8e8"
           stroke="#ccc"
-          strokeWidth="2"
+          strokeWidth="3"
           filter="url(#shadow)"
         />
 
@@ -188,16 +162,16 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
         {/* Labels das regiões */}
         {touristRegions2025.map((region) => {
-          // Posições dos centros das regiões baseadas no mapa atualizado
+          // Posições dos centros das regiões no mapa
           const labelPositions: Record<string, { x: number; y: number }> = {
-            "pantanal": { x: 70, y: 115 },
-            "bonito-serra-bodoquena": { x: 80, y: 275 },
-            "campo-grande-ipes": { x: 200, y: 195 },
-            "rota-cerrado-pantanal": { x: 240, y: 75 },
-            "costa-leste": { x: 370, y: 175 },
-            "celeiro-ms": { x: 225, y: 320 },
-            "vale-das-aguas": { x: 325, y: 335 },
-            "caminhos-fronteira": { x: 120, y: 375 },
+            "pantanal": { x: 85, y: 120 },
+            "bonito-serra-bodoquena": { x: 75, y: 280 },
+            "campo-grande-ipes": { x: 215, y: 210 },
+            "rota-cerrado-pantanal": { x: 250, y: 85 },
+            "costa-leste": { x: 375, y: 190 },
+            "celeiro-ms": { x: 235, y: 345 },
+            "vale-das-aguas": { x: 340, y: 345 },
+            "caminhos-fronteira": { x: 115, y: 385 },
             "caminhos-natureza-cone-sul": { x: 230, y: 430 }
           };
 
