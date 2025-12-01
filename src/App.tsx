@@ -80,6 +80,7 @@ import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
 import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
 import TermosUsoMS from "@/pages/ms/TermosUsoMS";
+import MapaTuristico from "@/pages/MapaTuristico";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
@@ -220,6 +221,7 @@ function App() {
                             
                             {/* Descubra Mato Grosso do Sul Routes */}
                             <Route path="/descubramatogrossodosul" element={<MSIndex />} />
+                            <Route path="/descubramatogrossodosul/mapa-turistico" element={<MapaTuristico />} />
                             <Route path="/descubramatogrossodosul/destinos" element={<Destinos />} />
                             <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
                             <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />

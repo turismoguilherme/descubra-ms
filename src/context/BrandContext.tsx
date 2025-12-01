@@ -76,6 +76,7 @@ const msConfig: BrandConfig = {
     fallback: 'Descubra MS'
   },
   navigation: [
+    { name: 'Mapa Turístico', path: '/descubramatogrossodosul/mapa-turistico' },
     { name: 'Destinos', path: '/descubramatogrossodosul/destinos' },
     { name: 'Eventos', path: '/descubramatogrossodosul/eventos' },
     { name: 'Parceiros', path: '/descubramatogrossodosul/parceiros' },
