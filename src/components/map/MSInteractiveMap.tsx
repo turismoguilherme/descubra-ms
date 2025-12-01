@@ -8,10 +8,7 @@ interface MSInteractiveMapProps {
   className?: string;
 }
 
-// Mapa do Mato Grosso do Sul - Traçado baseado no mapa oficial
-// Formato: Retângulo irregular com projeção no noroeste (Pantanal)
-// ViewBox calibrado para o formato real do estado
-
+// Mapa usando imagem real de fundo com áreas clicáveis
 const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   onRegionClick,
   onRegionHover,
@@ -30,7 +27,14 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     onRegionHover?.(null);
   };
 
-  const getRegionStyle = (regionId: string) => {
+  const handleRegionClick = (regionId: string) => {
+    const region = touristRegions2025.find(r => r.id === regionId);
+    if (region) {
+      onRegionClick(region);
+    }
+  };
+
+  const getOverlayStyle = (regionId: string) => {
     const region = touristRegions2025.find(r => r.id === regionId);
     if (!region) return {};
     
@@ -39,263 +43,175 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     const isActive = isHovered || isSelected;
     
     return {
-      fill: isActive ? region.colorHover : region.color,
-      opacity: selectedRegion && selectedRegion !== regionId ? 0.5 : 1,
+      fill: isActive ? region.color : 'transparent',
+      opacity: isActive ? 0.4 : 0,
       cursor: 'pointer',
       transition: 'all 0.3s ease',
     };
   };
 
-  const handleRegionClick = (regionId: string) => {
-    const region = touristRegions2025.find(r => r.id === regionId);
-    if (region) {
-      onRegionClick(region);
-    }
-  };
-
-  // Cores oficiais do mapa turístico de MS
-  const colors = {
-    pantanal: '#FFD700',           // Amarelo
-    cerradoPantanal: '#8BC34A',    // Verde claro
-    costaLeste: '#F44336',         // Vermelho
-    campoGrande: '#FF9800',        // Laranja
-    bonito: '#E91E63',             // Rosa/Magenta
-    fronteira: '#4CAF50',          // Verde
-    celeiro: '#CE93D8',            // Lilás
-    valeAguas: '#00BCD4',          // Ciano
-    coneSul: '#9C27B0',            // Roxo
-  };
-
   return (
     <div className={`relative ${className}`}>
-      <svg
-        viewBox="0 0 400 480"
-        className="w-full h-full"
-        style={{ maxHeight: '580px', filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.15))' }}
-      >
-        {/* ========================================
-            MAPA DE MATO GROSSO DO SUL
-            Traçado baseado no mapa oficial de regionalização
-            ======================================== */}
-
-        {/* PANTANAL - Amarelo - Noroeste 
-            Corumbá, Ladário, Aquidauana, Miranda, Anastácio */}
-        <path
-          d="M 35,75 
-             L 45,55 L 65,40 L 90,30 L 115,28 L 140,32
-             L 145,50 L 142,75 L 135,100 L 125,125 
-             L 110,148 L 90,165 L 70,175 L 52,172 
-             L 38,158 L 30,138 L 28,115 L 30,95 
-             Z"
-          style={getRegionStyle('pantanal')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('pantanal')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'pantanal')!)}
-          onMouseLeave={handleMouseLeave}
+      {/* Container do mapa com imagem de fundo */}
+      <div className="relative w-full" style={{ aspectRatio: '1/1.15' }}>
+        {/* Imagem do mapa real de MS como fundo */}
+        <img
+          src="https://www.turismo.ms.gov.br/wp-content/uploads/2022/03/MAPA-DE-REGIONALIZACAO-DO-TURISMO-2022.png"
+          alt="Mapa Turístico de Mato Grosso do Sul"
+          className="w-full h-full object-contain rounded-lg shadow-lg"
+          onError={(e) => {
+            // Fallback para imagem local se a externa falhar
+            const target = e.target as HTMLImageElement;
+            target.src = '/images/mapa-ms-turistico.png';
+          }}
         />
-
-        {/* ROTA CERRADO PANTANAL - Verde claro - Norte
-            Sonora, Pedro Gomes, Coxim, Costa Rica, Rio Verde, Chapadão do Sul */}
-        <path
-          d="M 140,32 
-             L 175,28 L 215,25 L 260,25 L 305,30 L 345,42
-             L 355,65 L 352,95 L 340,125 L 320,150 
-             L 290,168 L 255,178 L 220,180 L 185,175 
-             L 155,165 L 135,150 L 125,125 L 135,100 
-             L 142,75 L 145,50 L 140,32
-             Z"
-          style={getRegionStyle('rota-cerrado-pantanal')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('rota-cerrado-pantanal')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'rota-cerrado-pantanal')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* COSTA LESTE - Vermelho - Leste
-            Três Lagoas, Paranaíba, Cassilândia, Aparecida do Taboado, Selvíria */}
-        <path
-          d="M 345,42 
-             L 370,55 L 388,78 L 395,108 L 392,145 
-             L 382,185 L 368,220 L 350,252 L 328,278 
-             L 305,295 L 285,302 L 268,295 L 258,278 
-             L 260,252 L 272,222 L 290,192 L 305,168 
-             L 320,150 L 340,125 L 352,95 L 355,65 
-             Z"
-          style={getRegionStyle('costa-leste')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('costa-leste')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'costa-leste')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* CAMPO GRANDE DOS IPÊS - Laranja - Centro
-            Campo Grande, Terenos, Sidrolândia, Jaraguari, Rochedo, Corguinho, Rio Negro */}
-        <path
-          d="M 110,148 
-             L 125,125 L 135,150 L 155,165 L 185,175 
-             L 220,180 L 255,178 L 290,168 L 305,168 
-             L 290,192 L 272,222 L 260,252 L 250,280 
-             L 232,302 L 205,315 L 175,318 L 150,310 
-             L 130,295 L 118,272 L 112,245 L 110,215 
-             L 108,185 L 105,165 L 110,148
-             Z"
-          style={getRegionStyle('campo-grande-ipes')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('campo-grande-ipes')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'campo-grande-ipes')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* BONITO-SERRA DA BODOQUENA - Rosa/Magenta - Sudoeste
-            Bonito, Jardim, Bodoquena, Nioaque, Guia Lopes, Porto Murtinho, Bela Vista */}
-        <path
-          d="M 52,172 
-             L 70,175 L 90,165 L 110,148 L 105,165 
-             L 108,185 L 110,215 L 112,245 L 118,272 
-             L 115,300 L 105,330 L 88,358 L 68,378 
-             L 48,385 L 32,375 L 25,352 L 22,322 
-             L 25,288 L 32,252 L 40,218 L 48,188 
-             L 52,172
-             Z"
-          style={getRegionStyle('bonito-serra-bodoquena')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('bonito-serra-bodoquena')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'bonito-serra-bodoquena')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* CAMINHOS DA FRONTEIRA - Verde - Sul/Fronteira
-            Ponta Porã, Antônio João, Aral Moreira, Coronel Sapucaia, Paranhos, Amambai */}
-        <path
-          d="M 68,378 
-             L 88,358 L 105,330 L 115,300 L 118,272 
-             L 130,295 L 150,310 L 155,338 L 152,368 
-             L 142,398 L 125,422 L 102,438 L 78,445 
-             L 58,438 L 45,420 L 40,398 L 45,385 
-             L 48,385 L 68,378
-             Z"
-          style={getRegionStyle('caminhos-fronteira')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('caminhos-fronteira')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'caminhos-fronteira')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* CELEIRO DO MS / GRANDE DOURADOS - Lilás - Centro-Sul
-            Dourados, Maracaju, Rio Brilhante, Itaporã, Fátima do Sul, Caarapó */}
-        <path
-          d="M 175,318 
-             L 205,315 L 232,302 L 250,280 L 258,278 
-             L 268,295 L 272,322 L 268,352 L 255,382 
-             L 235,408 L 210,425 L 182,432 L 158,428 
-             L 155,405 L 152,375 L 152,368 L 155,338 
-             L 150,310 L 175,318
-             Z"
-          style={getRegionStyle('celeiro-ms')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('celeiro-ms')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'celeiro-ms')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* VALE DAS ÁGUAS - Ciano - Sudeste
-            Nova Andradina, Ivinhema, Batayporã, Taquarussu, Anaurilândia, Bataguassu */}
-        <path
-          d="M 268,295 
-             L 285,302 L 305,295 L 328,278 L 350,252 
-             L 358,275 L 355,308 L 342,342 L 322,372 
-             L 295,395 L 268,408 L 248,405 L 255,382 
-             L 268,352 L 272,322 L 268,295
-             Z"
-          style={getRegionStyle('vale-das-aguas')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('vale-das-aguas')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'vale-das-aguas')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* CAMINHOS DA NATUREZA-CONE SUL - Roxo - Extremo Sul
-            Naviraí, Eldorado, Mundo Novo, Iguatemi, Itaquiraí, Japorã, Tacuru */}
-        <path
-          d="M 152,368 
-             L 152,375 L 155,405 L 158,428 L 182,432 
-             L 210,425 L 235,408 L 248,405 L 268,408 
-             L 295,395 L 310,415 L 305,442 L 285,465 
-             L 255,480 L 218,488 L 178,485 L 142,472 
-             L 112,452 L 102,438 L 125,422 L 142,398 
-             L 152,368
-             Z"
-          style={getRegionStyle('caminhos-natureza-cone-sul')}
-          stroke="#fff"
-          strokeWidth="2"
-          onClick={() => handleRegionClick('caminhos-natureza-cone-sul')}
-          onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'caminhos-natureza-cone-sul')!)}
-          onMouseLeave={handleMouseLeave}
-        />
-
-        {/* ========== LABELS DAS REGIÕES ========== */}
         
-        <text x="85" y="105" fill="#fff" fontSize="11" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Pantanal
-        </text>
-        
-        <text x="245" y="95" fill="#fff" fontSize="10" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Rota Cerrado Pantanal
-        </text>
-        
-        <text x="340" y="175" fill="#fff" fontSize="11" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Costa Leste
-        </text>
-        
-        <text x="195" y="235" fill="#fff" fontSize="10" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Campo Grande
-        </text>
-        <text x="195" y="250" fill="#fff" fontSize="10" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          dos Ipês
-        </text>
-        
-        <text x="72" y="285" fill="#fff" fontSize="10" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Bonito
-        </text>
-        
-        <text x="100" y="400" fill="#fff" fontSize="9" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Caminhos da
-        </text>
-        <text x="100" y="412" fill="#fff" fontSize="9" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Fronteira
-        </text>
-        
-        <text x="210" y="375" fill="#fff" fontSize="11" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Celeiro
-        </text>
-        
-        <text x="305" y="345" fill="#fff" fontSize="11" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Vale
-        </text>
-        
-        <text x="210" y="455" fill="#fff" fontSize="9" fontWeight="600" textAnchor="middle" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}} className="pointer-events-none">
-          Caminhos da Natureza
-        </text>
+        {/* SVG overlay com áreas clicáveis transparentes */}
+        <svg
+          viewBox="0 0 100 115"
+          className="absolute inset-0 w-full h-full"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {/* Áreas clicáveis mapeadas sobre a imagem */}
+          
+          {/* PANTANAL - Noroeste */}
+          <polygon
+            points="8,18 12,12 18,8 25,7 30,10 32,18 30,28 26,36 20,42 14,44 10,40 8,32 7,25"
+            style={getOverlayStyle('pantanal')}
+            stroke={hoveredRegion === 'pantanal' || selectedRegion === 'pantanal' ? '#FFD700' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('pantanal')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'pantanal')!)}
+            onMouseLeave={handleMouseLeave}
+          />
 
-      </svg>
+          {/* ROTA CERRADO PANTANAL - Norte */}
+          <polygon
+            points="30,10 40,7 55,6 70,7 82,12 85,22 82,32 75,40 65,45 52,46 40,44 32,40 28,32 30,22 32,18 30,10"
+            style={getOverlayStyle('rota-cerrado-pantanal')}
+            stroke={hoveredRegion === 'rota-cerrado-pantanal' || selectedRegion === 'rota-cerrado-pantanal' ? '#8BC34A' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('rota-cerrado-pantanal')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'rota-cerrado-pantanal')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* COSTA LESTE - Leste */}
+          <polygon
+            points="82,12 90,18 95,28 95,42 92,55 86,65 78,72 70,75 65,70 64,60 68,50 75,42 80,35 82,28 85,22 82,12"
+            style={getOverlayStyle('costa-leste')}
+            stroke={hoveredRegion === 'costa-leste' || selectedRegion === 'costa-leste' ? '#F44336' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('costa-leste')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'costa-leste')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* CAMPO GRANDE DOS IPÊS - Centro */}
+          <polygon
+            points="28,32 32,40 40,44 52,46 65,45 75,40 80,35 75,42 68,50 64,60 60,68 52,74 42,76 34,74 28,68 24,60 22,50 24,42 26,36 28,32"
+            style={getOverlayStyle('campo-grande-ipes')}
+            stroke={hoveredRegion === 'campo-grande-ipes' || selectedRegion === 'campo-grande-ipes' ? '#FF9800' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('campo-grande-ipes')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'campo-grande-ipes')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* BONITO-SERRA DA BODOQUENA - Sudoeste */}
+          <polygon
+            points="10,40 14,44 20,42 26,36 24,42 22,50 24,60 26,70 24,80 18,88 12,92 8,90 5,82 5,72 7,60 9,50 10,40"
+            style={getOverlayStyle('bonito-serra-bodoquena')}
+            stroke={hoveredRegion === 'bonito-serra-bodoquena' || selectedRegion === 'bonito-serra-bodoquena' ? '#E91E63' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('bonito-serra-bodoquena')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'bonito-serra-bodoquena')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* CAMINHOS DA FRONTEIRA - Sul */}
+          <polygon
+            points="12,92 18,88 24,80 26,70 28,68 34,74 36,82 34,92 28,100 20,105 12,105 8,98 8,92 12,92"
+            style={getOverlayStyle('caminhos-fronteira')}
+            stroke={hoveredRegion === 'caminhos-fronteira' || selectedRegion === 'caminhos-fronteira' ? '#4CAF50' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('caminhos-fronteira')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'caminhos-fronteira')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* CELEIRO DO MS - Centro-Sul */}
+          <polygon
+            points="42,76 52,74 60,68 64,60 65,70 64,80 60,90 52,98 42,102 35,100 34,92 36,82 34,74 42,76"
+            style={getOverlayStyle('celeiro-ms')}
+            stroke={hoveredRegion === 'celeiro-ms' || selectedRegion === 'celeiro-ms' ? '#CE93D8' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('celeiro-ms')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'celeiro-ms')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* VALE DAS ÁGUAS - Sudeste */}
+          <polygon
+            points="65,70 70,75 78,72 86,65 88,75 85,85 78,92 68,96 60,95 60,90 64,80 65,70"
+            style={getOverlayStyle('vale-das-aguas')}
+            stroke={hoveredRegion === 'vale-das-aguas' || selectedRegion === 'vale-das-aguas' ? '#00BCD4' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('vale-das-aguas')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'vale-das-aguas')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+
+          {/* CAMINHOS DA NATUREZA-CONE SUL - Extremo Sul */}
+          <polygon
+            points="34,92 35,100 42,102 52,98 60,95 68,96 78,92 82,100 78,108 68,115 52,118 38,115 26,108 20,105 28,100 34,92"
+            style={getOverlayStyle('caminhos-natureza-cone-sul')}
+            stroke={hoveredRegion === 'caminhos-natureza-cone-sul' || selectedRegion === 'caminhos-natureza-cone-sul' ? '#9C27B0' : 'transparent'}
+            strokeWidth="0.5"
+            onClick={() => handleRegionClick('caminhos-natureza-cone-sul')}
+            onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'caminhos-natureza-cone-sul')!)}
+            onMouseLeave={handleMouseLeave}
+          />
+        </svg>
+      </div>
 
       {/* Tooltip flutuante */}
       {hoveredRegion && !selectedRegion && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-4 py-2 pointer-events-none z-10 border border-gray-200">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl px-4 py-3 pointer-events-none z-20 border border-gray-200">
           <p className="font-semibold text-gray-800 text-sm">
             {touristRegions2025.find(r => r.id === hoveredRegion)?.name}
           </p>
           <p className="text-xs text-gray-500">Clique para explorar</p>
         </div>
       )}
+
+      {/* Legenda das cores */}
+      <div className="mt-4 p-3 bg-white/80 rounded-lg backdrop-blur-sm">
+        <p className="text-xs text-gray-500 text-center mb-2 font-medium">
+          Passe o mouse sobre as regiões do mapa
+        </p>
+        <div className="grid grid-cols-3 gap-1 text-xs">
+          {touristRegions2025.map((region) => (
+            <div 
+              key={region.id}
+              className={`flex items-center gap-1 p-1 rounded cursor-pointer transition-all ${
+                hoveredRegion === region.id ? 'bg-gray-100' : ''
+              }`}
+              onClick={() => handleRegionClick(region.id)}
+              onMouseEnter={() => handleMouseEnter(region)}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div 
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: region.color }}
+              />
+              <span className="text-gray-600 truncate text-[10px]">
+                {region.name.split('-')[0].split(' ')[0]}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
