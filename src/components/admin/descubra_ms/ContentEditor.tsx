@@ -7,12 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Edit, Eye, Save, History, EyeOff } from 'lucide-react';
+import { Search, Plus, Edit, Eye } from 'lucide-react';
 import { descubraMSAdminService } from '@/services/admin/descubraMSAdminService';
 import { useToast } from '@/hooks/use-toast';
 import { ContentVersion } from '@/types/admin';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import ContentPreviewTabs from '@/components/admin/ContentPreviewTabs';
 
 export default function ContentEditor() {
   const [contents, setContents] = useState<ContentVersion[]>([]);
@@ -47,11 +47,11 @@ export default function ContentEditor() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Editor de Conteúdo</h2>
-          <p className="text-gray-600 mt-1">Edite textos e informações do Descubra MS</p>
+          <h2 className="text-2xl font-semibold text-[#0A0A0A]">Editor de Conteúdo</h2>
+          <p className="text-[#6B7280] mt-1.5 text-sm">Edite textos e informações do Descubra MS</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -60,7 +60,7 @@ export default function ContentEditor() {
               Novo Conteúdo
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingContent ? 'Editar Conteúdo' : 'Novo Conteúdo'}</DialogTitle>
               <DialogDescription>
@@ -79,80 +79,80 @@ export default function ContentEditor() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="bg-white border border-[#E5E5E5] shadow-sm">
+        <CardHeader className="border-b border-[#E5E5E5]">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
                 <Input
                   placeholder="Buscar conteúdo..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-[#E5E5E5] focus:border-[#3B82F6]"
                 />
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
             <div className="text-center py-8">Carregando...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Chave</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Versão</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Editado por</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContents.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      Nenhum conteúdo encontrado
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-[#E5E5E5] hover:bg-transparent">
+                    <TableHead className="text-[#6B7280] font-medium">Chave</TableHead>
+                    <TableHead className="text-[#6B7280] font-medium">Tipo</TableHead>
+                    <TableHead className="text-[#6B7280] font-medium">Versão</TableHead>
+                    <TableHead className="text-[#6B7280] font-medium">Status</TableHead>
+                    <TableHead className="text-[#6B7280] font-medium">Editado por</TableHead>
+                    <TableHead className="text-right text-[#6B7280] font-medium">Ações</TableHead>
                   </TableRow>
-                ) : (
-                  filteredContents.map((content) => (
-                    <TableRow key={content.id}>
-                      <TableCell className="font-medium">{content.content_key}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{content.content_type}</Badge>
-                      </TableCell>
-                      <TableCell>v{content.version}</TableCell>
-                      <TableCell>
-                        <Badge variant={content.is_published ? 'default' : 'secondary'}>
-                          {content.is_published ? 'Publicado' : 'Rascunho'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{content.edited_by || '-'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingContent(content);
-                              setIsDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredContents.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={6} className="text-center py-12 text-[#6B7280]">
+                        Nenhum conteúdo encontrado
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredContents.map((content) => (
+                      <TableRow key={content.id} className="border-b border-[#E5E5E5] hover:bg-[#FAFAFA]">
+                        <TableCell className="font-medium text-[#0A0A0A]">{content.content_key}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="border-[#E5E5E5] text-[#6B7280]">{content.content_type}</Badge>
+                        </TableCell>
+                        <TableCell className="text-[#6B7280]">v{content.version}</TableCell>
+                        <TableCell>
+                          <Badge variant={content.is_published ? 'default' : 'secondary'}>
+                            {content.is_published ? 'Publicado' : 'Rascunho'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-[#6B7280]">{content.edited_by || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingContent(content);
+                                setIsDialogOpen(true);
+                              }}
+                              className="h-8 w-8 p-0 hover:bg-[#FAFAFA]"
+                            >
+                              <Edit className="h-4 w-4 text-[#6B7280]" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -173,7 +173,8 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
     is_published: content?.is_published || false,
   });
   const [saving, setSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const [versions, setVersions] = useState<ContentVersion[]>([]);
   const { toast } = useToast();
 
@@ -194,17 +195,15 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
     }
   }, [content?.content_key]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     setSaving(true);
-
     try {
       if (content) {
         await descubraMSAdminService.updateContentVersion(content.id, {
           ...formData,
           version: content.version + 1,
         });
-        toast({ title: 'Sucesso', description: 'Conteúdo atualizado com sucesso' });
+        toast({ title: 'Sucesso', description: 'Conteúdo salvo com sucesso' });
       } else {
         await descubraMSAdminService.createContentVersion({
           ...formData,
@@ -214,6 +213,7 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
         });
         toast({ title: 'Sucesso', description: 'Conteúdo criado com sucesso' });
       }
+      setHasChanges(false);
       onSuccess();
     } catch (error: any) {
       toast({
@@ -226,27 +226,71 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
     }
   };
 
+  const handlePublish = async () => {
+    setPublishing(true);
+    try {
+      if (content) {
+        await descubraMSAdminService.updateContentVersion(content.id, {
+          ...formData,
+          version: content.version + 1,
+          is_published: true,
+        });
+      } else {
+        await descubraMSAdminService.createContentVersion({
+          ...formData,
+          platform: 'descubra_ms',
+          version: 1,
+          is_published: true,
+          edited_by: null,
+        });
+      }
+      toast({ title: 'Sucesso', description: 'Conteúdo publicado com sucesso' });
+      setHasChanges(false);
+      onSuccess();
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao publicar conteúdo',
+        variant: 'destructive',
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const renderPreview = () => {
     if (formData.content_type === 'html') {
-      return <div dangerouslySetInnerHTML={{ __html: formData.content }} className="prose max-w-none p-4 border rounded-md bg-gray-50" />;
+      return <div dangerouslySetInnerHTML={{ __html: formData.content }} className="prose max-w-none" />;
     } else if (formData.content_type === 'markdown') {
-      return <div className="prose max-w-none p-4 border rounded-md bg-gray-50 whitespace-pre-wrap">{formData.content}</div>;
+      return <div className="prose max-w-none whitespace-pre-wrap">{formData.content}</div>;
     } else {
-      return <div className="p-4 border rounded-md bg-gray-50 whitespace-pre-wrap">{formData.content}</div>;
+      return <div className="whitespace-pre-wrap text-[#0A0A0A]">{formData.content}</div>;
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <ContentPreviewTabs
+      previewContent={renderPreview()}
+      onSave={handleSave}
+      onPublish={handlePublish}
+      isSaving={saving}
+      isPublishing={publishing}
+      hasChanges={hasChanges}
+    >
+      <form className="space-y-6">
       <div>
         <Label htmlFor="content_key">Chave do Conteúdo</Label>
         <Input
           id="content_key"
           value={formData.content_key}
-          onChange={(e) => setFormData({ ...formData, content_key: e.target.value })}
+          onChange={(e) => {
+            setFormData({ ...formData, content_key: e.target.value });
+            setHasChanges(true);
+          }}
           placeholder="ex: hero_title, footer_text"
           required
           disabled={!!content}
+          className="border-[#E5E5E5] focus:border-[#3B82F6]"
         />
         {content && <p className="text-xs text-gray-500 mt-1">A chave não pode ser alterada após criação</p>}
       </div>
@@ -254,7 +298,10 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
         <Label htmlFor="content_type">Tipo</Label>
         <Select
           value={formData.content_type}
-          onValueChange={(value) => setFormData({ ...formData, content_type: value as any })}
+          onValueChange={(value) => {
+            setFormData({ ...formData, content_type: value as any });
+            setHasChanges(true);
+          }}
         >
           <SelectTrigger>
             <SelectValue />
@@ -267,83 +314,50 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
         </Select>
       </div>
       
-      <Tabs defaultValue="edit" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="edit">Editar</TabsTrigger>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="history">Histórico ({versions.length})</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="edit" className="space-y-2">
+        <div>
+          <Label htmlFor="content">Conteúdo</Label>
+          <Textarea
+            id="content"
+            value={formData.content}
+            onChange={(e) => {
+              setFormData({ ...formData, content: e.target.value });
+              setHasChanges(true);
+            }}
+            rows={12}
+            className="font-mono text-sm border-[#E5E5E5] focus:border-[#3B82F6]"
+            required
+          />
+        </div>
+
+        {/* Histórico de Versões */}
+        {versions.length > 0 && (
           <div>
-            <Label htmlFor="content">Conteúdo</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              rows={12}
-              className="font-mono text-sm"
-              required
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="preview" className="space-y-2">
-          <div>
-            <Label>Preview</Label>
-            {renderPreview()}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="history" className="space-y-2">
-          <div>
-            <Label>Histórico de Versões</Label>
-            <div className="max-h-64 overflow-y-auto border rounded-md">
-              {versions.length === 0 ? (
-                <p className="text-sm text-gray-500 p-4 text-center">Nenhuma versão anterior</p>
-              ) : (
-                <div className="divide-y">
-                  {versions.map((version) => (
-                    <div key={version.id} className="p-3 hover:bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-sm">Versão {version.version}</div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(version.created_at).toLocaleString('pt-BR')}
-                          </div>
+            <Label>Histórico de Versões ({versions.length})</Label>
+            <div className="max-h-64 overflow-y-auto border border-[#E5E5E5] rounded-md bg-white">
+              <div className="divide-y divide-[#E5E5E5]">
+                {versions.map((version) => (
+                  <div key={version.id} className="p-3 hover:bg-[#FAFAFA] transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm text-[#0A0A0A]">Versão {version.version}</div>
+                        <div className="text-xs text-[#6B7280]">
+                          {new Date(version.created_at).toLocaleString('pt-BR')}
                         </div>
-                        <Badge variant={version.is_published ? 'default' : 'secondary'}>
-                          {version.is_published ? 'Publicado' : 'Rascunho'}
-                        </Badge>
                       </div>
-                      <div className="mt-2 text-xs text-gray-600 line-clamp-2">
-                        {version.content.substring(0, 100)}...
-                      </div>
+                      <Badge variant={version.is_published ? 'default' : 'secondary'}>
+                        {version.is_published ? 'Publicado' : 'Rascunho'}
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="mt-2 text-xs text-[#6B7280] line-clamp-2">
+                      {version.content.substring(0, 100)}...
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="is_published"
-          checked={formData.is_published}
-          onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-          className="rounded"
-        />
-        <Label htmlFor="is_published">Publicar imediatamente</Label>
-      </div>
-      <DialogFooter>
-        <Button type="submit" disabled={saving}>
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Salvando...' : content ? 'Atualizar' : 'Criar'}
-        </Button>
-      </DialogFooter>
-    </form>
+        )}
+      </form>
+    </ContentPreviewTabs>
   );
 }

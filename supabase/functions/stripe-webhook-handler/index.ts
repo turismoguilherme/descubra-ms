@@ -108,7 +108,7 @@ async function handleEventPaymentCompleted(session: Stripe.Checkout.Session, sup
     }
 
     // Atualizar evento para patrocinado
-    const { error } = await supabase
+    const { error: eventError } = await supabase
       .from('events')
       .update({
         is_sponsored: true,
@@ -121,10 +121,37 @@ async function handleEventPaymentCompleted(session: Stripe.Checkout.Session, sup
       })
       .eq('id', eventId);
 
-    if (error) {
-      console.error('Erro ao atualizar evento:', error);
+    if (eventError) {
+      console.error('Erro ao atualizar evento:', eventError);
     } else {
       console.log(`Evento ${eventId} marcado como patrocinado`);
+      
+      // Registrar pagamento em master_financial_records
+      const amountPaid = session.amount_total ? session.amount_total / 100 : 499.90; // R$ 499,90 em centavos
+      const { error: financialError } = await supabase
+        .from('master_financial_records')
+        .insert({
+          record_type: 'revenue',
+          amount: amountPaid,
+          description: `Pagamento de evento em destaque: ${eventName || 'Evento'}`,
+          stripe_invoice_id: session.payment_intent as string,
+          status: 'paid',
+          paid_date: new Date().toISOString().split('T')[0],
+          source: 'event_sponsor',
+          currency: 'BRL',
+          metadata: {
+            event_id: eventId,
+            event_name: eventName,
+            organizer_email: organizerEmail,
+            checkout_session_id: session.id,
+          },
+        });
+
+      if (financialError) {
+        console.error('Erro ao registrar pagamento em master_financial_records:', financialError);
+      } else {
+        console.log('Pagamento registrado em master_financial_records');
+      }
       
       // Enviar email de confirmação para o organizador
       try {
