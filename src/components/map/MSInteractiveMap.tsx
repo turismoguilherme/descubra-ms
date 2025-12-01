@@ -63,15 +63,13 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     <div className={`relative ${className}`}>
       {/* Container do mapa */}
       <div 
-        className="relative w-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl overflow-hidden shadow-lg"
-        style={{ maxHeight: '480px' }}
+        className="relative w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl overflow-hidden shadow-lg"
       >
         {/* Imagem do mapa */}
         <img
           src={mapImageUrls[0]}
           alt="Mapa das Regiões Turísticas de Mato Grosso do Sul"
-          className={`w-full h-auto object-contain transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-          style={{ maxHeight: '480px' }}
+          className={`w-full h-full object-contain transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -146,7 +144,7 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
             {/* BONITO-SERRA DA BODOQUENA - Rosa/Roxo - Sudoeste */}
             <path
-              d="M 12,46 L 18,48 L 26,44 L 28,44 L 26,50 L 26,60 L 28,72 L 24,84 L 16,92 L 8,90 L 4,80 L 4,66 L 6,54 L 10,46 L 12,46 Z"
+              d="M 13,46 L 19,48 L 26,45 L 30,44 L 28,52 L 27,60 L 29,72 L 25,84 L 18,92 L 10,90 L 6,82 L 6,70 L 8,58 L 11,48 L 13,46 Z"
               style={{ ...getOverlayStyle('bonito-serra-bodoquena'), pointerEvents: 'all' }}
               onClick={() => handleRegionClick('bonito-serra-bodoquena')}
               onMouseEnter={() => handleMouseEnter(touristRegions2025.find(r => r.id === 'bonito-serra-bodoquena')!)}
