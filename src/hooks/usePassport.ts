@@ -161,7 +161,8 @@ export const usePassport = () => {
       checkpointId: string,
       latitude: number,
       longitude: number,
-      photoUrl?: string
+      photoUrl?: string,
+      partnerCodeInput?: string
     ): Promise<CheckinResult> => {
       if (!user) {
         return {
@@ -205,7 +206,8 @@ export const usePassport = () => {
           checkpointId,
           latitude,
           longitude,
-          photoUrl
+          photoUrl,
+          partnerCodeInput
         );
 
         // Se sucesso, atualizar progresso

@@ -42,7 +42,8 @@ class OfflineSyncService {
     longitude: number,
     accuracy?: number,
     photoUrl?: string,
-    photoMetadata?: Record<string, any>
+    photoMetadata?: Record<string, any>,
+    partnerCodeInput?: string,
   ): Promise<string> {
     await this.initDb();
 
@@ -57,6 +58,7 @@ class OfflineSyncService {
       photo_url: photoUrl || null,
       photo_metadata: photoMetadata || null,
       device_info: navigator.userAgent,
+      partner_code_input: partnerCodeInput || null,
       synced: false,
       synced_at: null,
       created_at: new Date().toISOString(),
@@ -96,7 +98,8 @@ class OfflineSyncService {
           checkin.checkpoint_id,
           checkin.latitude,
           checkin.longitude,
-          checkin.photo_url || undefined
+          checkin.photo_url || undefined,
+          checkin.partner_code_input || undefined
         );
 
         if (result.success) {

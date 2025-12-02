@@ -330,7 +330,8 @@ class PassportService {
     checkpointId: string,
     latitude: number,
     longitude: number,
-    photoUrl?: string
+    photoUrl?: string,
+    partnerCodeInput?: string
   ): Promise<CheckinResult> {
     try {
       // Validação anti-fraude: Rate limiting usando função SQL
@@ -352,7 +353,7 @@ class PassportService {
         };
       }
 
-      // Buscar checkpoint
+      // Buscar checkpoint com dados da rota
       const { data: checkpoint, error: cpError } = await supabase
         .from('route_checkpoints')
         .select('*, routes!inner(*)')
@@ -373,17 +374,40 @@ class PassportService {
 
       const routeId = checkpoint.routes.id;
 
-      // Validar geofence
-      if (checkpoint.latitude && checkpoint.longitude) {
-        const { data: isValid } = await supabase.rpc('check_geofence', {
-          checkpoint_lat: checkpoint.latitude,
-          checkpoint_lon: checkpoint.longitude,
-          user_lat: latitude,
-          user_lon: longitude,
-          radius_meters: checkpoint.geofence_radius || 100,
-        });
+      // Validar de acordo com o modo de validação do checkpoint
+      const validationMode: string = checkpoint.validation_mode || 'geofence';
 
-        if (!isValid) {
+      // 1) Validar geofence quando aplicável
+      if (validationMode === 'geofence' || validationMode === 'mixed') {
+        if (checkpoint.latitude && checkpoint.longitude) {
+          const { data: isValid } = await supabase.rpc('check_geofence', {
+            checkpoint_lat: checkpoint.latitude,
+            checkpoint_lon: checkpoint.longitude,
+            user_lat: latitude,
+            user_lon: longitude,
+            radius_meters: checkpoint.geofence_radius || 100,
+          });
+
+          if (!isValid) {
+            return {
+              success: false,
+              checkpoint_id: checkpointId,
+              route_id: routeId,
+              stamp_earned: false,
+              points_earned: 0,
+              route_completed: false,
+              error: 'Você está muito longe do checkpoint',
+            };
+          }
+        }
+      }
+
+      // 2) Validar código do parceiro quando aplicável
+      if (validationMode === 'code' || validationMode === 'mixed') {
+        const expectedCode: string | null = checkpoint.partner_code || null;
+        const inputCode = (partnerCodeInput || '').trim();
+
+        if (!expectedCode) {
           return {
             success: false,
             checkpoint_id: checkpointId,
@@ -391,7 +415,33 @@ class PassportService {
             stamp_earned: false,
             points_earned: 0,
             route_completed: false,
-            error: 'Você está muito longe do checkpoint',
+            error: 'Este ponto exige código do parceiro, mas nenhum código foi configurado.',
+          };
+        }
+
+        if (!inputCode) {
+          return {
+            success: false,
+            checkpoint_id: checkpointId,
+            route_id: routeId,
+            stamp_earned: false,
+            points_earned: 0,
+            route_completed: false,
+            error: 'Informe o código do parceiro para concluir o check-in.',
+          };
+        }
+
+        // Comparação case-insensitive e ignorando espaços
+        const normalize = (value: string) => value.replace(/\s+/g, '').toUpperCase();
+        if (normalize(inputCode) !== normalize(expectedCode)) {
+          return {
+            success: false,
+            checkpoint_id: checkpointId,
+            route_id: routeId,
+            stamp_earned: false,
+            points_earned: 0,
+            route_completed: false,
+            error: 'Código do parceiro inválido. Confirme o código no balcão.',
           };
         }
       }

@@ -26,6 +26,9 @@ export interface PassportReward {
   partner_phone?: string | null;
   partner_email?: string | null;
   is_active: boolean;
+  max_vouchers?: number | null;
+  max_per_user?: number | null;
+  is_fallback?: boolean | null;
   expires_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -54,6 +57,7 @@ export interface OfflineCheckin {
   photo_url?: string | null;
   photo_metadata?: Record<string, any> | null;
   device_info?: string | null;
+   partner_code_input?: string | null;
   synced: boolean;
   synced_at?: string | null;
   created_at: string;
@@ -84,6 +88,8 @@ export interface RouteCheckpointExtended {
   stamp_fragment_number?: number | null;
   geofence_radius?: number | null;
   requires_photo?: boolean | null;
+  validation_mode?: 'geofence' | 'code' | 'mixed' | null;
+  partner_code?: string | null;
 }
 
 export interface RouteExtended {

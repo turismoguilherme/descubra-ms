@@ -9,11 +9,15 @@
 ALTER TABLE route_checkpoints 
 ADD COLUMN IF NOT EXISTS stamp_fragment_number INTEGER,
 ADD COLUMN IF NOT EXISTS geofence_radius INTEGER DEFAULT 100,
-ADD COLUMN IF NOT EXISTS requires_photo BOOLEAN DEFAULT false;
+ADD COLUMN IF NOT EXISTS requires_photo BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS validation_mode VARCHAR(20) DEFAULT 'geofence',
+ADD COLUMN IF NOT EXISTS partner_code VARCHAR(20);
 
 COMMENT ON COLUMN route_checkpoints.stamp_fragment_number IS 'Número do fragmento do carimbo (1, 2, 3...)';
 COMMENT ON COLUMN route_checkpoints.geofence_radius IS 'Raio de validação geográfica em metros';
 COMMENT ON COLUMN route_checkpoints.requires_photo IS 'Se foto é obrigatória para check-in';
+COMMENT ON COLUMN route_checkpoints.validation_mode IS 'Modo de validação: geofence, code, mixed';
+COMMENT ON COLUMN route_checkpoints.partner_code IS 'Código curto informado pelo parceiro para validação de check-in';
 
 -- Expandir routes
 ALTER TABLE routes 
@@ -61,6 +65,9 @@ CREATE TABLE IF NOT EXISTS passport_rewards (
   partner_phone VARCHAR(50),
   partner_email VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
+  max_vouchers INTEGER,
+  max_per_user INTEGER DEFAULT 1,
+  is_fallback BOOLEAN DEFAULT false,
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -69,6 +76,9 @@ CREATE TABLE IF NOT EXISTS passport_rewards (
 COMMENT ON TABLE passport_rewards IS 'Recompensas disponíveis por rota';
 COMMENT ON COLUMN passport_rewards.reward_type IS 'Tipo: desconto, brinde, experiencia';
 COMMENT ON COLUMN passport_rewards.reward_code_prefix IS 'Prefixo para códigos de voucher únicos';
+COMMENT ON COLUMN passport_rewards.max_vouchers IS 'Quantidade máxima de vouchers a serem emitidos para esta recompensa (estoque).';
+COMMENT ON COLUMN passport_rewards.max_per_user IS 'Quantidade máxima de vouchers desta recompensa que um mesmo usuário pode receber.';
+COMMENT ON COLUMN passport_rewards.is_fallback IS 'Se true, esta recompensa é secundária (usada quando as principais esgotam).';
 
 -- Tabela: user_rewards
 CREATE TABLE IF NOT EXISTS user_rewards (
@@ -239,6 +249,7 @@ DECLARE
   v_reward RECORD;
   v_voucher_code VARCHAR;
   v_prefix VARCHAR;
+  v_total_emitted INTEGER;
 BEGIN
   -- Verificar se roteiro foi completado (todos os checkpoints)
   IF NOT EXISTS (
@@ -252,18 +263,32 @@ BEGIN
           AND ps.user_id = p_user_id
       )
   ) THEN
-    -- Roteiro completo, desbloquear recompensas
+    -- Roteiro completo, tentar desbloquear recompensas
+
+    -- 1) Tentar recompensas principais (is_fallback = false)
     FOR v_reward IN
       SELECT * FROM passport_rewards
       WHERE route_id = p_route_id
         AND is_active = true
         AND (expires_at IS NULL OR expires_at > NOW())
+        AND COALESCE(is_fallback, false) = false
         AND NOT EXISTS (
           SELECT 1 FROM user_rewards
           WHERE user_id = p_user_id
             AND reward_id = v_reward.id
         )
     LOOP
+      -- Verificar estoque: max_vouchers
+      IF v_reward.max_vouchers IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_total_emitted
+        FROM user_rewards
+        WHERE reward_id = v_reward.id;
+
+        IF v_total_emitted >= v_reward.max_vouchers THEN
+          CONTINUE; -- estoque esgotado, tenta próxima recompensa
+        END IF;
+      END IF;
+
       -- Gerar código de voucher único
       v_prefix := COALESCE(v_reward.reward_code_prefix, 'MS');
       v_voucher_code := v_prefix || '-' || UPPER(SUBSTRING(MD5(p_user_id::TEXT || v_reward.id::TEXT || NOW()::TEXT), 1, 8));
@@ -279,6 +304,49 @@ BEGIN
       RETURNING id, voucher_code INTO v_reward.id, v_voucher_code;
       
       RETURN QUERY SELECT v_reward.id, v_voucher_code;
+      RETURN;
+    END LOOP;
+
+    -- 2) Se nenhuma principal foi concedida, tentar recompensas secundárias (fallback)
+    FOR v_reward IN
+      SELECT * FROM passport_rewards
+      WHERE route_id = p_route_id
+        AND is_active = true
+        AND (expires_at IS NULL OR expires_at > NOW())
+        AND COALESCE(is_fallback, false) = true
+        AND NOT EXISTS (
+          SELECT 1 FROM user_rewards
+          WHERE user_id = p_user_id
+            AND reward_id = v_reward.id
+        )
+    LOOP
+      -- Verificar estoque: max_vouchers
+      IF v_reward.max_vouchers IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_total_emitted
+        FROM user_rewards
+        WHERE reward_id = v_reward.id;
+
+        IF v_total_emitted >= v_reward.max_vouchers THEN
+          CONTINUE; -- estoque esgotado para esta fallback também
+        END IF;
+      END IF;
+
+      -- Gerar código de voucher único
+      v_prefix := COALESCE(v_reward.reward_code_prefix, 'MS');
+      v_voucher_code := v_prefix || '-' || UPPER(SUBSTRING(MD5(p_user_id::TEXT || v_reward.id::TEXT || NOW()::TEXT), 1, 8));
+      
+      -- Garantir unicidade
+      WHILE EXISTS (SELECT 1 FROM user_rewards WHERE voucher_code = v_voucher_code) LOOP
+        v_voucher_code := v_prefix || '-' || UPPER(SUBSTRING(MD5(p_user_id::TEXT || v_reward.id::TEXT || NOW()::TEXT || RANDOM()::TEXT), 1, 8));
+      END LOOP;
+      
+      -- Inserir recompensa fallback
+      INSERT INTO user_rewards (user_id, reward_id, route_id, voucher_code)
+      VALUES (p_user_id, v_reward.id, p_route_id, v_voucher_code)
+      RETURNING id, voucher_code INTO v_reward.id, v_voucher_code;
+      
+      RETURN QUERY SELECT v_reward.id, v_voucher_code;
+      RETURN;
     END LOOP;
   END IF;
   
