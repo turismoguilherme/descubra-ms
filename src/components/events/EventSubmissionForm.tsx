@@ -26,9 +26,14 @@ import {
   Loader2,
   Megaphone,
   Gift,
-  CreditCard
+  CreditCard,
+  Image as ImageIcon,
+  Upload,
+  X
 } from "lucide-react";
 import { redirectToEventCheckout } from "@/services/stripe/eventCheckoutService";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
 const eventSchema = z.object({
   // Tipo de cadastro
@@ -57,6 +62,9 @@ const eventSchema = z.object({
   // Links
   site_oficial: z.string().url("URL inválida").optional().or(z.literal("")),
   video_promocional: z.string().optional(),
+  
+  // Banner
+  banner_url: z.string().url("URL inválida").optional().or(z.literal("")),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -78,6 +86,9 @@ export const EventSubmissionForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [tipoSelecionado, setTipoSelecionado] = useState<"gratuito" | "destaque">("gratuito");
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   const {
     register,
@@ -93,20 +104,140 @@ export const EventSubmissionForm: React.FC = () => {
     },
   });
 
+  // Função para fazer upload do banner
+  const uploadBanner = async (file: File): Promise<string | null> => {
+    try {
+      setIsUploadingBanner(true);
+      const BUCKET_NAME = 'event-images';
+      
+      // Validar arquivo
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Formato inválido",
+          description: "Use JPG, JPEG, PNG ou WEBP",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Validar tamanho (máximo 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O banner deve ter no máximo 10MB",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banners/${uuidv4()}.${fileExt}`;
+
+      // Upload para Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        // Se o bucket não existir, mostrar mensagem mais amigável
+        if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
+          console.warn('⚠️ Bucket event-images não encontrado. O evento será enviado sem banner.');
+          return null; // Retorna null silenciosamente, o onSubmit vai tratar
+        }
+        toast({
+          title: "Erro no upload",
+          description: uploadError.message || "Erro ao fazer upload da imagem",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Obter URL pública da imagem
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+      return publicUrlData?.publicUrl || null;
+    } catch (error: any) {
+      console.error('Erro ao fazer upload do banner:', error);
+      toast({
+        title: "Erro no upload",
+        description: error.message || "Erro ao fazer upload da imagem",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  // Handler para seleção de arquivo
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBannerFile(file);
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handler para remover arquivo
+  const handleRemoveBanner = () => {
+    setBannerFile(null);
+    setBannerPreview(null);
+  };
+
   const onSubmit = async (data: EventFormData) => {
+    console.log('🚀 Iniciando envio do evento...', data);
     setIsSubmitting(true);
     try {
-      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+      // Fazer upload do banner se houver arquivo
+      let bannerImageUrl = data.banner_url || null;
+      console.log('📸 Banner URL inicial:', bannerImageUrl);
       
+      if (bannerFile) {
+        console.log('📤 Fazendo upload do banner...', bannerFile.name);
+        const uploadedUrl = await uploadBanner(bannerFile);
+        if (uploadedUrl) {
+          bannerImageUrl = uploadedUrl;
+          console.log('✅ Upload do banner concluído:', uploadedUrl);
+        } else {
+          console.warn('⚠️ Falha no upload do banner, continuando sem banner');
+          // Se o upload falhar, continua sem banner (banner é opcional)
+          toast({
+            title: "Aviso",
+            description: "Não foi possível fazer upload do banner. O evento será enviado sem imagem.",
+            variant: "default",
+          });
+        }
+      }
+
+      // Preparar data de início e fim com horário (formato ISO)
+      const startDateTime = new Date(`${data.data_inicio}T${data.horario_inicio}:00`).toISOString();
+      const endDateTime = data.data_fim
+        ? new Date(`${data.data_fim}T${data.horario_fim}:00`).toISOString()
+        : new Date(`${data.data_inicio}T${data.horario_fim}:00`).toISOString();
+
+      console.log('📅 Datas preparadas:', { startDateTime, endDateTime });
+
       const eventData = {
         name: data.titulo,
         description: data.descricao,
-        start_date: data.data_inicio,
-        end_date: data.data_fim || data.data_inicio,
-        start_time: data.horario_inicio,
-        end_time: data.horario_fim,
+        start_date: startDateTime,
+        end_date: endDateTime,
         location: `${data.local}, ${data.cidade}`,
+        image_url: bannerImageUrl,
         site_oficial: data.site_oficial || null,
         video_url: data.video_promocional || null,
         organizador_nome: data.organizador_nome,
@@ -116,25 +247,41 @@ export const EventSubmissionForm: React.FC = () => {
         is_sponsored: data.tipo === "destaque",
         sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
         sponsor_amount: data.tipo === "destaque" ? 499.90 : null,
+        // category: data.categoria, // Temporariamente removido - coluna não existe no banco
       };
 
-      // Criar evento no banco
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/events`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(eventData)
-      });
+      console.log('📦 Dados do evento preparados:', eventData);
 
-      if (!response.ok) {
-        throw new Error('Erro ao enviar evento');
+      // Criar evento no banco usando cliente Supabase autenticado
+      console.log('💾 Inserindo evento no banco de dados...');
+      const { data: createdEvents, error: insertError } = await supabase
+        .from('events')
+        .insert(eventData)
+        .select();
+
+      if (insertError) {
+        console.error('❌ Erro ao criar evento:', insertError);
+        console.error('❌ Detalhes do erro:', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        });
+        toast({
+          title: "Erro ao enviar evento",
+          description: insertError.message || "Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+        throw new Error(insertError.message || 'Erro ao enviar evento');
       }
 
-      const createdEvents = await response.json();
+      console.log('✅ Evento criado com sucesso!', createdEvents);
+
+      if (!createdEvents || createdEvents.length === 0) {
+        console.error('❌ Nenhum evento foi retornado após inserção');
+        throw new Error('Erro ao criar evento');
+      }
+
       const eventId = createdEvents[0]?.id;
 
       // Se for evento em destaque, redirecionar para checkout Stripe
@@ -163,7 +310,8 @@ export const EventSubmissionForm: React.FC = () => {
         description: "Seu evento será analisado e publicado em breve.",
       });
     } catch (error: any) {
-      console.error('Erro ao enviar evento:', error);
+      console.error('❌ Erro geral ao enviar evento:', error);
+      console.error('❌ Stack trace:', error.stack);
       toast({
         title: "Erro ao enviar evento",
         description: error.message || "Tente novamente mais tarde.",
@@ -171,6 +319,7 @@ export const EventSubmissionForm: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+      console.log('🏁 Processo de envio finalizado');
     }
   };
 
@@ -202,8 +351,48 @@ export const EventSubmissionForm: React.FC = () => {
     );
   }
 
+  const handleFormSubmit = (data: EventFormData) => {
+    console.log('📝 Formulário submetido!', data);
+    console.log('📝 Erros de validação:', errors);
+    onSubmit(data);
+  };
+
+  const handleFormError = (errors: any) => {
+    console.log('❌ Erros de validação do formulário:', errors);
+    
+    // Mapear nomes de campos para nomes amigáveis
+    const fieldNames: Record<string, string> = {
+      titulo: 'Título',
+      descricao: 'Descrição',
+      categoria: 'Categoria',
+      data_inicio: 'Data de início',
+      horario_inicio: 'Horário de início',
+      horario_fim: 'Horário de término',
+      local: 'Local',
+      cidade: 'Cidade',
+      organizador_nome: 'Nome do organizador',
+      organizador_email: 'Email do organizador',
+      organizador_telefone: 'Telefone do organizador',
+    };
+    
+    // Mostrar toast com os erros
+    const errorMessages = Object.keys(errors).map(key => {
+      const fieldName = fieldNames[key] || key;
+      const message = errors[key]?.message || `${fieldName} é obrigatório`;
+      return `${fieldName}: ${message}`;
+    });
+    
+    toast({
+      title: "Formulário incompleto",
+      description: errorMessages.length > 0 
+        ? errorMessages[0] + (errorMessages.length > 1 ? ` e mais ${errorMessages.length - 1} campo(s)` : '')
+        : "Por favor, preencha todos os campos obrigatórios",
+      variant: "destructive",
+    });
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(handleFormSubmit, handleFormError)} className="space-y-8">
       {/* Escolha do Tipo */}
       <Card>
         <CardHeader>
@@ -423,6 +612,102 @@ export const EventSubmissionForm: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Banner */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-ms-primary-blue" />
+            Banner do Evento (opcional)
+          </CardTitle>
+          <CardDescription>
+            Adicione uma imagem de destaque para seu evento. Você pode fazer upload de uma imagem ou informar uma URL.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Upload de arquivo */}
+          <div>
+            <Label htmlFor="banner_file">Upload de Imagem</Label>
+            {!bannerFile ? (
+              <div className="mt-2">
+                <label
+                  htmlFor="banner_file"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Clique para fazer upload</span> ou arraste e solte
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, WEBP (máx. 10MB)</p>
+                  </div>
+                  <input
+                    id="banner_file"
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleBannerFileChange}
+                    disabled={isUploadingBanner}
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="mt-2 relative">
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+                  <img
+                    src={bannerPreview || ''}
+                    alt="Preview do banner"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveBanner}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{bannerFile.name}</p>
+              </div>
+            )}
+            {isUploadingBanner && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Fazendo upload da imagem...
+              </div>
+            )}
+          </div>
+
+          {/* Divisor OU */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">ou</span>
+            </div>
+          </div>
+
+          {/* URL de imagem */}
+          <div>
+            <Label htmlFor="banner_url">URL da Imagem</Label>
+            <Input
+              id="banner_url"
+              {...register("banner_url")}
+              placeholder="https://exemplo.com/imagem.jpg"
+              disabled={!!bannerFile}
+            />
+            {errors.banner_url && (
+              <p className="text-red-500 text-sm mt-1">{errors.banner_url.message}</p>
+            )}
+            {bannerFile && (
+              <p className="text-xs text-gray-500 mt-1">
+                Remova o arquivo para usar uma URL
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Links */}
       <Card>
         <CardHeader>
@@ -467,6 +752,10 @@ export const EventSubmissionForm: React.FC = () => {
               type="submit" 
               size="lg"
               disabled={isSubmitting}
+              onClick={() => {
+                console.log('🖱️ Botão de submit clicado!');
+                console.log('🖱️ Estado do formulário:', { isSubmitting, errors });
+              }}
               className={tipoSelecionado === "destaque" 
                 ? "bg-white text-yellow-600 hover:bg-white/90 font-bold px-8"
                 : "bg-white text-ms-primary-blue hover:bg-white/90 font-bold px-8"
