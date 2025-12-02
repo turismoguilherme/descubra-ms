@@ -198,7 +198,7 @@ const MapaTuristico: React.FC = () => {
             {/* Coluna direita - Mapa */}
             <div className="lg:col-span-3 order-1 lg:order-2">
               <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-                <div className="aspect-square lg:aspect-auto lg:h-[600px]">
+                <div className="aspect-square lg:aspect-auto lg:h-[850px]">
                   <MSInteractiveMap
                     onRegionClick={handleRegionClick}
                     onRegionHover={handleRegionHover}
