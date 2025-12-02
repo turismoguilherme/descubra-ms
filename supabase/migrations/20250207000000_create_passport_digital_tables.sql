@@ -65,9 +65,6 @@ CREATE TABLE IF NOT EXISTS passport_rewards (
   partner_phone VARCHAR(50),
   partner_email VARCHAR(255),
   is_active BOOLEAN DEFAULT true,
-  max_vouchers INTEGER,
-  max_per_user INTEGER DEFAULT 1,
-  is_fallback BOOLEAN DEFAULT false,
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -76,6 +73,13 @@ CREATE TABLE IF NOT EXISTS passport_rewards (
 COMMENT ON TABLE passport_rewards IS 'Recompensas disponíveis por rota';
 COMMENT ON COLUMN passport_rewards.reward_type IS 'Tipo: desconto, brinde, experiencia';
 COMMENT ON COLUMN passport_rewards.reward_code_prefix IS 'Prefixo para códigos de voucher únicos';
+
+-- Expandir passport_rewards com controle de estoque e fallback
+ALTER TABLE passport_rewards
+  ADD COLUMN IF NOT EXISTS max_vouchers INTEGER,
+  ADD COLUMN IF NOT EXISTS max_per_user INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS is_fallback BOOLEAN DEFAULT false;
+
 COMMENT ON COLUMN passport_rewards.max_vouchers IS 'Quantidade máxima de vouchers a serem emitidos para esta recompensa (estoque).';
 COMMENT ON COLUMN passport_rewards.max_per_user IS 'Quantidade máxima de vouchers desta recompensa que um mesmo usuário pode receber.';
 COMMENT ON COLUMN passport_rewards.is_fallback IS 'Se true, esta recompensa é secundária (usada quando as principais esgotam).';
