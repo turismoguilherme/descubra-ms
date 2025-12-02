@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { usePassport } from '@/hooks/usePassport';
 import { geolocationService } from '@/services/passport/geolocationService';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
   const [checkingIn, setCheckingIn] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [partnerCode, setPartnerCode] = useState('');
 
   /**
    * Obter localização atual
@@ -95,10 +97,20 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       return;
     }
 
-    if (validation && !validation.valid) {
+    if (validation && !validation.valid && (checkpoint.validation_mode === 'geofence' || checkpoint.validation_mode === 'mixed')) {
       toast({
         title: 'Fora do alcance',
         description: `Você está a ${validation.distance}m do checkpoint. Aproxime-se mais.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Se este checkpoint exige código (code ou mixed), garantir que o usuário digitou algo
+    if ((checkpoint.validation_mode === 'code' || checkpoint.validation_mode === 'mixed') && !partnerCode.trim()) {
+      toast({
+        title: 'Código do parceiro necessário',
+        description: 'Peça o código no balcão/recepção do parceiro e digite para concluir o check-in.',
         variant: 'destructive',
       });
       return;
@@ -114,7 +126,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
 
     try {
       setCheckingIn(true);
-      const result = await checkIn(checkpoint.id, location.lat, location.lon, photoUrl);
+      const result = await checkIn(checkpoint.id, location.lat, location.lon, photoUrl, partnerCode);
 
       if (result.success) {
         toast({
@@ -245,6 +257,23 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Código do parceiro (quando necessário) */}
+        {(checkpoint.validation_mode === 'code' || checkpoint.validation_mode === 'mixed') && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Código do parceiro
+            </label>
+            <Input
+              value={partnerCode}
+              onChange={(e) => setPartnerCode(e.target.value)}
+              placeholder="Peça o código no balcão e digite aqui (ex.: MS-4281)"
+            />
+            <p className="text-xs text-muted-foreground">
+              Este ponto exige confirmação do estabelecimento. Mostre seu passaporte digital e peça o código.
+            </p>
           </div>
         )}
 

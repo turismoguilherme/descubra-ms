@@ -5,7 +5,7 @@ import RouteHeroSection from './RouteHeroSection';
 import AnimalStampGrid from './AnimalStampGrid';
 import RewardsOverview from './RewardsOverview';
 import PassportMap from './PassportMap';
-import { MapPin, TrendingUp } from 'lucide-react';
+import { MapPin, TrendingUp, WifiOff, KeyRound } from 'lucide-react';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
 
 interface PassportRouteViewProps {
@@ -30,6 +30,39 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress }
         distance={route.distance_km || undefined}
         theme={theme}
       />
+
+      {/* Como usar este roteiro (online e offline) */}
+      <Card>
+        <CardContent className="p-4 md:p-5 space-y-3">
+          <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
+            <WifiOff className="h-4 w-4 text-ms-primary-blue" />
+            Como usar este roteiro com e sem internet
+          </h3>
+          <ul className="text-sm text-muted-foreground space-y-1.5">
+            <li>
+              <span className="font-semibold text-gray-800">1. Abra a rota antes de sair para o passeio.</span>
+              {' '}O sistema salva as informações principais no seu aparelho.
+            </li>
+            <li>
+              <span className="font-semibold text-gray-800">2. Nos pontos ao ar livre</span> (mirantes, trilhas, praças),
+              o check-in usa sua posição aproximada (GPS) para validar se você está no local.
+            </li>
+            <li className="flex items-start gap-2">
+              <KeyRound className="h-4 w-4 mt-0.5 text-ms-primary-blue" />
+              <span>
+                <span className="font-semibold text-gray-800">3. Nos parceiros participantes</span> (hotéis, atrativos, restaurantes),
+                algumas paradas pedem um <span className="font-semibold">código do parceiro</span>.
+                Mostre seu passaporte digital no balcão e peça o código para concluir o carimbo.
+              </span>
+            </li>
+            <li>
+              <span className="font-semibold text-gray-800">4. Sem sinal de internet?</span>
+              {' '}Se estiver sem conexão, seus check-ins são salvos no celular e sincronizados
+              automaticamente quando você voltar a ter internet.
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Main Content (2/3) */}

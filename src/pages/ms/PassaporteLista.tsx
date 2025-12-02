@@ -311,22 +311,23 @@ const PassaporteLista = () => {
             </Card>
             <Card className="border-ms-primary-blue/20 bg-white">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base text-ms-primary-blue">2. Escolha uma rota</CardTitle>
+                <CardTitle className="text-base text-ms-primary-blue">2. Escolha uma rota oficial</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-gray-600">
-                Selecione uma das rotas oficiais, siga os pontos indicados e registre as visitas
-                diretamente pelo passaporte.
+                Selecione um roteiro oficial (Pantanal, Bonito, Campo Grande etc.), veja os pontos da
+                rota e prepare-se para a jornada.
               </CardContent>
             </Card>
             <Card className="border-ms-primary-blue/20 bg-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-ms-primary-blue">
-                  3. Ganhe selos e benefícios
+                  3. Visite os pontos e carimbe seu passaporte
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-gray-600">
-                Ao completar rotas e visitar parceiros participantes, você acumula selos, pontos e
-                pode acessar ofertas exclusivas.
+                Em cada parada, o sistema valida sua presença por geolocalização e, em alguns parceiros,
+                pede um código informado no balcão. Ao completar a rota, você ganha selos, pontos e pode
+                desbloquear benefícios.
               </CardContent>
             </Card>
           </div>
