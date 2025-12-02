@@ -4,7 +4,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { Partner } from "@/hooks/usePartners";
 
-export type PartnerLeadRequestType = "day_use" | "diaria" | "pacote" | "outro";
+export type PartnerLeadRequestType =
+  | "day_use"
+  | "diaria"
+  | "pacote_completo"
+  | "passeio_especifico"
+  | "gastronomia"
+  | "transporte"
+  | "evento_grupo"
+  | "outro";
 
 export interface CreatePartnerLeadInput {
   partner: Partner;

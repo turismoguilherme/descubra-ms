@@ -59,45 +59,28 @@ const SejaUmParceiroMS = () => {
             </div>
           </div>
 
-          {/* Planos de parceria */}
-          <div className="max-w-4xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-ms-primary-blue mb-6">
-              Planos de Parceria Descubra MS
-            </h2>
-            <p className="text-gray-600 text-center max-w-2xl mx-auto mb-8">
-              Comece gratuito como parceiro da vitrine do Descubra MS e, quando fizer sentido para
-              o seu negócio, evolua para o plano PRO com geração de leads e mais destaque.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Parceiro Descubra MS</h3>
-                <p className="text-sm text-gray-500 mb-4">Plano gratuito</p>
-                <ul className="text-sm text-gray-700 space-y-2 mb-4">
-                  <li>• Presença na vitrine oficial do Descubra Mato Grosso do Sul.</li>
-                  <li>• Página com nome, descrição, fotos, endereço e contatos.</li>
-                  <li>• Possibilidade de participar de ações promocionais locais.</li>
-                </ul>
-                <p className="text-xs text-gray-500">
-                  Ideal para empreendimentos que querem começar a aparecer para turistas que buscam
-                  pelo destino.
+          {/* Plano de parceria PRO único */}
+          <div className="max-w-3xl mx-auto mb-12">
+            <div className="bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal rounded-3xl shadow-xl p-8 text-white relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_left,_#ffffff,_transparent_60%)]" />
+              <div className="relative space-y-4">
+                <h2 className="text-2xl md:text-3xl font-bold text-center">
+                  Plano Parceiro PRO Descubra MS
+                </h2>
+                <p className="text-blue-100 text-center max-w-2xl mx-auto">
+                  Um plano único e profissional para empreendimentos que querem gerar reservas
+                  reais a partir do Descubra Mato Grosso do Sul.
                 </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_left,_#ffffff,_transparent_60%)]" />
-                <div className="relative">
-                  <h3 className="text-xl font-bold mb-2">Parceiro PRO Descubra MS</h3>
-                  <p className="text-sm text-blue-100 mb-4">Plano comercial / comissão</p>
-                  <ul className="text-sm text-blue-50 space-y-2 mb-4">
-                    <li>• Destaque na listagem de parceiros do Descubra MS.</li>
-                    <li>• Botão “Pedir reserva / orçamento” com envio de leads qualificados.</li>
-                    <li>• Participação em campanhas especiais ligadas ao Passaporte Digital.</li>
-                  </ul>
-                  <p className="text-xs text-blue-100/90">
-                    Valores, comissões e condições são combinados diretamente com a equipe Descubra
-                    MS, de acordo com a realidade do seu empreendimento.
-                  </p>
-                </div>
+                <ul className="text-sm text-blue-50 space-y-2 mb-2">
+                  <li>• Destaque na listagem oficial de parceiros do Descubra MS.</li>
+                  <li>• Botão “Pedir reserva / orçamento” com envio de leads qualificados.</li>
+                  <li>• Participação em campanhas especiais ligadas ao Passaporte Digital.</li>
+                  <li>• Presença em ações e materiais promocionais do estado e municípios parceiros.</li>
+                </ul>
+                <p className="text-xs text-blue-100/90 text-center">
+                  Valores, comissões e condições são combinados diretamente com a equipe Descubra
+                  MS, de acordo com a realidade do seu empreendimento.
+                </p>
               </div>
             </div>
           </div>

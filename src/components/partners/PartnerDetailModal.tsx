@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Partner } from '@/hooks/usePartners';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Globe, Phone, MapPin, Mail, ExternalLink, Calendar, Users, Inbox } from 'lucide-react';
+import { Globe, MapPin, ExternalLink, Calendar, Users, Inbox } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePartnerLeads, PartnerLeadRequestType } from '@/hooks/usePartnerLeads';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -45,6 +44,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
   const [peopleCount, setPeopleCount] = useState<string>('');
   const [requestType, setRequestType] = useState<PartnerLeadRequestType>('day_use');
   const [message, setMessage] = useState('');
+  const [previewIndex, setPreviewIndex] = useState<number>(0);
 
   // Prefill com dados do usuário autenticado, se existirem
   useEffect(() => {
@@ -112,9 +112,20 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
 
   const youtubeEmbedUrl = partner.youtube_url ? getYouTubeEmbedUrl(partner.youtube_url) : null;
 
+  // Reset índice de foto quando o parceiro mudar
+  useEffect(() => {
+    setPreviewIndex(0);
+  }, [partner?.id]);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl border-0 shadow-2xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Detalhes do parceiro {partner.name}</DialogTitle>
+          <DialogDescription>
+            Informações e formulário de pedido de reserva para parceiro do Descubra Mato Grosso do Sul.
+          </DialogDescription>
+        </DialogHeader>
         {/* Header com imagem de fundo */}
         <div className="relative h-48 bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal">
           {partner.logo_url && (
@@ -197,43 +208,39 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
           {allImages.length > 0 && (
             <div>
               <h4 className="font-semibold text-gray-900 mb-3 text-lg">Fotos</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {allImages.map((img, index) => (
+              {/* Foto principal em destaque */}
+              <div className="w-full mb-3">
+                <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-gray-100">
                   <img
-                    key={index}
-                    src={img}
-                    alt={`${partner.name} - Foto ${index + 1}`}
-                    className="w-full aspect-square object-cover rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-pointer hover:scale-[1.02] transition-transform"
+                    src={allImages[previewIndex]}
+                    alt={`${partner.name} - Foto em destaque`}
+                    className="w-full h-full object-cover"
                   />
-                ))}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Contato */}
-          {(partner.contact_email || partner.contact_phone) && (
-            <div className="bg-gray-50 rounded-2xl p-5">
-              <h4 className="font-semibold text-gray-900 mb-4 text-lg">Contato</h4>
-              <div className="flex flex-wrap gap-3">
-                {partner.contact_email && (
-                  <a 
-                    href={`mailto:${partner.contact_email}`}
-                    className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-gray-700"
-                  >
-                    <Mail className="w-5 h-5 text-ms-primary-blue" />
-                    {partner.contact_email}
-                  </a>
-                )}
-                {partner.contact_phone && (
-                  <a 
-                    href={`tel:${partner.contact_phone}`}
-                    className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-gray-700"
-                  >
-                    <Phone className="w-5 h-5 text-ms-primary-blue" />
-                    {partner.contact_phone}
-                  </a>
-                )}
-              </div>
+              {/* Miniaturas em carrossel horizontal */}
+              {allImages.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {allImages.map((img, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={`flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                        index === previewIndex
+                          ? 'border-ms-primary-blue'
+                          : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                      onClick={() => setPreviewIndex(index)}
+                    >
+                      <img
+                        src={img}
+                        alt={`${partner.name} - Foto ${index + 1}`}
+                        className="w-24 h-16 object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -321,22 +328,25 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="lead-type">O que você quer reservar?</Label>
-                  <Select
+                  <select
+                    id="lead-type"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ms-primary-blue focus:border-ms-primary-blue bg-white"
                     value={requestType}
-                    onValueChange={(val: PartnerLeadRequestType) => setRequestType(val)}
+                    onChange={(e) => setRequestType(e.target.value as PartnerLeadRequestType)}
                   >
-                    <SelectTrigger id="lead-type">
-                      <SelectValue placeholder="Selecione o tipo de pedido" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="day_use">Day use</SelectItem>
-                      <SelectItem value="diaria">Diária / hospedagem</SelectItem>
-                      <SelectItem value="pacote">Pacote / experiência completa</SelectItem>
-                      <SelectItem value="outro">Outro tipo de serviço</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <option value="day_use">Day use em fazenda / balneário</option>
+                    <option value="diaria">Diária de hospedagem</option>
+                    <option value="pacote_completo">Pacote completo (hospedagem + passeios)</option>
+                    <option value="passeio_especifico">
+                      Passeio / atividade específica (flutuação, trilha, cavalgada etc.)
+                    </option>
+                    <option value="gastronomia">Experiência gastronômica</option>
+                    <option value="transporte">Transporte (traslado, barco etc.)</option>
+                    <option value="evento_grupo">Evento / grupo (empresa, escola, excursão)</option>
+                    <option value="outro">Outro tipo de serviço</option>
+                  </select>
               </div>
+            </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="lead-message">Detalhes do que você procura</Label>
@@ -361,7 +371,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
             </form>
           </div>
 
-          {/* Botões diretos do parceiro (site / WhatsApp) */}
+          {/* Botão direto do site do parceiro */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             {partner.website_url && (
               <Button
@@ -381,25 +391,9 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                 </a>
               </Button>
             )}
-
-            {partner.contact_phone && (
-              <Button
-                size="lg"
-                className="flex-1 rounded-xl h-12 text-base bg-green-500 hover:bg-green-600 text-white"
-                asChild
-              >
-                <a
-                  href={`https://wa.me/55${partner.contact_phone.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                  Chamar no WhatsApp
-                </a>
-              </Button>
-            )}
           </div>
         </div>
+
       </DialogContent>
     </Dialog>
   );
