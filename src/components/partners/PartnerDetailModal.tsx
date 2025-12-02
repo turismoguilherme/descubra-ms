@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Partner } from '@/hooks/usePartners';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Globe, Phone, MapPin, Mail, ExternalLink } from 'lucide-react';
+import { Globe, Phone, MapPin, Mail, ExternalLink, Calendar, Users, Inbox } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePartnerLeads, PartnerLeadRequestType } from '@/hooks/usePartnerLeads';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface PartnerDetailModalProps {
   partner: Partner | null;
@@ -26,6 +33,72 @@ const partnerTypeLabels: Record<string, string> = {
 
 export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModalProps) {
   if (!partner) return null;
+
+  const { user, userProfile } = useAuth();
+  const { toast } = useToast();
+  const { createLead, isSubmitting } = usePartnerLeads();
+
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [desiredDate, setDesiredDate] = useState('');
+  const [peopleCount, setPeopleCount] = useState<string>('');
+  const [requestType, setRequestType] = useState<PartnerLeadRequestType>('day_use');
+  const [message, setMessage] = useState('');
+
+  // Prefill com dados do usuário autenticado, se existirem
+  useEffect(() => {
+    if (userProfile) {
+      if (!fullName && (userProfile.full_name || userProfile.name)) {
+        setFullName(userProfile.full_name || userProfile.name || '');
+      }
+      if (!email && userProfile.email) {
+        setEmail(userProfile.email);
+      } else if (!email && user?.email) {
+        setEmail(user.email);
+      }
+      if (!phone && (userProfile.phone || userProfile.whatsapp)) {
+        setPhone(userProfile.phone || userProfile.whatsapp || '');
+      }
+    } else if (user && !email) {
+      setEmail(user.email || '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, userProfile]);
+
+  const handleSubmitLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!fullName.trim() || !email.trim()) {
+      toast({
+        title: 'Preencha nome e e-mail',
+        description: 'Esses campos são obrigatórios para enviar sua solicitação.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const countNumber = peopleCount ? Number(peopleCount) : undefined;
+
+    const result = await createLead({
+      partner,
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phone: phone.trim() || undefined,
+      desiredDate: desiredDate || undefined,
+      peopleCount: Number.isNaN(countNumber || NaN) ? undefined : countNumber,
+      requestType,
+      message: message.trim() || undefined,
+    });
+
+    if (result.success) {
+      // Limpa apenas campos mais sensíveis; mantém nome/email preenchidos para próximos envios
+      setDesiredDate('');
+      setPeopleCount('');
+      setMessage('');
+      onClose();
+    }
+  };
 
   const allImages = [
     partner.logo_url,
@@ -91,11 +164,15 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">🎁</span>
                 <h4 className="font-bold text-ms-primary-blue text-lg">
-                  Oferta Exclusiva Passaporte
+                  Oferta exclusiva para quem usa o Passaporte Digital
                 </h4>
               </div>
               <p className="text-gray-800 font-medium text-lg">
                 {partner.discount_offer}
+              </p>
+              <p className="text-sm text-gray-700 mt-2">
+                Apresente seu Passaporte Digital Descubra MS neste parceiro para garantir o
+                benefício indicado.
               </p>
             </div>
           )}
@@ -160,7 +237,131 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
             </div>
           )}
 
-          {/* Botões */}
+          {/* Ação: Pedido de reserva/orçamento via Descubra MS */}
+          <div className="bg-ms-primary-blue/5 rounded-2xl p-5 space-y-4 border border-ms-primary-blue/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Inbox className="w-5 h-5 text-ms-primary-blue" />
+              <h4 className="font-semibold text-gray-900 text-lg">
+                Pedir reserva ou orçamento pelo Descubra MS
+              </h4>
+            </div>
+            <p className="text-sm text-gray-600">
+              Envie seus dados e seu pedido. O parceiro receberá a solicitação e entrará em contato
+              diretamente com você.
+            </p>
+            {!user && (
+              <p className="text-sm text-red-600 font-medium">
+                Você precisa estar logado para enviar uma solicitação. Use o menu de login do
+                Descubra MS antes de continuar.
+              </p>
+            )}
+
+            <form onSubmit={handleSubmitLead} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-name">Seu nome *</Label>
+                  <Input
+                    id="lead-name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Seu nome completo"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-email">E-mail *</Label>
+                  <Input
+                    id="lead-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seuemail@exemplo.com"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-phone">WhatsApp / Telefone</Label>
+                  <Input
+                    id="lead-phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="(67) 9 0000-0000"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-date">Data desejada</Label>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <Input
+                      id="lead-date"
+                      type="date"
+                      value={desiredDate}
+                      onChange={(e) => setDesiredDate(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-people">Número de pessoas</Label>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-400" />
+                    <Input
+                      id="lead-people"
+                      type="number"
+                      min={1}
+                      value={peopleCount}
+                      onChange={(e) => setPeopleCount(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-type">O que você quer reservar?</Label>
+                  <Select
+                    value={requestType}
+                    onValueChange={(val: PartnerLeadRequestType) => setRequestType(val)}
+                  >
+                    <SelectTrigger id="lead-type">
+                      <SelectValue placeholder="Selecione o tipo de pedido" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="day_use">Day use</SelectItem>
+                      <SelectItem value="diaria">Diária / hospedagem</SelectItem>
+                      <SelectItem value="pacote">Pacote / experiência completa</SelectItem>
+                      <SelectItem value="outro">Outro tipo de serviço</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="lead-message">Detalhes do que você procura</Label>
+                <Textarea
+                  id="lead-message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Ex.: Quero reservar um day use para família com crianças, com almoço incluso."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !user}
+                  className="flex-1 rounded-xl h-11 text-base bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white"
+                >
+                  {isSubmitting ? "Enviando pedido..." : "Enviar pedido de reserva"}
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* Botões diretos do parceiro (site / WhatsApp) */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             {partner.website_url && (
               <Button

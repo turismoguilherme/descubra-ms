@@ -20,9 +20,8 @@ import {
   MapPin,
   Clock
 } from 'lucide-react';
-// import { ReportManager } from '@/components/reports/ReportManager';
-// import { ReportSchedules } from '@/components/reports/ReportSchedules';
-// import { ReportTemplates } from '@/components/reports/ReportTemplates';
+import ReportManager from '@/components/reports/ReportManager';
+import ReportsSection from '@/components/private/ReportsSection';
 
 const ViaJARReportsPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -186,11 +185,14 @@ const ViaJARReportsPage = () => {
           </TabsContent>
 
           <TabsContent value="schedules">
-            <ReportSchedules />
+            <ReportsSection />
           </TabsContent>
 
           <TabsContent value="templates">
-            <ReportTemplates />
+            <div className="text-center py-12 text-gray-500">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Modelos avançados de relatórios serão disponibilizados em breve.</p>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

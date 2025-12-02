@@ -14,6 +14,10 @@ const Contato = () => {
     email: '',
     phone: '',
     organization: '',
+    role: '',
+    interest: '',
+    city: '',
+    state: '',
     message: ''
   });
 
@@ -32,6 +36,10 @@ const Contato = () => {
       email: '',
       phone: '',
       organization: '',
+      role: '',
+      interest: '',
+      city: '',
+      state: '',
       message: ''
     });
   };
@@ -71,8 +79,14 @@ const Contato = () => {
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
                 Fale Conosco
               </h2>
-              <p className="text-gray-600 mb-8 text-lg">
+              <p className="text-gray-600 mb-4 text-lg">
                 Preencha o formulário ao lado ou entre em contato diretamente pelos nossos canais.
+              </p>
+              <p className="text-gray-700 text-sm mb-8">
+                Se você é de uma <span className="font-semibold">Prefeitura ou Secretaria de Turismo de
+                Mato Grosso do Sul</span> e deseja apenas{' '}
+                <span className="font-semibold">Relatórios de Inteligência Municipal</span>
+                (Alumia + Descubra MS), selecione essa opção no formulário.
               </p>
 
               <div className="space-y-6">
@@ -185,6 +199,82 @@ const Contato = () => {
                     className="w-full"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                      Sou
+                    </label>
+                    <select
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange as any}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Selecione</option>
+                      <option value="business">Empresa / Negócio turístico</option>
+                      <option value="municipality">Prefeitura / Secretaria de Turismo</option>
+                      <option value="public_entity">Outro órgão público / entidade</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="interest" className="block text-sm font-medium text-gray-700 mb-2">
+                      O que você procura?
+                    </label>
+                    <select
+                      id="interest"
+                      name="interest"
+                      value={formData.interest}
+                      onChange={handleChange as any}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Selecione</option>
+                      <option value="full_platform">Assinar a plataforma completa ViajARTur</option>
+                      <option value="ms_reports">
+                        Receber apenas Relatórios de Inteligência Municipal de MS
+                      </option>
+                      <option value="other">Outro tipo de parceria</option>
+                    </select>
+                  </div>
+                </div>
+
+                {formData.interest === 'ms_reports' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                        Município (obrigatório para relatórios)
+                      </label>
+                      <Input
+                        id="city"
+                        name="city"
+                        type="text"
+                        value={formData.city}
+                        onChange={handleChange}
+                        placeholder="Ex.: Bonito, Campo Grande..."
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                        Estado
+                      </label>
+                      <Input
+                        id="state"
+                        name="state"
+                        type="text"
+                        value={formData.state}
+                        onChange={handleChange}
+                        placeholder="MS"
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Os Relatórios de Inteligência Municipal estão disponíveis, neste momento,
+                        apenas para municípios de Mato Grosso do Sul.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">

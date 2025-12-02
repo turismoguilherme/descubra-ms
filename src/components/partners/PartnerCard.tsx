@@ -62,11 +62,11 @@ export function PartnerCard({ partner, onViewMore }: PartnerCardProps) {
           </span>
         )}
 
-        {/* Desconto indicator */}
+        {/* Indicador de parceiro do Passaporte */}
         {partner.discount_offer && (
           <span className="absolute top-3 right-3 bg-ms-secondary-yellow text-black text-xs font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
             <Gift className="w-3.5 h-3.5" />
-            Desconto
+            Aceita Passaporte
           </span>
         )}
 

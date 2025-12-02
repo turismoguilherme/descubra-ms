@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,61 +21,82 @@ import {
   Target,
   CheckCircle
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 const ViaJARLeadsPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const mockLeads = [
-    {
-      id: 1,
-      name: 'Hotel Pantanal Resort',
-      email: 'contato@hotelpantanal.com',
-      phone: '(67) 99999-9999',
-      company: 'Pantanal Resort LTDA',
-      status: 'Novo',
-      source: 'Website',
-      priority: 'Alta',
-      value: 'R$ 15.000',
-      createdAt: '2024-01-15',
-      lastContact: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Agência Bonito Tours',
-      email: 'info@bonitotours.com',
-      phone: '(67) 88888-8888',
-      company: 'Bonito Tours',
-      status: 'Em Contato',
-      source: 'Indicação',
-      priority: 'Média',
-      value: 'R$ 8.500',
-      createdAt: '2024-01-14',
-      lastContact: '2024-01-16'
-    },
-    {
-      id: 3,
-      name: 'Restaurante Peixe Dourado',
-      email: 'reservas@peixedourado.com',
-      phone: '(67) 77777-7777',
-      company: 'Peixe Dourado',
-      status: 'Qualificado',
-      source: 'Evento',
-      priority: 'Baixa',
-      value: 'R$ 3.200',
-      createdAt: '2024-01-12',
-      lastContact: '2024-01-14'
-    }
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const leadStats = {
-    totalLeads: 45,
-    newLeads: 12,
-    contactedLeads: 18,
-    qualifiedLeads: 15,
-    totalValue: 'R$ 125.000'
+    totalLeads: leads.length || 0,
+    newLeads: leads.filter(l => l._uiStatus === 'Novo').length,
+    contactedLeads: leads.filter(l => l._uiStatus === 'Em Contato').length,
+    qualifiedLeads: leads.filter(l => l._uiStatus === 'Qualificado').length,
+    totalValue: leads.reduce((sum, l) => sum + (Number(l.value) || 0), 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+    }),
   };
+
+  useEffect(() => {
+    const loadLeads = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        // Busca leads criados pelo usuário ou atribuídos a ele
+        const { data, error } = await supabase
+          .from('leads')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao carregar leads:', error);
+          throw error;
+        }
+
+        const mapped = (data || []).map((lead: any) => {
+          // Mapeia status de forma simples com base em status_id; para uso interno podemos
+          // refinar depois com uma tabela de status.
+          let uiStatus = 'Novo';
+          if (lead.status_id === '2b2b2b2b-2b2b-2b2b-2b2b-2b2b2b2b2b2b') uiStatus = 'Em Contato';
+          if (lead.status_id === '3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b') uiStatus = 'Qualificado';
+          if (lead.status_id === '6b6b6b6b-6b6b-6b6b-6b6b-6b6b6b6b6b6b') uiStatus = 'Convertido';
+
+          let uiPriority = 'Média';
+          if (lead.priority_id === '1c1c1c1c-1c1c-1c1c-1c1c-1c1c1c1c1c1c') uiPriority = 'Baixa';
+          if (lead.priority_id === '3c3c3c3c-3c3c-3c3c-3c3c-3c3c3c3c3c3c') uiPriority = 'Alta';
+
+          return {
+            ...lead,
+            _uiStatus: uiStatus,
+            _uiPriority: uiPriority,
+          };
+        });
+
+        setLeads(mapped);
+      } catch (error: any) {
+        toast({
+          title: 'Erro ao carregar leads',
+          description: error.message || 'Não foi possível carregar seus leads.',
+          variant: 'destructive',
+        });
+        setLeads([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLeads();
+  }, [user, toast]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -229,48 +250,93 @@ const ViaJARLeadsPage = () => {
                 <CardTitle>Leads Recentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockLeads.map((lead) => (
-                    <div key={lead.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{lead.name}</h3>
-                          <p className="text-sm text-gray-600">{lead.company}</p>
-                          <div className="flex items-center space-x-4 mt-1">
-                            <span className="text-xs text-gray-500 flex items-center">
-                              <Mail className="h-3 w-3 mr-1" />
-                              {lead.email}
-                            </span>
-                            <span className="text-xs text-gray-500 flex items-center">
-                              <Phone className="h-3 w-3 mr-1" />
-                              {lead.phone}
-                            </span>
+                {loading ? (
+                  <div className="text-center py-8 text-gray-500">Carregando leads...</div>
+                ) : leads.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Nenhum lead encontrado ainda. Assim que você começar a gerar leads pelo
+                    Descubra MS ou outros canais, eles aparecerão aqui.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {leads
+                      .filter((lead) => {
+                        const term = searchTerm.toLowerCase();
+                        const matchesSearch =
+                          !term ||
+                          lead.name?.toLowerCase().includes(term) ||
+                          lead.email?.toLowerCase().includes(term) ||
+                          lead.company?.toLowerCase().includes(term);
+
+                        const status = lead._uiStatus;
+                        const matchesStatus =
+                          statusFilter === 'all' ||
+                          (statusFilter === 'novo' && status === 'Novo') ||
+                          (statusFilter === 'contato' && status === 'Em Contato') ||
+                          (statusFilter === 'qualificado' && status === 'Qualificado') ||
+                          (statusFilter === 'convertido' && status === 'Convertido');
+
+                        return matchesSearch && matchesStatus;
+                      })
+                      .map((lead) => (
+                        <div
+                          key={lead.id}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Users className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900">{lead.name}</h3>
+                              <p className="text-sm text-gray-600">
+                                {lead.company || lead.custom_fields?.partner_name || '—'}
+                              </p>
+                              <div className="flex items-center space-x-4 mt-1">
+                                {lead.email && (
+                                  <span className="text-xs text-gray-500 flex items-center">
+                                    <Mail className="h-3 w-3 mr-1" />
+                                    {lead.email}
+                                  </span>
+                                )}
+                                {lead.phone && (
+                                  <span className="text-xs text-gray-500 flex items-center">
+                                    <Phone className="h-3 w-3 mr-1" />
+                                    {lead.phone}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Badge className={getStatusColor(lead._uiStatus)}>
+                              {lead._uiStatus}
+                            </Badge>
+                            <Badge className={getPriorityColor(lead._uiPriority)}>
+                              {lead._uiPriority}
+                            </Badge>
+                            {lead.value && (
+                              <span className="text-sm font-medium text-gray-900">
+                                {Number(lead.value).toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                  minimumFractionDigits: 0,
+                                })}
+                              </span>
+                            )}
+                            <div className="flex items-center space-x-1">
+                              <Button variant="ghost" size="sm">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge className={getStatusColor(lead.status)}>
-                          {lead.status}
-                        </Badge>
-                        <Badge className={getPriorityColor(lead.priority)}>
-                          {lead.priority}
-                        </Badge>
-                        <span className="text-sm font-medium text-gray-900">{lead.value}</span>
-                        <div className="flex items-center space-x-1">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

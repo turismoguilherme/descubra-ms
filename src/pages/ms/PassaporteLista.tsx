@@ -288,13 +288,47 @@ const PassaporteLista = () => {
       <main className="flex-grow bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-ms-primary-blue mb-4">
               Passaporte Digital
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Colecione selos virtuais explorando os destinos únicos de Mato Grosso do Sul
+              Viaje por Mato Grosso do Sul, colecione selos virtuais e desbloqueie benefícios
+              exclusivos com os parceiros do Descubra MS.
             </p>
+          </div>
+
+          {/* Como funciona */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <Card className="border-ms-primary-blue/20 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-ms-primary-blue">1. Crie sua conta</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-gray-600">
+                Entre ou cadastre-se no Descubra Mato Grosso do Sul para ativar seu passaporte
+                digital e salvar suas rotas favoritas.
+              </CardContent>
+            </Card>
+            <Card className="border-ms-primary-blue/20 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-ms-primary-blue">2. Escolha uma rota</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-gray-600">
+                Selecione uma das rotas oficiais, siga os pontos indicados e registre as visitas
+                diretamente pelo passaporte.
+              </CardContent>
+            </Card>
+            <Card className="border-ms-primary-blue/20 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-ms-primary-blue">
+                  3. Ganhe selos e benefícios
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-gray-600">
+                Ao completar rotas e visitar parceiros participantes, você acumula selos, pontos e
+                pode acessar ofertas exclusivas.
+              </CardContent>
+            </Card>
           </div>
 
           {/* Routes Grid */}
@@ -385,28 +419,53 @@ const PassaporteLista = () => {
           </div>
           )}
 
-          {/* Stats Section */}
-          <div className="mt-16 bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-center mb-8">Suas Conquistas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-ms-primary-blue">
-                  {routes.filter(r => r.completed).length}
+          {/* Stats + Por que usar o Passaporte */}
+          <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h2 className="text-2xl font-bold text-center mb-8">Suas Conquistas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-ms-primary-blue">
+                    {routes.filter(r => r.completed).length}
+                  </div>
+                  <div className="text-gray-600">Rotas Concluídas</div>
                 </div>
-                <div className="text-gray-600">Rotas Concluídas</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-ms-accent-orange">
-                  {routes.reduce((sum, r) => sum + r.checkpoints, 0)}
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-ms-accent-orange">
+                    {routes.reduce((sum, r) => sum + r.checkpoints, 0)}
+                  </div>
+                  <div className="text-gray-600">Pontos Totais</div>
                 </div>
-                <div className="text-gray-600">Pontos Totais</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-ms-accent-orange">
-                  {routes.reduce((sum, r) => sum + (r.completed ? r.checkpoints : 0), 0)}
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-ms-accent-orange">
+                    {routes.reduce((sum, r) => sum + (r.completed ? r.checkpoints : 0), 0)}
+                  </div>
+                  <div className="text-gray-600">Selos Coletados</div>
                 </div>
-                <div className="text-gray-600">Selos Coletados</div>
               </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h2 className="text-2xl font-bold mb-4 text-ms-primary-blue">
+                Por que usar o Passaporte?
+              </h2>
+              <ul className="space-y-3 text-gray-700 text-sm">
+                <li>
+                  <span className="font-semibold">Descontos em parceiros:</span> estabelecimentos
+                  que aceitam o Passaporte oferecem benefícios exclusivos para quem apresenta o
+                  passaporte digital.
+                </li>
+                <li>
+                  <span className="font-semibold">Rotas oficiais e seguras:</span> roteiros
+                  pensados para valorizar a experiência, a segurança e a sustentabilidade no
+                  turismo de Mato Grosso do Sul.
+                </li>
+                <li>
+                  <span className="font-semibold">Campanhas e prêmios locais:</span> prefeituras e
+                  parceiros podem criar campanhas especiais para quem completa rotas e coleciona
+                  selos.
+                </li>
+              </ul>
             </div>
           </div>
         </div>
