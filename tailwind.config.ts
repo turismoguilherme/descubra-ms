@@ -63,19 +63,28 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Nova identidade visual "Descubra MS" baseada na logo
+				// ViaJARTur Brand
+				viajar: {
+					'slate': 'hsl(var(--viajar-slate))',
+					'cyan': 'hsl(var(--viajar-cyan))',
+					'cyan-light': 'hsl(var(--viajar-cyan-light))',
+					'blue': 'hsl(var(--viajar-blue))',
+					'emerald': 'hsl(var(--viajar-emerald))',
+					'amber': 'hsl(var(--viajar-amber))'
+				},
+				// Descubra MS
 				ms: {
-					'primary-blue': 'hsl(var(--ms-primary-blue))',          // Azul rio principal
-					'secondary-yellow': 'hsl(var(--ms-secondary-yellow))',   // Amarelo dourado
-					'pantanal-green': 'hsl(var(--ms-pantanal-green))',      // Verde floresta
-					'cerrado-orange': 'hsl(var(--ms-cerrado-orange))',      // Laranja cerrado
-					'discovery-teal': 'hsl(var(--ms-discovery-teal))',      // Azul-verde descoberta
-					'earth-brown': 'hsl(var(--ms-earth-brown))',            // Tons terrosos
-					'sky-blue': 'hsl(var(--ms-sky-blue))',                  // Azul céu
-					'nature-green-light': 'hsl(var(--ms-nature-green-light))', // Verde claro
-					'guavira-purple': 'hsl(var(--ms-guavira-purple))',      // Roxo Guavira
-					'rivers-blue': 'hsl(var(--ms-rivers-blue))',            // Azul Rivers
-					'accent-orange': 'hsl(var(--ms-accent-orange))'         // Laranja Acento
+					'primary-blue': 'hsl(var(--ms-primary-blue))',
+					'secondary-yellow': 'hsl(var(--ms-secondary-yellow))',
+					'pantanal-green': 'hsl(var(--ms-pantanal-green))',
+					'cerrado-orange': 'hsl(var(--ms-cerrado-orange))',
+					'discovery-teal': 'hsl(var(--ms-discovery-teal))',
+					'earth-brown': 'hsl(var(--ms-earth-brown))',
+					'sky-blue': 'hsl(var(--ms-sky-blue))',
+					'nature-green-light': 'hsl(var(--ms-nature-green-light))',
+					'guavira-purple': 'hsl(var(--ms-guavira-purple))',
+					'rivers-blue': 'hsl(var(--ms-rivers-blue))',
+					'accent-orange': 'hsl(var(--ms-accent-orange))'
 				}
 			},
 			borderRadius: {

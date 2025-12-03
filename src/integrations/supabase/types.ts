@@ -998,13 +998,20 @@ export type Database = {
       }
       destination_details: {
         Row: {
+          best_time_to_visit: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string | null
           destination_id: string
+          highlights: string[] | null
+          how_to_get_there: string | null
           id: string
           image_gallery: string[] | null
           map_latitude: number | null
           map_longitude: number | null
+          official_website: string | null
           promotional_text: string | null
+          social_links: Json | null
           tourism_tags: string[] | null
           updated_at: string | null
           updated_by: string | null
@@ -1012,13 +1019,20 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          best_time_to_visit?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           destination_id: string
+          highlights?: string[] | null
+          how_to_get_there?: string | null
           id?: string
           image_gallery?: string[] | null
           map_latitude?: number | null
           map_longitude?: number | null
+          official_website?: string | null
           promotional_text?: string | null
+          social_links?: Json | null
           tourism_tags?: string[] | null
           updated_at?: string | null
           updated_by?: string | null
@@ -1026,13 +1040,20 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          best_time_to_visit?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           destination_id?: string
+          highlights?: string[] | null
+          how_to_get_there?: string | null
           id?: string
           image_gallery?: string[] | null
           map_latitude?: number | null
           map_longitude?: number | null
+          official_website?: string | null
           promotional_text?: string | null
+          social_links?: Json | null
           tourism_tags?: string[] | null
           updated_at?: string | null
           updated_by?: string | null
@@ -1266,53 +1287,101 @@ export type Database = {
       events: {
         Row: {
           auto_hide: boolean | null
+          category: string | null
           city_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           end_date: string | null
+          end_time: string | null
+          galeria_imagens: string[] | null
           id: string
           image_url: string | null
+          is_sponsored: boolean | null
           is_visible: boolean | null
           location: string | null
           name: string
+          organizador_email: string | null
+          organizador_empresa: string | null
+          organizador_nome: string | null
+          organizador_telefone: string | null
+          site_oficial: string | null
+          sponsor_amount: number | null
+          sponsor_end_date: string | null
+          sponsor_payment_status: string | null
+          sponsor_start_date: string | null
+          sponsor_tier: string | null
           start_date: string
+          start_time: string | null
           state_id: string | null
           updated_at: string | null
+          video_url: string | null
           visibility_end_date: string | null
         }
         Insert: {
           auto_hide?: boolean | null
+          category?: string | null
           city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_date?: string | null
+          end_time?: string | null
+          galeria_imagens?: string[] | null
           id?: string
           image_url?: string | null
+          is_sponsored?: boolean | null
           is_visible?: boolean | null
           location?: string | null
           name: string
+          organizador_email?: string | null
+          organizador_empresa?: string | null
+          organizador_nome?: string | null
+          organizador_telefone?: string | null
+          site_oficial?: string | null
+          sponsor_amount?: number | null
+          sponsor_end_date?: string | null
+          sponsor_payment_status?: string | null
+          sponsor_start_date?: string | null
+          sponsor_tier?: string | null
           start_date: string
+          start_time?: string | null
           state_id?: string | null
           updated_at?: string | null
+          video_url?: string | null
           visibility_end_date?: string | null
         }
         Update: {
           auto_hide?: boolean | null
+          category?: string | null
           city_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_date?: string | null
+          end_time?: string | null
+          galeria_imagens?: string[] | null
           id?: string
           image_url?: string | null
+          is_sponsored?: boolean | null
           is_visible?: boolean | null
           location?: string | null
           name?: string
+          organizador_email?: string | null
+          organizador_empresa?: string | null
+          organizador_nome?: string | null
+          organizador_telefone?: string | null
+          site_oficial?: string | null
+          sponsor_amount?: number | null
+          sponsor_end_date?: string | null
+          sponsor_payment_status?: string | null
+          sponsor_start_date?: string | null
+          sponsor_tier?: string | null
           start_date?: string
+          start_time?: string | null
           state_id?: string | null
           updated_at?: string | null
+          video_url?: string | null
           visibility_end_date?: string | null
         }
         Relationships: [
@@ -1990,11 +2059,14 @@ export type Database = {
       }
       institutional_partners: {
         Row: {
+          address: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          discount_offer: string | null
+          gallery_images: string[] | null
           id: string
           is_active: boolean | null
           logo_url: string | null
@@ -2003,13 +2075,17 @@ export type Database = {
           status: string
           updated_at: string
           website_url: string | null
+          youtube_url: string | null
         }
         Insert: {
+          address?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_offer?: string | null
+          gallery_images?: string[] | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -2018,13 +2094,17 @@ export type Database = {
           status?: string
           updated_at?: string
           website_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
+          address?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_offer?: string | null
+          gallery_images?: string[] | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -2033,6 +2113,7 @@ export type Database = {
           status?: string
           updated_at?: string
           website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -2137,6 +2218,302 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: []
+      }
+      lead_activities: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date: string
+          description: string | null
+          duration: number | null
+          id: string
+          lead_id: string | null
+          outcome: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          lead_id?: string | null
+          outcome?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          lead_id?: string | null
+          outcome?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_pipeline_stages: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          order_index: number | null
+          pipeline_id: string | null
+          probability: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          order_index?: number | null
+          pipeline_id?: string | null
+          probability?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          order_index?: number | null
+          pipeline_id?: string | null
+          probability?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_pipeline_stages_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "lead_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_pipelines: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      lead_priorities: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          order_index: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          order_index?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          order_index?: number | null
+        }
+        Relationships: []
+      }
+      lead_sources: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      lead_statuses: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_final: boolean | null
+          name: string
+          order_index: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_final?: boolean | null
+          name: string
+          order_index?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_final?: boolean | null
+          name?: string
+          order_index?: number | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          company: string | null
+          created_at: string | null
+          created_by: string | null
+          custom_fields: Json | null
+          email: string
+          id: string
+          last_contact_date: string | null
+          name: string
+          next_follow_up: string | null
+          notes: string | null
+          phone: string | null
+          priority_id: string | null
+          source_id: string | null
+          status_id: string | null
+          tags: string[] | null
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          company?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          email: string
+          id?: string
+          last_contact_date?: string | null
+          name: string
+          next_follow_up?: string | null
+          notes?: string | null
+          phone?: string | null
+          priority_id?: string | null
+          source_id?: string | null
+          status_id?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          assigned_to?: string | null
+          company?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          email?: string
+          id?: string
+          last_contact_date?: string | null
+          name?: string
+          next_follow_up?: string | null
+          notes?: string | null
+          phone?: string | null
+          priority_id?: string | null
+          source_id?: string | null
+          status_id?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_priority_id_fkey"
+            columns: ["priority_id"]
+            isOneToOne: false
+            referencedRelation: "lead_priorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "lead_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_templates: {
         Row: {
@@ -2360,6 +2737,9 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean | null
+          is_fallback: boolean | null
+          max_per_user: number | null
+          max_vouchers: number | null
           partner_address: string | null
           partner_email: string | null
           partner_name: string
@@ -2376,6 +2756,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_fallback?: boolean | null
+          max_per_user?: number | null
+          max_vouchers?: number | null
           partner_address?: string | null
           partner_email?: string | null
           partner_name: string
@@ -2392,6 +2775,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_fallback?: boolean | null
+          max_per_user?: number | null
+          max_vouchers?: number | null
           partner_address?: string | null
           partner_email?: string | null
           partner_name?: string
