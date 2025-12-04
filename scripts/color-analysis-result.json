@@ -1,0 +1,1110 @@
+{
+  "allColors": [
+    {
+      "color": "83A148",
+      "pathCount": 3,
+      "groupCount": 3
+    },
+    {
+      "color": "76428E",
+      "pathCount": 3,
+      "groupCount": 3
+    },
+    {
+      "color": "84A148",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "DA4340",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "DA4240",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "76438D",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "81C7D1",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "776A4D",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "E0501C",
+      "pathCount": 2,
+      "groupCount": 2
+    },
+    {
+      "color": "D1B21B",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "84A24B",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C2CDAF",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "86A155",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D9CF8F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C2CAAF",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "84A147",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "83A049",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D1B218",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CCC0A9",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D84642",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "83A147",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "E2D78E",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DACC7A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CFB11C",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D49B9A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "76448E",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D3BCB2",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C1C1BF",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D99A9C",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C6B6BA",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D6C7A8",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CFB9A9",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "BFB2C9",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "75428C",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "BEAFC9",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D69F9D",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DB413F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D1B21A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "77448F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CAA9B8",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "E4DE9A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "77448E",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D1DAB9",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "75428E",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D3DBB9",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C1E2E3",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "82C7CE",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CFBABB",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D2B31C",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DB423F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CDABB3",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DB4240",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D79E9A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "84C7D0",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C6B2B4",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CED1DD",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "76428D",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "E2E9EB",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B1B2D4",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "84C8D0",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B0B2D4",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "82C7D0",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B5C2CD",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "81C7CF",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "118DC2",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "8FC4D6",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D79F9A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D94844",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "77694D",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "BDB6BE",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "148DC1",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "168EC1",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B1B2D5",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "158FC2",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "AAC4CD",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "C0BCB1",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "786C4F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "128EC1",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "A7B2A7",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "9CD5E3",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B5B4D4",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B3B3D4",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B3B3D2",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "BCB8AB",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "76684C",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "B2B4D6",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "158FC0",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "BFB9AD",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "1A8EBE",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "148EBF",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "228FBC",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CAB6B2",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "CCAF9B",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "E0511F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "776D4F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "D4A488",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "BFB8AC",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "E39778",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "E04E1A",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "776B4E",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "77694C",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DAB8A1",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DB5523",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "7A6C4F",
+      "pathCount": 1,
+      "groupCount": 1
+    },
+    {
+      "color": "DA5527",
+      "pathCount": 1,
+      "groupCount": 1
+    }
+  ],
+  "regions": {
+    "pantanal": {
+      "name": "Pantanal",
+      "expectedColor": "#FFCA28",
+      "foundColors": [
+        {
+          "color": "D2B31C",
+          "pathCount": 1,
+          "distance": 51.94227565288221
+        },
+        {
+          "color": "D1B21B",
+          "pathCount": 1,
+          "distance": 53.48831648126533
+        },
+        {
+          "color": "D1B21A",
+          "pathCount": 1,
+          "distance": 53.74011537017761
+        },
+        {
+          "color": "D1B218",
+          "pathCount": 1,
+          "distance": 54.29548784199291
+        },
+        {
+          "color": "CFB11C",
+          "pathCount": 1,
+          "distance": 55.4346462061408
+        },
+        {
+          "color": "DACC7A",
+          "pathCount": 1,
+          "distance": 89.9833317898376
+        }
+      ]
+    },
+    "rota-cerrado-pantanal": {
+      "name": "Rota Cerrado Pantanal",
+      "expectedColor": "#66BB6A",
+      "foundColors": [
+        {
+          "color": "86A155",
+          "pathCount": 1,
+          "distance": 46.2709412050371
+        },
+        {
+          "color": "84A24B",
+          "pathCount": 1,
+          "distance": 49.85980344927164
+        },
+        {
+          "color": "83A049",
+          "pathCount": 1,
+          "distance": 51.56549233741495
+        },
+        {
+          "color": "83A148",
+          "pathCount": 3,
+          "distance": 51.70106381884226
+        },
+        {
+          "color": "84A148",
+          "pathCount": 2,
+          "distance": 52.26853738148792
+        },
+        {
+          "color": "83A147",
+          "pathCount": 1,
+          "distance": 52.364109846344185
+        },
+        {
+          "color": "84A147",
+          "pathCount": 1,
+          "distance": 52.92447448959697
+        }
+      ]
+    },
+    "costa-leste": {
+      "name": "Costa Leste",
+      "expectedColor": "#EF5350",
+      "foundColors": [
+        {
+          "color": "D94844",
+          "pathCount": 1,
+          "distance": 27.367864366808018
+        },
+        {
+          "color": "D84642",
+          "pathCount": 1,
+          "distance": 29.899832775452108
+        },
+        {
+          "color": "DB4240",
+          "pathCount": 1,
+          "distance": 30.740852297878796
+        },
+        {
+          "color": "DA4340",
+          "pathCount": 2,
+          "distance": 30.870698080866262
+        },
+        {
+          "color": "DB423F",
+          "pathCount": 1,
+          "distance": 31.272991542223778
+        },
+        {
+          "color": "DA4240",
+          "pathCount": 2,
+          "distance": 31.400636936215164
+        },
+        {
+          "color": "DB413F",
+          "pathCount": 1,
+          "distance": 31.827660925679098
+        },
+        {
+          "color": "DA5527",
+          "pathCount": 1,
+          "distance": 46.10856753359401
+        },
+        {
+          "color": "DB5523",
+          "pathCount": 1,
+          "distance": 49.28488612140643
+        },
+        {
+          "color": "E0511F",
+          "pathCount": 1,
+          "distance": 51.28352561983234
+        },
+        {
+          "color": "E0501C",
+          "pathCount": 2,
+          "distance": 54.20332093147061
+        },
+        {
+          "color": "E04E1A",
+          "pathCount": 1,
+          "distance": 56.2672195865408
+        },
+        {
+          "color": "E39778",
+          "pathCount": 1,
+          "distance": 79.79974937304002
+        }
+      ]
+    },
+    "campo-grande-ipes": {
+      "name": "Campo Grande dos Ipês",
+      "expectedColor": "#7E57C2",
+      "foundColors": [
+        {
+          "color": "77448F",
+          "pathCount": 1,
+          "distance": 54.872579673275794
+        },
+        {
+          "color": "77448E",
+          "pathCount": 1,
+          "distance": 55.80322571321482
+        },
+        {
+          "color": "76448E",
+          "pathCount": 1,
+          "distance": 55.937465083787984
+        },
+        {
+          "color": "76428E",
+          "pathCount": 3,
+          "distance": 56.64803615307419
+        },
+        {
+          "color": "75428E",
+          "pathCount": 1,
+          "distance": 56.79788728465171
+        },
+        {
+          "color": "76438D",
+          "pathCount": 2,
+          "distance": 57.21013896155121
+        },
+        {
+          "color": "76428D",
+          "pathCount": 1,
+          "distance": 57.56735185849702
+        },
+        {
+          "color": "75428C",
+          "pathCount": 1,
+          "distance": 58.63446085707619
+        }
+      ]
+    },
+    "bonito-serra-bodoquena": {
+      "name": "Bonito-Serra da Bodoquena",
+      "expectedColor": "#4FC3F7",
+      "foundColors": [
+        {
+          "color": "81C7D1",
+          "pathCount": 2,
+          "distance": 62.928530890209096
+        },
+        {
+          "color": "81C7CF",
+          "pathCount": 1,
+          "distance": 64.15605972938177
+        },
+        {
+          "color": "82C7D0",
+          "pathCount": 1,
+          "distance": 64.32728814430156
+        },
+        {
+          "color": "82C7CE",
+          "pathCount": 1,
+          "distance": 65.55913361233506
+        },
+        {
+          "color": "84C7D0",
+          "pathCount": 1,
+          "distance": 65.92419889539804
+        },
+        {
+          "color": "84C8D0",
+          "pathCount": 1,
+          "distance": 65.99242380758567
+        },
+        {
+          "color": "8FC4D6",
+          "pathCount": 1,
+          "distance": 72.01388754955533
+        },
+        {
+          "color": "9CD5E3",
+          "pathCount": 1,
+          "distance": 81.5659242576212
+        }
+      ]
+    },
+    "caminhos-fronteira": {
+      "name": "Caminhos da Fronteira",
+      "expectedColor": "#8D6E63",
+      "foundColors": [
+        {
+          "color": "7A6C4F",
+          "pathCount": 1,
+          "distance": 27.65863337187866
+        },
+        {
+          "color": "786C4F",
+          "pathCount": 1,
+          "distance": 29.068883707497267
+        },
+        {
+          "color": "776D4F",
+          "pathCount": 1,
+          "distance": 29.748949561287034
+        },
+        {
+          "color": "776B4E",
+          "pathCount": 1,
+          "distance": 30.56141357987225
+        },
+        {
+          "color": "776A4D",
+          "pathCount": 2,
+          "distance": 31.368774282716245
+        },
+        {
+          "color": "77694D",
+          "pathCount": 1,
+          "distance": 31.51190251317746
+        },
+        {
+          "color": "77694C",
+          "pathCount": 1,
+          "distance": 32.218007387174026
+        },
+        {
+          "color": "76684C",
+          "pathCount": 1,
+          "distance": 33.075670817082454
+        }
+      ]
+    },
+    "vale-das-aguas": {
+      "name": "Vale das Águas",
+      "expectedColor": "#42A5F5",
+      "foundColors": [
+        {
+          "color": "228FBC",
+          "pathCount": 1,
+          "distance": 68.97100840208152
+        },
+        {
+          "color": "158FC2",
+          "pathCount": 1,
+          "distance": 71.48426400264607
+        },
+        {
+          "color": "1A8EBE",
+          "pathCount": 1,
+          "distance": 71.79136438319027
+        },
+        {
+          "color": "168EC1",
+          "pathCount": 1,
+          "distance": 71.89575787207477
+        },
+        {
+          "color": "158FC0",
+          "pathCount": 1,
+          "distance": 72.92461861401813
+        },
+        {
+          "color": "148DC1",
+          "pathCount": 1,
+          "distance": 73.45747068882783
+        },
+        {
+          "color": "128EC1",
+          "pathCount": 1,
+          "distance": 74.41102068914255
+        },
+        {
+          "color": "148EBF",
+          "pathCount": 1,
+          "distance": 74.57211275000863
+        },
+        {
+          "color": "118DC2",
+          "pathCount": 1,
+          "distance": 74.68600939935136
+        }
+      ]
+    },
+    "caminhos-natureza-cone-sul": {
+      "name": "Caminhos da Natureza-Cone Sul",
+      "expectedColor": "#FF9800",
+      "foundColors": []
+    },
+    "celeiro-ms": {
+      "name": "Celeiro do MS",
+      "expectedColor": "#CE93D8",
+      "foundColors": [
+        {
+          "color": "BEAFC9",
+          "pathCount": 1,
+          "distance": 35.566838487557476
+        },
+        {
+          "color": "BFB2C9",
+          "pathCount": 1,
+          "distance": 37.5632799419859
+        },
+        {
+          "color": "CAA9B8",
+          "pathCount": 1,
+          "distance": 39.03844259188627
+        },
+        {
+          "color": "B5B4D4",
+          "pathCount": 1,
+          "distance": 41.593268686170845
+        },
+        {
+          "color": "B3B3D4",
+          "pathCount": 1,
+          "distance": 42.05948168962618
+        },
+        {
+          "color": "B3B3D2",
+          "pathCount": 1,
+          "distance": 42.2965719651132
+        },
+        {
+          "color": "B1B2D5",
+          "pathCount": 1,
+          "distance": 42.555845661906424
+        },
+        {
+          "color": "B1B2D4",
+          "pathCount": 1,
+          "distance": 42.638011210655684
+        },
+        {
+          "color": "B0B2D4",
+          "pathCount": 1,
+          "distance": 43.32435804486894
+        },
+        {
+          "color": "B2B4D6",
+          "pathCount": 1,
+          "distance": 43.32435804486894
+        },
+        {
+          "color": "CDABB3",
+          "pathCount": 1,
+          "distance": 44.11349000022555
+        },
+        {
+          "color": "C6B6BA",
+          "pathCount": 1,
+          "distance": 46.78675026115834
+        },
+        {
+          "color": "BDB6BE",
+          "pathCount": 1,
+          "distance": 46.79743582719036
+        },
+        {
+          "color": "C6B2B4",
+          "pathCount": 1,
+          "distance": 48.176757881783615
+        },
+        {
+          "color": "CFBABB",
+          "pathCount": 1,
+          "distance": 48.61069841094653
+        },
+        {
+          "color": "CAB6B2",
+          "pathCount": 1,
+          "distance": 51.81698563212646
+        },
+        {
+          "color": "C1C1BF",
+          "pathCount": 1,
+          "distance": 53.94441583704471
+        },
+        {
+          "color": "B5C2CD",
+          "pathCount": 1,
+          "distance": 54.35991169970753
+        },
+        {
+          "color": "D3BCB2",
+          "pathCount": 1,
+          "distance": 56.124860801609124
+        },
+        {
+          "color": "C0BCB1",
+          "pathCount": 1,
+          "distance": 58.29236656715869
+        },
+        {
+          "color": "BFB9AD",
+          "pathCount": 1,
+          "distance": 59.312730505347666
+        },
+        {
+          "color": "BFB8AC",
+          "pathCount": 1,
+          "distance": 59.413803110051795
+        },
+        {
+          "color": "CFB9A9",
+          "pathCount": 1,
+          "distance": 60.44832503882965
+        },
+        {
+          "color": "D69F9D",
+          "pathCount": 1,
+          "distance": 60.73713855624086
+        },
+        {
+          "color": "BCB8AB",
+          "pathCount": 1,
+          "distance": 60.975404877704584
+        },
+        {
+          "color": "D99A9C",
+          "pathCount": 1,
+          "distance": 61.40032573203501
+        },
+        {
+          "color": "AAC4CD",
+          "pathCount": 1,
+          "distance": 61.78996682310163
+        },
+        {
+          "color": "CED1DD",
+          "pathCount": 1,
+          "distance": 62.20128616033595
+        },
+        {
+          "color": "D49B9A",
+          "pathCount": 1,
+          "distance": 62.80127387243033
+        },
+        {
+          "color": "D79E9A",
+          "pathCount": 1,
+          "distance": 63.608175575157006
+        },
+        {
+          "color": "D79F9A",
+          "pathCount": 1,
+          "distance": 63.788713735268246
+        },
+        {
+          "color": "CCC0A9",
+          "pathCount": 1,
+          "distance": 65.09992319503918
+        },
+        {
+          "color": "CCAF9B",
+          "pathCount": 1,
+          "distance": 67.14908785679818
+        },
+        {
+          "color": "DAB8A1",
+          "pathCount": 1,
+          "distance": 67.36467917239716
+        },
+        {
+          "color": "C2CAAF",
+          "pathCount": 1,
+          "distance": 69.6419413859206
+        },
+        {
+          "color": "A7B2A7",
+          "pathCount": 1,
+          "distance": 69.87846592477543
+        },
+        {
+          "color": "D6C7A8",
+          "pathCount": 1,
+          "distance": 71.21797525905943
+        },
+        {
+          "color": "C2CDAF",
+          "pathCount": 1,
+          "distance": 72.03471385380801
+        },
+        {
+          "color": "D1DAB9",
+          "pathCount": 1,
+          "distance": 77.5306391048081
+        },
+        {
+          "color": "D3DBB9",
+          "pathCount": 1,
+          "distance": 78.54934754662193
+        },
+        {
+          "color": "C1E2E3",
+          "pathCount": 1,
+          "distance": 80.8146026408594
+        },
+        {
+          "color": "D4A488",
+          "pathCount": 1,
+          "distance": 82.00609733428362
+        },
+        {
+          "color": "E2E9EB",
+          "pathCount": 1,
+          "distance": 90.31611151948472
+        },
+        {
+          "color": "D9CF8F",
+          "pathCount": 1,
+          "distance": 95.13148795220224
+        },
+        {
+          "color": "E4DE9A",
+          "pathCount": 1,
+          "distance": 99.76472322419383
+        }
+      ]
+    }
+  },
+  "unmappedColors": [
+    {
+      "color": "E2D78E",
+      "pathCount": 1
+    }
+  ]
+}

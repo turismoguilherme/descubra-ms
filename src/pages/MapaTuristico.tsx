@@ -13,7 +13,13 @@ const MapaTuristico: React.FC = () => {
   const [hoveredRegion, setHoveredRegion] = useState<TouristRegion2025 | null>(null);
 
   const handleRegionClick = (region: TouristRegion2025) => {
-    setSelectedRegion(region);
+    // Garantir que apenas uma região seja selecionada por vez
+    // Se clicar na mesma região, deselecionar
+    if (selectedRegion?.id === region.id) {
+      setSelectedRegion(null);
+    } else {
+      setSelectedRegion(region);
+    }
   };
 
   const handleRegionHover = (region: TouristRegion2025 | null) => {

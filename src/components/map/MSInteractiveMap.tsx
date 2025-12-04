@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { touristRegions2025, TouristRegion2025 } from '@/data/touristRegions2025';
 import svgRegionsPaths from '@/data/svg-regions-paths.json';
 
@@ -22,17 +22,24 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   const [svgLoaded, setSvgLoaded] = useState(false);
 
   const handleMouseEnter = (region: TouristRegion2025) => {
-    setHoveredRegion(region.id);
-    onRegionHover?.(region);
+    // Só mostrar hover se não houver região selecionada
+    if (!selectedRegion) {
+      setHoveredRegion(region.id);
+      onRegionHover?.(region);
+    }
   };
 
   const handleMouseLeave = () => {
-    setHoveredRegion(null);
-    onRegionHover?.(null);
+    // Só limpar hover se não houver região selecionada
+    if (!selectedRegion) {
+      setHoveredRegion(null);
+      onRegionHover?.(null);
+    }
   };
 
   const handleRegionClick = (e: React.MouseEvent, regionId: string) => {
     e.stopPropagation();
+    e.preventDefault();
     const region = touristRegions2025.find(r => r.id === regionId);
     if (region) {
       onRegionClick(region);
@@ -43,31 +50,52 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   // IMPORTANTE: Overlay deve ser completamente invisível quando não estiver ativo
   // para não interferir com a visualização do mapa colorido
   const getOverlayStyle = (regionId: string) => {
-    const isHovered = hoveredRegion === regionId;
-    const isSelected = selectedRegion === regionId;
+    // IMPORTANTE: Apenas destacar se for EXATAMENTE a região selecionada ou hovered
+    // Não destacar outras regiões mesmo que tenham paths sobrepostos
+    const isHovered = hoveredRegion === regionId && !selectedRegion; // Só hover se não houver seleção
+    const isSelected = selectedRegion === regionId; // Apenas a selecionada
     const isActive = isHovered || isSelected;
     
+    // Se não estiver ativo, retornar estilo completamente invisível e sem pointer events
+    if (!isActive) {
+      return {
+        fill: 'transparent',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        cursor: 'pointer',
+        filter: 'none',
+        transition: 'all 0.2s ease',
+        fillRule: 'evenodd' as const,
+        opacity: 0,
+        visibility: 'hidden' as const,
+        pointerEvents: 'all' as const, // Manter clicável mesmo quando invisível
+      };
+    }
+    
     return {
-      // Quando inativo: completamente transparente (sem fill, sem stroke)
-      fill: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
-      stroke: isActive ? '#fff' : 'transparent',
-      strokeWidth: isActive ? 3 : 0,
+      fill: 'rgba(255,255,255,0.2)',
+      stroke: '#fff',
+      strokeWidth: 4,
       cursor: 'pointer',
-      // Apenas mostrar efeito quando ativo
-      filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' : 'none',
+      filter: 'drop-shadow(0 0 12px rgba(255,255,255,1))',
       transition: 'all 0.2s ease',
       fillRule: 'evenodd' as const,
-      // Garantir que não haja renderização visual quando inativo
-      opacity: isActive ? 1 : 0,
+      opacity: 1,
+      visibility: 'visible' as const,
+      pointerEvents: 'all' as const,
     };
   };
 
   // Obter paths de uma região e limpar (remover quebras de linha e espaços extras)
   const getRegionPaths = (regionId: string): string[] => {
     const paths = svgRegionsPaths.regions[regionId as keyof typeof svgRegionsPaths.regions];
-    if (!paths || paths.length === 0) return [];
+    if (!paths || paths.length === 0) {
+      console.warn(`⚠️ Nenhum path encontrado para região: ${regionId}`);
+      return [];
+    }
     // Limpar paths: remover quebras de linha e espaços múltiplos, manter apenas espaços simples
-    return paths.map(path => path.replace(/\s+/g, ' ').trim());
+    const cleanedPaths = paths.map(path => path.replace(/\s+/g, ' ').trim());
+    return cleanedPaths;
   };
 
   return (
@@ -93,30 +121,72 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
             {/* Áreas clicáveis para cada região usando paths exatos do SVG */}
             {/* IMPORTANTE: Este overlay é invisível e serve apenas para detectar cliques/hover */}
             {/* Os paths seguem exatamente os contornos das áreas coloridas do mapa */}
-            {touristRegions2025.map((region) => {
-              const paths = getRegionPaths(region.id);
-              if (!paths || paths.length === 0) return null;
+            {/* Ordem de renderização: regiões menores primeiro, maiores por último (menores ficam por cima e capturam cliques) */}
+            {(() => {
+              const regionsWithPaths = touristRegions2025
+                .map((region) => {
+                  const paths = getRegionPaths(region.id);
+                  const isSelected = selectedRegion === region.id;
+                  const isHovered = hoveredRegion === region.id;
+                  const isActive = isSelected || isHovered;
+                  return { 
+                    region, 
+                    paths, 
+                    pathCount: paths.length,
+                    isActive,
+                    isSelected,
+                    isHovered
+                  };
+                })
+                .filter(({ paths }) => paths && paths.length > 0)
+                // Ordenar: regiões menores por último (para ficarem por cima e capturarem cliques)
+                // Regiões ativas sempre por último para ficarem visíveis
+                .sort((a, b) => {
+                  if (a.isActive && !b.isActive) return 1; // Ativas por último
+                  if (!a.isActive && b.isActive) return -1;
+                  // Dentro do mesmo grupo, menores por último (ficam por cima)
+                  return b.pathCount - a.pathCount;
+                });
               
-              return (
-                <g
-                  key={region.id}
-                  style={{ pointerEvents: 'all', cursor: 'pointer' }}
-                  onClick={(e) => handleRegionClick(e, region.id)}
-                  onMouseEnter={() => handleMouseEnter(region)}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {/* Renderizar cada path separadamente para cobrir toda a área da região */}
-                  {/* Cada path corresponde exatamente a uma área colorida no mapa original */}
-                  {paths.map((pathData, index) => (
-                    <path
-                      key={`${region.id}-${index}`}
-                      d={pathData}
-                      style={{ ...getOverlayStyle(region.id), pointerEvents: 'all' }}
-                    />
-                  ))}
-                </g>
-              );
-            })}
+              return regionsWithPaths.map(({ region, paths, isActive }) => {
+                const overlayStyle = getOverlayStyle(region.id);
+                // Se a região não estiver ativa, ainda renderizar mas completamente invisível
+                // para manter a funcionalidade de clique
+                return (
+                  <g
+                    key={region.id}
+                    style={{ pointerEvents: 'none' }}
+                    onMouseEnter={() => handleMouseEnter(region)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {/* Renderizar cada path separadamente para cobrir toda a área da região */}
+                    {/* Cada path corresponde exatamente a uma área colorida no mapa original */}
+                    {paths.map((pathData, index) => (
+                      <path
+                        key={`${region.id}-${index}`}
+                        d={pathData}
+                        style={overlayStyle}
+                        data-region-id={region.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          // Garantir que apenas esta região seja clicada
+                          handleRegionClick(e, region.id);
+                        }}
+                        onMouseDown={(e) => {
+                          // Prevenir que outros paths capturem o evento
+                          e.stopPropagation();
+                        }}
+                        onMouseUp={(e) => {
+                          // Prevenir propagação também no mouseUp
+                          e.stopPropagation();
+                        }}
+                      />
+                    ))}
+                  </g>
+                );
+              });
+            })()}
           </svg>
         )}
 
