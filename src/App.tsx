@@ -80,6 +80,11 @@ import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
 import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
 import TermosUsoMS from "@/pages/ms/TermosUsoMS";
+
+// ViaJAR Legal Pages
+import ViaJARPrivacidade from "@/pages/viajar/Privacidade";
+import ViaJARTermosUso from "@/pages/viajar/TermosUso";
+import ViaJARCookies from "@/pages/viajar/Cookies";
 import MapaTuristico from "@/pages/MapaTuristico";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
@@ -135,6 +140,12 @@ function App() {
                             <Route path="/viajar/smart-onboarding" element={<Suspense fallback={<LoadingFallback />}><SmartOnboarding /></Suspense>} />
                             <Route path="/viajar/pricing" element={<Suspense fallback={<LoadingFallback />}><ViaJARPricing /></Suspense>} />
                             <Route path="/viajar/diagnostico" element={<Suspense fallback={<LoadingFallback />}><DiagnosticPage /></Suspense>} />
+                            
+                            {/* ViaJAR Legal Pages (públicas) */}
+                            <Route path="/viajar/privacidade" element={<ViaJARPrivacidade />} />
+                            <Route path="/viajar/termos" element={<ViaJARTermosUso />} />
+                            <Route path="/viajar/cookies" element={<ViaJARCookies />} />
+                            
                             <Route path="/test-login" element={<Suspense fallback={<LoadingFallback />}><TestLogin /></Suspense>} />
                             <Route path="/debug-auth" element={<Suspense fallback={<LoadingFallback />}><AuthDebug /></Suspense>} />
                             
