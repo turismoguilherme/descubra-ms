@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Download, Shield, Lock, Eye, FileText, Mail, ArrowLeft } from 'lucide-react';
+import { Download, Shield, Lock, Eye, FileText, Mail, ArrowLeft, UserX, Database, Globe, AlertTriangle, CheckCircle, Clock, Server } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
@@ -28,18 +28,21 @@ const Privacidade = () => {
             <style>
               body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #333; }
               h1 { color: #0f172a; font-size: 28px; margin-bottom: 10px; }
-              h2 { color: #0891b2; margin-top: 30px; margin-bottom: 15px; font-size: 22px; }
+              h2 { color: #0891b2; margin-top: 30px; margin-bottom: 15px; font-size: 20px; }
+              h3 { color: #334155; margin-top: 20px; margin-bottom: 10px; font-size: 16px; }
               p { margin-bottom: 15px; }
               ul { margin-left: 20px; margin-bottom: 15px; }
               li { margin-bottom: 8px; }
               strong { color: #333; }
-              .bg-gradient-to-r { background: #f5f5f5 !important; padding: 15px; border-left: 4px solid #0891b2; margin: 15px 0; }
+              table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+              th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+              th { background: #f5f5f5; }
               @media print { body { padding: 20px; } @page { margin: 2cm; } }
             </style>
           </head>
           <body>
             <h1>Política de Privacidade</h1>
-            <p><strong>ViajARTur</strong></p>
+            <p><strong>ViajARTur - Plataforma SaaS de Gestão Turística</strong></p>
             <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</em></p>
             <hr style="margin: 30px 0;">
             ${clone.innerHTML}
@@ -107,60 +110,109 @@ const Privacidade = () => {
                 e dos dados pessoais de seus usuários, em conformidade com a <strong className="text-foreground">Lei Geral 
                 de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
               </p>
+              <p className="text-muted-foreground leading-relaxed mt-4">
+                Esta política descreve como coletamos, usamos, armazenamos, protegemos e, quando necessário, 
+                excluímos suas informações pessoais.
+              </p>
             </div>
 
-            {/* Seção 1 */}
-            <section className="mb-8">
+            {/* Seção 1 - Informações Coletadas */}
+            <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
                 <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
-                  <FileText className="w-5 h-5 text-white" />
+                  <Database className="w-5 h-5 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">1. Informações Coletadas</h2>
               </div>
               <div className="ml-12 space-y-4">
-                <p className="text-muted-foreground leading-relaxed">
-                  Coletamos os seguintes tipos de informações quando você utiliza nossa plataforma:
+                <h3 className="font-semibold text-foreground">1.1 Dados de Identificação</h3>
+                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                  <li>Nome completo e nome da empresa/órgão;</li>
+                  <li>CNPJ ou CPF;</li>
+                  <li>E-mail corporativo e pessoal;</li>
+                  <li>Telefone de contato;</li>
+                  <li>Endereço comercial;</li>
+                  <li>Cargo ou função.</li>
+                </ul>
+
+                <h3 className="font-semibold text-foreground mt-6">1.2 Dados de Navegação</h3>
+                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                  <li>Endereço IP;</li>
+                  <li>Tipo de navegador e dispositivo;</li>
+                  <li>Páginas visitadas e tempo de permanência;</li>
+                  <li>Origem do acesso (referrer);</li>
+                  <li>Data e hora de acessos.</li>
+                </ul>
+
+                <h3 className="font-semibold text-foreground mt-6">1.3 Dados de Uso da Plataforma</h3>
+                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                  <li>Funcionalidades utilizadas;</li>
+                  <li>Relatórios gerados;</li>
+                  <li>Dados inseridos (receitas, ocupação, preços, etc.);</li>
+                  <li>Interações com o Guilherme IA;</li>
+                  <li>Configurações e preferências.</li>
+                </ul>
+
+                <h3 className="font-semibold text-foreground mt-6">1.4 Dados de Pagamento</h3>
+                <p className="text-muted-foreground">
+                  Informações de pagamento são processadas diretamente pelo <strong>Stripe</strong>. 
+                  A ViajARTur <strong>não armazena</strong> dados completos de cartão de crédito. 
+                  Recebemos apenas: últimos 4 dígitos, bandeira e status da transação.
                 </p>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-viajar-cyan rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="text-muted-foreground">
-                      <strong className="text-foreground">Dados de Identificação:</strong> nome completo, CNPJ/CPF, 
-                      e-mail, telefone, endereço comercial.
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-viajar-cyan rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="text-muted-foreground">
-                      <strong className="text-foreground">Dados de Navegação:</strong> endereço IP, tipo de navegador, 
-                      páginas visitadas, tempo de permanência.
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-viajar-cyan rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="text-muted-foreground">
-                      <strong className="text-foreground">Dados de Uso:</strong> funcionalidades utilizadas, 
-                      relatórios gerados, interações com a IA Guilherme.
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-viajar-cyan rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="text-muted-foreground">
-                      <strong className="text-foreground">Dados de Pagamento:</strong> informações necessárias para 
-                      processamento de assinaturas (processadas por parceiros de pagamento).
-                    </div>
-                  </div>
+              </div>
+            </section>
+
+            {/* Seção 2 - Bases Legais para Tratamento (LGPD) */}
+            <section className="mb-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">2. Bases Legais para Tratamento (LGPD)</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <p className="text-muted-foreground">
+                  O tratamento de seus dados pessoais é realizado com base nas seguintes hipóteses legais 
+                  previstas na LGPD (Art. 7º):
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border border-border p-3 text-left font-semibold">Base Legal</th>
+                        <th className="border border-border p-3 text-left font-semibold">Aplicação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr>
+                        <td className="border border-border p-3"><strong>Execução de Contrato</strong></td>
+                        <td className="border border-border p-3">Prestação dos serviços contratados (assinatura, funcionalidades)</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3"><strong>Consentimento</strong></td>
+                        <td className="border border-border p-3">Compartilhamento para benchmarking, envio de marketing</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3"><strong>Legítimo Interesse</strong></td>
+                        <td className="border border-border p-3">Melhoria da plataforma, análises internas, segurança</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3"><strong>Cumprimento de Obrigação Legal</strong></td>
+                        <td className="border border-border p-3">Retenção de dados fiscais, atendimento a autoridades</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </section>
 
-            {/* Seção 2 */}
-            <section className="mb-8">
+            {/* Seção 3 - Finalidade do Tratamento */}
+            <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
-                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
+                <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
                   <Eye className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">2. Finalidade do Tratamento</h2>
+                <h2 className="text-2xl font-bold text-foreground">3. Finalidade do Tratamento</h2>
               </div>
               <div className="ml-12 space-y-3">
                 <p className="text-muted-foreground leading-relaxed">
@@ -170,119 +222,349 @@ const Privacidade = () => {
                   <li>Fornecer e melhorar nossos serviços de gestão turística;</li>
                   <li>Personalizar sua experiência na plataforma;</li>
                   <li>Processar assinaturas e pagamentos;</li>
+                  <li>Gerar análises, relatórios e insights de IA;</li>
+                  <li>Realizar benchmarking com dados agregados (mediante consentimento);</li>
                   <li>Enviar comunicações sobre atualizações e novidades (com seu consentimento);</li>
-                  <li>Gerar análises e relatórios de inteligência turística;</li>
                   <li>Fornecer suporte ao cliente;</li>
-                  <li>Cumprir obrigações legais e regulatórias.</li>
+                  <li>Cumprir obrigações legais e regulatórias;</li>
+                  <li>Prevenir fraudes e garantir a segurança.</li>
                 </ul>
               </div>
             </section>
 
-            {/* Seção 3 */}
-            <section className="mb-8">
+            {/* Seção 4 - Compartilhamento de Dados */}
+            <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
-                <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
+                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
                   <Lock className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">3. Compartilhamento de Dados</h2>
+                <h2 className="text-2xl font-bold text-foreground">4. Compartilhamento de Dados</h2>
               </div>
               <div className="ml-12 space-y-4">
-                <p className="text-muted-foreground leading-relaxed">
-                  Seus dados pessoais podem ser compartilhados nas seguintes situações:
+                <h3 className="font-semibold text-foreground">4.1 Prestadores de Serviço</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border border-border p-3 text-left font-semibold">Parceiro</th>
+                        <th className="border border-border p-3 text-left font-semibold">Finalidade</th>
+                        <th className="border border-border p-3 text-left font-semibold">Localização</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr>
+                        <td className="border border-border p-3"><strong>Supabase</strong></td>
+                        <td className="border border-border p-3">Hospedagem, banco de dados, autenticação</td>
+                        <td className="border border-border p-3">Brasil (São Paulo)</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3"><strong>Stripe</strong></td>
+                        <td className="border border-border p-3">Processamento de pagamentos</td>
+                        <td className="border border-border p-3">EUA (com cláusulas contratuais padrão)</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3"><strong>Vercel</strong></td>
+                        <td className="border border-border p-3">Hospedagem da aplicação web</td>
+                        <td className="border border-border p-3">Global (CDN)</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3"><strong>Google (Gemini)</strong></td>
+                        <td className="border border-border p-3">Inteligência Artificial (Guilherme IA)</td>
+                        <td className="border border-border p-3">EUA</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 className="font-semibold text-foreground mt-6">4.2 Benchmarking (Mediante Consentimento)</h3>
+                <p className="text-muted-foreground">
+                  Dados <strong>agregados e anonimizados</strong> podem ser compartilhados para benchmarking, 
+                  conforme o Termo de Consentimento aceito durante o onboarding. Nenhum dado individual ou 
+                  identificável é compartilhado.
                 </p>
-                <div className="bg-viajar-cyan/5 border-l-4 border-viajar-cyan p-4 rounded-r-lg">
-                  <p className="text-muted-foreground leading-relaxed">
-                    <strong className="text-foreground">Prestadores de Serviços:</strong> utilizamos serviços de 
-                    terceiros para hospedagem, análise de dados e processamento de pagamentos.
+
+                <h3 className="font-semibold text-foreground mt-6">4.3 Autoridades</h3>
+                <p className="text-muted-foreground">
+                  Podemos compartilhar dados com autoridades competentes quando exigido por lei, ordem judicial 
+                  ou para proteção de direitos.
+                </p>
+
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg mt-4">
+                  <p className="text-green-900 font-medium">
+                    ✓ Não vendemos, alugamos ou comercializamos seus dados pessoais para terceiros.
                   </p>
                 </div>
-                <div className="bg-viajar-blue/5 border-l-4 border-viajar-blue p-4 rounded-r-lg">
-                  <p className="text-muted-foreground leading-relaxed">
-                    <strong className="text-foreground">Autoridades Competentes:</strong> quando exigido por lei 
-                    ou ordem judicial.
-                  </p>
-                </div>
-                <p className="text-muted-foreground leading-relaxed mt-4">
-                  <strong className="text-foreground">Não vendemos, alugamos ou comercializamos seus dados pessoais para terceiros.</strong>
-                </p>
               </div>
             </section>
 
-            {/* Seção 4 */}
-            <section className="mb-8">
+            {/* Seção 5 - Armazenamento e Transferência Internacional */}
+            <section className="mb-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
+                  <Server className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">5. Armazenamento e Transferência Internacional</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <h3 className="font-semibold text-foreground">5.1 Onde seus dados são armazenados</h3>
+                <p className="text-muted-foreground">
+                  Seus dados são armazenados primariamente em servidores da <strong>Supabase</strong> localizados 
+                  no <strong>Brasil (região São Paulo)</strong>, garantindo conformidade com a LGPD.
+                </p>
+
+                <h3 className="font-semibold text-foreground mt-6">5.2 Transferência Internacional</h3>
+                <p className="text-muted-foreground">
+                  Alguns de nossos parceiros podem processar dados fora do Brasil (Stripe, Google). Nestes casos:
+                </p>
+                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                  <li>Utilizamos cláusulas contratuais padrão aprovadas;</li>
+                  <li>Os parceiros possuem certificações de segurança (SOC 2, ISO 27001);</li>
+                  <li>Apenas dados necessários são transferidos.</li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Seção 6 - Segurança dos Dados */}
+            <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
                 <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
                   <Shield className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">4. Segurança dos Dados</h2>
+                <h2 className="text-2xl font-bold text-foreground">6. Segurança dos Dados</h2>
               </div>
               <div className="ml-12 space-y-3">
-                <p className="text-muted-foreground leading-relaxed">
-                  Implementamos medidas técnicas e organizacionais adequadas para proteger seus dados:
+                <p className="text-muted-foreground">
+                  Implementamos medidas técnicas e organizacionais para proteger seus dados:
                 </p>
                 <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                  <li>Criptografia de dados em trânsito e em repouso;</li>
-                  <li>Controle de acesso baseado em permissões;</li>
+                  <li>Criptografia de dados em trânsito (HTTPS/TLS) e em repouso;</li>
+                  <li>Autenticação segura com 2FA opcional;</li>
+                  <li>Controle de acesso baseado em permissões (RBAC);</li>
                   <li>Monitoramento contínuo de segurança;</li>
-                  <li>Backups regulares dos dados;</li>
-                  <li>Auditorias periódicas de segurança.</li>
+                  <li>Backups regulares e criptografados;</li>
+                  <li>Políticas de senha forte;</li>
+                  <li>Logs de auditoria de acessos.</li>
                 </ul>
+
+                <h3 className="font-semibold text-foreground mt-6">6.1 Incidentes de Segurança</h3>
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                  <p className="text-amber-900">
+                    Em caso de incidente de segurança que possa afetar seus dados, você será notificado por 
+                    e-mail em até <strong>72 horas</strong> após a confirmação do incidente, conforme exigido 
+                    pela LGPD. A Autoridade Nacional de Proteção de Dados (ANPD) também será comunicada.
+                  </p>
+                </div>
               </div>
             </section>
 
-            {/* Seção 5 */}
-            <section className="mb-8">
+            {/* Seção 7 - Direitos do Titular (LGPD) */}
+            <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
                 <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
-                  <Shield className="w-5 h-5 text-white" />
+                  <CheckCircle className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">5. Direitos do Titular (LGPD)</h2>
+                <h2 className="text-2xl font-bold text-foreground">7. Seus Direitos (LGPD - Art. 18)</h2>
               </div>
-              <div className="ml-12 space-y-3">
-                <p className="text-muted-foreground leading-relaxed">
+              <div className="ml-12 space-y-4">
+                <p className="text-muted-foreground">
                   Você possui os seguintes direitos em relação aos seus dados pessoais:
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-viajar-cyan/5 p-4 rounded-lg border border-viajar-cyan/20">
                     <strong className="text-viajar-cyan">Confirmação e Acesso</strong>
-                    <p className="text-sm text-muted-foreground mt-1">Confirmar e acessar seus dados.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Confirmar e acessar seus dados tratados.</p>
                   </div>
                   <div className="bg-viajar-blue/5 p-4 rounded-lg border border-viajar-blue/20">
                     <strong className="text-viajar-blue">Correção</strong>
-                    <p className="text-sm text-muted-foreground mt-1">Solicitar correção de dados.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Solicitar correção de dados incompletos ou incorretos.</p>
                   </div>
                   <div className="bg-viajar-cyan/5 p-4 rounded-lg border border-viajar-cyan/20">
-                    <strong className="text-viajar-cyan">Eliminação</strong>
-                    <p className="text-sm text-muted-foreground mt-1">Solicitar exclusão de dados.</p>
+                    <strong className="text-viajar-cyan">Anonimização ou Bloqueio</strong>
+                    <p className="text-sm text-muted-foreground mt-1">Solicitar anonimização de dados desnecessários.</p>
                   </div>
                   <div className="bg-viajar-blue/5 p-4 rounded-lg border border-viajar-blue/20">
-                    <strong className="text-viajar-blue">Portabilidade</strong>
+                    <strong className="text-viajar-blue">Eliminação</strong>
+                    <p className="text-sm text-muted-foreground mt-1">Solicitar exclusão dos dados (com exceções legais).</p>
+                  </div>
+                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border border-viajar-cyan/20">
+                    <strong className="text-viajar-cyan">Portabilidade</strong>
                     <p className="text-sm text-muted-foreground mt-1">Receber seus dados em formato portátil.</p>
                   </div>
+                  <div className="bg-viajar-blue/5 p-4 rounded-lg border border-viajar-blue/20">
+                    <strong className="text-viajar-blue">Revogação de Consentimento</strong>
+                    <p className="text-sm text-muted-foreground mt-1">Revogar consentimentos a qualquer momento.</p>
+                  </div>
+                </div>
+                <p className="text-muted-foreground mt-4">
+                  Para exercer seus direitos, entre em contato pelo e-mail: 
+                  <strong className="text-foreground"> privacidade@viajartur.com.br</strong>
+                </p>
+              </div>
+            </section>
+
+            {/* Seção 8 - Exclusão de Conta e Dados */}
+            <section className="mb-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
+                  <UserX className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">8. Exclusão de Conta e Dados</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <h3 className="font-semibold text-foreground">8.1 Como solicitar exclusão</h3>
+                <p className="text-muted-foreground">
+                  Você pode solicitar a exclusão da sua conta e dados de duas formas:
+                </p>
+                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                  <li>Através das <strong>Configurações da Conta</strong> na plataforma;</li>
+                  <li>Enviando e-mail para <strong>cancelamento@viajartur.com.br</strong>.</li>
+                </ul>
+
+                <h3 className="font-semibold text-foreground mt-6">8.2 Prazo de processamento</h3>
+                <div className="bg-viajar-cyan/5 p-5 rounded-lg border border-viajar-cyan/20">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-6 h-6 text-viajar-cyan flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-foreground font-medium mb-2">Prazo: até 30 dias</p>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Confirmação de recebimento em até 48 horas;</li>
+                        <li>• Processamento completo em até 30 dias;</li>
+                        <li>• Confirmação por e-mail após conclusão.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold text-foreground mt-6">8.3 O que é excluído</h3>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Dados de perfil (nome, e-mail, telefone)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Dados de uso da plataforma</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Configurações e preferências</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Histórico de interações com IA</span>
+                  </li>
+                </ul>
+
+                <h3 className="font-semibold text-foreground mt-6">8.4 O que é retido (obrigação legal)</h3>
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                  <p className="text-amber-900 mb-3">
+                    <strong>Por obrigação legal, alguns dados são retidos mesmo após cancelamento:</strong>
+                  </p>
+                  <ul className="text-amber-800 text-sm space-y-1">
+                    <li>• <strong>Dados fiscais/contábeis:</strong> 5 anos (legislação tributária);</li>
+                    <li>• <strong>Notas fiscais e recibos:</strong> 5 anos;</li>
+                    <li>• <strong>Logs de segurança:</strong> 6 meses;</li>
+                    <li>• <strong>Dados de benchmarking já agregados:</strong> permanentes (anonimizados).</li>
+                  </ul>
                 </div>
               </div>
             </section>
 
-            {/* Seção 6 */}
-            <section className="mb-8">
+            {/* Seção 9 - Retenção de Dados */}
+            <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
-                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
-                  <Mail className="w-5 h-5 text-white" />
+                <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
+                  <Database className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">6. Contato</h2>
+                <h2 className="text-2xl font-bold text-foreground">9. Retenção de Dados</h2>
               </div>
               <div className="ml-12 space-y-4">
-                <p className="text-muted-foreground leading-relaxed">
-                  Para exercer seus direitos ou esclarecer dúvidas sobre esta política:
+                <p className="text-muted-foreground">
+                  Mantemos seus dados pelo tempo necessário para cumprir as finalidades descritas:
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border border-border p-3 text-left font-semibold">Tipo de Dado</th>
+                        <th className="border border-border p-3 text-left font-semibold">Período de Retenção</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr>
+                        <td className="border border-border p-3">Dados de conta (enquanto ativa)</td>
+                        <td className="border border-border p-3">Durante a vigência do contrato</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3">Dados de navegação</td>
+                        <td className="border border-border p-3">12 meses</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3">Dados fiscais/contábeis</td>
+                        <td className="border border-border p-3">5 anos após o encerramento</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3">Logs de segurança</td>
+                        <td className="border border-border p-3">6 meses</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3">Termos assinados (PDFs)</td>
+                        <td className="border border-border p-3">5 anos</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3">Dados de benchmarking (anonimizados)</td>
+                        <td className="border border-border p-3">Indeterminado</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            {/* Seção 10 - Atualizações */}
+            <section className="mb-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">10. Atualizações desta Política</h2>
+              </div>
+              <div className="ml-12 space-y-3">
+                <p className="text-muted-foreground">
+                  Podemos atualizar esta Política de Privacidade periodicamente. Quando houver alterações:
+                </p>
+                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                  <li>Você será notificado por e-mail;</li>
+                  <li>A data de "Última atualização" será alterada;</li>
+                  <li>Um aviso será exibido na plataforma.</li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Seção 11 - Contato e DPO */}
+            <section className="mb-8">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
+                  <Mail className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">11. Contato e Encarregado de Dados (DPO)</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <p className="text-muted-foreground">
+                  Para exercer seus direitos, esclarecer dúvidas ou apresentar reclamações:
                 </p>
                 <div className="bg-gradient-to-r from-viajar-cyan/10 to-viajar-blue/10 p-6 rounded-lg border border-viajar-cyan/20">
-                  <p className="text-foreground font-semibold mb-2">ViajARTur</p>
-                  <p className="text-muted-foreground">
-                    <strong>E-mail:</strong> privacidade@viajartur.com.br
-                  </p>
-                  <p className="text-muted-foreground">
-                    <strong>Telefone:</strong> (67) 3000-0000
-                  </p>
+                  <p className="text-foreground font-semibold mb-3">ViajARTur</p>
+                  <div className="space-y-2 text-muted-foreground">
+                    <p><strong>E-mail de Privacidade:</strong> privacidade@viajartur.com.br</p>
+                    <p><strong>E-mail Geral:</strong> contato@viajartur.com.br</p>
+                    <p><strong>Telefone:</strong> (67) 3000-0000</p>
+                    <p className="mt-4 pt-4 border-t border-border">
+                      <strong>Encarregado de Dados (DPO):</strong><br />
+                      Para questões específicas sobre proteção de dados, entre em contato pelo e-mail 
+                      <strong> dpo@viajartur.com.br</strong>
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -304,4 +586,3 @@ const Privacidade = () => {
 };
 
 export default Privacidade;
-

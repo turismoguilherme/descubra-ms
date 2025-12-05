@@ -1,97 +1,54 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
-import { Check, Sparkles, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Check, Building2, Landmark, ArrowRight, Sparkles } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 const Precos = () => {
-  const navigate = useNavigate();
-
-  const handleSelectPlan = (planName: string) => {
-    const planMapping: { [key: string]: string } = {
-      'Starter': 'freemium',
-      'Professional': 'professional', 
-      'Enterprise': 'enterprise',
-      'Governo': 'government'
-    };
-    
-    const planId = planMapping[planName] || 'professional';
-    navigate(`/viajar/register?plan=${planId}&billing=monthly`);
-  };
-
   const plans = [
     {
-      name: "Starter",
-      price: "R$ 0",
-      period: "/mês",
-      description: "Para pequenos negócios iniciantes",
-      features: [
-        "Perfil público básico",
-        "Até 5 fotos",
-        "Aparece nas buscas",
-        "Localização no mapa",
-        "Horários de funcionamento"
-      ],
-      cta: "Começar Grátis",
-      highlighted: false,
-      gradient: "from-slate-500 to-slate-600"
-    },
-    {
-      name: "Professional",
+      name: "Enterprise",
+      subtitle: "Para Empresários",
+      icon: Building2,
       price: "R$ 199",
       period: "/mês",
-      description: "Para hotéis e pousadas médios",
+      description: "Hotéis, pousadas, agências e restaurantes",
       features: [
-        "Tudo do Starter",
-        "Fotos ilimitadas",
-        "Guilherme básico",
-        "Relatórios mensais",
+        "Guilherme IA - Assistente inteligente",
+        "Revenue Optimizer (precificação dinâmica)",
+        "Market Intelligence (análise de mercado)",
+        "Relatórios mensais detalhados",
         "Análise de concorrência",
+        "Previsão de demanda",
         "Destaque nas buscas",
         "Suporte prioritário (24h)"
       ],
-      cta: "Mais Popular",
-      highlighted: true,
+      cta: "Solicitar Demonstração",
+      highlighted: false,
       gradient: "from-viajar-cyan to-viajar-blue"
     },
     {
-      name: "Enterprise",
-      price: "R$ 499",
-      period: "/mês",
-      description: "Para grandes hotéis e redes",
-      features: [
-        "Tudo do Professional",
-        "Guilherme Suite completa",
-        "Revenue Optimizer (IA)",
-        "Market Intelligence",
-        "Previsão de demanda",
-        "API de integração",
-        "Consultoria mensal (1h)",
-        "Suporte 24/7 WhatsApp"
-      ],
-      cta: "Falar com Vendas",
-      highlighted: false,
-      gradient: "from-purple-500 to-violet-600"
-    },
-    {
       name: "Governo",
+      subtitle: "Para Secretarias",
+      icon: Landmark,
       price: "R$ 2.000",
       period: "/mês",
-      description: "Para prefeituras e secretarias",
+      description: "Prefeituras e Secretarias de Turismo",
       features: [
         "Dashboard municipal completo",
         "Gestão de CATs com GPS",
-        "Gestão de atendentes",
-        "Analytics estadual/municipal",
-        "Mapas de calor",
-        "Guilherme Estratégico",
-        "Relatórios consolidados",
+        "Gestão de atendentes e ponto eletrônico",
+        "Analytics estadual e municipal",
+        "Mapas de calor e fluxo turístico",
+        "Guilherme Estratégico (IA avançada)",
+        "Relatórios consolidados para gestão",
         "Multi-usuários ilimitados",
-        "Treinamento da equipe"
+        "Treinamento completo da equipe",
+        "Suporte dedicado 24/7"
       ],
       cta: "Contato Institucional",
-      highlighted: false,
+      highlighted: true,
       gradient: "from-emerald-500 to-teal-600"
     }
   ];
@@ -109,18 +66,22 @@ const Precos = () => {
           }} />
         </div>
         
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+        
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
               <Sparkles className="h-4 w-4 text-viajar-cyan" />
-              <span className="text-sm text-white/90 font-medium">14 dias grátis em todos os planos</span>
+              <span className="text-sm text-white/90 font-medium">Planos para cada necessidade</span>
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Planos para Todos os Tamanhos
+              Escolha o Plano Ideal
             </h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto">
-              Do pequeno estabelecimento às grandes redes e governos. Escolha o plano ideal para você.
+              Soluções completas para empresários do setor turístico e gestores públicos
             </p>
           </div>
         </div>
@@ -128,33 +89,40 @@ const Precos = () => {
 
       {/* Pricing Cards */}
       <section className="py-20 -mt-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {plans.map((plan, index) => (
               <div 
                 key={index} 
                 className={`relative rounded-2xl p-8 transition-all duration-300 ${
                   plan.highlighted 
-                    ? 'bg-viajar-slate text-white shadow-2xl shadow-viajar-cyan/20 scale-105 z-10' 
+                    ? 'bg-viajar-slate text-white shadow-2xl shadow-emerald-500/20 scale-105 z-10' 
                     : 'bg-card border border-border hover:border-viajar-cyan/30 hover:shadow-lg'
                 }`}
               >
                 {plan.highlighted && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="px-4 py-1 bg-viajar-cyan text-viajar-slate text-sm font-semibold rounded-full">
-                      Mais Popular
+                    <div className="px-4 py-1 bg-emerald-500 text-white text-sm font-semibold rounded-full">
+                      Mais Completo
                     </div>
                   </div>
                 )}
                 
                 {/* Plan Header */}
                 <div className="mb-6">
-                  <div className={`inline-flex w-12 h-12 rounded-xl bg-gradient-to-br ${plan.gradient} items-center justify-center mb-4`}>
-                    <span className="text-white font-bold text-lg">{plan.name[0]}</span>
+                  <div className={`inline-flex w-14 h-14 rounded-xl bg-gradient-to-br ${plan.gradient} items-center justify-center mb-4`}>
+                    <plan.icon className="h-7 w-7 text-white" />
                   </div>
-                  <h3 className={`text-xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-foreground'}`}>
-                    {plan.name}
-                  </h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className={`text-2xl font-bold ${plan.highlighted ? 'text-white' : 'text-foreground'}`}>
+                      {plan.name}
+                    </h3>
+                    <span className={`text-sm px-2 py-1 rounded-full ${
+                      plan.highlighted ? 'bg-white/20 text-white' : 'bg-viajar-cyan/10 text-viajar-cyan'
+                    }`}>
+                      {plan.subtitle}
+                    </span>
+                  </div>
                   <p className={`text-sm ${plan.highlighted ? 'text-white/70' : 'text-muted-foreground'}`}>
                     {plan.description}
                   </p>
@@ -177,7 +145,7 @@ const Precos = () => {
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                        plan.highlighted ? 'text-viajar-cyan' : 'text-viajar-cyan'
+                        plan.highlighted ? 'text-emerald-400' : 'text-viajar-cyan'
                       }`} />
                       <span className={`text-sm ${plan.highlighted ? 'text-white/90' : 'text-muted-foreground'}`}>
                         {feature}
@@ -187,34 +155,37 @@ const Precos = () => {
                 </ul>
 
                 {/* CTA */}
-                <Button 
-                  className={`w-full h-12 font-semibold ${
-                    plan.highlighted 
-                      ? 'bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate' 
-                      : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
-                  }`}
-                  onClick={() => handleSelectPlan(plan.name)}
-                >
-                  {plan.cta}
-                </Button>
+                <Link to="/contato">
+                  <Button 
+                    className={`w-full h-12 font-semibold gap-2 ${
+                      plan.highlighted 
+                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                        : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
+                    }`}
+                  >
+                    {plan.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* FAQ ou Info adicional */}
       <section className="py-20 bg-muted/50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-4">
-            Precisa de um plano personalizado?
+            Precisa de uma solução personalizada?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Fale com nossos especialistas e descubra a solução ideal para sua região.
+            Entre em contato com nossos especialistas e descubra como podemos atender 
+            às necessidades específicas da sua organização.
           </p>
           <Link to="/contato">
             <Button size="lg" className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2 h-14 px-8 text-lg">
-              Solicitar Proposta
+              Falar com Especialista
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>

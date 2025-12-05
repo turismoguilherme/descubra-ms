@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Brain, Shield, Globe, Building2, TrendingUp, Calendar, FileText, MapPin, Sparkles, CheckCircle2 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
-import CommercialSection from '@/components/commercial/CommercialSection';
+// CommercialSection removido temporariamente
 
 const ViaJARSaaS = () => {
   const features = [
@@ -46,12 +46,13 @@ const ViaJARSaaS = () => {
     },
   ];
 
-  const stats = [
-    { value: "50K+", label: "Usuários Ativos" },
-    { value: "95%", label: "Satisfação" },
-    { value: "27", label: "Estados" },
-    { value: "500+", label: "Parceiros" },
-  ];
+  // Stats removidos - podem ser reativados via admin futuramente
+  // const stats = [
+  //   { value: "50K+", label: "Usuários Ativos" },
+  //   { value: "95%", label: "Satisfação" },
+  //   { value: "27", label: "Estados" },
+  //   { value: "500+", label: "Parceiros" },
+  // ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -96,28 +97,18 @@ const ViaJARSaaS = () => {
             
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/viajar/register">
+              <Link to="/viajar/login">
                 <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2 shadow-lg shadow-viajar-cyan/25">
-                  Começar Gratuitamente
+                  Acessar Plataforma
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/contato">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 h-14 text-lg">
+                <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
                   Agendar Demo
                 </Button>
               </Link>
             </div>
-          </div>
-          
-          {/* Stats */}
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-sm text-white/60">{stat.label}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -217,6 +208,41 @@ const ViaJARSaaS = () => {
         </div>
       </section>
 
+      {/* Video Section */}
+      <section className="py-24 bg-background">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Veja a Plataforma em Ação
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Descubra como a ViajARTur pode transformar a gestão do turismo na sua região
+            </p>
+          </div>
+          
+          {/* Video Container */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border border-border bg-viajar-slate">
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src="https://www.youtube.com/embed/VIDEO_ID_AQUI"
+              title="ViajARTur - Plataforma de Turismo Inteligente"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+            {/* Placeholder quando não houver vídeo */}
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-viajar-slate to-slate-800">
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-full bg-viajar-cyan/20 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-viajar-cyan border-b-[12px] border-b-transparent ml-1" />
+                </div>
+                <p className="text-white/60 text-sm">Vídeo em breve</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 bg-viajar-slate">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -224,26 +250,24 @@ const ViaJARSaaS = () => {
             Pronto para Transformar seu Turismo?
           </h2>
           <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-            Junte-se a centenas de empresas e órgãos públicos que já confiam na ViajARTur.
+            Junte-se a empresas e órgãos públicos que já confiam na ViajARTur.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/viajar/register">
+            <Link to="/contato">
               <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
-                Teste Grátis por 14 dias
+                Solicitar Demonstração
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/contato">
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 h-14 text-lg">
-                Falar com Especialista
+            <Link to="/precos">
+              <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
+                Ver Planos
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Commercial Section */}
-      <CommercialSection />
 
       <ViaJARFooter />
     </div>

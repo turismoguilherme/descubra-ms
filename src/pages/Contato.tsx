@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, MessageSquare, Building2, Landmark, ArrowRight, Clock } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,36 +15,34 @@ const Contato = () => {
     phone: '',
     organization: '',
     role: '',
-    interest: '',
-    city: '',
-    state: '',
     message: ''
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
     // Simulação de envio
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     toast({
-      title: "Mensagem enviada!",
-      description: "Entraremos em contato em breve.",
+      title: "✅ Mensagem enviada!",
+      description: "Entraremos em contato em até 24 horas.",
     });
     
-    // Limpar formulário
     setFormData({
       name: '',
       email: '',
       phone: '',
       organization: '',
       role: '',
-      interest: '',
-      city: '',
-      state: '',
       message: ''
     });
+    setLoading(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -52,18 +50,33 @@ const Contato = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white py-20">
-        <div className="absolute inset-0 bg-black/20"></div>
+      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-20">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-viajar-blue/20 rounded-full blur-3xl" />
+        
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <MessageSquare className="h-4 w-4 text-viajar-cyan" />
+              <span className="text-sm text-white/90 font-medium">Fale Conosco</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Entre em Contato
             </h1>
-            <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-white/70">
               Estamos prontos para ajudar você a transformar o turismo na sua região
             </p>
           </div>
@@ -71,52 +84,51 @@ const Contato = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Fale Conosco
+              <h2 className="text-3xl font-bold text-foreground mb-6">
+                Vamos Conversar
               </h2>
-              <p className="text-gray-600 mb-4 text-lg">
-                Preencha o formulário ao lado ou entre em contato diretamente pelos nossos canais.
-              </p>
-              <p className="text-gray-700 text-sm mb-8">
-                Se você é de uma <span className="font-semibold">Prefeitura ou Secretaria de Turismo de
-                Mato Grosso do Sul</span> e deseja apenas{' '}
-                <span className="font-semibold">Relatórios de Inteligência Municipal</span>
-                (Alumia + Descubra MS), selecione essa opção no formulário.
+              <p className="text-muted-foreground mb-8 leading-relaxed">
+                Preencha o formulário ou entre em contato diretamente pelos nossos canais. 
+                Nossa equipe está pronta para atender empresários e gestores públicos.
               </p>
 
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mr-4">
+              <div className="space-y-6 mb-10">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center flex-shrink-0">
                     <Mail className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Email</h3>
-                    <p className="text-gray-600">contato@viajar.com.br</p>
+                    <h3 className="font-semibold text-foreground mb-1">Email</h3>
+                    <a href="mailto:contato@viajartur.com.br" className="text-viajar-cyan hover:underline">
+                      contato@viajartur.com.br
+                    </a>
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-emerald-500 rounded-xl flex items-center justify-center mr-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
                     <Phone className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Telefone</h3>
-                    <p className="text-gray-600">(67) 3000-0000</p>
+                    <h3 className="font-semibold text-foreground mb-1">Telefone</h3>
+                    <a href="tel:+556730000000" className="text-muted-foreground hover:text-foreground">
+                      (67) 3000-0000
+                    </a>
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-violet-500 rounded-xl flex items-center justify-center mr-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
                     <MapPin className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Endereço</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-foreground mb-1">Endereço</h3>
+                    <p className="text-muted-foreground">
                       Campo Grande - MS<br />
                       Brasil
                     </p>
@@ -125,21 +137,35 @@ const Contato = () => {
               </div>
 
               {/* Business Hours */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl border border-blue-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Horário de Atendimento</h3>
-                <div className="space-y-2 text-gray-600">
-                  <p>Segunda a Sexta: 8h às 18h</p>
-                  <p>Sábado: 9h às 13h</p>
-                  <p>Domingo: Fechado</p>
+              <div className="bg-card rounded-2xl p-6 border border-border">
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock className="h-5 w-5 text-viajar-cyan" />
+                  <h3 className="font-semibold text-foreground">Horário de Atendimento</h3>
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Segunda a Sexta</span>
+                    <span className="text-foreground">8h às 18h</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sábado</span>
+                    <span className="text-foreground">9h às 13h</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Domingo</span>
+                    <span className="text-muted-foreground">Fechado</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-200 shadow-lg">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-card rounded-2xl p-8 border border-border shadow-lg">
+              <h3 className="text-xl font-semibold text-foreground mb-6">Envie sua mensagem</h3>
+              
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                     Nome Completo *
                   </label>
                   <Input
@@ -150,44 +176,45 @@ const Contato = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Seu nome"
-                    className="w-full"
+                    className="h-12"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="seu@email.com"
-                    className="w-full"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                      Email *
+                    </label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="seu@email.com"
+                      className="h-12"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
+                      Telefone
+                    </label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="(00) 00000-0000"
+                      className="h-12"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Telefone
-                  </label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="(00) 00000-0000"
-                    className="w-full"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-2">
-                    Organização/Município
+                  <label htmlFor="organization" className="block text-sm font-medium text-foreground mb-2">
+                    Organização / Empresa
                   </label>
                   <Input
                     id="organization"
@@ -195,89 +222,31 @@ const Contato = () => {
                     type="text"
                     value={formData.organization}
                     onChange={handleChange}
-                    placeholder="Nome da organização ou município"
-                    className="w-full"
+                    placeholder="Nome da empresa ou órgão"
+                    className="h-12"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                      Sou
-                    </label>
-                    <select
-                      id="role"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange as any}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    >
-                      <option value="">Selecione</option>
-                      <option value="business">Empresa / Negócio turístico</option>
-                      <option value="municipality">Prefeitura / Secretaria de Turismo</option>
-                      <option value="public_entity">Outro órgão público / entidade</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="interest" className="block text-sm font-medium text-gray-700 mb-2">
-                      O que você procura?
-                    </label>
-                    <select
-                      id="interest"
-                      name="interest"
-                      value={formData.interest}
-                      onChange={handleChange as any}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    >
-                      <option value="">Selecione</option>
-                      <option value="full_platform">Assinar a plataforma completa ViajARTur</option>
-                      <option value="ms_reports">
-                        Receber apenas Relatórios de Inteligência Municipal de MS
-                      </option>
-                      <option value="other">Outro tipo de parceria</option>
-                    </select>
-                  </div>
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-foreground mb-2">
+                    Você é
+                  </label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full h-12 px-3 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-viajar-cyan focus:border-transparent"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="empresario">Empresário do setor turístico</option>
+                    <option value="secretaria">Secretaria de Turismo / Prefeitura</option>
+                    <option value="outro">Outro</option>
+                  </select>
                 </div>
 
-                {formData.interest === 'ms_reports' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                        Município (obrigatório para relatórios)
-                      </label>
-                      <Input
-                        id="city"
-                        name="city"
-                        type="text"
-                        value={formData.city}
-                        onChange={handleChange}
-                        placeholder="Ex.: Bonito, Campo Grande..."
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
-                        Estado
-                      </label>
-                      <Input
-                        id="state"
-                        name="state"
-                        type="text"
-                        value={formData.state}
-                        onChange={handleChange}
-                        placeholder="MS"
-                        className="w-full"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Os Relatórios de Inteligência Municipal estão disponíveis, neste momento,
-                        apenas para municípios de Mato Grosso do Sul.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
                     Mensagem *
                   </label>
                   <Textarea
@@ -287,16 +256,24 @@ const Contato = () => {
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Como podemos ajudar?"
-                    className="w-full min-h-[120px]"
+                    className="min-h-[120px] resize-none"
                   />
                 </div>
 
                 <Button 
                   type="submit" 
                   size="lg" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                  className="w-full h-14 bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold text-lg gap-2"
+                  disabled={loading}
                 >
-                  Enviar Mensagem
+                  {loading ? (
+                    <>Enviando...</>
+                  ) : (
+                    <>
+                      <Send className="h-5 w-5" />
+                      Enviar Mensagem
+                    </>
+                  )}
                 </Button>
               </form>
             </div>
@@ -304,17 +281,66 @@ const Contato = () => {
         </div>
       </section>
 
+      {/* Planos rápidos */}
+      <section className="py-20 bg-muted/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Soluções para Cada Necessidade
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Escolha o plano ideal para você
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-card rounded-2xl p-8 border border-border hover:border-viajar-cyan/30 transition-colors">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center">
+                  <Building2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Para Empresários</h3>
+                  <p className="text-sm text-muted-foreground">Hotéis, pousadas, agências</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm mb-4">
+                Guilherme IA, Revenue Optimizer, Market Intelligence e mais.
+              </p>
+              <div className="text-2xl font-bold text-foreground mb-4">R$ 199<span className="text-sm text-muted-foreground">/mês</span></div>
+            </div>
+
+            <div className="bg-card rounded-2xl p-8 border border-border hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <Landmark className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Para Secretarias</h3>
+                  <p className="text-sm text-muted-foreground">Prefeituras e órgãos públicos</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm mb-4">
+                Dashboard completo, Gestão de CATs, Analytics avançado.
+              </p>
+              <div className="text-2xl font-bold text-foreground mb-4">R$ 2.000<span className="text-sm text-muted-foreground">/mês</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-900 to-cyan-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+      <section className="py-20 bg-viajar-slate">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Prefere agendar uma demonstração?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+          <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
             Veja a plataforma em ação com uma demo personalizada para sua necessidade.
           </p>
-          <Button size="lg" className="bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 text-lg">
+          <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
             Agendar Demo
+            <ArrowRight className="h-5 w-5" />
           </Button>
         </div>
       </section>

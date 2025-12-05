@@ -1,21 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, Users, Building2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical } from 'lucide-react';
 
 const ViaJARFooter: React.FC = () => {
-  const { userProfile, user, loading } = useAuth();
-  
-  const userRole = userProfile?.role?.toLowerCase() || '';
-  const isAdmin = !loading && 
-                  user && 
-                  userProfile && 
-                  (userRole === 'admin' || 
-                   userRole === 'master_admin' || 
-                   userRole === 'tech' ||
-                   userRole === 'master admin' ||
-                   userRole === 'tech admin');
-
   const currentYear = new Date().getFullYear();
 
   return (
@@ -121,33 +108,15 @@ const ViaJARFooter: React.FC = () => {
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/viajar/login" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Login Setor Privado
-                </Link>
-              </li>
-              <li>
                 <Link to="/test-login" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Login Setor Público
+                  <FlaskConical className="h-4 w-4" />
+                  Login de Testes
                 </Link>
               </li>
               <li>
-                <Link to="/viajar/register" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
-                  Criar Conta
-                </Link>
-              </li>
-              {isAdmin && (
-                <li>
-                  <Link to="/viajar/admin" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Área Administrativa
-                  </Link>
-                </li>
-              )}
-              <li>
-                <Link to="/ms" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
-                  Descubra MS
+                <Link to="/viajar/admin" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Área Administrativa
                 </Link>
               </li>
             </ul>
