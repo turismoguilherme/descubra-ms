@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Eye, FileText } from 'lucide-react';
 import { descubraMSAdminService } from '@/services/admin/descubraMSAdminService';
 import { useToast } from '@/hooks/use-toast';
 import { ContentVersion } from '@/types/admin';
@@ -47,11 +47,13 @@ export default function ContentEditor() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-[#0A0A0A]">Editor de Conteúdo</h2>
-          <p className="text-[#6B7280] mt-1.5 text-sm">Edite textos e informações do Descubra MS</p>
+          <h2 className="text-2xl font-semibold text-gray-900">Editor de Conteúdo</h2>
+          <p className="text-gray-600 mt-1.5 text-sm">
+            Edite textos e informações do Descubra MS. Use a busca para encontrar o conteúdo que deseja editar.
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -79,79 +81,95 @@ export default function ContentEditor() {
         </Dialog>
       </div>
 
-      <Card className="bg-white border border-[#E5E5E5] shadow-sm">
-        <CardHeader className="border-b border-[#E5E5E5]">
+      {/* Busca mais destacada */}
+      <Card className="bg-white border-gray-200 shadow-sm">
+        <CardHeader className="border-b border-gray-200">
           <div className="flex items-center gap-4">
             <div className="flex-1">
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                🔍 Buscar Conteúdo
+              </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#6B7280]" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
-                  placeholder="Buscar conteúdo..."
+                  placeholder="Digite a chave ou parte do conteúdo que deseja editar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-[#E5E5E5] focus:border-[#3B82F6]"
+                  className="pl-10 border-gray-300 focus:border-blue-500"
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {filteredContents.length > 0 
+                  ? `${filteredContents.length} conteúdo(s) encontrado(s)`
+                  : 'Nenhum conteúdo encontrado com essa busca'}
+              </p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8">Carregando...</div>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando conteúdos...</p>
+            </div>
+          ) : filteredContents.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-600 font-medium">Nenhum conteúdo encontrado</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {searchTerm ? 'Tente buscar com outros termos' : 'Crie um novo conteúdo para começar'}
+              </p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-[#E5E5E5] hover:bg-transparent">
-                    <TableHead className="text-[#6B7280] font-medium">Chave</TableHead>
-                    <TableHead className="text-[#6B7280] font-medium">Tipo</TableHead>
-                    <TableHead className="text-[#6B7280] font-medium">Versão</TableHead>
-                    <TableHead className="text-[#6B7280] font-medium">Status</TableHead>
-                    <TableHead className="text-[#6B7280] font-medium">Editado por</TableHead>
-                    <TableHead className="text-right text-[#6B7280] font-medium">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredContents.length === 0 ? (
-                    <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={6} className="text-center py-12 text-[#6B7280]">
-                        Nenhum conteúdo encontrado
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredContents.map((content) => (
-                      <TableRow key={content.id} className="border-b border-[#E5E5E5] hover:bg-[#FAFAFA]">
-                        <TableCell className="font-medium text-[#0A0A0A]">{content.content_key}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="border-[#E5E5E5] text-[#6B7280]">{content.content_type}</Badge>
-                        </TableCell>
-                        <TableCell className="text-[#6B7280]">v{content.version}</TableCell>
-                        <TableCell>
-                          <Badge variant={content.is_published ? 'default' : 'secondary'}>
-                            {content.is_published ? 'Publicado' : 'Rascunho'}
+            <div className="divide-y divide-gray-200">
+              {filteredContents.map((content) => (
+                <div 
+                  key={content.id} 
+                  className="p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className="font-mono text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          {content.content_key}
+                        </Badge>
+                        <Badge variant="outline" className="border-gray-300 text-gray-700">
+                          {content.content_type}
+                        </Badge>
+                        <Badge variant="outline" className="border-gray-300 text-gray-600">
+                          v{content.version}
+                        </Badge>
+                        {content.is_published ? (
+                          <Badge className="bg-green-500">✓ Publicado</Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-amber-300 text-amber-600 bg-amber-50">
+                            Rascunho
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-[#6B7280]">{content.edited_by || '-'}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setEditingContent(content);
-                                setIsDialogOpen(true);
-                              }}
-                              className="h-8 w-8 p-0 hover:bg-[#FAFAFA]"
-                            >
-                              <Edit className="h-4 w-4 text-[#6B7280]" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-700 line-clamp-2 mb-1">
+                        {content.content.substring(0, 150)}
+                        {content.content.length > 150 && '...'}
+                      </p>
+                      {content.edited_by && (
+                        <p className="text-xs text-gray-500">Editado por: {content.edited_by}</p>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingContent(content);
+                        setIsDialogOpen(true);
+                      }}
+                      className="flex-shrink-0"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

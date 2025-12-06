@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils';
 const EmployeesManagement = lazy(() => import('@/components/admin/viajar/EmployeesManagement'));
 const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
 const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
-const CompanySettings = lazy(() => import('@/components/admin/viajar/CompanySettings'));
 const ContentEditor = lazy(() => import('@/components/admin/descubra_ms/ContentEditor'));
 const MenuManager = lazy(() => import('@/components/admin/descubra_ms/MenuManager'));
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
@@ -104,16 +103,6 @@ export default function ViaJARAdminPanel() {
             <Route path="viajar/subscriptions" element={
               <Suspense fallback={<LoadingFallback />}>
                 <SubscriptionsManagement />
-              </Suspense>
-            } />
-            <Route path="viajar/pages" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <CompanySettings />
-              </Suspense>
-            } />
-            <Route path="viajar/settings" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <CompanySettings />
               </Suspense>
             } />
             

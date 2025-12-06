@@ -78,7 +78,6 @@ const navigationItems: NavItem[] = [
       { id: 'employees', label: 'Funcionários', icon: Users, path: '/viajar/admin/viajar/employees', permission: 'employees', platform: 'viajar' },
       { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
       { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
-      { id: 'company-settings', label: 'Configurações', icon: Cog, path: '/viajar/admin/viajar/settings', permission: 'settings', platform: 'viajar' },
     ],
   },
   {

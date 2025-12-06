@@ -447,19 +447,29 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <span>{platform === 'viajar' ? 'ViajARTur' : 'Descubra MS'}</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>{currentPage?.name || 'Selecione uma página'}</span>
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              {platform === 'viajar' ? 'ViajARTur' : 'Descubra MS'}
+            </Badge>
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+            <span className="font-medium text-gray-900">{currentPage?.name || 'Selecione uma página'}</span>
             {currentSection && (
               <>
-                <ChevronRight className="h-4 w-4" />
-                <span>{currentSection.name}</span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <span className="font-medium text-gray-900">{currentSection.name}</span>
               </>
             )}
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">Editor Visual de Conteúdo</h2>
-          <p className="text-slate-500 mt-1">Edite o conteúdo das páginas com preview em tempo real</p>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {currentPage?.name && currentSection 
+              ? `Editando: ${currentPage.name} → ${currentSection.name}`
+              : 'Editor de Conteúdo'}
+          </h2>
+          <p className="text-gray-600 mt-1">
+            {currentPage?.name && currentSection 
+              ? `Você está editando a seção "${currentSection.name}" da página "${currentPage.name}"`
+              : 'Selecione uma página e seção para começar a editar'}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {hasChanges && (
@@ -485,10 +495,11 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Navegação de Páginas */}
-        <Card className="lg:col-span-2 bg-white border-slate-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-500">Páginas</CardTitle>
+        {/* Navegação de Páginas - Mais visível */}
+        <Card className="lg:col-span-3 bg-white border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 border-b border-gray-200">
+            <CardTitle className="text-base font-semibold text-gray-900">📄 Páginas Disponíveis</CardTitle>
+            <CardDescription className="text-sm text-gray-600">Clique para selecionar</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {pages.map((page) => {
@@ -498,68 +509,99 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
                   key={page.id}
                   onClick={() => setSelectedPage(page.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-sm transition-all text-left border-b border-slate-100 last:border-0",
+                    "w-full flex items-center gap-3 px-4 py-3 text-sm transition-all text-left border-b border-gray-100 last:border-0",
                     selectedPage === page.id
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "text-slate-600 hover:bg-slate-50"
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-l-blue-600 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  {page.name}
+                  <Icon className="h-5 w-5" />
+                  <span>{page.name}</span>
+                  {selectedPage === page.id && (
+                    <Check className="h-4 w-4 ml-auto text-blue-600" />
+                  )}
                 </button>
               );
             })}
           </CardContent>
         </Card>
 
-        {/* Seções e Editor */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Seleção de Seção */}
-          <Card className="bg-white border-slate-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-500">Seções</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2">
-              <div className="flex flex-wrap gap-2">
-                {currentPage?.sections.map((section) => (
-                  <Button
-                    key={section.id}
-                    variant={selectedSection === section.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedSection(section.id)}
-                    className={selectedSection === section.id ? "bg-emerald-600" : ""}
-                  >
-                    {section.name}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Seções e Editor - Mais claro */}
+        <div className="lg:col-span-5 space-y-4">
+          {/* Seleção de Seção - Mais destacada */}
+          {currentPage && (
+            <Card className="bg-white border-gray-200 shadow-sm">
+              <CardHeader className="pb-3 border-b border-gray-200">
+                <CardTitle className="text-base font-semibold text-gray-900">
+                  🎯 Seções de "{currentPage.name}"
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600">
+                  Escolha qual parte da página deseja editar
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {currentPage.sections.map((section) => (
+                    <Button
+                      key={section.id}
+                      variant={selectedSection === section.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedSection(section.id)}
+                      className={cn(
+                        "justify-start",
+                        selectedSection === section.id 
+                          ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                          : "border-gray-200 hover:bg-gray-50"
+                      )}
+                    >
+                      {section.name}
+                      {selectedSection === section.id && (
+                        <Check className="h-4 w-4 ml-auto" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Editor de Campos */}
-          <Card className="bg-white border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-slate-800">{currentSection?.name || 'Selecione uma seção'}</CardTitle>
-              <CardDescription>Edite os campos abaixo</CardDescription>
+          {/* Editor de Campos - Mais claro */}
+          <Card className="bg-white border-gray-200 shadow-sm">
+            <CardHeader className="border-b border-gray-200">
+              <CardTitle className="text-lg font-semibold text-gray-900">
+                ✏️ {currentSection?.name || 'Selecione uma seção'}
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                {currentSection 
+                  ? `Edite os campos da seção "${currentSection.name}". As alterações aparecerão no preview ao lado.`
+                  : 'Primeiro selecione uma página e depois uma seção para começar a editar'}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               {currentSection?.fields.map(field => renderField(field))}
               {!currentSection && (
-                <p className="text-slate-400 text-center py-8">
-                  Selecione uma página e seção para editar
-                </p>
+                <div className="text-center py-12 text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="font-medium">Nenhuma seção selecionada</p>
+                  <p className="text-sm mt-1">Selecione uma página e seção acima para começar</p>
+                </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Preview */}
-        <Card className="lg:col-span-6 bg-white border-slate-200">
-          <CardHeader className="border-b border-slate-100">
+        {/* Preview - Mais destacado */}
+        <Card className="lg:col-span-4 bg-white border-gray-200 shadow-sm">
+          <CardHeader className="border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-slate-800">Preview</CardTitle>
-                <CardDescription>Visualize como ficará no site</CardDescription>
+                <CardTitle className="text-gray-900 flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-blue-600" />
+                  Preview ao Vivo
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  Veja como ficará no site em tempo real
+                </CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex border border-slate-200 rounded-lg overflow-hidden">
