@@ -1,5 +1,4 @@
 import { KnowledgeItem } from "@/types/ai";
-import { guataClient } from "./client/guataClient";
 import { knowledgeService } from "./knowledge/knowledgeService";
 import { geminiClient } from "@/config/gemini";
 import { GuataResponse as GuataTypesResponse, GuataUserInfo } from "./types/guataTypes";
@@ -104,43 +103,36 @@ export class GuataService {
     try {
       this.lastPrompt = prompt;
       
-      console.log("🦦 Guatá Predictive processando:", prompt);
+      console.log("🦦 Guatá Intelligent processando:", prompt);
       
-      // Usar o serviço preditivo que combina todos os recursos
-      const predictiveResponse = await guataPredictiveService.processQuestion({
+      // Usar o serviço True API que combina todos os recursos
+      const intelligentResponse = await guataTrueApiService.processQuestion({
         question: prompt,
         userId: userId || 'Usuário',
         sessionId: sessionId || `session-${Date.now()}`,
-        userLocation: location || 'Mato Grosso do Sul'
+        userLocation: location || 'Mato Grosso do Sul',
+        conversationHistory: [],
+        userPreferences: {},
+        isTotemVersion: false,
+        isFirstUserMessage: false
       });
       
-      console.log("✅ Guatá Predictive: Resposta gerada em", predictiveResponse.processingTime, "ms");
-      console.log("📊 Fontes utilizadas:", predictiveResponse.sources);
-      console.log("🌐 Usou web search:", predictiveResponse.usedWebSearch);
-      console.log("🧠 Fonte do conhecimento:", predictiveResponse.knowledgeSource);
-      console.log("🤝 Sugestão de parceiro:", predictiveResponse.partnerSuggestion || 'Nenhuma');
-      console.log("🔮 Insights preditivos:", predictiveResponse.predictiveInsights);
-      console.log("🚀 Sugestões proativas:", predictiveResponse.proactiveSuggestions.length);
-      console.log("🧠 Análise de comportamento:", predictiveResponse.userBehaviorAnalysis);
-      console.log("🔮 Próximas perguntas previstas:", predictiveResponse.nextQuestionPrediction.length);
-      console.log("🎓 Insights de aprendizado:", predictiveResponse.learningInsights);
-      console.log("💡 Melhorias implementadas:", predictiveResponse.adaptiveImprovements);
-      console.log("💾 Atualizações de memória:", predictiveResponse.memoryUpdates.length);
-      console.log("😊 Personalidade:", predictiveResponse.personality);
-      console.log("🎭 Estado emocional:", predictiveResponse.emotionalState);
-      console.log("❓ Perguntas de seguimento:", predictiveResponse.followUpQuestions?.length || 0);
+      console.log("✅ Guatá True API: Resposta gerada em", intelligentResponse.processingTime, "ms");
+      console.log("📊 Fontes utilizadas:", intelligentResponse.sources);
+      console.log("🌐 Usou web search:", intelligentResponse.usedWebSearch);
+      console.log("🧠 Fonte do conhecimento:", intelligentResponse.knowledgeSource);
       
       return {
-        answer: predictiveResponse.answer,
-        confidence: predictiveResponse.confidence,
-        sources: predictiveResponse.sources,
+        answer: intelligentResponse.answer,
+        confidence: intelligentResponse.confidence,
+        sources: intelligentResponse.sources,
         timestamp: new Date(),
-        processingTime: predictiveResponse.processingTime,
+        processingTime: intelligentResponse.processingTime,
         verificationStatus: 'verified' as const
       };
       
     } catch (error) {
-      console.error("🦦 Erro no Guatá Predictive:", error);
+      console.error("🦦 Erro no Guatá Intelligent:", error);
       
       return {
         answer: "🦦 *coçando a cabeça* Ops! Parece que algo deu errado aqui. Deixe-me tentar novamente...",
