@@ -76,7 +76,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Erro na Edge Function send-email-via-gateway:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });

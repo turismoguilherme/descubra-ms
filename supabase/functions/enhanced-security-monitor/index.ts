@@ -178,23 +178,23 @@ async function getSecurityMetrics(supabaseClient: any): Promise<Response> {
 
     // Calculate metrics
     const metrics: SecurityMetrics = {
-      activeThreats: recentEvents?.filter(e => 
+      activeThreats: recentEvents?.filter((e: any) => 
         e.action.includes('threat') || 
         e.action.includes('suspicious') ||
         e.action.includes('blocked')
       ).length || 0,
       
-      blockedIPs: recentEvents?.filter(e => 
+      blockedIPs: recentEvents?.filter((e: any) => 
         e.action.includes('rate_limit_exceeded') || 
         e.action.includes('blocked')
       ).length || 0,
       
-      suspiciousActivity: recentEvents?.filter(e => 
+      suspiciousActivity: recentEvents?.filter((e: any) => 
         e.action.includes('suspicious') ||
         e.action.includes('anomaly')
       ).length || 0,
       
-      criticalAlerts: recentEvents?.filter(e => 
+      criticalAlerts: recentEvents?.filter((e: any) => 
         e.action.includes('critical') ||
         e.action.includes('privilege_escalation')
       ).length || 0,
@@ -243,15 +243,20 @@ async function analyzeThreats(supabaseClient: any): Promise<Response> {
     if (error) throw error;
 
     // Analyze threat patterns
-    const threatAnalysis = {
+    const threatAnalysis: {
+      total_threats: number;
+      threat_types: Record<string, number>;
+      risk_level: 'low' | 'medium' | 'high' | 'critical';
+      recommendations: string[];
+    } = {
       total_threats: threats?.length || 0,
       threat_types: {},
-      risk_level: 'low' as 'low' | 'medium' | 'high' | 'critical',
-      recommendations: [] as string[]
+      risk_level: 'low',
+      recommendations: []
     };
 
     // Count threat types
-    threats?.forEach(threat => {
+    threats?.forEach((threat: any) => {
       threatAnalysis.threat_types[threat.action] = 
         (threatAnalysis.threat_types[threat.action] || 0) + 1;
     });
