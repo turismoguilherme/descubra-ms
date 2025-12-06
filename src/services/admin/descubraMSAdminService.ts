@@ -4,29 +4,29 @@ import { ContentVersion, DynamicMenu } from '@/types/admin';
 export const descubraMSAdminService = {
   // Content
   async getContentVersions(platform: 'viajar' | 'descubra_ms') {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('content_versions')
       .select('*')
       .eq('platform', platform)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data;
+    return (data || []) as ContentVersion[];
   },
 
   async createContentVersion(content: Omit<ContentVersion, 'id' | 'created_at' | 'updated_at'>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('content_versions')
       .insert([content])
       .select()
       .single();
     
     if (error) throw error;
-    return data;
+    return data as ContentVersion;
   },
 
   async updateContentVersion(id: string, updates: Partial<ContentVersion>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('content_versions')
       .update(updates)
       .eq('id', id)
@@ -34,34 +34,34 @@ export const descubraMSAdminService = {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as ContentVersion;
   },
 
   // Menus
   async getMenus(platform: 'viajar' | 'descubra_ms') {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('dynamic_menus')
       .select('*')
       .eq('platform', platform)
       .order('order_index', { ascending: true });
     
     if (error) throw error;
-    return data;
+    return (data || []) as DynamicMenu[];
   },
 
   async createMenu(menu: Omit<DynamicMenu, 'id' | 'created_at' | 'updated_at'>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('dynamic_menus')
       .insert([menu])
       .select()
       .single();
     
     if (error) throw error;
-    return data;
+    return data as DynamicMenu;
   },
 
   async updateMenu(id: string, updates: Partial<DynamicMenu>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('dynamic_menus')
       .update(updates)
       .eq('id', id)
@@ -69,11 +69,11 @@ export const descubraMSAdminService = {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as DynamicMenu;
   },
 
   async deleteMenu(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('dynamic_menus')
       .delete()
       .eq('id', id);
@@ -115,7 +115,7 @@ export const descubraMSAdminService = {
     // Marcar usuário como banido (pode criar uma coluna is_banned ou usar uma flag)
     const { data, error } = await supabase
       .from('user_profiles')
-      .update({ is_banned: true, banned_at: new Date().toISOString() })
+      .update({ is_banned: true, banned_at: new Date().toISOString() } as any)
       .eq('user_id', userId)
       .select()
       .single();
@@ -124,4 +124,3 @@ export const descubraMSAdminService = {
     return data;
   },
 };
-
