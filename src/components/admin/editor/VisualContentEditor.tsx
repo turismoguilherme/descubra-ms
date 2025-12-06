@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { contentService } from '@/services/admin/contentService';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Eye, EyeOff, Save, Undo, Redo, Image, Type, Palette, Link2, 
   Layout, Monitor, Smartphone, Tablet, ChevronRight, MapPin,
@@ -137,8 +140,11 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
   const platform = propPlatform || routePlatform || 'viajar';
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const pageFromUrl = searchParams.get('page');
   
-  const [selectedPage, setSelectedPage] = useState('');
+  const [selectedPage, setSelectedPage] = useState(pageFromUrl || '');
   const [selectedSection, setSelectedSection] = useState('');
   const [content, setContent] = useState<Record<string, any>>({});
   const [originalContent, setOriginalContent] = useState<Record<string, any>>({});
@@ -146,6 +152,7 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [showPreview, setShowPreview] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
@@ -166,44 +173,128 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
   }, [selectedPage]);
 
   useEffect(() => {
-    loadContent();
+    if (selectedPage && selectedSection) {
+      loadContent();
+    }
   }, [selectedPage, selectedSection]);
 
-  const loadContent = () => {
+  const loadContent = async () => {
     if (!selectedPage || !selectedSection) return;
     
-    const key = getStorageKey(platform, selectedPage, selectedSection);
-    const saved = localStorage.getItem(key);
-    
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setContent(parsed);
-      setOriginalContent(parsed);
-    } else {
-      // Dados padrão baseados na seção
+    setLoading(true);
+    try {
+      const contentKey = `${selectedPage}_${selectedSection}`;
+      const platformKey = platform === 'descubra-ms' ? 'descubra_ms' : 'viajar';
+      
+      // Buscar conteúdo publicado do banco de dados
+      try {
+        const publishedContent = await contentService.getPublishedContent(platformKey as 'viajar' | 'descubra_ms', contentKey);
+        
+        if (publishedContent && publishedContent.content) {
+          // Se há conteúdo publicado, parsear e usar
+          const parsed = typeof publishedContent.content === 'string' 
+            ? JSON.parse(publishedContent.content) 
+            : publishedContent.content;
+          setContent(parsed);
+          setOriginalContent(parsed);
+        } else {
+          // Se não há conteúdo publicado, buscar a última versão (mesmo não publicada)
+          const versions = await contentService.getContentVersions(platformKey as 'viajar' | 'descubra_ms', contentKey);
+          if (versions && versions.length > 0) {
+            const latest = versions[0];
+            const parsed = typeof latest.content === 'string' 
+              ? JSON.parse(latest.content) 
+              : latest.content;
+            setContent(parsed);
+            setOriginalContent(parsed);
+          } else {
+            // Se não há nenhum conteúdo, usar valores padrão
+            const defaultContent = getDefaultContent();
+            // Garantir que sempre há conteúdo para mostrar
+            if (Object.keys(defaultContent).length === 0 && currentSection?.fields) {
+              currentSection.fields.forEach(field => {
+                defaultContent[field] = '';
+              });
+            }
+            setContent(defaultContent);
+            setOriginalContent(defaultContent);
+          }
+        }
+      } catch (error: any) {
+        // Se a tabela não existe ou erro, usar localStorage como fallback
+        const key = getStorageKey(platform, selectedPage, selectedSection);
+        const saved = localStorage.getItem(key);
+        
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setContent(parsed);
+          setOriginalContent(parsed);
+        } else {
+          const defaultContent = getDefaultContent();
+          // Garantir que sempre há conteúdo para mostrar
+          if (Object.keys(defaultContent).length === 0 && currentSection?.fields) {
+            currentSection.fields.forEach(field => {
+              defaultContent[field] = '';
+            });
+          }
+          setContent(defaultContent);
+          setOriginalContent(defaultContent);
+        }
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar conteúdo:', error);
+      toast({
+        title: 'Erro ao carregar',
+        description: 'Não foi possível carregar o conteúdo. Usando valores padrão.',
+        variant: 'destructive',
+      });
       const defaultContent = getDefaultContent();
+      // Garantir que sempre há conteúdo para mostrar
+      if (Object.keys(defaultContent).length === 0 && currentSection?.fields) {
+        currentSection.fields.forEach(field => {
+          defaultContent[field] = '';
+        });
+      }
       setContent(defaultContent);
       setOriginalContent(defaultContent);
+    } finally {
+      setLoading(false);
+      setHasChanges(false);
     }
-    setHasChanges(false);
   };
 
   const getDefaultContent = () => {
     const defaults: Record<string, any> = {
-      title: '',
-      subtitle: '',
+      title: 'Título Principal',
+      subtitle: 'Subtítulo descritivo aqui',
       cta_primary: 'Começar Agora',
       cta_secondary: 'Saiba Mais',
       background_image: '',
-      content: '',
+      content: 'Conteúdo da seção...',
       items: [],
+      email: 'contato@exemplo.com',
+      phone: '(67) 99999-9999',
+      address: 'Endereço completo aqui',
+      facebook: 'https://facebook.com/exemplo',
+      instagram: 'https://instagram.com/exemplo',
+      linkedin: 'https://linkedin.com/company/exemplo',
+      twitter: 'https://twitter.com/exemplo',
     };
     
-    currentSection?.fields.forEach(field => {
-      if (!defaults[field]) {
-        defaults[field] = field.includes('items') ? [] : '';
-      }
-    });
+    // Garantir que todos os campos da seção atual tenham valores padrão
+    if (currentSection?.fields) {
+      currentSection.fields.forEach(field => {
+        if (!(field in defaults)) {
+          if (field.includes('items') || field.includes('steps') || field.includes('categories')) {
+            defaults[field] = [];
+          } else if (field.includes('url') || field.includes('link') || field.includes('site')) {
+            defaults[field] = 'https://exemplo.com';
+          } else {
+            defaults[field] = `Valor padrão para ${field.replace(/_/g, ' ')}`;
+          }
+        }
+      });
+    }
     
     return defaults;
   };
@@ -220,23 +311,69 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
   };
 
   const handleSave = async () => {
+    if (!selectedPage || !selectedSection) return;
+    
     setSaving(true);
     try {
+      const contentKey = `${selectedPage}_${selectedSection}`;
+      const platformKey = platform === 'descubra-ms' ? 'descubra_ms' : 'viajar';
+      
+      // Buscar versão atual para incrementar
+      const versions = await contentService.getContentVersions(platformKey as 'viajar' | 'descubra_ms', contentKey);
+      const nextVersion = versions && versions.length > 0 
+        ? Math.max(...versions.map(v => v.version || 1)) + 1 
+        : 1;
+      
+      // Salvar no banco de dados
+      const { data, error } = await supabase
+        .from('content_versions')
+        .insert({
+          content_key: contentKey,
+          platform: platformKey,
+          content_type: 'text',
+          content: JSON.stringify(content),
+          version: nextVersion,
+          is_published: true, // Publicar automaticamente
+          edited_by: user?.id || null,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Também salvar no localStorage como backup
       const key = getStorageKey(platform, selectedPage, selectedSection);
       localStorage.setItem(key, JSON.stringify(content));
+      
       setOriginalContent(content);
       setHasChanges(false);
       
       toast({
         title: 'Conteúdo salvo!',
-        description: 'As alterações foram salvas com sucesso.',
+        description: 'As alterações foram salvas e publicadas com sucesso.',
       });
-    } catch (error) {
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar as alterações.',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      console.error('Erro ao salvar:', error);
+      
+      // Fallback para localStorage se o banco falhar
+      try {
+        const key = getStorageKey(platform, selectedPage, selectedSection);
+        localStorage.setItem(key, JSON.stringify(content));
+        setOriginalContent(content);
+        setHasChanges(false);
+        
+        toast({
+          title: 'Salvo localmente',
+          description: 'Conteúdo salvo localmente. Erro ao salvar no banco de dados.',
+          variant: 'default',
+        });
+      } catch (localError) {
+        toast({
+          title: 'Erro ao salvar',
+          description: error.message || 'Não foi possível salvar as alterações.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setSaving(false);
     }
@@ -362,7 +499,15 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
   };
 
   const renderPreview = () => {
-    if (!currentSection) return null;
+    if (!currentSection) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-gray-500 min-h-[300px]">
+          <Eye className="h-12 w-12 mb-4 text-gray-300" />
+          <p className="font-medium">Nenhuma seção selecionada</p>
+          <p className="text-sm mt-1">Selecione uma página e seção para ver o preview</p>
+        </div>
+      );
+    }
 
     const previewWidth = {
       desktop: 'w-full',
@@ -370,33 +515,42 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
       mobile: 'w-[375px]',
     }[previewMode];
 
-    // Preview simulado baseado na seção
+    // Se não há conteúdo ainda, mostrar campos vazios com placeholders
+    const hasContent = content && Object.keys(content).length > 0;
+
+    // Preview da plataforma real - atualiza em tempo real conforme edita
     if (selectedSection === 'hero') {
+      const title = content?.title || 'Título Principal';
+      const subtitle = content?.subtitle || 'Subtítulo descritivo aqui';
+      const ctaPrimary = content?.cta_primary || 'Começar Agora';
+      const ctaSecondary = content?.cta_secondary || 'Saiba Mais';
+      
       return (
         <div 
           className={cn(
-            "bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 rounded-lg overflow-hidden transition-all mx-auto",
+            "bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 rounded-lg overflow-hidden transition-all mx-auto shadow-xl",
             previewWidth
           )}
           style={{
-            backgroundImage: content.background_image ? `url(${content.background_image})` : undefined,
+            backgroundImage: content?.background_image ? `url(${content.background_image})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            minHeight: '300px',
           }}
         >
           <div className="bg-black/40 p-8 md:p-12 text-center text-white">
             <h1 className="text-2xl md:text-4xl font-bold mb-4">
-              {content.title || 'Título Principal'}
+              {title}
             </h1>
             <p className="text-lg md:text-xl text-white/80 mb-6">
-              {content.subtitle || 'Subtítulo descritivo aqui'}
+              {subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button className="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-lg font-medium">
-                {content.cta_primary || 'Botão Principal'}
+              <button className="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-lg font-medium transition-colors">
+                {ctaPrimary}
               </button>
-              <button className="border border-white/50 hover:bg-white/10 px-6 py-3 rounded-lg font-medium">
-                {content.cta_secondary || 'Botão Secundário'}
+              <button className="border border-white/50 hover:bg-white/10 px-6 py-3 rounded-lg font-medium transition-colors">
+                {ctaSecondary}
               </button>
             </div>
           </div>
@@ -406,37 +560,81 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
 
     if (selectedSection === 'info' || selectedSection === 'social') {
       return (
-        <div className={cn("bg-white rounded-lg p-6 border border-slate-200 mx-auto", previewWidth)}>
+        <div className={cn("bg-white rounded-lg p-6 border border-slate-200 mx-auto shadow-lg", previewWidth)}>
           <h3 className="text-lg font-semibold text-slate-800 mb-4">
             {selectedSection === 'info' ? 'Informações de Contato' : 'Redes Sociais'}
           </h3>
           <div className="space-y-3">
-            {currentSection.fields.map(field => (
-              <div key={field} className="flex items-center gap-3">
-                <span className="text-slate-500 capitalize">{field}:</span>
-                <span className="text-slate-800">{content[field] || 'Não definido'}</span>
-              </div>
-            ))}
+            {currentSection.fields && currentSection.fields.length > 0 ? (
+              currentSection.fields.map(field => {
+                const value = content?.[field] || '';
+                const isLink = field.includes('facebook') || field.includes('instagram') || field.includes('linkedin') || field.includes('twitter') || field.includes('link') || field.includes('url');
+                const displayValue = value || (isLink ? 'https://exemplo.com' : 'Não definido');
+                
+                return (
+                  <div key={field} className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-slate-500 capitalize font-medium min-w-[100px] text-sm">{field.replace(/_/g, ' ')}:</span>
+                    {isLink ? (
+                      <a 
+                        href={value || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "break-words",
+                          value ? "text-blue-600 hover:underline" : "text-gray-400 italic"
+                        )}
+                      >
+                        {displayValue}
+                      </a>
+                    ) : (
+                      <span className={cn(
+                        "break-words",
+                        value ? "text-slate-800" : "text-gray-400 italic"
+                      )}>{displayValue}</span>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-gray-500 italic">Nenhum campo definido para esta seção</p>
+            )}
           </div>
         </div>
       );
     }
 
-    // Preview genérico
+    // Preview genérico - mostra conteúdo real da plataforma
     return (
-      <div className={cn("bg-white rounded-lg p-6 border border-slate-200 mx-auto", previewWidth)}>
-        <h3 className="text-lg font-semibold text-slate-800 mb-4">{currentSection?.name}</h3>
-        <div className="space-y-3">
-          {currentSection?.fields.map(field => (
-            <div key={field}>
-              <span className="text-sm text-slate-500 capitalize">{field.replace(/_/g, ' ')}:</span>
-              <p className="text-slate-800">
-                {typeof content[field] === 'object' 
-                  ? JSON.stringify(content[field]) 
-                  : content[field] || 'Não definido'}
-              </p>
+      <div className={cn("bg-white rounded-lg p-6 border border-slate-200 mx-auto shadow-lg", previewWidth)}>
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">{currentSection?.name || 'Seção'}</h3>
+        <div className="space-y-4">
+          {currentSection?.fields && currentSection.fields.length > 0 ? (
+            currentSection.fields.map(field => {
+              const value = content?.[field];
+              const displayValue = typeof value === 'object' && value !== null
+                ? JSON.stringify(value, null, 2)
+                : value || 'Não definido';
+              
+              return (
+                <div key={field} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
+                  <span className="text-sm text-slate-500 capitalize font-medium block mb-1">
+                    {field.replace(/_/g, ' ')}:
+                  </span>
+                  <p className={cn(
+                    "break-words whitespace-pre-wrap",
+                    value ? "text-slate-800" : "text-gray-400 italic"
+                  )}>
+                    {displayValue}
+                  </p>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p className="font-medium mb-2">Nenhum campo definido</p>
+              <p className="text-sm">Esta seção não possui campos editáveis</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     );
@@ -644,10 +842,25 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
             </div>
           </CardHeader>
           <CardContent className={cn(
-            "p-6 bg-slate-100 min-h-[400px] flex items-center justify-center overflow-auto",
+            "p-6 bg-slate-100 min-h-[400px] flex items-center justify-center overflow-auto transition-all",
             !showPreview && "hidden"
           )}>
-            {renderPreview()}
+            {loading ? (
+              <div className="flex flex-col items-center justify-center text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <p className="font-medium">Carregando conteúdo...</p>
+              </div>
+            ) : showPreview ? (
+              <div className="w-full">
+                {renderPreview()}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">
+                <EyeOff className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="font-medium">Preview oculto</p>
+                <p className="text-sm mt-1">Clique no ícone do olho para mostrar</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -401,108 +401,215 @@ export default function EventsManagement() {
         </TabsContent>
       </Tabs>
 
-      {/* Modal de detalhes */}
+      {/* Modal de detalhes - Melhorado */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedEvent?.name}</DialogTitle>
-            <DialogDescription>Detalhes completos do evento</DialogDescription>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">
+                  {selectedEvent?.name}
+                </DialogTitle>
+                <DialogDescription className="text-gray-600">
+                  Detalhes completos do evento para revisão
+                </DialogDescription>
+              </div>
+              {selectedEvent && (
+                <div className="flex gap-2">
+                  {!selectedEvent.is_visible && (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Pendente
+                    </Badge>
+                  )}
+                  {selectedEvent.is_sponsored && (
+                    <Badge className="bg-yellow-500">
+                      <Star className="w-3 h-3 mr-1" />
+                      Destaque
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
           </DialogHeader>
           
           {selectedEvent && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Imagem do evento */}
               {selectedEvent.image_url && (
-                <img 
-                  src={selectedEvent.image_url} 
-                  alt={selectedEvent.name}
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Local</label>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    {selectedEvent.location}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Data</label>
-                  <p className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    {formatDate(selectedEvent.start_date)}
-                  </p>
-                </div>
-              </div>
-
-              {selectedEvent.description && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Descrição</label>
-                  <p className="text-gray-700 mt-1">{selectedEvent.description}</p>
+                <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                  <img 
+                    src={selectedEvent.image_url} 
+                    alt={selectedEvent.name}
+                    className="w-full h-64 object-cover"
+                  />
                 </div>
               )}
 
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Informações do Organizador</h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  {selectedEvent.organizador_nome && (
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-gray-400" />
-                      {selectedEvent.organizador_nome}
-                    </div>
-                  )}
-                  {selectedEvent.organizador_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-400" />
-                      {selectedEvent.organizador_email}
-                    </div>
-                  )}
-                  {selectedEvent.organizador_telefone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-gray-400" />
-                      {selectedEvent.organizador_telefone}
-                    </div>
-                  )}
-                  {selectedEvent.site_oficial && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-gray-400" />
-                      <a href={selectedEvent.site_oficial} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        Site Oficial
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {selectedEvent.is_sponsored && (
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Informações de Patrocínio
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-500">Status:</span>{' '}
-                      <Badge variant={selectedEvent.sponsor_payment_status === 'paid' ? 'default' : 'secondary'}>
-                        {selectedEvent.sponsor_payment_status === 'paid' ? 'Pago' : 'Pendente'}
-                      </Badge>
-                    </div>
-                    {selectedEvent.sponsor_amount && (
+              {/* Informações principais em cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                      </div>
                       <div>
-                        <span className="text-gray-500">Valor:</span>{' '}
-                        R$ {selectedEvent.sponsor_amount.toFixed(2)}
+                        <p className="text-xs font-medium text-blue-700 uppercase">Local</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                          {selectedEvent.location}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-purple-50 border-purple-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Calendar className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-purple-700 uppercase">Data e Hora</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                          {formatDate(selectedEvent.start_date)}
+                          {selectedEvent.start_time && ` às ${selectedEvent.start_time}`}
+                        </p>
+                        {selectedEvent.end_date && selectedEvent.end_date !== selectedEvent.start_date && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            até {formatDate(selectedEvent.end_date)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Descrição */}
+              {selectedEvent.description && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Descrição do Evento</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      {selectedEvent.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Informações do Organizador */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-gray-600" />
+                    Informações do Organizador
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedEvent.organizador_nome && (
+                      <div className="flex items-start gap-3">
+                        <Building2 className="w-5 h-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase">Instituição</p>
+                          <p className="text-sm font-medium text-gray-900 mt-1">
+                            {selectedEvent.organizador_nome}
+                            {selectedEvent.organizador_empresa && ` - ${selectedEvent.organizador_empresa}`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedEvent.organizador_email && (
+                      <div className="flex items-start gap-3">
+                        <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase">Email</p>
+                          <a 
+                            href={`mailto:${selectedEvent.organizador_email}`}
+                            className="text-sm font-medium text-blue-600 hover:underline mt-1 block"
+                          >
+                            {selectedEvent.organizador_email}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {selectedEvent.organizador_telefone && (
+                      <div className="flex items-start gap-3">
+                        <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase">Telefone</p>
+                          <a 
+                            href={`tel:${selectedEvent.organizador_telefone}`}
+                            className="text-sm font-medium text-gray-900 mt-1 block"
+                          >
+                            {selectedEvent.organizador_telefone}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {selectedEvent.site_oficial && (
+                      <div className="flex items-start gap-3">
+                        <Globe className="w-5 h-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase">Site Oficial</p>
+                          <a 
+                            href={selectedEvent.site_oficial} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-sm font-medium text-blue-600 hover:underline mt-1 block"
+                          >
+                            {selectedEvent.site_oficial}
+                          </a>
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                </CardContent>
+              </Card>
 
-              <div className="flex gap-2 pt-4 border-t">
+              {/* Informações de Patrocínio - Sempre visível (igual para pago e não pago) */}
+              <Card className="bg-yellow-50 border-yellow-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-yellow-600" />
+                    Informações de Patrocínio
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase mb-2">Status do Pagamento</p>
+                      <Badge 
+                        variant={selectedEvent.sponsor_payment_status === 'paid' ? 'default' : 'secondary'}
+                        className={selectedEvent.sponsor_payment_status === 'paid' ? 'bg-green-600' : 'bg-amber-500'}
+                      >
+                        {selectedEvent.sponsor_payment_status === 'paid' ? 'Pago' : selectedEvent.sponsor_payment_status || 'Não informado'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase mb-2">Valor</p>
+                      {selectedEvent.sponsor_amount ? (
+                        <p className="text-lg font-bold text-gray-900">
+                          R$ {selectedEvent.sponsor_amount.toFixed(2)}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-500">Não informado</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Ações */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
                 {!selectedEvent.is_visible && (
                   <>
                     <Button
-                      className="bg-green-600 hover:bg-green-700"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => {
                         approveEvent(selectedEvent.id);
                         setSelectedEvent(null);
@@ -513,6 +620,7 @@ export default function EventsManagement() {
                     </Button>
                     <Button
                       variant="destructive"
+                      className="flex-1"
                       onClick={() => {
                         rejectEvent(selectedEvent.id);
                         setSelectedEvent(null);
@@ -526,6 +634,7 @@ export default function EventsManagement() {
                 {selectedEvent.is_visible && (
                   <Button
                     variant={selectedEvent.is_sponsored ? "secondary" : "default"}
+                    className="flex-1"
                     onClick={() => {
                       toggleSponsorship(selectedEvent.id, selectedEvent.is_sponsored);
                       setSelectedEvent(null);

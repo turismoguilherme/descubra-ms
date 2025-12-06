@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PassportRouteManager from '@/components/admin/passport/PassportRouteManager';
@@ -9,7 +10,21 @@ import PassportAnalytics from '@/components/admin/passport/PassportAnalytics';
 import { Route, Settings, Gift, MapPin, BarChart3 } from 'lucide-react';
 
 const PassportAdmin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('routes');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') || 'routes';
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
 
   return (
     <div className="space-y-6">
@@ -20,7 +35,7 @@ const PassportAdmin: React.FC = () => {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="routes" className="flex items-center gap-2">
             <Route className="h-4 w-4" />

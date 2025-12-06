@@ -33,8 +33,12 @@ import {
   Zap,
   UserCog,
   Globe,
+  Home,
   Layers,
-  Monitor
+  Monitor,
+  Route,
+  Gift,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -77,32 +81,45 @@ const navigationItems: NavItem[] = [
     permission: 'platforms',
     platform: 'system',
     children: [
-      {
-        id: 'viajar',
-        label: 'ViajARTur',
-        icon: Building2,
-        permission: 'viajar',
-        platform: 'viajar',
+  {
+    id: 'viajar',
+    label: 'ViajARTur',
+    icon: Building2,
+    permission: 'viajar',
+    platform: 'viajar',
         children: [
           { id: 'viajar-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/editor/viajar', permission: 'content', platform: 'viajar' },
           { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
           { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
         ],
-      },
-      {
-        id: 'descubra-ms',
-        label: 'Descubra MS',
-        icon: MapPin,
-        permission: 'descubra_ms',
-        platform: 'descubra-ms',
-        children: [
+  },
+  {
+    id: 'descubra-ms',
+    label: 'Descubra MS',
+    icon: MapPin,
+    permission: 'descubra_ms',
+    platform: 'descubra-ms',
+    children: [
           { id: 'ms-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/editor/descubra-ms', permission: 'content', platform: 'descubra-ms' },
-          { id: 'destinations', label: 'Destinos', icon: Map, path: '/viajar/admin/descubra-ms/destinations', permission: 'destinations', platform: 'descubra-ms' },
-          { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
-          { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
-          { id: 'passport', label: 'Passaporte Digital', icon: Stamp, path: '/viajar/admin/descubra-ms/passport', permission: 'passport', platform: 'descubra-ms' },
-          { id: 'menus', label: 'Menus', icon: BookOpen, path: '/viajar/admin/descubra-ms/menus', permission: 'menus', platform: 'descubra-ms' },
-          { id: 'users', label: 'Usuários', icon: Users, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
+      { id: 'destinations', label: 'Destinos', icon: Map, path: '/viajar/admin/descubra-ms/destinations', permission: 'destinations', platform: 'descubra-ms' },
+      { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
+      { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
+          {
+            id: 'passport',
+            label: 'Passaporte Digital',
+            icon: Stamp,
+            permission: 'passport',
+            platform: 'descubra-ms',
+            children: [
+              { id: 'passport-routes', label: 'Cadastrar Rotas', icon: Route, path: '/viajar/admin/descubra-ms/passport?tab=routes', permission: 'passport', platform: 'descubra-ms' },
+              { id: 'passport-stamps', label: 'Carimbos', icon: Stamp, path: '/viajar/admin/descubra-ms/passport?tab=stamps', permission: 'passport', platform: 'descubra-ms' },
+              { id: 'passport-checkpoints', label: 'Checkpoints', icon: MapPin, path: '/viajar/admin/descubra-ms/passport?tab=checkpoints', permission: 'passport', platform: 'descubra-ms' },
+              { id: 'passport-rewards', label: 'Recompensas', icon: Gift, path: '/viajar/admin/descubra-ms/passport?tab=rewards', permission: 'passport', platform: 'descubra-ms' },
+              { id: 'passport-analytics', label: 'Analytics', icon: BarChart3, path: '/viajar/admin/descubra-ms/passport?tab=analytics', permission: 'passport', platform: 'descubra-ms' },
+            ],
+          },
+      { id: 'menus', label: 'Menus', icon: BookOpen, path: '/viajar/admin/descubra-ms/menus', permission: 'menus', platform: 'descubra-ms' },
+      { id: 'users', label: 'Usuários', icon: Users, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
         ],
       },
     ],
@@ -195,13 +212,13 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
 
   const filterNavItems = (items: NavItem[]): NavItem[] => {
     return items.filter(item => {
-      if (!hasPermission(item.permission)) return false;
-      if (item.children) {
+    if (!hasPermission(item.permission)) return false;
+    if (item.children) {
         item.children = filterNavItems(item.children);
-        return item.children.length > 0;
-      }
-      return true;
-    });
+      return item.children.length > 0;
+    }
+    return true;
+  });
   };
 
   const filteredNavItems = filterNavItems(navigationItems);
@@ -233,11 +250,11 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
             isActive(child.path) || (child.children && child.children.some(gc => isActive(gc.path)))
           );
           if (hasActiveChild && !expandedItems.includes(item.id)) {
-            setExpandedItems(prev => [...prev, item.id]);
-          }
-          expandParents(item.children);
+          setExpandedItems(prev => [...prev, item.id]);
         }
-      });
+          expandParents(item.children);
+      }
+    });
     };
     expandParents(navigationItems);
   }, [location.pathname]);
@@ -258,29 +275,29 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
               <p className="text-blue-100 mt-2">
                 {userProfile?.full_name || 'Administrador'} - {userRole === 'master_admin' ? 'Master Admin' : userRole}
               </p>
-            </div>
+              </div>
             <div className="flex gap-4">
-              {/* Platform Badge */}
-              {currentPlatform !== 'system' && (
-                <div className={cn(
+            {/* Platform Badge */}
+            {currentPlatform !== 'system' && (
+              <div className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-lg",
-                  currentPlatform === 'viajar' 
+                currentPlatform === 'viajar' 
                     ? "bg-blue-500/30 border border-blue-300/50" 
                     : "bg-emerald-500/30 border border-emerald-300/50"
-                )}>
-                  {currentPlatform === 'viajar' ? (
-                    <>
+              )}>
+                {currentPlatform === 'viajar' ? (
+                  <>
                       <Building2 className="h-4 w-4" />
                       <span className="text-sm font-medium">ViajARTur</span>
-                    </>
-                  ) : (
-                    <>
+                  </>
+                ) : (
+                  <>
                       <MapPin className="h-4 w-4" />
                       <span className="text-sm font-medium">Descubra MS</span>
-                    </>
-                  )}
-                </div>
-              )}
+                  </>
+                )}
+              </div>
+            )}
               <Button 
                 variant="secondary" 
                 size="sm"
@@ -300,10 +317,10 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Administração</h2>
             <nav className="space-y-2">
-              {filteredNavItems.map((item) => {
-                const Icon = item.icon;
-                const hasChildren = item.children && item.children.length > 0;
-                const isExpanded = expandedItems.includes(item.id);
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedItems.includes(item.id);
                 const isItemActive = item.path ? isActive(item.path) : item.children?.some(c => isActive(c.path) || c.children?.some(gc => isActive(gc.path)));
 
                 const renderNavItem = (navItem: NavItem, level: number = 0): React.ReactNode => {
@@ -313,9 +330,9 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                   const isNavActive = navItem.path ? isActive(navItem.path) : navItem.children?.some(c => isActive(c.path) || c.children?.some(gc => isActive(gc.path)));
 
                   if (hasNavChildren) {
-                    return (
+              return (
                       <div key={navItem.id} className={level > 0 ? "mt-1" : ""}>
-                        <button
+                    <button
                           onClick={() => toggleExpanded(navItem.id)}
                           className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
                             isNavActive 
@@ -329,14 +346,14 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                             "h-4 w-4 transition-transform",
                             isNavExpanded && "rotate-90"
                           )} />
-                        </button>
+                    </button>
                         {isNavExpanded && (
                           <div className={cn("mt-1 space-y-1", level === 0 ? "ml-4" : "ml-6")}>
                             {navItem.children?.map((child) => renderNavItem(child, level + 1))}
-                          </div>
-                        )}
-                      </div>
-                    );
+                    </div>
+                  )}
+                </div>
+              );
                   } else {
                     return (
                       <Link
@@ -359,7 +376,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
 
                 return renderNavItem(item);
               })}
-            </nav>
+        </nav>
           </div>
         </div>
 
