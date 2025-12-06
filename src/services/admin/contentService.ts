@@ -3,7 +3,7 @@ import { ContentVersion } from '@/types/admin';
 
 export const contentService = {
   async getContentVersions(platform: 'viajar' | 'descubra_ms', contentKey?: string) {
-    let query = supabase
+    let query = (supabase as any)
       .from('content_versions')
       .select('*')
       .eq('platform', platform)
@@ -16,11 +16,11 @@ export const contentService = {
     const { data, error } = await query;
     
     if (error) throw error;
-    return data;
+    return (data || []) as ContentVersion[];
   },
 
   async getPublishedContent(platform: 'viajar' | 'descubra_ms', contentKey: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('content_versions')
       .select('*')
       .eq('platform', platform)
@@ -30,8 +30,7 @@ export const contentService = {
       .limit(1)
       .single();
     
-    if (error) throw error;
-    return data;
+    if (error && error.code !== 'PGRST116') throw error;
+    return data as ContentVersion | null;
   },
 };
-

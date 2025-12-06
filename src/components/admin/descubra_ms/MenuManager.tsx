@@ -3,15 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
-import { descubraMSAdminService } from '@/services/admin/descubraMSAdminService';
+import { Plus, Edit, Trash2, GripVertical, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicMenu } from '@/types/admin';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function MenuManager() {
   const [menus, setMenus] = useState<DynamicMenu[]>([]);
@@ -27,8 +26,14 @@ export default function MenuManager() {
 
   const fetchMenus = async () => {
     try {
-      const data = await descubraMSAdminService.getMenus('descubra_ms');
-      setMenus(data || []);
+      const { data, error } = await (supabase as any)
+        .from('dynamic_menus')
+        .select('*')
+        .eq('platform', 'descubra_ms')
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      setMenus((data || []) as DynamicMenu[]);
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -42,9 +47,12 @@ export default function MenuManager() {
 
   const handleToggleActive = async (menu: DynamicMenu) => {
     try {
-      await descubraMSAdminService.updateMenu(menu.id, {
-        is_active: !menu.is_active,
-      });
+      const { error } = await (supabase as any)
+        .from('dynamic_menus')
+        .update({ is_active: !menu.is_active })
+        .eq('id', menu.id);
+      
+      if (error) throw error;
       fetchMenus();
       toast({ title: 'Sucesso', description: 'Menu atualizado' });
     } catch (error: any) {
@@ -60,7 +68,12 @@ export default function MenuManager() {
     if (!confirm('Tem certeza que deseja excluir este item de menu?')) return;
 
     try {
-      await descubraMSAdminService.deleteMenu(id);
+      const { error } = await (supabase as any)
+        .from('dynamic_menus')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
       fetchMenus();
       toast({ title: 'Sucesso', description: 'Item excluído' });
     } catch (error: any) {
@@ -110,9 +123,10 @@ export default function MenuManager() {
     // Salvar nova ordem
     try {
       for (const menu of updatedMenus) {
-        await descubraMSAdminService.updateMenu(menu.id, {
-          order_index: menu.order_index,
-        });
+        await (supabase as any)
+          .from('dynamic_menus')
+          .update({ order_index: menu.order_index })
+          .eq('id', menu.id);
       }
       toast({ title: 'Sucesso', description: 'Ordem dos menus atualizada' });
     } catch (error: any) {
@@ -129,8 +143,8 @@ export default function MenuManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gerenciador de Menus</h2>
-          <p className="text-gray-600 mt-1">Gerencie menus do Descubra MS</p>
+          <h2 className="text-2xl font-bold text-foreground">Gerenciador de Menus</h2>
+          <p className="text-muted-foreground mt-1">Gerencie menus do Descubra MS</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -158,88 +172,64 @@ export default function MenuManager() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-border">
+        <CardHeader className="border-b border-border">
           <CardTitle>Itens de Menu</CardTitle>
           <CardDescription>Gerencie os itens do menu principal</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8">Carregando...</div>
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            </div>
+          ) : menus.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum item de menu encontrado
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ordem</TableHead>
-                  <TableHead>Label</TableHead>
-                  <TableHead>Path</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Ativo</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {menus.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      Nenhum item de menu encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  menus
-                    .sort((a, b) => a.order_index - b.order_index)
-                    .map((menu) => (
-                    <TableRow 
-                      key={menu.id}
-                      draggable
-                      onDragStart={() => handleDragStart(menu.id)}
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(menu.id)}
-                      className={`cursor-move ${draggedItem === menu.id ? 'opacity-50' : ''}`}
+            <div className="divide-y divide-border">
+              {menus
+                .sort((a, b) => a.order_index - b.order_index)
+                .map((menu) => (
+                <div 
+                  key={menu.id}
+                  draggable
+                  onDragStart={() => handleDragStart(menu.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(menu.id)}
+                  className={`flex items-center gap-4 p-4 hover:bg-muted/50 cursor-move transition-colors ${draggedItem === menu.id ? 'opacity-50' : ''}`}
+                >
+                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
+                  <span className="text-sm text-muted-foreground w-8">{menu.order_index}</span>
+                  <span className="font-medium flex-1 text-foreground">{menu.label}</span>
+                  <span className="text-muted-foreground">{menu.path || '-'}</span>
+                  <Badge variant="outline">{menu.menu_type}</Badge>
+                  <Switch
+                    checked={menu.is_active}
+                    onCheckedChange={() => handleToggleActive(menu)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingMenu(menu);
+                        setIsDialogOpen(true);
+                      }}
                     >
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
-                          {menu.order_index}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{menu.label}</TableCell>
-                      <TableCell>{menu.path || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{menu.menu_type}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={menu.is_active}
-                          onCheckedChange={() => handleToggleActive(menu)}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingMenu(menu);
-                              setIsDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(menu.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(menu.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -266,15 +256,24 @@ function MenuForm({ menu, onSuccess }: { menu: DynamicMenu | null; onSuccess: ()
 
     try {
       if (menu) {
-        await descubraMSAdminService.updateMenu(menu.id, formData);
+        const { error } = await (supabase as any)
+          .from('dynamic_menus')
+          .update(formData)
+          .eq('id', menu.id);
+        
+        if (error) throw error;
         toast({ title: 'Sucesso', description: 'Item atualizado com sucesso' });
       } else {
-        await descubraMSAdminService.createMenu({
-          ...formData,
-          platform: 'descubra_ms',
-          roles: null,
-          parent_id: null,
-        });
+        const { error } = await (supabase as any)
+          .from('dynamic_menus')
+          .insert([{
+            ...formData,
+            platform: 'descubra_ms',
+            roles: null,
+            parent_id: null,
+          }]);
+        
+        if (error) throw error;
         toast({ title: 'Sucesso', description: 'Item criado com sucesso' });
       }
       onSuccess();
@@ -313,7 +312,7 @@ function MenuForm({ menu, onSuccess }: { menu: DynamicMenu | null; onSuccess: ()
         <Label htmlFor="menu_type">Tipo de Menu</Label>
         <Select
           value={formData.menu_type}
-          onValueChange={(value) => setFormData({ ...formData, menu_type: value as any })}
+          onValueChange={(value: 'main' | 'footer' | 'sidebar') => setFormData({ ...formData, menu_type: value })}
         >
           <SelectTrigger>
             <SelectValue />
