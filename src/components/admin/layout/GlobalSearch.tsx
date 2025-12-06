@@ -123,11 +123,11 @@ export default function GlobalSearch() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-[#1F1F1F] bg-[#111111] text-sm text-[#A1A1AA] hover:border-[#2F2F2F] hover:text-white transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-200 bg-white text-sm text-gray-600 hover:border-gray-300 hover:text-gray-900 transition-colors"
       >
         <Search className="h-4 w-4" />
         <span className="hidden md:inline">Find...</span>
-        <kbd className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-[#1F1F1F] border border-[#2F2F2F] rounded text-[#A1A1AA]">
+        <kbd className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 border border-gray-300 rounded text-gray-600">
           <Command className="h-3 w-3" />K
         </kbd>
       </button>
@@ -139,10 +139,10 @@ export default function GlobalSearch() {
           setSelectedIndex(0);
         }
       }}>
-        <DialogContent className="max-w-2xl p-0 border-[#1F1F1F] bg-[#111111] shadow-lg dark:bg-[#111111]">
-          <div className="p-4 border-b border-[#1F1F1F]">
+        <DialogContent className="max-w-2xl p-0 border-gray-200 bg-white shadow-lg dark:bg-white">
+          <div className="p-4 border-b border-gray-200">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#A1A1AA]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600" />
               <Input
                 value={query}
                 onChange={(e) => {
@@ -150,22 +150,22 @@ export default function GlobalSearch() {
                   setSelectedIndex(0);
                 }}
                 placeholder="Find pages, settings, features..."
-                className="pl-10 h-12 text-base border-[#1F1F1F] bg-[#0A0A0A] text-white placeholder:text-[#A1A1AA] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]"
+                className="pl-10 h-12 text-base border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-600 focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]"
                 autoFocus
               />
             </div>
           </div>
           
-          <div className="max-h-[400px] overflow-y-auto bg-[#111111]">
+          <div className="max-h-[400px] overflow-y-auto bg-white">
             {filteredItems.length === 0 ? (
-              <div className="p-8 text-center text-[#A1A1AA]">
+              <div className="p-8 text-center text-gray-600">
                 <p className="text-sm">No results found</p>
               </div>
             ) : (
               <div className="p-2">
                 {Object.entries(groupedItems).map(([category, items]) => (
                   <div key={category} className="mb-4">
-                    <div className="px-3 py-1.5 text-xs font-semibold text-[#A1A1AA] uppercase tracking-wider">
+                    <div className="px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       {category}
                     </div>
                     {items.map((item, index) => {
@@ -177,12 +177,12 @@ export default function GlobalSearch() {
                           className={cn(
                             "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
                             globalIndex === selectedIndex
-                              ? "bg-[#1F1F1F] text-white"
-                              : "text-[#A1A1AA] hover:bg-[#1F1F1F] hover:text-white"
+                              ? "bg-gray-100 text-gray-900"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                           )}
                         >
                           <span className="flex-1">{item.label}</span>
-                          <kbd className="px-1.5 py-0.5 text-xs bg-[#0A0A0A] border border-[#1F1F1F] rounded text-[#A1A1AA]">
+                          <kbd className="px-1.5 py-0.5 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600">
                             ↵
                           </kbd>
                         </button>

@@ -284,16 +284,16 @@ export default function PoliciesEditor() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Políticas e Termos</h2>
-          <p className="text-zinc-400 mt-1">Gerencie todos os documentos legais das plataformas</p>
+          <h2 className="text-2xl font-bold text-gray-900">Políticas e Termos</h2>
+          <p className="text-gray-600 mt-1">Gerencie todos os documentos legais das plataformas</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Lista de políticas */}
-        <Card className="lg:col-span-1 bg-[#1A1D27] border-[#2D3348]">
+        <Card className="lg:col-span-1 bg-white border-gray-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-zinc-400">Documentos</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Documentos</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-1 p-2">
@@ -309,7 +309,7 @@ export default function PoliciesEditor() {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                       activePolicy === policy.key
                         ? 'bg-blue-500/10 text-blue-400'
-                        : 'text-zinc-400 hover:text-white hover:bg-[#27272A]'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
@@ -327,14 +327,14 @@ export default function PoliciesEditor() {
         </Card>
 
         {/* Editor */}
-        <Card className="lg:col-span-3 bg-[#1A1D27] border-[#2D3348]">
+        <Card className="lg:col-span-3 bg-white border-gray-200">
           {currentPolicy && (
             <>
-              <CardHeader className="border-b border-[#27272A]">
+              <CardHeader className="border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <CardTitle className="text-white">{currentPolicy.title}</CardTitle>
+                      <CardTitle className="text-gray-900">{currentPolicy.title}</CardTitle>
                       {getPlatformBadge(currentPolicy.platform)}
                     </div>
                     <CardDescription className="flex items-center gap-4 text-zinc-500">
@@ -347,7 +347,7 @@ export default function PoliciesEditor() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="publish" className="text-sm text-zinc-400">Publicado</Label>
+                      <Label htmlFor="publish" className="text-sm text-gray-600">Publicado</Label>
                       <Switch
                         id="publish"
                         checked={currentPolicy.is_published}
@@ -383,11 +383,11 @@ export default function PoliciesEditor() {
                 {editMode ? (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-zinc-400 mb-2 block">Conteúdo (suporta Markdown)</Label>
+                      <Label className="text-gray-600 mb-2 block">Conteúdo (suporta Markdown)</Label>
                       <Textarea
                         value={editedContent}
                         onChange={(e) => setEditedContent(e.target.value)}
-                        className="min-h-[500px] bg-[#141720] border-[#27272A] font-mono text-sm"
+                        className="min-h-[500px] bg-white border-gray-200 font-mono text-sm"
                         placeholder={`# ${currentPolicy.title}\n\nDigite o conteúdo aqui...\n\n## Seção 1\n\nTexto da seção...\n\n## Seção 2\n\nMais conteúdo...`}
                       />
                     </div>
@@ -401,7 +401,7 @@ export default function PoliciesEditor() {
                       <div className="prose prose-invert max-w-none">
                         {previewMode ? (
                           <div 
-                            className="bg-[#141720] p-6 rounded-lg border border-[#27272A]"
+                            className="bg-white p-6 rounded-lg border border-gray-200"
                             dangerouslySetInnerHTML={{ 
                               __html: currentPolicy.content
                                 .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -413,7 +413,7 @@ export default function PoliciesEditor() {
                             }}
                           />
                         ) : (
-                          <pre className="whitespace-pre-wrap text-zinc-400 font-mono text-sm bg-[#141720] p-6 rounded-lg border border-[#27272A]">
+                          <pre className="whitespace-pre-wrap text-gray-600 font-mono text-sm bg-white p-6 rounded-lg border border-gray-200">
                             {currentPolicy.content}
                           </pre>
                         )}
@@ -421,7 +421,7 @@ export default function PoliciesEditor() {
                     ) : (
                       <div className="text-center py-12">
                         <FileText className="h-12 w-12 mx-auto text-zinc-600 mb-4" />
-                        <h3 className="text-lg font-medium text-zinc-400 mb-2">Documento vazio</h3>
+                        <h3 className="text-lg font-medium text-gray-600 mb-2">Documento vazio</h3>
                         <p className="text-sm text-zinc-500 mb-4">
                           Este documento ainda não possui conteúdo.
                         </p>

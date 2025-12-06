@@ -270,11 +270,6 @@ export default function ViaJARAdminPanel() {
             } />
             
             {/* AI Routes */}
-            <Route path="ai/chat" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AIAdminChat />
-              </Suspense>
-            } />
             <Route path="ai/suggestions" element={
               <Suspense fallback={<LoadingFallback />}>
                 <AISuggestions />

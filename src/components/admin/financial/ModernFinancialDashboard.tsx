@@ -227,7 +227,7 @@ export default function ModernFinancialDashboard() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-zinc-400">Carregando dados financeiros...</p>
+          <p className="text-gray-600">Carregando dados financeiros...</p>
         </div>
       </div>
     );
@@ -238,12 +238,12 @@ export default function ModernFinancialDashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">Dashboard Financeiro</h2>
-          <p className="text-zinc-400 mt-1">Visão completa das finanças da empresa</p>
+          <h2 className="text-2xl font-bold text-gray-900">Dashboard Financeiro</h2>
+          <p className="text-gray-600 mt-1">Visão completa das finanças da empresa</p>
         </div>
         <div className="flex items-center gap-2">
           <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <TabsList className="bg-[#18181B]">
+            <TabsList className="bg-gray-100">
               <TabsTrigger value="week">7 dias</TabsTrigger>
               <TabsTrigger value="month">30 dias</TabsTrigger>
               <TabsTrigger value="quarter">90 dias</TabsTrigger>
@@ -255,9 +255,9 @@ export default function ModernFinancialDashboard() {
 
       {/* AI Insights */}
       {aiInsights.length > 0 && (
-        <Card className="bg-gradient-to-r from-[#18181B] to-[#1F1F23] border-[#27272A]">
+        <Card className="bg-white border-gray-200">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-white">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Brain className="h-5 w-5 text-purple-500" />
               Insights da IA
             </CardTitle>
@@ -275,8 +275,8 @@ export default function ModernFinancialDashboard() {
                   <div className="flex items-start gap-3">
                     {getInsightIcon(insight.type)}
                     <div className="flex-1">
-                      <h4 className="font-medium text-white text-sm">{insight.title}</h4>
-                      <p className="text-xs text-zinc-400 mt-1">{insight.description}</p>
+                      <h4 className="font-medium text-gray-900 text-sm">{insight.title}</h4>
+                      <p className="text-xs text-gray-600 mt-1">{insight.description}</p>
                       {insight.action && (
                         <Button variant="link" size="sm" className="p-0 h-auto mt-2 text-xs">
                           {insight.action} →
@@ -294,55 +294,55 @@ export default function ModernFinancialDashboard() {
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Receita */}
-        <Card className="bg-[#1A1D27] border-[#2D3348] overflow-hidden">
+        <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardContent className="p-6 relative">
             <div className="flex items-center justify-between">
               <div className="p-2 rounded-lg bg-green-500/10">
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+              <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +12%
               </Badge>
             </div>
             <div className="mt-4">
-              <p className="text-zinc-400 text-sm">Receita Total</p>
-              <p className="text-2xl font-bold text-white mt-1">
+              <p className="text-gray-600 text-sm">Receita Total</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {formatCurrency(data?.revenue.total || 0)}
               </p>
             </div>
             <div className="mt-4 flex items-center gap-4 text-xs">
-              <span className="text-zinc-500">ViaJAR: {formatCurrency(data?.revenue.viajar || 0)}</span>
+              <span className="text-gray-500">ViaJAR: {formatCurrency(data?.revenue.viajar || 0)}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Despesas */}
-        <Card className="bg-[#1A1D27] border-[#2D3348] overflow-hidden">
+        <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
           <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardContent className="p-6 relative">
             <div className="flex items-center justify-between">
               <div className="p-2 rounded-lg bg-red-500/10">
                 <TrendingDown className="h-5 w-5 text-red-500" />
               </div>
-              <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+              <Badge className="bg-red-500/20 text-red-600 border-red-500/30">
                 <ArrowDownRight className="h-3 w-3 mr-1" />
                 -5%
               </Badge>
             </div>
             <div className="mt-4">
-              <p className="text-zinc-400 text-sm">Despesas Total</p>
-              <p className="text-2xl font-bold text-white mt-1">
+              <p className="text-gray-600 text-sm">Despesas Total</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
                 {formatCurrency(data?.expenses.total || 0)}
               </p>
             </div>
             <div className="mt-4">
               <Progress 
                 value={data ? (data.expenses.total / data.revenue.total) * 100 : 0} 
-                className="h-1.5 bg-[#27272A]"
+                className="h-1.5 bg-gray-200"
               />
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {data ? ((data.expenses.total / data.revenue.total) * 100).toFixed(0) : 0}% da receita
               </p>
             </div>
@@ -350,7 +350,7 @@ export default function ModernFinancialDashboard() {
         </Card>
 
         {/* Lucro */}
-        <Card className="bg-[#1A1D27] border-[#2D3348] overflow-hidden">
+        <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardContent className="p-6 relative">
             <div className="flex items-center justify-between">
@@ -360,29 +360,29 @@ export default function ModernFinancialDashboard() {
               <Badge className={cn(
                 "border",
                 (data?.profit.profit || 0) >= 0 
-                  ? "bg-green-500/20 text-green-400 border-green-500/30"
-                  : "bg-red-500/20 text-red-400 border-red-500/30"
+                  ? "bg-green-500/20 text-green-600 border-green-500/30"
+                  : "bg-red-500/20 text-red-600 border-red-500/30"
               )}>
                 {(data?.profit.profitMargin || 0).toFixed(1)}% margem
               </Badge>
             </div>
             <div className="mt-4">
-              <p className="text-zinc-400 text-sm">Lucro Líquido</p>
+              <p className="text-gray-600 text-sm">Lucro Líquido</p>
               <p className={cn(
                 "text-2xl font-bold mt-1",
-                (data?.profit.profit || 0) >= 0 ? "text-green-400" : "text-red-400"
+                (data?.profit.profit || 0) >= 0 ? "text-green-600" : "text-red-600"
               )}>
                 {formatCurrency(data?.profit.profit || 0)}
               </p>
             </div>
-            <div className="mt-4 text-xs text-zinc-500">
+            <div className="mt-4 text-xs text-gray-500">
               Após impostos e salários
             </div>
           </CardContent>
         </Card>
 
         {/* Contas a Pagar */}
-        <Card className="bg-[#1A1D27] border-[#2D3348] overflow-hidden">
+        <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
           <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardContent className="p-6 relative">
             <div className="flex items-center justify-between">
@@ -390,18 +390,18 @@ export default function ModernFinancialDashboard() {
                 <Receipt className="h-5 w-5 text-yellow-500" />
               </div>
               {(data?.upcomingBills.length || 0) > 0 && (
-                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 animate-pulse">
+                <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 animate-pulse">
                   {data?.upcomingBills.length} pendentes
                 </Badge>
               )}
             </div>
             <div className="mt-4">
-              <p className="text-zinc-400 text-sm">Contas a Pagar</p>
-              <p className="text-2xl font-bold text-yellow-400 mt-1">
+              <p className="text-gray-600 text-sm">Contas a Pagar</p>
+              <p className="text-2xl font-bold text-yellow-600 mt-1">
                 {formatCurrency(data?.upcomingBills.reduce((sum, b) => sum + b.amount, 0) || 0)}
               </p>
             </div>
-            <div className="mt-4 text-xs text-zinc-500">
+            <div className="mt-4 text-xs text-gray-500">
               Próximos 30 dias
             </div>
           </CardContent>
@@ -411,13 +411,13 @@ export default function ModernFinancialDashboard() {
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Evolução Receita x Despesa */}
-        <Card className="bg-[#1A1D27] border-[#2D3348]">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Activity className="h-5 w-5 text-blue-500" />
               Evolução Financeira
             </CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardDescription className="text-gray-600">
               Comparativo de receita, despesas e lucro
             </CardDescription>
           </CardHeader>
@@ -434,14 +434,15 @@ export default function ModernFinancialDashboard() {
                     <stop offset="95%" stopColor={CHART_COLORS.danger} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                <XAxis dataKey="month" stroke="#71717A" fontSize={12} />
-                <YAxis stroke="#71717A" fontSize={12} tickFormatter={(v) => `R$${v/1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(v) => `R$${v/1000}k`} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#18181B', 
-                    border: '1px solid #27272A',
+                    backgroundColor: '#ffffff', 
+                    border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                    color: '#111827',
                   }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
@@ -476,13 +477,13 @@ export default function ModernFinancialDashboard() {
         </Card>
 
         {/* Distribuição de Despesas */}
-        <Card className="bg-[#1A1D27] border-[#2D3348]">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-purple-500" />
               Despesas por Categoria
             </CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardDescription className="text-gray-600">
               Onde o dinheiro está sendo gasto
             </CardDescription>
           </CardHeader>
@@ -504,9 +505,10 @@ export default function ModernFinancialDashboard() {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#18181B', 
-                    border: '1px solid #27272A',
+                    backgroundColor: '#ffffff', 
+                    border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                    color: '#111827',
                   }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
@@ -518,15 +520,15 @@ export default function ModernFinancialDashboard() {
       </div>
 
       {/* Contas a Vencer */}
-      <Card className="bg-[#1A1D27] border-[#2D3348]">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-gray-900 flex items-center gap-2">
                 <Clock className="h-5 w-5 text-yellow-500" />
                 Contas a Vencer
               </CardTitle>
-              <CardDescription className="text-zinc-500">
+              <CardDescription className="text-gray-600">
                 Próximas contas e compromissos financeiros
               </CardDescription>
             </div>
@@ -541,7 +543,7 @@ export default function ModernFinancialDashboard() {
               {data.upcomingBills.slice(0, 5).map((bill) => (
                 <div 
                   key={bill.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-[#141720] border border-[#27272A] hover:border-[#3F3F46] transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className={cn(
@@ -554,20 +556,20 @@ export default function ModernFinancialDashboard() {
                       )} />
                     </div>
                     <div>
-                      <p className="font-medium text-white">{bill.description}</p>
-                      <p className="text-sm text-zinc-500">
+                      <p className="font-medium text-gray-900">{bill.description}</p>
+                      <p className="text-sm text-gray-600">
                         {bill.category} • Vence em {bill.days_until_due} {bill.days_until_due === 1 ? 'dia' : 'dias'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-white">{formatCurrency(bill.amount)}</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(bill.amount)}</p>
                     <Badge 
                       variant="outline"
                       className={cn(
                         bill.days_until_due <= 3 
-                          ? "border-red-500/30 text-red-400" 
-                          : "border-yellow-500/30 text-yellow-400"
+                          ? "border-red-500/30 text-red-600" 
+                          : "border-yellow-500/30 text-yellow-600"
                       )}
                     >
                       {format(new Date(bill.due_date), 'dd/MM', { locale: ptBR })}
@@ -579,7 +581,7 @@ export default function ModernFinancialDashboard() {
           ) : (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
-              <p className="text-zinc-400">Nenhuma conta pendente nos próximos 30 dias</p>
+              <p className="text-gray-600">Nenhuma conta pendente nos próximos 30 dias</p>
             </div>
           )}
         </CardContent>
@@ -587,9 +589,9 @@ export default function ModernFinancialDashboard() {
 
       {/* Fontes de Receita */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-1 bg-[#1A1D27] border-[#2D3348]">
+        <Card className="lg:col-span-1 bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Wallet className="h-5 w-5 text-green-500" />
               Fontes de Receita
             </CardTitle>
@@ -612,9 +614,10 @@ export default function ModernFinancialDashboard() {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#18181B', 
-                    border: '1px solid #27272A',
+                    backgroundColor: '#ffffff', 
+                    border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                    color: '#111827',
                   }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
@@ -623,9 +626,9 @@ export default function ModernFinancialDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 bg-[#1A1D27] border-[#2D3348]">
+        <Card className="lg:col-span-2 bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-500" />
               Receita por Fonte (Mensal)
             </CardTitle>
@@ -633,14 +636,15 @@ export default function ModernFinancialDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data?.revenue.byMonth || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                <XAxis dataKey="month" stroke="#71717A" fontSize={12} />
-                <YAxis stroke="#71717A" fontSize={12} tickFormatter={(v) => `R$${v/1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(v) => `R$${v/1000}k`} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#18181B', 
-                    border: '1px solid #27272A',
+                    backgroundColor: '#ffffff', 
+                    border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                    color: '#111827',
                   }}
                   formatter={(value: number) => formatCurrency(value)}
                 />

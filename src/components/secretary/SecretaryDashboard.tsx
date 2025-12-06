@@ -58,6 +58,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import QuickTestLogin from '@/components/auth/QuickTestLogin';
+import { getCurrentTestUser } from '@/services/auth/TestUsers';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Attraction {
   id: string;
@@ -87,6 +90,7 @@ interface CAT {
 
 export default function SecretaryDashboard() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Attraction | Event | CAT | null>(null);
@@ -103,6 +107,7 @@ export default function SecretaryDashboard() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [autoInsights, setAutoInsights] = useState<any>(null);
   const [loadingAutoInsights, setLoadingAutoInsights] = useState(false);
+  const [showTestLogin, setShowTestLogin] = useState(false);
 
   // Dados mock para métricas
   const loading = false;
@@ -266,9 +271,30 @@ export default function SecretaryDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
 
+  // Verificar se há usuário autenticado
+  useEffect(() => {
+    const testUser = getCurrentTestUser();
+    if (!user && !testUser) {
+      setShowTestLogin(true);
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <ViaJARNavbar />
+      
+      {/* Login de Testes - Mostrar quando não autenticado */}
+      {showTestLogin && !user && (
+        <div className="container mx-auto px-6 py-4">
+          <QuickTestLogin 
+            onLogin={(testUser) => {
+              setShowTestLogin(false);
+              window.location.reload();
+            }}
+            onClose={() => setShowTestLogin(false)}
+          />
+        </div>
+      )}
       
       {/* Header com gradiente azul-roxo */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white py-8">

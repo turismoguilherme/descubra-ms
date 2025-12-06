@@ -152,20 +152,20 @@ export default function BillsManager() {
   };
 
   const getStatusColor = (bill: Bill) => {
-    if (bill.payment_status === 'paid') return 'text-[#16A34A]';
-    if (bill.payment_status === 'overdue') return 'text-[#DC2626]';
+    if (bill.payment_status === 'paid') return 'text-green-600';
+    if (bill.payment_status === 'overdue') return 'text-red-600';
     const days = getDaysUntilDue(bill.due_date);
-    if (days < 0) return 'text-[#DC2626]';
-    if (days <= 7) return 'text-[#F59E0B]';
-    return 'text-[#A1A1AA]';
+    if (days < 0) return 'text-red-600';
+    if (days <= 7) return 'text-yellow-600';
+    return 'text-gray-600';
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-white mb-1">Contas a Pagar</h2>
-          <p className="text-sm text-[#A1A1AA]">Gerencie suas contas e despesas</p>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-1">Contas a Pagar</h2>
+          <p className="text-sm text-gray-600">Gerencie suas contas e despesas</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
@@ -181,61 +181,61 @@ export default function BillsManager() {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="bg-[#3B82F6] hover:bg-[#2563EB] text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Conta
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#111111] border-[#1F1F1F] text-white">
+          <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
-              <DialogTitle>{editingBill ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
-              <DialogDescription className="text-[#A1A1AA]">
+              <DialogTitle className="text-gray-900">{editingBill ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
+              <DialogDescription className="text-gray-600">
                 {editingBill ? 'Atualize os dados da conta' : 'Adicione uma nova conta a pagar'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="description" className="text-white">Descrição</Label>
+                <Label htmlFor="description" className="text-gray-900">Descrição</Label>
                 <Input
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="bg-[#0A0A0A] border-[#1F1F1F] text-white"
+                  className="bg-white border-gray-300 text-gray-900"
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="amount" className="text-white">Valor (R$)</Label>
+                  <Label htmlFor="amount" className="text-gray-900">Valor (R$)</Label>
                   <Input
                     id="amount"
                     type="number"
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="bg-[#0A0A0A] border-[#1F1F1F] text-white"
+                    className="bg-white border-gray-300 text-gray-900"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="due_date" className="text-white">Data de Vencimento</Label>
+                  <Label htmlFor="due_date" className="text-gray-900">Data de Vencimento</Label>
                   <Input
                     id="due_date"
                     type="date"
                     value={formData.due_date}
                     onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    className="bg-[#0A0A0A] border-[#1F1F1F] text-white"
+                    className="bg-white border-gray-300 text-gray-900"
                     required
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="category" className="text-white">Categoria</Label>
+                <Label htmlFor="category" className="text-gray-900">Categoria</Label>
                 <select
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#1F1F1F] rounded-md text-white"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900"
                 >
                   <option value="servers">Servidores</option>
                   <option value="marketing">Marketing</option>
@@ -245,19 +245,19 @@ export default function BillsManager() {
                 </select>
               </div>
               <div>
-                <Label htmlFor="notes" className="text-white">Observações (opcional)</Label>
+                <Label htmlFor="notes" className="text-gray-900">Observações (opcional)</Label>
                 <Input
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="bg-[#0A0A0A] border-[#1F1F1F] text-white"
+                  className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-[#3B82F6] hover:bg-[#2563EB]">
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                   {editingBill ? 'Atualizar' : 'Adicionar'}
                 </Button>
               </DialogFooter>
@@ -266,27 +266,27 @@ export default function BillsManager() {
         </Dialog>
       </div>
 
-      <Card className="bg-[#111111] border-[#1F1F1F]">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 text-center text-[#A1A1AA]">Carregando...</div>
+            <div className="p-8 text-center text-gray-600">Carregando...</div>
           ) : bills.length === 0 ? (
-            <div className="p-8 text-center text-[#A1A1AA]">
+            <div className="p-8 text-center text-gray-600">
               <p>Nenhuma conta cadastrada</p>
             </div>
           ) : (
-            <div className="divide-y divide-[#1F1F1F]">
+            <div className="divide-y divide-gray-200">
               {bills.map((bill) => {
                 const days = getDaysUntilDue(bill.due_date);
                 return (
-                  <div key={bill.id} className="p-4 hover:bg-[#1A1A1A] transition-colors">
+                  <div key={bill.id} className="p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <DollarSign className="h-5 w-5 text-[#A1A1AA]" />
+                          <DollarSign className="h-5 w-5 text-gray-500" />
                           <div>
-                            <div className="font-medium text-white">{bill.description}</div>
-                            <div className="text-sm text-[#A1A1AA] flex items-center gap-4 mt-1">
+                            <div className="font-medium text-gray-900">{bill.description}</div>
+                            <div className="text-sm text-gray-600 flex items-center gap-4 mt-1">
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {format(new Date(bill.due_date), "dd/MM/yyyy", { locale: ptBR })}
@@ -301,7 +301,7 @@ export default function BillsManager() {
                           <div className={`text-lg font-semibold ${getStatusColor(bill)}`}>
                             R$ {bill.amount.toFixed(2).replace('.', ',')}
                           </div>
-                          <div className="text-xs text-[#A1A1AA]">
+                          <div className="text-xs text-gray-500">
                             {days < 0 
                               ? `${Math.abs(days)} dias atrasado`
                               : days === 0
@@ -315,7 +315,7 @@ export default function BillsManager() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(bill)}
-                            className="h-8 w-8 p-0 text-[#A1A1AA] hover:text-white"
+                            className="h-8 w-8 p-0 text-gray-500 hover:text-gray-900"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -323,7 +323,7 @@ export default function BillsManager() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(bill.id)}
-                            className="h-8 w-8 p-0 text-[#A1A1AA] hover:text-[#DC2626]"
+                            className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

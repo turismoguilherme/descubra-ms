@@ -101,7 +101,7 @@ export default function HorizontalNav() {
   };
 
   return (
-    <nav className="h-12 bg-[#111111] dark:bg-[#111111] border-b border-[#1F1F1F] flex items-center px-6 fixed top-16 left-0 right-0 z-40 overflow-x-auto">
+    <nav className="h-12 bg-white dark:bg-white border-b border-gray-200 flex items-center px-6 fixed top-16 left-0 right-0 z-40 overflow-x-auto">
       <div className="flex items-center gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -121,8 +121,8 @@ export default function HorizontalNav() {
                     className={cn(
                       "flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors relative",
                       active
-                        ? "text-white"
-                        : "text-[#A1A1AA] hover:text-white"
+                        ? "text-gray-900"
+                        : "text-gray-600 hover:text-gray-900"
                     )}
                   >
                     {Icon && <Icon className="h-4 w-4" />}
@@ -134,7 +134,7 @@ export default function HorizontalNav() {
                   </Link>
 
                   {openDropdown === item.path && (
-                    <div className="absolute top-full left-0 mt-1 bg-[#111111] border border-[#1F1F1F] rounded-md shadow-lg min-w-[200px] py-1 z-50">
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[200px] py-1 z-50">
                       {item.children?.map((child) => {
                         const childActive = isActive(child.path);
                         return (
@@ -144,8 +144,8 @@ export default function HorizontalNav() {
                             className={cn(
                               "flex items-center px-4 py-2 text-sm transition-colors",
                               childActive
-                                ? "bg-[#1F1F1F] text-white"
-                                : "text-[#A1A1AA] hover:bg-[#1F1F1F] hover:text-white"
+                                ? "bg-gray-100 text-gray-900"
+                                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                             )}
                           >
                             {child.label}
@@ -161,8 +161,8 @@ export default function HorizontalNav() {
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors relative",
                     active
-                      ? "text-white"
-                      : "text-[#A1A1AA] hover:text-white"
+                      ? "text-gray-900"
+                      : "text-gray-600 hover:text-gray-900"
                   )}
                 >
                   {Icon && <Icon className="h-4 w-4" />}

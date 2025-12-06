@@ -356,18 +356,18 @@ export default function BankAccountsManager() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">Contas e Fornecedores</h2>
-          <p className="text-slate-400 mt-1">Gerencie suas contas bancárias e fornecedores</p>
+          <h2 className="text-2xl font-bold text-gray-900">Contas e Fornecedores</h2>
+          <p className="text-gray-600 mt-1">Gerencie suas contas bancárias e fornecedores</p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-[#1A1D27]">
-          <TabsTrigger value="accounts" className="data-[state=active]:bg-[#2D3348]">
+        <TabsList className="bg-gray-100">
+          <TabsTrigger value="accounts" className="data-[state=active]:bg-white">
             <CreditCard className="h-4 w-4 mr-2" />
             Contas Bancárias
           </TabsTrigger>
-          <TabsTrigger value="suppliers" className="data-[state=active]:bg-[#2D3348]">
+          <TabsTrigger value="suppliers" className="data-[state=active]:bg-white">
             <Users className="h-4 w-4 mr-2" />
             Fornecedores
           </TabsTrigger>
@@ -377,7 +377,7 @@ export default function BankAccountsManager() {
         <TabsContent value="accounts" className="space-y-6 mt-6">
           {/* Resumo */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-[#1A1D27] border-[#2D3348]">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="p-2 rounded-lg bg-blue-500/10">
@@ -387,31 +387,31 @@ export default function BankAccountsManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowBalances(!showBalances)}
-                    className="text-slate-400 hover:text-white"
+                    className="text-gray-500 hover:text-gray-900"
                   >
                     {showBalances ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                <p className="text-slate-400 text-sm mt-3">Saldo Total</p>
-                <p className="text-2xl font-bold text-white mt-1">
+                <p className="text-gray-600 text-sm mt-3">Saldo Total</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {showBalances ? formatCurrency(totalBalance) : '••••••'}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#1A1D27] border-[#2D3348]">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-5">
                 <div className="p-2 rounded-lg bg-green-500/10 w-fit">
                   <Building2 className="h-5 w-5 text-green-500" />
                 </div>
-                <p className="text-slate-400 text-sm mt-3">Contas Ativas</p>
-                <p className="text-2xl font-bold text-white mt-1">
+                <p className="text-gray-600 text-sm mt-3">Contas Ativas</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {accounts.filter(a => a.is_active).length}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#1A1D27] border-[#2D3348]">
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-5 flex items-center justify-center">
                 <Dialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen}>
                   <DialogTrigger asChild>
@@ -423,64 +423,64 @@ export default function BankAccountsManager() {
                       Nova Conta
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#1A1D27] border-[#2D3348]">
+                  <DialogContent className="bg-white border-gray-200">
                     <DialogHeader>
-                      <DialogTitle className="text-white">
+                      <DialogTitle className="text-gray-900">
                         {editingAccount ? 'Editar Conta' : 'Nova Conta Bancária'}
                       </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-slate-300">Nome da Conta</Label>
+                          <Label className="text-gray-700">Nome da Conta</Label>
                           <Input
                             value={accountForm.name}
                             onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
                             placeholder="Ex: Conta Principal"
-                            className="bg-[#141720] border-[#2D3348] mt-1"
+                            className="bg-white border-gray-200 mt-1"
                           />
                         </div>
                         <div>
-                          <Label className="text-slate-300">Banco</Label>
+                          <Label className="text-gray-700">Banco</Label>
                           <Input
                             value={accountForm.bank_name}
                             onChange={(e) => setAccountForm({ ...accountForm, bank_name: e.target.value })}
                             placeholder="Ex: Banco do Brasil"
-                            className="bg-[#141720] border-[#2D3348] mt-1"
+                            className="bg-white border-gray-200 mt-1"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-slate-300">Agência</Label>
+                          <Label className="text-gray-700">Agência</Label>
                           <Input
                             value={accountForm.agency}
                             onChange={(e) => setAccountForm({ ...accountForm, agency: e.target.value })}
                             placeholder="0000"
-                            className="bg-[#141720] border-[#2D3348] mt-1"
+                            className="bg-white border-gray-200 mt-1"
                           />
                         </div>
                         <div>
-                          <Label className="text-slate-300">Número da Conta</Label>
+                          <Label className="text-gray-700">Número da Conta</Label>
                           <Input
                             value={accountForm.account_number}
                             onChange={(e) => setAccountForm({ ...accountForm, account_number: e.target.value })}
                             placeholder="00000-0"
-                            className="bg-[#141720] border-[#2D3348] mt-1"
+                            className="bg-white border-gray-200 mt-1"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-slate-300">Tipo</Label>
+                          <Label className="text-gray-700">Tipo</Label>
                           <Select
                             value={accountForm.account_type}
                             onValueChange={(v: any) => setAccountForm({ ...accountForm, account_type: v })}
                           >
-                            <SelectTrigger className="bg-[#141720] border-[#2D3348] mt-1">
+                            <SelectTrigger className="bg-white border-gray-200 mt-1">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#1A1D27] border-[#2D3348]">
+                            <SelectContent className="bg-white border-gray-200">
                               <SelectItem value="checking">Conta Corrente</SelectItem>
                               <SelectItem value="savings">Poupança</SelectItem>
                               <SelectItem value="investment">Investimento</SelectItem>
@@ -488,19 +488,19 @@ export default function BankAccountsManager() {
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-slate-300">Saldo Atual</Label>
+                          <Label className="text-gray-700">Saldo Atual</Label>
                           <Input
                             type="number"
                             step="0.01"
                             value={accountForm.balance}
                             onChange={(e) => setAccountForm({ ...accountForm, balance: e.target.value })}
                             placeholder="0,00"
-                            className="bg-[#141720] border-[#2D3348] mt-1"
+                            className="bg-white border-gray-200 mt-1"
                           />
                         </div>
                       </div>
                       <div>
-                        <Label className="text-slate-300">Cor de Identificação</Label>
+                        <Label className="text-gray-700">Cor de Identificação</Label>
                         <div className="flex gap-2 mt-2">
                           {BANK_COLORS.map((color) => (
                             <button
@@ -508,7 +508,7 @@ export default function BankAccountsManager() {
                               onClick={() => setAccountForm({ ...accountForm, color: color.value })}
                               className={cn(
                                 "w-8 h-8 rounded-full transition-all",
-                                accountForm.color === color.value && "ring-2 ring-white ring-offset-2 ring-offset-[#1A1D27]"
+                                accountForm.color === color.value && "ring-2 ring-white ring-offset-2 ring-offset-white"
                               )}
                               style={{ backgroundColor: color.value }}
                               title={color.name}
@@ -536,7 +536,7 @@ export default function BankAccountsManager() {
             {accounts.map((account) => (
               <Card 
                 key={account.id} 
-                className="bg-[#1A1D27] border-[#2D3348] hover:border-blue-500/30 transition-all overflow-hidden"
+                className="bg-white border-gray-200 hover:border-blue-500/30 transition-all overflow-hidden"
               >
                 <div 
                   className="h-1.5" 
@@ -552,13 +552,13 @@ export default function BankAccountsManager() {
                         <Building2 className="h-5 w-5" style={{ color: account.color }} />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">{account.name}</h3>
-                        <p className="text-sm text-slate-400">{account.bank_name}</p>
+                        <h3 className="font-semibold text-gray-900">{account.name}</h3>
+                        <p className="text-sm text-gray-600">{account.bank_name}</p>
                       </div>
                     </div>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => editAccount(account)}>
-                        <Edit className="h-4 w-4 text-slate-400" />
+                        <Edit className="h-4 w-4 text-gray-600" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => deleteAccount(account.id)}>
                         <Trash2 className="h-4 w-4 text-red-400" />
@@ -566,8 +566,8 @@ export default function BankAccountsManager() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <p className="text-sm text-slate-500">Ag: {account.agency} • Cc: {account.account_number}</p>
-                    <p className="text-xl font-bold text-white mt-2">
+                    <p className="text-sm text-gray-500">Ag: {account.agency} • Cc: {account.account_number}</p>
+                    <p className="text-xl font-bold text-gray-900 mt-2">
                       {showBalances ? formatCurrency(account.balance) : '••••••'}
                     </p>
                     <Badge 
@@ -587,7 +587,7 @@ export default function BankAccountsManager() {
               </Card>
             ))}
             {accounts.length === 0 && !loading && (
-              <div className="col-span-full text-center py-12 text-slate-400">
+              <div className="col-span-full text-center py-12 text-gray-600">
                 <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhuma conta cadastrada</p>
                 <p className="text-sm mt-1">Adicione sua primeira conta bancária</p>
@@ -601,12 +601,12 @@ export default function BankAccountsManager() {
           {/* Header */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
               <Input
                 placeholder="Buscar fornecedor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-[#141720] border-[#2D3348]"
+                className="pl-10 bg-white border-gray-200"
               />
             </div>
             <Dialog open={supplierDialogOpen} onOpenChange={setSupplierDialogOpen}>
@@ -616,76 +616,76 @@ export default function BankAccountsManager() {
                   Novo Fornecedor
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-[#1A1D27] border-[#2D3348] max-w-2xl">
+              <DialogContent className="bg-white border-gray-200 max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-white">
+                  <DialogTitle className="text-gray-900">
                     {editingSupplier ? 'Editar Fornecedor' : 'Novo Fornecedor'}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2">
-                      <Label className="text-slate-300">Nome / Razão Social</Label>
+                      <Label className="text-gray-700">Nome / Razão Social</Label>
                       <Input
                         value={supplierForm.name}
                         onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })}
                         placeholder="Nome do fornecedor"
-                        className="bg-[#141720] border-[#2D3348] mt-1"
+                        className="bg-white border-gray-200 mt-1"
                       />
                     </div>
                     <div>
-                      <Label className="text-slate-300">Tipo de Documento</Label>
+                      <Label className="text-gray-700">Tipo de Documento</Label>
                       <Select
                         value={supplierForm.document_type}
                         onValueChange={(v: any) => setSupplierForm({ ...supplierForm, document_type: v })}
                       >
-                        <SelectTrigger className="bg-[#141720] border-[#2D3348] mt-1">
+                        <SelectTrigger className="bg-white border-gray-200 mt-1">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1A1D27] border-[#2D3348]">
+                        <SelectContent className="bg-white border-gray-200">
                           <SelectItem value="cnpj">CNPJ</SelectItem>
                           <SelectItem value="cpf">CPF</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-slate-300">{supplierForm.document_type.toUpperCase()}</Label>
+                      <Label className="text-gray-700">{supplierForm.document_type.toUpperCase()}</Label>
                       <Input
                         value={supplierForm.document}
                         onChange={(e) => setSupplierForm({ ...supplierForm, document: e.target.value })}
                         placeholder={supplierForm.document_type === 'cnpj' ? '00.000.000/0000-00' : '000.000.000-00'}
-                        className="bg-[#141720] border-[#2D3348] mt-1"
+                        className="bg-white border-gray-200 mt-1"
                       />
                     </div>
                     <div>
-                      <Label className="text-slate-300">Email</Label>
+                      <Label className="text-gray-700">Email</Label>
                       <Input
                         type="email"
                         value={supplierForm.email}
                         onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })}
                         placeholder="email@fornecedor.com"
-                        className="bg-[#141720] border-[#2D3348] mt-1"
+                        className="bg-white border-gray-200 mt-1"
                       />
                     </div>
                     <div>
-                      <Label className="text-slate-300">Telefone</Label>
+                      <Label className="text-gray-700">Telefone</Label>
                       <Input
                         value={supplierForm.phone}
                         onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
                         placeholder="(00) 00000-0000"
-                        className="bg-[#141720] border-[#2D3348] mt-1"
+                        className="bg-white border-gray-200 mt-1"
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-slate-300">Categoria</Label>
+                      <Label className="text-gray-700">Categoria</Label>
                       <Select
                         value={supplierForm.category}
                         onValueChange={(v) => setSupplierForm({ ...supplierForm, category: v })}
                       >
-                        <SelectTrigger className="bg-[#141720] border-[#2D3348] mt-1">
+                        <SelectTrigger className="bg-white border-gray-200 mt-1">
                           <SelectValue placeholder="Selecione uma categoria" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1A1D27] border-[#2D3348]">
+                        <SelectContent className="bg-white border-gray-200">
                           {SUPPLIER_CATEGORIES.map((cat) => (
                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                           ))}
@@ -693,21 +693,21 @@ export default function BankAccountsManager() {
                       </Select>
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-slate-300">Endereço</Label>
+                      <Label className="text-gray-700">Endereço</Label>
                       <Input
                         value={supplierForm.address}
                         onChange={(e) => setSupplierForm({ ...supplierForm, address: e.target.value })}
                         placeholder="Endereço completo"
-                        className="bg-[#141720] border-[#2D3348] mt-1"
+                        className="bg-white border-gray-200 mt-1"
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-slate-300">Observações</Label>
+                      <Label className="text-gray-700">Observações</Label>
                       <Input
                         value={supplierForm.notes}
                         onChange={(e) => setSupplierForm({ ...supplierForm, notes: e.target.value })}
                         placeholder="Notas adicionais"
-                        className="bg-[#141720] border-[#2D3348] mt-1"
+                        className="bg-white border-gray-200 mt-1"
                       />
                     </div>
                   </div>
@@ -725,51 +725,51 @@ export default function BankAccountsManager() {
           </div>
 
           {/* Lista de Fornecedores */}
-          <Card className="bg-[#1A1D27] border-[#2D3348]">
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-[#2D3348]">
-                      <th className="text-left p-4 text-sm font-medium text-slate-400">Fornecedor</th>
-                      <th className="text-left p-4 text-sm font-medium text-slate-400">Documento</th>
-                      <th className="text-left p-4 text-sm font-medium text-slate-400">Categoria</th>
-                      <th className="text-left p-4 text-sm font-medium text-slate-400">Contato</th>
-                      <th className="text-left p-4 text-sm font-medium text-slate-400">Total Pago</th>
-                      <th className="text-right p-4 text-sm font-medium text-slate-400">Ações</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">Fornecedor</th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">Documento</th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">Categoria</th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">Contato</th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">Total Pago</th>
+                      <th className="text-right p-4 text-sm font-medium text-gray-600">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSuppliers.map((supplier) => (
-                      <tr key={supplier.id} className="border-b border-[#2D3348] hover:bg-[#141720]">
+                      <tr key={supplier.id} className="border-b border-gray-200 hover:bg-white">
                         <td className="p-4">
                           <div>
-                            <p className="font-medium text-white">{supplier.name}</p>
+                            <p className="font-medium text-gray-900">{supplier.name}</p>
                           </div>
                         </td>
                         <td className="p-4">
-                          <Badge variant="outline" className="border-[#2D3348] text-slate-300">
+                          <Badge variant="outline" className="border-gray-200 text-gray-700">
                             {supplier.document_type.toUpperCase()}: {supplier.document}
                           </Badge>
                         </td>
                         <td className="p-4">
-                          <span className="text-slate-300">{supplier.category || '-'}</span>
+                          <span className="text-gray-700">{supplier.category || '-'}</span>
                         </td>
                         <td className="p-4">
                           <div className="text-sm">
-                            <p className="text-slate-300">{supplier.email || '-'}</p>
-                            <p className="text-slate-500">{supplier.phone || '-'}</p>
+                            <p className="text-gray-700">{supplier.email || '-'}</p>
+                            <p className="text-gray-500">{supplier.phone || '-'}</p>
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className="font-medium text-white">
+                          <span className="font-medium text-gray-900">
                             {formatCurrency(supplier.total_paid || 0)}
                           </span>
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="icon" onClick={() => editSupplier(supplier)}>
-                              <Edit className="h-4 w-4 text-slate-400" />
+                              <Edit className="h-4 w-4 text-gray-600" />
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => deleteSupplier(supplier.id)}>
                               <Trash2 className="h-4 w-4 text-red-400" />
@@ -780,7 +780,7 @@ export default function BankAccountsManager() {
                     ))}
                     {filteredSuppliers.length === 0 && !loading && (
                       <tr>
-                        <td colSpan={6} className="p-12 text-center text-slate-400">
+                        <td colSpan={6} className="p-12 text-center text-gray-600">
                           <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                           <p>Nenhum fornecedor encontrado</p>
                         </td>
