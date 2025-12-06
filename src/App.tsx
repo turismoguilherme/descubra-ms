@@ -34,7 +34,6 @@ import Sobre from "@/pages/Sobre";
 import Contato from "@/pages/Contato";
 
 // ViaJAR Dashboard Pages (Lazy loaded)
-const ViaJARDashboard = lazy(() => import("@/pages/ViaJARDynamicDashboard"));
 const ViaJARUnifiedDashboard = lazy(() => import("@/pages/ViaJARUnifiedDashboard"));
 const ViaJARLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const ViaJARRegister = lazy(() => import("@/pages/OverflowOneRegister"));
@@ -58,7 +57,6 @@ const PrivateDashboard = lazy(() => import("@/pages/PrivateDashboard"));
 const UnifiedDashboard = lazy(() => import("@/pages/UnifiedDashboard"));
 const ViaJARMasterDashboard = lazy(() => import("@/pages/ViaJARMasterDashboard"));
 const ViaJARAdminPanel = lazy(() => import("@/pages/admin/ViaJARAdminPanel"));
-const AuthDebug = lazy(() => import("@/components/debug/AuthDebug"));
 
 // State Pages
 import MSIndex from "@/pages/MSIndex";
@@ -147,7 +145,6 @@ function App() {
                             <Route path="/viajar/cookies" element={<ViaJARCookies />} />
                             
                             <Route path="/test-login" element={<Suspense fallback={<LoadingFallback />}><TestLogin /></Suspense>} />
-                            <Route path="/debug-auth" element={<Suspense fallback={<LoadingFallback />}><AuthDebug /></Suspense>} />
                             
                             {/* Dashboard Routes Específicos */}
                             <Route path="/secretary-dashboard" element={
@@ -177,11 +174,6 @@ function App() {
                             <Route path="/viajar/dashboard" element={
                               <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
                                 <Suspense fallback={<LoadingFallback />}><ViaJARUnifiedDashboard /></Suspense>
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/viajar/dashboard-old" element={
-                              <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
-                                <Suspense fallback={<LoadingFallback />}><ViaJARDashboard /></Suspense>
                               </ProtectedRoute>
                             } />
                             <Route path="/viajar/master-dashboard" element={
