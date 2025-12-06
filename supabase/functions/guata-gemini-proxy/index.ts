@@ -267,8 +267,7 @@ serve(async (req) => {
       error: 'Internal server error',
       message: error?.message || String(error),
       type: error?.name || 'UnknownError',
-      success: false,
-      ...(import.meta.env.DEV && { stack: error?.stack })
+      success: false
     };
     
     return new Response(

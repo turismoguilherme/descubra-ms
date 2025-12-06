@@ -984,9 +984,7 @@ async function applyContinuousLearning(
     return {
       query_type: queryType,
       confidence: confidence + learningBoost,
-      sources,
-      
-      knowledge_gaps: knowledgeGaps
+      sources
     }
     
   } catch (error) {

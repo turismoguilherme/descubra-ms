@@ -118,8 +118,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Erro no crawling:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Erro no crawling', details: error.message }), 
+      JSON.stringify({ error: 'Erro no crawling', details: errorMessage }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
@@ -169,7 +170,7 @@ async function getSourcesForCrawling(supabase: any, state_code: string, source_f
 
     // Filtrar fontes que precisam de atualização
     const now = new Date()
-    return sources.filter(source => {
+    return sources.filter((source: any) => {
       const lastFetched = new Date(source.metadata?.last_fetched || 0)
       const daysSinceFetch = (now.getTime() - lastFetched.getTime()) / (1000 * 60 * 60 * 24)
       

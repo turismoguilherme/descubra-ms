@@ -51,7 +51,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Erro na Edge Function receive-email-webhook:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
     });
   }

@@ -85,7 +85,8 @@ Responda em formato JSON, com as chaves: "analise_qualidade", "sugestoes_ajuste_
     });
   } catch (error) {
     console.error('Erro na Edge Function ai-optimizer:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

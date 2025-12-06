@@ -301,8 +301,7 @@ serve(async (req) => {
       message: error?.message || String(error),
       type: error?.name || 'UnknownError',
       results: [],
-      success: false,
-      ...(import.meta.env.DEV && { stack: error?.stack })
+      success: false
     };
     
     return new Response(
