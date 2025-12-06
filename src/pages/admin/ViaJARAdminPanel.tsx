@@ -17,7 +17,6 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 // Lazy load components
-const EmployeesManagement = lazy(() => import('@/components/admin/viajar/EmployeesManagement'));
 const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
 const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
 const ContentEditor = lazy(() => import('@/components/admin/descubra_ms/ContentEditor'));
@@ -90,11 +89,6 @@ export default function ViaJARAdminPanel() {
             <Route index element={<DashboardOverview />} />
             
             {/* ViaJAR Routes */}
-            <Route path="viajar/employees" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <EmployeesManagement />
-              </Suspense>
-            } />
             <Route path="viajar/clients" element={
               <Suspense fallback={<LoadingFallback />}>
                 <ClientsManagement />

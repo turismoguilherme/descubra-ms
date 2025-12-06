@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,9 @@ import {
   Activity,
   Zap,
   UserCog,
-  Globe
+  Globe,
+  Layers,
+  Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -44,6 +46,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   financeiro: ['dashboard', 'financial', 'reports'],
   rh: ['dashboard', 'employees', 'salaries'],
   comercial: ['dashboard', 'clients', 'subscriptions', 'partners'],
+  platforms: ['dashboard', 'viajar', 'descubra_ms', 'content'],
   editor: ['dashboard', 'content', 'events', 'destinations', 'menus'],
   atendente: ['dashboard', 'cat', 'users'],
 };
@@ -68,32 +71,40 @@ const navigationItems: NavItem[] = [
     platform: 'system',
   },
   {
-    id: 'viajar',
-    label: 'ViajARTur',
-    icon: Building2,
-    permission: 'viajar',
-    platform: 'viajar',
+    id: 'platforms',
+    label: 'Plataformas',
+    icon: Layers,
+    permission: 'platforms',
+    platform: 'system',
     children: [
-      { id: 'viajar-content', label: 'Editar Páginas', icon: Edit3, path: '/viajar/admin/editor/viajar', permission: 'content', platform: 'viajar' },
-      { id: 'employees', label: 'Funcionários', icon: Users, path: '/viajar/admin/viajar/employees', permission: 'employees', platform: 'viajar' },
-      { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
-      { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
-    ],
-  },
-  {
-    id: 'descubra-ms',
-    label: 'Descubra MS',
-    icon: MapPin,
-    permission: 'descubra_ms',
-    platform: 'descubra-ms',
-    children: [
-      { id: 'ms-content', label: 'Editar Páginas', icon: Edit3, path: '/viajar/admin/editor/descubra-ms', permission: 'content', platform: 'descubra-ms' },
-      { id: 'destinations', label: 'Destinos', icon: Map, path: '/viajar/admin/descubra-ms/destinations', permission: 'destinations', platform: 'descubra-ms' },
-      { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
-      { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
-      { id: 'passport', label: 'Passaporte Digital', icon: Stamp, path: '/viajar/admin/descubra-ms/passport', permission: 'passport', platform: 'descubra-ms' },
-      { id: 'menus', label: 'Menus', icon: BookOpen, path: '/viajar/admin/descubra-ms/menus', permission: 'menus', platform: 'descubra-ms' },
-      { id: 'users', label: 'Usuários', icon: Users, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
+      {
+        id: 'viajar',
+        label: 'ViajARTur',
+        icon: Building2,
+        permission: 'viajar',
+        platform: 'viajar',
+        children: [
+          { id: 'viajar-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/editor/viajar', permission: 'content', platform: 'viajar' },
+          { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
+          { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
+        ],
+      },
+      {
+        id: 'descubra-ms',
+        label: 'Descubra MS',
+        icon: MapPin,
+        permission: 'descubra_ms',
+        platform: 'descubra-ms',
+        children: [
+          { id: 'ms-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/editor/descubra-ms', permission: 'content', platform: 'descubra-ms' },
+          { id: 'destinations', label: 'Destinos', icon: Map, path: '/viajar/admin/descubra-ms/destinations', permission: 'destinations', platform: 'descubra-ms' },
+          { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
+          { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
+          { id: 'passport', label: 'Passaporte Digital', icon: Stamp, path: '/viajar/admin/descubra-ms/passport', permission: 'passport', platform: 'descubra-ms' },
+          { id: 'menus', label: 'Menus', icon: BookOpen, path: '/viajar/admin/descubra-ms/menus', permission: 'menus', platform: 'descubra-ms' },
+          { id: 'users', label: 'Usuários', icon: Users, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
+        ],
+      },
     ],
   },
   {
@@ -112,38 +123,30 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
-    id: 'team',
-    label: 'Equipe',
+    id: 'administration',
+    label: 'Administração',
     icon: UserCog,
     permission: 'team',
     platform: 'system',
     children: [
-      { id: 'team-members', label: 'Membros', icon: Users, path: '/viajar/admin/team/members', permission: 'team', platform: 'system' },
+      { id: 'team-members', label: 'Equipe Admin', icon: Users, path: '/viajar/admin/team/members', permission: 'team', platform: 'system' },
       { id: 'team-activities', label: 'Atividades', icon: Activity, path: '/viajar/admin/team/activities', permission: 'team', platform: 'system' },
       { id: 'team-permissions', label: 'Permissões', icon: Shield, path: '/viajar/admin/team/permissions', permission: 'team', platform: 'system' },
     ],
   },
   {
-    id: 'database',
-    label: 'Banco de Dados',
-    icon: Database,
-    permission: 'database',
-    platform: 'system',
-    children: [
-      { id: 'db-tables', label: 'Gerenciar Tabelas', icon: Database, path: '/viajar/admin/database', permission: 'database', platform: 'system' },
-    ],
-  },
-  {
-    id: 'settings',
-    label: 'Configurações',
+    id: 'system',
+    label: 'Sistema',
     icon: Settings,
-    permission: 'settings',
+    permission: 'system',
     platform: 'system',
     children: [
-      { id: 'platform', label: 'Plataforma', icon: Globe, path: '/viajar/admin/settings/platform', permission: 'settings', platform: 'system' },
-      { id: 'policies', label: 'Políticas e Termos', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
-      { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
+      { id: 'database', label: 'Banco de Dados', icon: Database, path: '/viajar/admin/database', permission: 'database', platform: 'system' },
+      { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
       { id: 'system-logs', label: 'Logs', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
+      { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
+      { id: 'settings-platform', label: 'Configurações - Plataforma', icon: Globe, path: '/viajar/admin/settings/platform', permission: 'settings', platform: 'system' },
+      { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
     ],
   },
   {
@@ -190,14 +193,18 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     return permissions.includes('*') || permissions.includes(permission);
   };
 
-  const filteredNavItems = navigationItems.filter(item => {
-    if (!hasPermission(item.permission)) return false;
-    if (item.children) {
-      item.children = item.children.filter(child => hasPermission(child.permission));
-      return item.children.length > 0;
-    }
-    return true;
-  });
+  const filterNavItems = (items: NavItem[]): NavItem[] => {
+    return items.filter(item => {
+      if (!hasPermission(item.permission)) return false;
+      if (item.children) {
+        item.children = filterNavItems(item.children);
+        return item.children.length > 0;
+      }
+      return true;
+    });
+  };
+
+  const filteredNavItems = filterNavItems(navigationItems);
 
   const toggleExpanded = (id: string) => {
     setExpandedItems(prev =>
@@ -219,13 +226,20 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
   };
 
   useEffect(() => {
-    navigationItems.forEach(item => {
-      if (item.children?.some(child => isActive(child.path))) {
-        if (!expandedItems.includes(item.id)) {
-          setExpandedItems(prev => [...prev, item.id]);
+    const expandParents = (items: NavItem[]) => {
+      items.forEach(item => {
+        if (item.children) {
+          const hasActiveChild = item.children.some(child => 
+            isActive(child.path) || (child.children && child.children.some(gc => isActive(gc.path)))
+          );
+          if (hasActiveChild && !expandedItems.includes(item.id)) {
+            setExpandedItems(prev => [...prev, item.id]);
+          }
+          expandParents(item.children);
         }
-      }
-    });
+      });
+    };
+    expandParents(navigationItems);
   }, [location.pathname]);
 
 
@@ -290,64 +304,60 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                 const Icon = item.icon;
                 const hasChildren = item.children && item.children.length > 0;
                 const isExpanded = expandedItems.includes(item.id);
-                const isItemActive = item.path ? isActive(item.path) : item.children?.some(c => isActive(c.path));
+                const isItemActive = item.path ? isActive(item.path) : item.children?.some(c => isActive(c.path) || c.children?.some(gc => isActive(gc.path)));
 
-                return (
-                  <div key={item.id}>
-                    {hasChildren ? (
-                      <>
+                const renderNavItem = (navItem: NavItem, level: number = 0): React.ReactNode => {
+                  const NavIcon = navItem.icon;
+                  const hasNavChildren = navItem.children && navItem.children.length > 0;
+                  const isNavExpanded = expandedItems.includes(navItem.id);
+                  const isNavActive = navItem.path ? isActive(navItem.path) : navItem.children?.some(c => isActive(c.path) || c.children?.some(gc => isActive(gc.path)));
+
+                  if (hasNavChildren) {
+                    return (
+                      <div key={navItem.id} className={level > 0 ? "mt-1" : ""}>
                         <button
-                          onClick={() => toggleExpanded(item.id)}
+                          onClick={() => toggleExpanded(navItem.id)}
                           className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                            isItemActive 
+                            isNavActive 
                               ? 'bg-blue-100 text-blue-700' 
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
                         >
-                          <Icon className="h-4 w-4" />
-                          <span className="flex-1">{item.label}</span>
+                          <NavIcon className="h-4 w-4" />
+                          <span className="flex-1">{navItem.label}</span>
                           <ChevronRight className={cn(
                             "h-4 w-4 transition-transform",
-                            isExpanded && "rotate-90"
+                            isNavExpanded && "rotate-90"
                           )} />
                         </button>
-                        {isExpanded && (
-                          <div className="ml-4 mt-1 space-y-1">
-                            {item.children?.map((child) => {
-                              const ChildIcon = child.icon;
-                              return (
-                                <Link
-                                  key={child.id}
-                                  to={child.path || '#'}
-                                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
-                                    isActive(child.path)
-                                      ? 'bg-blue-100 text-blue-700'
-                                      : 'text-gray-600 hover:bg-gray-100'
-                                  }`}
-                                >
-                                  <ChildIcon className="h-4 w-4" />
-                                  <span>{child.label}</span>
-                                </Link>
-                              );
-                            })}
+                        {isNavExpanded && (
+                          <div className={cn("mt-1 space-y-1", level === 0 ? "ml-4" : "ml-6")}>
+                            {navItem.children?.map((child) => renderNavItem(child, level + 1))}
                           </div>
                         )}
-                      </>
-                    ) : (
+                      </div>
+                    );
+                  } else {
+                    return (
                       <Link
-                        to={item.path || '#'}
-                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                          isItemActive 
-                            ? 'bg-blue-100 text-blue-700' 
+                        key={navItem.id}
+                        to={navItem.path || '#'}
+                        className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                          level === 0 ? 'text-base' : level === 1 ? 'text-sm' : 'text-xs'
+                        } ${
+                          isActive(navItem.path)
+                            ? 'bg-blue-100 text-blue-700'
                             : 'text-gray-600 hover:bg-gray-100'
                         }`}
                       >
-                        <Icon className="h-4 w-4" />
-                        {item.label}
+                        <NavIcon className="h-4 w-4" />
+                        <span>{navItem.label}</span>
                       </Link>
-                    )}
-                  </div>
-                );
+                    );
+                  }
+                };
+
+                return renderNavItem(item);
               })}
             </nav>
           </div>
