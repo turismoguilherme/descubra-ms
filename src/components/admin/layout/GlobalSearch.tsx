@@ -30,7 +30,6 @@ const searchItems: SearchItem[] = [
   { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners', category: 'Descubra MS' },
   { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', category: 'Descubra MS' },
   { label: 'Conteúdo Descubra MS', path: '/viajar/admin/descubra-ms/content', category: 'Descubra MS' },
-  { label: 'Menus Descubra MS', path: '/viajar/admin/descubra-ms/menus', category: 'Descubra MS' },
   { label: 'Usuários Descubra MS', path: '/viajar/admin/descubra-ms/users', category: 'Descubra MS' },
   { label: 'Configurações Descubra MS', path: '/viajar/admin/descubra-ms/settings', category: 'Descubra MS' },
   

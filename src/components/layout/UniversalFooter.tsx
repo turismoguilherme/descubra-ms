@@ -2,9 +2,11 @@ import React from 'react';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Globe, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useBrand } from '@/context/BrandContext';
+import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const UniversalFooter = () => {
   const { isOverflowOne } = useBrand();
+  const { settings: msSettings, loading: msLoading } = useFooterSettings('ms');
 
   if (isOverflowOne) {
     // Footer para OverFlow One
@@ -106,15 +108,21 @@ const UniversalFooter = () => {
               Descubra as maravilhas do Pantanal, Cerrado e muito mais.
             </p>
             <div className="flex space-x-3 justify-center lg:justify-start">
-              <a href="#" className="text-blue-200 hover:text-white transition-colors" aria-label="Facebook">
-                <Facebook className="h-4 w-4" />
-              </a>
-              <a href="#" className="text-blue-200 hover:text-white transition-colors" aria-label="Instagram">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="#" className="text-blue-200 hover:text-white transition-colors" aria-label="Twitter">
-                <Twitter className="h-4 w-4" />
-              </a>
+              {msSettings.social_media.facebook && (
+                <a href={msSettings.social_media.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors" aria-label="Facebook">
+                  <Facebook className="h-4 w-4" />
+                </a>
+              )}
+              {msSettings.social_media.instagram && (
+                <a href={msSettings.social_media.instagram} target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors" aria-label="Instagram">
+                  <Instagram className="h-4 w-4" />
+                </a>
+              )}
+              {msSettings.social_media.twitter && (
+                <a href={msSettings.social_media.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors" aria-label="Twitter">
+                  <Twitter className="h-4 w-4" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -151,18 +159,22 @@ const UniversalFooter = () => {
             <div className="text-center lg:text-left">
               <h3 className="text-xs font-semibold mb-2 text-white">Contato</h3>
               <ul className="space-y-2">
-                <li className="text-blue-100 text-xs">
-                  <div className="flex items-start justify-center lg:justify-start gap-1.5 max-w-full">
-                    <Mail className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span className="break-words leading-relaxed hyphens-auto" style={{ wordBreak: 'break-word', maxWidth: '100%' }}>
-                      contato@descubramsconline.com.br
-                    </span>
-                  </div>
-                </li>
-                <li className="flex items-center justify-center lg:justify-start gap-1.5 text-blue-100 text-xs">
-                  <Phone className="h-3 w-3 flex-shrink-0" />
-                  <span>(67) 3318-7600</span>
-                </li>
+                {msSettings.email && (
+                  <li className="text-blue-100 text-xs">
+                    <div className="flex items-start justify-center lg:justify-start gap-1.5 max-w-full">
+                      <Mail className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                      <span className="break-words leading-relaxed hyphens-auto" style={{ wordBreak: 'break-word', maxWidth: '100%' }}>
+                        {msSettings.email}
+                      </span>
+                    </div>
+                  </li>
+                )}
+                {msSettings.phone && (
+                  <li className="flex items-center justify-center lg:justify-start gap-1.5 text-blue-100 text-xs">
+                    <Phone className="h-3 w-3 flex-shrink-0" />
+                    <span>{msSettings.phone}</span>
+                  </li>
+                )}
               </ul>
             </div>
 
@@ -195,7 +207,7 @@ const UniversalFooter = () => {
         <div className="border-t border-blue-300/30 pt-3 mt-4">
           <div className="text-center">
             <p className="text-blue-200 text-xs">
-              © 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.
+              {msSettings.copyright || '© 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.'}
             </p>
           </div>
         </div>

@@ -9,14 +9,22 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { financialDashboardService } from '@/services/admin/financialDashboardService';
-import { DollarSign, Plus, Edit, Trash2, Check, X, Download, FileText, Calendar } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, Check, X, Download, FileText, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ReportPreviewDialog } from './ReportPreviewDialog';
+import { generateDREPDF, generateCashFlowPDF, generateProfitReportPDF } from '@/utils/financialReportGenerator';
 
 export default function FinancialManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('revenue');
   const [loading, setLoading] = useState(false);
+  
+  // Estados para preview de relatórios
+  const [reportPreviewOpen, setReportPreviewOpen] = useState(false);
+  const [reportPreviewData, setReportPreviewData] = useState<any>(null);
+  const [reportPreviewType, setReportPreviewType] = useState<'dre' | 'cashflow' | 'profit'>('dre');
+  const [reportPeriod, setReportPeriod] = useState({ startDate: '', endDate: '' });
 
   // Receitas
   const [revenues, setRevenues] = useState<any[]>([]);
@@ -76,38 +84,133 @@ export default function FinancialManagement() {
         setSalaries(salaryData.employees);
       }
     } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao carregar dados',
-        variant: 'destructive',
-      });
+      console.error('Erro ao carregar dados:', error);
+      // Não mostrar toast para erros de sessão expirada (já são tratados silenciosamente)
+      // O usuário verá dados vazios e pode recarregar a página se necessário
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateExpense = async () => {
+    console.log('handleCreateExpense chamado', expenseForm);
+    
+    // Validar campos obrigatórios
+    if (!expenseForm.description || !expenseForm.description.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, preencha a descrição da despesa.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!expenseForm.category) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, selecione uma categoria.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!expenseForm.due_date) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, selecione a data de vencimento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!expenseForm.amount || expenseForm.amount === '') {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, insira o valor da despesa.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     try {
-      await financialDashboardService.createExpense({
+      setLoading(true);
+      
+      // Validar e converter o valor
+      let amountValue: number;
+      if (typeof expenseForm.amount === 'string') {
+        // Substituir vírgula por ponto e remover espaços/formatação
+        const cleanAmount = expenseForm.amount.replace(',', '.').replace(/\s/g, '').replace(/[^\d.-]/g, '');
+        amountValue = parseFloat(cleanAmount);
+      } else {
+        amountValue = Number(expenseForm.amount);
+      }
+      
+      // Validar se é um número válido
+      if (isNaN(amountValue) || amountValue <= 0) {
+        toast({
+          title: 'Erro',
+          description: 'Por favor, insira um valor válido maior que zero.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Validar se não excede o limite (99.999.999,99)
+      if (amountValue > 99999999.99) {
+        toast({
+          title: 'Erro',
+          description: 'O valor máximo permitido é R$ 99.999.999,99.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      console.log('Criando despesa com dados:', {
         description: expenseForm.description,
         category: expenseForm.category,
-        amount: Number(expenseForm.amount),
+        amount: amountValue,
         due_date: expenseForm.due_date,
         recurring: expenseForm.recurring === 'one_time' ? undefined : expenseForm.recurring,
       });
+      
+      const result = await financialDashboardService.createExpense({
+        description: expenseForm.description.trim(),
+        category: expenseForm.category,
+        amount: amountValue,
+        due_date: expenseForm.due_date,
+        recurring: expenseForm.recurring === 'one_time' ? undefined : expenseForm.recurring,
+      });
+      
+      console.log('Despesa criada com sucesso:', result);
+      
+      // Adicionar a despesa criada ao estado local imediatamente (otimista)
+      setExpenses(prev => [result, ...prev]);
+      
       toast({
         title: 'Sucesso',
         description: 'Despesa criada com sucesso',
       });
       setExpenseDialogOpen(false);
       resetExpenseForm();
+      
+      // Recarregar dados em background para garantir sincronização
       loadData();
     } catch (error: any) {
+      console.error('Erro ao criar despesa:', error);
+      let errorMessage = error.message || 'Erro ao criar despesa';
+      
+      // Mensagem mais amigável para sessão expirada
+      if (errorMessage.includes('Sessão expirada') || errorMessage.includes('JWT expired')) {
+        errorMessage = 'Sua sessão expirou. Por favor, recarregue a página e faça login novamente.';
+      }
+      
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao criar despesa',
+        description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -237,8 +340,256 @@ export default function FinancialManagement() {
     });
   };
 
+  const generateDRE = async () => {
+    try {
+      setLoading(true);
+      
+      // Usar período selecionado ou padrão
+      const startDate = reportPeriod.startDate || undefined;
+      const endDate = reportPeriod.endDate || undefined;
+      
+      // Buscar dados do período
+      const revenueData = await financialDashboardService.getMonthlyRevenue(startDate, endDate);
+      const expensesData = await financialDashboardService.getMonthlyExpenses(startDate, endDate);
+      const salariesData = await financialDashboardService.getMonthlySalaries();
+      const taxes = expensesData.byCategory.impostos || 0;
+      const profitData = await financialDashboardService.calculateProfit(
+        revenueData.total,
+        expensesData.total,
+        salariesData.total,
+        taxes
+      );
+
+      // Preparar dados para preview
+      const periodText = startDate && endDate 
+        ? `${new Date(startDate).toLocaleDateString('pt-BR')} a ${new Date(endDate).toLocaleDateString('pt-BR')}`
+        : new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      
+      const previewData = {
+        period: periodText,
+        revenue: revenueData.total,
+        expenses: expensesData.total,
+        expensesByCategory: expensesData.byCategory,
+        salaries: salariesData.total,
+        taxes: taxes,
+        profit: profitData.profit,
+        profitMargin: profitData.profitMargin,
+      };
+
+      setReportPreviewData(previewData);
+      setReportPreviewType('dre');
+      setReportPreviewOpen(true);
+    } catch (error: any) {
+      console.error('Erro ao gerar DRE:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao gerar DRE',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateCashFlow = async () => {
+    try {
+      setLoading(true);
+      
+      // Usar período selecionado ou padrão
+      const startDate = reportPeriod.startDate || undefined;
+      const endDate = reportPeriod.endDate || undefined;
+      
+      // Buscar receitas e despesas
+      const revenueData = await financialDashboardService.getMonthlyRevenue(startDate, endDate);
+      const expensesData = await financialDashboardService.getMonthlyExpenses(startDate, endDate);
+      const salariesData = await financialDashboardService.getMonthlySalaries();
+      const allRevenues = await financialDashboardService.getAllRevenue(startDate, endDate);
+      const allExpenses = await financialDashboardService.getAllExpenses(startDate, endDate);
+
+      // Agrupar por mês
+      const cashFlow: Record<string, { revenue: number; expenses: number; net: number }> = {};
+      
+      allRevenues.forEach((r: any) => {
+        const month = r.paid_date ? r.paid_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
+        if (!cashFlow[month]) {
+          cashFlow[month] = { revenue: 0, expenses: 0, net: 0 };
+        }
+        cashFlow[month].revenue += Number(r.amount || 0);
+      });
+
+      allExpenses.forEach((e: any) => {
+        const month = e.due_date ? e.due_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
+        if (!cashFlow[month]) {
+          cashFlow[month] = { revenue: 0, expenses: 0, net: 0 };
+        }
+        if (e.payment_status === 'paid') {
+          cashFlow[month].expenses += Number(e.amount || 0);
+        }
+      });
+
+      // Calcular saldo líquido
+      Object.keys(cashFlow).forEach(month => {
+        cashFlow[month].net = cashFlow[month].revenue - cashFlow[month].expenses;
+      });
+
+      // Preparar dados para preview
+      const months = Object.entries(cashFlow)
+        .sort()
+        .map(([month, data]) => ({
+          month: new Date(month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+          revenue: data.revenue,
+          expenses: data.expenses,
+          net: data.net,
+        }));
+
+      const previewData = {
+        months,
+        total: {
+          revenue: revenueData.total,
+          expenses: expensesData.total + salariesData.total,
+          net: revenueData.total - expensesData.total - salariesData.total,
+        },
+      };
+
+      setReportPreviewData(previewData);
+      setReportPreviewType('cashflow');
+      setReportPreviewOpen(true);
+    } catch (error: any) {
+      console.error('Erro ao gerar Fluxo de Caixa:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao gerar Fluxo de Caixa',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateProfitReport = async () => {
+    try {
+      setLoading(true);
+      
+      // Buscar todos os dados de uma vez e agrupar por mês
+      const allRevenues = await financialDashboardService.getAllRevenue();
+      const allExpenses = await financialDashboardService.getAllExpenses();
+      const allSalaries = await financialDashboardService.getMonthlySalaries();
+      
+      // Agrupar por mês
+      const monthsMap: Record<string, { revenue: number; expenses: number; salaries: number }> = {};
+      
+      allRevenues.forEach((r: any) => {
+        const month = r.paid_date ? r.paid_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
+        if (!monthsMap[month]) {
+          monthsMap[month] = { revenue: 0, expenses: 0, salaries: 0 };
+        }
+        monthsMap[month].revenue += Number(r.amount || 0);
+      });
+
+      allExpenses.forEach((e: any) => {
+        if (e.payment_status === 'paid') {
+          const month = e.paid_date ? e.paid_date.substring(0, 7) : e.due_date ? e.due_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
+          if (!monthsMap[month]) {
+            monthsMap[month] = { revenue: 0, expenses: 0, salaries: 0 };
+          }
+          monthsMap[month].expenses += Number(e.amount || 0);
+        }
+      });
+
+      // Processar salários (assumindo que são do mês atual por enquanto)
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      if (allSalaries.employees && allSalaries.employees.length > 0) {
+        if (!monthsMap[currentMonth]) {
+          monthsMap[currentMonth] = { revenue: 0, expenses: 0, salaries: 0 };
+        }
+        monthsMap[currentMonth].salaries = allSalaries.total;
+      }
+
+      // Converter para array e ordenar
+      const months = Object.entries(monthsMap)
+        .map(([month, data]) => {
+          const date = new Date(month + '-01');
+          const taxes = data.expenses * 0.1; // Estimativa de 10% de impostos
+          const profit = data.revenue - data.expenses - data.salaries - taxes;
+          
+          return {
+            month: date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+            revenue: data.revenue,
+            expenses: data.expenses,
+            salaries: data.salaries,
+            profit: profit,
+            monthKey: month,
+          };
+        })
+        .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+        .slice(-12); // Últimos 12 meses
+
+      // Preparar dados para preview
+      const monthsData = months.map(m => ({
+        month: m.month,
+        revenue: m.revenue,
+        expenses: m.expenses,
+        salaries: m.salaries,
+        profit: m.profit,
+        margin: m.revenue > 0 ? (m.profit / m.revenue) * 100 : 0,
+      }));
+
+      const totalRevenue = months.reduce((sum, m) => sum + m.revenue, 0);
+      const totalExpenses = months.reduce((sum, m) => sum + m.expenses, 0);
+      const totalSalaries = months.reduce((sum, m) => sum + m.salaries, 0);
+      const totalProfit = months.reduce((sum, m) => sum + m.profit, 0);
+
+      const previewData = {
+        months: monthsData,
+        total: {
+          revenue: totalRevenue,
+          expenses: totalExpenses,
+          salaries: totalSalaries,
+          profit: totalProfit,
+          margin: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0,
+        },
+      };
+
+      setReportPreviewData(previewData);
+      setReportPreviewType('profit');
+      setReportPreviewOpen(true);
+    } catch (error: any) {
+      console.error('Erro ao gerar Relatório de Lucro:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao gerar Relatório de Lucro',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generatePDF = (type: 'dre' | 'cashflow' | 'profit', data: any) => {
+    try {
+      if (type === 'dre') {
+        generateDREPDF(data);
+      } else if (type === 'cashflow') {
+        generateCashFlowPDF(data);
+      } else if (type === 'profit') {
+        generateProfitReportPDF(data);
+      }
+      toast({
+        title: 'Sucesso',
+        description: 'PDF gerado com sucesso',
+      });
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao gerar PDF',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16 min-h-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Gestão Financeira</h2>
@@ -354,10 +705,10 @@ export default function FinancialManagement() {
                         <div>
                           <Label>Categoria</Label>
                           <Select value={expenseForm.category} onValueChange={(value) => setExpenseForm({ ...expenseForm, category: value })}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Selecione a categoria" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[10000]">
                               <SelectItem value="servidores">Servidores</SelectItem>
                               <SelectItem value="marketing">Marketing</SelectItem>
                               <SelectItem value="infraestrutura">Infraestrutura</SelectItem>
@@ -387,10 +738,10 @@ export default function FinancialManagement() {
                         <div>
                           <Label>Recorrência</Label>
                           <Select value={expenseForm.recurring} onValueChange={(value) => setExpenseForm({ ...expenseForm, recurring: value })}>
-                            <SelectTrigger>
-                              <SelectValue />
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecione a recorrência" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[10000]">
                               <SelectItem value="one_time">Única vez</SelectItem>
                               <SelectItem value="monthly">Mensal</SelectItem>
                               <SelectItem value="annual">Anual</SelectItem>
@@ -399,8 +750,19 @@ export default function FinancialManagement() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setExpenseDialogOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleCreateExpense}>Salvar</Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setExpenseDialogOpen(false)}
+                          disabled={loading}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          onClick={handleCreateExpense}
+                          disabled={loading}
+                        >
+                          {loading ? 'Salvando...' : 'Salvar'}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -472,15 +834,19 @@ export default function FinancialManagement() {
                       <div>
                         <Label>Funcionário</Label>
                         <Select value={salaryForm.employee_id} onValueChange={(value) => setSalaryForm({ ...salaryForm, employee_id: value })}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Selecione o funcionário" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {employees.map((emp) => (
-                              <SelectItem key={emp.id} value={emp.id}>
-                                {emp.name} {emp.current_salary && `(R$ ${Number(emp.current_salary).toFixed(2)})`}
-                              </SelectItem>
-                            ))}
+                          <SelectContent className="z-[10000]">
+                            {employees.length > 0 ? (
+                              employees.map((emp) => (
+                                <SelectItem key={emp.id} value={emp.id}>
+                                  {emp.name} {emp.current_salary && `(R$ ${Number(emp.current_salary).toFixed(2)})`}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="" disabled>Nenhum funcionário cadastrado</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -488,10 +854,10 @@ export default function FinancialManagement() {
                         <div>
                           <Label>Mês</Label>
                           <Select value={salaryForm.month.toString()} onValueChange={(value) => setSalaryForm({ ...salaryForm, month: Number(value) })}>
-                            <SelectTrigger>
-                              <SelectValue />
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecione o mês" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[10000]">
                               {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
                                 <SelectItem key={month} value={month.toString()}>
                                   {format(new Date(2024, month - 1, 1), 'MMMM', { locale: ptBR })}
@@ -590,43 +956,104 @@ export default function FinancialManagement() {
         </TabsContent>
 
         {/* Aba Relatórios */}
-        <TabsContent value="reports" className="space-y-4">
+        <TabsContent value="reports" className="space-y-4 pb-8">
           <Card>
             <CardHeader>
               <CardTitle>Relatórios Financeiros</CardTitle>
               <CardDescription>Gere relatórios detalhados das finanças</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Seleção de Período */}
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <h3 className="font-semibold mb-3">Período do Relatório</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Data Inicial</Label>
+                      <Input
+                        type="date"
+                        value={reportPeriod.startDate}
+                        onChange={(e) => setReportPeriod({ ...reportPeriod, startDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Data Final</Label>
+                      <Input
+                        type="date"
+                        value={reportPeriod.endDate}
+                        onChange={(e) => setReportPeriod({ ...reportPeriod, endDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Deixe em branco para usar o período padrão (mês atual)
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold mb-2">DRE (Demonstração do Resultado do Exercício)</h3>
                   <p className="text-sm text-gray-600">Relatório completo de receitas, despesas e lucro líquido</p>
-                  <Button className="mt-2" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Gerar DRE
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      variant="outline"
+                      onClick={generateDRE}
+                      disabled={loading}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      {loading ? 'Gerando...' : 'Visualizar DRE'}
+                    </Button>
+                  </div>
                 </div>
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold mb-2">Fluxo de Caixa</h3>
                   <p className="text-sm text-gray-600">Análise de entradas e saídas de dinheiro</p>
-                  <Button className="mt-2" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Gerar Fluxo de Caixa
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      variant="outline"
+                      onClick={generateCashFlow}
+                      disabled={loading}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      {loading ? 'Gerando...' : 'Visualizar Fluxo de Caixa'}
+                    </Button>
+                  </div>
                 </div>
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold mb-2">Lucro Mensal/Anual</h3>
                   <p className="text-sm text-gray-600">Evolução do lucro ao longo do tempo</p>
-                  <Button className="mt-2" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Gerar Relatório de Lucro
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      variant="outline"
+                      onClick={generateProfitReport}
+                      disabled={loading}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      {loading ? 'Gerando...' : 'Visualizar Relatório de Lucro'}
+                    </Button>
+                  </div>
+                </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Dialog de Preview de Relatório */}
+      <ReportPreviewDialog
+        open={reportPreviewOpen}
+        onOpenChange={setReportPreviewOpen}
+        title={reportPreviewType === 'dre' ? 'DRE - Demonstração do Resultado do Exercício' : 
+               reportPreviewType === 'cashflow' ? 'Fluxo de Caixa' : 'Relatório de Lucro Mensal/Anual'}
+        reportData={reportPreviewData}
+        type={reportPreviewType}
+        onDownload={() => {
+          if (reportPreviewData) {
+            generatePDF(reportPreviewType, reportPreviewData);
+          }
+        }}
+      />
     </div>
   );
 }

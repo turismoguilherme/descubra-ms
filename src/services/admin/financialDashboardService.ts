@@ -3,8 +3,114 @@
  * Serviço completo para gestão financeira: receitas, despesas, salários e cálculo de lucro
  */
 
-const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+import { supabase } from '@/integrations/supabase/client';
+
+/**
+ * Verifica se há uma sessão válida antes de fazer operações
+ */
+async function ensureValidSession(): Promise<boolean> {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      return false;
+    }
+    
+    // Verificar se o token está próximo de expirar (menos de 5 minutos)
+    if (session.expires_at) {
+      const expiresAt = new Date(session.expires_at * 1000);
+      const now = new Date();
+      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+      
+      // Se está próximo de expirar (menos de 5 minutos), tentar renovar
+      if (timeUntilExpiry < 5 * 60 * 1000 && session.refresh_token) {
+        console.log('Token próximo de expirar, renovando preventivamente...');
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.warn('Não foi possível renovar token preventivamente:', refreshError);
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao verificar sessão:', error);
+    return false;
+  }
+}
+
+/**
+ * Helper para tentar renovar o token e retentar a operação
+ */
+async function retryWithTokenRefresh<T>(
+  operation: () => Promise<T>,
+  retries = 1
+): Promise<T> {
+  try {
+    // Verificar sessão antes de tentar a operação
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
+    }
+    
+    return await operation();
+  } catch (error: any) {
+    // Se for erro de JWT expirado e ainda tiver tentativas
+    if ((error.code === 'PGRST301' || error.message?.includes('JWT expired')) && retries > 0) {
+      console.log('Token expirado, tentando renovar...');
+      try {
+        // Verificar se há uma sessão atual
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !currentSession) {
+          console.warn('Nenhuma sessão encontrada para renovar:', sessionError);
+          throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
+        }
+        
+        // Verificar se a sessão tem refresh token
+        if (!currentSession.refresh_token) {
+          console.warn('Sessão não tem refresh token');
+          throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
+        }
+        
+        // Tentar renovar o token usando a sessão atual
+        const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('Erro ao renovar token:', refreshError);
+          // Se o refresh token também expirou, não há como renovar
+          if (refreshError.message?.includes('refresh_token_not_found') || 
+              refreshError.message?.includes('invalid_grant') ||
+              refreshError.message?.includes('JWT expired')) {
+            throw new Error('Sessão completamente expirada. Por favor, recarregue a página e faça login novamente.');
+          }
+          throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
+        }
+        
+        if (!session) {
+          console.warn('Renovação de token não retornou sessão');
+          throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
+        }
+        
+        console.log('Token renovado com sucesso, retentando operação...');
+        // Aguardar um pouco para garantir que o token foi atualizado no cliente
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Retentar a operação
+        return await operation();
+      } catch (refreshErr: any) {
+        // Se a mensagem já é sobre sessão expirada, propagar
+        if (refreshErr.message?.includes('Sessão expirada') || refreshErr.message?.includes('expirada')) {
+          throw refreshErr;
+        }
+        console.error('Erro ao renovar token:', refreshErr);
+        throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
+      }
+    }
+    throw error;
+  }
+}
 
 export interface MonthlyRevenue {
   total: number;
@@ -73,29 +179,21 @@ export const financialDashboardService = {
       const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
       const end = endDate || new Date().toISOString().split('T')[0];
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/master_financial_records?record_type=eq.revenue&status=eq.paid&paid_date=gte.${start}&paid_date=lte.${end}&select=*`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          }
+      const records = await retryWithTokenRefresh(async () => {
+        const { data, error } = await supabase
+          .from('master_financial_records')
+          .select('*')
+          .eq('record_type', 'revenue')
+          .eq('status', 'paid')
+          .gte('paid_date', start)
+          .lte('paid_date', end);
+
+        if (error || !data) {
+          console.warn('Tabela master_financial_records não encontrada ou erro na query:', error);
+          return [];
         }
-      );
-
-      if (!response.ok) {
-        console.warn('Tabela master_financial_records não encontrada ou erro na query');
-        return {
-          total: 0,
-          viajar: 0,
-          events: 0,
-          partners: 0,
-          other: 0,
-          byMonth: [],
-        };
-      }
-
-      const records = await response.json();
+        return data;
+      }).catch(() => []);
       
       // Garantir que records é um array
       if (!Array.isArray(records)) {
@@ -172,33 +270,19 @@ export const financialDashboardService = {
       const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
       const end = endDate || new Date().toISOString().split('T')[0];
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/expenses?due_date=gte.${start}&due_date=lte.${end}&select=*`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          }
+      const expenses = await retryWithTokenRefresh(async () => {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .gte('due_date', start)
+          .lte('due_date', end);
+
+        if (error || !data) {
+          console.warn('Tabela expenses não encontrada ou erro na query:', error);
+          return [];
         }
-      );
-
-      if (!response.ok) {
-        console.warn('Tabela expenses não encontrada ou erro na query');
-        return {
-          total: 0,
-          byCategory: {
-            servidores: 0,
-            marketing: 0,
-            infraestrutura: 0,
-            impostos: 0,
-            salarios: 0,
-            outros: 0,
-          },
-          byMonth: [],
-        };
-      }
-
-      const expenses = await response.json();
+        return data;
+      }).catch(() => []);
       
       // Garantir que expenses é um array
       if (!Array.isArray(expenses)) {
@@ -283,29 +367,22 @@ export const financialDashboardService = {
       const currentMonth = month || new Date().getMonth() + 1;
       const currentYear = year || new Date().getFullYear();
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/employee_salaries?month=eq.${currentMonth}&year=eq.${currentYear}&select=*&order=total_amount.desc`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          }
+      const salaries = await retryWithTokenRefresh(async () => {
+        const { data, error } = await supabase
+          .from('employee_salaries')
+          .select('*')
+          .eq('month', currentMonth)
+          .eq('year', currentYear)
+          .order('total_amount', { ascending: false });
+
+        if (error || !data) {
+          console.warn('Tabela employee_salaries não encontrada ou erro na query:', error);
+          return [];
         }
-      );
+        return Array.isArray(data) ? data : [];
+      }).catch(() => []);
 
-      if (!response.ok) {
-        console.warn('Tabela employee_salaries não encontrada ou erro na query');
-        return {
-          total: 0,
-          employees: [],
-        };
-      }
-
-      const salaries = await response.json();
-      
-      // Garantir que salaries é um array
-      if (!Array.isArray(salaries)) {
-        console.warn('Resposta não é um array:', salaries);
+      if (!Array.isArray(salaries) || salaries.length === 0) {
         return {
           total: 0,
           employees: [],
@@ -320,24 +397,19 @@ export const financialDashboardService = {
       
       if (employeeIds.length > 0) {
         try {
-          const empResponse = await fetch(
-            `${SUPABASE_URL}/rest/v1/viajar_employees?id=in.(${employeeIds.join(',')})&select=id,name`,
-            {
-              headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-              }
-            }
-          );
+          const employeesData = await retryWithTokenRefresh(async () => {
+            const { data, error } = await supabase
+              .from('viajar_employees')
+              .select('id, name')
+              .in('id', employeeIds);
+            
+            if (error || !data) return [];
+            return Array.isArray(data) ? data : [];
+          }).catch(() => []);
           
-          if (empResponse.ok) {
-            const employeesData = await empResponse.json();
-            if (Array.isArray(employeesData)) {
-              employeesData.forEach((emp: any) => {
-                employeeNames[emp.id] = emp.name;
-              });
-            }
-          }
+          employeesData.forEach((emp: any) => {
+            employeeNames[emp.id] = emp.name;
+          });
         } catch (err) {
           console.warn('Erro ao buscar nomes dos funcionários:', err);
         }
@@ -394,22 +466,21 @@ export const financialDashboardService = {
       const futureDate = new Date(today);
       futureDate.setDate(today.getDate() + days);
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/expenses?payment_status=eq.pending&due_date=gte.${today.toISOString().split('T')[0]}&due_date=lte.${futureDate.toISOString().split('T')[0]}&select=*&order=due_date.asc`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          }
+      const expenses = await retryWithTokenRefresh(async () => {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('payment_status', 'pending')
+          .gte('due_date', today.toISOString().split('T')[0])
+          .lte('due_date', futureDate.toISOString().split('T')[0])
+          .order('due_date', { ascending: true });
+
+        if (error || !data) {
+          console.warn('Tabela expenses não encontrada ou erro na query:', error);
+          return [];
         }
-      );
-
-      if (!response.ok) {
-        console.warn('Tabela expenses não encontrada ou erro na query');
-        return [];
-      }
-
-      const expenses = await response.json();
+        return Array.isArray(data) ? data : [];
+      }).catch(() => []);
       
       // Garantir que expenses é um array
       if (!Array.isArray(expenses)) {
@@ -448,29 +519,43 @@ export const financialDashboardService = {
     metadata?: any;
   }): Promise<any> {
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/expenses`,
-        {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation',
-          },
-          body: JSON.stringify({
-            ...data,
-            payment_status: 'pending',
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Erro ao criar despesa');
+      // Garantir que o amount é um número válido e não excede o limite
+      const amountValue = Number(data.amount);
+      if (isNaN(amountValue) || amountValue <= 0) {
+        throw new Error('Valor inválido. Deve ser um número maior que zero.');
       }
+      
+      // Limitar o valor máximo (99.999.999,99)
+      if (amountValue > 99999999.99) {
+        throw new Error('Valor excede o limite máximo de R$ 99.999.999,99.');
+      }
+      
+      return await retryWithTokenRefresh(async () => {
+        const { data: expenseData, error } = await supabase
+          .from('expenses')
+          .insert({
+            ...data,
+            amount: amountValue, // Garantir que é um número
+            payment_status: 'pending',
+          })
+          .select()
+          .single();
 
-      return await response.json();
-    } catch (error) {
+        if (error) {
+          console.error('Erro ao criar despesa:', error);
+          // Melhorar mensagem de erro para overflow numérico
+          if (error.code === '22003' || error.message?.includes('overflow')) {
+            throw new Error('Valor muito grande. O valor máximo permitido é R$ 99.999.999,99.');
+          }
+          if (error.code === 'PGRST301' || error.message?.includes('JWT expired')) {
+            throw new Error('Sessão expirada. Por favor, faça login novamente.');
+          }
+          throw new Error(error.message || 'Erro ao criar despesa');
+        }
+
+        return expenseData;
+      });
+    } catch (error: any) {
       console.error('Erro ao criar despesa:', error);
       throw error;
     }
@@ -489,26 +574,19 @@ export const financialDashboardService = {
     recurring: string;
   }>): Promise<any> {
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/expenses?id=eq.${id}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation',
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const { data: updatedData, error } = await supabase
+        .from('expenses')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar despesa');
+      if (error) {
+        throw new Error(error.message || 'Erro ao atualizar despesa');
       }
 
-      return await response.json();
-    } catch (error) {
+      return updatedData;
+    } catch (error: any) {
       console.error('Erro ao atualizar despesa:', error);
       throw error;
     }
@@ -532,36 +610,28 @@ export const financialDashboardService = {
     try {
       const totalAmount = Number(data.base_salary) + Number(data.bonuses || 0) - Number(data.deductions || 0);
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/employee_salaries`,
-        {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation',
-          },
-          body: JSON.stringify({
-            employee_id: employeeId,
-            month,
-            year,
-            base_salary: data.base_salary,
-            bonuses: data.bonuses || 0,
-            deductions: data.deductions || 0,
-            total_amount: totalAmount,
-            payment_status: data.payment_date ? 'paid' : 'pending',
-            payment_date: data.payment_date || null,
-            notes: data.notes || null,
-          }),
-        }
-      );
+      const { data: salaryData, error } = await supabase
+        .from('employee_salaries')
+        .insert({
+          employee_id: employeeId,
+          month,
+          year,
+          base_salary: data.base_salary,
+          bonuses: data.bonuses || 0,
+          deductions: data.deductions || 0,
+          total_amount: totalAmount,
+          payment_status: data.payment_date ? 'paid' : 'pending',
+          payment_date: data.payment_date || null,
+          notes: data.notes || null,
+        })
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Erro ao registrar pagamento de salário');
+      if (error) {
+        throw new Error(error.message || 'Erro ao registrar pagamento de salário');
       }
 
-      return await response.json();
+      return salaryData;
     } catch (error) {
       console.error('Erro ao registrar pagamento de salário:', error);
       throw error;
@@ -573,29 +643,22 @@ export const financialDashboardService = {
    */
   async updateEmployeeSalary(employeeId: string, newSalary: number): Promise<any> {
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/viajar_employees?id=eq.${employeeId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation',
-          },
-          body: JSON.stringify({
-            current_salary: newSalary,
-            salary_updated_at: new Date().toISOString(),
-          }),
-        }
-      );
+      const { data: updatedData, error } = await supabase
+        .from('viajar_employees')
+        .update({
+          current_salary: newSalary,
+          salary_updated_at: new Date().toISOString(),
+        })
+        .eq('id', employeeId)
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar salário');
+      if (error) {
+        throw new Error(error.message || 'Erro ao atualizar salário');
       }
 
-      return await response.json();
-    } catch (error) {
+      return updatedData;
+    } catch (error: any) {
       console.error('Erro ao atualizar salário:', error);
       throw error;
     }
@@ -609,24 +672,34 @@ export const financialDashboardService = {
       const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
       const end = endDate || new Date().toISOString().split('T')[0];
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/master_financial_records?record_type=eq.revenue&paid_date=gte.${start}&paid_date=lte.${end}&select=*&order=paid_date.desc`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
+      try {
+        return await retryWithTokenRefresh(async () => {
+          const { data, error } = await supabase
+            .from('master_financial_records')
+            .select('*')
+            .eq('record_type', 'revenue')
+            .gte('paid_date', start)
+            .lte('paid_date', end)
+            .order('paid_date', { ascending: false });
+
+          if (error) {
+            // Não logar erro de JWT expirado como warning (já será tratado pelo retry)
+            if (error.code !== 'PGRST301') {
+              console.warn('Tabela master_financial_records não encontrada ou erro na query:', error);
+            }
+            throw error;
           }
+
+          return Array.isArray(data) ? data : [];
+        });
+      } catch (error: any) {
+        // Se for erro de sessão expirada, retornar array vazio silenciosamente
+        if (error.message?.includes('Sessão expirada') || error.code === 'PGRST301') {
+          return [];
         }
-      );
-
-      if (!response.ok) {
-        console.warn('Tabela master_financial_records não encontrada ou erro na query');
-        return [];
+        throw error;
       }
-
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao buscar receitas:', error);
       return [];
     }
@@ -637,27 +710,67 @@ export const financialDashboardService = {
    */
   async getAllExpenses(startDate?: string, endDate?: string): Promise<any[]> {
     try {
-      const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-      const end = endDate || new Date().toISOString().split('T')[0];
-
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/expenses?due_date=gte.${start}&due_date=lte.${end}&select=*&order=due_date.desc`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
+      try {
+        return await retryWithTokenRefresh(async () => {
+          // Se não houver filtros de data, buscar todas as despesas
+          // (mas limitar a um range razoável para performance)
+          if (!startDate && !endDate) {
+            // Buscar despesas dos últimos 2 anos e próximos 2 anos
+            const twoYearsAgo = new Date();
+            twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+            const twoYearsAhead = new Date();
+            twoYearsAhead.setFullYear(twoYearsAhead.getFullYear() + 2);
+            
+            const { data, error } = await supabase
+              .from('expenses')
+              .select('*')
+              .gte('due_date', twoYearsAgo.toISOString().split('T')[0])
+              .lte('due_date', twoYearsAhead.toISOString().split('T')[0])
+              .order('due_date', { ascending: false });
+            
+            if (error) {
+              // Não logar erro de JWT expirado como warning (já será tratado pelo retry)
+              if (error.code !== 'PGRST301') {
+                console.warn('Tabela expenses não encontrada ou erro na query:', error);
+              }
+              throw error;
+            }
+            
+            return Array.isArray(data) ? data : [];
           }
+          
+          // Se houver filtros de data, aplicá-los
+          let query = supabase
+            .from('expenses')
+            .select('*');
+          
+          if (startDate) {
+            query = query.gte('due_date', startDate);
+          }
+          if (endDate) {
+            query = query.lte('due_date', endDate);
+          }
+          
+          const { data, error } = await query.order('due_date', { ascending: false });
+
+          if (error) {
+            // Não logar erro de JWT expirado como warning (já será tratado pelo retry)
+            if (error.code !== 'PGRST301') {
+              console.warn('Tabela expenses não encontrada ou erro na query:', error);
+            }
+            throw error;
+          }
+
+          return Array.isArray(data) ? data : [];
+        });
+      } catch (error: any) {
+        // Se for erro de sessão expirada, retornar array vazio silenciosamente
+        if (error.message?.includes('Sessão expirada') || error.code === 'PGRST301') {
+          return [];
         }
-      );
-
-      if (!response.ok) {
-        console.warn('Tabela expenses não encontrada ou erro na query');
-        return [];
+        throw error;
       }
-
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao buscar despesas:', error);
       return [];
     }
@@ -668,25 +781,25 @@ export const financialDashboardService = {
    */
   async getEmployees(): Promise<any[]> {
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/viajar_employees?is_active=eq.true&select=*&order=name.asc`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          }
+      return await retryWithTokenRefresh(async () => {
+        const { data, error } = await supabase
+          .from('viajar_employees')
+          .select('*')
+          .eq('is_active', true)
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.warn('Tabela viajar_employees não encontrada ou erro na query:', error);
+          return [];
         }
-      );
 
-      if (!response.ok) {
-        console.warn('Tabela viajar_employees não encontrada ou erro na query');
-        return [];
-      }
-
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
+        return Array.isArray(data) ? data : [];
+      });
+    } catch (error: any) {
       console.error('Erro ao buscar funcionários:', error);
+      if (error.message?.includes('Sessão expirada')) {
+        throw error;
+      }
       return [];
     }
   },

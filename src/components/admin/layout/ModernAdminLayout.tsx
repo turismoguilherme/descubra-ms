@@ -88,7 +88,7 @@ const navigationItems: NavItem[] = [
     permission: 'viajar',
     platform: 'viajar',
         children: [
-          { id: 'viajar-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/editor/viajar', permission: 'content', platform: 'viajar' },
+          { id: 'viajar-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/viajar/content', permission: 'content', platform: 'viajar' },
           { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
           { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
         ],
@@ -100,8 +100,10 @@ const navigationItems: NavItem[] = [
     permission: 'descubra_ms',
     platform: 'descubra-ms',
     children: [
-          { id: 'ms-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/editor/descubra-ms', permission: 'content', platform: 'descubra-ms' },
-      { id: 'destinations', label: 'Destinos', icon: Map, path: '/viajar/admin/descubra-ms/destinations', permission: 'destinations', platform: 'descubra-ms' },
+          { id: 'ms-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/descubra-ms/content', permission: 'content', platform: 'descubra-ms' },
+      { id: 'destinations', label: 'Destinos', icon: MapPin, path: '/viajar/admin/descubra-ms/destinations', permission: 'content', platform: 'descubra-ms' },
+      { id: 'cats', label: 'CATs', icon: MapPin, path: '/viajar/admin/descubra-ms/cats', permission: 'content', platform: 'descubra-ms' },
+      { id: 'footer', label: 'Footer', icon: Globe, path: '/viajar/admin/descubra-ms/footer', permission: 'content', platform: 'descubra-ms' },
       { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
       { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
           {
@@ -118,7 +120,7 @@ const navigationItems: NavItem[] = [
               { id: 'passport-analytics', label: 'Analytics', icon: BarChart3, path: '/viajar/admin/descubra-ms/passport?tab=analytics', permission: 'passport', platform: 'descubra-ms' },
             ],
           },
-      { id: 'menus', label: 'Menus', icon: BookOpen, path: '/viajar/admin/descubra-ms/menus', permission: 'menus', platform: 'descubra-ms' },
+      // Menus removido - desnecessário (menus são gerenciados via código)
       { id: 'users', label: 'Usuários', icon: Users, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
         ],
       },
@@ -191,12 +193,12 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
 
   const userRole = userProfile?.role || 'user';
 
-  // Detectar qual plataforma está sendo editada
+    // Detectar qual plataforma está sendo editada
   const getCurrentPlatform = (): 'viajar' | 'descubra-ms' | 'system' => {
-    if (location.pathname.includes('/editor/viajar') || location.pathname.includes('/viajar/admin/viajar')) {
+    if (location.pathname.includes('/viajar/admin/viajar')) {
       return 'viajar';
     }
-    if (location.pathname.includes('/editor/descubra-ms') || location.pathname.includes('/descubra-ms')) {
+    if (location.pathname.includes('/descubra-ms')) {
       return 'descubra-ms';
     }
     return 'system';

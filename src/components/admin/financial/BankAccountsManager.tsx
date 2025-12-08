@@ -477,10 +477,10 @@ export default function BankAccountsManager() {
                             value={accountForm.account_type}
                             onValueChange={(v: any) => setAccountForm({ ...accountForm, account_type: v })}
                           >
-                            <SelectTrigger className="bg-white border-gray-200 mt-1">
-                              <SelectValue />
+                            <SelectTrigger className="bg-white border-gray-200 mt-1 w-full">
+                              <SelectValue placeholder="Selecione o tipo" />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-gray-200">
+                            <SelectContent className="bg-white border-gray-200 z-[10000]">
                               <SelectItem value="checking">Conta Corrente</SelectItem>
                               <SelectItem value="savings">Poupança</SelectItem>
                               <SelectItem value="investment">Investimento</SelectItem>
@@ -642,7 +642,7 @@ export default function BankAccountsManager() {
                         <SelectTrigger className="bg-white border-gray-200 mt-1">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
+                        <SelectContent className="bg-white border-gray-200 z-[10000]">
                           <SelectItem value="cnpj">CNPJ</SelectItem>
                           <SelectItem value="cpf">CPF</SelectItem>
                         </SelectContent>
@@ -685,7 +685,7 @@ export default function BankAccountsManager() {
                         <SelectTrigger className="bg-white border-gray-200 mt-1">
                           <SelectValue placeholder="Selecione uma categoria" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
+                        <SelectContent className="bg-white border-gray-200 z-[10000]">
                           {SUPPLIER_CATEGORIES.map((cat) => (
                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                           ))}

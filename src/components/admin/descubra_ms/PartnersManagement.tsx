@@ -90,18 +90,22 @@ export default function PartnersManagement() {
 
       if (error) throw error;
 
-      // Enviar email de notificação
+      // Enviar email de notificação (não bloqueia a ação se falhar)
       if (partner?.contact_email) {
         if (status === 'approved') {
           notifyPartnerApproved({
             partnerEmail: partner.contact_email,
             partnerName: partner.name,
-          }).catch(err => console.error('Erro ao enviar email:', err));
+          }).catch(err => {
+            console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
+          });
         } else if (status === 'rejected') {
           notifyPartnerRejected({
             partnerEmail: partner.contact_email,
             partnerName: partner.name,
-          }).catch(err => console.error('Erro ao enviar email:', err));
+          }).catch(err => {
+            console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
+          });
         }
       }
 

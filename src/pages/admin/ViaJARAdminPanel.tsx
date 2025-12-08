@@ -19,12 +19,16 @@ import { cn } from '@/lib/utils';
 // Lazy load components
 const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
 const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
-const ContentEditor = lazy(() => import('@/components/admin/descubra_ms/ContentEditor'));
-const MenuManager = lazy(() => import('@/components/admin/descubra_ms/MenuManager'));
+const DescubraMSContentEditor = lazy(() => import('@/components/admin/descubra_ms/UnifiedContentEditor'));
+const ViaJARContentEditor = lazy(() => import('@/components/admin/viajar/UnifiedContentEditor'));
+// MenuManager removido - desnecessário (menus são gerenciados via código)
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
 const PlatformSettings = lazy(() => import('@/components/admin/descubra_ms/PlatformSettings'));
 const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
 const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
+const DestinationManager = lazy(() => import('@/components/admin/descubra_ms/DestinationManager'));
+const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
+const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
 const Reconciliation = lazy(() => import('@/components/admin/financial/Reconciliation'));
 const FinancialReports = lazy(() => import('@/components/admin/financial/FinancialReports'));
@@ -101,26 +105,27 @@ export default function ViaJARAdminPanel() {
             } />
             
             {/* Descubra MS Routes */}
-            <Route path="descubra-ms/homepage" element={
+            <Route path="descubra-ms/content" element={
               <Suspense fallback={<LoadingFallback />}>
-                <ContentEditor />
+                <DescubraMSContentEditor />
               </Suspense>
             } />
             <Route path="descubra-ms/destinations" element={
               <Suspense fallback={<LoadingFallback />}>
-                <ContentEditor />
+                <DestinationManager />
               </Suspense>
             } />
-            <Route path="descubra-ms/content" element={
+            <Route path="descubra-ms/cats" element={
               <Suspense fallback={<LoadingFallback />}>
-                <ContentEditor />
+                <CATLocationManager />
               </Suspense>
             } />
-            <Route path="descubra-ms/menus" element={
+            <Route path="descubra-ms/footer" element={
               <Suspense fallback={<LoadingFallback />}>
-                <MenuManager />
+                <FooterSettingsManager />
               </Suspense>
             } />
+            {/* Rota de Menus removida - desnecessária */}
             <Route path="descubra-ms/users" element={
               <Suspense fallback={<LoadingFallback />}>
                 <UsersManagement />
@@ -199,15 +204,10 @@ export default function ViaJARAdminPanel() {
           </Suspense>
         } />
         
-        {/* Editor Visual de Conteúdo */}
-        <Route path="editor/viajar" element={
+        {/* Editor de Conteúdo ViaJAR */}
+        <Route path="viajar/content" element={
           <Suspense fallback={<LoadingFallback />}>
-            <VisualContentEditor platform="viajar" />
-          </Suspense>
-        } />
-        <Route path="editor/descubra-ms" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <VisualContentEditor platform="descubra-ms" />
+            <ViaJARContentEditor />
           </Suspense>
         } />
         

@@ -28,7 +28,8 @@ export async function sendNotificationEmail(params: SendEmailParams): Promise<{
     });
 
     if (error) {
-      console.error('Erro ao enviar email:', error);
+      // Log do erro mas não interrompe o fluxo - email é opcional
+      console.warn('Aviso: Não foi possível enviar email de notificação:', error.message);
       return {
         success: false,
         error: error.message,
@@ -41,7 +42,8 @@ export async function sendNotificationEmail(params: SendEmailParams): Promise<{
     };
 
   } catch (error: any) {
-    console.error('Erro no serviço de email:', error);
+    // Log do erro mas não interrompe o fluxo - email é opcional
+    console.warn('Aviso: Erro no serviço de email (não crítico):', error.message);
     return {
       success: false,
       error: error.message,
