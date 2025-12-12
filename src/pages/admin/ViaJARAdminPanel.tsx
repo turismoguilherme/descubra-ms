@@ -19,8 +19,6 @@ import { cn } from '@/lib/utils';
 // Lazy load components
 const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
 const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
-const DescubraMSContentEditor = lazy(() => import('@/components/admin/descubra_ms/UnifiedContentEditor'));
-const ViaJARContentEditor = lazy(() => import('@/components/admin/viajar/UnifiedContentEditor'));
 // MenuManager removido - desnecessário (menus são gerenciados via código)
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
 const PlatformSettings = lazy(() => import('@/components/admin/descubra_ms/PlatformSettings'));
@@ -105,11 +103,6 @@ export default function ViaJARAdminPanel() {
             } />
             
             {/* Descubra MS Routes */}
-            <Route path="descubra-ms/content" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <DescubraMSContentEditor />
-              </Suspense>
-            } />
             <Route path="descubra-ms/destinations" element={
               <Suspense fallback={<LoadingFallback />}>
                 <DestinationManager />
@@ -201,13 +194,6 @@ export default function ViaJARAdminPanel() {
         <Route path="financial/suppliers" element={
           <Suspense fallback={<LoadingFallback />}>
             <BankAccountsManager />
-          </Suspense>
-        } />
-        
-        {/* Editor de Conteúdo ViaJAR */}
-        <Route path="viajar/content" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <ViaJARContentEditor />
           </Suspense>
         } />
         

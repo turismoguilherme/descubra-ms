@@ -46,6 +46,7 @@ export default function DatabaseManager() {
   const [tableData, setTableData] = useState<TableData | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [page, setPage] = useState(0);
   const [pageSize] = useState(20);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -209,7 +210,15 @@ export default function DatabaseManager() {
     return 'text';
   };
 
-  const groupedTables = AVAILABLE_TABLES.reduce((acc, table) => {
+  // Obter categorias únicas
+  const categories = Array.from(new Set(AVAILABLE_TABLES.map(t => t.category)));
+  
+  // Filtrar tabelas por categoria selecionada
+  const filteredTables = selectedCategory === 'all' 
+    ? AVAILABLE_TABLES 
+    : AVAILABLE_TABLES.filter(t => t.category === selectedCategory);
+
+  const groupedTables = filteredTables.reduce((acc, table) => {
     if (!acc[table.category]) acc[table.category] = [];
     acc[table.category].push(table);
     return acc;
@@ -234,6 +243,48 @@ export default function DatabaseManager() {
         </div>
       </div>
 
+      {/* Filtros por Categoria */}
+      <Card className="bg-white border-slate-200">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filtrar por categoria:
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSelectedTable('');
+                }}
+                className={selectedCategory === 'all' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+              >
+                Todas ({AVAILABLE_TABLES.length})
+              </Button>
+              {categories.map((category) => {
+                const count = AVAILABLE_TABLES.filter(t => t.category === category).length;
+                return (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedCategory(category);
+                      setSelectedTable('');
+                    }}
+                    className={selectedCategory === category ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+                  >
+                    {category} ({count})
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Lista de Tabelas */}
         <Card className="lg:col-span-1 bg-white border-slate-200">
@@ -244,11 +295,20 @@ export default function DatabaseManager() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 max-h-[600px] overflow-y-auto">
-            {Object.entries(groupedTables).map(([category, tables]) => (
-              <div key={category} className="border-b border-slate-100 last:border-0">
-                <div className="px-4 py-2 bg-slate-50 text-xs font-semibold text-slate-500 uppercase">
-                  {category}
-                </div>
+            {Object.keys(groupedTables).length === 0 ? (
+              <div className="p-8 text-center text-slate-400">
+                <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhuma tabela encontrada para esta categoria</p>
+              </div>
+            ) : (
+              Object.entries(groupedTables).map(([category, tables]) => (
+                <div key={category} className="border-b border-slate-100 last:border-0">
+                  <div className="px-4 py-2 bg-slate-50 text-xs font-semibold text-slate-500 uppercase flex items-center justify-between">
+                    <span>{category}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {tables.length}
+                    </Badge>
+                  </div>
                 {tables.map((table) => (
                   <button
                     key={table.name}
@@ -270,8 +330,9 @@ export default function DatabaseManager() {
                     </div>
                   </button>
                 ))}
-              </div>
-            ))}
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 

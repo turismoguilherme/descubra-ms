@@ -50,8 +50,8 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   financeiro: ['dashboard', 'financial', 'reports'],
   rh: ['dashboard', 'employees', 'salaries'],
   comercial: ['dashboard', 'clients', 'subscriptions', 'partners'],
-  platforms: ['dashboard', 'viajar', 'descubra_ms', 'content'],
-  editor: ['dashboard', 'content', 'events', 'destinations', 'menus'],
+  platforms: ['dashboard', 'viajar', 'descubra_ms'],
+  editor: ['dashboard', 'events', 'destinations'],
   atendente: ['dashboard', 'cat', 'users'],
 };
 
@@ -88,7 +88,6 @@ const navigationItems: NavItem[] = [
     permission: 'viajar',
     platform: 'viajar',
         children: [
-          { id: 'viajar-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/viajar/content', permission: 'content', platform: 'viajar' },
           { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
           { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
         ],
@@ -100,7 +99,6 @@ const navigationItems: NavItem[] = [
     permission: 'descubra_ms',
     platform: 'descubra-ms',
     children: [
-          { id: 'ms-content', label: 'Conteúdo', icon: Edit3, path: '/viajar/admin/descubra-ms/content', permission: 'content', platform: 'descubra-ms' },
       { id: 'destinations', label: 'Destinos', icon: MapPin, path: '/viajar/admin/descubra-ms/destinations', permission: 'content', platform: 'descubra-ms' },
       { id: 'cats', label: 'CATs', icon: MapPin, path: '/viajar/admin/descubra-ms/cats', permission: 'content', platform: 'descubra-ms' },
       { id: 'footer', label: 'Footer', icon: Globe, path: '/viajar/admin/descubra-ms/footer', permission: 'content', platform: 'descubra-ms' },
