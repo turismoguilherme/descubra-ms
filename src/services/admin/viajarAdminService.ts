@@ -60,8 +60,15 @@ export const viajarAdminService = {
       `)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
-    return data;
+    if (error) {
+      // Se a tabela não existir, retornar array vazio
+      if (error.code === 'PGRST204' || error.message?.includes('does not exist')) {
+        console.warn('Tabela flowtrip_clients não encontrada, retornando array vazio');
+        return [];
+      }
+      throw error;
+    }
+    return data || [];
   },
 
   async updateClient(id: string, updates: any) {
@@ -90,8 +97,15 @@ export const viajarAdminService = {
       `)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
-    return data;
+    if (error) {
+      // Se a tabela não existir, retornar array vazio
+      if (error.code === 'PGRST204' || error.message?.includes('does not exist')) {
+        console.warn('Tabela flowtrip_subscriptions não encontrada, retornando array vazio');
+        return [];
+      }
+      throw error;
+    }
+    return data || [];
   },
 
   async updateSubscription(id: string, updates: any) {

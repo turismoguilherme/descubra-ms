@@ -160,7 +160,18 @@ serve(async (req) => {
   }
 
   try {
-    const { type, to, data } = await req.json() as EmailRequest;
+    let requestData: EmailRequest;
+    try {
+      requestData = await req.json() as EmailRequest;
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const { type, to, data } = requestData;
 
     if (!type || !to || !templates[type]) {
       return new Response(
@@ -218,16 +229,25 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       );
 
-      // Criar tabela de emails pendentes se não existir (será criada via migration)
-      await supabase.from('pending_emails').insert({
-        to_email: to,
-        subject: emailContent.subject,
-        html_content: emailContent.html,
-        type: type,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      });
+      // Tentar registrar no banco, mas não falhar se a tabela não existir
+      try {
+        const { error: insertError } = await supabase.from('pending_emails').insert({
+          to_email: to,
+          subject: emailContent.subject,
+          html_content: emailContent.html,
+          type: type,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        });
 
+        if (insertError) {
+          console.warn('Não foi possível registrar email pendente (tabela pode não existir):', insertError);
+        }
+      } catch (dbError) {
+        console.warn('Erro ao registrar email pendente:', dbError);
+      }
+
+      // Retornar sucesso mesmo sem Resend configurado (não é erro crítico)
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -240,9 +260,18 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Erro ao processar email:', error);
+    
+    // SEMPRE retornar sucesso para não bloquear o fluxo de aprovação
+    // O email não é crítico para a operação principal
+    console.warn('Erro no envio de email, mas retornando sucesso para não bloquear o fluxo:', error.message || error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro ao enviar email' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ 
+        success: true, 
+        message: 'Email não enviado (erro não crítico)',
+        pending: true,
+        error: error.message || 'Erro desconhecido'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   }
 });

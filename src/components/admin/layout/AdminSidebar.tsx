@@ -68,7 +68,6 @@ const sidebarItems: SidebarItem[] = [
       { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners', icon: Users2 },
       { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', icon: Ticket },
       { label: 'Conteúdo', path: '/viajar/admin/descubra-ms/content', icon: FileText },
-      { label: 'Menus', path: '/viajar/admin/descubra-ms/menus', icon: Menu },
       { label: 'Usuários', path: '/viajar/admin/descubra-ms/users', icon: UserCog },
       { label: 'Configurações', path: '/viajar/admin/descubra-ms/settings', icon: Settings },
     ],

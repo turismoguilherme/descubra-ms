@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnóstico - Versão Servida</title>
+</head>
+<body>
+    <h1>Diagnóstico de Versão</h1>
+    <div id="info"></div>
+    <script>
+        // Verificar qual componente está sendo usado
+        setTimeout(() => {
+            const nav = document.querySelector('nav');
+            const info = document.getElementById('info');
+            
+            if (nav) {
+                const navText = nav.textContent || nav.innerText;
+                const navHTML = nav.outerHTML;
+                
+                info.innerHTML = `
+                    <h2>Navbar Encontrada:</h2>
+                    <pre>${navHTML.substring(0, 500)}</pre>
+                    <h2>Texto da Navbar:</h2>
+                    <pre>${navText.substring(0, 200)}</pre>
+                    <h2>Classes da Navbar:</h2>
+                    <pre>${nav.className}</pre>
+                `;
+                
+                // Verificar se é ViaJAR ou OverflowOne
+                if (navText.includes('ViajAR') || navText.includes('ViaJAR')) {
+                    info.innerHTML += '<h2 style="color: green;">✅ É ViaJAR (CORRETO)</h2>';
+                } else if (navText.includes('Overflow') || navText.includes('OverFlow')) {
+                    info.innerHTML += '<h2 style="color: red;">❌ É Overflow One (ERRADO - VERSÃO ANTIGA)</h2>';
+                } else {
+                    info.innerHTML += '<h2 style="color: orange;">⚠️ Não identificado</h2>';
+                }
+            } else {
+                info.innerHTML = '<h2 style="color: red;">❌ Navbar não encontrada</h2>';
+            }
+            
+            // Verificar console logs
+            console.log('=== DIAGNÓSTICO ===');
+            console.log('Navbar encontrada:', !!nav);
+            if (nav) {
+                console.log('Classes:', nav.className);
+                console.log('Texto:', nav.textContent?.substring(0, 100));
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
+
+
+

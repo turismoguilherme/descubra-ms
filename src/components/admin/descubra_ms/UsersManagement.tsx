@@ -134,10 +134,66 @@ export default function UsersManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              toast({
+                                title: 'Detalhes do Usuário',
+                                description: `Nome: ${user.full_name || 'N/A'}\nRole: ${user.role}\nCadastro: ${user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}`,
+                              });
+                            }}
+                            title="Ver detalhes"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={async () => {
+                              if (!confirm(`Tem certeza que deseja ${user.role === 'banned' ? 'desbloquear' : 'bloquear'} este usuário?`)) return;
+                              
+                              try {
+                                // Atualizar role para 'banned' ou reverter
+                                const newRole = user.role === 'banned' ? 'user' : 'banned';
+                                
+                                // Buscar user_id do profile
+                                const { data: profile } = await supabase
+                                  .from('user_profiles')
+                                  .select('user_id')
+                                  .eq('id', user.id)
+                                  .single();
+                                
+                                if (profile?.user_id) {
+                                  // Atualizar role
+                                  const { error: roleError } = await supabase
+                                    .from('user_roles')
+                                    .upsert({
+                                      user_id: profile.user_id,
+                                      role: newRole,
+                                    }, {
+                                      onConflict: 'user_id'
+                                    });
+                                  
+                                  if (roleError) throw roleError;
+                                  
+                                  toast({
+                                    title: 'Sucesso',
+                                    description: `Usuário ${newRole === 'banned' ? 'bloqueado' : 'desbloqueado'} com sucesso`,
+                                  });
+                                  
+                                  fetchUsers();
+                                }
+                              } catch (error: any) {
+                                toast({
+                                  title: 'Erro',
+                                  description: error.message || 'Erro ao atualizar usuário',
+                                  variant: 'destructive',
+                                });
+                              }
+                            }}
+                            title={user.role === 'banned' ? 'Desbloquear usuário' : 'Bloquear usuário'}
+                          >
                             <Ban className="h-4 w-4" />
                           </Button>
                         </div>

@@ -17,7 +17,6 @@ const routeLabels: Record<string, string> = {
   '/viajar/admin/descubra-ms/partners': 'Parceiros',
   '/viajar/admin/descubra-ms/passport': 'Passaporte Digital',
   '/viajar/admin/descubra-ms/content': 'Conteúdo',
-  '/viajar/admin/descubra-ms/menus': 'Menus',
   '/viajar/admin/descubra-ms/users': 'Usuários',
   '/viajar/admin/descubra-ms/settings': 'Configurações',
   '/viajar/admin/financial': 'Financeiro',

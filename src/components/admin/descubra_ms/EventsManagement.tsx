@@ -16,7 +16,8 @@ import {
   Phone,
   Globe,
   Mail,
-  Building2
+  Building2,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { notifyEventApproved, notifyEventRejected } from '@/services/email/notificationEmailService';
@@ -58,6 +59,7 @@ export default function EventsManagement() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [approvingEventId, setApprovingEventId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('pending');
   const { toast } = useToast();
 
@@ -88,18 +90,79 @@ export default function EventsManagement() {
   }, []);
 
   const approveEvent = async (eventId: string) => {
+    // Evitar múltiplas aprovações simultâneas
+    if (approvingEventId === eventId) return;
+    
+    setApprovingEventId(eventId);
+    
     try {
       // Buscar dados do evento para o email
       const event = events.find(e => e.id === eventId);
       
-      const { error } = await supabase
+      if (!event) {
+        toast({
+          title: 'Erro',
+          description: 'Evento não encontrado',
+          variant: 'destructive',
+        });
+        setApprovingEventId(null);
+        return;
+      }
+
+      console.log('Aprovando evento:', eventId, event.name);
+
+      // Atualizar evento: tornar visível
+      const updateData: any = {
+        is_visible: true,
+      };
+
+      console.log('Dados para atualização:', updateData);
+
+      // Atualizar evento
+      const { data: updatedEvent, error } = await supabase
         .from('events')
-        .update({ is_visible: true })
-        .eq('id', eventId);
+        .update(updateData)
+        .eq('id', eventId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar evento:', error);
+        throw error;
+      }
 
-      // Enviar email de notificação
+      if (!updatedEvent || updatedEvent.length === 0) {
+        throw new Error('Nenhum evento foi atualizado. Verifique se você tem permissão para atualizar este evento.');
+      }
+
+      console.log('Evento atualizado com sucesso:', updatedEvent);
+
+      // Tentar atualizar approval_status separadamente (pode não existir ainda)
+      try {
+        const { error: approvalError } = await supabase
+          .from('events')
+          .update({ approval_status: 'approved' })
+          .eq('id', eventId);
+        
+        if (approvalError && approvalError.code !== 'PGRST204') {
+          console.warn('Aviso ao atualizar approval_status:', approvalError);
+        } else if (!approvalError) {
+          console.log('approval_status atualizado para approved');
+        }
+      } catch (err) {
+        console.warn('Não foi possível atualizar approval_status (campo pode não existir):', err);
+      }
+
+      // MOSTRAR TOAST DE SUCESSO IMEDIATAMENTE (antes do email)
+      toast({
+        title: '✅ Evento aprovado com sucesso!',
+        description: `O evento "${event.name}" agora está visível na plataforma.`,
+        duration: 5000,
+      });
+
+      // Recarregar eventos para atualizar a lista (fazer antes do email)
+      await loadEvents();
+
+      // Enviar email de notificação em background (não bloqueia)
       if (event?.organizador_email) {
         notifyEventApproved({
           organizerEmail: event.organizador_email,
@@ -107,56 +170,126 @@ export default function EventsManagement() {
           eventName: event.name,
           eventDate: formatDate(event.start_date),
           eventLocation: event.location,
-        }).catch(err => console.error('Erro ao enviar email:', err));
+        })
+        .then(result => {
+          if (result.success) {
+            console.log('✅ Email de notificação enviado com sucesso');
+          } else {
+            console.warn('⚠️ Email não foi enviado (não crítico):', result.error);
+          }
+        })
+        .catch(err => {
+          console.warn('⚠️ Erro ao enviar email (não crítico):', err);
+        });
       }
-
-      toast({
-        title: 'Evento aprovado!',
-        description: 'O evento agora está visível na plataforma. Email de notificação enviado.',
-      });
-      loadEvents();
+      
     } catch (error: any) {
+      console.error('Erro ao aprovar evento:', error);
       toast({
-        title: 'Erro',
-        description: error.message,
+        title: '❌ Erro ao aprovar evento',
+        description: error.message || 'Não foi possível aprovar o evento. Tente novamente.',
         variant: 'destructive',
+        duration: 5000,
       });
+    } finally {
+      setApprovingEventId(null);
     }
   };
 
   const rejectEvent = async (eventId: string, reason?: string) => {
+    // Evitar múltiplas rejeições simultâneas
+    if (approvingEventId === eventId) return;
+    
+    setApprovingEventId(eventId);
+    
     try {
       // Buscar dados do evento para o email
       const event = events.find(e => e.id === eventId);
+      
+      if (!event) {
+        toast({
+          title: 'Erro',
+          description: 'Evento não encontrado',
+          variant: 'destructive',
+        });
+        setApprovingEventId(null);
+        return;
+      }
 
-      const { error } = await supabase
+      // Marcar como rejeitado ao invés de deletar (melhor para auditoria)
+      const updateData: any = {
+        is_visible: false,
+      };
+
+      // Tentar atualizar approval_status se existir
+      try {
+        const { error: approvalError } = await supabase
+          .from('events')
+          .update({ approval_status: 'rejected' })
+          .eq('id', eventId);
+        
+        if (approvalError && approvalError.code !== 'PGRST204') {
+          console.warn('Aviso ao atualizar approval_status:', approvalError);
+        }
+      } catch (err) {
+        console.warn('Não foi possível atualizar approval_status:', err);
+      }
+
+      // Atualizar evento
+      const { data: updatedEvent, error } = await supabase
         .from('events')
-        .delete()
-        .eq('id', eventId);
+        .update(updateData)
+        .eq('id', eventId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao rejeitar evento:', error);
+        throw error;
+      }
 
-      // Enviar email de notificação
+      if (!updatedEvent || updatedEvent.length === 0) {
+        throw new Error('Nenhum evento foi atualizado. Verifique se você tem permissão.');
+      }
+
+      // MOSTRAR TOAST DE SUCESSO IMEDIATAMENTE
+      toast({
+        title: '❌ Evento rejeitado',
+        description: `O evento "${event.name}" foi rejeitado e não está mais visível.`,
+        duration: 5000,
+      });
+
+      // Recarregar eventos para atualizar a lista
+      await loadEvents();
+
+      // Enviar email de notificação em background (não bloqueia)
       if (event?.organizador_email) {
         notifyEventRejected({
           organizerEmail: event.organizador_email,
           organizerName: event.organizador_nome,
           eventName: event.name,
           reason: reason,
-        }).catch(err => console.error('Erro ao enviar email:', err));
+        })
+        .then(result => {
+          if (result.success) {
+            console.log('✅ Email de rejeição enviado com sucesso');
+          } else {
+            console.warn('⚠️ Email não foi enviado (não crítico):', result.error);
+          }
+        })
+        .catch(err => {
+          console.warn('⚠️ Erro ao enviar email (não crítico):', err);
+        });
       }
-
-      toast({
-        title: 'Evento rejeitado',
-        description: 'O evento foi removido. Email de notificação enviado.',
-      });
-      loadEvents();
     } catch (error: any) {
+      console.error('Erro ao rejeitar evento:', error);
       toast({
-        title: 'Erro',
-        description: error.message,
+        title: '❌ Erro ao rejeitar evento',
+        description: error.message || 'Não foi possível rejeitar o evento. Tente novamente.',
         variant: 'destructive',
+        duration: 5000,
       });
+    } finally {
+      setApprovingEventId(null);
     }
   };
 
@@ -267,17 +400,27 @@ export default function EventsManagement() {
                       variant="default"
                       className="bg-green-600 hover:bg-green-700"
                       onClick={() => approveEvent(event.id)}
+                      disabled={approvingEventId === event.id}
                     >
-                      <Check className="w-4 h-4 mr-1" />
-                      Aprovar
+                      {approvingEventId === event.id ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4 mr-1" />
+                      )}
+                      {approvingEventId === event.id ? 'Aprovando...' : 'Aprovar'}
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={() => rejectEvent(event.id)}
+                      disabled={approvingEventId === event.id}
                     >
-                      <X className="w-4 h-4 mr-1" />
-                      Rejeitar
+                      {approvingEventId === event.id ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <X className="w-4 h-4 mr-1" />
+                      )}
+                      {approvingEventId === event.id ? 'Rejeitando...' : 'Rejeitar'}
                     </Button>
                   </>
                 )}
@@ -614,9 +757,14 @@ export default function EventsManagement() {
                         approveEvent(selectedEvent.id);
                         setSelectedEvent(null);
                       }}
+                      disabled={approvingEventId === selectedEvent.id}
                     >
-                      <Check className="w-4 h-4 mr-2" />
-                      Aprovar Evento
+                      {approvingEventId === selectedEvent.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4 mr-2" />
+                      )}
+                      {approvingEventId === selectedEvent.id ? 'Aprovando...' : 'Aprovar Evento'}
                     </Button>
                     <Button
                       variant="destructive"
@@ -625,9 +773,14 @@ export default function EventsManagement() {
                         rejectEvent(selectedEvent.id);
                         setSelectedEvent(null);
                       }}
+                      disabled={approvingEventId === selectedEvent.id}
                     >
-                      <X className="w-4 h-4 mr-2" />
-                      Rejeitar
+                      {approvingEventId === selectedEvent.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <X className="w-4 h-4 mr-2" />
+                      )}
+                      {approvingEventId === selectedEvent.id ? 'Rejeitando...' : 'Rejeitar'}
                     </Button>
                   </>
                 )}

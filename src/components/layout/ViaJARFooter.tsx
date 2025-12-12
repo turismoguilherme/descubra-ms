@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical } from 'lucide-react';
+import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const ViaJARFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { settings } = useFooterSettings('viajar');
 
   return (
     <footer className="bg-viajar-slate text-white">
@@ -23,42 +25,50 @@ const ViaJARFooter: React.FC = () => {
               com analytics avançado e IA para o setor público e privado.
             </p>
             <div className="flex gap-3">
-              <a 
-                href="https://facebook.com/viajartur" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
-              </a>
-              <a 
-                href="https://instagram.com/viajartur" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
-              </a>
-              <a 
-                href="https://linkedin.com/company/viajartur" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
-                aria-label="LinkedIn"
-              >
-                <Linkedin className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
-              </a>
-              <a 
-                href="https://twitter.com/viajartur" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
-              </a>
+              {settings.social_media.facebook && (
+                <a 
+                  href={settings.social_media.facebook} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                </a>
+              )}
+              {settings.social_media.instagram && (
+                <a 
+                  href={settings.social_media.instagram} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                </a>
+              )}
+              {settings.social_media.linkedin && (
+                <a 
+                  href={settings.social_media.linkedin} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                </a>
+              )}
+              {settings.social_media.twitter && (
+                <a 
+                  href={settings.social_media.twitter} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -128,31 +138,36 @@ const ViaJARFooter: React.FC = () => {
               Contato
             </h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <Mail className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
-                <a 
-                  href="mailto:contato@viajartur.com.br" 
-                  className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm"
-                >
-                  contato@viajartur.com.br
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <Phone className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
-                <a 
-                  href="tel:+556730000000" 
-                  className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm"
-                >
-                  (67) 3000-0000
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
-                <span className="text-gray-400 text-sm">
-                  Campo Grande - MS<br />
-                  Brasil
-                </span>
-              </li>
+              {settings.email && (
+                <li className="flex items-start gap-3">
+                  <Mail className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
+                  <a 
+                    href={`mailto:${settings.email}`} 
+                    className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm"
+                  >
+                    {settings.email}
+                  </a>
+                </li>
+              )}
+              {settings.phone && (
+                <li className="flex items-start gap-3">
+                  <Phone className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
+                  <a 
+                    href={`tel:${settings.phone.replace(/\D/g, '')}`} 
+                    className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm"
+                  >
+                    {settings.phone}
+                  </a>
+                </li>
+              )}
+              {settings.address && (
+                <li className="flex items-start gap-3">
+                  <MapPin className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-400 text-sm">
+                    {settings.address}
+                  </span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -164,7 +179,7 @@ const ViaJARFooter: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Copyright */}
             <p className="text-gray-400 text-sm">
-              © {currentYear} ViajARTur. Todos os direitos reservados.
+              {settings.copyright || `© ${currentYear} ViajARTur. Todos os direitos reservados.`}
             </p>
 
             {/* Legal Links */}

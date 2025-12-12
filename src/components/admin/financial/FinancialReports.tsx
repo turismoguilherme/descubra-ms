@@ -104,9 +104,9 @@ export default function FinancialReports() {
         <div className="flex gap-2">
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-40">
-              <SelectValue />
+              <SelectValue placeholder="Selecione o período" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[10000]">
               <SelectItem value="week">Última Semana</SelectItem>
               <SelectItem value="month">Último Mês</SelectItem>
               <SelectItem value="quarter">Último Trimestre</SelectItem>
