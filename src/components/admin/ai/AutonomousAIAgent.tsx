@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { autonomousAgentService } from '@/services/admin/autonomousAgentService';
+import { generateContent } from '@/config/gemini';
 import {
   Bot, Zap, Activity, Play, Pause, Settings, Clock, Target,
   CheckCircle, AlertTriangle, Loader2, Brain, Sparkles, 
@@ -45,76 +47,124 @@ interface AILog {
   details?: string;
 }
 
-const defaultTasks: AITask[] = [
-  {
-    id: '1',
-    type: 'analysis',
-    name: 'Análise de Métricas',
-    description: 'Analisa métricas de usuários, receitas e engajamento. Gera insights automáticos.',
-    schedule: 'Diariamente às 08:00',
-    enabled: true,
-    status: 'idle',
-  },
-  {
-    id: '2',
-    type: 'report',
-    name: 'Relatório Financeiro',
-    description: 'Gera relatório financeiro com receitas, despesas e projeções.',
-    schedule: 'Semanalmente (Segunda)',
-    enabled: true,
-    status: 'idle',
-  },
-  {
-    id: '3',
-    type: 'content',
-    name: 'Sugestões de Conteúdo',
-    description: 'Sugere novos conteúdos baseado em tendências e comportamento dos usuários.',
-    schedule: 'Diariamente às 10:00',
-    enabled: false,
-    status: 'idle',
-  },
-  {
-    id: '4',
-    type: 'optimization',
-    name: 'Otimização de SEO',
-    description: 'Analisa e sugere melhorias de SEO para páginas e conteúdos.',
-    schedule: 'Semanalmente (Quarta)',
-    enabled: false,
-    status: 'idle',
-  },
-  {
-    id: '5',
-    type: 'notification',
-    name: 'Alertas de Anomalias',
-    description: 'Detecta padrões incomuns e envia alertas automáticos.',
-    schedule: 'A cada hora',
-    enabled: true,
-    status: 'idle',
-  },
-  {
-    id: '6',
-    type: 'backup',
-    name: 'Backup de Dados',
-    description: 'Realiza backup automático dos dados críticos do sistema.',
-    schedule: 'Diariamente às 03:00',
-    enabled: true,
-    status: 'idle',
-  },
-  {
-    id: '7',
-    type: 'cleanup',
-    name: 'Limpeza de Cache',
-    description: 'Limpa cache e dados temporários para otimizar performance.',
-    schedule: 'Semanalmente (Domingo)',
-    enabled: true,
-    status: 'idle',
-  },
-];
+const getDefaultTasks = (): AITask[] => {
+  const now = new Date();
+  
+  return [
+    {
+      id: '1',
+      type: 'analysis',
+      name: 'Análise de Métricas',
+      description: 'Analisa métricas de usuários, receitas e engajamento. Gera insights automáticos.',
+      schedule: 'Diariamente às 08:00',
+      enabled: true,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        next.setHours(8, 0, 0, 0);
+        if (next <= now) next.setDate(next.getDate() + 1);
+        return next;
+      })(),
+    },
+    {
+      id: '2',
+      type: 'report',
+      name: 'Relatório Financeiro',
+      description: 'Gera relatório financeiro com receitas, despesas e projeções.',
+      schedule: 'Semanalmente (Segunda)',
+      enabled: true,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        const daysUntilMonday = (1 - next.getDay() + 7) % 7 || 7;
+        next.setDate(next.getDate() + daysUntilMonday);
+        next.setHours(8, 0, 0, 0);
+        return next;
+      })(),
+    },
+    {
+      id: '3',
+      type: 'content',
+      name: 'Sugestões de Conteúdo',
+      description: 'Sugere novos conteúdos baseado em tendências e comportamento dos usuários.',
+      schedule: 'Diariamente às 10:00',
+      enabled: false,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        next.setHours(10, 0, 0, 0);
+        if (next <= now) next.setDate(next.getDate() + 1);
+        return next;
+      })(),
+    },
+    {
+      id: '4',
+      type: 'optimization',
+      name: 'Otimização de SEO',
+      description: 'Analisa e sugere melhorias de SEO para páginas e conteúdos.',
+      schedule: 'Semanalmente (Quarta)',
+      enabled: false,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        const daysUntilWednesday = (3 - next.getDay() + 7) % 7 || 7;
+        next.setDate(next.getDate() + daysUntilWednesday);
+        next.setHours(8, 0, 0, 0);
+        return next;
+      })(),
+    },
+    {
+      id: '5',
+      type: 'notification',
+      name: 'Alertas de Anomalias',
+      description: 'Detecta padrões incomuns e envia alertas automáticos.',
+      schedule: 'A cada hora',
+      enabled: true,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        next.setHours(next.getHours() + 1, 0, 0, 0);
+        return next;
+      })(),
+    },
+    {
+      id: '6',
+      type: 'backup',
+      name: 'Backup de Dados',
+      description: 'Realiza backup automático dos dados críticos do sistema.',
+      schedule: 'Diariamente às 03:00',
+      enabled: true,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        next.setHours(3, 0, 0, 0);
+        if (next <= now) next.setDate(next.getDate() + 1);
+        return next;
+      })(),
+    },
+    {
+      id: '7',
+      type: 'cleanup',
+      name: 'Limpeza de Cache',
+      description: 'Limpa cache e dados temporários para otimizar performance.',
+      schedule: 'Semanalmente (Domingo)',
+      enabled: true,
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        const daysUntilSunday = (0 - next.getDay() + 7) % 7 || 7;
+        next.setDate(next.getDate() + daysUntilSunday);
+        next.setHours(8, 0, 0, 0);
+        return next;
+      })(),
+    },
+  ];
+};
 
 export default function AutonomousAIAgent() {
   const { toast } = useToast();
   const [agentActive, setAgentActive] = useState(false);
-  const [tasks, setTasks] = useState<AITask[]>(defaultTasks);
+  const [tasks, setTasks] = useState<AITask[]>(getDefaultTasks());
   const [logs, setLogs] = useState<AILog[]>([]);
   const [autonomyLevel, setAutonomyLevel] = useState([50]);
   const [selectedTask, setSelectedTask] = useState<AITask | null>(null);
@@ -122,15 +172,54 @@ export default function AutonomousAIAgent() {
   const [chatInput, setChatInput] = useState('');
   const [processing, setProcessing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Estados para as permissões
+  const [permissions, setPermissions] = useState({
+    modifyDatabase: false,
+    sendNotifications: true,
+    generateReports: true,
+    accessFinancialData: false,
+  });
 
   useEffect(() => {
     // Load saved state
     const saved = localStorage.getItem('ai_agent_config');
     if (saved) {
-      const config = JSON.parse(saved);
-      setAgentActive(config.active || false);
-      setAutonomyLevel([config.autonomyLevel || 50]);
-      if (config.tasks) setTasks(config.tasks);
+      try {
+        const config = JSON.parse(saved);
+        setAgentActive(config.active || false);
+        setAutonomyLevel([config.autonomyLevel || 50]);
+        if (config.tasks) setTasks(config.tasks);
+        
+        // Carregar permissões salvas
+        if (config.permissions) {
+          setPermissions({
+            modifyDatabase: config.permissions.modifyDatabase ?? false,
+            sendNotifications: config.permissions.sendNotifications ?? true,
+            generateReports: config.permissions.generateReports ?? true,
+            accessFinancialData: config.permissions.accessFinancialData ?? false,
+          });
+        } else {
+          // Valores padrão baseados no nível de autonomia inicial
+          const initialAutonomy = config.autonomyLevel || 50;
+          setPermissions({
+            modifyDatabase: initialAutonomy > 50,
+            sendNotifications: true,
+            generateReports: true,
+            accessFinancialData: initialAutonomy > 70,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações salvas:', error);
+      }
+    } else {
+      // Valores padrão baseados no nível de autonomia inicial (50)
+      setPermissions({
+        modifyDatabase: false,
+        sendNotifications: true,
+        generateReports: true,
+        accessFinancialData: false,
+      });
     }
 
     // Add welcome message
@@ -142,21 +231,175 @@ export default function AutonomousAIAgent() {
     ]);
   }, []);
 
+  // Sistema de agendamento automático
+  useEffect(() => {
+    if (!agentActive) {
+      console.log('🤖 [AutonomousAgent] Agente desativado - tarefas automáticas pausadas');
+      return;
+    }
+
+    console.log('🤖 [AutonomousAgent] Agente ativado - iniciando verificação de tarefas agendadas');
+
+    const checkScheduledTasks = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentDay = now.getDay(); // 0 = Domingo, 1 = Segunda, etc.
+
+      console.log(`🕐 [AutonomousAgent] Verificando tarefas - Hora: ${currentHour}:${currentMinute.toString().padStart(2, '0')}, Dia: ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][currentDay]}`);
+
+      setTasks(currentTasks => {
+        const tasksToRun: AITask[] = [];
+        const enabledTasks = currentTasks.filter(t => t.enabled);
+        
+        console.log(`📋 [AutonomousAgent] Total de tarefas: ${currentTasks.length}, Habilitadas: ${enabledTasks.length}`);
+
+        currentTasks.forEach(task => {
+          if (!task.enabled) {
+            console.log(`⏸️ [AutonomousAgent] Tarefa ${task.name} está desabilitada`);
+            return;
+          }
+          
+          if (task.status === 'running') {
+            console.log(`⏳ [AutonomousAgent] Tarefa ${task.name} já está em execução`);
+            return;
+          }
+
+          const shouldRun = checkIfTaskShouldRun(task, currentHour, currentMinute, currentDay);
+          
+          if (shouldRun) {
+            // Verificar se já executou hoje (evitar múltiplas execuções)
+            const lastRun = task.lastRun ? new Date(task.lastRun) : null;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Verificar também se já executou na última hora (para tarefas horárias)
+            const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+            
+            const canRun = !lastRun || 
+              (task.schedule.includes('a cada hora') 
+                ? lastRun < oneHourAgo 
+                : lastRun < today);
+            
+            if (canRun) {
+              console.log(`⏰ [AutonomousAgent] ✅ Tarefa agendada detectada: ${task.name} (${task.schedule})`);
+              console.log(`   Última execução: ${lastRun ? lastRun.toLocaleString('pt-BR') : 'Nunca'}`);
+              tasksToRun.push(task);
+            } else {
+              const lastRunStr = lastRun ? lastRun.toLocaleString('pt-BR') : 'Nunca';
+              console.log(`⏭️ [AutonomousAgent] Tarefa ${task.name} já executou (${lastRunStr}), pulando...`);
+            }
+          } else {
+            // Log apenas para debug - mostrar quando a tarefa não deve rodar
+            const nextRun = task.nextRun ? new Date(task.nextRun) : null;
+            if (nextRun) {
+              console.log(`⏰ [AutonomousAgent] ${task.name} - Próxima execução: ${nextRun.toLocaleString('pt-BR')}`);
+            }
+          }
+        });
+
+        // Executar tarefas encontradas
+        if (tasksToRun.length > 0) {
+          console.log(`🚀 [AutonomousAgent] ${tasksToRun.length} tarefa(s) pronta(s) para execução`);
+          tasksToRun.forEach(task => {
+            console.log(`🚀 [AutonomousAgent] Iniciando execução: ${task.name}`);
+            setTimeout(() => runTask(task), 100);
+          });
+        } else {
+          console.log(`✅ [AutonomousAgent] Nenhuma tarefa precisa ser executada no momento`);
+        }
+
+        return currentTasks; // Não modificar o estado aqui
+      });
+    };
+
+    // Verificar a cada minuto
+    const interval = setInterval(() => {
+      console.log('🔄 [AutonomousAgent] Verificando tarefas agendadas...');
+      checkScheduledTasks();
+    }, 60000);
+    
+    // Verificar imediatamente ao ativar (com delay para evitar execução imediata)
+    const initialCheck = setTimeout(() => {
+      console.log('🔄 [AutonomousAgent] Verificação inicial de tarefas agendadas...');
+      checkScheduledTasks();
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialCheck);
+      console.log('🛑 [AutonomousAgent] Sistema de agendamento parado');
+    };
+  }, [agentActive, tasks.length]); // Usar tasks.length para detectar mudanças sem causar loop
+
+  const checkIfTaskShouldRun = (task: AITask, hour: number, minute: number, day: number): boolean => {
+    const schedule = task.schedule.toLowerCase();
+
+    // Diariamente às 08:00
+    if (schedule.includes('diariamente') && schedule.includes('08:00')) {
+      return hour === 8 && minute === 0;
+    }
+
+    // Diariamente às 10:00
+    if (schedule.includes('diariamente') && schedule.includes('10:00')) {
+      return hour === 10 && minute === 0;
+    }
+
+    // Diariamente às 03:00
+    if (schedule.includes('diariamente') && schedule.includes('03:00')) {
+      return hour === 3 && minute === 0;
+    }
+
+    // Semanalmente (Segunda)
+    if (schedule.includes('semanalmente') && schedule.includes('segunda')) {
+      return day === 1 && hour === 8 && minute === 0;
+    }
+
+    // Semanalmente (Quarta)
+    if (schedule.includes('semanalmente') && schedule.includes('quarta')) {
+      return day === 3 && hour === 8 && minute === 0;
+    }
+
+    // Semanalmente (Domingo)
+    if (schedule.includes('semanalmente') && schedule.includes('domingo')) {
+      return day === 0 && hour === 8 && minute === 0;
+    }
+
+    // A cada hora
+    if (schedule.includes('a cada hora')) {
+      return minute === 0; // Executa no início de cada hora
+    }
+
+    return false;
+  };
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
   const saveConfig = () => {
-    localStorage.setItem('ai_agent_config', JSON.stringify({
+    const config = {
       active: agentActive,
       autonomyLevel: autonomyLevel[0],
-      tasks: tasks
-    }));
+      tasks: tasks,
+      permissions: permissions,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem('ai_agent_config', JSON.stringify(config));
+    return config;
   };
 
   useEffect(() => {
-    saveConfig();
-  }, [agentActive, autonomyLevel, tasks]);
+    // Salvar automaticamente quando mudanças relevantes ocorrerem
+    const config = {
+      active: agentActive,
+      autonomyLevel: autonomyLevel[0],
+      tasks: tasks,
+      permissions: permissions,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem('ai_agent_config', JSON.stringify(config));
+  }, [agentActive, autonomyLevel, tasks, permissions]);
 
   const toggleAgent = () => {
     setAgentActive(!agentActive);
@@ -195,40 +438,127 @@ export default function AutonomousAIAgent() {
       status: 'success',
     });
 
-    // Simular execução
-    await new Promise(r => setTimeout(r, 2000 + Math.random() * 3000));
+    const startTime = Date.now();
+    let result: any = null;
+    let success = false;
+    let errorMessage = '';
 
-    const success = Math.random() > 0.1;
-    
-    setTasks(prev => prev.map(t => 
-      t.id === task.id ? { 
-        ...t, 
-        status: success ? 'completed' as const : 'error' as const,
-        lastRun: new Date(),
-        result: success ? 'Tarefa executada com sucesso' : 'Erro durante execução'
-      } : t
-    ));
+    try {
+      // Executar tarefa real baseada no tipo
+      switch (task.type) {
+        case 'analysis':
+          result = await autonomousAgentService.runMetricsAnalysis();
+          break;
+        case 'report':
+          result = await autonomousAgentService.generateFinancialReport();
+          break;
+        case 'notification':
+          result = await autonomousAgentService.detectAnomalies();
+          break;
+        case 'content':
+          result = await autonomousAgentService.suggestContent();
+          break;
+        case 'optimization':
+          result = await autonomousAgentService.analyzeSEO();
+          break;
+        case 'cleanup':
+          result = await autonomousAgentService.cleanupCache();
+          break;
+        case 'backup':
+          // Backup ainda não implementado - usar simulação
+          await new Promise(r => setTimeout(r, 2000));
+          result = { success: true, message: 'Backup simulado (não implementado ainda)' };
+          break;
+        default:
+          throw new Error('Tipo de tarefa não reconhecido');
+      }
 
-    addLog({
-      taskId: task.id,
-      taskName: task.name,
-      action: success ? 'Tarefa concluída' : 'Erro na execução',
-      status: success ? 'success' : 'error',
-      details: success ? `Executada em ${(2 + Math.random() * 3).toFixed(1)}s` : 'Erro de conexão'
-    });
+      success = result.success;
+      errorMessage = result.error || '';
 
-    toast({
-      title: success ? 'Tarefa concluída!' : 'Erro na tarefa',
-      description: task.name,
-      variant: success ? 'default' : 'destructive',
-    });
+      const executionTime = ((Date.now() - startTime) / 1000).toFixed(1);
+
+      setTasks(prev => prev.map(t => 
+        t.id === task.id ? { 
+          ...t, 
+          status: success ? 'completed' as const : 'error' as const,
+          lastRun: new Date(),
+          result: success ? result.message : errorMessage,
+          nextRun: calculateNextRun(task)
+        } : t
+      ));
+
+      addLog({
+        taskId: task.id,
+        taskName: task.name,
+        action: success ? 'Tarefa concluída' : 'Erro na execução',
+        status: success ? 'success' : 'error',
+        details: success 
+          ? `Executada em ${executionTime}s${result.data ? ` - ${JSON.stringify(result.data).substring(0, 100)}...` : ''}` 
+          : errorMessage
+      });
+
+      toast({
+        title: success ? 'Tarefa concluída!' : 'Erro na tarefa',
+        description: result.message || task.name,
+        variant: success ? 'default' : 'destructive',
+      });
+
+    } catch (error: any) {
+      success = false;
+      errorMessage = error.message || 'Erro desconhecido';
+      
+      setTasks(prev => prev.map(t => 
+        t.id === task.id ? { 
+          ...t, 
+          status: 'error' as const,
+          lastRun: new Date(),
+          result: errorMessage
+        } : t
+      ));
+
+      addLog({
+        taskId: task.id,
+        taskName: task.name,
+        action: 'Erro na execução',
+        status: 'error',
+        details: errorMessage
+      });
+
+      toast({
+        title: 'Erro na tarefa',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
 
     // Reset status after a while
     setTimeout(() => {
       setTasks(prev => prev.map(t => 
         t.id === task.id ? { ...t, status: 'idle' as const } : t
       ));
-    }, 5000);
+    }, 10000);
+  };
+
+  const calculateNextRun = (task: AITask): Date => {
+    const now = new Date();
+    const next = new Date(now);
+    
+    const schedule = task.schedule.toLowerCase();
+    
+    if (schedule.includes('a cada hora')) {
+      next.setHours(next.getHours() + 1, 0, 0, 0);
+    } else if (schedule.includes('diariamente')) {
+      next.setDate(next.getDate() + 1);
+      if (schedule.includes('08:00')) next.setHours(8, 0, 0, 0);
+      else if (schedule.includes('10:00')) next.setHours(10, 0, 0, 0);
+      else if (schedule.includes('03:00')) next.setHours(3, 0, 0, 0);
+    } else if (schedule.includes('semanalmente')) {
+      next.setDate(next.getDate() + 7);
+      next.setHours(8, 0, 0, 0);
+    }
+    
+    return next;
   };
 
   const toggleTaskEnabled = (taskId: string) => {
@@ -245,23 +575,70 @@ export default function AutonomousAIAgent() {
     setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setProcessing(true);
 
-    // Simulate AI response
-    await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
+    try {
+      // Construir contexto do chat
+      const conversationHistory = chatMessages
+        .slice(-5) // Últimas 5 mensagens
+        .map(msg => `${msg.role === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}`)
+        .join('\n');
 
-    const responses = [
-      'Analisei os dados e encontrei alguns insights interessantes. A receita aumentou 15% este mês em relação ao anterior.',
-      'Baseado nos padrões de uso, recomendo publicar novos conteúdos às terças e quintas-feiras, quando o engajamento é maior.',
-      'Identifiquei 3 tarefas pendentes que podem ser automatizadas. Gostaria que eu configure isso para você?',
-      'O relatório financeiro do mês passado foi gerado. As principais métricas estão acima da meta.',
-      'Notei que alguns usuários estão tendo dificuldades no fluxo de cadastro. Sugiro simplificar o processo.',
-      'A análise de SEO indica que 5 páginas podem ser otimizadas para melhorar o ranking.',
-    ];
+      // Buscar dados do sistema para contexto
+      let usersCount = 0;
+      let eventsCount = 0;
+      
+      try {
+        const [usersResult, eventsResult] = await Promise.all([
+          supabase.from('user_profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('events').select('id', { count: 'exact', head: true }).eq('is_visible', true),
+        ]);
+        usersCount = usersResult.count || 0;
+        eventsCount = eventsResult.count || 0;
+      } catch (error) {
+        console.warn('Erro ao buscar dados para contexto:', error);
+      }
 
-    setChatMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: responses[Math.floor(Math.random() * responses.length)] 
-    }]);
-    setProcessing(false);
+      const context = `Você é o Agente IA Autônomo do sistema de turismo do Mato Grosso do Sul.
+Você ajuda administradores com análises, relatórios e automação de tarefas.
+
+CONTEXTO DO SISTEMA:
+- Total de usuários: ${usersCount}
+- Eventos ativos: ${eventsCount}
+- Tarefas ativas: ${tasks.filter(t => t.enabled).length}
+- Nível de autonomia: ${autonomyLevel[0]}%
+
+HISTÓRICO DA CONVERSA:
+${conversationHistory}
+
+PERGUNTA DO USUÁRIO: ${userMessage}
+
+INSTRUÇÕES:
+- Seja útil, objetivo e profissional
+- Use os dados do sistema quando relevante
+- Sugira ações práticas quando apropriado
+- Se não souber algo, seja honesto
+- Mantenha respostas concisas mas informativas
+
+RESPOSTA:`;
+
+      const aiResponse = await generateContent(context);
+      
+      if (aiResponse.ok) {
+        setChatMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: aiResponse.text 
+        }]);
+      } else {
+        throw new Error(aiResponse.error || 'Erro ao gerar resposta');
+      }
+    } catch (error: any) {
+      console.error('Erro no chat:', error);
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.' 
+      }]);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const getTaskIcon = (type: string) => {
@@ -438,6 +815,12 @@ export default function AutonomousAIAgent() {
                               <span className="flex items-center gap-1">
                                 <CheckCircle className="h-3 w-3" />
                                 Última: {format(task.lastRun, 'dd/MM HH:mm', { locale: ptBR })}
+                              </span>
+                            )}
+                            {task.nextRun && (
+                              <span className="flex items-center gap-1">
+                                <Target className="h-3 w-3" />
+                                Próxima: {format(task.nextRun, 'dd/MM HH:mm', { locale: ptBR })}
                               </span>
                             )}
                           </div>
@@ -677,7 +1060,12 @@ export default function AutonomousAIAgent() {
                       <Database className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-700">Modificar dados no banco</span>
                     </div>
-                    <Switch defaultChecked={autonomyLevel[0] > 50} />
+                    <Switch 
+                      checked={permissions.modifyDatabase}
+                      onCheckedChange={(checked) => 
+                        setPermissions(prev => ({ ...prev, modifyDatabase: checked }))
+                      }
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -685,7 +1073,12 @@ export default function AutonomousAIAgent() {
                       <Mail className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-700">Enviar notificações</span>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={permissions.sendNotifications}
+                      onCheckedChange={(checked) => 
+                        setPermissions(prev => ({ ...prev, sendNotifications: checked }))
+                      }
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -693,7 +1086,12 @@ export default function AutonomousAIAgent() {
                       <FileText className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-700">Gerar relatórios</span>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={permissions.generateReports}
+                      onCheckedChange={(checked) => 
+                        setPermissions(prev => ({ ...prev, generateReports: checked }))
+                      }
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -701,15 +1099,24 @@ export default function AutonomousAIAgent() {
                       <DollarSign className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-700">Acessar dados financeiros</span>
                     </div>
-                    <Switch defaultChecked={autonomyLevel[0] > 70} />
+                    <Switch 
+                      checked={permissions.accessFinancialData}
+                      onCheckedChange={(checked) => 
+                        setPermissions(prev => ({ ...prev, accessFinancialData: checked }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
 
               <Button 
                 onClick={() => {
-                  saveConfig();
-                  toast({ title: 'Configurações salvas!' });
+                  const config = saveConfig();
+                  toast({ 
+                    title: '✅ Configurações salvas!', 
+                    description: `Nível de autonomia: ${config.autonomyLevel}% | Agente: ${config.active ? 'Ativo' : 'Inativo'}`,
+                    duration: 3000
+                  });
                 }}
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
               >

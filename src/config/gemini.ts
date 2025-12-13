@@ -1,4 +1,8 @@
- import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { supabase } from '@/integrations/supabase/client';
+
+// Cliente Gemini para compatibilidade com outros arquivos
+export const geminiClient = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // Cache para reduzir chamadas à API
 const responseCache = new Map<string, { response: string; timestamp: number }>();
@@ -7,8 +11,6 @@ const CACHE_DURATION = 0; // 0 = cache desabilitado para respostas sempre reais
 // Contador de requests para monitoramento
 let requestCount = 0;
 const REQUEST_LIMIT_PER_MINUTE = 10; // Reduzido de 15 para 10 para margem de segurança
-
-export const geminiClient = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export async function generateContent(
   systemPrompt: string, 
@@ -38,10 +40,30 @@ export async function generateContent(
 
     console.log('Gemini: Iniciando generateContent com system prompt:', systemPrompt.substring(0, 100) + '...');
     
-    const model = geminiClient.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    const text = response.text();
+    // Usar Edge Function (chaves protegidas no servidor)
+    const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
+      body: {
+        prompt: fullPrompt,
+        model: 'gemini-2.0-flash-exp', // Modelo que funciona na Edge Function
+        temperature: 0.7,
+        maxOutputTokens: 2000
+      }
+    });
+
+    // Verificar se há erro na resposta
+    if (error) {
+      throw new Error(`Edge Function error: ${error.message}`);
+    }
+
+    if (data?.error || !data?.success) {
+      throw new Error(data?.error || 'Erro desconhecido na Edge Function');
+    }
+
+    if (!data?.text) {
+      throw new Error('Resposta da Edge Function não contém texto');
+    }
+
+    const text = data.text;
     
     // Incrementar contador
     requestCount++;
@@ -49,7 +71,7 @@ export async function generateContent(
     // Salvar no cache
     responseCache.set(cacheKey, { response: text, timestamp: Date.now() });
     
-    console.log(`✅ Gemini: Resposta gerada (request #${requestCount})`);
+    console.log(`✅ Gemini: Resposta gerada via Edge Function (request #${requestCount})`);
     
     return { text, ok: true };
     
