@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Download, FileText, AlertCircle, Shield, Users, ArrowLeft, CheckCircle } from 'lucide-react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import { useRef } from 'react';
+import { policyService } from '@/services/public/policyService';
 
 const TermosUsoMS = () => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [policyContent, setPolicyContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    const loadPolicy = async () => {
+      try {
+        const policy = await policyService.getPublishedPolicy('terms_of_use', 'descubra_ms');
+        if (policy && policy.content) {
+          setPolicyContent(policy.content);
+          setLastUpdated(policy.last_updated);
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar política do banco:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPolicy();
+  }, []);
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -89,7 +110,9 @@ const TermosUsoMS = () => {
               </h1>
             </div>
             <p className="text-white/95 text-lg max-w-3xl">
-              Última atualização: {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              Última atualização: {lastUpdated 
+                ? new Date(lastUpdated).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+                : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
             </p>
           </div>
         </div>
@@ -108,15 +131,31 @@ const TermosUsoMS = () => {
               </Button>
             </div>
 
-            {/* Introdução */}
-            <div className="mb-8">
-              <p className="text-gray-700 leading-relaxed text-lg">
-                Estes Termos de Uso regem o uso da plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
-                operada pela <strong>viajARTUR</strong>. Ao acessar e utilizar esta plataforma, você concorda 
-                com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar 
-                nossos serviços.
-              </p>
-            </div>
+            {/* Conteúdo Dinâmico ou Fallback */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-primary-blue"></div>
+              </div>
+            ) : policyContent ? (
+              /* Conteúdo do banco */
+              <div 
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: policyService.markdownToHtml(policyContent)
+                }}
+              />
+            ) : (
+              /* Conteúdo padrão (fallback) */
+              <>
+                {/* Introdução */}
+                <div className="mb-8">
+                  <p className="text-gray-700 leading-relaxed text-lg">
+                    Estes Termos de Uso regem o uso da plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
+                    operada pela <strong>viajARTUR</strong>. Ao acessar e utilizar esta plataforma, você concorda 
+                    com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar 
+                    nossos serviços.
+                  </p>
+                </div>
 
             {/* Seção 1 */}
             <section className="mb-8">
@@ -466,13 +505,15 @@ const TermosUsoMS = () => {
               </div>
             </section>
 
-            {/* Rodapé do Documento */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <p className="text-center text-gray-600 text-sm">
-                Ao utilizar a plataforma <strong>Descubra Mato Grosso do Sul</strong>, você declara ter lido, 
-                compreendido e concordado com estes Termos de Uso.
-              </p>
-            </div>
+                {/* Rodapé do Documento */}
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <p className="text-center text-gray-600 text-sm">
+                    Ao utilizar a plataforma <strong>Descubra Mato Grosso do Sul</strong>, você declara ter lido, 
+                    compreendido e concordado com estes Termos de Uso.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>

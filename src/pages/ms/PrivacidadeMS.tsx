@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Download, Shield, Lock, Eye, FileText, Mail, ArrowLeft } from 'lucide-react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import { useRef } from 'react';
+import { policyService } from '@/services/public/policyService';
 
 const PrivacidadeMS = () => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [policyContent, setPolicyContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    const loadPolicy = async () => {
+      try {
+        const policy = await policyService.getPublishedPolicy('privacy_policy', 'descubra_ms');
+        if (policy && policy.content) {
+          setPolicyContent(policy.content);
+          setLastUpdated(policy.last_updated);
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar política do banco:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPolicy();
+  }, []);
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -89,7 +110,9 @@ const PrivacidadeMS = () => {
               </h1>
             </div>
             <p className="text-white/95 text-lg max-w-3xl">
-              Última atualização: {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              Última atualização: {lastUpdated 
+                ? new Date(lastUpdated).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+                : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
             </p>
           </div>
         </div>
@@ -108,14 +131,30 @@ const PrivacidadeMS = () => {
               </Button>
             </div>
 
-            {/* Introdução */}
-            <div className="mb-8">
-              <p className="text-gray-700 leading-relaxed text-lg">
-                A <strong>viajARTUR</strong>, responsável pela plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
-                está comprometida com a proteção da privacidade e dos dados pessoais de seus usuários, em conformidade 
-                com a <strong>Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
-              </p>
-            </div>
+            {/* Conteúdo Dinâmico ou Fallback */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-primary-blue"></div>
+              </div>
+            ) : policyContent ? (
+              /* Conteúdo do banco */
+              <div 
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: policyService.markdownToHtml(policyContent)
+                }}
+              />
+            ) : (
+              /* Conteúdo padrão (fallback) */
+              <>
+                {/* Introdução */}
+                <div className="mb-8">
+                  <p className="text-gray-700 leading-relaxed text-lg">
+                    A <strong>viajARTUR</strong>, responsável pela plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
+                    está comprometida com a proteção da privacidade e dos dados pessoais de seus usuários, em conformidade 
+                    com a <strong>Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
+                  </p>
+                </div>
 
             {/* Seção 1 */}
             <section className="mb-8">
@@ -435,13 +474,15 @@ const PrivacidadeMS = () => {
               </div>
             </section>
 
-            {/* Rodapé do Documento */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <p className="text-center text-gray-600 text-sm">
-                Esta Política de Privacidade é regida pela legislação brasileira, especialmente pela 
-                Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
-              </p>
-            </div>
+                {/* Rodapé do Documento */}
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <p className="text-center text-gray-600 text-sm">
+                    Esta Política de Privacidade é regida pela legislação brasileira, especialmente pela 
+                    Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>

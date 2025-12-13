@@ -279,7 +279,7 @@ const CATLocationManager = () => {
               Novo CAT
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
+          <DialogContent className="sm:max-w-[550px] top-[60%] translate-y-[-50%] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingCAT ? "Editar CAT" : "Adicionar Novo CAT"}</DialogTitle>
               <DialogDescription>

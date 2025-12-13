@@ -1,12 +1,33 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Download, Cookie, Settings, BarChart3, Shield, ArrowLeft, Clock, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { policyService } from '@/services/public/policyService';
 
 const Cookies = () => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [policyContent, setPolicyContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    const loadPolicy = async () => {
+      try {
+        const policy = await policyService.getPublishedPolicy('cookie_policy', 'viajar');
+        if (policy && policy.content) {
+          setPolicyContent(policy.content);
+          setLastUpdated(policy.last_updated);
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar política do banco:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPolicy();
+  }, []);
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -109,7 +130,9 @@ const Cookies = () => {
             </h1>
           </div>
           <p className="text-white/80 text-lg max-w-3xl">
-            Última atualização: {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            Última atualização: {lastUpdated 
+              ? new Date(lastUpdated).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+              : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </section>
@@ -129,16 +152,32 @@ const Cookies = () => {
               </Button>
             </div>
 
-            {/* Introdução */}
-            <div className="mb-8">
-              <p className="text-muted-foreground leading-relaxed text-lg">
-                A <strong className="text-foreground">ViajARTur</strong> utiliza cookies e tecnologias similares 
-                para melhorar sua experiência em nossa plataforma. Esta política explica detalhadamente o que são 
-                cookies, quais utilizamos, suas finalidades e como você pode gerenciá-los.
-              </p>
-            </div>
+            {/* Conteúdo Dinâmico ou Fallback */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viajar-cyan"></div>
+              </div>
+            ) : policyContent ? (
+              /* Conteúdo do banco */
+              <div 
+                className="prose prose-lg max-w-none text-foreground"
+                dangerouslySetInnerHTML={{ 
+                  __html: policyService.markdownToHtml(policyContent)
+                }}
+              />
+            ) : (
+              /* Conteúdo padrão (fallback) */
+              <>
+                {/* Introdução */}
+                <div className="mb-8">
+                  <p className="text-muted-foreground leading-relaxed text-lg">
+                    A <strong className="text-foreground">ViajARTur</strong> utiliza cookies e tecnologias similares 
+                    para melhorar sua experiência em nossa plataforma. Esta política explica detalhadamente o que são 
+                    cookies, quais utilizamos, suas finalidades e como você pode gerenciá-los.
+                  </p>
+                </div>
 
-            {/* Seção 1 - O que são Cookies */}
+                {/* Seção 1 - O que são Cookies */}
             <section className="mb-10">
               <div className="flex items-start gap-4 mb-4">
                 <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
@@ -517,13 +556,15 @@ const Cookies = () => {
               </div>
             </section>
 
-            {/* Rodapé do Documento */}
-            <div className="mt-12 pt-8 border-t border-border">
-              <p className="text-center text-muted-foreground text-sm">
-                Ao continuar navegando na plataforma <strong className="text-foreground">ViajARTur</strong>, 
-                você concorda com o uso de cookies conforme descrito nesta política.
-              </p>
-            </div>
+                {/* Rodapé do Documento */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <p className="text-center text-muted-foreground text-sm">
+                    Ao continuar navegando na plataforma <strong className="text-foreground">ViajARTur</strong>, 
+                    você concorda com o uso de cookies conforme descrito nesta política.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>

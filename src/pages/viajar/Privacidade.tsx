@@ -1,12 +1,33 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Download, Shield, Lock, Eye, FileText, Mail, ArrowLeft, UserX, Database, Globe, AlertTriangle, CheckCircle, Clock, Server } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { policyService } from '@/services/public/policyService';
 
 const Privacidade = () => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [policyContent, setPolicyContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    const loadPolicy = async () => {
+      try {
+        const policy = await policyService.getPublishedPolicy('privacy_policy', 'viajar');
+        if (policy && policy.content) {
+          setPolicyContent(policy.content);
+          setLastUpdated(policy.last_updated);
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar política do banco:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPolicy();
+  }, []);
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -83,7 +104,9 @@ const Privacidade = () => {
             </h1>
           </div>
           <p className="text-white/80 text-lg max-w-3xl">
-            Última atualização: {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            Última atualização: {lastUpdated 
+              ? new Date(lastUpdated).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+              : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </section>
@@ -103,18 +126,34 @@ const Privacidade = () => {
               </Button>
             </div>
 
-            {/* Introdução */}
-            <div className="mb-8">
-              <p className="text-muted-foreground leading-relaxed text-lg">
-                A <strong className="text-foreground">ViajARTur</strong> está comprometida com a proteção da privacidade 
-                e dos dados pessoais de seus usuários, em conformidade com a <strong className="text-foreground">Lei Geral 
-                de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
-              </p>
-              <p className="text-muted-foreground leading-relaxed mt-4">
-                Esta política descreve como coletamos, usamos, armazenamos, protegemos e, quando necessário, 
-                excluímos suas informações pessoais.
-              </p>
-            </div>
+            {/* Conteúdo Dinâmico ou Fallback */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viajar-cyan"></div>
+              </div>
+            ) : policyContent ? (
+              /* Conteúdo do banco */
+              <div 
+                className="prose prose-lg max-w-none text-foreground"
+                dangerouslySetInnerHTML={{ 
+                  __html: policyService.markdownToHtml(policyContent)
+                }}
+              />
+            ) : (
+              /* Conteúdo padrão (fallback) */
+              <>
+                {/* Introdução */}
+                <div className="mb-8">
+                  <p className="text-muted-foreground leading-relaxed text-lg">
+                    A <strong className="text-foreground">ViajARTur</strong> está comprometida com a proteção da privacidade 
+                    e dos dados pessoais de seus usuários, em conformidade com a <strong className="text-foreground">Lei Geral 
+                    de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed mt-4">
+                    Esta política descreve como coletamos, usamos, armazenamos, protegemos e, quando necessário, 
+                    excluímos suas informações pessoais.
+                  </p>
+                </div>
 
             {/* Seção 1 - Informações Coletadas */}
             <section className="mb-10">
@@ -569,13 +608,15 @@ const Privacidade = () => {
               </div>
             </section>
 
-            {/* Rodapé do Documento */}
-            <div className="mt-12 pt-8 border-t border-border">
-              <p className="text-center text-muted-foreground text-sm">
-                Esta Política de Privacidade é regida pela legislação brasileira, especialmente pela 
-                Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
-              </p>
-            </div>
+                {/* Rodapé do Documento */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <p className="text-center text-muted-foreground text-sm">
+                    Esta Política de Privacidade é regida pela legislação brasileira, especialmente pela 
+                    Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>

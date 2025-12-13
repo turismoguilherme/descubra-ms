@@ -1,12 +1,33 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Download, FileText, AlertCircle, Shield, Users, ArrowLeft, CheckCircle, XCircle, Clock, CreditCard, AlertTriangle, Brain, Scale } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { policyService } from '@/services/public/policyService';
 
 const TermosUso = () => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [policyContent, setPolicyContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    const loadPolicy = async () => {
+      try {
+        const policy = await policyService.getPublishedPolicy('terms_of_use', 'viajar');
+        if (policy && policy.content) {
+          setPolicyContent(policy.content);
+          setLastUpdated(policy.last_updated);
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar política do banco:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPolicy();
+  }, []);
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -82,7 +103,9 @@ const TermosUso = () => {
             </h1>
           </div>
           <p className="text-white/80 text-lg max-w-3xl">
-            Última atualização: {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            Última atualização: {lastUpdated 
+              ? new Date(lastUpdated).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+              : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </section>
@@ -102,14 +125,30 @@ const TermosUso = () => {
               </Button>
             </div>
 
-            {/* Introdução */}
-            <div className="mb-8">
-              <p className="text-muted-foreground leading-relaxed text-lg">
-                Estes Termos de Uso regem o uso da plataforma <strong className="text-foreground">ViajARTur</strong>, 
-                um sistema SaaS (Software as a Service) de gestão turística inteligente. Ao acessar e utilizar 
-                esta plataforma, você concorda com todos os termos descritos neste documento.
-              </p>
-            </div>
+            {/* Conteúdo Dinâmico ou Fallback */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viajar-cyan"></div>
+              </div>
+            ) : policyContent ? (
+              /* Conteúdo do banco */
+              <div 
+                className="prose prose-lg max-w-none text-foreground"
+                dangerouslySetInnerHTML={{ 
+                  __html: policyService.markdownToHtml(policyContent)
+                }}
+              />
+            ) : (
+              /* Conteúdo padrão (fallback) */
+              <>
+                {/* Introdução */}
+                <div className="mb-8">
+                  <p className="text-muted-foreground leading-relaxed text-lg">
+                    Estes Termos de Uso regem o uso da plataforma <strong className="text-foreground">ViajARTur</strong>, 
+                    um sistema SaaS (Software as a Service) de gestão turística inteligente. Ao acessar e utilizar 
+                    esta plataforma, você concorda com todos os termos descritos neste documento.
+                  </p>
+                </div>
 
             {/* AVISO IMPORTANTE - Plataforma em Evolução */}
             <div className="mb-8 p-6 bg-amber-500/10 border-2 border-amber-500/50 rounded-xl">
@@ -518,14 +557,16 @@ const TermosUso = () => {
               </div>
             </section>
 
-            {/* Rodapé do Documento */}
-            <div className="mt-12 pt-8 border-t border-border">
-              <p className="text-center text-muted-foreground text-sm">
-                Ao utilizar a plataforma <strong className="text-foreground">ViajARTur</strong>, você declara ter lido, 
-                compreendido e concordado com estes Termos de Uso, incluindo o aviso sobre a plataforma estar 
-                em evolução e a possibilidade de erros.
-              </p>
-            </div>
+                {/* Rodapé do Documento */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <p className="text-center text-muted-foreground text-sm">
+                    Ao utilizar a plataforma <strong className="text-foreground">ViajARTur</strong>, você declara ter lido, 
+                    compreendido e concordado com estes Termos de Uso, incluindo o aviso sobre a plataforma estar 
+                    em evolução e a possibilidade de erros.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
