@@ -162,7 +162,6 @@ const navigationItems: NavItem[] = [
       { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
       { id: 'system-logs', label: 'Logs', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
       { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
-      { id: 'settings-platform', label: 'Configurações - Plataforma', icon: Globe, path: '/viajar/admin/settings/platform', permission: 'settings', platform: 'system' },
       { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
     ],
   },

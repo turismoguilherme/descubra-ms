@@ -6,6 +6,8 @@ import { RefreshCw, CheckCircle, AlertCircle, XCircle, Server, Database, Cloud, 
 import { fallbackService } from '@/services/admin/fallbackService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { systemHealthService } from '@/services/admin/systemHealthService';
+import { checkApiAvailability } from '@/services/tourism/fetchCompatible';
 
 interface SystemStatus {
   platform: string;
@@ -29,6 +31,7 @@ export default function SystemMonitoring() {
     totalUsers: 0,
     activeEvents: 0,
     totalRequests: 0,
+    uptime: 99.9, // Inicializar com valor padrão
   });
   const { toast } = useToast();
 
@@ -47,6 +50,17 @@ export default function SystemMonitoring() {
         if (error) throw error;
         return { status: 'online', latency: Date.now() - startTime };
       }
+      if (name === 'API Backend') {
+        const isAvailable = await checkApiAvailability();
+        const latency = Date.now() - startTime;
+        return { status: isAvailable ? 'online' : 'offline', latency };
+      }
+      if (name === 'CDN') {
+        // Verificar CDN através do Supabase Storage
+        const { error } = await supabase.storage.listBuckets();
+        const latency = Date.now() - startTime;
+        return { status: error ? 'offline' : 'online', latency };
+      }
       return { status: 'online', latency: Date.now() - startTime };
     } catch {
       return { status: 'offline' };
@@ -55,18 +69,43 @@ export default function SystemMonitoring() {
 
   const fetchStatus = async () => {
     try {
-      const [viajarConfig, descubraConfig, servicesStatus, statsData] = await Promise.all([
+      // Log para verificação - mostrar que estamos buscando dados reais
+      console.log('🔍 [SystemMonitoring] Buscando dados REAIS do sistema...');
+      
+      const [viajarConfig, descubraConfig, servicesStatus, statsData, uptimeData] = await Promise.all([
         fallbackService.getFallbackConfig('viajar').catch(() => null),
         fallbackService.getFallbackConfig('descubra_ms').catch(() => null),
         Promise.all([
-          checkService('Supabase').then(result => ({ name: 'Banco de Dados', status: result.status, latency: result.latency, icon: Database })),
-          Promise.resolve({ name: 'API Backend', status: 'online' as const, latency: 45, icon: Server }),
-          Promise.resolve({ name: 'CDN', status: 'online' as const, latency: 12, icon: Cloud }),
+          checkService('Supabase').then(result => {
+            console.log('✅ [SystemMonitoring] Banco de Dados:', result);
+            return { name: 'Banco de Dados', status: result.status, latency: result.latency, icon: Database };
+          }),
+          checkService('API Backend').then(result => {
+            console.log('✅ [SystemMonitoring] API Backend:', result);
+            return { name: 'API Backend', status: result.status, latency: result.latency, icon: Server };
+          }),
+          checkService('CDN').then(result => {
+            console.log('✅ [SystemMonitoring] CDN:', result);
+            return { name: 'CDN', status: result.status, latency: result.latency, icon: Cloud };
+          }),
         ]),
         Promise.all([
-          supabase.from('user_profiles').select('id', { count: 'exact', head: true }).catch(() => ({ count: 0 })),
-          supabase.from('events').select('id', { count: 'exact', head: true }).eq('is_visible', true).catch(() => ({ count: 0 })),
+          supabase.from('user_profiles').select('id', { count: 'exact', head: true }).then(result => {
+            console.log('✅ [SystemMonitoring] Total de Usuários (REAL):', result.count);
+            return result;
+          }).catch(() => ({ count: 0 })),
+          supabase.from('events').select('id', { count: 'exact', head: true }).eq('is_visible', true).then(result => {
+            console.log('✅ [SystemMonitoring] Eventos Ativos (REAL):', result.count);
+            return result;
+          }).catch(() => ({ count: 0 })),
         ]),
+        systemHealthService.calculateUptime24h().then(uptime => {
+          console.log('✅ [SystemMonitoring] Uptime 24h (REAL do banco):', uptime + '%');
+          return uptime;
+        }).catch(() => {
+          console.warn('⚠️ [SystemMonitoring] Erro ao calcular uptime, usando fallback');
+          return 99.9;
+        }),
       ]);
 
       const systemsData: SystemStatus[] = [];
@@ -107,6 +146,7 @@ export default function SystemMonitoring() {
         totalUsers: (usersResult as any)?.count || 0,
         activeEvents: (eventsResult as any)?.count || 0,
         totalRequests: 0,
+        uptime: uptimeData as number,
       });
     } catch (error: any) {
       toast({
@@ -199,7 +239,7 @@ export default function SystemMonitoring() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-purple-700 uppercase">Uptime</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">99.9%</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.uptime.toFixed(1)}%</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-400" />
             </div>

@@ -205,11 +205,6 @@ export default function ViaJARAdminPanel() {
         } />
         
         {/* Settings Routes */}
-        <Route path="settings/platform" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <PlatformSettings />
-          </Suspense>
-        } />
         <Route path="settings/policies" element={
           <Suspense fallback={<LoadingFallback />}>
             <PoliciesEditor />

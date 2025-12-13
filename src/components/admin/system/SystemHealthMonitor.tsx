@@ -9,13 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Activity, Server, Database, Cloud, Mail, CreditCard, Bot,
-  CheckCircle, AlertTriangle, XCircle, RefreshCw, Bell, Settings,
-  Clock, TrendingUp, Shield, Zap, MessageCircle, Phone
+  Activity, Database, Cloud, Mail, Bot,
+  CheckCircle, AlertTriangle, XCircle, RefreshCw,
+  Clock, Shield, MessageCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { systemHealthService, type AlertConfig } from '@/services/admin/systemHealthService';
 
 interface ServiceStatus {
   name: string;
@@ -26,15 +27,13 @@ interface ServiceStatus {
   description: string;
 }
 
-interface AlertConfig {
-  email: boolean;
-  emailAddress: string;
-  whatsapp: boolean;
-  whatsappNumber: string;
-  downtime: boolean;
-  slowResponse: boolean;
-  errors: boolean;
-}
+const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  'Banco de Dados (Supabase)': Database,
+  'Autenticação': Shield,
+  'Storage de Arquivos': Cloud,
+  'API Gemini (IA)': Bot,
+  'Serviço de Email': Mail,
+};
 
 export default function SystemHealthMonitor() {
   const { toast } = useToast();
@@ -44,52 +43,109 @@ export default function SystemHealthMonitor() {
   const [uptime, setUptime] = useState(99.9);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [alertConfig, setAlertConfig] = useState<AlertConfig>({
-    email: true,
-    emailAddress: '',
-    whatsapp: false,
-    whatsappNumber: '',
-    downtime: true,
-    slowResponse: true,
-    errors: true,
+    email_enabled: true,
+    email_address: '',
+    whatsapp_enabled: false,
+    whatsapp_number: '',
+    downtime_alerts: true,
+    slow_response_alerts: true,
+    error_alerts: true,
   });
 
   useEffect(() => {
-    checkAllServices();
-    loadAlertConfig();
+    loadInitialData();
     
     // Verificar a cada 5 minutos
     const interval = setInterval(checkAllServices, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadAlertConfig = () => {
-    const saved = localStorage.getItem('system_alert_config');
-    if (saved) {
-      setAlertConfig(JSON.parse(saved));
+  const loadInitialData = async () => {
+    // Verificar se as políticas RLS estão corretas
+    const rlsCheck = await systemHealthService.checkRLSPolicies();
+    if (!rlsCheck.correct && rlsCheck.message) {
+      toast({
+        title: 'Atenção: Migration Pendente',
+        description: rlsCheck.message + ' Arquivo: supabase/migrations/20251213000001_fix_system_health_rls_policies.sql',
+        variant: 'destructive',
+      });
+    }
+
+    await Promise.all([
+      loadAlertConfig(),
+      loadAlerts(),
+      checkAllServices(),
+    ]);
+  };
+
+  const loadAlertConfig = async () => {
+    const config = await systemHealthService.loadAlertConfig();
+    if (config) {
+      setAlertConfig(config);
+    } else {
+      // Fallback para localStorage se não houver no banco
+      const saved = localStorage.getItem('system_alert_config');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setAlertConfig({
+            email_enabled: parsed.email ?? true,
+            email_address: parsed.emailAddress ?? '',
+            whatsapp_enabled: parsed.whatsapp ?? false,
+            whatsapp_number: parsed.whatsappNumber ?? '',
+            downtime_alerts: parsed.downtime ?? true,
+            slow_response_alerts: parsed.slowResponse ?? true,
+            error_alerts: parsed.errors ?? true,
+          });
+        } catch (e) {
+          console.error('Erro ao carregar config do localStorage:', e);
+        }
+      }
     }
   };
 
-  const saveAlertConfig = () => {
-    localStorage.setItem('system_alert_config', JSON.stringify(alertConfig));
-    toast({ title: 'Configurações salvas!' });
+  const saveAlertConfig = async () => {
+    const success = await systemHealthService.saveAlertConfig(alertConfig);
+    if (success) {
+      toast({ title: 'Configurações salvas!', description: 'Suas preferências foram salvas no banco de dados.' });
+    } else {
+      // Fallback para localStorage
+      localStorage.setItem('system_alert_config', JSON.stringify({
+        email: alertConfig.email_enabled,
+        emailAddress: alertConfig.email_address,
+        whatsapp: alertConfig.whatsapp_enabled,
+        whatsappNumber: alertConfig.whatsapp_number,
+        downtime: alertConfig.downtime_alerts,
+        slowResponse: alertConfig.slow_response_alerts,
+        errors: alertConfig.error_alerts,
+      }));
+      toast({ title: 'Configurações salvas!', description: 'Salvas localmente (banco temporariamente indisponível).' });
+    }
   };
 
-  const checkService = async (name: string, checkFn: () => Promise<boolean>): Promise<{ online: boolean; latency: number }> => {
-    const start = Date.now();
-    try {
-      const result = await Promise.race([
-        checkFn(),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
-      ]);
-      return { online: result, latency: Date.now() - start };
-    } catch (error) {
-      return { online: false, latency: Date.now() - start };
-    }
+  const loadAlerts = async () => {
+    console.log('📋 [SystemHealthMonitor] Carregando alertas do banco de dados...');
+    const loadedAlerts = await systemHealthService.loadAlerts(50);
+    console.log('✅ [SystemHealthMonitor] Alertas carregados (REAL do banco):', loadedAlerts.length);
+    setAlerts(loadedAlerts.map(alert => ({
+      id: alert.id,
+      type: alert.alert_type,
+      service: alert.service_name,
+      message: alert.message,
+      time: new Date(alert.created_at),
+      severity: alert.severity,
+      resolved: alert.resolved,
+    })));
   };
 
   const checkAllServices = async () => {
     setChecking(true);
+    setLoading(true);
     
+    // Log para verificação - mostrar que estamos buscando dados reais
+    console.log('🔍 [SystemHealthMonitor] Verificando serviços com dados REAIS...');
+    
+    // Inicializar serviços com status "checking"
     const serviceChecks: ServiceStatus[] = [
       {
         name: 'Banco de Dados (Supabase)',
@@ -135,85 +191,101 @@ export default function SystemHealthMonitor() {
 
     setServices(serviceChecks);
 
-    // Verificar cada serviço
+    // Verificar cada serviço usando o serviço real
     const results = await Promise.all([
-      // Banco de dados
-      checkService('database', async () => {
-        const { data, error } = await supabase.from('user_profiles').select('id').limit(1);
-        return !error;
+      systemHealthService.checkDatabase().then(result => {
+        console.log('✅ [SystemHealthMonitor] Banco de Dados (REAL):', result);
+        return result;
       }),
-      // Autenticação
-      checkService('auth', async () => {
-        const { data } = await supabase.auth.getSession();
-        return true;
+      systemHealthService.checkAuth().then(result => {
+        console.log('✅ [SystemHealthMonitor] Autenticação (REAL):', result);
+        return result;
       }),
-      // Storage
-      checkService('storage', async () => {
-        const { data, error } = await supabase.storage.listBuckets();
-        return !error;
+      systemHealthService.checkStorage().then(result => {
+        console.log('✅ [SystemHealthMonitor] Storage (REAL):', result);
+        return result;
       }),
-      // API Gemini - simulado
-      checkService('gemini', async () => {
-        // Simular verificação da API
-        await new Promise(r => setTimeout(r, 500));
-        return true;
+      systemHealthService.checkGeminiAPI().then(result => {
+        console.log('✅ [SystemHealthMonitor] API Gemini (REAL):', result);
+        return result;
       }),
-      // Email - simulado
-      checkService('email', async () => {
-        await new Promise(r => setTimeout(r, 300));
-        return true;
+      systemHealthService.checkEmailService().then(result => {
+        console.log('✅ [SystemHealthMonitor] Email Service (REAL):', result);
+        return result;
       }),
     ]);
 
+    // Salvar verificações no banco
+    console.log('💾 [SystemHealthMonitor] Salvando verificações no banco de dados...');
+    await Promise.all(results.map(result => systemHealthService.saveHealthCheck(result)));
+    console.log('✅ [SystemHealthMonitor] Verificações salvas no banco!');
+
+    // Atualizar serviços com resultados reais
     const updatedServices = serviceChecks.map((service, index) => {
       const result = results[index];
-      let status: 'online' | 'slow' | 'offline' = 'offline';
-      
-      if (result.online) {
-        status = result.latency > 500 ? 'slow' : 'online';
-      }
+      const Icon = SERVICE_ICONS[service.name] || Database;
       
       return {
         ...service,
-        status,
-        latency: result.latency,
+        name: result.service_name,
+        status: result.status,
+        latency: result.latency_ms,
         lastCheck: new Date(),
+        icon: Icon,
       };
     });
 
     setServices(updatedServices);
-    setLoading(false);
-    setChecking(false);
 
-    // Gerar alertas se necessário
+    // Calcular uptime real das últimas 24h
+    console.log('📊 [SystemHealthMonitor] Calculando uptime real das últimas 24h do banco...');
+    const realUptime = await systemHealthService.calculateUptime24h();
+    console.log('✅ [SystemHealthMonitor] Uptime 24h (REAL do banco):', realUptime + '%');
+    setUptime(realUptime);
+
+    // Gerar e salvar alertas se necessário
     const newAlerts: any[] = [];
-    updatedServices.forEach(service => {
-      if (service.status === 'offline') {
+    for (const result of results) {
+      if (result.status === 'offline' && alertConfig.downtime_alerts) {
+        const alert = {
+          service_name: result.service_name,
+          alert_type: 'error' as const,
+          message: `${result.service_name} está offline!`,
+          severity: 'high' as const,
+          metadata: { error_message: result.error_message },
+        };
+        await systemHealthService.saveAlert(alert);
         newAlerts.push({
-          id: Date.now(),
+          id: Date.now() + Math.random(),
           type: 'error',
-          service: service.name,
-          message: `${service.name} está offline!`,
+          service: result.service_name,
+          message: alert.message,
           time: new Date(),
         });
-      } else if (service.status === 'slow') {
+      } else if (result.status === 'slow' && alertConfig.slow_response_alerts) {
+        const alert = {
+          service_name: result.service_name,
+          alert_type: 'warning' as const,
+          message: `${result.service_name} está lento (${result.latency_ms}ms)`,
+          severity: 'medium' as const,
+          metadata: { latency_ms: result.latency_ms },
+        };
+        await systemHealthService.saveAlert(alert);
         newAlerts.push({
-          id: Date.now() + 1,
+          id: Date.now() + Math.random(),
           type: 'warning',
-          service: service.name,
-          message: `${service.name} está lento (${service.latency}ms)`,
+          service: result.service_name,
+          message: alert.message,
           time: new Date(),
         });
       }
-    });
-
-    if (newAlerts.length > 0) {
-      setAlerts(prev => [...newAlerts, ...prev].slice(0, 50));
     }
 
-    // Calcular uptime
-    const onlineCount = updatedServices.filter(s => s.status === 'online').length;
-    setUptime((onlineCount / updatedServices.length) * 100);
+    // Recarregar alertas do banco
+    await loadAlerts();
+
+    setLoading(false);
+    setChecking(false);
   };
 
   const getStatusIcon = (status: string) => {
@@ -288,7 +360,7 @@ export default function SystemHealthMonitor() {
               <div>
                 <p className="text-slate-500 text-sm">Alertas Ativos</p>
                 <p className="text-3xl font-bold text-amber-600 mt-1">
-                  {alerts.filter(a => a.type === 'warning').length}
+                  {alerts.filter(a => !a.resolved && a.type === 'warning').length}
                 </p>
               </div>
               <AlertTriangle className="h-10 w-10 text-amber-200" />
@@ -326,55 +398,61 @@ export default function SystemHealthMonitor() {
               <CardDescription>Monitoramento em tempo real de todos os componentes</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {services.map((service, index) => {
-                  const Icon = service.icon;
-                  return (
-                    <div 
-                      key={index}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border transition-colors",
-                        service.status === 'online' && "bg-emerald-50/50 border-emerald-100",
-                        service.status === 'slow' && "bg-amber-50/50 border-amber-100",
-                        service.status === 'offline' && "bg-red-50/50 border-red-100",
-                        service.status === 'checking' && "bg-slate-50 border-slate-100"
-                      )}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "p-2 rounded-lg",
-                          service.status === 'online' && "bg-emerald-100",
-                          service.status === 'slow' && "bg-amber-100",
-                          service.status === 'offline' && "bg-red-100",
-                          service.status === 'checking' && "bg-slate-100"
-                        )}>
-                          <Icon className={cn(
-                            "h-5 w-5",
-                            service.status === 'online' && "text-emerald-600",
-                            service.status === 'slow' && "text-amber-600",
-                            service.status === 'offline' && "text-red-600",
-                            service.status === 'checking' && "text-slate-400"
-                          )} />
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-800">{service.name}</div>
-                          <div className="text-sm text-slate-500">{service.description}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-slate-700">
-                            {service.latency > 0 ? `${service.latency}ms` : '--'}
+              {loading && services.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="h-8 w-8 text-slate-400 animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {services.map((service, index) => {
+                    const Icon = service.icon;
+                    return (
+                      <div 
+                        key={index}
+                        className={cn(
+                          "flex items-center justify-between p-4 rounded-lg border transition-colors",
+                          service.status === 'online' && "bg-emerald-50/50 border-emerald-100",
+                          service.status === 'slow' && "bg-amber-50/50 border-amber-100",
+                          service.status === 'offline' && "bg-red-50/50 border-red-100",
+                          service.status === 'checking' && "bg-slate-50 border-slate-100"
+                        )}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "p-2 rounded-lg",
+                            service.status === 'online' && "bg-emerald-100",
+                            service.status === 'slow' && "bg-amber-100",
+                            service.status === 'offline' && "bg-red-100",
+                            service.status === 'checking' && "bg-slate-100"
+                          )}>
+                            <Icon className={cn(
+                              "h-5 w-5",
+                              service.status === 'online' && "text-emerald-600",
+                              service.status === 'slow' && "text-amber-600",
+                              service.status === 'offline' && "text-red-600",
+                              service.status === 'checking' && "text-slate-400"
+                            )} />
                           </div>
-                          <div className="text-xs text-slate-400">Latência</div>
+                          <div>
+                            <div className="font-medium text-slate-800">{service.name}</div>
+                            <div className="text-sm text-slate-500">{service.description}</div>
+                          </div>
                         </div>
-                        {getStatusBadge(service.status)}
-                        {getStatusIcon(service.status)}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-slate-700">
+                              {service.latency > 0 ? `${service.latency}ms` : '--'}
+                            </div>
+                            <div className="text-xs text-slate-400">Latência</div>
+                          </div>
+                          {getStatusBadge(service.status)}
+                          {getStatusIcon(service.status)}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -395,7 +473,8 @@ export default function SystemHealthMonitor() {
                       className={cn(
                         "flex items-center gap-4 p-4 rounded-lg border",
                         alert.type === 'error' && "bg-red-50 border-red-100",
-                        alert.type === 'warning' && "bg-amber-50 border-amber-100"
+                        alert.type === 'warning' && "bg-amber-50 border-amber-100",
+                        alert.resolved && "opacity-50"
                       )}
                     >
                       {alert.type === 'error' ? (
@@ -414,6 +493,9 @@ export default function SystemHealthMonitor() {
                           {format(alert.time, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </div>
                       </div>
+                      {alert.resolved && (
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Resolvido</Badge>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -449,18 +531,18 @@ export default function SystemHealthMonitor() {
                     </div>
                   </div>
                   <Switch
-                    checked={alertConfig.email}
-                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, email: checked })}
+                    checked={alertConfig.email_enabled}
+                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, email_enabled: checked })}
                   />
                 </div>
-                {alertConfig.email && (
+                {alertConfig.email_enabled && (
                   <div>
                     <Label className="text-slate-600">Endereço de Email</Label>
                     <Input
                       type="email"
                       placeholder="seu@email.com"
-                      value={alertConfig.emailAddress}
-                      onChange={(e) => setAlertConfig({ ...alertConfig, emailAddress: e.target.value })}
+                      value={alertConfig.email_address || ''}
+                      onChange={(e) => setAlertConfig({ ...alertConfig, email_address: e.target.value })}
                       className="mt-1"
                     />
                   </div>
@@ -480,18 +562,18 @@ export default function SystemHealthMonitor() {
                     </div>
                   </div>
                   <Switch
-                    checked={alertConfig.whatsapp}
-                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, whatsapp: checked })}
+                    checked={alertConfig.whatsapp_enabled}
+                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, whatsapp_enabled: checked })}
                   />
                 </div>
-                {alertConfig.whatsapp && (
+                {alertConfig.whatsapp_enabled && (
                   <div>
                     <Label className="text-slate-600">Número do WhatsApp</Label>
                     <Input
                       type="tel"
                       placeholder="+55 67 99999-9999"
-                      value={alertConfig.whatsappNumber}
-                      onChange={(e) => setAlertConfig({ ...alertConfig, whatsappNumber: e.target.value })}
+                      value={alertConfig.whatsapp_number || ''}
+                      onChange={(e) => setAlertConfig({ ...alertConfig, whatsapp_number: e.target.value })}
                       className="mt-1"
                     />
                   </div>
@@ -508,8 +590,8 @@ export default function SystemHealthMonitor() {
                     <div className="text-sm text-slate-500">Alerta quando um serviço ficar indisponível</div>
                   </div>
                   <Switch
-                    checked={alertConfig.downtime}
-                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, downtime: checked })}
+                    checked={alertConfig.downtime_alerts}
+                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, downtime_alerts: checked })}
                   />
                 </div>
 
@@ -519,8 +601,8 @@ export default function SystemHealthMonitor() {
                     <div className="text-sm text-slate-500">Alerta quando um serviço estiver lento ({">"} 500ms)</div>
                   </div>
                   <Switch
-                    checked={alertConfig.slowResponse}
-                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, slowResponse: checked })}
+                    checked={alertConfig.slow_response_alerts}
+                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, slow_response_alerts: checked })}
                   />
                 </div>
 
@@ -530,8 +612,8 @@ export default function SystemHealthMonitor() {
                     <div className="text-sm text-slate-500">Alerta quando ocorrerem erros críticos</div>
                   </div>
                   <Switch
-                    checked={alertConfig.errors}
-                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, errors: checked })}
+                    checked={alertConfig.error_alerts}
+                    onCheckedChange={(checked) => setAlertConfig({ ...alertConfig, error_alerts: checked })}
                   />
                 </div>
               </div>
@@ -546,4 +628,3 @@ export default function SystemHealthMonitor() {
     </div>
   );
 }
-
