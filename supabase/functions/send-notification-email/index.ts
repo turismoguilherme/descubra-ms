@@ -420,14 +420,6 @@ serve(async (req) => {
         );
       }
 
-      const result = await resendResponse.json();
-      console.log('Email enviado com sucesso:', result);
-
-      return new Response(
-        JSON.stringify({ success: true, message: 'Email enviado', id: result.id }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-
     } else {
       // Resend não configurado - registrar no banco para envio manual
       console.log('RESEND_API_KEY não configurada. Registrando email para envio manual.');
