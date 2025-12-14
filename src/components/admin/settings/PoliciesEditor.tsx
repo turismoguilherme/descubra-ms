@@ -420,7 +420,7 @@ export default function PoliciesEditor() {
                               <span className="hidden sm:inline">Compartilhado (afeta ambas as plataformas)</span>
                               <span className="sm:hidden">Compartilhado</span>
                             </Badge>
-                          </div>
+                    </div>
                         )}
                         <CardDescription className="flex flex-wrap items-center gap-2 sm:gap-4 text-zinc-500 text-xs sm:text-sm">
                           <span className="flex items-center gap-1 whitespace-nowrap">
@@ -638,27 +638,27 @@ export default function PoliciesEditor() {
                         </CardDescription>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 sm:gap-3 flex-shrink-0">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                           <Label htmlFor="publish-viajar" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Publicado</Label>
-                          <Switch
+                      <Switch
                             id="publish-viajar"
-                            checked={currentPolicy.is_published}
-                            onCheckedChange={() => handleTogglePublish(currentPolicy.key)}
-                          />
-                        </div>
-                        {editMode ? (
-                          <>
+                        checked={currentPolicy.is_published}
+                        onCheckedChange={() => handleTogglePublish(currentPolicy.key)}
+                      />
+                    </div>
+                    {editMode ? (
+                      <>
                             <Button variant="outline" size="sm" onClick={cancelEditing} className="text-xs sm:text-sm">
                               <span className="hidden sm:inline">Cancelar</span>
                               <span className="sm:hidden">Cancelar</span>
-                            </Button>
+                        </Button>
                             <Button size="sm" onClick={handleSavePolicy} disabled={saving} className="text-xs sm:text-sm">
                               <Save className="h-4 w-4 sm:mr-2" />
                               <span className="hidden sm:inline">{saving ? 'Salvando...' : 'Salvar'}</span>
-                            </Button>
-                          </>
-                        ) : (
-                          <>
+                        </Button>
+                      </>
+                    ) : (
+                      <>
                             <Button 
                               variant="outline" 
                               size="sm" 
@@ -673,7 +673,7 @@ export default function PoliciesEditor() {
                             <Button variant="outline" size="sm" onClick={() => setPreviewMode(!previewMode)} className="text-xs sm:text-sm">
                               <Eye className="h-4 w-4 sm:mr-2" />
                               <span className="hidden sm:inline">{previewMode ? 'Ocultar Preview' : 'Preview'}</span>
-                            </Button>
+                        </Button>
                             <Button size="sm" onClick={startEditing} className="text-xs sm:text-sm">
                               <Edit3 className="h-4 w-4 sm:mr-2" />
                               <span className="hidden sm:inline">Editar</span>

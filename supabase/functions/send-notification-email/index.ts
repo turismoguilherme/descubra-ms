@@ -9,7 +9,8 @@ type NotificationType =
   | 'event_payment_confirmed'
   | 'partner_approved'
   | 'partner_rejected'
-  | 'welcome';
+  | 'welcome'
+  | 'system_alert';
 
 interface EmailRequest {
   type: NotificationType;
@@ -152,6 +153,47 @@ const templates: Record<NotificationType, { subject: string; html: (data: any) =
       </div>
     `,
   },
+  system_alert: {
+    subject: '🚨 Alerta do Sistema - Descubra MS',
+    html: (data: any) => {
+      const severityColors: Record<string, string> = {
+        critical: '#dc2626',
+        high: '#ea580c',
+        medium: '#f59e0b',
+        low: '#3b82f6',
+      };
+      const severityColor = severityColors[data.severity] || '#6b7280';
+      const alertIcon = data.alert_type === 'error' ? '🔴' : data.alert_type === 'warning' ? '⚠️' : 'ℹ️';
+      
+      return `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: ${severityColor}; padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">${alertIcon} Alerta do Sistema</h1>
+          </div>
+          <div style="padding: 30px; background: #f9fafb;">
+            <h2 style="color: ${severityColor}; margin-top: 0;">${data.service_name || 'Serviço'} - ${data.severity?.toUpperCase() || 'ALERTA'}</h2>
+            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${severityColor}; margin: 20px 0;">
+              <p style="font-size: 16px; margin: 0;"><strong>${data.message || 'Alerta do sistema'}</strong></p>
+            </div>
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Serviço:</strong> ${data.service_name || 'N/A'}</p>
+              <p style="margin: 5px 0;"><strong>Tipo:</strong> ${data.alert_type || 'N/A'}</p>
+              <p style="margin: 5px 0;"><strong>Severidade:</strong> ${data.severity || 'N/A'}</p>
+              <p style="margin: 5px 0;"><strong>Data/Hora:</strong> ${data.timestamp ? new Date(data.timestamp).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')}</p>
+            </div>
+            <a href="https://descubramatogrossodosul.com.br/viajar/admin/system/health" 
+               style="display: inline-block; background: ${severityColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+              Ver Detalhes no Painel Admin
+            </a>
+          </div>
+          <div style="padding: 20px; text-align: center; color: #6b7280; font-size: 12px; background: #f9fafb;">
+            <p>Este é um email automático do sistema de monitoramento do Descubra MS.</p>
+            <p>Para gerenciar suas preferências de alertas, acesse o painel administrativo.</p>
+          </div>
+        </div>
+      `;
+    },
+  },
 };
 
 serve(async (req) => {
@@ -162,54 +204,220 @@ serve(async (req) => {
   try {
     let requestData: EmailRequest;
     try {
+      // Usar req.json() diretamente como outras Edge Functions fazem
       requestData = await req.json() as EmailRequest;
+      console.log('✅ [send-notification-email] Body parseado com sucesso:', {
+        hasType: !!requestData.type,
+        type: requestData.type,
+        hasTo: !!requestData.to,
+        to: requestData.to,
+        hasData: !!requestData.data,
+        dataKeys: requestData.data ? Object.keys(requestData.data) : [],
+        fullRequestData: JSON.stringify(requestData).substring(0, 1000),
+        requestDataType: typeof requestData,
+        requestDataKeys: Object.keys(requestData || {})
+      });
     } catch (parseError) {
-      console.error('Erro ao fazer parse do JSON:', parseError);
+      console.error('❌ [send-notification-email] Erro ao fazer parse do JSON:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        JSON.stringify({ error: 'Invalid JSON in request body', details: String(parseError) }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    const { type, to, data } = requestData;
+    // Extrair campos com valores padrão para evitar undefined
+    const type = requestData?.type;
+    const to = requestData?.to;
+    const data = requestData?.data;
 
-    if (!type || !to || !templates[type]) {
+    console.log('📧 [send-notification-email] Campos extraídos após destructuring:', { 
+      type, 
+      to, 
+      hasData: !!data,
+      dataKeys: data ? Object.keys(data) : [],
+      fullData: JSON.stringify(data || {}).substring(0, 500),
+      typeIsTruthy: !!type,
+      toIsTruthy: !!to,
+      typeValue: type,
+      toValue: to
+    });
+
+    if (!type || !to) {
+      console.error('❌ [send-notification-email] Campos obrigatórios faltando:', { 
+        type: type || 'MISSING', 
+        to: to || 'MISSING',
+        requestData: JSON.stringify(requestData).substring(0, 500)
+      });
       return new Response(
-        JSON.stringify({ error: 'Invalid request: type and to are required' }),
+        JSON.stringify({ 
+          error: 'Invalid request: type and to are required',
+          received: { type: type || null, to: to || null }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (!templates[type]) {
+      console.error('❌ [send-notification-email] Tipo de template não encontrado:', {
+        requestedType: type,
+        availableTypes: Object.keys(templates),
+        templatesCount: Object.keys(templates).length
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: `Invalid template type: ${type}. Available: ${Object.keys(templates).join(', ')}`,
+          requestedType: type,
+          availableTypes: Object.keys(templates)
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     const template = templates[type];
+    
+    // Para system_alert, personalizar o subject com o nome do serviço
+    let subject = template.subject;
+    if (type === 'system_alert' && data?.service_name) {
+      subject = `🚨 Alerta: ${data.service_name} - Descubra MS`;
+    }
+    
+    // Gerar HTML do template
+    let htmlContent: string;
+    try {
+      htmlContent = template.html(data || {});
+      if (!htmlContent) {
+        throw new Error('Template HTML retornou vazio');
+      }
+    } catch (htmlError: any) {
+      console.error('❌ [send-notification-email] Erro ao gerar HTML do template:', htmlError);
+      return new Response(
+        JSON.stringify({ error: `Error generating email HTML: ${htmlError.message}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
     const emailContent = {
       to,
-      subject: template.subject,
-      html: template.html(data),
+      subject,
+      html: htmlContent,
     };
+
+    console.log('📧 [send-notification-email] Conteúdo do email preparado:', { to, subject, htmlLength: htmlContent.length });
 
     // Verificar se Resend está configurado (aceita ambos os nomes)
     const resendApiKey = Deno.env.get('RESEND_API_KEY') || Deno.env.get('RESEND_KEY');
 
     if (resendApiKey) {
-      // Enviar via Resend
-      const resendResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'Descubra MS <noreply@descubramatogrossodosul.com.br>',
-          to: [to],
-          subject: emailContent.subject,
-          html: emailContent.html,
-        }),
-      });
+      // Tentar usar domínio customizado primeiro, com fallback para domínio padrão do Resend
+      // O domínio padrão do Resend é sempre verificado e pode ser usado sem configuração adicional
+      const customDomain = Deno.env.get('RESEND_FROM_EMAIL') || 'Descubra MS <noreply@descubramatogrossodosul.com.br>';
+      // Domínio padrão do Resend (sempre verificado - funciona mesmo sem verificar domínio customizado)
+      const defaultDomain = Deno.env.get('RESEND_DEFAULT_FROM') || 'Descubra MS <onboarding@resend.dev>';
+      
+      // Função para tentar enviar com um domínio específico
+      const trySendEmail = async (fromEmail: string, isRetry: boolean = false) => {
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [to],
+            subject: emailContent.subject,
+            html: emailContent.html,
+          }),
+        });
 
-      if (!resendResponse.ok) {
-        const errorData = await resendResponse.json();
-        console.error('Erro Resend:', errorData);
-        throw new Error('Falha ao enviar email via Resend');
+        if (!resendResponse.ok) {
+          let errorData: any;
+          try {
+            errorData = await resendResponse.json();
+          } catch {
+            errorData = { status: resendResponse.status, statusText: resendResponse.statusText };
+          }
+          
+          // Se for erro 403 (domínio não verificado) e ainda não tentou o domínio padrão, tentar novamente
+          if (resendResponse.status === 403 && !isRetry && fromEmail === customDomain) {
+            console.warn('⚠️ [send-notification-email] Domínio customizado não verificado, tentando com domínio padrão do Resend...');
+            return await trySendEmail(defaultDomain, true);
+          }
+          
+          console.error('❌ [send-notification-email] Erro Resend:', {
+            status: resendResponse.status,
+            statusText: resendResponse.statusText,
+            errorData,
+            emailTo: to,
+            emailSubject: emailContent.subject,
+            fromEmail,
+            isRetry
+          });
+          
+          // Se for erro 403 de domínio não verificado, retornar sucesso mas com aviso
+          if (resendResponse.status === 403 && errorData?.message?.includes('domain is not verified')) {
+            console.warn('⚠️ [send-notification-email] Domínio não verificado no Resend. Email não enviado, mas retornando sucesso para não bloquear o fluxo.');
+            return {
+              success: true,
+              pending: true,
+              warning: 'Domínio não verificado no Resend. Verifique o domínio em resend.com/domains',
+              errorData
+            };
+          }
+          
+          throw new Error(`Resend API error: ${resendResponse.status} - ${errorData?.message || resendResponse.statusText}`);
+        }
+
+        const result = await resendResponse.json();
+        return { success: true, result, fromEmail, isRetry };
+      };
+
+      try {
+        const emailResult = await trySendEmail(customDomain);
+        
+        if (emailResult.pending) {
+          // Domínio não verificado - retornar sucesso com aviso
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Email não enviado - domínio não verificado no Resend',
+              pending: true,
+              warning: emailResult.warning,
+              errorData: emailResult.errorData
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+          );
+        }
+        
+        console.log('✅ [send-notification-email] Email enviado com sucesso:', {
+          id: emailResult.result?.id,
+          from: emailResult.fromEmail,
+          to,
+          usedDefaultDomain: emailResult.isRetry
+        });
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Email enviado', 
+            id: emailResult.result?.id,
+            from: emailResult.fromEmail,
+            usedDefaultDomain: emailResult.isRetry
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      } catch (emailError: any) {
+        console.error('❌ [send-notification-email] Erro ao enviar email:', emailError);
+        // Retornar sucesso para não bloquear o fluxo, mas logar o erro
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Email não enviado (erro não crítico)',
+            pending: true,
+            error: emailError.message || 'Erro desconhecido'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
       }
 
       const result = await resendResponse.json();

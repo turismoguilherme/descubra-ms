@@ -8,12 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Database, Table, Plus, Edit, Trash2, Search, RefreshCw, Download,
   Upload, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal,
-  AlertTriangle, CheckCircle, Copy, FileJson
+  AlertTriangle, CheckCircle, Copy, FileJson, Shield
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -21,18 +22,58 @@ import { cn } from '@/lib/utils';
 
 // Tabelas disponíveis para gerenciamento
 const AVAILABLE_TABLES = [
-  { name: 'destinations', label: 'Destinos', description: 'Destinos turísticos do Descubra MS', category: 'Descubra MS' },
-  { name: 'events', label: 'Eventos', description: 'Eventos cadastrados na plataforma', category: 'Descubra MS' },
-  { name: 'institutional_partners', label: 'Parceiros', description: 'Parceiros institucionais', category: 'Descubra MS' },
-  { name: 'passport_routes', label: 'Rotas do Passaporte', description: 'Rotas do passaporte digital', category: 'Passaporte' },
-  { name: 'passport_checkpoints', label: 'Checkpoints', description: 'Pontos de check-in', category: 'Passaporte' },
-  { name: 'rewards', label: 'Recompensas', description: 'Recompensas do passaporte', category: 'Passaporte' },
-  { name: 'user_profiles', label: 'Usuários', description: 'Perfis de usuários', category: 'Sistema' },
-  { name: 'viajar_employees', label: 'Funcionários', description: 'Funcionários da ViajARTur', category: 'ViajARTur' },
-  { name: 'expenses', label: 'Despesas', description: 'Despesas financeiras', category: 'Financeiro' },
-  { name: 'master_financial_records', label: 'Receitas', description: 'Registros de receitas', category: 'Financeiro' },
-  { name: 'guata_knowledge_base', label: 'Base de Conhecimento IA', description: 'Conhecimento do Guatá', category: 'IA' },
+  { name: 'destinations', label: 'Destinos', description: 'Destinos turísticos do Descubra MS', category: 'Descubra MS', sensitive: false },
+  { name: 'events', label: 'Eventos', description: 'Eventos cadastrados na plataforma', category: 'Descubra MS', sensitive: false },
+  { name: 'institutional_partners', label: 'Parceiros', description: 'Parceiros institucionais', category: 'Descubra MS', sensitive: false },
+  { name: 'passport_routes', label: 'Rotas do Passaporte', description: 'Rotas do passaporte digital', category: 'Passaporte', sensitive: false },
+  { name: 'passport_checkpoints', label: 'Checkpoints', description: 'Pontos de check-in', category: 'Passaporte', sensitive: false },
+  { name: 'rewards', label: 'Recompensas', description: 'Recompensas do passaporte', category: 'Passaporte', sensitive: false },
+  { name: 'user_profiles', label: 'Usuários', description: 'Perfis de usuários', category: 'Sistema', sensitive: true },
+  { name: 'viajar_employees', label: 'Funcionários', description: 'Funcionários da ViajARTur', category: 'ViajARTur', sensitive: true },
+  { name: 'expenses', label: 'Despesas', description: 'Despesas financeiras', category: 'Financeiro', sensitive: true },
+  { name: 'master_financial_records', label: 'Receitas', description: 'Registros de receitas', category: 'Financeiro', sensitive: true },
+  { name: 'guata_knowledge_base', label: 'Base de Conhecimento IA', description: 'Conhecimento do Guatá', category: 'IA', sensitive: false },
 ];
+
+// Função helper para registrar ações de auditoria
+const logAuditAction = async (
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'VIEW',
+  tableName: string,
+  recordId?: string,
+  oldData?: any,
+  newData?: any
+) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const userProfile = user ? await supabase
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('user_id', user.id)
+      .single() : null;
+
+    await supabase.from('master_activity_logs').insert({
+      user_id: user?.id || 'system',
+      action: `DATABASE_${action}`,
+      entity_type: tableName,
+      entity_id: recordId,
+      details: {
+        table: tableName,
+        action,
+        record_id: recordId,
+        user_email: userProfile?.data?.email || user?.email,
+        user_name: userProfile?.data?.full_name || 'Sistema',
+        old_data: oldData ? JSON.stringify(oldData) : null,
+        new_data: newData ? JSON.stringify(newData) : null,
+        ip_address: null, // Pode ser obtido do servidor se necessário
+        user_agent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Erro ao registrar ação de auditoria:', error);
+    // Não falhar a operação principal se o log falhar
+  }
+};
 
 interface TableData {
   columns: string[];
@@ -118,19 +159,32 @@ export default function DatabaseManager() {
       delete dataToSave.updated_at;
 
       if (isCreating) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from(selectedTable as any)
-          .insert(dataToSave);
+          .insert(dataToSave)
+          .select()
+          .single();
         
         if (error) throw error;
+        
+        // Registrar ação de auditoria
+        await logAuditAction('CREATE', selectedTable, data?.id, null, dataToSave);
+        
         toast({ title: 'Registro criado com sucesso!' });
       } else {
+        // Salvar dados antigos para auditoria
+        const oldData = { ...editingRecord };
+        
         const { error } = await supabase
           .from(selectedTable as any)
           .update(dataToSave)
           .eq('id', editingRecord.id);
         
         if (error) throw error;
+        
+        // Registrar ação de auditoria
+        await logAuditAction('UPDATE', selectedTable, editingRecord.id, oldData, dataToSave);
+        
         toast({ title: 'Registro atualizado com sucesso!' });
       }
 
@@ -146,7 +200,17 @@ export default function DatabaseManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+    // Buscar dados do registro antes de excluir para auditoria
+    const recordToDelete = tableData?.rows.find(r => r.id === id);
+    
+    // Confirmação mais robusta
+    const confirmed = window.confirm(
+      `⚠️ ATENÇÃO: Você está prestes a EXCLUIR permanentemente um registro da tabela "${selectedTable}".\n\n` +
+      `ID: ${id}\n\n` +
+      `Esta ação NÃO pode ser desfeita. Deseja continuar?`
+    );
+    
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -155,6 +219,10 @@ export default function DatabaseManager() {
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Registrar ação de auditoria
+      await logAuditAction('DELETE', selectedTable, id, recordToDelete, null);
+      
       toast({ title: 'Registro excluído com sucesso!' });
       loadTableData();
     } catch (error: any) {
@@ -166,7 +234,7 @@ export default function DatabaseManager() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!tableData || tableData.rows.length === 0) {
       toast({ title: 'Nenhum dado para exportar', variant: 'destructive' });
       return;
@@ -180,6 +248,10 @@ export default function DatabaseManager() {
     a.download = `${selectedTable}_${format(new Date(), 'yyyy-MM-dd')}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    
+    // Registrar ação de auditoria
+    await logAuditAction('EXPORT', selectedTable, undefined, undefined, { record_count: tableData.rows.length });
+    
     toast({ title: 'Dados exportados com sucesso!' });
   };
 
@@ -348,13 +420,29 @@ export default function DatabaseManager() {
             <>
               <CardHeader className="border-b border-slate-100">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-slate-800">
-                      {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.label || selectedTable}
-                    </CardTitle>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-slate-800">
+                        {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.label || selectedTable}
+                      </CardTitle>
+                      {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.sensitive && (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <Shield className="h-3 w-3" />
+                          Sensível
+                        </Badge>
+                      )}
+                    </div>
                     <CardDescription>
                       {tableData?.total || 0} registros encontrados
                     </CardDescription>
+                    {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.sensitive && (
+                      <Alert className="mt-3 border-amber-200 bg-amber-50">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800 text-sm">
+                          ⚠️ Esta tabela contém dados sensíveis. Todas as ações serão registradas para auditoria.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="relative">

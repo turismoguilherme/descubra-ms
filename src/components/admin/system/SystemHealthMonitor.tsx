@@ -40,6 +40,7 @@ export default function SystemHealthMonitor() {
   const [services, setServices] = useState<ServiceStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
   const [uptime, setUptime] = useState(99.9);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [alertConfig, setAlertConfig] = useState<AlertConfig>({
@@ -84,8 +85,8 @@ export default function SystemHealthMonitor() {
       setAlertConfig(config);
     } else {
       // Fallback para localStorage se não houver no banco
-      const saved = localStorage.getItem('system_alert_config');
-      if (saved) {
+    const saved = localStorage.getItem('system_alert_config');
+    if (saved) {
         try {
           const parsed = JSON.parse(saved);
           setAlertConfig({
@@ -105,21 +106,78 @@ export default function SystemHealthMonitor() {
   };
 
   const saveAlertConfig = async () => {
-    const success = await systemHealthService.saveAlertConfig(alertConfig);
-    if (success) {
-      toast({ title: 'Configurações salvas!', description: 'Suas preferências foram salvas no banco de dados.' });
-    } else {
-      // Fallback para localStorage
-      localStorage.setItem('system_alert_config', JSON.stringify({
-        email: alertConfig.email_enabled,
-        emailAddress: alertConfig.email_address,
-        whatsapp: alertConfig.whatsapp_enabled,
-        whatsappNumber: alertConfig.whatsapp_number,
-        downtime: alertConfig.downtime_alerts,
-        slowResponse: alertConfig.slow_response_alerts,
-        errors: alertConfig.error_alerts,
-      }));
-      toast({ title: 'Configurações salvas!', description: 'Salvas localmente (banco temporariamente indisponível).' });
+    console.log('💾 [SystemHealthMonitor] Botão clicado! Salvando configurações...', alertConfig);
+    setSavingConfig(true);
+    
+    try {
+      // Validações básicas
+      if (alertConfig.email_enabled && !alertConfig.email_address?.trim()) {
+        console.warn('⚠️ [SystemHealthMonitor] Validação falhou: email habilitado mas sem endereço');
+        toast({
+          title: 'Erro de validação',
+          description: 'Por favor, informe um endereço de email para receber alertas.',
+          variant: 'destructive',
+        });
+        setSavingConfig(false);
+        return;
+      }
+
+      if (alertConfig.whatsapp_enabled && !alertConfig.whatsapp_number?.trim()) {
+        console.warn('⚠️ [SystemHealthMonitor] Validação falhou: WhatsApp habilitado mas sem número');
+        toast({
+          title: 'Erro de validação',
+          description: 'Por favor, informe um número de WhatsApp para receber alertas.',
+          variant: 'destructive',
+        });
+        setSavingConfig(false);
+        return;
+      }
+
+      console.log('✅ [SystemHealthMonitor] Validações passaram, salvando no banco...');
+      const success = await systemHealthService.saveAlertConfig(alertConfig);
+      console.log('📊 [SystemHealthMonitor] Resultado do salvamento:', success);
+      
+      if (success) {
+        console.log('✅ [SystemHealthMonitor] Configurações salvas com sucesso no banco!');
+        // Forçar toast a aparecer - usar requestAnimationFrame para garantir que o DOM está pronto
+        requestAnimationFrame(() => {
+          console.log('🎯 [SystemHealthMonitor] Disparando toast...');
+          toast({ 
+            title: '✅ Configurações salvas!', 
+            description: 'Suas preferências foram salvas no banco de dados. Você receberá alertas conforme configurado.',
+            duration: 5000,
+          });
+          console.log('✅ [SystemHealthMonitor] Toast disparado!');
+        });
+      } else {
+        console.warn('⚠️ [SystemHealthMonitor] Falha ao salvar no banco, usando localStorage como fallback');
+        // Fallback para localStorage
+        localStorage.setItem('system_alert_config', JSON.stringify({
+          email: alertConfig.email_enabled,
+          emailAddress: alertConfig.email_address,
+          whatsapp: alertConfig.whatsapp_enabled,
+          whatsappNumber: alertConfig.whatsapp_number,
+          downtime: alertConfig.downtime_alerts,
+          slowResponse: alertConfig.slow_response_alerts,
+          errors: alertConfig.error_alerts,
+        }));
+        toast({ 
+          title: '⚠️ Configurações salvas localmente', 
+          description: 'Salvas no navegador (banco temporariamente indisponível). Configure novamente quando o banco estiver disponível.',
+          variant: 'default',
+          duration: 5000,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ [SystemHealthMonitor] Erro ao salvar configurações:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message || 'Não foi possível salvar as configurações. Tente novamente.',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    } finally {
+      setSavingConfig(false);
     }
   };
 
@@ -403,55 +461,55 @@ export default function SystemHealthMonitor() {
                   <RefreshCw className="h-8 w-8 text-slate-400 animate-spin" />
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {services.map((service, index) => {
-                    const Icon = service.icon;
-                    return (
-                      <div 
-                        key={index}
-                        className={cn(
-                          "flex items-center justify-between p-4 rounded-lg border transition-colors",
-                          service.status === 'online' && "bg-emerald-50/50 border-emerald-100",
-                          service.status === 'slow' && "bg-amber-50/50 border-amber-100",
-                          service.status === 'offline' && "bg-red-50/50 border-red-100",
-                          service.status === 'checking' && "bg-slate-50 border-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={cn(
-                            "p-2 rounded-lg",
-                            service.status === 'online' && "bg-emerald-100",
-                            service.status === 'slow' && "bg-amber-100",
-                            service.status === 'offline' && "bg-red-100",
-                            service.status === 'checking' && "bg-slate-100"
-                          )}>
-                            <Icon className={cn(
-                              "h-5 w-5",
-                              service.status === 'online' && "text-emerald-600",
-                              service.status === 'slow' && "text-amber-600",
-                              service.status === 'offline' && "text-red-600",
-                              service.status === 'checking' && "text-slate-400"
-                            )} />
-                          </div>
-                          <div>
-                            <div className="font-medium text-slate-800">{service.name}</div>
-                            <div className="text-sm text-slate-500">{service.description}</div>
-                          </div>
+              <div className="space-y-3">
+                {services.map((service, index) => {
+                  const Icon = service.icon;
+                  return (
+                    <div 
+                      key={index}
+                      className={cn(
+                        "flex items-center justify-between p-4 rounded-lg border transition-colors",
+                        service.status === 'online' && "bg-emerald-50/50 border-emerald-100",
+                        service.status === 'slow' && "bg-amber-50/50 border-amber-100",
+                        service.status === 'offline' && "bg-red-50/50 border-red-100",
+                        service.status === 'checking' && "bg-slate-50 border-slate-100"
+                      )}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "p-2 rounded-lg",
+                          service.status === 'online' && "bg-emerald-100",
+                          service.status === 'slow' && "bg-amber-100",
+                          service.status === 'offline' && "bg-red-100",
+                          service.status === 'checking' && "bg-slate-100"
+                        )}>
+                          <Icon className={cn(
+                            "h-5 w-5",
+                            service.status === 'online' && "text-emerald-600",
+                            service.status === 'slow' && "text-amber-600",
+                            service.status === 'offline' && "text-red-600",
+                            service.status === 'checking' && "text-slate-400"
+                          )} />
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-slate-700">
-                              {service.latency > 0 ? `${service.latency}ms` : '--'}
-                            </div>
-                            <div className="text-xs text-slate-400">Latência</div>
-                          </div>
-                          {getStatusBadge(service.status)}
-                          {getStatusIcon(service.status)}
+                        <div>
+                          <div className="font-medium text-slate-800">{service.name}</div>
+                          <div className="text-sm text-slate-500">{service.description}</div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-slate-700">
+                            {service.latency > 0 ? `${service.latency}ms` : '--'}
+                          </div>
+                          <div className="text-xs text-slate-400">Latência</div>
+                        </div>
+                        {getStatusBadge(service.status)}
+                        {getStatusIcon(service.status)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
               )}
             </CardContent>
           </Card>
@@ -618,8 +676,19 @@ export default function SystemHealthMonitor() {
                 </div>
               </div>
 
-              <Button onClick={saveAlertConfig} className="w-full bg-emerald-600 hover:bg-emerald-700">
-                Salvar Configurações
+              <Button 
+                onClick={saveAlertConfig} 
+                disabled={savingConfig}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingConfig ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar Configurações'
+                )}
               </Button>
             </CardContent>
           </Card>

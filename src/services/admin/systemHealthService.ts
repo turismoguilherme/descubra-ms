@@ -345,7 +345,7 @@ export const systemHealthService = {
   },
 
   /**
-   * Salva um alerta no banco
+   * Salva um alerta no banco e envia notificações se configurado
    */
   async saveAlert(alert: {
     service_name: string;
@@ -356,22 +356,255 @@ export const systemHealthService = {
   }): Promise<void> {
     try {
       await retryWithTokenRefresh(async () => {
-        const { error } = await supabase.from('system_alerts').insert({
+        const { data, error } = await supabase.from('system_alerts').insert({
           service_name: alert.service_name,
           alert_type: alert.alert_type,
           message: alert.message,
           severity: alert.severity,
           metadata: alert.metadata,
-        });
+        }).select().single();
         
         if (error) {
           console.error('Erro ao salvar alerta:', error);
           throw error;
         }
+
+        // Enviar notificações se configurado
+        if (data) {
+          await this.sendAlertNotifications(data);
+        }
       });
     } catch (error) {
       console.error('Erro ao salvar alerta:', error);
       // Não propagar erro - permitir que o sistema continue funcionando
+    }
+  },
+
+  /**
+   * Envia notificações de alerta (email/WhatsApp) para usuários configurados
+   */
+  async sendAlertNotifications(alert: SystemAlert): Promise<void> {
+    // #region agent log - HYP-A: sendAlertNotifications iniciado
+    console.log('🔍 [DEBUG-HYP-A] sendAlertNotifications iniciado:', {
+      alertType: alert.alert_type,
+      serviceName: alert.service_name,
+      severity: alert.severity,
+      hasMessage: !!alert.message,
+      message: alert.message,
+      hasCreatedAt: !!alert.created_at,
+      createdAt: alert.created_at
+    });
+    // #endregion
+    
+    try {
+      // Buscar todas as configurações de alerta ativas
+      const { data: configs, error } = await supabase
+        .from('system_alert_config')
+        .select('*')
+        .eq('downtime_alerts', true)
+        .or(`email_enabled.eq.true,whatsapp_enabled.eq.true`);
+
+      // #region agent log - HYP-B: Configurações de alerta buscadas
+      console.log('🔍 [DEBUG-HYP-B] Configurações de alerta buscadas:', {
+        hasError: !!error,
+        errorMessage: error?.message,
+        configsCount: configs?.length || 0,
+        configs: configs
+      });
+      // #endregion
+
+      if (error || !configs || configs.length === 0) {
+        return; // Nenhuma configuração encontrada
+      }
+
+      // Enviar para cada usuário configurado
+      for (const config of configs) {
+        // Enviar email se configurado e for alerta de erro ou warning
+        if (config.email_enabled && config.email_address && (alert.alert_type === 'error' || alert.alert_type === 'warning')) {
+          try {
+            const emailPayload = {
+              type: 'system_alert',
+              to: config.email_address,
+              data: {
+                service_name: alert.service_name,
+                message: alert.message,
+                severity: alert.severity,
+                alert_type: alert.alert_type,
+                timestamp: alert.created_at,
+              },
+            };
+            
+            // #region agent log - HYP-A/B: Payload antes de enviar
+            console.log('🔍 [DEBUG-HYP-A] Payload completo antes de enviar:', JSON.stringify(emailPayload, null, 2));
+            console.log('🔍 [DEBUG-HYP-B] Validação do payload:', {
+              hasType: !!emailPayload.type,
+              typeValue: emailPayload.type,
+              hasTo: !!emailPayload.to,
+              toValue: emailPayload.to,
+              hasData: !!emailPayload.data,
+              dataKeys: Object.keys(emailPayload.data || {}),
+              dataValues: emailPayload.data
+            });
+            // #endregion
+            
+            console.log('📧 [systemHealthService] Enviando email de alerta:', {
+              to: config.email_address,
+              payload: emailPayload,
+              alertData: {
+                service_name: alert.service_name,
+                message: alert.message,
+                severity: alert.severity,
+                alert_type: alert.alert_type,
+                created_at: alert.created_at,
+              }
+            });
+            
+            // Usar fetch direto para garantir que o body seja enviado corretamente
+            // O Supabase client pode estar serializando o body de forma incorreta
+            let emailResult: any = null;
+            let emailError: any = null;
+            
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              const supabaseUrl = 'https://hvtrpkbjgbuypkskqcqm.supabase.co';
+              const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q';
+              const functionUrl = `${supabaseUrl}/functions/v1/send-notification-email`;
+              
+              // #region agent log - HYP-C: Tentando fetch direto
+              console.log('🔍 [DEBUG-HYP-C] Fazendo fetch direto para:', functionUrl);
+              console.log('🔍 [DEBUG-HYP-C] Payload serializado:', JSON.stringify(emailPayload));
+              console.log('🔍 [DEBUG-HYP-C] Payload type:', typeof emailPayload);
+              console.log('🔍 [DEBUG-HYP-C] Payload keys:', Object.keys(emailPayload));
+              // #endregion
+              
+              const directResponse = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session?.access_token || supabaseAnonKey}`,
+                  'apikey': supabaseAnonKey,
+                },
+                body: JSON.stringify(emailPayload),
+              });
+              
+              const responseText = await directResponse.text();
+              let responseBody: any;
+              try {
+                responseBody = JSON.parse(responseText);
+              } catch {
+                responseBody = { raw: responseText };
+              }
+              
+              // #region agent log - HYP-C/D/E: Resposta capturada
+              console.log('🔍 [DEBUG-HYP-C] Resposta HTTP direta capturada:', {
+                status: directResponse.status,
+                statusText: directResponse.statusText,
+                ok: directResponse.ok,
+                headers: Object.fromEntries(directResponse.headers.entries()),
+                body: responseBody,
+                bodyRaw: responseText,
+                bodyRawLength: responseText.length
+              });
+              
+              console.log('🔍 [DEBUG-HYP-E] CORPO COMPLETO DA RESPOSTA (bodyRaw):', responseText);
+              console.log('🔍 [DEBUG-HYP-E] CORPO PARSED (body):', JSON.stringify(responseBody, null, 2));
+              // #endregion
+              
+              if (!directResponse.ok) {
+                emailError = {
+                  name: 'FunctionsHttpError',
+                  message: `Edge Function returned status ${directResponse.status}`,
+                  status: directResponse.status,
+                  context: responseBody
+                };
+              } else {
+                emailResult = responseBody;
+              }
+            } catch (fetchError: any) {
+              // #region agent log - HYP-C/E: Erro no fetch
+              console.warn('🔍 [DEBUG-HYP-C] Erro ao fazer fetch direto:', {
+                error: fetchError,
+                message: fetchError?.message,
+                stack: fetchError?.stack
+              });
+              // #endregion
+              emailError = fetchError;
+            }
+            
+            if (emailError) {
+            // #region agent log - HYP-D/E: Erro detalhado capturado
+            console.log('🔍 [DEBUG-HYP-D] Erro detalhado:', {
+              errorName: emailError?.name,
+              errorMessage: emailError?.message,
+              errorStack: emailError?.stack,
+              errorContext: emailError?.context,
+              errorKeys: Object.keys(emailError || {}),
+              errorType: typeof emailError,
+              errorConstructor: emailError?.constructor?.name,
+              fullErrorString: JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2)
+            });
+            // #endregion
+              
+              // Tentar extrair mensagem de erro mais detalhada
+              const errorMessage = emailError.message || JSON.stringify(emailError);
+              console.error(`❌ Erro ao enviar email de alerta para ${config.email_address}:`, {
+                error: emailError,
+                message: errorMessage,
+                errorName: emailError?.name,
+                errorContext: emailError?.context,
+                fullError: JSON.stringify(emailError, null, 2),
+                context: {
+                  service_name: alert.service_name,
+                  alert_type: alert.alert_type,
+                  severity: alert.severity,
+                }
+              });
+              console.warn('💡 Dica: Verifique os logs da Edge Function no Supabase Dashboard para mais detalhes sobre o erro 400');
+            } else {
+            // #region agent log - HYP-A: Sucesso
+            console.log('🔍 [DEBUG-HYP-A] Sucesso - Edge Function retornou sem erro:', emailResult);
+            // #endregion
+              console.log(`✅ Email de alerta enviado para ${config.email_address}`, emailResult);
+            }
+          } catch (emailError: any) {
+            // #region agent log - HYP-C/E: Exceção capturada no catch
+            console.log('🔍 [DEBUG-HYP-C] Exceção capturada no catch:', {
+              errorName: emailError?.name,
+              errorMessage: emailError?.message,
+              errorStack: emailError?.stack,
+              errorType: typeof emailError,
+              errorConstructor: emailError?.constructor?.name,
+              errorProps: Object.getOwnPropertyNames(emailError),
+              errorString: String(emailError)
+            });
+            // #endregion
+            
+            // Capturar mensagem de erro mais detalhada
+            let errorDetails = emailError?.message || String(emailError);
+            if (emailError?.context) {
+              errorDetails += ` | Context: ${JSON.stringify(emailError.context)}`;
+            }
+            console.error(`❌ Erro ao enviar email de alerta para ${config.email_address}:`, {
+              error: emailError,
+              message: errorDetails,
+              stack: emailError?.stack,
+              errorName: emailError?.name,
+              fullError: JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2),
+            });
+            console.warn('💡 Dica: Verifique os logs da Edge Function no Supabase Dashboard para mais detalhes sobre o erro 400');
+            // Não propagar erro - não queremos que falhas de email quebrem o sistema
+          }
+        }
+
+        // WhatsApp pode ser implementado aqui se houver integração
+        if (config.whatsapp_enabled && config.whatsapp_number) {
+          // TODO: Implementar envio via WhatsApp quando houver integração
+          console.log(`📱 WhatsApp alerta seria enviado para ${config.whatsapp_number}`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao enviar notificações de alerta:', error);
+      // Não propagar erro - não queremos que falhas de notificação quebrem o sistema
     }
   },
 
@@ -447,29 +680,56 @@ export const systemHealthService = {
    */
   async saveAlertConfig(config: AlertConfig): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      console.log('💾 [systemHealthService] Iniciando salvamento de configurações...');
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('❌ [systemHealthService] Erro ao obter usuário:', userError);
+        return false;
+      }
+      
+      if (!user) {
+        console.warn('⚠️ [systemHealthService] Nenhum usuário autenticado');
+        return false;
+      }
 
-      const { error } = await supabase
+      console.log('👤 [systemHealthService] Usuário autenticado:', user.id);
+      console.log('📝 [systemHealthService] Configurações a salvar:', config);
+
+      const { data, error } = await supabase
         .from('system_alert_config')
         .upsert({
           user_id: user.id,
-          email_enabled: config.email_enabled,
-          email_address: config.email_address,
-          whatsapp_enabled: config.whatsapp_enabled,
-          whatsapp_number: config.whatsapp_number,
-          downtime_alerts: config.downtime_alerts,
-          slow_response_alerts: config.slow_response_alerts,
-          error_alerts: config.error_alerts,
+          email_enabled: config.email_enabled ?? false,
+          email_address: config.email_address || null,
+          whatsapp_enabled: config.whatsapp_enabled ?? false,
+          whatsapp_number: config.whatsapp_number || null,
+          downtime_alerts: config.downtime_alerts ?? true,
+          slow_response_alerts: config.slow_response_alerts ?? true,
+          error_alerts: config.error_alerts ?? true,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: 'user_id',
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [systemHealthService] Erro ao salvar no banco:', error);
+        console.error('❌ [systemHealthService] Detalhes do erro:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+        throw error;
+      }
+
+      console.log('✅ [systemHealthService] Configurações salvas com sucesso!', data);
       return true;
-    } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+    } catch (error: any) {
+      console.error('❌ [systemHealthService] Erro ao salvar configurações:', error);
+      console.error('❌ [systemHealthService] Stack trace:', error.stack);
       return false;
     }
   },

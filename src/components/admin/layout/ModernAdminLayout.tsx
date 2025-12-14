@@ -260,7 +260,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <ViaJARNavbar />
       
       {/* Header com gradiente azul-roxo - Igual aos outros dashboards */}
@@ -310,9 +310,9 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex relative" style={{ minHeight: 'calc(100vh - 64px - 128px)' }}>
         {/* Sidebar Esquerda - Igual aos outros dashboards (branca) */}
-        <div className="w-64 bg-white shadow-lg flex-shrink-0">
+        <div className="w-64 bg-white shadow-lg flex-shrink-0 relative" style={{ maxHeight: 'calc(100vh - 64px - 128px)', overflowY: 'auto' }}>
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Administração</h2>
             <nav className="space-y-2">
@@ -380,7 +380,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
         </div>
 
         {/* Conteúdo Principal - Igual aos outros dashboards */}
-        <div className="flex-1 p-8 overflow-y-auto bg-gray-50 space-y-6">
+        <div className="flex-1 p-8 overflow-y-auto bg-gray-50 space-y-6" style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}>
           {children}
         </div>
       </div>
