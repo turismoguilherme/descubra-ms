@@ -459,76 +459,40 @@ export const systemHealthService = {
               }
             });
             
-            // Usar fetch direto para garantir que o body seja enviado corretamente
-            // O Supabase client pode estar serializando o body de forma incorreta
+            // Usar supabase.functions.invoke - o Supabase client serializa o body corretamente
             let emailResult: any = null;
             let emailError: any = null;
             
             try {
-              const { data: { session } } = await supabase.auth.getSession();
-              const supabaseUrl = 'https://hvtrpkbjgbuypkskqcqm.supabase.co';
-              const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q';
-              const functionUrl = `${supabaseUrl}/functions/v1/send-notification-email`;
-              
-              // #region agent log - HYP-C: Tentando fetch direto
-              console.log('🔍 [DEBUG-HYP-C] Fazendo fetch direto para:', functionUrl);
-              console.log('🔍 [DEBUG-HYP-C] Payload serializado:', JSON.stringify(emailPayload));
-              console.log('🔍 [DEBUG-HYP-C] Payload type:', typeof emailPayload);
-              console.log('🔍 [DEBUG-HYP-C] Payload keys:', Object.keys(emailPayload));
+              // #region agent log - HYP-C: Tentando invocar via Supabase client
+              console.log('🔍 [DEBUG-HYP-C] Invocando Edge Function via Supabase client');
+              console.log('🔍 [DEBUG-HYP-C] Payload:', JSON.stringify(emailPayload, null, 2));
               // #endregion
               
-              const directResponse = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session?.access_token || supabaseAnonKey}`,
-                  'apikey': supabaseAnonKey,
-                },
-                body: JSON.stringify(emailPayload),
+              const result = await supabase.functions.invoke('send-notification-email', {
+                body: emailPayload,
               });
               
-              const responseText = await directResponse.text();
-              let responseBody: any;
-              try {
-                responseBody = JSON.parse(responseText);
-              } catch {
-                responseBody = { raw: responseText };
-              }
+              emailResult = result.data;
+              emailError = result.error;
               
-              // #region agent log - HYP-C/D/E: Resposta capturada
-              console.log('🔍 [DEBUG-HYP-C] Resposta HTTP direta capturada:', {
-                status: directResponse.status,
-                statusText: directResponse.statusText,
-                ok: directResponse.ok,
-                headers: Object.fromEntries(directResponse.headers.entries()),
-                body: responseBody,
-                bodyRaw: responseText,
-                bodyRawLength: responseText.length
-              });
-              
-              console.log('🔍 [DEBUG-HYP-E] CORPO COMPLETO DA RESPOSTA (bodyRaw):', responseText);
-              console.log('🔍 [DEBUG-HYP-E] CORPO PARSED (body):', JSON.stringify(responseBody, null, 2));
-              // #endregion
-              
-              if (!directResponse.ok) {
-                emailError = {
-                  name: 'FunctionsHttpError',
-                  message: `Edge Function returned status ${directResponse.status}`,
-                  status: directResponse.status,
-                  context: responseBody
-                };
-              } else {
-                emailResult = responseBody;
-              }
-            } catch (fetchError: any) {
-              // #region agent log - HYP-C/E: Erro no fetch
-              console.warn('🔍 [DEBUG-HYP-C] Erro ao fazer fetch direto:', {
-                error: fetchError,
-                message: fetchError?.message,
-                stack: fetchError?.stack
+              // #region agent log - HYP-C: Resultado da invocação
+              console.log('🔍 [DEBUG-HYP-C] Resultado da invocação:', {
+                hasData: !!emailResult,
+                hasError: !!emailError,
+                data: emailResult,
+                error: emailError
               });
               // #endregion
-              emailError = fetchError;
+            } catch (invokeError: any) {
+              // #region agent log - HYP-C/E: Erro na invocação
+              console.error('🔍 [DEBUG-HYP-C] Erro ao invocar Edge Function:', {
+                error: invokeError,
+                message: invokeError?.message,
+                stack: invokeError?.stack
+              });
+              // #endregion
+              emailError = invokeError;
             }
             
             if (emailError) {
