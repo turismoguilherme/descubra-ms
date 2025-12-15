@@ -24,6 +24,7 @@ const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersM
 const PlatformSettings = lazy(() => import('@/components/admin/descubra_ms/PlatformSettings'));
 const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
 const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
+const PartnerSettingsManager = lazy(() => import('@/components/admin/PartnerSettingsManager'));
 const DestinationManager = lazy(() => import('@/components/admin/descubra_ms/DestinationManager'));
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
@@ -132,6 +133,11 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/partners" element={
               <Suspense fallback={<LoadingFallback />}>
                 <PartnersManagement />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/partner-settings" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PartnerSettingsManager />
               </Suspense>
             } />
             <Route path="descubra-ms/settings" element={

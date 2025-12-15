@@ -152,6 +152,16 @@ const UniversalFooter = () => {
                     Parceiros
                   </Link>
                 </li>
+                <li>
+                  <Link to="/descubramatogrossodosul/seja-um-parceiro" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                    Seja um Parceiro
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/descubramatogrossodosul/partner/login" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                    Área do Parceiro
+                  </Link>
+                </li>
               </ul>
             </div>
 

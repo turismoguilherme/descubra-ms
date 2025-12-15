@@ -51,9 +51,11 @@ serve(async (req) => {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
-        // Verificar se é pagamento de evento ou assinatura
+        // Verificar tipo de pagamento
         if (session.metadata?.type === 'event_sponsorship') {
           await handleEventPaymentCompleted(session, supabase);
+        } else if (session.metadata?.type === 'partner_reservation') {
+          await handleReservationPaymentCompleted(session, supabase);
         } else {
           await handleCheckoutCompleted(session, supabase);
         }
@@ -219,13 +221,38 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
     const customerEmail = typeof customer === 'object' && !customer.deleted ? customer.email : null;
     const metadata = subscription.metadata || {};
     const userId = metadata.supabase_user_id || (typeof customer === 'object' && !customer.deleted ? customer.metadata?.supabase_user_id : null);
+    const isPartnerSubscription = metadata.type === 'partner_subscription';
 
     // Obter informações do plano
     const priceItem = subscription.items.data[0];
     const planId = metadata.plan_id || priceItem?.price.lookup_key || 'unknown';
     const monthlyAmount = priceItem?.price.unit_amount ? priceItem.price.unit_amount / 100 : 0;
 
-    // Criar ou atualizar registro na tabela master_clients
+    // Se for assinatura de parceiro, atualizar institutional_partners
+    if (isPartnerSubscription && customerEmail) {
+      const { error: partnerError } = await supabase
+        .from('institutional_partners')
+        .update({
+          stripe_customer_id: subscription.customer as string,
+          stripe_subscription_id: subscription.id,
+          subscription_status: subscription.status === 'trialing' ? 'trialing' : subscription.status,
+          monthly_fee: monthlyAmount,
+          subscription_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
+          subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
+          status: subscription.status === 'active' || subscription.status === 'trialing' ? 'approved' : 'pending',
+          is_active: subscription.status === 'active' || subscription.status === 'trialing',
+        })
+        .eq('contact_email', customerEmail);
+
+      if (partnerError) {
+        console.error('Erro ao atualizar parceiro:', partnerError);
+      } else {
+        console.log('Parceiro atualizado com sucesso');
+      }
+      return; // Não processar como cliente ViaJAR
+    }
+
+    // Criar ou atualizar registro na tabela master_clients (ViaJAR)
     const { error } = await supabase
       .from('master_clients')
       .upsert({
@@ -328,12 +355,37 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supa
   console.log('Assinatura atualizada:', subscription.id);
   
   try {
-    // Atualizar dados da assinatura
+    const metadata = subscription.metadata || {};
+    const isPartnerSubscription = metadata.type === 'partner_subscription';
+    const monthlyAmount = subscription.items.data[0]?.price.unit_amount ? subscription.items.data[0].price.unit_amount / 100 : 0;
+
+    // Se for assinatura de parceiro, atualizar institutional_partners
+    if (isPartnerSubscription) {
+      const { error: partnerError } = await supabase
+        .from('institutional_partners')
+        .update({
+          subscription_status: subscription.status,
+          monthly_fee: monthlyAmount,
+          subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
+          status: subscription.status === 'active' || subscription.status === 'trialing' ? 'approved' : 'pending',
+          is_active: subscription.status === 'active' || subscription.status === 'trialing',
+        })
+        .eq('stripe_subscription_id', subscription.id);
+
+      if (partnerError) {
+        console.error('Erro ao atualizar parceiro:', partnerError);
+      } else {
+        console.log('Parceiro atualizado com sucesso');
+      }
+      return; // Não processar como cliente ViaJAR
+    }
+
+    // Atualizar dados da assinatura (ViaJAR)
     const { error } = await supabase
       .from('master_clients')
       .update({
         subscription_plan: subscription.items.data[0]?.price.lookup_key || 'unknown',
-        monthly_fee: subscription.items.data[0]?.price.unit_amount / 100,
+        monthly_fee: monthlyAmount,
         contract_end_date: new Date(subscription.current_period_end * 1000).toISOString().split('T')[0],
         auto_renewal: subscription.cancel_at_period_end ? false : true,
         status: subscription.status
@@ -347,6 +399,80 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supa
     }
   } catch (error) {
     console.error('Erro ao processar atualização da assinatura:', error);
+  }
+}
+
+async function handleReservationPaymentCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Pagamento de reserva completado:', session.id);
+  
+  try {
+    const metadata = session.metadata || {};
+    const reservationId = metadata.reservation_id;
+    const partnerId = metadata.partner_id;
+    const commissionAmount = parseFloat(metadata.commission_amount || '0');
+    const partnerAmount = parseFloat(metadata.partner_amount || '0');
+
+    if (!reservationId) {
+      console.error('Reservation ID não encontrado no metadata');
+      return;
+    }
+
+    // Atualizar status da reserva para 'confirmed' (aguardando confirmação do parceiro)
+    const { error: reservationError } = await supabase
+      .from('partner_reservations')
+      .update({
+        status: 'confirmed', // Pagamento confirmado, aguardando parceiro confirmar
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', reservationId);
+
+    if (reservationError) {
+      console.error('Erro ao atualizar reserva:', reservationError);
+    } else {
+      console.log('Reserva atualizada com sucesso');
+    }
+
+    // Registrar pagamento na tabela financeira (se existir)
+    try {
+      const { error: financeError } = await supabase
+        .from('master_financial_records')
+        .insert({
+          record_type: 'revenue',
+          amount: parseFloat(metadata.commission_amount || '0'),
+          description: `Comissão sobre reserva ${metadata.reservation_code || reservationId}`,
+          stripe_invoice_id: session.id,
+          status: 'paid',
+          paid_date: new Date().toISOString().split('T')[0],
+          metadata: {
+            reservation_id: reservationId,
+            partner_id: partnerId,
+            total_amount: session.amount_total ? session.amount_total / 100 : 0,
+            commission_amount: commissionAmount,
+            partner_amount: partnerAmount,
+          },
+        });
+
+      if (financeError) {
+        console.warn('Erro ao registrar pagamento financeiro (não crítico):', financeError);
+      }
+    } catch (financeErr) {
+      console.warn('Erro ao registrar pagamento financeiro (não crítico):', financeErr);
+    }
+
+    // TODO: Implementar repasse automático se parceiro tiver Stripe Connect
+    // Se partner.stripe_connect_account_id existir, fazer transfer automático
+    // await stripe.transfers.create({
+    //   amount: Math.round(partnerAmount * 100),
+    //   currency: 'brl',
+    //   destination: partner.stripe_connect_account_id,
+    //   metadata: {
+    //     reservation_id: reservationId,
+    //     reservation_code: metadata.reservation_code,
+    //   },
+    // });
+
+  } catch (error) {
+    console.error('Erro ao processar pagamento de reserva:', error);
   }
 }
 

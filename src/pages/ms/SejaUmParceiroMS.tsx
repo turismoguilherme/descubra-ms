@@ -1,6 +1,6 @@
 import React from 'react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
-import { PartnerApplicationForm } from '@/components/partners/PartnerApplicationForm';
+import PartnerOnboardingWizard from '@/components/partners/PartnerOnboardingWizard';
 import { Building2, Gift, TrendingUp, Users } from 'lucide-react';
 
 const SejaUmParceiroMS = () => {
@@ -85,20 +85,9 @@ const SejaUmParceiroMS = () => {
             </div>
           </div>
 
-          {/* Formulário */}
+          {/* Wizard de Cadastro */}
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-ms-primary-blue mb-2">
-                  Cadastre sua empresa
-                </h2>
-                <p className="text-gray-600">
-                  Preencha o formulário abaixo e nossa equipe entrará em contato para discutir os detalhes da parceria.
-                </p>
-              </div>
-              
-              <PartnerApplicationForm />
-            </div>
+            <PartnerOnboardingWizard />
           </div>
         </div>
       </main>

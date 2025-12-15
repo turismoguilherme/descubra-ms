@@ -20,7 +20,10 @@ import {
   X, 
   Youtube,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Lock
 } from 'lucide-react';
 
 const partnerSchema = z.object({
@@ -32,6 +35,11 @@ const partnerSchema = z.object({
   contact_email: z.string().email('Email inválido'),
   contact_phone: z.string().optional(),
   address: z.string().optional(),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Confirme sua senha'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword'],
 });
 
 type FormData = z.infer<typeof partnerSchema>;
@@ -50,13 +58,25 @@ const businessTypes = [
   { value: 'outro', label: 'Outro' }
 ];
 
-export const PartnerApplicationForm = () => {
+interface PartnerApplicationFormProps {
+  onComplete?: (data: {
+    partnerId: string;
+    partnerName: string;
+    partnerEmail: string;
+    password: string;
+  }) => void;
+  includePassword?: boolean;
+}
+
+export const PartnerApplicationForm = ({ onComplete, includePassword = false }: PartnerApplicationFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -131,7 +151,34 @@ export const PartnerApplicationForm = () => {
     setUploadProgress(0);
 
     try {
-      // 1. Criar registro do parceiro
+      // 1. Se includePassword, criar conta no Supabase Auth primeiro
+      let authUserId: string | null = null;
+      if (includePassword && data.password) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.contact_email,
+          password: data.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/descubramatogrossodosul/partner/login`,
+          },
+        });
+
+        if (authError) {
+          // Se email já existe, tentar fazer login para obter o user_id
+          if (authError.message.includes('already registered')) {
+            const { data: signInData } = await supabase.auth.signInWithPassword({
+              email: data.contact_email,
+              password: data.password,
+            });
+            authUserId = signInData?.user?.id || null;
+          } else {
+            throw new Error(`Erro ao criar conta: ${authError.message}`);
+          }
+        } else {
+          authUserId = authData?.user?.id || null;
+        }
+      }
+
+      // 2. Criar registro do parceiro
       const { data: partner, error: insertError } = await supabase
         .from('institutional_partners')
         .insert([{
@@ -145,6 +192,7 @@ export const PartnerApplicationForm = () => {
           youtube_url: data.youtube_url || null,
           status: 'pending',
           is_active: false,
+          created_by: authUserId,
         }])
         .select()
         .single();
@@ -153,7 +201,7 @@ export const PartnerApplicationForm = () => {
         throw new Error(insertError.message);
       }
 
-      // 2. Upload das fotos (se houver)
+      // 3. Upload das fotos (se houver)
       if (photos.length > 0 && partner) {
         const photoUrls = await uploadPhotosToStorage(partner.id);
         
@@ -169,6 +217,18 @@ export const PartnerApplicationForm = () => {
         }
       }
 
+      // 4. Se onComplete existe (wizard), chamar callback
+      if (onComplete && includePassword) {
+        onComplete({
+          partnerId: partner.id,
+          partnerName: data.name,
+          partnerEmail: data.contact_email,
+          password: data.password || '',
+        });
+        return; // Não mostrar tela de sucesso, wizard continua
+      }
+
+      // 5. Comportamento padrão (sem wizard)
       setIsSuccess(true);
       reset();
       setPhotos([]);
@@ -401,6 +461,64 @@ export const PartnerApplicationForm = () => {
         </div>
       </div>
 
+      {/* Senha (apenas se includePassword) */}
+      {includePassword && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-ms-primary-blue">
+            <Lock className="w-5 h-5" />
+            <h3 className="text-lg font-semibold">Criar Senha</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha *</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  {...register('password')}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...register('confirmPassword')}
+                  placeholder="Digite a senha novamente"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Upload Progress */}
       {uploadProgress > 0 && uploadProgress < 100 && (
         <div className="space-y-2">
@@ -441,4 +559,5 @@ export const PartnerApplicationForm = () => {
   );
 };
 
+// Export both named and default for compatibility
 export default PartnerApplicationForm;

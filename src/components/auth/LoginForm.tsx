@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
+import { supabase } from '@/integrations/supabase/client';
 
 
 
@@ -79,6 +80,24 @@ const LoginForm = () => {
       
       if (!error) {
         console.log("✅ Login realizado com sucesso");
+        
+        // Verificar se é parceiro
+        const { data: partner } = await supabase
+          .from('institutional_partners')
+          .select('id, is_active, subscription_status')
+          .eq('contact_email', sanitizedData.email)
+          .maybeSingle();
+        
+        if (partner) {
+          console.log("🤝 LOGIN: Parceiro detectado, redirecionando para dashboard");
+          toast({
+            title: "Login realizado!",
+            description: "Bem-vindo, parceiro!",
+            duration: 3000,
+          });
+          navigate('/partner/dashboard');
+          return;
+        }
         
         // Detectar tenant do path atual para manter contexto
         const currentPath = window.location.pathname;
