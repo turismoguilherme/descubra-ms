@@ -79,9 +79,14 @@ const PartnerLoginForm = () => {
         // Verificar se é parceiro
         const { data: partner, error: partnerError } = await supabase
           .from('institutional_partners')
-          .select('id, is_active, subscription_status')
+          .select('id, is_active')
           .eq('contact_email', sanitizedData.email)
           .maybeSingle();
+        
+        if (partnerError) {
+          console.error('Erro ao buscar parceiro:', partnerError);
+          // Continuar mesmo se houver erro na query
+        }
         
         if (partner) {
           console.log("🤝 LOGIN: Parceiro detectado, redirecionando para dashboard");

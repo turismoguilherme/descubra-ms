@@ -26,3 +26,4 @@ COMMENT ON COLUMN public.institutional_partners.terms_accepted_version IS 'Vers√
 CREATE INDEX IF NOT EXISTS idx_institutional_partners_stripe_subscription ON public.institutional_partners(stripe_subscription_id);
 CREATE INDEX IF NOT EXISTS idx_institutional_partners_subscription_status ON public.institutional_partners(subscription_status);
 
+
