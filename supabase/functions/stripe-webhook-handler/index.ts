@@ -432,12 +432,13 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       console.log('Reserva atualizada com sucesso');
     }
 
-    // Registrar pagamento na tabela financeira (se existir)
+    // Registrar comissão na tabela financeira como receita
     try {
       const { error: financeError } = await supabase
         .from('master_financial_records')
         .insert({
           record_type: 'revenue',
+          source: 'commission', // Identifica como comissão
           amount: parseFloat(metadata.commission_amount || '0'),
           description: `Comissão sobre reserva ${metadata.reservation_code || reservationId}`,
           stripe_invoice_id: session.id,
@@ -449,6 +450,7 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
             total_amount: session.amount_total ? session.amount_total / 100 : 0,
             commission_amount: commissionAmount,
             partner_amount: partnerAmount,
+            commission_rate: metadata.commission_rate || '10.00',
           },
         });
 

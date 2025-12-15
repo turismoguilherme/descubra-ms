@@ -232,6 +232,7 @@ export default function ViaJAROnboarding() {
             <PlanSelector
               onSelectPlan={handlePlanSelected}
               recommendedPlan="professional"
+              isViaJARTur={true} // ViaJAR Tur: apenas 2 planos (Empresários e Secretárias)
             />
           )}
 

@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Save, Loader2 } from 'lucide-react';
+import { DollarSign, Save, Loader2, Percent } from 'lucide-react';
 
 export default function PartnerSettingsManager() {
   const { toast } = useToast();
   const [monthlyFee, setMonthlyFee] = useState<string>('299.00');
+  const [commissionRate, setCommissionRate] = useState<string>('10.00');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -36,6 +37,21 @@ export default function PartnerSettingsManager() {
           : String(data.setting_value);
         setMonthlyFee(fee);
       }
+
+      // Carregar percentual de comissão
+      const { data: commissionData, error: commissionError } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_commission_rate')
+        .maybeSingle();
+
+      if (!commissionError && commissionData?.setting_value) {
+        const rate = typeof commissionData.setting_value === 'string' 
+          ? commissionData.setting_value 
+          : String(commissionData.setting_value);
+        setCommissionRate(rate);
+      }
     } catch (error) {
       console.error('Erro ao carregar settings:', error);
     } finally {
@@ -54,9 +70,20 @@ export default function PartnerSettingsManager() {
       return;
     }
 
+    const commissionValue = parseFloat(commissionRate);
+    if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
+      toast({
+        title: 'Percentual inválido',
+        description: 'O percentual de comissão deve ser entre 0 e 100',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      const { error } = await supabase
+      // Salvar valor mensal
+      const { error: feeError } = await supabase
         .from('site_settings')
         .upsert({
           platform: 'ms',
@@ -68,11 +95,26 @@ export default function PartnerSettingsManager() {
           onConflict: 'platform,setting_key',
         });
 
-      if (error) throw error;
+      if (feeError) throw feeError;
+
+      // Salvar percentual de comissão
+      const { error: commissionError } = await supabase
+        .from('site_settings')
+        .upsert({
+          platform: 'ms',
+          setting_key: 'partner_commission_rate',
+          setting_value: commissionRate,
+          description: 'Percentual de comissão sobre reservas de parceiros (0-100)',
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'platform,setting_key',
+        });
+
+      if (commissionError) throw commissionError;
 
       toast({
         title: 'Salvo com sucesso!',
-        description: `Valor mensal atualizado para R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}%`,
       });
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
@@ -103,7 +145,7 @@ export default function PartnerSettingsManager() {
           Configurações de Parceiros
         </CardTitle>
         <CardDescription>
-          Configure o valor mensal da assinatura para parceiros do Descubra MS
+          Configure valores e comissões para parceiros do Descubra MS
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -124,6 +166,27 @@ export default function PartnerSettingsManager() {
           </div>
           <p className="text-sm text-gray-500">
             Este valor será cobrado mensalmente de todos os parceiros através do Stripe.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="commission_rate">Percentual de Comissão sobre Reservas (%)</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="commission_rate"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              value={commissionRate}
+              onChange={(e) => setCommissionRate(e.target.value)}
+              placeholder="10.00"
+              className="flex-1"
+            />
+            <span className="text-gray-500">%</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            Percentual de comissão calculado automaticamente sobre cada reserva paga. Você pode alterar este valor a qualquer momento.
           </p>
         </div>
 

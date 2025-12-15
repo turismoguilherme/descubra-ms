@@ -633,6 +633,7 @@ export default function FinancialManagement() {
                       <SelectItem value="viajar_subscription">ViaJAR</SelectItem>
                       <SelectItem value="event_sponsor">Eventos</SelectItem>
                       <SelectItem value="partner">Parceiros</SelectItem>
+                      <SelectItem value="commission">Comissões</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={loadData} variant="outline">Filtrar</Button>
@@ -658,6 +659,7 @@ export default function FinancialManagement() {
                             {revenue.source === 'viajar_subscription' && 'ViaJAR'}
                             {revenue.source === 'event_sponsor' && 'Evento em Destaque'}
                             {revenue.source === 'partner' && 'Parceiro'}
+                            {revenue.source === 'commission' && 'Comissão sobre Reserva'}
                             {!revenue.source && 'Outro'} • {revenue.paid_date && format(new Date(revenue.paid_date), 'dd/MM/yyyy', { locale: ptBR })}
                           </div>
                         </div>

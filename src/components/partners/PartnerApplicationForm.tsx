@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -84,9 +84,40 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
     formState: { errors },
     setValue,
     reset,
+    watch,
   } = useForm<FormData>({
     resolver: zodResolver(partnerSchema),
-  });
+    mode: 'onSubmit', // #region agent log
+    defaultValues: {
+      name: '',
+      description: '',
+      partner_type: '',
+      youtube_url: '',
+      website_url: '',
+      contact_email: '',
+      contact_phone: '',
+      address: '',
+      password: '',
+      confirmPassword: '',
+    },
+  }); // #endregion
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:90',message:'Form initialized',data:{hasDefaultValues:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  }, []);
+  
+  const formValues = watch();
+  useEffect(() => {
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:95',message:'Form values changed',data:formValues,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  }, [formValues]);
+  
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:100',message:'Validation errors detected',data:{errors,formValues},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    }
+  }, [errors, formValues]);
+  // #endregion
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -147,6 +178,9 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   };
 
   const onSubmit = async (data: FormData) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:149',message:'onSubmit called',data:data,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     setIsSubmitting(true);
     setUploadProgress(0);
 
@@ -276,8 +310,20 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
     );
   }
 
+  // #region agent log
+  const handleFormSubmit = handleSubmit(
+    onSubmit,
+    (validationErrors) => {
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:310',message:'Form validation failed',data:{validationErrors,formValues},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    }
+  );
+  useEffect(() => {
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:315',message:'Form component rendered',data:{includePassword},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  }, [includePassword]);
+  // #endregion
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleFormSubmit} className="space-y-8">
       {/* Dados da Empresa */}
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-ms-primary-blue">
@@ -300,7 +346,12 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="partner_type">Tipo de Negócio *</Label>
-            <Select onValueChange={(value) => setValue('partner_type', value)}>
+            <Select onValueChange={(value) => {
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:303',message:'partner_type changed',data:{value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
+              setValue('partner_type', value);
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>

@@ -70,11 +70,12 @@ serve(async (req) => {
     }
 
     // Mapear planos para preços do Stripe (em centavos)
+    // ViaJAR Tur: apenas 2 planos (Secretárias e Empresários)
     const planPrices: Record<string, { monthly: number; annual: number }> = {
-      freemium: { monthly: 0, annual: 0 },
-      professional: { monthly: 19900, annual: 191200 }, // R$ 199/mês ou R$ 1912/ano
-      enterprise: { monthly: 49900, annual: 479200 }, // R$ 499/mês ou R$ 4792/ano
-      government: { monthly: 200000, annual: 1920000 }, // R$ 2000/mês ou R$ 19200/ano
+      freemium: { monthly: 0, annual: 0 }, // Não usado em ViaJAR Tur
+      professional: { monthly: 20000, annual: 192000 }, // R$ 200/mês ou R$ 1920/ano (Empresários ViaJAR Tur)
+      enterprise: { monthly: 49900, annual: 479200 }, // R$ 499/mês ou R$ 4792/ano (não usado em ViaJAR Tur)
+      government: { monthly: 200000, annual: 1920000 }, // R$ 2000/mês ou R$ 19200/ano (Secretárias ViaJAR Tur)
     };
 
     const planPrice = planPrices[planId];
@@ -194,11 +195,12 @@ serve(async (req) => {
         },
       ],
       subscription_data: {
-        trial_period_days: 14, // 14 dias grátis
+        // SEM período de teste - todos os planos são pagos imediatamente
         metadata: {
           plan_id: planId,
           billing_period: billingPeriod,
           supabase_user_id: user.id,
+          platform: 'viajar_tur', // Identificador para ViaJAR Tur
         },
       },
       success_url: defaultSuccessUrl,

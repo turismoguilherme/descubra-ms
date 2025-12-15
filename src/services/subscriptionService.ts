@@ -87,15 +87,15 @@ export const PLANS: Record<PlanTier, Plan> = {
   
   professional: {
     id: 'professional',
-    name: 'Professional',
-    price: 199,
-    annualPrice: 1912, // 20% desconto
+    name: 'Empresários',
+    price: 200, // ViaJAR Tur: R$ 200/mês para empresários
+    annualPrice: 1920, // 20% desconto
     annualDiscount: 20,
     currency: 'BRL',
     icon: 'Briefcase',
     color: 'blue',
     recommended: true,
-    target: 'Hotéis, pousadas e agências de médio porte',
+    target: 'Empresários do setor turístico',
     features: [
       { name: 'Tudo do Freemium', included: true },
       { name: 'Fotos ilimitadas', included: true },
@@ -138,8 +138,8 @@ export const PLANS: Record<PlanTier, Plan> = {
   
   government: {
     id: 'government',
-    name: 'Governo / Prefeitura',
-    price: 2000,
+    name: 'Secretárias',
+    price: 2000, // ViaJAR Tur: R$ 2.000/mês para secretárias
     annualPrice: 19200, // 20% desconto
     annualDiscount: 20,
     currency: 'BRL',

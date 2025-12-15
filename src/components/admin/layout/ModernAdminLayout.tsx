@@ -38,7 +38,9 @@ import {
   Monitor,
   Route,
   Gift,
-  BarChart3
+  BarChart3,
+  CreditCard as CreditCardIcon,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -132,8 +134,10 @@ const navigationItems: NavItem[] = [
     platform: 'system',
     children: [
       { id: 'overview', label: 'Visão Geral', icon: PieChart, path: '/viajar/admin/financial', permission: 'financial', platform: 'system' },
-      { id: 'bills', label: 'Contas a Pagar', icon: Receipt, path: '/viajar/admin/financial/bills', permission: 'financial', platform: 'system' },
+      { id: 'payments', label: 'Pagamentos', icon: CreditCardIcon, path: '/viajar/admin/financial/payments', permission: 'financial', platform: 'system' },
       { id: 'revenue', label: 'Receitas', icon: Wallet, path: '/viajar/admin/financial/revenue', permission: 'financial', platform: 'system' },
+      { id: 'reconciliation', label: 'Reconciliação', icon: RefreshCw, path: '/viajar/admin/financial/reconciliation', permission: 'financial', platform: 'system' },
+      { id: 'bills', label: 'Contas a Pagar', icon: Receipt, path: '/viajar/admin/financial/bills', permission: 'financial', platform: 'system' },
       { id: 'accounts', label: 'Contas Bancárias', icon: CreditCard, path: '/viajar/admin/financial/accounts', permission: 'financial', platform: 'system' },
       { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/viajar/admin/financial/suppliers', permission: 'financial', platform: 'system' },
       { id: 'reports', label: 'Relatórios', icon: FileText, path: '/viajar/admin/financial/reports', permission: 'reports', platform: 'system' },

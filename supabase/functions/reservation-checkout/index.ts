@@ -74,8 +74,18 @@ serve(async (req) => {
       );
     }
 
-    // Calcular comissão
-    const commissionRate = partner.commission_rate || 10.00;
+    // Buscar percentual de comissão configurado no admin (padrão: 10%)
+    const { data: commissionSetting } = await supabase
+      .from('site_settings')
+      .select('setting_value')
+      .eq('platform', 'ms')
+      .eq('setting_key', 'partner_commission_rate')
+      .maybeSingle();
+
+    const commissionRate = commissionSetting?.setting_value 
+      ? parseFloat(String(commissionSetting.setting_value))
+      : (partner.commission_rate || 10.00);
+    
     const commissionAmount = (totalAmount * commissionRate) / 100;
     const partnerAmount = totalAmount - commissionAmount;
 

@@ -17,12 +17,17 @@ interface PlanSelectorProps {
   recommendedPlan?: PlanTier;
   preSelectedPlan?: PlanTier | null;
   preSelectedBilling?: 'monthly' | 'annual' | null;
+  isViaJARTur?: boolean; // Se true, mostra apenas 2 planos (Professional e Government)
 }
 
-export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelectedPlan, preSelectedBilling }: PlanSelectorProps) {
+export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelectedPlan, preSelectedBilling, isViaJARTur = false }: PlanSelectorProps) {
   const [isAnnual, setIsAnnual] = useState(preSelectedBilling === 'annual' || false);
 
-  const planOrder: PlanTier[] = ['freemium', 'professional', 'enterprise', 'government'];
+  // ViaJAR Tur: apenas 2 planos (Empresários e Secretárias)
+  // Descubra MS ou outros: todos os planos
+  const planOrder: PlanTier[] = isViaJARTur 
+    ? ['professional', 'government'] // ViaJAR Tur: apenas 2 planos
+    : ['freemium', 'professional', 'enterprise', 'government']; // Outros: todos os planos
 
   return (
     <div className="space-y-8">
@@ -30,7 +35,9 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold">Escolha Seu Plano</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Selecione o plano ideal para o seu negócio. Todos os planos incluem 14 dias de teste grátis.
+          {isViaJARTur 
+            ? 'Selecione o plano ideal para o seu negócio. Assinatura recorrente mensal ou anual.'
+            : 'Selecione o plano ideal para o seu negócio. Todos os planos incluem 14 dias de teste grátis.'}
         </p>
         
         {preSelectedPlan && (
@@ -194,9 +201,14 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
                 </Button>
 
                 {/* Aviso */}
-                {plan.price > 0 && (
+                {plan.price > 0 && !isViaJARTur && (
                   <p className="text-xs text-center text-muted-foreground">
                     14 dias grátis, cancele quando quiser
+                  </p>
+                )}
+                {plan.price > 0 && isViaJARTur && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Cancele quando quiser
                   </p>
                 )}
               </CardContent>
