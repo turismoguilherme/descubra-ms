@@ -116,8 +116,8 @@ export default function AuditLogs() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Logs de Auditoria</h2>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Logs de Auditoria</h2>
           <p className="text-gray-600 mt-1">Histórico completo de ações administrativas no sistema</p>
         </div>
         <Button variant="outline" onClick={fetchLogs} disabled={loading}>
@@ -150,28 +150,28 @@ export default function AuditLogs() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data/Hora</TableHead>
-                    <TableHead>Ação</TableHead>
-                    <TableHead>Tabela</TableHead>
-                    <TableHead>Usuário</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data/Hora</TableHead>
+                  <TableHead>Ação</TableHead>
+                  <TableHead>Tabela</TableHead>
+                  <TableHead>Usuário</TableHead>
                     <TableHead>ID do Registro</TableHead>
                     <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLogs.length === 0 ? (
-                    <TableRow>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredLogs.length === 0 ? (
+                  <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                         {searchTerm ? 'Nenhum log encontrado para a busca' : 'Nenhum log encontrado. As ações serão registradas aqui.'}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredLogs.map((log) => (
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredLogs.map((log) => (
                       <TableRow key={log.id} className="hover:bg-gray-50">
-                        <TableCell className="text-sm">
+                      <TableCell className="text-sm">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-gray-400" />
                             {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}
@@ -185,8 +185,8 @@ export default function AuditLogs() {
                             <Database className="h-4 w-4 text-gray-400" />
                             <span className="font-medium">{log.entity_type || '-'}</span>
                           </div>
-                        </TableCell>
-                        <TableCell>
+                      </TableCell>
+                      <TableCell>
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-gray-400" />
                             <div>
@@ -197,8 +197,8 @@ export default function AuditLogs() {
                         </TableCell>
                         <TableCell className="font-mono text-xs text-gray-600">
                           {log.entity_id ? log.entity_id.substring(0, 8) + '...' : '-'}
-                        </TableCell>
-                        <TableCell>
+                      </TableCell>
+                      <TableCell>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -210,12 +210,12 @@ export default function AuditLogs() {
                             <Eye className="h-4 w-4 mr-1" />
                             Detalhes
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
             </div>
           )}
         </CardContent>

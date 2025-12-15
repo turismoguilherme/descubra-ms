@@ -316,21 +316,21 @@ serve(async (req) => {
       
       // Função para tentar enviar com um domínio específico
       const trySendEmail = async (fromEmail: string, isRetry: boolean = false) => {
-        const resendResponse = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
             from: fromEmail,
-            to: [to],
-            subject: emailContent.subject,
-            html: emailContent.html,
-          }),
-        });
+          to: [to],
+          subject: emailContent.subject,
+          html: emailContent.html,
+        }),
+      });
 
-        if (!resendResponse.ok) {
+      if (!resendResponse.ok) {
           let errorData: any;
           try {
             errorData = await resendResponse.json();
@@ -366,9 +366,9 @@ serve(async (req) => {
           }
           
           throw new Error(`Resend API error: ${resendResponse.status} - ${errorData?.message || resendResponse.statusText}`);
-        }
+      }
 
-        const result = await resendResponse.json();
+      const result = await resendResponse.json();
         return { success: true, result, fromEmail, isRetry };
       };
 
@@ -396,7 +396,7 @@ serve(async (req) => {
           usedDefaultDomain: emailResult.isRetry
         });
 
-        return new Response(
+      return new Response(
           JSON.stringify({ 
             success: true, 
             message: 'Email enviado', 
@@ -416,8 +416,8 @@ serve(async (req) => {
             pending: true,
             error: emailError.message || 'Erro desconhecido'
           }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-        );
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
       }
 
     } else {

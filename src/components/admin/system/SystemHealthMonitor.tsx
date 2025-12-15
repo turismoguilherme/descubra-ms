@@ -134,10 +134,10 @@ export default function SystemHealthMonitor() {
       }
 
       console.log('✅ [SystemHealthMonitor] Validações passaram, salvando no banco...');
-      const success = await systemHealthService.saveAlertConfig(alertConfig);
+    const success = await systemHealthService.saveAlertConfig(alertConfig);
       console.log('📊 [SystemHealthMonitor] Resultado do salvamento:', success);
       
-      if (success) {
+    if (success) {
         console.log('✅ [SystemHealthMonitor] Configurações salvas com sucesso no banco!');
         // Forçar toast a aparecer - usar requestAnimationFrame para garantir que o DOM está pronto
         requestAnimationFrame(() => {
@@ -149,18 +149,18 @@ export default function SystemHealthMonitor() {
           });
           console.log('✅ [SystemHealthMonitor] Toast disparado!');
         });
-      } else {
+    } else {
         console.warn('⚠️ [SystemHealthMonitor] Falha ao salvar no banco, usando localStorage como fallback');
-        // Fallback para localStorage
-        localStorage.setItem('system_alert_config', JSON.stringify({
-          email: alertConfig.email_enabled,
-          emailAddress: alertConfig.email_address,
-          whatsapp: alertConfig.whatsapp_enabled,
-          whatsappNumber: alertConfig.whatsapp_number,
-          downtime: alertConfig.downtime_alerts,
-          slowResponse: alertConfig.slow_response_alerts,
-          errors: alertConfig.error_alerts,
-        }));
+      // Fallback para localStorage
+      localStorage.setItem('system_alert_config', JSON.stringify({
+        email: alertConfig.email_enabled,
+        emailAddress: alertConfig.email_address,
+        whatsapp: alertConfig.whatsapp_enabled,
+        whatsappNumber: alertConfig.whatsapp_number,
+        downtime: alertConfig.downtime_alerts,
+        slowResponse: alertConfig.slow_response_alerts,
+        errors: alertConfig.error_alerts,
+      }));
         toast({ 
           title: '⚠️ Configurações salvas localmente', 
           description: 'Salvas no navegador (banco temporariamente indisponível). Configure novamente quando o banco estiver disponível.',

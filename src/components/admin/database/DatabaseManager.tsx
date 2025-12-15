@@ -422,9 +422,9 @@ export default function DatabaseManager() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-slate-800">
-                        {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.label || selectedTable}
-                      </CardTitle>
+                    <CardTitle className="text-slate-800">
+                      {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.label || selectedTable}
+                    </CardTitle>
                       {AVAILABLE_TABLES.find(t => t.name === selectedTable)?.sensitive && (
                         <Badge variant="destructive" className="flex items-center gap-1">
                           <Shield className="h-3 w-3" />
