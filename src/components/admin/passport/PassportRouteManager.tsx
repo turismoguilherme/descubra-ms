@@ -332,11 +332,18 @@ const PassportRouteManager: React.FC = () => {
         </Card>
       )}
 
-      {creatingRoute && (
-        <Card className="border-2 border-blue-300">
-          <CardHeader>
-            <CardTitle>Criar Nova Rota</CardTitle>
-          </CardHeader>
+      {(() => {
+        console.log('🔵 [PassportRouteManager] Renderizando formulário? creatingRoute =', creatingRoute);
+        return creatingRoute && (
+          <Card className="border-2 border-blue-300">
+            <CardHeader>
+              <CardTitle>
+                Criar Nova Rota
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (Debug: creatingRoute = {String(creatingRoute)})
+                </span>
+              </CardTitle>
+            </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="new_name">Nome da Rota *</Label>
@@ -423,7 +430,8 @@ const PassportRouteManager: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
     </div>
   );
 };
