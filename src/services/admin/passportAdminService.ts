@@ -11,52 +11,112 @@ class PassportAdminService {
    */
 
   async getConfigurations(): Promise<PassportConfiguration[]> {
-    const { data, error } = await supabase
-      .from('passport_configurations')
-      .select('*, routes(*)')
-      .order('created_at', { ascending: false });
+    console.log('🔵 [PassportAdminService] ========== getConfigurations ==========');
+    try {
+      const { data, error } = await supabase
+        .from('passport_configurations')
+        .select('*, routes(*)')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return (data || []) as PassportConfiguration[];
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao buscar configurações:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Configurações encontradas:', data?.length || 0);
+      return (data || []) as PassportConfiguration[];
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   async getConfiguration(routeId: string): Promise<PassportConfiguration | null> {
-    const { data, error } = await supabase
-      .from('passport_configurations')
-      .select('*, routes(*)')
-      .eq('route_id', routeId)
-      .single();
+    console.log('🔵 [PassportAdminService] ========== getConfiguration ==========');
+    console.log('🔵 [PassportAdminService] Route ID:', routeId);
+    try {
+      const { data, error } = await supabase
+        .from('passport_configurations')
+        .select('*, routes(*)')
+        .eq('route_id', routeId)
+        .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
-    return data as PassportConfiguration | null;
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ [PassportAdminService] Erro ao buscar configuração:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Configuração encontrada:', !!data);
+      return data as PassportConfiguration | null;
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   async createConfiguration(
     config: Omit<PassportConfiguration, 'id' | 'created_at' | 'updated_at'>
   ): Promise<PassportConfiguration> {
-    const { data, error } = await supabase
-      .from('passport_configurations')
-      .insert(config)
-      .select()
-      .single();
+    console.log('🔵 [PassportAdminService] ========== createConfiguration ==========');
+    console.log('🔵 [PassportAdminService] Config data:', JSON.stringify(config, null, 2));
+    try {
+      const { data, error } = await supabase
+        .from('passport_configurations')
+        .insert(config)
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao criar configuração:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Configuração criada:', data?.id);
+      return data;
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   async updateConfiguration(
     routeId: string,
     updates: Partial<PassportConfiguration>
   ): Promise<PassportConfiguration> {
-    const { data, error } = await supabase
-      .from('passport_configurations')
-      .update(updates)
-      .eq('route_id', routeId)
-      .select()
-      .single();
+    console.log('🔵 [PassportAdminService] ========== updateConfiguration ==========');
+    console.log('🔵 [PassportAdminService] Route ID:', routeId);
+    console.log('🔵 [PassportAdminService] Updates:', JSON.stringify(updates, null, 2));
+    try {
+      const { data, error } = await supabase
+        .from('passport_configurations')
+        .update(updates)
+        .eq('route_id', routeId)
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao atualizar configuração:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Configuração atualizada:', data?.id);
+      return data;
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   async deleteConfiguration(routeId: string): Promise<void> {
@@ -101,14 +161,29 @@ class PassportAdminService {
   async createReward(
     reward: Omit<PassportReward, 'id' | 'created_at' | 'updated_at'>
   ): Promise<PassportReward> {
-    const { data, error } = await supabase
-      .from('passport_rewards')
-      .insert(reward)
-      .select()
-      .single();
+    console.log('🔵 [PassportAdminService] ========== createReward ==========');
+    console.log('🔵 [PassportAdminService] Reward data:', JSON.stringify(reward, null, 2));
+    try {
+      const { data, error } = await supabase
+        .from('passport_rewards')
+        .insert(reward)
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao criar recompensa:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Recompensa criada:', data?.id);
+      return data;
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   async updateReward(
@@ -127,12 +202,27 @@ class PassportAdminService {
   }
 
   async deleteReward(rewardId: string): Promise<void> {
-    const { error } = await supabase
-      .from('passport_rewards')
-      .delete()
-      .eq('id', rewardId);
+    console.log('🔵 [PassportAdminService] ========== deleteReward ==========');
+    console.log('🔵 [PassportAdminService] Reward ID:', rewardId);
+    try {
+      const { error } = await supabase
+        .from('passport_rewards')
+        .delete()
+        .eq('id', rewardId);
 
-    if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao deletar recompensa:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Recompensa deletada');
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -156,15 +246,31 @@ class PassportAdminService {
     checkpointId: string,
     updates: Partial<RouteCheckpointExtended>
   ): Promise<RouteCheckpointExtended> {
-    const { data, error } = await supabase
-      .from('route_checkpoints')
-      .update(updates)
-      .eq('id', checkpointId)
-      .select()
-      .single();
+    console.log('🔵 [PassportAdminService] ========== updateCheckpoint ==========');
+    console.log('🔵 [PassportAdminService] Checkpoint ID:', checkpointId);
+    console.log('🔵 [PassportAdminService] Updates:', JSON.stringify(updates, null, 2));
+    try {
+      const { data, error } = await supabase
+        .from('route_checkpoints')
+        .update(updates)
+        .eq('id', checkpointId)
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao atualizar checkpoint:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Checkpoint atualizado:', data?.id);
+      return data;
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -177,37 +283,68 @@ class PassportAdminService {
     total_checkins: number;
     rewards_unlocked: number;
   }> {
-    // Total de usuários com passaporte
-    const { count: totalUsers } = await supabase
-      .from('user_passports')
-      .select('*', { count: 'exact', head: true });
+    console.log('🔵 [PassportAdminService] ========== getStatistics ==========');
+    console.log('🔵 [PassportAdminService] Route ID (opcional):', routeId);
+    try {
+      // Total de usuários com passaporte
+      console.log('🔵 [PassportAdminService] Buscando total de usuários...');
+      const { count: totalUsers, error: usersError } = await supabase
+        .from('user_passports')
+        .select('*', { count: 'exact', head: true });
 
-    // Rotas completadas
-    let routesQuery = supabase
-      .from('passport_stamps')
-      .select('route_id, user_id', { count: 'exact' });
+      if (usersError) {
+        console.error('❌ [PassportAdminService] Erro ao buscar usuários:', usersError);
+        throw usersError;
+      }
 
-    if (routeId) {
-      routesQuery = routesQuery.eq('route_id', routeId);
+      // Rotas completadas
+      console.log('🔵 [PassportAdminService] Buscando check-ins...');
+      let routesQuery = supabase
+        .from('passport_stamps')
+        .select('route_id, user_id', { count: 'exact' });
+
+      if (routeId) {
+        routesQuery = routesQuery.eq('route_id', routeId);
+      }
+
+      const { count: totalCheckins, error: checkinsError } = await routesQuery;
+      if (checkinsError) {
+        console.error('❌ [PassportAdminService] Erro ao buscar check-ins:', checkinsError);
+        throw checkinsError;
+      }
+
+      // Recompensas desbloqueadas
+      console.log('🔵 [PassportAdminService] Buscando recompensas desbloqueadas...');
+      const { count: rewardsUnlocked, error: rewardsError } = await supabase
+        .from('user_rewards')
+        .select('*', { count: 'exact', head: true });
+
+      if (rewardsError) {
+        console.error('❌ [PassportAdminService] Erro ao buscar recompensas:', rewardsError);
+        throw rewardsError;
+      }
+
+      // Calcular rotas completadas (usuários que completaram todos os checkpoints de uma rota)
+      // Isso requer uma query mais complexa, simplificando por enquanto
+      const completedRoutes = 0; // TODO: Implementar cálculo correto
+
+      const stats = {
+        total_users: totalUsers || 0,
+        completed_routes: completedRoutes,
+        total_checkins: totalCheckins || 0,
+        rewards_unlocked: rewardsUnlocked || 0,
+      };
+
+      console.log('✅ [PassportAdminService] Estatísticas calculadas:', stats);
+      return stats;
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
     }
-
-    const { count: totalCheckins } = await routesQuery;
-
-    // Recompensas desbloqueadas
-    const { count: rewardsUnlocked } = await supabase
-      .from('user_rewards')
-      .select('*', { count: 'exact', head: true });
-
-    // Calcular rotas completadas (usuários que completaram todos os checkpoints de uma rota)
-    // Isso requer uma query mais complexa, simplificando por enquanto
-    const completedRoutes = 0; // TODO: Implementar cálculo correto
-
-    return {
-      total_users: totalUsers || 0,
-      completed_routes: completedRoutes,
-      total_checkins: totalCheckins || 0,
-      rewards_unlocked: rewardsUnlocked || 0,
-    };
   }
 
   /**
@@ -218,12 +355,28 @@ class PassportAdminService {
     routeId: string,
     updates: { video_url?: string; passport_number_prefix?: string; wallpaper_url?: string }
   ): Promise<void> {
-    const { error } = await supabase
-      .from('routes')
-      .update(updates)
-      .eq('id', routeId);
+    console.log('🔵 [PassportAdminService] ========== updateRoute ==========');
+    console.log('🔵 [PassportAdminService] Route ID:', routeId);
+    console.log('🔵 [PassportAdminService] Updates:', JSON.stringify(updates, null, 2));
+    try {
+      const { error } = await supabase
+        .from('routes')
+        .update(updates)
+        .eq('id', routeId);
 
-    if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportAdminService] Erro ao atualizar rota:', error);
+        throw error;
+      }
+      console.log('✅ [PassportAdminService] Rota atualizada');
+    } catch (error: any) {
+      console.error('❌ [PassportAdminService] Erro completo:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 }
 

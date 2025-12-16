@@ -43,25 +43,64 @@ const PassportStampConfig: React.FC = () => {
   const isValidHexColor = (value: string) => /^#[0-9A-F]{6}$/i.test(value);
 
   useEffect(() => {
+    console.log('🔵 [PassportStampConfig] Componente montado, carregando dados...');
     loadData();
   }, []);
 
+  useEffect(() => {
+    console.log('🔵 [PassportStampConfig] selectedRoute mudou para:', selectedRoute);
+  }, [selectedRoute]);
+
+  useEffect(() => {
+    console.log('🔵 [PassportStampConfig] creatingTheme mudou para:', creatingTheme);
+  }, [creatingTheme]);
+
+  useEffect(() => {
+    console.log('🔵 [PassportStampConfig] Componente renderizado. Estado atual:', {
+      loading,
+      routesCount: routes.length,
+      configsCount: configs.length,
+      themesCount: stampThemes.length,
+      selectedRoute,
+      creatingTheme,
+    });
+  });
+
   const loadData = async () => {
+    console.log('🔵 [PassportStampConfig] ========== loadData INICIADO ==========');
     try {
       setLoading(true);
+      console.log('🔵 [PassportStampConfig] Buscando rotas, configurações e temas...');
       const [routesRes, configsRes, themesRes] = await Promise.all([
         supabase.from('routes').select('*').eq('is_active', true),
         passportAdminService.getConfigurations(),
         supabase.from('stamp_themes' as any).select('*').eq('is_active', true).order('theme_name'),
       ]);
 
-      if (routesRes.error) throw routesRes.error;
-      if (themesRes.error) throw themesRes.error;
+      if (routesRes.error) {
+        console.error('❌ [PassportStampConfig] Erro ao buscar rotas:', routesRes.error);
+        throw routesRes.error;
+      }
+      if (themesRes.error) {
+        console.error('❌ [PassportStampConfig] Erro ao buscar temas:', themesRes.error);
+        throw themesRes.error;
+      }
+      
+      console.log('✅ [PassportStampConfig] Rotas carregadas:', routesRes.data?.length || 0);
+      console.log('✅ [PassportStampConfig] Configurações carregadas:', configsRes?.length || 0);
+      console.log('✅ [PassportStampConfig] Temas carregados:', themesRes.data?.length || 0);
       
       setRoutes(routesRes.data || []);
       setConfigs(configsRes);
       setStampThemes(themesRes.data || []);
     } catch (error: any) {
+      console.error('❌ [PassportStampConfig] Erro completo ao carregar dados:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao carregar dados',
         description: error.message,
@@ -69,11 +108,16 @@ const PassportStampConfig: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      console.log('🔵 [PassportStampConfig] loadData finalizado');
     }
   };
 
   const handleCreateTheme = async () => {
+    console.log('🔵 [PassportStampConfig] ========== handleCreateTheme INICIADO ==========');
+    console.log('🔵 [PassportStampConfig] Form data:', JSON.stringify(newThemeForm, null, 2));
+    
     if (!newThemeForm.theme_key.trim() || !newThemeForm.theme_name.trim()) {
+      console.log('❌ [PassportStampConfig] Chave ou nome do tema vazio');
       toast({
         title: 'Erro',
         description: 'Chave e nome do tema são obrigatórios',
@@ -84,8 +128,10 @@ const PassportStampConfig: React.FC = () => {
 
     const colorPrimary = normalizeHexColor(newThemeForm.color_primary);
     const colorSecondary = normalizeHexColor(newThemeForm.color_secondary);
+    console.log('🔵 [PassportStampConfig] Cores normalizadas:', { colorPrimary, colorSecondary });
 
     if (!isValidHexColor(colorPrimary) || !isValidHexColor(colorSecondary)) {
+      console.log('❌ [PassportStampConfig] Cores inválidas:', { colorPrimary, colorSecondary });
       toast({
         title: 'Cores inválidas',
         description: 'Use o formato #RRGGBB (ex: #FF5733).',
@@ -94,8 +140,10 @@ const PassportStampConfig: React.FC = () => {
       return;
     }
 
+    console.log('✅ [PassportStampConfig] Validações passadas, criando tema...');
+    
     try {
-      const { error } = await supabase.from('stamp_themes' as any).insert({
+      const themeData = {
         theme_key: newThemeForm.theme_key.toLowerCase().replace(/\s+/g, '_'),
         theme_name: newThemeForm.theme_name,
         emoji: newThemeForm.emoji || null,
@@ -103,9 +151,18 @@ const PassportStampConfig: React.FC = () => {
         color_secondary: colorSecondary,
         description: newThemeForm.description || null,
         is_active: true,
-      });
+      };
+      
+      console.log('🔵 [PassportStampConfig] Dados para inserção:', JSON.stringify(themeData, null, 2));
+      
+      const { data, error } = await supabase.from('stamp_themes' as any).insert(themeData).select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportStampConfig] Erro ao inserir tema:', error);
+        throw error;
+      }
+
+      console.log('✅ [PassportStampConfig] Tema criado com sucesso:', data);
 
       toast({
         title: 'Tema criado',
@@ -123,6 +180,13 @@ const PassportStampConfig: React.FC = () => {
       });
       loadData();
     } catch (error: any) {
+      console.error('❌ [PassportStampConfig] Erro completo ao criar tema:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao criar tema',
         description: error.message,
@@ -132,7 +196,12 @@ const PassportStampConfig: React.FC = () => {
   };
 
   const handleSave = async () => {
+    console.log('🔵 [PassportStampConfig] ========== handleSave INICIADO ==========');
+    console.log('🔵 [PassportStampConfig] selectedRoute:', selectedRoute);
+    console.log('🔵 [PassportStampConfig] Form data:', JSON.stringify(formData, null, 2));
+    
     if (!selectedRoute) {
+      console.log('❌ [PassportStampConfig] Rota não selecionada');
       toast({
         title: 'Selecione uma rota',
         variant: 'destructive',
@@ -142,9 +211,13 @@ const PassportStampConfig: React.FC = () => {
 
     try {
       const existing = configs.find(c => c.route_id === selectedRoute);
+      console.log('🔵 [PassportStampConfig] Configuração existente?', !!existing);
+      
       if (existing) {
+        console.log('🔵 [PassportStampConfig] Atualizando configuração existente...');
         await passportAdminService.updateConfiguration(selectedRoute, formData);
       } else {
+        console.log('🔵 [PassportStampConfig] Criando nova configuração...');
         await passportAdminService.createConfiguration({
           route_id: selectedRoute,
           ...formData,
@@ -152,11 +225,20 @@ const PassportStampConfig: React.FC = () => {
           is_active: true,
         });
       }
+      
+      console.log('✅ [PassportStampConfig] Configuração salva com sucesso');
       toast({
         title: 'Configuração salva',
       });
       loadData();
     } catch (error: any) {
+      console.error('❌ [PassportStampConfig] Erro completo ao salvar configuração:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao salvar',
         description: error.message,
@@ -166,6 +248,7 @@ const PassportStampConfig: React.FC = () => {
   };
 
   if (loading) {
+    console.log('🔵 [PassportStampConfig] Renderizando estado de loading');
     return <div className="text-center py-8">Carregando...</div>;
   }
 
@@ -175,7 +258,14 @@ const PassportStampConfig: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Configurar Carimbos</CardTitle>
-            <Button variant="outline" onClick={() => setCreatingTheme(true)}>
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => {
+                console.log('🔵 [PassportStampConfig] Botão "Novo Tema" clicado');
+                setCreatingTheme(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Novo Tema
             </Button>
@@ -249,7 +339,17 @@ const PassportStampConfig: React.FC = () => {
               />
             </div>
 
-            <Button onClick={handleSave}>Salvar Configuração</Button>
+            <Button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔵 [PassportStampConfig] Botão "Salvar Configuração" clicado');
+                handleSave();
+              }}
+            >
+              Salvar Configuração
+            </Button>
           </>
         )}
       </CardContent>

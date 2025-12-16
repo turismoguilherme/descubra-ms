@@ -34,30 +34,60 @@ const PassportRewardsManager: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('🔵 [PassportRewardsManager] Componente montado, carregando dados...');
     loadData();
   }, []);
 
+  useEffect(() => {
+    console.log('🔵 [PassportRewardsManager] showForm mudou para:', showForm);
+  }, [showForm]);
+
+  useEffect(() => {
+    console.log('🔵 [PassportRewardsManager] Componente renderizado. Estado atual:', {
+      loading,
+      routesCount: routes.length,
+      rewardsCount: rewards.length,
+      showForm,
+      emittedByRewardIdCount: Object.keys(emittedByRewardId).length,
+    });
+  });
+
   const loadData = async () => {
+    console.log('🔵 [PassportRewardsManager] ========== loadData INICIADO ==========');
     try {
       setLoading(true);
+      console.log('🔵 [PassportRewardsManager] Buscando rotas e recompensas...');
       const [routesRes, rewardsRes] = await Promise.all([
         supabase.from('routes').select('*').eq('is_active', true),
         passportAdminService.getRewards(),
       ]);
 
-      if (routesRes.error) throw routesRes.error;
+      if (routesRes.error) {
+        console.error('❌ [PassportRewardsManager] Erro ao buscar rotas:', routesRes.error);
+        throw routesRes.error;
+      }
+      
+      console.log('✅ [PassportRewardsManager] Rotas carregadas:', routesRes.data?.length || 0);
+      console.log('✅ [PassportRewardsManager] Recompensas carregadas:', rewardsRes?.length || 0);
+      
       setRoutes(routesRes.data || []);
       setRewards(rewardsRes);
 
       // Carregar quantidade de vouchers emitidos por recompensa (para exibir estoque)
       const rewardIds = (rewardsRes || []).map((r: any) => r.id).filter(Boolean);
+      console.log('🔵 [PassportRewardsManager] Reward IDs encontrados:', rewardIds.length);
+      
       if (rewardIds.length > 0) {
+        console.log('🔵 [PassportRewardsManager] Buscando vouchers emitidos...');
         const { data: userRewardsData, error: userRewardsError } = await supabase
           .from('user_rewards')
           .select('reward_id')
           .in('reward_id', rewardIds);
 
-        if (userRewardsError) throw userRewardsError;
+        if (userRewardsError) {
+          console.error('❌ [PassportRewardsManager] Erro ao buscar vouchers:', userRewardsError);
+          throw userRewardsError;
+        }
 
         const counts = (userRewardsData || []).reduce((acc: Record<string, number>, row: any) => {
           const rid = row.reward_id;
@@ -65,11 +95,20 @@ const PassportRewardsManager: React.FC = () => {
           return acc;
         }, {});
 
+        console.log('✅ [PassportRewardsManager] Contagem de vouchers emitidos:', counts);
         setEmittedByRewardId(counts);
       } else {
+        console.log('🔵 [PassportRewardsManager] Nenhuma recompensa encontrada, zerando contagem');
         setEmittedByRewardId({});
       }
     } catch (error: any) {
+      console.error('❌ [PassportRewardsManager] Erro completo ao carregar dados:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao carregar dados',
         description: error.message,
@@ -77,15 +116,57 @@ const PassportRewardsManager: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      console.log('🔵 [PassportRewardsManager] loadData finalizado');
     }
   };
 
   const handleSave = async () => {
+    console.log('🔵 [PassportRewardsManager] ========== handleSave INICIADO ==========');
+    console.log('🔵 [PassportRewardsManager] Form data:', JSON.stringify(formData, null, 2));
+    
+    // Validações
+    if (!formData.route_id) {
+      console.log('❌ [PassportRewardsManager] Rota não selecionada');
+      toast({
+        title: 'Rota obrigatória',
+        description: 'Selecione uma rota',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.partner_name.trim()) {
+      console.log('❌ [PassportRewardsManager] Nome do parceiro vazio');
+      toast({
+        title: 'Nome obrigatório',
+        description: 'O nome do parceiro é obrigatório',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.reward_description.trim()) {
+      console.log('❌ [PassportRewardsManager] Descrição vazia');
+      toast({
+        title: 'Descrição obrigatória',
+        description: 'A descrição da recompensa é obrigatória',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    console.log('✅ [PassportRewardsManager] Validações passadas, criando recompensa...');
+    
     try {
-      await passportAdminService.createReward({
+      const rewardData = {
         ...formData,
         is_active: true,
-      });
+      };
+      console.log('🔵 [PassportRewardsManager] Dados para criação:', JSON.stringify(rewardData, null, 2));
+      
+      await passportAdminService.createReward(rewardData);
+      
+      console.log('✅ [PassportRewardsManager] Recompensa criada com sucesso');
       toast({
         title: 'Recompensa criada',
       });
@@ -105,8 +186,16 @@ const PassportRewardsManager: React.FC = () => {
         is_fallback: false,
         expires_at: '',
       });
+      console.log('🔵 [PassportRewardsManager] Formulário resetado, recarregando dados...');
       loadData();
     } catch (error: any) {
+      console.error('❌ [PassportRewardsManager] Erro completo ao salvar recompensa:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao salvar',
         description: error.message,
@@ -116,15 +205,30 @@ const PassportRewardsManager: React.FC = () => {
   };
 
   const handleDelete = async (rewardId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta recompensa?')) return;
+    console.log('🔵 [PassportRewardsManager] ========== handleDelete ==========');
+    console.log('🔵 [PassportRewardsManager] Reward ID:', rewardId);
+    
+    if (!confirm('Tem certeza que deseja excluir esta recompensa?')) {
+      console.log('🔵 [PassportRewardsManager] Exclusão cancelada pelo usuário');
+      return;
+    }
 
     try {
+      console.log('🔵 [PassportRewardsManager] Deletando recompensa...');
       await passportAdminService.deleteReward(rewardId);
+      console.log('✅ [PassportRewardsManager] Recompensa deletada com sucesso');
       toast({
         title: 'Recompensa excluída',
       });
       loadData();
     } catch (error: any) {
+      console.error('❌ [PassportRewardsManager] Erro completo ao excluir recompensa:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao excluir',
         description: error.message,
@@ -134,6 +238,7 @@ const PassportRewardsManager: React.FC = () => {
   };
 
   if (loading) {
+    console.log('🔵 [PassportRewardsManager] Renderizando estado de loading');
     return <div className="text-center py-8">Carregando...</div>;
   }
 
@@ -143,7 +248,13 @@ const PassportRewardsManager: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Recompensas</CardTitle>
-            <Button onClick={() => setShowForm(!showForm)}>
+            <Button 
+              type="button"
+              onClick={() => {
+                console.log('🔵 [PassportRewardsManager] Botão "Nova Recompensa" clicado. showForm atual:', showForm);
+                setShowForm(!showForm);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Nova Recompensa
             </Button>
@@ -276,8 +387,25 @@ const PassportRewardsManager: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleSave}>Salvar</Button>
-                <Button variant="outline" onClick={() => setShowForm(false)}>
+                <Button 
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔵 [PassportRewardsManager] Botão "Salvar" clicado');
+                    handleSave();
+                  }}
+                >
+                  Salvar
+                </Button>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => {
+                    console.log('🔵 [PassportRewardsManager] Botão "Cancelar" clicado');
+                    setShowForm(false);
+                  }}
+                >
                   Cancelar
                 </Button>
               </div>
@@ -312,9 +440,15 @@ const PassportRewardsManager: React.FC = () => {
                       </div>
                     </div>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(reward.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔵 [PassportRewardsManager] Botão "Excluir" clicado para recompensa:', reward.id);
+                        handleDelete(reward.id);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

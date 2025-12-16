@@ -50,29 +50,53 @@ const PassportCheckpointManager: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log('🔵 [PassportCheckpointManager] Componente montado, carregando rotas...');
     loadRoutes();
   }, []);
 
   useEffect(() => {
+    console.log('🔵 [PassportCheckpointManager] selectedRoute mudou para:', selectedRoute);
     if (selectedRoute) {
+      console.log('🔵 [PassportCheckpointManager] Carregando checkpoints para rota:', selectedRoute);
       loadCheckpoints();
       // Resetar formulário ao trocar de rota
       setCreatingCheckpoint(false);
       setEditingCheckpoint(null);
+      console.log('🔵 [PassportCheckpointManager] Formulários resetados');
     }
   }, [selectedRoute]);
 
+  useEffect(() => {
+    console.log('🔵 [PassportCheckpointManager] creatingCheckpoint mudou para:', creatingCheckpoint);
+  }, [creatingCheckpoint]);
+
+  useEffect(() => {
+    console.log('🔵 [PassportCheckpointManager] editingCheckpoint mudou para:', editingCheckpoint);
+  }, [editingCheckpoint]);
+
   const loadRoutes = async () => {
+    console.log('🔵 [PassportCheckpointManager] ========== loadRoutes INICIADO ==========');
     try {
+      console.log('🔵 [PassportCheckpointManager] Buscando rotas ativas...');
       const { data, error } = await supabase
         .from('routes')
         .select('*')
         .eq('is_active', true)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportCheckpointManager] Erro ao buscar rotas:', error);
+        throw error;
+      }
+      console.log('✅ [PassportCheckpointManager] Rotas carregadas:', data?.length || 0);
       setRoutes(data || []);
     } catch (error: any) {
+      console.error('❌ [PassportCheckpointManager] Erro completo ao carregar rotas:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       toast({
         title: 'Erro ao carregar rotas',
         description: error.message,
@@ -80,22 +104,40 @@ const PassportCheckpointManager: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      console.log('🔵 [PassportCheckpointManager] loadRoutes finalizado');
     }
   };
 
   const loadCheckpoints = async () => {
-    if (!selectedRoute) return;
+    if (!selectedRoute) {
+      console.log('🔵 [PassportCheckpointManager] loadCheckpoints: selectedRoute vazio, abortando');
+      return;
+    }
     
+    console.log('🔵 [PassportCheckpointManager] ========== loadCheckpoints INICIADO ==========');
+    console.log('🔵 [PassportCheckpointManager] Route ID:', selectedRoute);
     try {
+      console.log('🔵 [PassportCheckpointManager] Buscando checkpoints...');
       const { data, error } = await supabase
         .from('route_checkpoints')
         .select('*')
         .eq('route_id', selectedRoute)
         .order('order_sequence', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportCheckpointManager] Erro ao buscar checkpoints:', error);
+        throw error;
+      }
+      console.log('✅ [PassportCheckpointManager] Checkpoints carregados:', data?.length || 0);
+      console.log('🔵 [PassportCheckpointManager] Dados dos checkpoints:', data);
       setCheckpoints(data || []);
     } catch (error: any) {
+      console.error('❌ [PassportCheckpointManager] Erro completo ao carregar checkpoints:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       toast({
         title: 'Erro ao carregar checkpoints',
         description: error.message,
@@ -105,13 +147,19 @@ const PassportCheckpointManager: React.FC = () => {
   };
 
   const handleLocationSelect = (location: { latitude: number; longitude: number; address?: string }) => {
+    console.log('🔵 [PassportCheckpointManager] ========== handleLocationSelect ==========');
+    console.log('🔵 [PassportCheckpointManager] Location selecionada:', location);
+    console.log('🔵 [PassportCheckpointManager] locationPickerFor:', locationPickerFor);
+    
     if (locationPickerFor === 'create') {
+      console.log('🔵 [PassportCheckpointManager] Atualizando formulário de criação');
       setNewCheckpointForm({
         ...newCheckpointForm,
         latitude: location.latitude,
         longitude: location.longitude,
       });
     } else if (locationPickerFor === 'edit') {
+      console.log('🔵 [PassportCheckpointManager] Atualizando formulário de edição');
       setEditCheckpointForm({
         ...editCheckpointForm,
         latitude: location.latitude,
@@ -120,10 +168,16 @@ const PassportCheckpointManager: React.FC = () => {
     }
     setShowLocationPicker(false);
     setLocationPickerFor(null);
+    console.log('✅ [PassportCheckpointManager] Localização aplicada ao formulário');
   };
 
   const handleCreateCheckpoint = async () => {
+    console.log('🔵 [PassportCheckpointManager] ========== handleCreateCheckpoint INICIADO ==========');
+    console.log('🔵 [PassportCheckpointManager] Form data:', JSON.stringify(newCheckpointForm, null, 2));
+    console.log('🔵 [PassportCheckpointManager] selectedRoute:', selectedRoute);
+    
     if (!selectedRoute) {
+      console.log('❌ [PassportCheckpointManager] Rota não selecionada');
       toast({
         title: 'Selecione uma rota',
         variant: 'destructive',
@@ -132,6 +186,7 @@ const PassportCheckpointManager: React.FC = () => {
     }
 
     if (!newCheckpointForm.name.trim()) {
+      console.log('❌ [PassportCheckpointManager] Nome vazio');
       toast({
         title: 'Nome obrigatório',
         description: 'O nome do checkpoint é obrigatório',
@@ -143,6 +198,7 @@ const PassportCheckpointManager: React.FC = () => {
     // Validar se precisa de coordenadas
     if ((newCheckpointForm.validation_mode === 'geofence' || newCheckpointForm.validation_mode === 'mixed') && 
         (!newCheckpointForm.latitude || !newCheckpointForm.longitude)) {
+      console.log('❌ [PassportCheckpointManager] Coordenadas faltando para modo:', newCheckpointForm.validation_mode);
       toast({
         title: 'Localização necessária',
         description: 'Este modo de validação requer coordenadas. Selecione a localização no mapa.',
@@ -154,6 +210,7 @@ const PassportCheckpointManager: React.FC = () => {
     // Validar se precisa de código
     if ((newCheckpointForm.validation_mode === 'code' || newCheckpointForm.validation_mode === 'mixed') && 
         !newCheckpointForm.partner_code.trim()) {
+      console.log('❌ [PassportCheckpointManager] Código do parceiro faltando para modo:', newCheckpointForm.validation_mode);
       toast({
         title: 'Código do parceiro necessário',
         description: 'Este modo de validação requer um código do parceiro.',
@@ -162,8 +219,10 @@ const PassportCheckpointManager: React.FC = () => {
       return;
     }
 
+    console.log('✅ [PassportCheckpointManager] Validações passadas, criando checkpoint...');
+    
     try {
-      const { error } = await supabase.from('route_checkpoints').insert({
+      const checkpointData = {
         route_id: selectedRoute,
         name: newCheckpointForm.name,
         description: newCheckpointForm.description || null,
@@ -176,9 +235,18 @@ const PassportCheckpointManager: React.FC = () => {
         requires_photo: newCheckpointForm.requires_photo,
         stamp_fragment_number: newCheckpointForm.stamp_fragment_number,
         is_mandatory: true,
-      });
+      };
+      
+      console.log('🔵 [PassportCheckpointManager] Dados para inserção:', JSON.stringify(checkpointData, null, 2));
+      
+      const { data, error } = await supabase.from('route_checkpoints').insert(checkpointData).select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportCheckpointManager] Erro ao inserir checkpoint:', error);
+        throw error;
+      }
+
+      console.log('✅ [PassportCheckpointManager] Checkpoint criado com sucesso:', data);
 
       toast({
         title: 'Checkpoint criado',
@@ -198,8 +266,16 @@ const PassportCheckpointManager: React.FC = () => {
         requires_photo: false,
         stamp_fragment_number: null,
       });
+      console.log('🔵 [PassportCheckpointManager] Formulário resetado, recarregando checkpoints...');
       loadCheckpoints();
     } catch (error: any) {
+      console.error('❌ [PassportCheckpointManager] Erro completo ao criar checkpoint:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao criar checkpoint',
         description: error.message,
@@ -209,8 +285,10 @@ const PassportCheckpointManager: React.FC = () => {
   };
 
   const handleEditCheckpoint = (checkpoint: any) => {
+    console.log('🔵 [PassportCheckpointManager] ========== handleEditCheckpoint ==========');
+    console.log('🔵 [PassportCheckpointManager] Checkpoint selecionado:', checkpoint);
     setEditingCheckpoint(checkpoint.id);
-    setEditCheckpointForm({
+    const formData = {
       name: checkpoint.name || '',
       description: checkpoint.description || '',
       order_sequence: checkpoint.order_sequence || 1,
@@ -221,20 +299,38 @@ const PassportCheckpointManager: React.FC = () => {
       partner_code: checkpoint.partner_code || '',
       requires_photo: checkpoint.requires_photo || false,
       stamp_fragment_number: checkpoint.stamp_fragment_number,
-    });
+    };
+    console.log('🔵 [PassportCheckpointManager] Formulário de edição preenchido:', formData);
+    setEditCheckpointForm(formData);
   };
 
   const handleSaveEdit = async () => {
-    if (!editingCheckpoint) return;
+    console.log('🔵 [PassportCheckpointManager] ========== handleSaveEdit INICIADO ==========');
+    console.log('🔵 [PassportCheckpointManager] editingCheckpoint:', editingCheckpoint);
+    console.log('🔵 [PassportCheckpointManager] Form data:', JSON.stringify(editCheckpointForm, null, 2));
+    
+    if (!editingCheckpoint) {
+      console.log('❌ [PassportCheckpointManager] Nenhum checkpoint em edição');
+      return;
+    }
 
     try {
+      console.log('🔵 [PassportCheckpointManager] Chamando passportAdminService.updateCheckpoint...');
       await passportAdminService.updateCheckpoint(editingCheckpoint, editCheckpointForm);
+      console.log('✅ [PassportCheckpointManager] Checkpoint atualizado com sucesso');
       toast({
         title: 'Checkpoint atualizado',
       });
       setEditingCheckpoint(null);
       loadCheckpoints();
     } catch (error: any) {
+      console.error('❌ [PassportCheckpointManager] Erro completo ao atualizar checkpoint:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao atualizar',
         description: error.message,
@@ -244,21 +340,39 @@ const PassportCheckpointManager: React.FC = () => {
   };
 
   const handleDeleteCheckpoint = async (checkpointId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este checkpoint?')) return;
+    console.log('🔵 [PassportCheckpointManager] ========== handleDeleteCheckpoint ==========');
+    console.log('🔵 [PassportCheckpointManager] Checkpoint ID:', checkpointId);
+    
+    if (!confirm('Tem certeza que deseja excluir este checkpoint?')) {
+      console.log('🔵 [PassportCheckpointManager] Exclusão cancelada pelo usuário');
+      return;
+    }
 
     try {
+      console.log('🔵 [PassportCheckpointManager] Deletando checkpoint...');
       const { error } = await supabase
         .from('route_checkpoints')
         .delete()
         .eq('id', checkpointId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PassportCheckpointManager] Erro ao deletar:', error);
+        throw error;
+      }
 
+      console.log('✅ [PassportCheckpointManager] Checkpoint deletado com sucesso');
       toast({
         title: 'Checkpoint excluído',
       });
       loadCheckpoints();
     } catch (error: any) {
+      console.error('❌ [PassportCheckpointManager] Erro completo ao excluir checkpoint:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
       toast({
         title: 'Erro ao excluir',
         description: error.message,
@@ -273,7 +387,19 @@ const PassportCheckpointManager: React.FC = () => {
     return `${prefix}-${random}`;
   };
 
+  useEffect(() => {
+    console.log('🔵 [PassportCheckpointManager] Componente renderizado. Estado atual:', {
+      loading,
+      routesCount: routes.length,
+      selectedRoute,
+      checkpointsCount: checkpoints.length,
+      creatingCheckpoint,
+      editingCheckpoint,
+    });
+  });
+
   if (loading) {
+    console.log('🔵 [PassportCheckpointManager] Renderizando estado de loading');
     return <div className="text-center py-8">Carregando...</div>;
   }
 
@@ -284,7 +410,13 @@ const PassportCheckpointManager: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Gerenciar Checkpoints</CardTitle>
             {selectedRoute && (
-              <Button onClick={() => setCreatingCheckpoint(true)}>
+              <Button 
+                type="button"
+                onClick={() => {
+                  console.log('🔵 [PassportCheckpointManager] Botão "Novo Checkpoint" clicado');
+                  setCreatingCheckpoint(true);
+                }}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Checkpoint
               </Button>
@@ -294,7 +426,13 @@ const PassportCheckpointManager: React.FC = () => {
         <CardContent>
           <div className="mb-4">
             <Label>Selecione uma Rota</Label>
-            <Select value={selectedRoute} onValueChange={setSelectedRoute}>
+            <Select 
+              value={selectedRoute} 
+              onValueChange={(value) => {
+                console.log('🔵 [PassportCheckpointManager] Rota selecionada:', value);
+                setSelectedRoute(value);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma rota" />
               </SelectTrigger>
@@ -511,7 +649,15 @@ const PassportCheckpointManager: React.FC = () => {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button onClick={handleCreateCheckpoint}>
+                      <Button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('🔵 [PassportCheckpointManager] Botão "Criar Checkpoint" clicado');
+                          handleCreateCheckpoint();
+                        }}
+                      >
                         <Save className="h-4 w-4 mr-2" />
                         Criar Checkpoint
                       </Button>
@@ -704,7 +850,15 @@ const PassportCheckpointManager: React.FC = () => {
                             </div>
 
                             <div className="flex gap-2">
-                              <Button onClick={handleSaveEdit}>
+                              <Button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  console.log('🔵 [PassportCheckpointManager] Botão "Salvar" (edição) clicado');
+                                  handleSaveEdit();
+                                }}
+                              >
                                 <Save className="h-4 w-4 mr-2" />
                                 Salvar
                               </Button>
@@ -768,16 +922,28 @@ const PassportCheckpointManager: React.FC = () => {
                               </div>
                               <div className="flex gap-2">
                                 <Button
+                                  type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleEditCheckpoint(checkpoint)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('🔵 [PassportCheckpointManager] Botão "Editar" clicado para checkpoint:', checkpoint.id);
+                                    handleEditCheckpoint(checkpoint);
+                                  }}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
+                                  type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleDeleteCheckpoint(checkpoint.id)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('🔵 [PassportCheckpointManager] Botão "Excluir" clicado para checkpoint:', checkpoint.id);
+                                    handleDeleteCheckpoint(checkpoint.id);
+                                  }}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
