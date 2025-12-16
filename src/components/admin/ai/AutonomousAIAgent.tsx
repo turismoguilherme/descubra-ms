@@ -770,7 +770,7 @@ RESPOSTA:`;
         <TabsList className="bg-white border border-slate-200">
           <TabsTrigger value="tasks">Tarefas Automáticas</TabsTrigger>
           <TabsTrigger value="chat">Chat com IA</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
+          <TabsTrigger value="logs">Histórico de Execuções</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
 

@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, Info, AlertCircle } from 'lucide-react';
 import { financialService } from '@/services/admin/financialService';
 import { useToast } from '@/components/ui/use-toast';
 import { PaymentReconciliation } from '@/types/admin';
 import { useAuth } from '@/hooks/useAuth';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
@@ -64,6 +65,13 @@ export default function PaymentsList() {
     payment.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Estatísticas de reconciliação
+  const totalPayments = payments.length;
+  const paidPayments = payments.filter(p => p.status === 'paid');
+  const reconciledCount = paidPayments.filter(p => p.reconciled).length;
+  const unreconciledCount = paidPayments.filter(p => !p.reconciled).length;
+  const totalAmount = paidPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
@@ -80,6 +88,69 @@ export default function PaymentsList() {
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Pagamentos</h2>
         <p className="text-gray-600 mt-1">Lista de pagamentos e transações</p>
+      </div>
+
+      {/* Card Informativo sobre Reconciliação */}
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <strong>O que é Reconciliação?</strong> É uma marcação de controle interno para indicar que você já conferiu o pagamento. 
+          Os pagamentos aparecem automaticamente quando o Stripe confirma. A reconciliação não afeta o acesso do cliente à plataforma.
+        </AlertDescription>
+      </Alert>
+
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Recebido</p>
+                <p className="text-2xl font-bold">R$ {totalAmount.toFixed(2).replace('.', ',')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Reconciliados</p>
+                <p className="text-2xl font-bold">{reconciledCount}</p>
+                <p className="text-xs text-gray-500">Pagamentos conferidos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5 text-yellow-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pendentes</p>
+                <p className="text-2xl font-bold">{unreconciledCount}</p>
+                <p className="text-xs text-gray-500">Aguardando conferência</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-gray-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total</p>
+                <p className="text-2xl font-bold">{totalPayments}</p>
+                <p className="text-xs text-gray-500">Pagamentos registrados</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -173,7 +244,7 @@ export default function PaymentsList() {
           <DialogHeader>
             <DialogTitle>Dar Baixa no Pagamento</DialogTitle>
             <DialogDescription>
-              Confirme a reconciliação deste pagamento
+              Marque este pagamento como conferido. Isso é apenas um controle interno e não afeta o acesso do cliente.
             </DialogDescription>
           </DialogHeader>
           {selectedPayment && (

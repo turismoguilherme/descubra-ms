@@ -117,7 +117,7 @@ export default function AuditLogs() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Logs de Auditoria</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Auditoria</h2>
           <p className="text-gray-600 mt-1">Histórico completo de ações administrativas no sistema</p>
         </div>
         <Button variant="outline" onClick={fetchLogs} disabled={loading}>

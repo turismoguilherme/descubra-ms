@@ -36,13 +36,12 @@ const searchItems: SearchItem[] = [
   // Financeiro
   { label: 'Gestão Financeira', path: '/viajar/admin/financial', category: 'Financeiro' },
   { label: 'Pagamentos', path: '/viajar/admin/financial/payments', category: 'Financeiro' },
-  { label: 'Reconciliação', path: '/viajar/admin/financial/reconciliation', category: 'Financeiro' },
   { label: 'Relatórios Financeiros', path: '/viajar/admin/financial/reports', category: 'Financeiro' },
   
   // Sistema
   { label: 'Fallback', path: '/viajar/admin/system/fallback', category: 'Sistema' },
   { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', category: 'Sistema' },
-  { label: 'Logs', path: '/viajar/admin/system/logs', category: 'Sistema' },
+  { label: 'Auditoria', path: '/viajar/admin/system/logs', category: 'Sistema' },
   
   // IA
   { label: 'Chat IA', path: '/viajar/admin/ai/chat', category: 'IA Administradora' },

@@ -27,3 +27,8 @@ CREATE INDEX IF NOT EXISTS idx_institutional_partners_stripe_subscription ON pub
 CREATE INDEX IF NOT EXISTS idx_institutional_partners_subscription_status ON public.institutional_partners(subscription_status);
 
 
+
+
+
+
+

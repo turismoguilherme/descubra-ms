@@ -90,8 +90,7 @@ const navigationItems: NavItem[] = [
     permission: 'viajar',
     platform: 'viajar',
         children: [
-          { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'viajar' },
-          { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'viajar' },
+          // Clientes e Assinaturas movidos para Financeiro
         ],
   },
   {
@@ -134,9 +133,10 @@ const navigationItems: NavItem[] = [
     platform: 'system',
     children: [
       { id: 'overview', label: 'Visão Geral', icon: PieChart, path: '/viajar/admin/financial', permission: 'financial', platform: 'system' },
+      { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'system' },
+      { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'system' },
       { id: 'payments', label: 'Pagamentos', icon: CreditCardIcon, path: '/viajar/admin/financial/payments', permission: 'financial', platform: 'system' },
       { id: 'revenue', label: 'Receitas', icon: Wallet, path: '/viajar/admin/financial/revenue', permission: 'financial', platform: 'system' },
-      { id: 'reconciliation', label: 'Reconciliação', icon: RefreshCw, path: '/viajar/admin/financial/reconciliation', permission: 'financial', platform: 'system' },
       { id: 'bills', label: 'Contas a Pagar', icon: Receipt, path: '/viajar/admin/financial/bills', permission: 'financial', platform: 'system' },
       { id: 'accounts', label: 'Contas Bancárias', icon: CreditCard, path: '/viajar/admin/financial/accounts', permission: 'financial', platform: 'system' },
       { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/viajar/admin/financial/suppliers', permission: 'financial', platform: 'system' },
@@ -164,7 +164,7 @@ const navigationItems: NavItem[] = [
     children: [
       { id: 'database', label: 'Banco de Dados', icon: Database, path: '/viajar/admin/database', permission: 'database', platform: 'system' },
       { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
-      { id: 'system-logs', label: 'Logs', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
+      { id: 'system-logs', label: 'Auditoria', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
       { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
       { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
     ],

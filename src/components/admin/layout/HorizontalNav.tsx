@@ -69,7 +69,7 @@ const navItems: NavItem[] = [
     icon: Shield,
     children: [
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring' },
-      { label: 'Logs', path: '/viajar/admin/system/logs' },
+      { label: 'Auditoria', path: '/viajar/admin/system/logs' },
       { label: 'Configurações', path: '/viajar/admin/system/settings' },
     ],
   },

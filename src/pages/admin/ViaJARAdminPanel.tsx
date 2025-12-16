@@ -29,7 +29,6 @@ const DestinationManager = lazy(() => import('@/components/admin/descubra_ms/Des
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
-const Reconciliation = lazy(() => import('@/components/admin/financial/Reconciliation'));
 const FinancialReports = lazy(() => import('@/components/admin/financial/FinancialReports'));
 const FinancialManagement = lazy(() => import('@/components/admin/financial/FinancialManagement'));
 const ModernFinancialDashboard = lazy(() => import('@/components/admin/financial/ModernFinancialDashboard'));
@@ -180,11 +179,6 @@ export default function ViaJARAdminPanel() {
             <Route path="financial/payments" element={
               <Suspense fallback={<LoadingFallback />}>
                 <PaymentsList />
-              </Suspense>
-            } />
-            <Route path="financial/reconciliation" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Reconciliation />
               </Suspense>
             } />
         <Route path="financial/reports" element={

@@ -79,7 +79,6 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { label: 'Gestão Financeira', path: '/viajar/admin/financial', icon: DollarSign },
       { label: 'Pagamentos', path: '/viajar/admin/financial/payments', icon: CreditCard },
-      { label: 'Reconciliação', path: '/viajar/admin/financial/reconciliation', icon: FileCheck },
       { label: 'Relatórios', path: '/viajar/admin/financial/reports', icon: FileText },
     ],
   },
@@ -90,7 +89,7 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { label: 'Fallback', path: '/viajar/admin/system/fallback', icon: Activity },
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', icon: Activity },
-      { label: 'Logs', path: '/viajar/admin/system/logs', icon: FileCheck },
+      { label: 'Auditoria', path: '/viajar/admin/system/logs', icon: FileCheck },
     ],
   },
   {
