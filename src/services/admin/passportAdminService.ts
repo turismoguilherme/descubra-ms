@@ -139,6 +139,19 @@ class PassportAdminService {
    * CHECKPOINTS
    */
 
+  async createCheckpoint(
+    checkpoint: Omit<RouteCheckpointExtended, 'id' | 'created_at'>
+  ): Promise<RouteCheckpointExtended> {
+    const { data, error } = await supabase
+      .from('route_checkpoints')
+      .insert(checkpoint)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async updateCheckpoint(
     checkpointId: string,
     updates: Partial<RouteCheckpointExtended>
@@ -203,7 +216,7 @@ class PassportAdminService {
 
   async updateRoute(
     routeId: string,
-    updates: { video_url?: string; passport_number_prefix?: string }
+    updates: { video_url?: string; passport_number_prefix?: string; wallpaper_url?: string }
   ): Promise<void> {
     const { error } = await supabase
       .from('routes')

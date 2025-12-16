@@ -3,7 +3,7 @@
 export interface PassportConfiguration {
   id: string;
   route_id: string;
-  stamp_theme: 'onca' | 'tuiuiu' | 'jacare' | 'arara';
+  stamp_theme: string;
   stamp_fragments: number;
   video_url?: string | null;
   description?: string | null;
@@ -18,7 +18,7 @@ export interface PassportReward {
   id: string;
   route_id: string;
   partner_name: string;
-  reward_type: 'desconto' | 'brinde' | 'experiencia';
+  reward_type: 'desconto' | 'brinde' | 'experiencia' | 'outros';
   reward_description?: string | null;
   reward_code_prefix?: string | null;
   discount_percentage?: number | null;
@@ -118,7 +118,7 @@ export interface RouteExtended {
 
 export interface StampProgress {
   route_id: string;
-  theme: 'onca' | 'tuiuiu' | 'jacare' | 'arara';
+  theme: string;
   total_fragments: number;
   collected_fragments: number;
   completion_percentage: number;

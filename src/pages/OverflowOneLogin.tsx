@@ -177,10 +177,10 @@ const OverflowOneLogin: React.FC = () => {
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Entrar na ViajARTur
-            </h1>
+          </h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto">
               Acesse sua conta empresarial e continue transformando seu negócio turístico
-            </p>
+          </p>
           </div>
         </div>
       </section>
@@ -303,20 +303,20 @@ const OverflowOneLogin: React.FC = () => {
           </CardContent>
         </Card>
 
-          {/* Footer */}
+        {/* Footer */}
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>
-              Ao fazer login, você concorda com nossos{' '}
+          <p>
+            Ao fazer login, você concorda com nossos{' '}
               <Link to="/terms" className="text-viajar-cyan hover:underline">
-                Termos de Serviço
-              </Link>{' '}
-              e{' '}
+              Termos de Serviço
+            </Link>{' '}
+            e{' '}
               <Link to="/privacy" className="text-viajar-cyan hover:underline">
-                Política de Privacidade
-              </Link>
-            </p>
-          </div>
+              Política de Privacidade
+            </Link>
+          </p>
         </div>
+      </div>
       </section>
       
       <ViaJARFooter />

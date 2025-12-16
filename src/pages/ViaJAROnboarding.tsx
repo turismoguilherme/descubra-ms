@@ -170,20 +170,20 @@ export default function ViaJAROnboarding() {
             </h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto mb-6">
               Vamos configurar sua conta ViajARTur em poucos passos
-            </p>
+              </p>
             
             {/* Progress Badge */}
             <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
               Passo {currentStep} de {steps.length}
             </Badge>
           </div>
-        </div>
+          </div>
       </section>
 
       {/* Main Content */}
       <section className="py-12 -mt-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Stepper */}
+        {/* Stepper */}
           <div className="mb-12">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => {
@@ -393,16 +393,16 @@ export default function ViaJAROnboarding() {
           )}
         </div>
 
-          {/* Footer Help */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              Precisa de ajuda?{" "}
+        {/* Footer Help */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Precisa de ajuda?{" "}
               <a href="/contato" className="text-viajar-cyan hover:underline">
-                Entre em contato com nosso suporte
-              </a>
-            </p>
-          </div>
+              Entre em contato com nosso suporte
+            </a>
+          </p>
         </div>
+      </div>
       </section>
       
       <ViaJARFooter />

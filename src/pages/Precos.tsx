@@ -188,17 +188,17 @@ const Precos = () => {
                 </ul>
 
                 {/* CTA */}
-                <Button 
+                  <Button 
                   onClick={() => handleSelectPlan(plan.planId)}
-                  className={`w-full h-12 font-semibold gap-2 ${
-                    plan.highlighted 
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
-                      : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
-                  }`}
-                >
-                  {plan.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                    className={`w-full h-12 font-semibold gap-2 ${
+                      plan.highlighted 
+                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                        : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
+                    }`}
+                  >
+                    {plan.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
               </div>
             ))}
           </div>

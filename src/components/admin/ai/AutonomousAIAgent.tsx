@@ -158,6 +158,20 @@ const getDefaultTasks = (): AITask[] => {
         return next;
       })(),
     },
+    {
+      id: '8',
+      type: 'notification',
+      name: 'Aprovação Automática de Eventos',
+      description: 'Aprova automaticamente eventos gratuitos que atendem aos critérios.',
+      schedule: 'A cada hora',
+      enabled: false, // Desabilitado por padrão - admin pode ativar
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        next.setHours(next.getHours() + 1, 0, 0, 0);
+        return next;
+      })(),
+    },
   ];
 };
 
@@ -172,6 +186,13 @@ export default function AutonomousAIAgent() {
   const [chatInput, setChatInput] = useState('');
   const [processing, setProcessing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Estados para novas abas
+  const [lastMetricsAnalysis, setLastMetricsAnalysis] = useState<any>(null);
+  const [lastFinancialReport, setLastFinancialReport] = useState<any>(null);
+  const [seoImprovements, setSeoImprovements] = useState<any[]>([]);
+  const [autoApprovals, setAutoApprovals] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
   
   // Estados para as permissões
   const [permissions, setPermissions] = useState({
@@ -229,7 +250,74 @@ export default function AutonomousAIAgent() {
         content: 'Olá! Sou seu Agente de IA Autônomo. Posso ajudar com análises, relatórios, e executar tarefas automáticas. O que você gostaria de fazer hoje?'
       }
     ]);
+
+    // Carregar dados das novas abas
+    loadAnalysesData();
+    loadSEOImprovements();
+    loadAutoApprovals();
   }, []);
+
+  // Carregar análises salvas
+  const loadAnalysesData = async () => {
+    try {
+      setLoadingData(true);
+      const [metricsResult, financialResult] = await Promise.all([
+        supabase
+          .from('ai_analyses')
+          .select('*')
+          .eq('type', 'metrics')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
+        supabase
+          .from('ai_analyses')
+          .select('*')
+          .eq('type', 'financial')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
+      ]);
+
+      if (metricsResult.data) setLastMetricsAnalysis(metricsResult.data);
+      if (financialResult.data) setLastFinancialReport(financialResult.data);
+    } catch (error) {
+      console.warn('Erro ao carregar análises:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Carregar melhorias de SEO
+  const loadSEOImprovements = async () => {
+    try {
+      const { data } = await supabase
+        .from('ai_seo_improvements')
+        .select('*')
+        .eq('status', 'pending')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (data) setSeoImprovements(data);
+    } catch (error) {
+      console.warn('Erro ao carregar melhorias de SEO:', error);
+    }
+  };
+
+  // Carregar aprovações automáticas
+  const loadAutoApprovals = async () => {
+    try {
+      const { data } = await supabase
+        .from('ai_auto_approvals')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (data) setAutoApprovals(data);
+    } catch (error) {
+      console.warn('Erro ao carregar aprovações:', error);
+    }
+  };
 
   // Sistema de agendamento automático
   useEffect(() => {
@@ -365,7 +453,7 @@ export default function AutonomousAIAgent() {
       return day === 0 && hour === 8 && minute === 0;
     }
 
-    // A cada hora
+    // A cada hora (inclui aprovação automática e alertas)
     if (schedule.includes('a cada hora')) {
       return minute === 0; // Executa no início de cada hora
     }
@@ -504,6 +592,17 @@ export default function AutonomousAIAgent() {
         variant: success ? 'default' : 'destructive',
       });
 
+      // Recarregar dados após execução
+      if (task.type === 'analysis' || task.type === 'report') {
+        loadAnalysesData();
+      }
+      if (task.type === 'optimization') {
+        loadSEOImprovements();
+      }
+      if (task.name === 'Aprovação Automática de Eventos') {
+        loadAutoApprovals();
+      }
+
     } catch (error: any) {
       success = false;
       errorMessage = error.message || 'Erro desconhecido';
@@ -556,6 +655,9 @@ export default function AutonomousAIAgent() {
     } else if (schedule.includes('semanalmente')) {
       next.setDate(next.getDate() + 7);
       next.setHours(8, 0, 0, 0);
+    } else {
+      // Fallback: próxima hora
+      next.setHours(next.getHours() + 1, 0, 0, 0);
     }
     
     return next;
@@ -769,6 +871,7 @@ RESPOSTA:`;
       <Tabs defaultValue="tasks" className="space-y-4">
         <TabsList className="bg-white border border-slate-200">
           <TabsTrigger value="tasks">Tarefas Automáticas</TabsTrigger>
+          <TabsTrigger value="analyses">📊 Análises</TabsTrigger>
           <TabsTrigger value="chat">Chat com IA</TabsTrigger>
           <TabsTrigger value="logs">Histórico de Execuções</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
@@ -852,6 +955,259 @@ RESPOSTA:`;
             })}
           </div>
         </TabsContent>
+
+        {/* Análises */}
+        <TabsContent value="analyses">
+          <div className="space-y-4">
+            {/* Análise de Métricas */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-emerald-600" />
+                  Análise de Métricas Unificada
+                </CardTitle>
+                <CardDescription>
+                  Métricas combinadas das plataformas ViajARTur e Descubra MS
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                    <p className="text-sm text-slate-500 mt-2">Carregando análise...</p>
+                  </div>
+                ) : lastMetricsAnalysis ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {lastMetricsAnalysis.analysis_data?.unified?.totalUsers || 0}
+                        </div>
+                        <div className="text-sm text-slate-600">Total de Usuários</div>
+                      </div>
+                      <div className="p-4 bg-emerald-50 rounded-lg">
+                        <div className="text-2xl font-bold text-emerald-600">
+                          {lastMetricsAnalysis.analysis_data?.unified?.newUsersLast30Days || 0}
+                        </div>
+                        <div className="text-sm text-slate-600">Novos (30 dias)</div>
+                      </div>
+                      <div className="p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {lastMetricsAnalysis.analysis_data?.unified?.totalEvents || 0}
+                        </div>
+                        <div className="text-sm text-slate-600">Eventos Ativos</div>
+                      </div>
+                      <div className="p-4 bg-amber-50 rounded-lg">
+                        <div className="text-2xl font-bold text-amber-600">
+                          R$ {((lastMetricsAnalysis.analysis_data?.viajar?.revenue || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Receita (30 dias)</div>
+                      </div>
+                    </div>
+                    {lastMetricsAnalysis.insights && (
+                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h4 className="font-semibold text-slate-800 mb-2">Insights da IA</h4>
+                        <p className="text-sm text-slate-700 whitespace-pre-line">
+                          {lastMetricsAnalysis.insights}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Gerado em {format(new Date(lastMetricsAnalysis.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhuma análise disponível</p>
+                    <p className="text-sm mt-1">Execute a tarefa "Análise de Métricas" para gerar</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Relatório Financeiro */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Relatório Financeiro
+                </CardTitle>
+                <CardDescription>
+                  Relatório financeiro mensal gerado automaticamente
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {lastFinancialReport ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="p-4 bg-emerald-50 rounded-lg">
+                        <div className="text-xl font-bold text-emerald-600">
+                          R$ {((lastFinancialReport.analysis_data?.revenue || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Receitas</div>
+                      </div>
+                      <div className="p-4 bg-red-50 rounded-lg">
+                        <div className="text-xl font-bold text-red-600">
+                          R$ {((lastFinancialReport.analysis_data?.expenses || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Despesas</div>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="text-xl font-bold text-blue-600">
+                          R$ {((lastFinancialReport.analysis_data?.profit || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Lucro</div>
+                      </div>
+                    </div>
+                    {lastFinancialReport.insights && (
+                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h4 className="font-semibold text-slate-800 mb-2">Relatório Completo</h4>
+                        <p className="text-sm text-slate-700 whitespace-pre-line">
+                          {lastFinancialReport.insights}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Período: {lastFinancialReport.analysis_data?.period?.start} a {lastFinancialReport.analysis_data?.period?.end}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhum relatório disponível</p>
+                    <p className="text-sm mt-1">Execute a tarefa "Relatório Financeiro" para gerar</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SEO - Dentro de Análises */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                  Melhorias de SEO Sugeridas
+                </CardTitle>
+                <CardDescription>
+                  Melhorias sugeridas pela IA para eventos e destinos existentes
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                  </div>
+                ) : seoImprovements.length > 0 ? (
+                  <div className="space-y-4">
+                    {seoImprovements.map((improvement) => (
+                      <div key={improvement.id} className="p-4 border border-slate-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant={improvement.priority === 'high' ? 'destructive' : improvement.priority === 'medium' ? 'default' : 'secondary'}>
+                                {improvement.priority === 'high' ? 'Alta' : improvement.priority === 'medium' ? 'Média' : 'Baixa'}
+                              </Badge>
+                              <span className="text-sm text-slate-500">
+                                {improvement.content_type === 'event' ? 'Evento' : 'Destino'} ID: {improvement.content_id}
+                              </span>
+                            </div>
+                            {improvement.seo_analysis && (
+                              <p className="text-sm text-slate-700 mb-2">{improvement.seo_analysis}</p>
+                            )}
+                            {improvement.improvements && typeof improvement.improvements === 'object' && (
+                              <div className="text-xs text-slate-600 space-y-1">
+                                {Object.entries(improvement.improvements).map(([key, value]) => (
+                                  <div key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              // TODO: Implementar aplicação de melhorias
+                              toast({
+                                title: 'Em desenvolvimento',
+                                description: 'Funcionalidade de aplicar melhorias será implementada em breve',
+                              });
+                            }}
+                          >
+                            Aplicar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhuma melhoria de SEO pendente</p>
+                    <p className="text-sm mt-1">Execute a tarefa "Otimização de SEO" para gerar sugestões</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Aprovações - Dentro de Análises */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  Aprovações Automáticas
+                </CardTitle>
+                <CardDescription>
+                  Eventos aprovados automaticamente pela IA
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                  </div>
+                ) : autoApprovals.length > 0 ? (
+                  <div className="space-y-3">
+                    {autoApprovals.map((approval) => (
+                      <div key={approval.id} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CheckCircle className="h-4 w-4 text-emerald-600" />
+                              <span className="font-medium text-slate-800">
+                                Evento ID: {approval.event_id}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-700 mb-1">
+                              {approval.approval_reason}
+                            </p>
+                            {approval.event_data && (
+                              <p className="text-xs text-slate-500">
+                                {approval.event_data.name || approval.event_data.title}
+                              </p>
+                            )}
+                            <p className="text-xs text-slate-400 mt-2">
+                              {format(new Date(approval.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <CheckCircle className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhuma aprovação automática registrada</p>
+                    <p className="text-sm mt-1">Ative a tarefa "Aprovação Automática de Eventos" para começar</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
 
         {/* Chat com IA */}
         <TabsContent value="chat">

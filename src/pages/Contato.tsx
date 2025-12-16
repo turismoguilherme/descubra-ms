@@ -64,20 +64,20 @@ const Contato = () => {
         console.error('Erro ao salvar lead:', error);
         throw error;
       }
-
-      toast({
-        title: "✅ Mensagem enviada!",
-        description: "Entraremos em contato em até 24 horas.",
-      });
-      
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        organization: '',
-        role: '',
-        message: ''
-      });
+    
+    toast({
+      title: "✅ Mensagem enviada!",
+      description: "Entraremos em contato em até 24 horas.",
+    });
+    
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      organization: '',
+      role: '',
+      message: ''
+    });
     } catch (error: any) {
       console.error('Erro ao enviar formulário:', error);
       toast({
@@ -86,7 +86,7 @@ const Contato = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+    setLoading(false);
     }
   };
 

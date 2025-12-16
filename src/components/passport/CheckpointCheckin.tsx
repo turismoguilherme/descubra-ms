@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { usePassport } from '@/hooks/usePassport';
 import { geolocationService } from '@/services/passport/geolocationService';
+import { passportService } from '@/services/passport/passportService';
 import { useToast } from '@/hooks/use-toast';
 import { MapPin, Camera, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import type { RouteCheckpointExtended, GeofenceValidation } from '@/types/passportDigital';
@@ -141,6 +142,26 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
             title: 'Recompensas desbloqueadas!',
             description: `${result.rewards_unlocked.length} recompensa(s) disponível(is).`,
           });
+        }
+
+        // Se completou a rota mas não ganhou voucher, explicar o motivo (sem travar selo/pontos)
+        if (result.route_completed && (!result.rewards_unlocked || result.rewards_unlocked.length === 0)) {
+          try {
+            const summary = await passportService.getRewardAvailabilitySummary(result.route_id);
+            if (!summary.hasActiveRewards) {
+              toast({
+                title: 'Roteiro concluído ✅',
+                description: 'Seu selo e pontos foram garantidos. No momento não há recompensas cadastradas para este roteiro.',
+              });
+            } else if (!summary.anyAvailable) {
+              toast({
+                title: 'Roteiro concluído ✅',
+                description: 'A campanha de recompensas está esgotada. Seu selo e pontos foram garantidos normalmente.',
+              });
+            }
+          } catch {
+            // Se falhar a checagem, não bloquear a experiência
+          }
         }
 
         onCheckinSuccess?.();

@@ -438,7 +438,7 @@ const OverflowOneRegister: React.FC = () => {
             </li>
           </ul>
         </div>
-        </div>
+      </div>
       </section>
       
       <ViaJARFooter />
