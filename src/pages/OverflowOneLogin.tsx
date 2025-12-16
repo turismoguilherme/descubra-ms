@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
+import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 const OverflowOneLogin: React.FC = () => {
   const [loginField, setLoginField] = useState('');
@@ -151,27 +152,42 @@ const OverflowOneLogin: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-20">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-white">Entrar na</span>
-              <span className="text-cyan-300"> ViajARTur</span>
-          </h1>
-            <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <Sparkles className="h-4 w-4 text-viajar-cyan" />
+              <span className="text-sm text-white/90 font-medium">Acesso à Plataforma</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Entrar na ViajARTur
+            </h1>
+            <p className="text-xl text-white/70 max-w-2xl mx-auto">
               Acesse sua conta empresarial e continue transformando seu negócio turístico
-          </p>
+            </p>
           </div>
         </div>
       </section>
 
       {/* Login Form */}
-      <div className="max-w-md mx-auto px-4 py-12">
+      <section className="py-20 -mt-10">
+        <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">
@@ -287,20 +303,23 @@ const OverflowOneLogin: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>
-            Ao fazer login, você concorda com nossos{' '}
-            <Link to="/terms" className="text-blue-600 hover:text-blue-700">
-              Termos de Serviço
-            </Link>{' '}
-            e{' '}
-            <Link to="/privacy" className="text-blue-600 hover:text-blue-700">
-              Política de Privacidade
-            </Link>
-          </p>
+          {/* Footer */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            <p>
+              Ao fazer login, você concorda com nossos{' '}
+              <Link to="/terms" className="text-viajar-cyan hover:underline">
+                Termos de Serviço
+              </Link>{' '}
+              e{' '}
+              <Link to="/privacy" className="text-viajar-cyan hover:underline">
+                Política de Privacidade
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
+      
+      <ViaJARFooter />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { Mail, Phone, MapPin, Send, MessageSquare, Building2, Landmark, ArrowRig
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Contato = () => {
   const { toast } = useToast();
@@ -23,23 +24,70 @@ const Contato = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulação de envio
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "✅ Mensagem enviada!",
-      description: "Entraremos em contato em até 24 horas.",
-    });
-    
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      organization: '',
-      role: '',
-      message: ''
-    });
-    setLoading(false);
+    try {
+      // IDs fixos da tabela leads (criados na migration)
+      const WEBSITE_SOURCE_ID = "1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a"; // Website
+      const STATUS_NEW_ID = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"; // New
+      const PRIORITY_MEDIUM_ID = "2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c"; // Medium
+
+      // Montar notas com informações do formulário
+      const notesLines: string[] = [];
+      if (formData.role) {
+        notesLines.push(`Tipo: ${formData.role === 'empresario' ? 'Empresário do setor turístico' : formData.role === 'secretaria' ? 'Secretaria de Turismo / Prefeitura' : 'Outro'}`);
+      }
+      if (formData.message) {
+        notesLines.push('');
+        notesLines.push('Mensagem:');
+        notesLines.push(formData.message);
+      }
+
+      const notes = notesLines.join('\n');
+
+      // Salvar na tabela leads
+      const { error } = await supabase.from('leads').insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        company: formData.organization || null,
+        source_id: WEBSITE_SOURCE_ID,
+        status_id: STATUS_NEW_ID,
+        priority_id: PRIORITY_MEDIUM_ID,
+        notes: notes || null,
+        custom_fields: {
+          origin: 'viajartur',
+          role: formData.role || null,
+          form_type: 'contact',
+        },
+      } as any);
+
+      if (error) {
+        console.error('Erro ao salvar lead:', error);
+        throw error;
+      }
+
+      toast({
+        title: "✅ Mensagem enviada!",
+        description: "Entraremos em contato em até 24 horas.",
+      });
+      
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        organization: '',
+        role: '',
+        message: ''
+      });
+    } catch (error: any) {
+      console.error('Erro ao enviar formulário:', error);
+      toast({
+        title: "Erro ao enviar",
+        description: error.message || "Não foi possível enviar sua mensagem. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

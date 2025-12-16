@@ -1,17 +1,62 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Users, BarChart3, Award, MapPin, ArrowRight, CheckCircle2, Brain, Building2, Sparkles } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { platformMetricsService } from '@/services/public/platformMetricsService';
 
 const CasosSucesso = () => {
-  const metrics = [
-    { icon: Users, value: "50K+", label: "Turistas Impactados", color: "text-viajar-cyan" },
-    { icon: TrendingUp, value: "95%", label: "Satisfação", color: "text-emerald-500" },
-    { icon: BarChart3, value: "200+", label: "Pontos Turísticos", color: "text-viajar-blue" },
-    { icon: Award, value: "150+", label: "Parceiros", color: "text-purple-500" },
-  ];
+  const [metrics, setMetrics] = useState([
+    { icon: Users, value: "0+", label: "Turistas Impactados", color: "text-viajar-cyan" },
+    { icon: TrendingUp, value: "0%", label: "Satisfação", color: "text-emerald-500" },
+    { icon: BarChart3, value: "0+", label: "Pontos Turísticos", color: "text-viajar-blue" },
+    { icon: Award, value: "0+", label: "Parceiros", color: "text-purple-500" },
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadMetrics();
+  }, []);
+
+  const loadMetrics = async () => {
+    try {
+      setLoading(true);
+      const metricsData = await platformMetricsService.getMetrics();
+      
+      setMetrics([
+        { 
+          icon: Users, 
+          value: platformMetricsService.formatNumber(metricsData.tourists_impacted), 
+          label: "Turistas Impactados", 
+          color: "text-viajar-cyan" 
+        },
+        { 
+          icon: TrendingUp, 
+          value: platformMetricsService.formatPercentage(metricsData.satisfaction_percentage), 
+          label: "Satisfação", 
+          color: "text-emerald-500" 
+        },
+        { 
+          icon: BarChart3, 
+          value: `${metricsData.tourist_spots}+`, 
+          label: "Pontos Turísticos", 
+          color: "text-viajar-blue" 
+        },
+        { 
+          icon: Award, 
+          value: `${metricsData.partners}+`, 
+          label: "Parceiros", 
+          color: "text-purple-500" 
+        },
+      ]);
+    } catch (error) {
+      console.error('Erro ao carregar métricas:', error);
+      // Manter valores padrão em caso de erro
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const features = [
     "Guatá - Assistente IA regional especializado em turismo",

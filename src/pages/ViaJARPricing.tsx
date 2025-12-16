@@ -49,7 +49,6 @@ export default function ViaJARPricing() {
           
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Do pequeno estabelecimento ao grande hotel, temos o plano ideal para impulsionar seu turismo.
-            <strong> Todos os planos incluem 14 dias grátis.</strong>
           </p>
         </div>
       </div>
@@ -95,7 +94,7 @@ export default function ViaJARPricing() {
 
             <div className="p-6 bg-white rounded-lg border shadow-sm">
               <div className="text-3xl mb-4">⚡</div>
-              <h3 className="font-semibold mb-2">Atualizações Grátis</h3>
+              <h3 className="font-semibold mb-2">Atualizações Incluídas</h3>
               <p className="text-sm text-muted-foreground">
                 Novas funcionalidades adicionadas regularmente sem custo extra
               </p>
@@ -209,15 +208,6 @@ export default function ViaJARPricing() {
           </div>
 
           <div className="space-y-6">
-            <div className="p-6 bg-white rounded-lg border">
-              <h3 className="font-semibold mb-2">
-                Como funciona o teste grátis de 14 dias?
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Você tem acesso completo a todas as funcionalidades do plano escolhido por 14 dias, 
-                sem precisar informar cartão de crédito. Se não gostar, basta não renovar e não será cobrado nada.
-              </p>
-            </div>
 
             <div className="p-6 bg-white rounded-lg border">
               <h3 className="font-semibold mb-2">
@@ -287,7 +277,7 @@ export default function ViaJARPricing() {
                 Vocês têm desconto para pagamento anual?
               </h3>
               <p className="text-sm text-muted-foreground">
-                Sim! Pagando anualmente você economiza 20% (2 meses grátis). 
+                Sim! Pagando anualmente você economiza 20% (equivalente a 2 meses de desconto). 
                 Por exemplo, o plano Professional sai de R$ 2.388/ano para R$ 1.912/ano.
               </p>
             </div>
@@ -311,7 +301,7 @@ export default function ViaJARPricing() {
               className="text-lg px-8"
               onClick={() => navigate('/viajar/register')}
             >
-              Começar Teste Grátis de 14 Dias
+              Começar Agora
             </Button>
             <Button 
               size="lg" 

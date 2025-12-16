@@ -160,10 +160,10 @@ export default function StripeCheckout({
           <div className="pt-4 border-t">
             <div className="flex items-center gap-2 text-sm text-green-600">
               <Check className="w-4 h-4" />
-              <span>14 dias grátis para testar</span>
+              <span>Pagamento seguro via Stripe</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Cancele antes do vencimento e não será cobrado
+              Cancele quando quiser
             </p>
           </div>
         </CardContent>

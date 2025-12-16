@@ -37,7 +37,7 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
         <p className="text-muted-foreground max-w-2xl mx-auto">
           {isViaJARTur 
             ? 'Selecione o plano ideal para o seu negócio. Assinatura recorrente mensal ou anual.'
-            : 'Selecione o plano ideal para o seu negócio. Todos os planos incluem 14 dias de teste grátis.'}
+            : 'Selecione o plano ideal para o seu negócio.'}
         </p>
         
         {preSelectedPlan && (
@@ -201,12 +201,7 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
                 </Button>
 
                 {/* Aviso */}
-                {plan.price > 0 && !isViaJARTur && (
-                  <p className="text-xs text-center text-muted-foreground">
-                    14 dias grátis, cancele quando quiser
-                  </p>
-                )}
-                {plan.price > 0 && isViaJARTur && (
+                {plan.price > 0 && (
                   <p className="text-xs text-center text-muted-foreground">
                     Cancele quando quiser
                   </p>
@@ -299,14 +294,6 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Como funciona o teste grátis?</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              14 dias de acesso completo sem cobrança. Se não gostar, cancele antes e não pague nada.
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>

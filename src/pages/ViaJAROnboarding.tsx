@@ -9,8 +9,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
+import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import CadastURVerification from '@/components/onboarding/CadastURVerification';
 import PlanSelector from '@/components/onboarding/PlanSelector';
 import ProfileCompletion from '@/components/onboarding/ProfileCompletion';
@@ -79,10 +81,23 @@ export default function ViaJAROnboarding() {
     },
   ];
 
-  // Ler parâmetro step da URL para permitir redirecionamento após pagamento
+  // Ler parâmetros da URL (step, plan, billing)
   useEffect(() => {
     const stepParam = searchParams.get('step');
-    if (stepParam) {
+    const planParam = searchParams.get('plan') as PlanTier | null;
+    const billingParam = searchParams.get('billing') as BillingPeriod | null;
+
+    // Se tiver plano e billing na URL, pré-selecionar e ir direto para pagamento
+    if (planParam && billingParam) {
+      setOnboardingData(prev => ({ 
+        ...prev, 
+        plan: { planId: planParam, billingPeriod: billingParam } 
+      }));
+      // Pular CADASTUR e seleção de plano, ir direto para pagamento
+      setCurrentStep(3);
+    } 
+    // Se tiver apenas step, usar o step
+    else if (stepParam) {
       const step = parseInt(stepParam, 10);
       if (step >= 1 && step <= steps.length) {
         setCurrentStep(step);
@@ -127,30 +142,49 @@ export default function ViaJAROnboarding() {
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
-      <div className="container max-w-6xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Configuração Inicial</h1>
-              <p className="text-muted-foreground">
-                Estamos quase lá! Vamos configurar sua conta.
-              </p>
+    <div className="min-h-screen bg-background">
+      <ViaJARNavbar />
+      
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-16">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <Sparkles className="h-4 w-4 text-viajar-cyan" />
+              <span className="text-sm text-white/90 font-medium">Configuração Inicial</span>
             </div>
-            <Badge variant="outline" className="text-sm">
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Estamos quase lá!
+            </h1>
+            <p className="text-xl text-white/70 max-w-2xl mx-auto mb-6">
+              Vamos configurar sua conta ViajARTur em poucos passos
+            </p>
+            
+            {/* Progress Badge */}
+            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
               Passo {currentStep} de {steps.length}
             </Badge>
           </div>
-
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <Progress value={progressPercentage} className="h-2" />
-          </div>
         </div>
+      </section>
 
-        {/* Stepper */}
-        <div className="mb-8">
+      {/* Main Content */}
+      <section className="py-12 -mt-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Stepper */}
+          <div className="mb-12">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => {
               const isCompleted = currentStep > step.id;
@@ -231,14 +265,16 @@ export default function ViaJAROnboarding() {
           {currentStep === 2 && (
             <PlanSelector
               onSelectPlan={handlePlanSelected}
-              recommendedPlan="professional"
+              recommendedPlan={onboardingData.plan?.planId || "professional"}
+              preSelectedPlan={onboardingData.plan?.planId || null}
+              preSelectedBilling={onboardingData.plan?.billingPeriod || null}
               isViaJARTur={true} // ViaJAR Tur: apenas 2 planos (Empresários e Secretárias)
             />
           )}
 
           {/* Step 3: Payment */}
           {currentStep === 3 && onboardingData.plan && (
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-3xl mx-auto">
               {onboardingData.plan.planId === "freemium" ? (
                 <Card>
                   <CardContent className="pt-6 space-y-6">
@@ -357,16 +393,19 @@ export default function ViaJAROnboarding() {
           )}
         </div>
 
-        {/* Footer Help */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Precisa de ajuda?{" "}
-            <a href="#" className="text-purple-600 hover:underline">
-              Entre em contato com nosso suporte
-            </a>
-          </p>
+          {/* Footer Help */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Precisa de ajuda?{" "}
+              <a href="/contato" className="text-viajar-cyan hover:underline">
+                Entre em contato com nosso suporte
+              </a>
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
+      
+      <ViaJARFooter />
     </div>
   );
 }

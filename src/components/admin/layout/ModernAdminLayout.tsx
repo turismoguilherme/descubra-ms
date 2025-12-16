@@ -40,7 +40,9 @@ import {
   Gift,
   BarChart3,
   CreditCard as CreditCardIcon,
-  RefreshCw
+  RefreshCw,
+  Mail,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -141,6 +143,7 @@ const navigationItems: NavItem[] = [
       { id: 'accounts', label: 'Contas Bancárias', icon: CreditCard, path: '/viajar/admin/financial/accounts', permission: 'financial', platform: 'system' },
       { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/viajar/admin/financial/suppliers', permission: 'financial', platform: 'system' },
       { id: 'reports', label: 'Relatórios', icon: FileText, path: '/viajar/admin/financial/reports', permission: 'reports', platform: 'system' },
+      { id: 'contact-leads', label: 'Leads de Contato', icon: Mail, path: '/viajar/admin/financial/contact-leads', permission: 'financial', platform: 'system' },
     ],
   },
   {
@@ -167,6 +170,7 @@ const navigationItems: NavItem[] = [
       { id: 'system-logs', label: 'Auditoria', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
       { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
       { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
+      { id: 'settings-metrics', label: 'Métricas Públicas', icon: TrendingUp, path: '/viajar/admin/settings/metrics', permission: 'settings', platform: 'system' },
     ],
   },
   {

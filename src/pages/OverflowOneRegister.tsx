@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Mail, Lock, Building, User, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Building, User, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { BUSINESS_CATEGORIES } from '@/services/cadasturService';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
+import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 const OverflowOneRegister: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -172,22 +173,33 @@ const OverflowOneRegister: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 text-white">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-20">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-white">Comece seu teste</span>
-              <span className="text-cyan-300"> grátis</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <Sparkles className="h-4 w-4 text-viajar-cyan" />
+              <span className="text-sm text-white/90 font-medium">Criar Conta</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Comece sua jornada
             </h1>
-            <p className="text-lg text-blue-100 mb-4 max-w-2xl mx-auto">
-              14 dias grátis • Sem cartão de crédito • Cancele quando quiser
-            </p>
-            <p className="text-sm text-blue-200">
+            <p className="text-xl text-white/70 max-w-2xl mx-auto">
               Transforme seu negócio turístico com inteligência artificial
             </p>
           </div>
@@ -195,7 +207,8 @@ const OverflowOneRegister: React.FC = () => {
       </section>
 
       {/* Registration Form */}
-      <div className="max-w-md mx-auto px-4 py-12">
+      <section className="py-20 -mt-10">
+        <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
         <Card>
           <CardHeader>
             <CardTitle>Criar Conta Empresarial</CardTitle>
@@ -412,9 +425,6 @@ const OverflowOneRegister: React.FC = () => {
           <h3 className="font-semibold mb-3 text-center">O que você ganha:</h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-center gap-2">
-              ✅ 14 dias de teste grátis (sem cartão)
-            </li>
-            <li className="flex items-center gap-2">
               ✅ Acesso a todas as funcionalidades
             </li>
             <li className="flex items-center gap-2">
@@ -423,9 +433,15 @@ const OverflowOneRegister: React.FC = () => {
             <li className="flex items-center gap-2">
               ✅ Cancele quando quiser
             </li>
+            <li className="flex items-center gap-2">
+              ✅ Dashboard personalizado com insights
+            </li>
           </ul>
         </div>
-      </div>
+        </div>
+      </section>
+      
+      <ViaJARFooter />
     </div>
   );
 };

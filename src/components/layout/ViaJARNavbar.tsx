@@ -168,7 +168,7 @@ const ViaJARNavbar = () => {
                 </Link>
                 <Link to="/viajar/register">
                   <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
-                    Começar Grátis
+                    Começar Agora
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -246,7 +246,7 @@ const ViaJARNavbar = () => {
                     </Link>
                     <Link to="/viajar/register" onClick={() => setIsOpen(false)}>
                       <Button className="w-full bg-viajar-slate hover:bg-viajar-slate/90 text-white">
-                        Começar Grátis
+                        Começar Agora
                       </Button>
                     </Link>
                   </div>

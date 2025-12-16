@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, Building2, Landmark, ArrowRight, Sparkles } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { supabase } from '@/integrations/supabase/client';
+import type { PlanTier } from '@/services/subscriptionService';
 
 const Precos = () => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Verificar se usuário está autenticado
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+
+    // Ouvir mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const plans = [
     {
       name: "Enterprise",
@@ -14,6 +35,7 @@ const Precos = () => {
       price: "R$ 199",
       period: "/mês",
       description: "Hotéis, pousadas, agências e restaurantes",
+      planId: 'professional' as PlanTier,
       features: [
         "Guilherme IA - Assistente inteligente",
         "Revenue Optimizer (precificação dinâmica)",
@@ -24,7 +46,7 @@ const Precos = () => {
         "Destaque nas buscas",
         "Suporte prioritário (24h)"
       ],
-      cta: "Solicitar Demonstração",
+      cta: "Assinar Agora",
       highlighted: false,
       gradient: "from-viajar-cyan to-viajar-blue"
     },
@@ -35,6 +57,7 @@ const Precos = () => {
       price: "R$ 2.000",
       period: "/mês",
       description: "Prefeituras e Secretarias de Turismo",
+      planId: 'government' as PlanTier,
       features: [
         "Dashboard municipal completo",
         "Gestão de CATs com GPS",
@@ -47,11 +70,21 @@ const Precos = () => {
         "Treinamento completo da equipe",
         "Suporte dedicado 24/7"
       ],
-      cta: "Contato Institucional",
+      cta: "Assinar Agora",
       highlighted: true,
       gradient: "from-emerald-500 to-teal-600"
     }
   ];
+
+  const handleSelectPlan = (planId: PlanTier) => {
+    // Se estiver autenticado, vai direto para onboarding
+    // Se não estiver, vai para registro primeiro
+    if (isAuthenticated) {
+      navigate(`/viajar/onboarding?plan=${planId}&billing=monthly`);
+    } else {
+      navigate(`/viajar/register?plan=${planId}&billing=monthly`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,18 +188,17 @@ const Precos = () => {
                 </ul>
 
                 {/* CTA */}
-                <Link to="/contato">
-                  <Button 
-                    className={`w-full h-12 font-semibold gap-2 ${
-                      plan.highlighted 
-                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
-                        : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
-                    }`}
-                  >
-                    {plan.cta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={() => handleSelectPlan(plan.planId)}
+                  className={`w-full h-12 font-semibold gap-2 ${
+                    plan.highlighted 
+                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                      : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
+                  }`}
+                >
+                  {plan.cta}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </div>

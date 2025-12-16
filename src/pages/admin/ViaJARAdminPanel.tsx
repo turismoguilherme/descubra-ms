@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import ModernAdminLayout from '@/components/admin/layout/ModernAdminLayout';
 import AdminLogin from '@/components/admin/AdminLogin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Users, DollarSign, FileText, TrendingUp, AlertTriangle, Calendar, Brain, Sparkles } from 'lucide-react';
+import { Activity, Users, DollarSign, FileText, TrendingUp, AlertTriangle, Calendar, Brain, Sparkles, MessageSquare } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import LoadingFallback from '@/components/ui/loading-fallback';
 import { financialDashboardService } from '@/services/admin/financialDashboardService';
@@ -47,6 +47,8 @@ const VisualContentEditor = lazy(() => import('@/components/admin/editor/VisualC
 const SystemHealthMonitor = lazy(() => import('@/components/admin/system/SystemHealthMonitor'));
 const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIAgent'));
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
+const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
+const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
@@ -186,6 +188,11 @@ export default function ViaJARAdminPanel() {
             <FinancialReports />
           </Suspense>
         } />
+        <Route path="financial/contact-leads" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <ContactLeadsManagement />
+          </Suspense>
+        } />
         <Route path="financial/accounts" element={
           <Suspense fallback={<LoadingFallback />}>
             <BankAccountsManager />
@@ -208,6 +215,11 @@ export default function ViaJARAdminPanel() {
         <Route path="settings/policies" element={
           <Suspense fallback={<LoadingFallback />}>
             <PoliciesEditor />
+          </Suspense>
+        } />
+        <Route path="settings/metrics" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PlatformMetricsEditor />
           </Suspense>
         } />
             
