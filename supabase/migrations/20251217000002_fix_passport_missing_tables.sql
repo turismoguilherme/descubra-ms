@@ -50,23 +50,15 @@ CREATE POLICY "Admins can manage stamp themes" ON stamp_themes
     )
   );
 
--- Trigger para updated_at (verificar se função existe)
-DO $$
+-- Trigger para updated_at (criar função se não existir)
+-- CREATE OR REPLACE é idempotente, pode ser executado múltiplas vezes
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_proc p
-    JOIN pg_namespace n ON p.pronamespace = n.oid
-    WHERE n.nspname = 'public' AND p.proname = 'update_updated_at_column'
-  ) THEN
-    CREATE OR REPLACE FUNCTION update_updated_at_column()
-    RETURNS TRIGGER AS $$
-    BEGIN
-      NEW.updated_at = NOW();
-      RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-  END IF;
-END $$;
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Criar trigger se não existir
 DROP TRIGGER IF EXISTS update_stamp_themes_updated_at ON stamp_themes;
