@@ -8,9 +8,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, MapPin, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, Save, X, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LocationPicker from '@/components/admin/LocationPicker';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const PassportCheckpointManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -251,8 +252,10 @@ const PassportCheckpointManager: React.FC = () => {
       toast({
         title: 'Checkpoint criado',
         description: 'O novo checkpoint foi criado com sucesso.',
+        duration: 5000,
       });
 
+      console.log('🔵 [PassportCheckpointManager] Fechando formulário e resetando...');
       setCreatingCheckpoint(false);
       setNewCheckpointForm({
         name: '',
@@ -266,8 +269,10 @@ const PassportCheckpointManager: React.FC = () => {
         requires_photo: false,
         stamp_fragment_number: null,
       });
-      console.log('🔵 [PassportCheckpointManager] Formulário resetado, recarregando checkpoints...');
-      loadCheckpoints();
+      
+      console.log('🔵 [PassportCheckpointManager] Recarregando checkpoints...');
+      await loadCheckpoints();
+      console.log('✅ [PassportCheckpointManager] Processo completo finalizado');
     } catch (error: any) {
       console.error('❌ [PassportCheckpointManager] Erro completo ao criar checkpoint:', {
         message: error.message,
@@ -276,11 +281,16 @@ const PassportCheckpointManager: React.FC = () => {
         hint: error.hint,
         stack: error.stack,
       });
+      
       toast({
         title: 'Erro ao criar checkpoint',
-        description: error.message,
+        description: error.message || 'Erro desconhecido. Verifique o console para mais detalhes.',
         variant: 'destructive',
+        duration: 10000,
       });
+      
+      // Re-lançar o erro para que o onClick possa capturá-lo também
+      throw error;
     }
   };
 
@@ -455,66 +465,119 @@ const PassportCheckpointManager: React.FC = () => {
                     <CardTitle className="text-lg">Novo Checkpoint</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="new_name">Nome do Ponto *</Label>
-                      <Input
-                        id="new_name"
-                        value={newCheckpointForm.name}
-                        onChange={(e) =>
-                          setNewCheckpointForm({ ...newCheckpointForm, name: e.target.value })
-                        }
-                        placeholder="Ex: Mercadão Municipal"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="new_description">Descrição</Label>
-                      <Textarea
-                        id="new_description"
-                        value={newCheckpointForm.description}
-                        onChange={(e) =>
-                          setNewCheckpointForm({ ...newCheckpointForm, description: e.target.value })
-                        }
-                        placeholder="Descrição do ponto..."
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                    <TooltipProvider>
                       <div>
-                        <Label htmlFor="new_order">Ordem na Rota</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label htmlFor="new_name">Nome do Ponto *</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Nome do ponto turístico ou local que será visitado. Ex: "Casa do Artesão", "Bioparque", "Feira Central".</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         <Input
-                          id="new_order"
-                          type="number"
-                          min="1"
-                          value={newCheckpointForm.order_sequence}
+                          id="new_name"
+                          value={newCheckpointForm.name}
                           onChange={(e) =>
-                            setNewCheckpointForm({
-                              ...newCheckpointForm,
-                              order_sequence: parseInt(e.target.value) || 1,
-                            })
+                            setNewCheckpointForm({ ...newCheckpointForm, name: e.target.value })
                           }
+                          placeholder="Ex: Mercadão Municipal"
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="new_fragment">Fragmento do Carimbo</Label>
-                        <Input
-                          id="new_fragment"
-                          type="number"
-                          min="1"
-                          value={newCheckpointForm.stamp_fragment_number || ''}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label htmlFor="new_description">Descrição</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Descrição detalhada do ponto. Informe o que o turista encontrará neste local e por que vale a pena visitar.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Textarea
+                          id="new_description"
+                          value={newCheckpointForm.description}
                           onChange={(e) =>
-                            setNewCheckpointForm({
-                              ...newCheckpointForm,
-                              stamp_fragment_number: e.target.value ? parseInt(e.target.value) : null,
-                            })
+                            setNewCheckpointForm({ ...newCheckpointForm, description: e.target.value })
                           }
-                          placeholder="Opcional"
+                          placeholder="Descrição do ponto..."
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <Label>Tipo de Validação *</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Label htmlFor="new_order">Ordem na Rota</Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Número que define a ordem de visitação dos checkpoints. O turista deve visitar na sequência: 1, 2, 3, etc.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id="new_order"
+                            type="number"
+                            min="1"
+                            value={newCheckpointForm.order_sequence}
+                            onChange={(e) =>
+                              setNewCheckpointForm({
+                                ...newCheckpointForm,
+                                order_sequence: parseInt(e.target.value) || 1,
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Label htmlFor="new_fragment">Fragmento do Carimbo</Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Número do fragmento do carimbo que será desbloqueado ao completar este checkpoint. Cada checkpoint desbloqueia uma parte do carimbo completo.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id="new_fragment"
+                            type="number"
+                            min="1"
+                            value={newCheckpointForm.stamp_fragment_number || ''}
+                            onChange={(e) =>
+                              setNewCheckpointForm({
+                                ...newCheckpointForm,
+                                stamp_fragment_number: e.target.value ? parseInt(e.target.value) : null,
+                              })
+                            }
+                            placeholder="Opcional"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label>Tipo de Validação *</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p><strong>📍 Apenas Geolocalização:</strong> Turista precisa estar no local (GPS).</p>
+                              <p><strong>🔑 Apenas Código:</strong> Turista digita código fornecido pelo parceiro.</p>
+                              <p><strong>🔒 Geolocalização + Código:</strong> Mais seguro - exige GPS E código correto.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                       <Select
                         value={newCheckpointForm.validation_mode}
                         onValueChange={(v: any) =>
@@ -549,7 +612,18 @@ const PassportCheckpointManager: React.FC = () => {
                     {(newCheckpointForm.validation_mode === 'geofence' ||
                       newCheckpointForm.validation_mode === 'mixed') && (
                       <div>
-                        <Label>Localização (Latitude/Longitude) *</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label>Localização (Latitude/Longitude) *</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p>Coordenadas GPS do ponto físico. Clique em "Selecionar no Mapa" para escolher visualmente ou digite manualmente.</p>
+                              <p className="mt-2 text-xs">As coordenadas são usadas para validar se o turista está realmente no local.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         <div className="flex gap-2">
                           <Input
                             value={newCheckpointForm.latitude?.toString() || ''}
@@ -567,6 +641,7 @@ const PassportCheckpointManager: React.FC = () => {
                             type="button"
                             variant="outline"
                             onClick={() => {
+                              console.log('🔵 [PassportCheckpointManager] Botão "Selecionar no Mapa" clicado');
                               setLocationPickerFor('create');
                               setShowLocationPicker(true);
                             }}
@@ -581,7 +656,19 @@ const PassportCheckpointManager: React.FC = () => {
                     {(newCheckpointForm.validation_mode === 'code' ||
                       newCheckpointForm.validation_mode === 'mixed') && (
                       <div>
-                        <Label htmlFor="new_partner_code">Código do Parceiro *</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label htmlFor="new_partner_code">Código do Parceiro *</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p>Código curto que o parceiro físico fornecerá ao turista quando ele chegar no local.</p>
+                              <p className="mt-2 text-xs">Exemplo: "MS-4281". O turista digita este código no app para validar o check-in.</p>
+                              <p className="mt-1 text-xs">Você precisa comunicar este código ao parceiro físico (dono do estabelecimento).</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         <div className="flex gap-2">
                           <Input
                             id="new_partner_code"
@@ -598,12 +685,14 @@ const PassportCheckpointManager: React.FC = () => {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() =>
+                            onClick={() => {
+                              const code = generatePartnerCode();
+                              console.log('🔵 [PassportCheckpointManager] Código gerado:', code);
                               setNewCheckpointForm({
                                 ...newCheckpointForm,
-                                partner_code: generatePartnerCode(),
-                              })
-                            }
+                                partner_code: code,
+                              });
+                            }}
                           >
                             Gerar Código
                           </Button>
@@ -616,7 +705,22 @@ const PassportCheckpointManager: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="new_radius">Raio Geofence (metros)</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label htmlFor="new_radius">Raio Geofence (metros)</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p>Distância máxima (em metros) que o turista pode estar do ponto para fazer check-in.</p>
+                              <p className="mt-2 text-xs"><strong>Exemplos:</strong></p>
+                              <p className="text-xs">• Loja pequena: 50-100m</p>
+                              <p className="text-xs">• Praça/Parque: 100-200m</p>
+                              <p className="text-xs">• Zoológico/Feira: 200-500m</p>
+                              <p className="mt-1 text-xs">Padrão: 100 metros</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         <Input
                           id="new_radius"
                           type="number"
@@ -645,18 +749,42 @@ const PassportCheckpointManager: React.FC = () => {
                             })
                           }
                         />
-                        <Label htmlFor="new_photo">Foto obrigatória</Label>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="new_photo">Foto obrigatória</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Se marcado, o turista será obrigado a tirar uma foto ao fazer check-in neste checkpoint.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                       </div>
                     </div>
+                    </TooltipProvider>
 
                     <div className="flex gap-2">
                       <Button 
                         type="button"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('🔵 [PassportCheckpointManager] Botão "Criar Checkpoint" clicado');
-                          handleCreateCheckpoint();
+                          console.log('🔵 [PassportCheckpointManager] ========== BOTÃO "CRIAR CHECKPOINT" CLICADO ==========');
+                          console.log('🔵 [PassportCheckpointManager] Event:', e);
+                          console.log('🔵 [PassportCheckpointManager] Form data:', JSON.stringify(newCheckpointForm, null, 2));
+                          try {
+                            await handleCreateCheckpoint();
+                            console.log('✅ [PassportCheckpointManager] handleCreateCheckpoint concluído com sucesso');
+                          } catch (err) {
+                            console.error('❌ [PassportCheckpointManager] Erro ao chamar handleCreateCheckpoint:', err);
+                            toast({
+                              title: 'Erro ao criar checkpoint',
+                              description: err instanceof Error ? err.message : 'Erro desconhecido. Verifique o console.',
+                              variant: 'destructive',
+                              duration: 10000,
+                            });
+                          }
                         }}
                       >
                         <Save className="h-4 w-4 mr-2" />

@@ -188,21 +188,38 @@ const PassportRouteManager: React.FC = () => {
       }
 
       console.log('✅ [PassportRouteManager] Rota criada com sucesso:', data);
+      
       toast({
         title: 'Rota criada',
         description: 'A nova rota foi criada com sucesso.',
+        duration: 5000,
       });
 
+      console.log('🔵 [PassportRouteManager] Fechando formulário e resetando...');
       setCreatingRoute(false);
       setNewRouteForm({ name: '', description: '', region: '', difficulty: 'medio' });
-      loadRoutes();
+      
+      console.log('🔵 [PassportRouteManager] Recarregando lista de rotas...');
+      await loadRoutes();
+      console.log('✅ [PassportRouteManager] Processo completo finalizado');
     } catch (error: any) {
-      console.error('Erro inesperado ao criar rota:', error);
+      console.error('❌ [PassportRouteManager] Erro completo ao criar rota:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack,
+      });
+      
       toast({
         title: 'Erro ao criar rota',
         description: error.message || 'Ocorreu um erro inesperado. Tente novamente.',
         variant: 'destructive',
+        duration: 10000,
       });
+      
+      // Re-lançar o erro para que o onClick possa capturá-lo também
+      throw error;
     }
   };
 
@@ -408,10 +425,21 @@ const PassportRouteManager: React.FC = () => {
                   console.log('🔵 [PassportRouteManager] newRouteForm:', newRouteForm);
                   console.log('🔵 [PassportRouteManager] Chamando handleCreateRoute...');
                   try {
-                    await handleCreateRoute();
-                    console.log('🔵 [PassportRouteManager] handleCreateRoute concluído');
-                  } catch (err) {
+                    const result = await handleCreateRoute();
+                    console.log('✅ [PassportRouteManager] handleCreateRoute concluído com sucesso:', result);
+                    // Se chegou aqui, a função retornou sem erro
+                    // O toast de sucesso já deve ter sido mostrado dentro de handleCreateRoute
+                  } catch (err: any) {
                     console.error('❌ [PassportRouteManager] Erro ao chamar handleCreateRoute:', err);
+                    // Se handleCreateRoute lançou erro, mostrar toast aqui também
+                    if (!err?.handled) {
+                      toast({
+                        title: 'Erro ao criar rota',
+                        description: err?.message || 'Erro desconhecido. Verifique o console para mais detalhes.',
+                        variant: 'destructive',
+                        duration: 10000,
+                      });
+                    }
                   }
                 }}
               >
