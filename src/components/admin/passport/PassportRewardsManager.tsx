@@ -333,7 +333,24 @@ const PassportRewardsManager: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Prefixo do Voucher (opcional)</Label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Label>Prefixo do Voucher (opcional)</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          <p><strong>⚠️ IMPORTANTE: Este é diferente do "Código do Parceiro" usado nos checkpoints!</strong></p>
+                          <p className="mt-2">O prefixo do voucher é usado para gerar códigos únicos quando o turista <strong>ganha a recompensa</strong> (após completar a rota).</p>
+                          <p className="mt-2 text-xs">Exemplo: Se o prefixo for "CG10", cada turista receberá um código único como:</p>
+                          <p className="text-xs font-mono">• CG10-A1B2C3D4</p>
+                          <p className="text-xs font-mono">• CG10-X9Y8Z7W6</p>
+                          <p className="mt-2 text-xs">O turista apresenta este código ao parceiro para resgatar a recompensa.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <Input
                     value={formData.reward_code_prefix}
                     onChange={(e) => setFormData({ ...formData, reward_code_prefix: e.target.value })}
