@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const PassportCheckpointManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<string>('');
   const [checkpoints, setCheckpoints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,7 @@ const PassportCheckpointManager: React.FC = () => {
     longitude: null as number | null,
     geofence_radius: 100,
     validation_mode: 'geofence' as 'geofence' | 'code' | 'mixed',
+    partner_id: null as string | null,
     partner_code: '',
     requires_photo: false,
     stamp_fragment_number: null as number | null,
@@ -45,6 +47,7 @@ const PassportCheckpointManager: React.FC = () => {
     longitude: null as number | null,
     geofence_radius: 100,
     validation_mode: 'geofence' as 'geofence' | 'code' | 'mixed',
+    partner_id: null as string | null,
     partner_code: '',
     requires_photo: false,
     stamp_fragment_number: null as number | null,
@@ -106,6 +109,26 @@ const PassportCheckpointManager: React.FC = () => {
     } finally {
       setLoading(false);
       console.log('🔵 [PassportCheckpointManager] loadRoutes finalizado');
+    }
+  };
+
+  const loadPartners = async () => {
+    console.log('🔵 [PassportCheckpointManager] ========== loadPartners INICIADO ==========');
+    try {
+      const { data, error } = await supabase
+        .from('institutional_partners')
+        .select('id, name, contact_email')
+        .order('name');
+
+      if (error) {
+        console.error('❌ [PassportCheckpointManager] Erro ao buscar parceiros:', error);
+        // Não mostrar erro ao usuário, apenas logar
+        return;
+      }
+      console.log('✅ [PassportCheckpointManager] Parceiros carregados:', data?.length || 0);
+      setPartners(data || []);
+    } catch (error: any) {
+      console.error('❌ [PassportCheckpointManager] Erro ao carregar parceiros:', error);
     }
   };
 
@@ -208,16 +231,27 @@ const PassportCheckpointManager: React.FC = () => {
       return;
     }
 
-    // Validar se precisa de código
-    if ((newCheckpointForm.validation_mode === 'code' || newCheckpointForm.validation_mode === 'mixed') && 
-        !newCheckpointForm.partner_code.trim()) {
-      console.log('❌ [PassportCheckpointManager] Código do parceiro faltando para modo:', newCheckpointForm.validation_mode);
-      toast({
-        title: 'Código do parceiro necessário',
-        description: 'Este modo de validação requer um código do parceiro.',
-        variant: 'destructive',
-      });
-      return;
+    // Validar se precisa de parceiro e código
+    if ((newCheckpointForm.validation_mode === 'code' || newCheckpointForm.validation_mode === 'mixed')) {
+      if (!newCheckpointForm.partner_id) {
+        console.log('❌ [PassportCheckpointManager] Parceiro não selecionado');
+        toast({
+          title: 'Parceiro obrigatório',
+          description: 'Selecione um parceiro para este checkpoint',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!newCheckpointForm.partner_code.trim()) {
+        console.log('❌ [PassportCheckpointManager] Código do parceiro faltando para modo:', newCheckpointForm.validation_mode);
+        toast({
+          title: 'Código do parceiro necessário',
+          description: 'Este modo de validação requer um código do parceiro.',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     console.log('✅ [PassportCheckpointManager] Validações passadas, criando checkpoint...');
@@ -232,6 +266,7 @@ const PassportCheckpointManager: React.FC = () => {
         longitude: newCheckpointForm.longitude,
         geofence_radius: newCheckpointForm.geofence_radius,
         validation_mode: newCheckpointForm.validation_mode,
+        partner_id: newCheckpointForm.partner_id || null,
         partner_code: newCheckpointForm.partner_code || null,
         requires_photo: newCheckpointForm.requires_photo,
         stamp_fragment_number: newCheckpointForm.stamp_fragment_number,
@@ -265,6 +300,7 @@ const PassportCheckpointManager: React.FC = () => {
         longitude: null,
         geofence_radius: 100,
         validation_mode: 'geofence',
+        partner_id: null,
         partner_code: '',
         requires_photo: false,
         stamp_fragment_number: null,
@@ -391,10 +427,18 @@ const PassportCheckpointManager: React.FC = () => {
     }
   };
 
-  const generatePartnerCode = () => {
-    const prefix = 'MS';
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `${prefix}-${random}`;
+  const generatePartnerCode = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase.rpc('generate_partner_code');
+      if (error) throw error;
+      return data || 'MS-0000';
+    } catch (error: any) {
+      console.error('Erro ao gerar código:', error);
+      // Fallback para geração local
+      const prefix = 'MS';
+      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      return `${prefix}-${random}`;
+    }
   };
 
   // Log de renderização apenas quando estados importantes mudam
@@ -655,9 +699,45 @@ const PassportCheckpointManager: React.FC = () => {
 
                     {(newCheckpointForm.validation_mode === 'code' ||
                       newCheckpointForm.validation_mode === 'mixed') && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Label htmlFor="new_partner_code">Código do Parceiro *</Label>
+                      <>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Label htmlFor="new_partner_id">Parceiro *</Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Selecione o parceiro responsável por este checkpoint. O parceiro poderá ver e gerenciar seu código no dashboard.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Select
+                            value={newCheckpointForm.partner_id || ''}
+                            onValueChange={(v) =>
+                              setNewCheckpointForm({ ...newCheckpointForm, partner_id: v || null })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um parceiro" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {partners.map((partner) => (
+                                <SelectItem key={partner.id} value={partner.id}>
+                                  {partner.name} ({partner.contact_email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {!newCheckpointForm.partner_id && (
+                            <p className="text-xs text-yellow-600 mt-1">
+                              ⚠️ Selecione um parceiro para continuar
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Label htmlFor="new_partner_code">Código do Parceiro *</Label>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
@@ -690,8 +770,8 @@ const PassportCheckpointManager: React.FC = () => {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => {
-                              const code = generatePartnerCode();
+                            onClick={async () => {
+                              const code = await generatePartnerCode();
                               console.log('🔵 [PassportCheckpointManager] Código gerado:', code);
                               setNewCheckpointForm({
                                 ...newCheckpointForm,
@@ -706,6 +786,7 @@ const PassportCheckpointManager: React.FC = () => {
                           Código curto que o parceiro informará ao turista (ex: MS-4281)
                         </p>
                       </div>
+                      </>
                     )}
 
                     <div className="grid grid-cols-2 gap-4">
