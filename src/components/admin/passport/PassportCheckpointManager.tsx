@@ -387,8 +387,9 @@ const PassportCheckpointManager: React.FC = () => {
     return `${prefix}-${random}`;
   };
 
+  // Log de renderização apenas quando estados importantes mudam
   useEffect(() => {
-    console.log('🔵 [PassportCheckpointManager] Componente renderizado. Estado atual:', {
+    console.log('🔵 [PassportCheckpointManager] Estado atual:', {
       loading,
       routesCount: routes.length,
       selectedRoute,
@@ -396,7 +397,7 @@ const PassportCheckpointManager: React.FC = () => {
       creatingCheckpoint,
       editingCheckpoint,
     });
-  });
+  }, [loading, routes.length, selectedRoute, checkpoints.length, creatingCheckpoint, editingCheckpoint]);
 
   if (loading) {
     console.log('🔵 [PassportCheckpointManager] Renderizando estado de loading');

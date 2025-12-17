@@ -55,8 +55,9 @@ const PassportStampConfig: React.FC = () => {
     console.log('🔵 [PassportStampConfig] creatingTheme mudou para:', creatingTheme);
   }, [creatingTheme]);
 
+  // Log de renderização apenas quando estados importantes mudam
   useEffect(() => {
-    console.log('🔵 [PassportStampConfig] Componente renderizado. Estado atual:', {
+    console.log('🔵 [PassportStampConfig] Estado atual:', {
       loading,
       routesCount: routes.length,
       configsCount: configs.length,
@@ -64,7 +65,7 @@ const PassportStampConfig: React.FC = () => {
       selectedRoute,
       creatingTheme,
     });
-  });
+  }, [loading, routes.length, configs.length, stampThemes.length, selectedRoute, creatingTheme]);
 
   const loadData = async () => {
     console.log('🔵 [PassportStampConfig] ========== loadData INICIADO ==========');

@@ -42,15 +42,16 @@ const PassportRewardsManager: React.FC = () => {
     console.log('🔵 [PassportRewardsManager] showForm mudou para:', showForm);
   }, [showForm]);
 
+  // Log de renderização apenas quando estados importantes mudam
   useEffect(() => {
-    console.log('🔵 [PassportRewardsManager] Componente renderizado. Estado atual:', {
+    console.log('🔵 [PassportRewardsManager] Estado atual:', {
       loading,
       routesCount: routes.length,
       rewardsCount: rewards.length,
       showForm,
       emittedByRewardIdCount: Object.keys(emittedByRewardId).length,
     });
-  });
+  }, [loading, routes.length, rewards.length, showForm, emittedByRewardId]);
 
   const loadData = async () => {
     console.log('🔵 [PassportRewardsManager] ========== loadData INICIADO ==========');

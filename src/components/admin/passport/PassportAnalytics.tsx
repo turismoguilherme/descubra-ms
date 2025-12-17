@@ -12,12 +12,13 @@ const PassportAnalytics: React.FC = () => {
     loadStats();
   }, []);
 
+  // Log de renderização apenas quando estados importantes mudam
   useEffect(() => {
-    console.log('🔵 [PassportAnalytics] Componente renderizado. Estado atual:', {
+    console.log('🔵 [PassportAnalytics] Estado atual:', {
       loading,
       stats,
     });
-  });
+  }, [loading, stats]);
 
   const loadStats = async () => {
     console.log('🔵 [PassportAnalytics] ========== loadStats INICIADO ==========');
