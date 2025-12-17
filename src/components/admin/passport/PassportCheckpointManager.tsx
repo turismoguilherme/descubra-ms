@@ -663,9 +663,14 @@ const PassportCheckpointManager: React.FC = () => {
                               <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                             </TooltipTrigger>
                             <TooltipContent className="max-w-sm">
-                              <p>Código curto que o parceiro físico fornecerá ao turista quando ele chegar no local.</p>
-                              <p className="mt-2 text-xs">Exemplo: "MS-4281". O turista digita este código no app para validar o check-in.</p>
-                              <p className="mt-1 text-xs">Você precisa comunicar este código ao parceiro físico (dono do estabelecimento).</p>
+                              <p><strong>⚠️ IMPORTANTE: Este é diferente do "Código do Voucher" usado nas recompensas!</strong></p>
+                              <p className="mt-2">O <strong>Código do Parceiro</strong> é um código fixo que o parceiro físico (dono do estabelecimento) fornece ao turista para validar o <strong>checkpoint</strong>.</p>
+                              <p className="mt-2 text-xs"><strong>Exemplo:</strong> "MS-4281"</p>
+                              <p className="mt-2 text-xs">• O turista chega no local</p>
+                              <p className="text-xs">• O parceiro informa o código: "MS-4281"</p>
+                              <p className="text-xs">• O turista digita este código no app para validar o check-in</p>
+                              <p className="mt-2 text-xs"><strong>Este código é o mesmo para todos os turistas</strong> que visitam este checkpoint.</p>
+                              <p className="mt-2 text-xs text-yellow-600">💡 O "Código do Voucher" é diferente: é gerado automaticamente quando o turista ganha uma recompensa (após completar a rota).</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>

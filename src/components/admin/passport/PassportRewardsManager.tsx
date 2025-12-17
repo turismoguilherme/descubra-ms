@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const PassportRewardsManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -350,7 +351,22 @@ const PassportRewardsManager: React.FC = () => {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label>Estoque (max vouchers)</Label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Label>Estoque (max vouchers)</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          <p>Quantidade máxima de vouchers que podem ser emitidos para esta recompensa.</p>
+                          <p className="mt-2 text-xs"><strong>Exemplo:</strong> Se colocar 50, apenas os primeiros 50 turistas que completarem a rota receberão esta recompensa.</p>
+                          <p className="mt-2 text-xs"><strong>Deixe vazio</strong> para permitir vouchers ilimitados (sem estoque).</p>
+                          <p className="mt-2 text-xs">Cada turista recebe um código único de voucher quando ganha a recompensa.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <Input
                     type="number"
                     min="0"

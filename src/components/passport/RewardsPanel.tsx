@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePassportRewards } from '@/hooks/usePassportRewards';
-import { Copy, Gift, MapPin, Phone, Mail, CheckCircle2 } from 'lucide-react';
+import { Copy, Gift, MapPin, Phone, Mail, CheckCircle2, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface RewardsPanelProps {
   routeId: string;
