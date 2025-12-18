@@ -247,10 +247,14 @@ Formato: Relatório profissional e objetivo.`;
    * Detecta anomalias e envia alertas
    */
   async detectAnomalies(): Promise<TaskResult> {
+    // Definir variável de anomalias ANTES do try para garantir escopo
+    let anomalies: string[] = [];
+    
     try {
       console.log('🔍 [AutonomousAgent] Detectando anomalias...');
       
-      const anomalies: string[] = [];
+      // Reinicializar array de anomalias
+      anomalies = [];
 
       // Verificar métricas anômalas
       const [usersResult, eventsResult, healthChecks] = await Promise.all([
@@ -276,7 +280,7 @@ Formato: Relatório profissional e objetivo.`;
       }
 
       // Anomalia 2: Serviços offline
-      const offlineServices = healthChecks.data?.filter(h => h.status === 'offline').length || 0;
+      const offlineServices = healthChecks.data?.filter((h: any) => h.status === 'offline').length || 0;
       if (offlineServices > 5) {
         anomalies.push(`⚠️ ${offlineServices} verificações de serviços offline nas últimas 24h`);
       }
@@ -287,27 +291,36 @@ Formato: Relatório profissional e objetivo.`;
         anomalies.push(`⚠️ Apenas ${activeEvents} eventos ativos - considere adicionar mais conteúdo`);
       }
 
+      // Garantir que anomalies está definida
+      const anomaliesList = anomalies || [];
+      
       const result = {
-        anomaliesFound: anomalies.length,
-        anomalies,
+        anomaliesFound: anomaliesList.length,
+        anomalies: anomaliesList,
         timestamp: new Date().toISOString(),
       };
 
-      console.log('✅ [AutonomousAgent] Detecção de anomalias concluída:', anomalies.length, 'anomalias encontradas');
+      console.log('✅ [AutonomousAgent] Detecção de anomalias concluída:', anomaliesList.length, 'anomalias encontradas');
 
       return {
         success: true,
-        message: anomalies.length > 0 
-          ? `${anomalias.length} anomalia(s) detectada(s)`
+        message: anomaliesList.length > 0 
+          ? `${anomaliesList.length} anomalia(s) detectada(s)`
           : 'Nenhuma anomalia detectada',
         data: result,
       };
     } catch (error: any) {
+      // Garantir que anomalies está definida mesmo em caso de erro
+      const safeAnomalies = anomalies || [];
       console.error('❌ [AutonomousAgent] Erro na detecção de anomalias:', error);
       return {
         success: false,
         message: 'Erro ao detectar anomalias',
         error: error.message,
+        data: {
+          anomaliesFound: safeAnomalies.length,
+          anomalies: safeAnomalies,
+        },
       };
     }
   },

@@ -45,6 +45,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AdminNotifications } from '@/components/admin/notifications/AdminNotifications';
 
 // Definição das permissões por cargo
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -283,7 +284,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                 {userProfile?.full_name || 'Administrador'} - {userRole === 'master_admin' ? 'Master Admin' : userRole}
               </p>
               </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
             {/* Platform Badge */}
             {currentPlatform !== 'system' && (
               <div className={cn(
@@ -305,6 +306,8 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                 )}
               </div>
             )}
+              {/* Notificações */}
+              <AdminNotifications />
               <Button 
                 variant="secondary" 
                 size="sm"

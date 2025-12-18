@@ -34,59 +34,104 @@ serve(async (req) => {
 
     console.log('🤖 [AutonomousAgentScheduler] Iniciando verificação de tarefas agendadas...');
 
-    // Verificar se o agente está ativo (configuração salva)
-    // Por enquanto, vamos assumir que está ativo se houver tarefas habilitadas
-    // No futuro, pode ter uma tabela de configuração
+    // Buscar configuração do agente do banco de dados
+    const { data: agentConfig, error: configError } = await supabase
+      .from('ai_agent_config')
+      .select('*')
+      .eq('active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // Se não houver configuração ativa, não executar nada
+    if (configError || !agentConfig || !agentConfig.active) {
+      console.log('⏸️ [AutonomousAgentScheduler] Agente inativo ou configuração não encontrada. Pulando execução.');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Agente inativo - nenhuma tarefa executada',
+          timestamp: new Date().toISOString(),
+          tasksExecuted: 0,
+          results: [],
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    console.log(`✅ [AutonomousAgentScheduler] Agente ativo - Nível de autonomia: ${agentConfig.autonomy_level}%`);
 
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentDay = now.getDay(); // 0 = Domingo, 1 = Segunda, etc.
 
-    // Definir tarefas padrão (mesmas do frontend)
-    const defaultTasks: AITask[] = [
-      {
-        id: '1',
-        type: 'analysis',
-        name: 'Análise de Métricas',
-        schedule: 'Diariamente às 08:00',
-        enabled: true,
-      },
-      {
-        id: '2',
-        type: 'report',
-        name: 'Relatório Financeiro',
-        schedule: 'Semanalmente (Segunda)',
-        enabled: true,
-      },
-      {
-        id: '3',
-        type: 'notification',
-        name: 'Alertas de Anomalias',
-        schedule: 'A cada hora',
-        enabled: true,
-      },
-      {
-        id: '4',
-        type: 'cleanup',
-        name: 'Limpeza de Cache',
-        schedule: 'Semanalmente (Domingo)',
-        enabled: true,
-      },
-      {
-        id: '5',
-        type: 'notification',
-        name: 'Aprovação Automática de Eventos',
-        schedule: 'A cada hora',
-        enabled: false, // Desabilitado por padrão - admin pode ativar
-      },
-    ];
+    // Usar tarefas da configuração do banco, ou tarefas padrão como fallback
+    let tasks: AITask[] = [];
+    
+    if (agentConfig.tasks && Array.isArray(agentConfig.tasks) && agentConfig.tasks.length > 0) {
+      // Usar tarefas salvas no banco
+      tasks = agentConfig.tasks.map((t: any) => ({
+        id: t.id || '',
+        type: t.type || '',
+        name: t.name || '',
+        schedule: t.schedule || '',
+        enabled: t.enabled !== undefined ? t.enabled : true,
+        lastRun: t.lastRun ? new Date(t.lastRun).toISOString() : undefined,
+      }));
+      console.log(`📋 [AutonomousAgentScheduler] Carregadas ${tasks.length} tarefas da configuração do banco`);
+    } else {
+      // Fallback: tarefas padrão (mesmas do frontend)
+      console.log('⚠️ [AutonomousAgentScheduler] Nenhuma tarefa na configuração, usando tarefas padrão');
+      tasks = [
+        {
+          id: '1',
+          type: 'analysis',
+          name: 'Análise de Métricas',
+          schedule: 'Diariamente às 08:00',
+          enabled: true,
+        },
+        {
+          id: '2',
+          type: 'report',
+          name: 'Relatório Financeiro',
+          schedule: 'Semanalmente (Segunda)',
+          enabled: true,
+        },
+        {
+          id: '3',
+          type: 'notification',
+          name: 'Alertas de Anomalias',
+          schedule: 'A cada hora',
+          enabled: true,
+        },
+        {
+          id: '4',
+          type: 'cleanup',
+          name: 'Limpeza de Cache',
+          schedule: 'Semanalmente (Domingo)',
+          enabled: true,
+        },
+        {
+          id: '5',
+          type: 'notification',
+          name: 'Aprovação Automática de Eventos',
+          schedule: 'A cada hora',
+          enabled: false, // Desabilitado por padrão - admin pode ativar
+        },
+      ];
+    }
 
     // Verificar quais tarefas devem ser executadas
     const tasksToRun: AITask[] = [];
 
-    for (const task of defaultTasks) {
-      if (!task.enabled) continue;
+    for (const task of tasks) {
+      if (!task.enabled) {
+        console.log(`⏸️ [AutonomousAgentScheduler] Tarefa ${task.name} está desabilitada`);
+        continue;
+      }
 
       const shouldRun = checkIfTaskShouldRun(task, currentHour, currentMinute, currentDay);
       
@@ -94,6 +139,7 @@ serve(async (req) => {
         // Verificar última execução (buscar do banco se existir)
         // Por enquanto, vamos executar se não tiver executado na última hora/dia
         tasksToRun.push(task);
+        console.log(`⏰ [AutonomousAgentScheduler] Tarefa agendada: ${task.name} (${task.schedule})`);
       }
     }
 
