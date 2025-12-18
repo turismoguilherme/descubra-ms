@@ -19,7 +19,8 @@ import {
   Eye,
   MessageSquare,
   Filter,
-  User
+  User,
+  CheckCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -47,6 +48,7 @@ export default function ContactLeadsManagement() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [resolvingLeadId, setResolvingLeadId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export default function ContactLeadsManagement() {
     if (statusId === '5b5b5b5b-5b5b-5b5b-5b5b-5b5b5b5b5b5b') return 'Negociação';
     if (statusId === '6b6b6b6b-6b6b-6b6b-6b6b-6b6b6b6b6b6b') return 'Ganho';
     if (statusId === '7b7b7b7b-7b7b-7b7b-7b7b-7b7b7b7b7b7b') return 'Perdido';
+    if (statusId === '8b8b8b8b-8b8b-8b8b-8b8b-8b8b8b8b8b8b') return 'Resolvido';
     return 'Novo';
   };
 
@@ -108,6 +111,7 @@ export default function ContactLeadsManagement() {
       case 'Negociação': return 'bg-orange-100 text-orange-800';
       case 'Ganho': return 'bg-emerald-100 text-emerald-800';
       case 'Perdido': return 'bg-red-100 text-red-800';
+      case 'Resolvido': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -132,11 +136,76 @@ export default function ContactLeadsManagement() {
     return matchesSearch && matchesStatus;
   });
 
+  const markAsResolved = async (leadId: string, leadName: string) => {
+    // Feedback visual imediato
+    setResolvingLeadId(leadId);
+    
+    try {
+      const RESOLVED_STATUS_ID = '8b8b8b8b-8b8b-8b8b-8b8b-8b8b8b8b8b8b';
+      
+      console.log('🔄 Marcando lead como resolvido:', { leadId, leadName, RESOLVED_STATUS_ID });
+      
+      // Atualizar o lead diretamente
+      const { data, error } = await supabase
+        .from('leads')
+        .update({ status_id: RESOLVED_STATUS_ID })
+        .eq('id', leadId)
+        .select();
+
+      if (error) {
+        console.error('❌ Erro ao atualizar lead:', error);
+        
+        // Se o erro for de foreign key (status não existe), fornecer mensagem clara
+        if (error.code === '23503' && error.details?.includes('lead_statuses')) {
+          throw new Error(
+            'Status "Resolvido" não existe no banco de dados. ' +
+            'Execute a migration 20251215000001_add_resolved_status_to_leads.sql no Supabase Dashboard. ' +
+            'Veja o SQL abaixo para copiar e colar no SQL Editor do Supabase.'
+          );
+        }
+        
+        throw error;
+      }
+
+      console.log('✅ Lead atualizado com sucesso:', data);
+
+      // Atualizar o lead localmente com animação
+      setLeads(leads.map(lead => 
+        lead.id === leadId 
+          ? { ...lead, status_id: RESOLVED_STATUS_ID }
+          : lead
+      ));
+
+      // Feedback visual de sucesso
+      toast({
+        title: '✅ Lead marcado como resolvido!',
+        description: `"${leadName}" foi marcado como resolvido com sucesso.`,
+        duration: 3000,
+      });
+
+      // Pequeno delay para feedback visual antes de remover o loading
+      setTimeout(() => {
+        setResolvingLeadId(null);
+      }, 500);
+    } catch (error: any) {
+      console.error('❌ Erro completo ao marcar lead como resolvido:', error);
+      setResolvingLeadId(null);
+      
+      toast({
+        title: '❌ Erro ao marcar como resolvido',
+        description: error.message || 'Não foi possível marcar o lead como resolvido. Verifique o console para mais detalhes.',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    }
+  };
+
   const stats = {
     total: leads.length,
     new: leads.filter(l => getStatusLabel(l.status_id) === 'Novo').length,
     contacted: leads.filter(l => getStatusLabel(l.status_id) === 'Contatado').length,
     qualified: leads.filter(l => getStatusLabel(l.status_id) === 'Qualificado').length,
+    resolved: leads.filter(l => getStatusLabel(l.status_id) === 'Resolvido').length,
   };
 
   return (
@@ -150,7 +219,7 @@ export default function ContactLeadsManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Mensagens</CardTitle>
@@ -173,6 +242,14 @@ export default function ContactLeadsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{stats.contacted + stats.qualified}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Resolvidos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.resolved}</div>
           </CardContent>
         </Card>
       </div>
@@ -199,6 +276,7 @@ export default function ContactLeadsManagement() {
               <option value="novo">Novas (não lidas)</option>
               <option value="contatado">Em Andamento</option>
               <option value="qualificado">Respondidas</option>
+              <option value="resolvido">Resolvidas</option>
             </select>
           </div>
         </CardContent>
@@ -273,16 +351,45 @@ export default function ContactLeadsManagement() {
                       {format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedLead(lead);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedLead(lead);
+                            setDialogOpen(true);
+                          }}
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {getStatusLabel(lead.status_id) !== 'Resolvido' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              console.log('🖱️ Botão clicado para lead:', lead.id, lead.name);
+                              markAsResolved(lead.id, lead.name);
+                            }}
+                            title="Marcar como resolvido"
+                            className={`text-green-600 hover:text-green-700 hover:bg-green-50 transition-all ${
+                              resolvingLeadId === lead.id ? 'opacity-50 cursor-wait animate-pulse' : ''
+                            }`}
+                            disabled={resolvingLeadId === lead.id}
+                          >
+                            {resolvingLeadId === lead.id ? (
+                              <div className="h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <CheckCircle className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                        {getStatusLabel(lead.status_id) === 'Resolvido' && (
+                          <Badge className="bg-green-100 text-green-800 text-xs">
+                            ✓ Resolvido
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

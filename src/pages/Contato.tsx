@@ -25,6 +25,9 @@ const Contato = () => {
     setLoading(true);
     
     try {
+      // Verificar autenticação do usuário (opcional - para rastreamento)
+      const { data: { user } } = await supabase.auth.getUser();
+
       // IDs fixos da tabela leads (criados na migration)
       const WEBSITE_SOURCE_ID = "1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a"; // Website
       const STATUS_NEW_ID = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"; // New
@@ -43,8 +46,8 @@ const Contato = () => {
 
       const notes = notesLines.join('\n');
 
-      // Salvar na tabela leads
-      const { error } = await supabase.from('leads').insert({
+      // Preparar dados para inserção
+      const leadData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone || null,
@@ -58,7 +61,11 @@ const Contato = () => {
           role: formData.role || null,
           form_type: 'contact',
         },
-      } as any);
+        ...(user?.id ? { created_by: user.id } : {}),
+      };
+
+      // Salvar na tabela leads
+      const { error } = await supabase.from('leads').insert(leadData as any);
 
       if (error) {
         console.error('Erro ao salvar lead:', error);
