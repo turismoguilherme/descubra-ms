@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { Users, Search } from "lucide-react";
+import { Users, Search, Briefcase } from "lucide-react";
 
 const Partners = () => {
     const { partners, isLoading } = usePartners('approved');
@@ -47,6 +47,7 @@ const Partners = () => {
                 {/* Hero */}
                 <div className="bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-16">
                     <div className="ms-container text-center">
+                        <Briefcase size={48} className="text-white mx-auto mb-4" />
                         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                             Nossos Parceiros
                         </h1>

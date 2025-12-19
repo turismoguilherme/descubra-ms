@@ -8,6 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import PlatformContentEditor from './PlatformContentEditor';
 import PlatformMenuEditor from './PlatformMenuEditor';
+import SimpleTextEditor from './SimpleTextEditor';
 
 interface UnifiedPlatformEditorProps {
   initialPlatform?: 'viajar' | 'descubra_ms';
@@ -99,7 +100,7 @@ export default function UnifiedPlatformEditor({ initialPlatform = 'viajar' }: Un
         </TabsList>
 
         <TabsContent value="content" className="mt-6">
-          <PlatformContentEditor 
+          <SimpleTextEditor 
             key={selectedPlatform} 
             platform={selectedPlatform} 
           />

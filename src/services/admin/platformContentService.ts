@@ -32,10 +32,12 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       id: 'hero',
       name: 'Hero Principal',
       fields: [
-        { key: 'viajar_hero_title', label: 'Título Principal', type: 'text', placeholder: 'Título do Hero' },
-        { key: 'viajar_hero_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Descrição do Hero' },
-        { key: 'viajar_hero_cta_primary', label: 'Botão Principal', type: 'text', placeholder: 'Texto do botão' },
-        { key: 'viajar_hero_cta_secondary', label: 'Botão Secundário', type: 'text', placeholder: 'Texto do botão' },
+        { key: 'viajar_hero_badge', label: 'Badge (texto pequeno acima do título)', type: 'text', placeholder: 'Plataforma #1 de Turismo Inteligente' },
+        { key: 'viajar_hero_title', label: 'Título Principal', type: 'text', placeholder: 'ViajARTur' },
+        { key: 'viajar_hero_subtitle', label: 'Subtítulo', type: 'text', placeholder: 'Ecossistema inteligente de turismo' },
+        { key: 'viajar_hero_description', label: 'Descrição', type: 'textarea', placeholder: 'Transforme dados em decisões estratégicas. Analytics avançado e IA para o setor público e privado.' },
+        { key: 'viajar_hero_cta_primary', label: 'Botão Principal', type: 'text', placeholder: 'Acessar Plataforma' },
+        { key: 'viajar_hero_cta_secondary', label: 'Botão Secundário', type: 'text', placeholder: 'Agendar Demo' },
         { key: 'viajar_hero_video_url', label: 'Vídeo Promocional', type: 'url', placeholder: 'URL do YouTube' },
       ]
     },
@@ -43,8 +45,50 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       id: 'features',
       name: 'Funcionalidades',
       fields: [
-        { key: 'viajar_features_title', label: 'Título da Seção', type: 'text' },
-        { key: 'viajar_features_subtitle', label: 'Subtítulo', type: 'textarea' },
+        { key: 'viajar_features_title', label: 'Título da Seção', type: 'text', placeholder: 'Soluções Inteligentes' },
+        { key: 'viajar_features_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Tecnologia de ponta para transformar a gestão do turismo' },
+        { key: 'viajar_features_items', label: 'Lista de Funcionalidades (JSON)', type: 'json', description: 'Array de objetos com: title, description, icon (opcional)' },
+      ]
+    },
+    {
+      id: 'reports',
+      name: 'Seção Relatórios de Dados',
+      fields: [
+        { key: 'viajar_reports_badge', label: 'Badge', type: 'text', placeholder: 'Novidade' },
+        { key: 'viajar_reports_title', label: 'Título', type: 'text', placeholder: 'Relatórios de Dados de Turismo' },
+        { key: 'viajar_reports_description', label: 'Descrição', type: 'textarea', placeholder: 'Acesse dados agregados e anonimizados...' },
+        { key: 'viajar_reports_items', label: 'Lista de Itens (JSON)', type: 'json', description: 'Array de strings com os itens da lista' },
+        { key: 'viajar_reports_button_primary', label: 'Botão Principal', type: 'text', placeholder: 'Saiba Mais' },
+        { key: 'viajar_reports_button_secondary', label: 'Botão Secundário', type: 'text', placeholder: 'Solicitar Relatório' },
+      ]
+    },
+    {
+      id: 'descubra_ms',
+      name: 'Seção Descubra MS',
+      fields: [
+        { key: 'viajar_descubra_ms_badge', label: 'Badge', type: 'text', placeholder: 'Case de Sucesso' },
+        { key: 'viajar_descubra_ms_title', label: 'Título', type: 'text', placeholder: 'Descubra Mato Grosso do Sul' },
+        { key: 'viajar_descubra_ms_description', label: 'Descrição', type: 'textarea', placeholder: 'Nossa primeira implementação completa...' },
+        { key: 'viajar_descubra_ms_items', label: 'Lista de Itens (JSON)', type: 'json', description: 'Array de strings com os itens da lista' },
+        { key: 'viajar_descubra_ms_button', label: 'Texto do Botão', type: 'text', placeholder: 'Conhecer Descubra MS' },
+      ]
+    },
+    {
+      id: 'video',
+      name: 'Seção Vídeo',
+      fields: [
+        { key: 'viajar_video_title', label: 'Título', type: 'text', placeholder: 'Veja a Plataforma em Ação' },
+        { key: 'viajar_video_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra como a ViajARTur pode transformar...' },
+      ]
+    },
+    {
+      id: 'cta',
+      name: 'Call to Action Final',
+      fields: [
+        { key: 'viajar_cta_title', label: 'Título', type: 'text', placeholder: 'Pronto para Transformar seu Turismo?' },
+        { key: 'viajar_cta_description', label: 'Descrição', type: 'textarea', placeholder: 'Junte-se a empresas e órgãos públicos...' },
+        { key: 'viajar_cta_button_primary', label: 'Botão Principal', type: 'text', placeholder: 'Solicitar Demonstração' },
+        { key: 'viajar_cta_button_secondary', label: 'Botão Secundário', type: 'text', placeholder: 'Ver Planos' },
       ]
     },
     {

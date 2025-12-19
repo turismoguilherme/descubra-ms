@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { useMultiTenant, getTenantQuestions } from '@/config/multiTenant';
-import { geminiClient } from '@/config/gemini';
+import { useMultiTenant } from '@/config/multiTenant';
 
 interface AdaptiveQuestionsProps {
   onComplete: (answers: QuestionAnswers) => void;
@@ -16,31 +14,41 @@ interface AdaptiveQuestionsProps {
 }
 
 export interface QuestionAnswers {
+  // Tipo de usuário
+  user_type: string; // 'morador' ou 'turista'
+  
   // Perguntas universais
   age_range: string;
   gender: string;
   origin_state: string;
   travel_purpose: string;
   
-  // Perguntas específicas do estado
-  state_specific: Record<string, string | string[]>;
+  // CEP (apenas para moradores)
+  zip_code?: string;
   
   // Informações adicionais
   additional_info: string;
   preferences: string[];
-  contribute_tourism: boolean; // Novo campo
 }
 
 interface Question {
   id: string;
   text: string;
-  type: 'radio' | 'checkbox' | 'text' | 'textarea' | 'boolean'; // Adicionado 'boolean'
+  type: 'radio' | 'text' | 'textarea';
   options?: string[];
   required: boolean;
-  category: 'universal' | 'state_specific';
+  category: 'universal';
 }
 
 const UNIVERSAL_QUESTIONS: Question[] = [
+  {
+    id: 'user_type',
+    text: 'Você é morador ou turista?',
+    type: 'radio',
+    options: ['Morador', 'Turista'],
+    required: true,
+    category: 'universal'
+  },
   {
     id: 'age_range',
     text: 'Qual sua faixa etária?',
@@ -71,14 +79,6 @@ const UNIVERSAL_QUESTIONS: Question[] = [
     options: ['Lazer', 'Negócios', 'Visita a familiares', 'Estudos', 'Outro'],
     required: true,
     category: 'universal'
-  },
-  {
-    id: 'tourism_contribution_interest', // Nova pergunta
-    text: 'Você estaria interessado(a) em contribuir com o desenvolvimento do turismo em sua região?',
-    type: 'radio', // Usando radio para Sim/Não
-    options: ['Sim', 'Não'],
-    required: true,
-    category: 'universal'
   }
 ];
 
@@ -90,113 +90,68 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   const { currentTenant } = useMultiTenant();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<QuestionAnswers>({
+    user_type: '',
     age_range: '',
     gender: '',
     origin_state: '',
     travel_purpose: '',
-    state_specific: {},
     additional_info: '',
     preferences: [],
-    contribute_tourism: false, // Valor inicial para o novo campo
     ...initialAnswers
   });
 
-  const [loading, setLoading] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<Array<{id: string; text: string; type: string; options?: string[]}>>([]);
+  // Determinar se é morador para mostrar pergunta de CEP
+  const isResident = answers.user_type === 'Morador';
 
-  // Gerar perguntas específicas do estado usando IA
-  const generateStateSpecificQuestions = async () => {
-    try {
-      setLoading(true);
-      
-      const prompt = `
-        Gere 5 perguntas específicas para turistas e moradores visitando ${currentTenant.fullName}.
-        As perguntas devem ser sobre:
-        - Experiências anteriores na região ou conhecimento de atrativos locais.
-        - Interesses específicos do estado (ex: ecoturismo, cultura, gastronomia, aventura, eventos).
-        - Preferências de atividades e duração da estadia.
-        - Percepções sobre a cidade (pontos fortes, pontos a melhorar, como ela é vista).
-        - Hábitos de consumo turístico (ex: preferência por restaurantes locais, hospedagem, transporte).
-        
-        Para cada pergunta, sugira um tipo de resposta:
-        - 'radio' para opções de múltipla escolha (forneça 3-5 opções).
-        - 'checkbox' para múltiplas seleções (forneça 3-5 opções).
-        - 'textarea' para respostas abertas (não forneça opções).
-        
-        Retorne as perguntas no formato JSON, um array de objetos, onde cada objeto tem:
-        { "id": "[id_unico]", "text": "[pergunta]", "type": "[radio|checkbox|textarea]", "options": ["opcao1", "opcao2"] (se aplicável) }
-        
-        Exemplo de formato JSON:
-        [
-          { "id": "experiencia_anterior", "text": "Você já visitou esta região antes?", "type": "radio", "options": ["Sim", "Não", "Fazendo escala"] },
-          { "id": "interesses_especificos", "text": "Quais tipos de atividades turísticas você mais busca em suas viagens?", "type": "checkbox", "options": ["Ecoturismo e natureza", "Cultura e história", "Gastronomia local", "Aventura e esportes", "Eventos e festivais"] },
-          { "id": "percepcao_cidade", "text": "Na sua opinião, qual é o maior atrativo de Campo Grande (ou da sua cidade)?", "type": "textarea" }
-        ]
-      `;
-
-      const model = geminiClient.getGenerativeModel({ model: "gemini-pro" });
-      const response = await model.generateContent(prompt);
-      const responseText = response.response.text();
-      // Analisar a resposta JSON
-      const jsonResponse = JSON.parse(responseText);
-      setAiSuggestions(jsonResponse);
-      
-    } catch (error) {
-      console.error('❌ Erro ao gerar perguntas com IA:', error);
-      // Fallback para perguntas padrão se houver erro ou a IA não retornar JSON válido
-      const fallbackQuestions: Array<{id: string; text: string; type: string; options?: string[]}> = [
-        { id: 'default_exp', text: 'Você já visitou esta região antes?', type: 'radio', options: ['Sim', 'Não', 'Talvez'] },
-        { id: 'default_interesses', text: 'Quais seus principais interesses ao visitar esta região?', type: 'checkbox', options: ['Natureza', 'Cultura', 'Gastronomia'] },
-        { id: 'default_percepcao', text: 'Qual sua percepção sobre a infraestrutura turística local?', type: 'textarea' }
-      ];
-      setAiSuggestions(fallbackQuestions);
-    } finally {
-      setLoading(false);
-    }
+  // Pergunta de CEP (apenas para moradores)
+  const cepQuestion: Question = {
+    id: 'zip_code',
+    text: 'Qual seu CEP?',
+    type: 'text',
+    required: true,
+    category: 'universal'
   };
 
-  // Carregar perguntas específicas do estado
-  useEffect(() => {
-    generateStateSpecificQuestions();
-  }, [currentTenant.slug]);
-
-  // Combinar perguntas universais e específicas
-  const allQuestions = [
-    ...UNIVERSAL_QUESTIONS,
-    ...aiSuggestions.map((question, index) => ({
-      id: question.id || `ai_question_${index}`,
-      text: question.text,
-      type: question.type as 'radio' | 'checkbox' | 'text' | 'textarea',
-      options: question.options || (question.type === 'radio' ? ['Sim', 'Não', 'Talvez'] : undefined),
-      required: false,
-      category: 'state_specific' as const
-    }))
-  ];
+  // Combinar perguntas universais com CEP (se aplicável)
+  // Usar useMemo para recalcular quando user_type mudar
+  const allQuestions = useMemo(() => {
+    const baseQuestions = [...UNIVERSAL_QUESTIONS];
+    
+    // Se for morador, adicionar pergunta de CEP após as perguntas universais
+    if (isResident) {
+      baseQuestions.push(cepQuestion);
+    }
+    
+    return baseQuestions;
+  }, [isResident]);
 
   const totalSteps = allQuestions.length + 1; // +1 para informações adicionais
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const handleAnswerChange = (questionId: string, value: string | string[]) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: questionId === 'tourism_contribution_interest'
-        ? (value === 'Sim' ? true : false)
-        : value
-    }));
-  };
-
-  const handleStateSpecificAnswer = (questionId: string, value: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      state_specific: {
-        ...prev.state_specific,
+    setAnswers(prev => {
+      const newAnswers = {
+        ...prev,
         [questionId]: value
+      };
+      
+      // Se mudou o tipo de usuário
+      if (questionId === 'user_type') {
+        if (value !== 'Morador') {
+          // Se mudou para turista, remover CEP
+          delete newAnswers.zip_code;
+        }
+        // Se mudou para morador e já passou da pergunta de propósito, 
+        // a pergunta de CEP será adicionada automaticamente pelo useMemo
       }
-    }));
+      
+      return newAnswers;
+    });
   };
 
   const handleNext = () => {
-    if (currentStep < totalSteps - 1) {
+    // Se mudou para morador e ainda não passou pela pergunta de CEP, ajustar o step
+    if (currentStep < allQuestions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       onComplete(answers);
@@ -216,10 +171,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
     if (!currentQuestion) return true; // Última etapa (informações adicionais)
     
     if (currentQuestion.required) {
-      const answer = currentQuestion.category === 'universal' 
-        ? answers[currentQuestion.id as keyof QuestionAnswers]
-        : answers.state_specific[currentQuestion.id];
-      
+      const answer = answers[currentQuestion.id as keyof QuestionAnswers];
       return answer && (typeof answer === 'string' ? answer.trim() !== '' : Array.isArray(answer) ? answer.length > 0 : true);
     }
     
@@ -227,20 +179,14 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   };
 
   const renderQuestion = (question: Question) => {
-    const currentAnswer = question.category === 'universal' 
-      ? answers[question.id as keyof QuestionAnswers]
-      : answers.state_specific[question.id];
+    const currentAnswer = answers[question.id as keyof QuestionAnswers];
 
     switch (question.type) {
       case 'radio':
         return (
           <RadioGroup
             value={currentAnswer as string || ''}
-            onValueChange={(value) => 
-              question.category === 'universal'
-                ? handleAnswerChange(question.id, value)
-                : handleStateSpecificAnswer(question.id, value)
-            }
+            onValueChange={(value) => handleAnswerChange(question.id, value)}
           >
             {question.options?.map((option) => (
               <div key={option} className="flex items-center space-x-2">
@@ -251,40 +197,15 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
           </RadioGroup>
         );
 
-      case 'checkbox':
-        return (
-          <div className="space-y-2">
-            {question.options?.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${question.id}-${option}`}
-                  checked={(currentAnswer as string[] || []).includes(option)}
-                  onCheckedChange={(checked) => {
-                    const currentArray = (currentAnswer as string[]) || [];
-                    const newArray = checked
-                      ? [...currentArray, option]
-                      : currentArray.filter(item => item !== option);
-                    handleAnswerChange(question.id, newArray);
-                  }}
-                />
-                <Label htmlFor={`${question.id}-${option}`}>{option}</Label>
-              </div>
-            ))}
-          </div>
-        );
-
       case 'text':
         return (
           <input
             type="text"
             className="w-full p-2 border rounded-md"
             value={currentAnswer as string || ''}
-            onChange={(e) => 
-              question.category === 'universal'
-                ? handleAnswerChange(question.id, e.target.value)
-                : handleStateSpecificAnswer(question.id, e.target.value)
-            }
-            placeholder="Digite sua resposta..."
+            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+            placeholder={question.id === 'zip_code' ? '00000-000' : 'Digite sua resposta...'}
+            maxLength={question.id === 'zip_code' ? 9 : undefined}
           />
         );
 
@@ -292,11 +213,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
         return (
           <Textarea
             value={currentAnswer as string || ''}
-            onChange={(e) => 
-              question.category === 'universal'
-                ? handleAnswerChange(question.id, e.target.value)
-                : handleStateSpecificAnswer(question.id, e.target.value)
-            }
+            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             placeholder="Digite sua resposta..."
             rows={4}
           />
@@ -308,8 +225,11 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   };
 
   const renderCurrentStep = () => {
-    if (currentStep < allQuestions.length) {
-      const question = allQuestions[currentStep];
+    // Garantir que o step atual está dentro do range válido
+    const validStep = Math.min(currentStep, allQuestions.length - 1);
+    const question = allQuestions[validStep];
+    
+    if (question) {
       return (
         <div className="space-y-4">
           <div>
@@ -345,9 +265,8 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <span>Perguntas Personalizadas</span>
-          {loading && <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></div>}
+        <CardTitle>
+          Perguntas Personalizadas
         </CardTitle>
         <CardDescription>
           Ajude-nos a personalizar sua experiência em {currentTenant.fullName}

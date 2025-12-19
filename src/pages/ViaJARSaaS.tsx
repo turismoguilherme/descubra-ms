@@ -7,6 +7,14 @@ import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { platformContentService } from '@/services/admin/platformContentService';
 // CommercialSection removido temporariamente
 
+// Tipos para features
+interface Feature {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  gradient: string;
+}
+
 const VideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,7 +80,12 @@ const VideoSection = () => {
 };
 
 const ViaJARSaaS = () => {
-  const features = [
+  // Estados para conteúdos editáveis
+  const [content, setContent] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  
+  // Features padrão (fallback)
+  const defaultFeatures: Feature[] = [
     {
       icon: Brain,
       title: "Guilherme IA",
@@ -111,6 +124,104 @@ const ViaJARSaaS = () => {
     },
   ];
 
+  // Carregar conteúdos do banco
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('viajar_');
+        const contentMap: Record<string, string> = {};
+        
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadContent();
+  }, []);
+
+  // Helper para obter conteúdo com fallback
+  const getContent = (key: string, fallback: string = '') => {
+    return content[key] || fallback;
+  };
+
+  // Carregar features dos campos individuais
+  const getFeatures = (): Feature[] => {
+    const iconMap: Record<number, React.ComponentType<{ className?: string }>> = {
+      1: Brain,
+      2: TrendingUp,
+      3: BarChart3,
+      4: Map,
+      5: Calendar,
+      6: Building2
+    };
+
+    const gradientMap: Record<number, string> = {
+      1: 'from-purple-500 to-violet-600',
+      2: 'from-emerald-500 to-teal-600',
+      3: 'from-blue-500 to-cyan-600',
+      4: 'from-orange-500 to-amber-600',
+      5: 'from-pink-500 to-rose-600',
+      6: 'from-indigo-500 to-blue-600'
+    };
+
+    const features: Feature[] = [];
+    for (let i = 1; i <= 6; i++) {
+      const title = getContent(`viajar_feature_${i}_title`);
+      const description = getContent(`viajar_feature_${i}_description`);
+      
+      if (title || description) {
+        features.push({
+          icon: iconMap[i] || defaultFeatures[i - 1]?.icon || Brain,
+          title: title || defaultFeatures[i - 1]?.title || '',
+          description: description || defaultFeatures[i - 1]?.description || '',
+          gradient: gradientMap[i] || defaultFeatures[i - 1]?.gradient || 'from-gray-500 to-gray-600'
+        });
+      } else if (defaultFeatures[i - 1]) {
+        features.push(defaultFeatures[i - 1]);
+      }
+    }
+    
+    return features.length > 0 ? features : defaultFeatures;
+  };
+
+  const features = getFeatures();
+
+  // Carregar listas de itens dos campos individuais
+  const getReportItems = (): string[] => {
+    const items: string[] = [];
+    for (let i = 1; i <= 4; i++) {
+      const item = getContent(`viajar_reports_item_${i}`);
+      if (item) items.push(item);
+    }
+    return items.length > 0 ? items : [
+      'Dados agregados e anonimizados (LGPD)',
+      'Perfil demográfico dos visitantes',
+      'Origem e propósito de viagem',
+      'Interações na plataforma Descubra MS'
+    ];
+  };
+
+  const getDescubraMSItems = (): string[] => {
+    const items: string[] = [];
+    for (let i = 1; i <= 4; i++) {
+      const item = getContent(`viajar_descubra_ms_item_${i}`);
+      if (item) items.push(item);
+    }
+    return items.length > 0 ? items : [
+      'Guatá - Assistente IA regional',
+      'Passaporte Digital interativo',
+      'Mapas e rotas inteligentes',
+      'Analytics em tempo real'
+    ];
+  };
+
   // Stats removidos - podem ser reativados via admin futuramente
   // const stats = [
   //   { value: "50K+", label: "Usuários Ativos" },
@@ -140,37 +251,49 @@ const ViaJARSaaS = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
-              <Sparkles className="h-4 w-4 text-viajar-cyan" />
-              <span className="text-sm text-white/90 font-medium">Plataforma #1 de Turismo Inteligente</span>
-            </div>
+            {getContent('viajar_hero_badge') && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
+                <Sparkles className="h-4 w-4 text-viajar-cyan" />
+                <span className="text-sm text-white/90 font-medium">{getContent('viajar_hero_badge', 'Plataforma #1 de Turismo Inteligente')}</span>
+              </div>
+            )}
             
             {/* Headline */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
-              <span className="text-white">Viaj</span>
-              <span className="text-viajar-cyan">AR</span>
-              <span className="text-white">Tur</span>
+              {getContent('viajar_hero_title') ? (
+                <span className="text-white">{getContent('viajar_hero_title', 'ViajARTur')}</span>
+              ) : (
+                <>
+                  <span className="text-white">Viaj</span>
+                  <span className="text-viajar-cyan">AR</span>
+                  <span className="text-white">Tur</span>
+                </>
+              )}
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/80 mb-4 font-light">
-              Ecossistema inteligente de turismo
-            </p>
+            {getContent('viajar_hero_subtitle') && (
+              <p className="text-xl md:text-2xl text-white/80 mb-4 font-light">
+                {getContent('viajar_hero_subtitle', 'Ecossistema inteligente de turismo')}
+              </p>
+            )}
             
-            <p className="text-lg text-white/60 mb-12 max-w-2xl mx-auto">
-              Transforme dados em decisões estratégicas. Analytics avançado e IA para o setor público e privado.
-            </p>
+            {getContent('viajar_hero_description') && (
+              <p className="text-lg text-white/60 mb-12 max-w-2xl mx-auto">
+                {getContent('viajar_hero_description', 'Transforme dados em decisões estratégicas. Analytics avançado e IA para o setor público e privado.')}
+              </p>
+            )}
             
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/viajar/login">
                 <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2 shadow-lg shadow-viajar-cyan/25">
-                  Acessar Plataforma
+                  {getContent('viajar_hero_cta_primary', 'Acessar Plataforma')}
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/contato">
                 <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
-                  Agendar Demo
+                  {getContent('viajar_hero_cta_secondary', 'Agendar Demo')}
                 </Button>
               </Link>
             </div>
@@ -183,11 +306,13 @@ const ViaJARSaaS = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Soluções Inteligentes
+              {getContent('viajar_features_title', 'Soluções Inteligentes')}
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tecnologia de ponta para transformar a gestão do turismo
-            </p>
+            {getContent('viajar_features_subtitle') && (
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {getContent('viajar_features_subtitle', 'Tecnologia de ponta para transformar a gestão do turismo')}
+              </p>
+            )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -224,28 +349,25 @@ const ViaJARSaaS = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Content */}
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-4">
-                  <FileText className="h-4 w-4" />
-                  Novidade
-                </div>
+                {getContent('viajar_reports_badge') && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-4">
+                    <FileText className="h-4 w-4" />
+                    {getContent('viajar_reports_badge', 'Novidade')}
+                  </div>
+                )}
                 
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  Relatórios de Dados de Turismo
+                  {getContent('viajar_reports_title', 'Relatórios de Dados de Turismo')}
                 </h2>
                 
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Acesse dados agregados e anonimizados de turismo de Mato Grosso do Sul. 
-                  Relatórios completos com análises demográficas, origem dos visitantes, 
-                  propósitos de viagem e interações na plataforma.
-                </p>
+                {getContent('viajar_reports_description') && (
+                  <p className="text-muted-foreground mb-6 leading-relaxed">
+                    {getContent('viajar_reports_description', 'Acesse dados agregados e anonimizados de turismo de Mato Grosso do Sul. Relatórios completos com análises demográficas, origem dos visitantes, propósitos de viagem e interações na plataforma.')}
+                  </p>
+                )}
                 
                 <ul className="space-y-2 mb-6">
-                  {[
-                    'Dados agregados e anonimizados (LGPD)',
-                    'Perfil demográfico dos visitantes',
-                    'Origem e propósito de viagem',
-                    'Interações na plataforma Descubra MS'
-                  ].map((item, i) => (
+                  {getReportItems().map((item, i) => (
                     <li key={i} className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-viajar-cyan flex-shrink-0" />
                       <span className="text-sm text-foreground">{item}</span>
@@ -256,13 +378,13 @@ const ViaJARSaaS = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link to="/dados-turismo">
                     <Button className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-white gap-2 w-full sm:w-auto">
-                      Saiba Mais
+                      {getContent('viajar_reports_button_primary', 'Saiba Mais')}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
                   <Link to="/contato">
                     <Button variant="outline" className="w-full sm:w-auto">
-                      Solicitar Relatório
+                      {getContent('viajar_reports_button_secondary', 'Solicitar Relatório')}
                     </Button>
                   </Link>
                 </div>
@@ -295,21 +417,25 @@ const ViaJARSaaS = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Content */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-6">
-                <Globe className="h-4 w-4" />
-                Case de Sucesso
-              </div>
+              {getContent('viajar_descubra_ms_badge') && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-6">
+                  <Globe className="h-4 w-4" />
+                  {getContent('viajar_descubra_ms_badge', 'Case de Sucesso')}
+                </div>
+              )}
               
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                Descubra Mato Grosso do Sul
+                {getContent('viajar_descubra_ms_title', 'Descubra Mato Grosso do Sul')}
               </h2>
               
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Nossa primeira implementação completa demonstra como a tecnologia ViajARTur revoluciona o turismo regional com Guatá IA, Passaporte Digital e Analytics Avançado.
-              </p>
+              {getContent('viajar_descubra_ms_description') && (
+                <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                  {getContent('viajar_descubra_ms_description', 'Nossa primeira implementação completa demonstra como a tecnologia ViajARTur revoluciona o turismo regional com Guatá IA, Passaporte Digital e Analytics Avançado.')}
+                </p>
+              )}
               
               <ul className="space-y-4 mb-8">
-                {['Guatá - Assistente IA regional', 'Passaporte Digital interativo', 'Mapas e rotas inteligentes', 'Analytics em tempo real'].map((item, i) => (
+                {getDescubraMSItems().map((item, i) => (
                   <li key={i} className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-viajar-cyan flex-shrink-0" />
                     <span className="text-foreground">{item}</span>
@@ -319,7 +445,7 @@ const ViaJARSaaS = () => {
               
               <Link to="/ms">
                 <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
-                  Conhecer Descubra MS
+                  {getContent('viajar_descubra_ms_button', 'Conhecer Descubra MS')}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -350,11 +476,13 @@ const ViaJARSaaS = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Veja a Plataforma em Ação
+              {getContent('viajar_video_title', 'Veja a Plataforma em Ação')}
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Descubra como a ViajARTur pode transformar a gestão do turismo na sua região
-            </p>
+            {getContent('viajar_video_description') && (
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {getContent('viajar_video_description', 'Descubra como a ViajARTur pode transformar a gestão do turismo na sua região')}
+              </p>
+            )}
           </div>
           
           {/* Video Container */}
@@ -366,21 +494,23 @@ const ViaJARSaaS = () => {
       <section className="py-24 bg-viajar-slate">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Pronto para Transformar seu Turismo?
+            {getContent('viajar_cta_title', 'Pronto para Transformar seu Turismo?')}
           </h2>
-          <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-            Junte-se a empresas e órgãos públicos que já confiam na ViajARTur.
-          </p>
+          {getContent('viajar_cta_description') && (
+            <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
+              {getContent('viajar_cta_description', 'Junte-se a empresas e órgãos públicos que já confiam na ViajARTur.')}
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contato">
               <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
-                Solicitar Demonstração
+                {getContent('viajar_cta_button_primary', 'Solicitar Demonstração')}
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
             <Link to="/precos">
               <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
-                Ver Planos
+                {getContent('viajar_cta_button_secondary', 'Ver Planos')}
               </Button>
             </Link>
           </div>

@@ -93,6 +93,7 @@ const navigationItems: NavItem[] = [
     permission: 'viajar',
     platform: 'viajar',
         children: [
+          { id: 'viajar-content', label: 'Conteúdo e Menu', icon: FileText, path: '/viajar/admin/viajar/content', permission: 'viajar', platform: 'viajar' },
           // Clientes e Assinaturas movidos para Financeiro
         ],
   },
@@ -108,6 +109,7 @@ const navigationItems: NavItem[] = [
       { id: 'footer', label: 'Footer', icon: Globe, path: '/viajar/admin/descubra-ms/footer', permission: 'content', platform: 'descubra-ms' },
       { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
       { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
+      { id: 'avatars', label: 'Avatares', icon: Users, path: '/viajar/admin/descubra-ms/avatars', permission: 'content', platform: 'descubra-ms' },
           {
             id: 'passport',
             label: 'Passaporte Digital',

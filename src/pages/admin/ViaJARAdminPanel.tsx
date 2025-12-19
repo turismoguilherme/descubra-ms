@@ -26,6 +26,7 @@ const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/Event
 const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
 const PartnerSettingsManager = lazy(() => import('@/components/admin/PartnerSettingsManager'));
 const DestinationManager = lazy(() => import('@/components/admin/descubra_ms/DestinationManager'));
+const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
@@ -49,6 +50,7 @@ const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIA
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
+const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
@@ -93,6 +95,11 @@ export default function ViaJARAdminPanel() {
             <Route index element={<DashboardOverview />} />
             
             {/* ViaJAR Routes */}
+            <Route path="viajar/content" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <UnifiedPlatformEditor initialPlatform="viajar" />
+              </Suspense>
+            } />
             <Route path="viajar/clients" element={
               <Suspense fallback={<LoadingFallback />}>
                 <ClientsManagement />
@@ -149,6 +156,11 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/passport" element={
               <Suspense fallback={<LoadingFallback />}>
                 <PassportAdmin />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/avatars" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PantanalAvatarsManager />
               </Suspense>
             } />
             

@@ -149,7 +149,11 @@ const PantanalAvatarSelector: React.FC<PantanalAvatarSelectorProps> = ({
                         className="flex-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onSelect(animal.id);
+                          e.preventDefault();
+                          // Chamar onSelect que já fecha o modal internamente
+                          if (typeof onSelect === 'function') {
+                            onSelect(animal.id);
+                          }
                         }}
                       >
                         {selectedAvatar === animal.id ? 'Selecionado' : 'Selecionar'}
