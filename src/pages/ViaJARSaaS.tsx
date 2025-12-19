@@ -217,6 +217,78 @@ const ViaJARSaaS = () => {
         </div>
       </section>
 
+      {/* Relatórios de Dados de Turismo Banner */}
+      <section className="py-16 bg-gradient-to-r from-viajar-cyan/10 via-viajar-blue/10 to-viajar-cyan/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-viajar-cyan/20 p-8 md:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              {/* Content */}
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-4">
+                  <FileText className="h-4 w-4" />
+                  Novidade
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                  Relatórios de Dados de Turismo
+                </h2>
+                
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  Acesse dados agregados e anonimizados de turismo de Mato Grosso do Sul. 
+                  Relatórios completos com análises demográficas, origem dos visitantes, 
+                  propósitos de viagem e interações na plataforma.
+                </p>
+                
+                <ul className="space-y-2 mb-6">
+                  {[
+                    'Dados agregados e anonimizados (LGPD)',
+                    'Perfil demográfico dos visitantes',
+                    'Origem e propósito de viagem',
+                    'Interações na plataforma Descubra MS'
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-viajar-cyan flex-shrink-0" />
+                      <span className="text-sm text-foreground">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link to="/dados-turismo">
+                    <Button className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-white gap-2 w-full sm:w-auto">
+                      Saiba Mais
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/contato">
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      Solicitar Relatório
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              
+              {/* Visual */}
+              <div className="relative">
+                <div className="aspect-square rounded-xl bg-gradient-to-br from-viajar-cyan/20 to-viajar-blue/20 border border-viajar-cyan/30 flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mx-auto mb-4">
+                      <BarChart3 className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">Dados Reais</h3>
+                    <p className="text-sm text-muted-foreground">Alumia + Descubra MS</p>
+                  </div>
+                </div>
+                
+                {/* Floating Elements */}
+                <div className="absolute -top-2 -right-2 w-16 h-16 rounded-lg bg-viajar-cyan/10 blur-xl" />
+                <div className="absolute -bottom-2 -left-2 w-20 h-20 rounded-lg bg-viajar-blue/10 blur-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Descubra MS Section */}
       <section className="py-24 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

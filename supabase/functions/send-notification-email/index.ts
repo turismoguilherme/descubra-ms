@@ -10,7 +10,9 @@ type NotificationType =
   | 'partner_approved'
   | 'partner_rejected'
   | 'welcome'
-  | 'system_alert';
+  | 'system_alert'
+  | 'data_report_ready'
+  | 'data_report_approved';
 
 interface EmailRequest {
   type: NotificationType;
@@ -193,6 +195,85 @@ const templates: Record<NotificationType, { subject: string; html: (data: any) =
         </div>
       `;
     },
+  },
+  data_report_approved: {
+    subject: '✅ Solicitação de Relatório Aprovada - ViajARTur',
+    html: (data) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">ViajARTur</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Sua solicitação foi aprovada! ✅</h2>
+          <p>Olá, <strong>${data.requesterName || 'Cliente'}</strong>!</p>
+          <p>Sua solicitação de relatório de dados de turismo foi aprovada e está pronta para pagamento.</p>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #22c55e;">
+            <p><strong>📊 Tipo de Relatório:</strong> ${data.reportType === 'explanatory' ? 'Dados Tratados' : data.reportType === 'raw_data' ? 'Dados Brutos' : 'Tratados + Brutos'}</p>
+            <p><strong>📅 Período:</strong> ${data.periodStart} a ${data.periodEnd}</p>
+            <p><strong>💰 Valor:</strong> R$ ${data.price || '300,00'}</p>
+          </div>
+          <p>Para finalizar e receber seu relatório, clique no botão abaixo para realizar o pagamento:</p>
+          ${data.checkoutUrl ? `
+            <a href="${data.checkoutUrl}" 
+               style="display: inline-block; background: #22c55e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+              💳 Realizar Pagamento
+            </a>
+          ` : ''}
+          <p style="margin-top: 20px; font-size: 12px; color: #666;">
+            Após o pagamento confirmado, seu relatório será gerado e enviado por email em até 24 horas.
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>ViajARTur - Plataforma de Inteligência Turística</p>
+        </div>
+      </div>
+    `,
+  },
+  data_report_ready: {
+    subject: '📊 Seu Relatório de Dados está Pronto! - ViajARTur',
+    html: (data) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">ViajARTur</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Seu relatório está pronto! 📊</h2>
+          <p>Olá, <strong>${data.requesterName || 'Cliente'}</strong>!</p>
+          <p>Seu relatório de dados de turismo foi gerado com sucesso e está disponível para download.</p>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+            <p><strong>📊 Tipo de Relatório:</strong> ${data.reportType === 'explanatory' ? 'Dados Tratados' : data.reportType === 'raw_data' ? 'Dados Brutos' : 'Tratados + Brutos'}</p>
+            <p><strong>📅 Período:</strong> ${data.periodStart} a ${data.periodEnd}</p>
+            <p><strong>📈 Total de Registros:</strong> ${data.totalRecords?.toLocaleString('pt-BR') || 'N/A'}</p>
+          </div>
+          <div style="margin: 20px 0;">
+            ${data.reportUrl ? `
+              <a href="${data.reportUrl}" 
+                 style="display: inline-block; background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold;">
+                📄 Baixar Relatório Tratado (PDF)
+              </a>
+            ` : ''}
+            ${data.rawDataUrl ? `
+              <a href="${data.rawDataUrl}" 
+                 style="display: inline-block; background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold;">
+                📊 Baixar Dados Brutos (Excel)
+              </a>
+            ` : ''}
+          </div>
+          <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; font-size: 13px; color: #92400e;">
+              <strong>⚠️ Importante:</strong> Este relatório contém dados reais e verificados, respeitando a LGPD. 
+              Os links de download expiram em 30 dias por segurança.
+            </p>
+          </div>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>ViajARTur - Plataforma de Inteligência Turística</p>
+          <p style="margin-top: 10px; font-size: 11px; color: #999;">
+            Dúvidas? Entre em contato: contato@viajartur.com.br
+          </p>
+        </div>
+      </div>
+    `,
   },
 };
 

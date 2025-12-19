@@ -188,11 +188,11 @@ export default function ViaJARAdminPanel() {
             <FinancialReports />
           </Suspense>
         } />
-        <Route path="financial/contact-leads" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <ContactLeadsManagement />
-          </Suspense>
-        } />
+            <Route path="financial/contact-leads" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ContactLeadsManagement />
+              </Suspense>
+            } />
         <Route path="financial/accounts" element={
           <Suspense fallback={<LoadingFallback />}>
             <BankAccountsManager />

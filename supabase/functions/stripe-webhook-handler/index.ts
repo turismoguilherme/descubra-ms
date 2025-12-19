@@ -56,6 +56,8 @@ serve(async (req) => {
           await handleEventPaymentCompleted(session, supabase);
         } else if (session.metadata?.type === 'partner_reservation') {
           await handleReservationPaymentCompleted(session, supabase);
+        } else if (session.metadata?.type === 'data_sale_report') {
+          await handleDataSalePaymentCompleted(session, supabase);
         } else {
           await handleCheckoutCompleted(session, supabase);
         }
@@ -498,6 +500,87 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
     }
   } catch (error) {
     console.error('Erro ao processar cancelamento da assinatura:', error);
+  }
+}
+
+async function handleDataSalePaymentCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Pagamento de relatório de dados completado:', session.id);
+  
+  try {
+    const metadata = session.metadata || {};
+    const requestId = metadata.request_id;
+    const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+
+    if (!requestId) {
+      console.error('Request ID não encontrado no metadata');
+      return;
+    }
+
+    // Atualizar status da solicitação para 'paid'
+    const { error: requestError } = await supabase
+      .from('data_sale_requests')
+      .update({
+        status: 'paid',
+        price_paid: amountPaid,
+        stripe_payment_id: session.payment_intent as string,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestId);
+
+    if (requestError) {
+      console.error('Erro ao atualizar solicitação:', requestError);
+      return;
+    }
+
+    console.log('Solicitação atualizada para pago');
+
+    // Registrar pagamento na tabela financeira
+    try {
+      const { error: financeError } = await supabase
+        .from('master_financial_records')
+        .insert({
+          record_type: 'revenue',
+          source: 'data_sale',
+          amount: amountPaid,
+          description: `Venda de relatório de dados - ${metadata.requester_name || 'Cliente'}`,
+          stripe_invoice_id: session.payment_intent as string,
+          stripe_checkout_session_id: session.id,
+          status: 'paid',
+          paid_date: new Date().toISOString().split('T')[0],
+          currency: 'BRL',
+          metadata: {
+            request_id: requestId,
+            requester_email: metadata.requester_email,
+            requester_name: metadata.requester_name,
+            report_type: metadata.report_type,
+            period_start: metadata.period_start,
+            period_end: metadata.period_end,
+          },
+        });
+
+      if (financeError) {
+        console.warn('Erro ao registrar pagamento financeiro (não crítico):', financeError);
+      } else {
+        console.log('Pagamento registrado em master_financial_records');
+      }
+    } catch (financeErr) {
+      console.warn('Erro ao registrar pagamento financeiro (não crítico):', financeErr);
+    }
+
+    // Log da ação
+    try {
+      await supabase.rpc('log_data_sale_action', {
+        p_request_id: requestId,
+        p_action: 'paid',
+        p_notes: `Pagamento confirmado via Stripe. Valor: R$ ${amountPaid.toFixed(2)}`
+      });
+    } catch (logError) {
+      console.warn('Erro ao registrar log (não crítico):', logError);
+    }
+
+    console.log('Pagamento de relatório processado com sucesso');
+  } catch (error) {
+    console.error('Erro ao processar pagamento de relatório:', error);
   }
 }
 

@@ -67,6 +67,7 @@ const ViaJARNavbar = () => {
     { name: "Soluções", path: "/solucoes" },
     { name: "Cases", path: "/casos-sucesso" },
     { name: "Preços", path: "/precos" },
+    { name: "Dados de Turismo", path: "/dados-turismo" },
     { name: "Sobre", path: "/sobre" },
     { name: "Contato", path: "/contato" },
   ];

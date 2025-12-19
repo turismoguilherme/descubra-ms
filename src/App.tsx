@@ -32,6 +32,13 @@ import CasosSucesso from "@/pages/CasosSucesso";
 import Precos from "@/pages/Precos";
 import Sobre from "@/pages/Sobre";
 import Contato from "@/pages/Contato";
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:35',message:'Antes do import DadosTurismo',data:{timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'A',timestamp:Date.now()})}).catch(()=>{});
+// #endregion
+import DadosTurismo from "@/pages/DadosTurismo";
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:37',message:'Após import DadosTurismo',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',dadosTurismoValue:DadosTurismo?.toString?.()?.substring(0,50)||'undefined',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'A',timestamp:Date.now()})}).catch(()=>{});
+// #endregion
 
 // ViaJAR Dashboard Pages (Lazy loaded)
 const ViaJARUnifiedDashboard = lazy(() => import("@/pages/ViaJARUnifiedDashboard"));
@@ -126,6 +133,13 @@ function App() {
                             <Route path="/precos" element={<Precos />} />
                             <Route path="/sobre" element={<Sobre />} />
                             <Route path="/contato" element={<Contato />} />
+                            {/* #region agent log */}
+                            {(() => {
+                              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:130',message:'Verificando DadosTurismo antes de usar na rota',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',dadosTurismoType:typeof DadosTurismo,dadosTurismoIsFunction:typeof DadosTurismo==='function',dadosTurismoIsObject:typeof DadosTurismo==='object',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'B',timestamp:Date.now()})}).catch(()=>{});
+                              return null;
+                            })()}
+                            {/* #endregion */}
+                            <Route path="/dados-turismo" element={typeof DadosTurismo !== 'undefined' ? <DadosTurismo /> : <div>Erro: DadosTurismo não carregado</div>} />
                             
                             {/* Chatbot Guatá Standalone - Totem */}
                             <Route path="/chatguata" element={<ChatGuata />} />

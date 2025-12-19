@@ -6,7 +6,9 @@ type NotificationType =
   | 'event_payment_confirmed'
   | 'partner_approved'
   | 'partner_rejected'
-  | 'welcome';
+  | 'welcome'
+  | 'data_report_ready'
+  | 'data_report_approved';
 
 interface SendEmailParams {
   type: NotificationType;

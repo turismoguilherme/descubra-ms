@@ -108,6 +108,11 @@ const ViaJARFooter: React.FC = () => {
                   Contato
                 </Link>
               </li>
+              <li>
+                <Link to="/dados-turismo" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
+                  Dados de Turismo
+                </Link>
+              </li>
             </ul>
           </div>
 

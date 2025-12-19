@@ -162,6 +162,11 @@ const UniversalFooter = () => {
                     Área do Parceiro
                   </Link>
                 </li>
+                <li>
+                  <Link to="/dados-turismo" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                    Dados de Turismo
+                  </Link>
+                </li>
               </ul>
             </div>
 
