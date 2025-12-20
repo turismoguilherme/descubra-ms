@@ -12,7 +12,8 @@ type NotificationType =
   | 'welcome'
   | 'system_alert'
   | 'data_report_ready'
-  | 'data_report_approved';
+  | 'data_report_approved'
+  | 'partner_notification';
 
 interface EmailRequest {
   type: NotificationType;
@@ -21,7 +22,7 @@ interface EmailRequest {
 }
 
 // Templates de email
-const templates: Record<NotificationType, { subject: string; html: (data: any) => string }> = {
+const templates: Record<NotificationType, { subject: string | ((data: any) => string); html: (data: any) => string }> = {
   event_approved: {
     subject: '✅ Seu evento foi aprovado! - Descubra MS',
     html: (data) => `
@@ -275,6 +276,58 @@ const templates: Record<NotificationType, { subject: string; html: (data: any) =
       </div>
     `,
   },
+  partner_notification: {
+    subject: (data: any) => `${data.title || 'Notificação'} - Descubra MS`,
+    html: (data: any) => {
+      const getIcon = (type: string) => {
+        switch (type) {
+          case 'new_reservation':
+            return '📅';
+          case 'payment_confirmed':
+          case 'commission_paid':
+            return '💰';
+          case 'reservation_cancelled':
+            return '⚠️';
+          case 'subscription_expiring':
+            return '⏰';
+          case 'subscription_renewed':
+            return '✅';
+          case 'payout_completed':
+            return '💳';
+          default:
+            return '🔔';
+        }
+      };
+
+      return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Descubra MS</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">${getIcon(data.type || '')} ${data.title || 'Notificação'}</h2>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #1e3a5f;">
+            <p style="color: #333; line-height: 1.6;">${data.message || 'Você tem uma nova notificação no seu dashboard.'}</p>
+          </div>
+          ${data.reservationId ? `
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+              <p style="margin: 0; font-size: 13px; color: #1e40af;">
+                <strong>Reserva:</strong> ${data.reservationId}
+              </p>
+            </div>
+          ` : ''}
+          <a href="https://descubramatogrossodosul.com.br/partner/dashboard" 
+             style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Ver no Dashboard
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Área do Parceiro</p>
+        </div>
+      </div>
+    `;
+    },
+  },
 };
 
 serve(async (req) => {
@@ -356,10 +409,14 @@ serve(async (req) => {
 
     const template = templates[type];
     
-    // Para system_alert, personalizar o subject com o nome do serviço
-    let subject = template.subject;
-    if (type === 'system_alert' && data?.service_name) {
+    // Determinar subject (pode ser string ou função)
+    let subject: string;
+    if (typeof template.subject === 'function') {
+      subject = template.subject(data);
+    } else if (type === 'system_alert' && data?.service_name) {
       subject = `🚨 Alerta: ${data.service_name} - Descubra MS`;
+    } else {
+      subject = template.subject;
     }
     
     // Gerar HTML do template

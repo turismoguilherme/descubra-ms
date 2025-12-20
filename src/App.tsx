@@ -84,6 +84,7 @@ import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
 import PartnerDashboard from "@/components/partners/PartnerDashboard";
 import PartnerLoginPage from "@/pages/PartnerLoginPage";
 import PartnerSuccessPage from "@/pages/PartnerSuccessPage";
+import UserReservationsPage from "@/pages/UserReservationsPage";
 import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
 import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
@@ -252,6 +253,8 @@ function App() {
                             <Route path="/descubramatogrossodosul/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/partner/login" element={<PartnerLoginPage />} />
                             <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
+                            <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
+                            <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/sobre" element={<SobreMS />} />
                             <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
                             <Route path="/descubramatogrossodosul/chatguata" element={<ChatGuata />} />

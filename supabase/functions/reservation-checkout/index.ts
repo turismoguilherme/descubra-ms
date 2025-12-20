@@ -127,6 +127,59 @@ serve(async (req) => {
       );
     }
 
+    // Criar notificação para o parceiro sobre nova reserva
+    try {
+      const { error: notificationError } = await supabase
+        .from('partner_notifications')
+        .insert({
+          partner_id: partnerId,
+          type: 'new_reservation',
+          title: 'Nova Reserva Recebida',
+          message: `Nova reserva ${reservationCode} recebida de ${guestName}. Valor: R$ ${totalAmount.toFixed(2)}. Aguardando pagamento.`,
+          reservation_id: reservation.id,
+          email_sent: false,
+          metadata: {
+            reservation_code: reservationCode,
+            guest_name: guestName,
+            total_amount: totalAmount,
+          },
+        });
+
+      if (notificationError) {
+        console.warn('Erro ao criar notificação (não crítico):', notificationError);
+      } else if (partner.contact_email) {
+        // Enviar email de notificação
+        try {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'partner_notification',
+              to: partner.contact_email,
+              data: {
+                title: 'Nova Reserva Recebida',
+                message: `Nova reserva ${reservationCode} recebida de ${guestName}. Valor: R$ ${totalAmount.toFixed(2)}. Aguardando pagamento.`,
+                type: 'new_reservation',
+                reservationId: reservation.id,
+              },
+            },
+          });
+
+          await supabase
+            .from('partner_notifications')
+            .update({
+              email_sent: true,
+              email_sent_at: new Date().toISOString(),
+            })
+            .eq('partner_id', partnerId)
+            .eq('type', 'new_reservation')
+            .eq('reservation_id', reservation.id);
+        } catch (emailErr) {
+          console.warn('Erro ao enviar email (não crítico):', emailErr);
+        }
+      }
+    } catch (notificationErr) {
+      console.warn('Erro ao criar notificação (não crítico):', notificationErr);
+    }
+
     // URLs de callback
     const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('/functions/v1', '') || 'http://localhost:3000';
     const defaultSuccessUrl = successUrl || `${baseUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}&reservation_id=${reservation.id}`;

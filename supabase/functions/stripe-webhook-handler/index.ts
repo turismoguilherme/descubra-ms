@@ -310,7 +310,143 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
   console.log('Pagamento realizado com sucesso:', invoice.id);
   
   try {
-    // Registrar o pagamento na tabela master_financial_records
+    // Verificar se é assinatura de parceiro
+    const subscriptionId = invoice.subscription as string;
+    if (subscriptionId) {
+      const { data: subscription } = await supabase
+        .from('institutional_partners')
+        .select('id, name, contact_email, stripe_subscription_id')
+        .eq('stripe_subscription_id', subscriptionId)
+        .maybeSingle();
+
+      if (subscription) {
+        // É assinatura de parceiro - registrar transação
+        const { data: transaction, error: transactionError } = await supabase
+          .from('partner_transactions')
+          .insert({
+            partner_id: subscription.id,
+            transaction_type: 'subscription_payment',
+            amount: -(invoice.amount_paid / 100), // Negativo (despesa)
+            description: `Pagamento de assinatura mensal - ${subscription.name}`,
+            stripe_invoice_id: invoice.id,
+            stripe_subscription_id: subscriptionId,
+            status: 'paid',
+            paid_date: new Date().toISOString(),
+            metadata: {
+              subscription_id: subscriptionId,
+              invoice_id: invoice.id,
+              invoice_url: invoice.hosted_invoice_url,
+            },
+          })
+          .select()
+          .single();
+
+        if (transactionError) {
+          console.warn('Erro ao registrar transação de assinatura (não crítico):', transactionError);
+        } else {
+          // Criar notificação
+          try {
+            const { error: notificationError } = await supabase
+              .from('partner_notifications')
+              .insert({
+                partner_id: subscription.id,
+                type: 'subscription_payment',
+                title: 'Pagamento de Assinatura',
+                message: `Pagamento de assinatura mensal de R$ ${(invoice.amount_paid / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} realizado com sucesso.`,
+                transaction_id: transaction.id,
+                email_sent: false,
+                metadata: {
+                  invoice_id: invoice.id,
+                  invoice_url: invoice.hosted_invoice_url,
+                },
+              });
+
+            if (!notificationError && subscription.contact_email) {
+              // Enviar email
+              try {
+                await supabase.functions.invoke('send-notification-email', {
+                  body: {
+                    type: 'partner_notification',
+                    to: subscription.contact_email,
+                    data: {
+                      title: 'Pagamento de Assinatura Confirmado',
+                      message: `Seu pagamento de assinatura mensal foi confirmado.`,
+                      type: 'subscription_payment',
+                    },
+                  },
+                });
+
+                await supabase
+                  .from('partner_notifications')
+                  .update({
+                    email_sent: true,
+                    email_sent_at: new Date().toISOString(),
+                  })
+                  .eq('transaction_id', transaction.id)
+                  .eq('type', 'subscription_payment');
+              } catch (emailError) {
+                console.warn('Erro ao enviar email (não crítico):', emailError);
+              }
+            }
+          } catch (notifErr) {
+            console.warn('Erro ao criar notificação (não crítico):', notifErr);
+          }
+        }
+
+        if (transactionError) {
+          console.warn('Erro ao registrar transação de assinatura (não crítico):', transactionError);
+        }
+
+        // Criar notificação
+        const { error: notificationError } = await supabase
+          .from('partner_notifications')
+          .insert({
+            partner_id: subscription.id,
+            type: 'subscription_renewed',
+            title: 'Assinatura Renovada',
+            message: `Seu pagamento de assinatura mensal foi processado com sucesso. Valor: R$ ${(invoice.amount_paid / 100).toFixed(2)}`,
+            email_sent: false,
+            metadata: {
+              invoice_id: invoice.id,
+              amount: invoice.amount_paid / 100,
+            },
+          });
+
+        if (!notificationError && subscription.contact_email) {
+          // Enviar email
+          try {
+            await supabase.functions.invoke('send-notification-email', {
+              body: {
+                type: 'partner_notification',
+                to: subscription.contact_email,
+                data: {
+                  title: 'Assinatura Renovada',
+                  message: `Seu pagamento de assinatura mensal foi processado com sucesso. Valor: R$ ${(invoice.amount_paid / 100).toFixed(2)}`,
+                  type: 'subscription_renewed',
+                },
+              },
+            });
+
+            await supabase
+              .from('partner_notifications')
+              .update({
+                email_sent: true,
+                email_sent_at: new Date().toISOString(),
+              })
+              .eq('partner_id', subscription.id)
+              .eq('type', 'subscription_renewed')
+              .order('created_at', { ascending: false })
+              .limit(1);
+          } catch (emailErr) {
+            console.warn('Erro ao enviar email (não crítico):', emailErr);
+          }
+        }
+
+        return; // Não processar como cliente ViaJAR
+      }
+    }
+
+    // Registrar o pagamento na tabela master_financial_records (para clientes ViaJAR)
     const { error } = await supabase
       .from('master_financial_records')
       .insert({
@@ -363,21 +499,83 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supa
 
     // Se for assinatura de parceiro, atualizar institutional_partners
     if (isPartnerSubscription) {
-      const { error: partnerError } = await supabase
+      const { data: partner, error: partnerError } = await supabase
+        .from('institutional_partners')
+        .select('id, name, contact_email')
+        .eq('stripe_subscription_id', subscription.id)
+        .single();
+
+      if (partnerError) {
+        console.error('Erro ao buscar parceiro:', partnerError);
+        return;
+      }
+
+      const subscriptionEndDate = new Date(subscription.current_period_end * 1000);
+      const daysUntilExpiry = Math.ceil((subscriptionEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+      const { error: updateError } = await supabase
         .from('institutional_partners')
         .update({
           subscription_status: subscription.status,
           monthly_fee: monthlyAmount,
-          subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
+          subscription_end_date: subscriptionEndDate.toISOString(),
           status: subscription.status === 'active' || subscription.status === 'trialing' ? 'approved' : 'pending',
           is_active: subscription.status === 'active' || subscription.status === 'trialing',
         })
         .eq('stripe_subscription_id', subscription.id);
 
-      if (partnerError) {
-        console.error('Erro ao atualizar parceiro:', partnerError);
+      if (updateError) {
+        console.error('Erro ao atualizar parceiro:', updateError);
       } else {
         console.log('Parceiro atualizado com sucesso');
+
+        // Verificar se assinatura está vencendo (7 dias ou menos)
+        if (subscription.status === 'active' && daysUntilExpiry <= 7 && daysUntilExpiry > 0) {
+          // Criar notificação de vencimento
+          const { error: notificationError } = await supabase
+            .from('partner_notifications')
+            .insert({
+              partner_id: partner.id,
+              type: 'subscription_expiring',
+              title: 'Assinatura Vencendo',
+              message: `Sua assinatura vence em ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'dia' : 'dias'}. Renove para continuar usando a plataforma.`,
+              email_sent: false,
+              metadata: {
+                days_until_expiry: daysUntilExpiry,
+                subscription_end_date: subscriptionEndDate.toISOString(),
+              },
+            });
+
+          if (!notificationError && partner.contact_email) {
+            // Enviar email
+            try {
+              await supabase.functions.invoke('send-notification-email', {
+                body: {
+                  type: 'partner_notification',
+                  to: partner.contact_email,
+                  data: {
+                    title: 'Assinatura Vencendo',
+                    message: `Sua assinatura vence em ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'dia' : 'dias'}. Renove para continuar usando a plataforma.`,
+                    type: 'subscription_expiring',
+                  },
+                },
+              });
+
+              await supabase
+                .from('partner_notifications')
+                .update({
+                  email_sent: true,
+                  email_sent_at: new Date().toISOString(),
+                })
+                .eq('partner_id', partner.id)
+                .eq('type', 'subscription_expiring')
+                .order('created_at', { ascending: false })
+                .limit(1);
+            } catch (emailErr) {
+              console.warn('Erro ao enviar email (não crítico):', emailErr);
+            }
+          }
+        }
       }
       return; // Não processar como cliente ViaJAR
     }
@@ -419,6 +617,13 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       return;
     }
 
+    // Buscar dados do parceiro para notificação
+    const { data: partner } = await supabase
+      .from('institutional_partners')
+      .select('id, name, contact_email')
+      .eq('id', partnerId)
+      .single();
+
     // Atualizar status da reserva para 'confirmed' (aguardando confirmação do parceiro)
     const { error: reservationError } = await supabase
       .from('partner_reservations')
@@ -432,7 +637,69 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       console.error('Erro ao atualizar reserva:', reservationError);
     } else {
       console.log('Reserva atualizada com sucesso');
+
+      // Criar notificação de reserva confirmada (pagamento recebido)
+      if (partner) {
+        try {
+          const { error: notificationError } = await supabase
+            .from('partner_notifications')
+            .insert({
+              partner_id: partnerId,
+              type: 'reservation_confirmed',
+              title: 'Reserva Confirmada - Pagamento Recebido',
+              message: `Pagamento confirmado para a reserva ${metadata.reservation_code || reservationId}. Valor total: R$ ${(session.amount_total ? session.amount_total / 100 : 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`,
+              reservation_id: reservationId,
+              email_sent: false,
+              action_url: `/partner/dashboard?tab=reservations`,
+              action_label: 'Ver Reserva',
+              metadata: {
+                reservation_code: metadata.reservation_code,
+                total_amount: session.amount_total ? session.amount_total / 100 : 0,
+              },
+            });
+
+          if (!notificationError && partner.contact_email) {
+            // Enviar email
+            try {
+              await supabase.functions.invoke('send-notification-email', {
+                body: {
+                  type: 'partner_notification',
+                  to: partner.contact_email,
+                  data: {
+                    title: 'Reserva Confirmada - Pagamento Recebido',
+                    message: `Pagamento confirmado para a reserva ${metadata.reservation_code || reservationId}. Valor total: R$ ${(session.amount_total ? session.amount_total / 100 : 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`,
+                    type: 'reservation_confirmed',
+                    reservationId: reservationId,
+                    actionUrl: `/partner/dashboard?tab=reservations`,
+                  },
+                },
+              });
+
+              await supabase
+                .from('partner_notifications')
+                .update({
+                  email_sent: true,
+                  email_sent_at: new Date().toISOString(),
+                })
+                .eq('reservation_id', reservationId)
+                .eq('type', 'reservation_confirmed')
+                .eq('email_sent', false);
+            } catch (emailError) {
+              console.warn('Erro ao enviar email (não crítico):', emailError);
+            }
+          }
+        } catch (notifErr) {
+          console.warn('Erro ao criar notificação (não crítico):', notifErr);
+        }
+      }
     }
+
+    // Buscar dados do parceiro para notificação
+    const { data: partner } = await supabase
+      .from('institutional_partners')
+      .select('id, name, contact_email')
+      .eq('id', partnerId)
+      .single();
 
     // Registrar comissão na tabela financeira como receita
     try {
@@ -461,6 +728,197 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       }
     } catch (financeErr) {
       console.warn('Erro ao registrar pagamento financeiro (não crítico):', financeErr);
+    }
+
+    // Registrar transação de comissão na tabela partner_transactions
+    try {
+      const { error: transactionError } = await supabase
+        .from('partner_transactions')
+        .insert({
+          partner_id: partnerId,
+          transaction_type: 'commission',
+          amount: commissionAmount,
+          description: `Comissão sobre reserva ${metadata.reservation_code || reservationId}`,
+          stripe_invoice_id: session.id,
+          stripe_payment_intent_id: session.payment_intent as string,
+          reservation_id: reservationId,
+          status: 'paid',
+          paid_date: new Date().toISOString(),
+          metadata: {
+            reservation_code: metadata.reservation_code,
+            total_amount: session.amount_total ? session.amount_total / 100 : 0,
+            commission_rate: metadata.commission_rate || '10.00',
+            partner_amount: partnerAmount,
+          },
+        });
+
+      if (transactionError) {
+        console.warn('Erro ao registrar transação (não crítico):', transactionError);
+      }
+    } catch (transactionErr) {
+      console.warn('Erro ao registrar transação (não crítico):', transactionErr);
+    }
+
+    // Criar notificação para o parceiro
+    if (partner) {
+      try {
+        const { data: transaction } = await supabase
+          .from('partner_transactions')
+          .select('id')
+          .eq('reservation_id', reservationId)
+          .eq('transaction_type', 'commission')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        const { error: notificationError } = await supabase
+          .from('partner_notifications')
+          .insert({
+            partner_id: partnerId,
+            type: 'commission_paid',
+            title: 'Comissão Recebida',
+            message: `Você recebeu R$ ${commissionAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de comissão sobre a reserva ${metadata.reservation_code || reservationId}`,
+            reservation_id: reservationId,
+            transaction_id: transaction?.id,
+            email_sent: false,
+            action_url: `/partner/dashboard?tab=transactions`,
+            action_label: 'Ver Transações',
+            metadata: {
+              reservation_code: metadata.reservation_code,
+              commission_amount: commissionAmount,
+              total_amount: session.amount_total ? session.amount_total / 100 : 0,
+            },
+          });
+
+        if (!notificationError && partner.contact_email) {
+          // Enviar email
+          try {
+            await supabase.functions.invoke('send-notification-email', {
+              body: {
+                type: 'partner_notification',
+                to: partner.contact_email,
+                data: {
+                  title: 'Comissão Recebida',
+                  message: `Você recebeu R$ ${commissionAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de comissão sobre a reserva ${metadata.reservation_code || reservationId}`,
+                  type: 'commission_paid',
+                  reservationId: reservationId,
+                  actionUrl: `/partner/dashboard?tab=transactions`,
+                },
+              },
+            });
+
+            // Marcar email como enviado
+            await supabase
+              .from('partner_notifications')
+              .update({
+                email_sent: true,
+                email_sent_at: new Date().toISOString(),
+              })
+              .eq('reservation_id', reservationId)
+              .eq('type', 'commission_paid')
+              .eq('email_sent', false);
+          } catch (emailError) {
+            console.warn('Erro ao enviar email (não crítico):', emailError);
+          }
+        }
+      } catch (notifErr) {
+        console.warn('Erro ao criar notificação (não crítico):', notifErr);
+      }
+    }
+
+    // Registrar transação na tabela partner_transactions
+    try {
+      const { error: transactionError } = await supabase
+        .from('partner_transactions')
+        .insert({
+          partner_id: partnerId,
+          transaction_type: 'commission',
+          amount: commissionAmount,
+          description: `Comissão sobre reserva ${metadata.reservation_code || reservationId}`,
+          stripe_payment_intent_id: session.payment_intent as string,
+          reservation_id: reservationId,
+          status: 'paid',
+          paid_date: new Date().toISOString(),
+          metadata: {
+            reservation_code: metadata.reservation_code,
+            total_amount: session.amount_total ? session.amount_total / 100 : 0,
+            commission_rate: metadata.commission_rate || '10.00',
+            partner_amount: partnerAmount,
+          },
+        });
+
+      if (transactionError) {
+        console.warn('Erro ao registrar transação (não crítico):', transactionError);
+      } else {
+        console.log('Transação de comissão registrada com sucesso');
+      }
+    } catch (transactionErr) {
+      console.warn('Erro ao registrar transação (não crítico):', transactionErr);
+    }
+
+    // Criar notificação para o parceiro
+    try {
+      // Buscar dados do parceiro para email
+      const { data: partner } = await supabase
+        .from('institutional_partners')
+        .select('name, contact_email')
+        .eq('id', partnerId)
+        .single();
+
+      if (partner) {
+        const { error: notificationError } = await supabase
+          .from('partner_notifications')
+          .insert({
+            partner_id: partnerId,
+            type: 'payment_confirmed',
+            title: 'Pagamento Confirmado',
+            message: `O pagamento da reserva ${metadata.reservation_code || reservationId} foi confirmado. Comissão de R$ ${commissionAmount.toFixed(2)} registrada.`,
+            reservation_id: reservationId,
+            email_sent: false,
+            metadata: {
+              reservation_code: metadata.reservation_code,
+              commission_amount: commissionAmount,
+            },
+          });
+
+        if (notificationError) {
+          console.warn('Erro ao criar notificação (não crítico):', notificationError);
+        } else {
+          // Enviar email de notificação
+          try {
+            const { data: emailData } = await supabase.functions.invoke('send-notification-email', {
+              body: {
+                type: 'partner_notification',
+                to: partner.contact_email,
+                data: {
+                  title: 'Pagamento Confirmado',
+                  message: `O pagamento da reserva ${metadata.reservation_code || reservationId} foi confirmado. Comissão de R$ ${commissionAmount.toFixed(2)} registrada.`,
+                  type: 'payment_confirmed',
+                  reservationId: reservationId,
+                },
+              },
+            });
+
+            if (emailData?.success) {
+              await supabase
+                .from('partner_notifications')
+                .update({
+                  email_sent: true,
+                  email_sent_at: new Date().toISOString(),
+                })
+                .eq('partner_id', partnerId)
+                .eq('type', 'payment_confirmed')
+                .eq('reservation_id', reservationId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            }
+          } catch (emailErr) {
+            console.warn('Erro ao enviar email (não crítico):', emailErr);
+          }
+        }
+      }
+    } catch (notificationErr) {
+      console.warn('Erro ao criar notificação (não crítico):', notificationErr);
     }
 
     // TODO: Implementar repasse automático se parceiro tiver Stripe Connect
