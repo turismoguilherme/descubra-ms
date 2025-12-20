@@ -18,6 +18,7 @@ import {
   Menu
 } from 'lucide-react';
 import PartnerBusinessEditor from './PartnerBusinessEditor';
+import PartnerPricingEditor from './PartnerPricingEditor';
 import { PartnerMetricCard } from './PartnerMetricCard';
 import { PartnerReservationsTable } from './PartnerReservationsTable';
 import { PartnerCancellationDialog } from './PartnerCancellationDialog';
@@ -355,6 +356,7 @@ export default function PartnerDashboard() {
         <button
           onClick={() => {
             setActiveTab('business');
+            setBusinessSubTab('info');
             if (isMobile) setSidebarOpen(false);
           }}
           className={cn(
@@ -588,12 +590,28 @@ export default function PartnerDashboard() {
                   </div>
                 ) : activeTab === 'transactions' ? (
                   <PartnerTransactionHistory partnerId={partner.id} />
-                ) : (
-                  <PartnerBusinessEditor
-                    partnerId={partner.id}
-                    onUpdate={loadPartnerData}
-                  />
-                )}
+                ) : activeTab === 'business' ? (
+                  <div className="space-y-6">
+                    <Tabs value={businessSubTab} onValueChange={(v) => setBusinessSubTab(v as 'info' | 'pricing')}>
+                      <TabsList>
+                        <TabsTrigger value="info">Informações</TabsTrigger>
+                        <TabsTrigger value="pricing">Preços e Disponibilidade</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="info">
+                        <PartnerBusinessEditor
+                          partnerId={partner.id}
+                          onUpdate={loadPartnerData}
+                        />
+                      </TabsContent>
+                      <TabsContent value="pricing">
+                        <PartnerPricingEditor
+                          partnerId={partner.id}
+                          onUpdate={loadPartnerData}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </div>
