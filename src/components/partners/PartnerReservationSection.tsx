@@ -53,7 +53,15 @@ export function PartnerReservationSection({ partnerId, partnerName }: PartnerRes
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Se a tabela não existir (404), não é erro crítico
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+          console.log('Tabela partner_pricing ainda não foi criada. Execute as migrations primeiro.');
+          setPricingList([]);
+          return;
+        }
+        throw error;
+      }
 
       setPricingList(data || []);
       if (data && data.length > 0) {
@@ -61,6 +69,10 @@ export function PartnerReservationSection({ partnerId, partnerName }: PartnerRes
       }
     } catch (error: any) {
       console.error('Erro ao carregar preços:', error);
+      // Não mostrar erro se tabela não existir
+      if (error.code !== 'PGRST116' && !error.message?.includes('does not exist')) {
+        setPricingList([]);
+      }
     } finally {
       setLoading(false);
     }

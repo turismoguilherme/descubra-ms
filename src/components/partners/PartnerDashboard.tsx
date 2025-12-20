@@ -75,6 +75,7 @@ export default function PartnerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedReservationForChat, setSelectedReservationForChat] = useState<string | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState<Record<string, number>>({});
+  const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing'>('info');
 
   useEffect(() => {
     loadPartnerData();
