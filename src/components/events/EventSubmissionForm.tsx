@@ -29,34 +29,45 @@ import {
   CreditCard
 } from "lucide-react";
 import { redirectToEventCheckout } from "@/services/stripe/eventCheckoutService";
+import EventImageUpload from "./EventImageUpload";
 
 const eventSchema = z.object({
   // Tipo de cadastro
   tipo: z.enum(["gratuito", "destaque"]),
-  
+
   // Dados do evento
   titulo: z.string().min(5, "Título deve ter pelo menos 5 caracteres"),
   descricao: z.string().min(30, "Descrição deve ter pelo menos 30 caracteres"),
   categoria: z.string().min(1, "Selecione uma categoria"),
-  
+
   // Datas
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().optional(),
   horario_inicio: z.string().min(1, "Horário de início é obrigatório"),
   horario_fim: z.string().min(1, "Horário de término é obrigatório"),
-  
+
   // Local
   local: z.string().min(3, "Local é obrigatório"),
   cidade: z.string().min(2, "Cidade é obrigatória"),
-  
+
   // Organizador
   organizador_nome: z.string().min(3, "Nome do organizador é obrigatório"),
   organizador_email: z.string().email("Email inválido"),
   organizador_telefone: z.string().min(10, "Telefone inválido"),
-  
+
   // Links
   site_oficial: z.string().url("URL inválida").optional().or(z.literal("")),
   video_promocional: z.string().optional(),
+  logo_evento: z.string().optional(),
+}).refine((data) => {
+  // Se for evento em destaque, vídeo OU logotipo é obrigatório
+  if (data.tipo === "destaque") {
+    return data.video_promocional || data.logo_evento;
+  }
+  return true; // Evento gratuito não precisa de vídeo/logotipo
+}, {
+  message: "Para eventos em destaque, vídeo promocional ou logotipo é obrigatório",
+  path: ["video_promocional"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -109,6 +120,7 @@ export const EventSubmissionForm: React.FC = () => {
         location: `${data.local}, ${data.cidade}`,
         site_oficial: data.site_oficial || null,
         video_url: data.video_promocional || null,
+        logo_evento: data.logo_evento || null,
         organizador_nome: data.organizador_nome,
         organizador_email: data.organizador_email,
         organizador_telefone: data.organizador_telefone,
@@ -147,13 +159,11 @@ export const EventSubmissionForm: React.FC = () => {
         // Pequeno delay para mostrar o toast
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        await redirectToEventCheckout({
-          eventId,
-          eventName: data.titulo,
-          organizerEmail: data.organizador_email,
-          organizerName: data.organizador_nome,
-        });
-        return; // Não mostra tela de sucesso, vai redirecionar
+        // Redirecionar para Payment Link do Stripe
+        // Adiciona parâmetros para identificar o evento e pré-preencher email
+        const paymentUrl = `https://buy.stripe.com/test_bJe3cxaliec5gR65mH43S00?prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
+        window.location.href = paymentUrl;
+        return;
       }
 
       // Evento gratuito - mostra sucesso
@@ -185,15 +195,12 @@ export const EventSubmissionForm: React.FC = () => {
             Evento Enviado!
           </h2>
           <p className="text-gray-600 mb-6">
-            {tipoSelecionado === "destaque" 
-              ? "Recebemos sua solicitação. Nossa equipe irá analisar e entrar em contato para confirmar o pagamento."
-              : "Recebemos seu evento. Após análise, ele será publicado no calendário."}
+            Recebemos seu evento. Após análise, ele será publicado no calendário.
           </p>
           <div className="bg-blue-50 rounded-lg p-4 text-left">
             <h3 className="font-semibold text-blue-900 mb-2">Próximos passos:</h3>
             <ol className="list-decimal list-inside text-blue-800 space-y-1 text-sm">
               <li>Análise do evento (até 24h)</li>
-              {tipoSelecionado === "destaque" && <li>Envio do link de pagamento por email</li>}
               <li>Publicação no calendário de eventos</li>
             </ol>
           </div>
@@ -428,7 +435,7 @@ export const EventSubmissionForm: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-ms-primary-blue" />
-            Links (opcional)
+            Links {tipoSelecionado === "destaque" ? "(vídeo ou logotipo obrigatório)" : "(opcional)"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -439,6 +446,24 @@ export const EventSubmissionForm: React.FC = () => {
           <div>
             <Label htmlFor="video_promocional">Vídeo Promocional (YouTube)</Label>
             <Input id="video_promocional" {...register("video_promocional")} placeholder="https://www.youtube.com/watch?v=..." />
+            {errors.video_promocional && (
+              <p className="text-red-500 text-sm mt-1">{errors.video_promocional.message}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="logo_evento">Logotipo do Evento</Label>
+            <EventImageUpload
+              label="Logotipo do Evento"
+              value=""
+              onChange={(url) => setValue("logo_evento", url)}
+              folder="event-images"
+              placeholder="Clique para fazer upload do logotipo"
+            />
+            {tipoSelecionado === "destaque" && (
+              <p className="text-sm text-amber-600 mt-1">
+                ⚠️ Para eventos em destaque, vídeo OU logotipo é obrigatório
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -490,7 +515,7 @@ export const EventSubmissionForm: React.FC = () => {
           </div>
           <p className="text-white/70 text-sm mt-4">
             {tipoSelecionado === "destaque" 
-              ? "* Após enviar, nossa equipe irá analisar e enviar o link de pagamento por email."
+              ? "* Após enviar, você será redirecionado automaticamente para o pagamento seguro."
               : "* Seu evento será analisado antes de ser publicado no calendário."}
           </p>
         </CardContent>

@@ -131,7 +131,7 @@ export const AdaptiveQuestions: React.FC<AdaptiveQuestionsProps> = ({
   const handleAnswerChange = (questionId: string, value: string | string[]) => {
     setAnswers(prev => {
       const newAnswers = {
-        ...prev,
+      ...prev,
         [questionId]: value
       };
       

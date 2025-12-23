@@ -116,6 +116,20 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_destinations_title', label: 'Título', type: 'text', placeholder: 'Destinos em Destaque', section: 'Destinos em Destaque' },
     { key: 'ms_destinations_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra os principais destinos...', section: 'Destinos em Destaque' },
     { key: 'ms_destinations_button', label: 'Texto do Botão', type: 'text', placeholder: 'Ver Todos os Destinos', section: 'Destinos em Destaque' },
+    
+    // Página Sobre
+    { key: 'ms_about_title', label: 'Título da Página', type: 'text', placeholder: 'Sobre o Descubra MS', section: 'Página Sobre' },
+    { key: 'ms_about_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Sua plataforma completa para explorar as maravilhas do estado mais biodiverso do Brasil.', section: 'Página Sobre' },
+    { key: 'ms_about_essence_title', label: 'Título "Nossa Essência"', type: 'text', placeholder: 'Nossa Essência', section: 'Página Sobre' },
+    { key: 'ms_about_mission_title', label: 'Título Missão', type: 'text', placeholder: 'Nossa Missão', section: 'Página Sobre' },
+    { key: 'ms_about_mission_text', label: 'Texto da Missão', type: 'textarea', placeholder: 'Conectar turistas a experiências autênticas...', section: 'Página Sobre' },
+    { key: 'ms_about_vision_title', label: 'Título Visão', type: 'text', placeholder: 'Nossa Visão', section: 'Página Sobre' },
+    { key: 'ms_about_vision_text', label: 'Texto da Visão', type: 'textarea', placeholder: 'Ser a principal plataforma de turismo...', section: 'Página Sobre' },
+    
+    // Footer
+    { key: 'ms_footer_copyright', label: 'Copyright', type: 'text', placeholder: '© 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.', section: 'Rodapé' },
+    { key: 'ms_footer_privacy_link', label: 'Link Política de Privacidade', type: 'text', placeholder: 'Política de Privacidade', section: 'Rodapé' },
+    { key: 'ms_footer_terms_link', label: 'Link Termos de Uso', type: 'text', placeholder: 'Termos de Uso', section: 'Rodapé' },
   ],
 };
 
@@ -152,10 +166,16 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       const contentMap: Record<string, string> = {};
       const idMap: Record<string, string> = {};
 
-      // Carregar valores do banco
+      // Filtrar apenas campos que pertencem à plataforma atual
+      const platformFieldKeys = new Set(fields.map(f => f.key));
+
+      // Carregar valores do banco - APENAS para campos desta plataforma
       data.forEach(item => {
-        contentMap[item.content_key] = item.content_value || '';
-        idMap[item.content_key] = item.id;
+        // Garantir que apenas campos desta plataforma sejam carregados
+        if (platformFieldKeys.has(item.content_key)) {
+          contentMap[item.content_key] = item.content_value || '';
+          idMap[item.content_key] = item.id;
+        }
       });
 
       // Para campos que não existem no banco, usar placeholder como valor inicial

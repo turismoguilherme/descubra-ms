@@ -247,7 +247,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
                             <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />
                             <Route path="/descubramatogrossodosul/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/promover-evento" element={<Navigate to="/descubramatogrossodosul/cadastrar-evento" replace />} />
+                            <Route path="/descubramatogrossodosul/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />

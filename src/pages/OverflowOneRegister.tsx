@@ -6,12 +6,49 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Mail, Lock, Building, User, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Building, User, ArrowRight, Sparkles, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { BUSINESS_CATEGORIES } from '@/services/cadasturService';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+
+// Categorias de negócio (sem depender de cadasturService)
+const BUSINESS_CATEGORIES = [
+  { id: 'hotel', name: 'Hotel/Pousada' },
+  { id: 'agency', name: 'Agência de Turismo' },
+  { id: 'transport', name: 'Transportadora Turística' },
+  { id: 'event', name: 'Organizadora de Eventos' },
+  { id: 'park', name: 'Parque Temático' },
+  { id: 'camping', name: 'Acampamento Turístico' },
+  { id: 'guide', name: 'Guia de Turismo' },
+  { id: 'restaurant', name: 'Restaurante' },
+  { id: 'attraction', name: 'Atração Turística' },
+  { id: 'other', name: 'Outro' },
+];
+
+// Lista de países principais
+const COUNTRIES = [
+  { code: 'BR', name: 'Brasil' },
+  { code: 'US', name: 'Estados Unidos' },
+  { code: 'AR', name: 'Argentina' },
+  { code: 'PY', name: 'Paraguai' },
+  { code: 'BO', name: 'Bolívia' },
+  { code: 'UY', name: 'Uruguai' },
+  { code: 'CL', name: 'Chile' },
+  { code: 'CO', name: 'Colômbia' },
+  { code: 'PE', name: 'Peru' },
+  { code: 'MX', name: 'México' },
+  { code: 'PT', name: 'Portugal' },
+  { code: 'ES', name: 'Espanha' },
+  { code: 'FR', name: 'França' },
+  { code: 'DE', name: 'Alemanha' },
+  { code: 'IT', name: 'Itália' },
+  { code: 'GB', name: 'Reino Unido' },
+  { code: 'CA', name: 'Canadá' },
+  { code: 'JP', name: 'Japão' },
+  { code: 'CN', name: 'China' },
+  { code: 'OTHER', name: 'Outro' },
+];
 
 const OverflowOneRegister: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -21,7 +58,8 @@ const OverflowOneRegister: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    cnpjOrCadastur: '', // Campo unificado para CNPJ ou CADASTUR
+    country: 'BR', // País (Brasil por padrão)
+    cnpj: '', // CNPJ (obrigatório apenas para brasileiros)
     category: 'hotel'
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,12 +69,20 @@ const OverflowOneRegister: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
   
+  // TODOS os hooks devem ser chamados ANTES de qualquer early return
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   // Verificar se o AuthProvider está disponível
   let auth = null;
   try {
     auth = useAuth();
   } catch (error) {
     console.error('OverflowOneRegister: AuthProvider não disponível:', error);
+  }
+  
+  // Se auth não estiver disponível, mostrar loading (DEPOIS de todos os hooks)
+  if (!auth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -48,8 +94,6 @@ const OverflowOneRegister: React.FC = () => {
   }
   
   const { signUp } = auth;
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Capturar parâmetros de plano da URL
   useEffect(() => {
@@ -64,25 +108,20 @@ const OverflowOneRegister: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Verificar se é brasileiro
+  const isBrazilian = formData.country === 'BR';
+
   const handleInputChange = (field: string, value: string) => {
-    // Formatar CNPJ ou CADASTUR automaticamente
-    if (field === 'cnpjOrCadastur') {
+    // Formatar CNPJ automaticamente
+    if (field === 'cnpj') {
       const digitsOnly = value.replace(/\D/g, ''); // Remove tudo que não é dígito
       
-      // Se tem 14 dígitos ou menos, formatar como CNPJ: 00.000.000/0000-00
+      // Formatar como CNPJ: 00.000.000/0000-00
       if (digitsOnly.length <= 14) {
         value = digitsOnly.replace(/^(\d{2})(\d)/, '$1.$2');
         value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
         value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
         value = value.replace(/(\d{4})(\d)/, '$1-$2');
-      } 
-      // Se tem 15 dígitos, formatar como CADASTUR: 00.000.000/0000-000
-      else if (digitsOnly.length <= 15) {
-        value = digitsOnly.replace(/^(\d{2})(\d)/, '$1.$2');
-        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-        value = value.replace(/(\d{4})(\d)/, '$1-$2');
-        // CADASTUR tem 3 dígitos finais após o hífen
       }
     }
     
@@ -110,15 +149,14 @@ const OverflowOneRegister: React.FC = () => {
       return;
     }
 
-    // Validar CNPJ ou CADASTUR
-    const digitsOnly = formData.cnpjOrCadastur.replace(/\D/g, '');
-    const isCnpj = digitsOnly.length === 14;
-    const isCadastur = digitsOnly.length === 15;
-    
-    if (!isCnpj && !isCadastur) {
-      setError('Preencha o CNPJ (14 dígitos) ou CADASTUR (15 dígitos).');
-      setIsLoading(false);
-      return;
+    // Validar CNPJ apenas para brasileiros
+    if (formData.country === 'BR') {
+      const digitsOnly = formData.cnpj.replace(/\D/g, '');
+      if (digitsOnly.length !== 14) {
+        setError('CNPJ inválido. O CNPJ deve ter 14 dígitos.');
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -130,38 +168,46 @@ const OverflowOneRegister: React.FC = () => {
       );
       
       if (error) {
-        setError(error.message);
+        // Se o erro for "User already registered", sugerir login
+        if (error.message?.includes('already registered')) {
+          setError('Este email já está cadastrado. Por favor, faça login ou use outro email.');
+          // Opcional: redirecionar para login após 2 segundos
+          setTimeout(() => {
+            navigate('/viajar/login');
+          }, 3000);
+        } else {
+          setError(error.message);
+        }
       } else {
-        // Determinar se é CNPJ ou CADASTUR
-        const digitsOnly = formData.cnpjOrCadastur.replace(/\D/g, '');
-        const isCnpj = digitsOnly.length === 14;
-        
-        // Salvar dados temporários no localStorage para escolha de plano
+        // Salvar dados temporários no localStorage para o onboarding
         localStorage.setItem('registration_data', JSON.stringify({
-          cnpj: isCnpj ? formData.cnpjOrCadastur : '',
-          cadastur: !isCnpj ? formData.cnpjOrCadastur : '',
-          cnpjOrCadastur: formData.cnpjOrCadastur,
+          country: formData.country,
+          cnpj: formData.country === 'BR' ? formData.cnpj : '',
           category: formData.category,
           companyName: formData.companyName,
           contactPerson: formData.contactPerson,
           email: formData.email,
           selectedPlan: selectedPlan,
-          selectedBilling: selectedBilling
+          selectedBilling: 'monthly' // ViaJARTur só tem plano mensal
         }));
         
         toast({
           title: "Conta criada com sucesso! 🎉",
-          description: selectedPlan ? `Plano ${selectedPlan} pré-selecionado! Agora faça o pagamento.` : "Agora escolha seu plano e faça o pagamento.",
+          description: "Agora vamos para o pagamento.",
         });
         
-        // Redirecionar para escolha de plano (com plano pré-selecionado se houver)
-        // Redirecionar baseado no contexto (MS ou ViaJAR)
+        // Redirecionar para onboarding com plano (vai direto para pagamento)
         const currentPath = window.location.pathname;
         if (currentPath.includes('/descubramatogrossodosul/') || currentPath.includes('/ms/')) {
           navigate('/ms');
         } else {
-          const pricingUrl = selectedPlan ? `/viajar/pricing?plan=${selectedPlan}&billing=${selectedBilling}` : '/viajar/pricing';
-          navigate(pricingUrl);
+          // Redirecionar para o onboarding do ViaJAR com plano na URL
+          if (selectedPlan) {
+            navigate(`/viajar/onboarding?plan=${selectedPlan}&billing=monthly`);
+          } else {
+            // Se não tem plano, vai para página de preços
+            navigate('/viajar/precos');
+          }
         }
       }
     } catch (err) {
@@ -254,29 +300,68 @@ const OverflowOneRegister: React.FC = () => {
                 />
               </div>
 
-              {/* CNPJ ou CADASTUR */}
+              {/* País */}
               <div className="space-y-2">
-                <Label htmlFor="cnpjOrCadastur">
-                  CNPJ ou CADASTUR *
+                <Label htmlFor="country">
+                  <Globe className="inline h-4 w-4 mr-2" />
+                  País *
                 </Label>
-                <Input
-                  id="cnpjOrCadastur"
-                  type="text"
-                  placeholder="00.000.000/0000-00 (CNPJ) ou 00.000.000/0000-000 (CADASTUR)"
-                  value={formData.cnpjOrCadastur}
-                  onChange={(e) => handleInputChange('cnpjOrCadastur', e.target.value)}
-                  maxLength={20}
-                  required
+                <Select 
+                  value={formData.country} 
+                  onValueChange={(value) => handleInputChange('country', value)}
                   disabled={isLoading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {formData.cnpjOrCadastur.replace(/\D/g, '').length === 14 
-                    ? 'CNPJ detectado (14 dígitos)' 
-                    : formData.cnpjOrCadastur.replace(/\D/g, '').length === 15
-                    ? 'CADASTUR detectado (15 dígitos)'
-                    : 'Digite o CNPJ (14 dígitos) ou CADASTUR (15 dígitos)'}
-                </p>
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map(country => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* CNPJ - Apenas para brasileiros */}
+              {isBrazilian && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="cnpj">
+                      CNPJ *
+                    </Label>
+                    {import.meta.env.DEV && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          import('@/utils/testCnpj').then(({ DEFAULT_TEST_CNPJ }) => {
+                            handleInputChange('cnpj', DEFAULT_TEST_CNPJ);
+                          });
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Usar CNPJ de teste
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    id="cnpj"
+                    type="text"
+                    placeholder="00.000.000/0000-00"
+                    value={formData.cnpj}
+                    onChange={(e) => handleInputChange('cnpj', e.target.value)}
+                    maxLength={18}
+                    required
+                    disabled={isLoading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {formData.cnpj.replace(/\D/g, '').length === 14 
+                      ? '✓ CNPJ válido (14 dígitos)' 
+                      : 'Digite o CNPJ (14 dígitos)'}
+                  </p>
+                </div>
+              )}
 
               {/* Categoria de Negócio */}
               <div className="space-y-2">

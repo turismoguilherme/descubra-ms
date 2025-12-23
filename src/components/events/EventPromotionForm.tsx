@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { redirectToEventCheckout } from "@/services/stripe/eventCheckoutService";
+import EventImageUpload from "./EventImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,28 +34,35 @@ const eventPromotionSchema = z.object({
   titulo: z.string().min(5, "Título deve ter pelo menos 5 caracteres"),
   descricao: z.string().min(50, "Descrição deve ter pelo menos 50 caracteres"),
   categoria: z.string().min(1, "Selecione uma categoria"),
-  
+
   // Datas
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().optional(),
   horario_inicio: z.string().min(1, "Horário de início é obrigatório"),
   horario_fim: z.string().min(1, "Horário de término é obrigatório"),
-  
+
   // Local
   local: z.string().min(3, "Local é obrigatório"),
   cidade: z.string().min(2, "Cidade é obrigatória"),
   endereco_completo: z.string().optional(),
-  
+
   // Organizador
   organizador_nome: z.string().min(3, "Nome do organizador é obrigatório"),
   organizador_email: z.string().email("Email inválido"),
   organizador_telefone: z.string().min(10, "Telefone inválido"),
   organizador_empresa: z.string().optional(),
-  
+
   // Links
   site_oficial: z.string().url("URL inválida").min(1, "Site oficial é obrigatório"),
   link_inscricao: z.string().url("URL inválida").optional().or(z.literal("")),
   video_promocional: z.string().optional(),
+  logo_evento: z.string().optional(),
+}).refine((data) => {
+  // Vídeo promocional OU logo do evento deve ser fornecido
+  return data.video_promocional || data.logo_evento;
+}, {
+  message: "Vídeo promocional ou logotipo do evento é obrigatório",
+  path: ["video_promocional"], // Mostra erro no campo video_promocional
 });
 
 type EventPromotionFormData = z.infer<typeof eventPromotionSchema>;
@@ -96,6 +105,7 @@ export const EventPromotionForm: React.FC = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<EventPromotionFormData>({
     resolver: zodResolver(eventPromotionSchema),
@@ -126,6 +136,7 @@ export const EventPromotionForm: React.FC = () => {
         site_oficial: data.site_oficial || null,
         link_inscricao: data.link_inscricao || null,
         video_promocional: data.video_promocional || null,
+        logo_evento: data.logo_evento || null,
         is_sponsored: true,
         sponsor_tier: 'destaque',
         sponsor_amount: plano.valor,
@@ -137,17 +148,29 @@ export const EventPromotionForm: React.FC = () => {
         confiabilidade: 100,
       };
 
-      const { error } = await supabase
+      const { data: createdEvent, error } = await supabase
         .from('events')
-        .insert([eventData]);
+        .insert([eventData])
+        .select('id')
+        .single();
 
       if (error) throw error;
 
-      setSubmitSuccess(true);
+      const eventId = createdEvent.id;
+
+      // Redirecionar para checkout Stripe
       toast({
-        title: "Evento enviado com sucesso!",
-        description: "Entraremos em contato para confirmar o pagamento e ativar seu destaque.",
+        title: "Redirecionando para pagamento...",
+        description: "Você será redirecionado para a página de pagamento seguro.",
       });
+
+      // Pequeno delay para mostrar o toast
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Redirecionar para Payment Link do Stripe
+      const paymentUrl = `https://buy.stripe.com/test_bJe3cxaliec5gR65mH43S00?prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
+      window.location.href = paymentUrl;
+      // Não mostra tela de sucesso, vai redirecionar
     } catch (error: any) {
       console.error('Erro ao enviar evento:', error);
       toast({
@@ -155,7 +178,6 @@ export const EventPromotionForm: React.FC = () => {
         description: error.message || "Tente novamente mais tarde.",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -168,18 +190,17 @@ export const EventPromotionForm: React.FC = () => {
             <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Solicitação Enviada!
+            Redirecionando para Pagamento
           </h2>
           <p className="text-gray-600 mb-6">
-            Recebemos sua solicitação de promoção de evento. Nossa equipe irá analisar 
-            e entrar em contato pelo email informado para confirmar o pagamento.
+            Seu evento foi criado com sucesso! Você será redirecionado para a página segura de pagamento.
           </p>
           <div className="bg-blue-50 rounded-lg p-4 text-left">
-            <h3 className="font-semibold text-blue-900 mb-2">Próximos passos:</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">O que acontece agora:</h3>
             <ol className="list-decimal list-inside text-blue-800 space-y-1 text-sm">
-              <li>Análise do evento (até 24h)</li>
-              <li>Envio do link de pagamento por email</li>
-              <li>Após confirmação, seu evento será destacado</li>
+              <li>Redirecionamento automático para checkout Stripe</li>
+              <li>Pagamento seguro de R$ 499,90</li>
+              <li>Após pagamento, seu evento será destacado por 30 dias</li>
             </ol>
           </div>
         </CardContent>
@@ -455,6 +476,19 @@ export const EventPromotionForm: React.FC = () => {
               placeholder="https://www.youtube.com/watch?v=..."
             />
           </div>
+          <div>
+            <Label htmlFor="logo_evento">Logotipo do Evento</Label>
+            <EventImageUpload
+              label="Logotipo do Evento"
+              value=""
+              onChange={(url) => setValue("logo_evento", url)}
+              folder="event-images"
+              placeholder="Clique para fazer upload do logotipo"
+            />
+            <p className="text-sm text-amber-600 mt-1">
+              ⚠️ Vídeo promocional OU logotipo é obrigatório
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -488,7 +522,7 @@ export const EventPromotionForm: React.FC = () => {
             </Button>
           </div>
           <p className="text-white/70 text-sm mt-4">
-            * Após enviar, nossa equipe irá analisar e enviar o link de pagamento por email.
+            * Após enviar, você será redirecionado automaticamente para o checkout seguro.
           </p>
         </CardContent>
       </Card>

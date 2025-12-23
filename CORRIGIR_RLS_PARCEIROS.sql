@@ -238,3 +238,7 @@ SELECT
 FROM pg_policies
 WHERE tablename IN ('partner_reservations', 'partner_notifications', 'partner_transactions', 'reservation_messages')
 ORDER BY tablename, policyname;
+
+
+
+

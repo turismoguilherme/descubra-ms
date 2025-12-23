@@ -9,14 +9,18 @@ const HeroSimple = () => {
   useEffect(() => {
     const loadContent = async () => {
       try {
+        console.log('📄 [Hero] Carregando conteúdo do hero...');
         const contents = await platformContentService.getContentByPrefix('ms_hero_');
+        console.log('📄 [Hero] Conteúdo recebido:', contents.length, 'itens');
         const contentMap: Record<string, string> = {};
         contents.forEach(item => {
           contentMap[item.content_key] = item.content_value || '';
+          console.log(`📄 [Hero] Mapeado: ${item.content_key} = ${item.content_value?.substring(0, 50) || '(vazio)'}`);
         });
+        console.log('📄 [Hero] Content map final:', Object.keys(contentMap));
         setContent(contentMap);
       } catch (error) {
-        console.error('Erro ao carregar conteúdo:', error);
+        console.error('❌ [Hero] Erro ao carregar conteúdo:', error);
       }
     };
     loadContent();

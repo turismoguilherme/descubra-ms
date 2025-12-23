@@ -281,16 +281,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Detectar tenant do path atual para manter contexto
       const currentPath = window.location.pathname;
       const pathSegments = currentPath.split('/').filter(Boolean);
-      const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
+      const currentTenant = pathSegments[0]; // 'viajar', 'ms', 'descubramatogrossodosul', etc.
       const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
-      const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
+      const isViajar = currentTenant === 'viajar';
       
-      console.log("🏛️ SIGNUP: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
+      console.log("🏛️ SIGNUP: Tenant detectado:", currentTenant, "isDescubraMS:", isDescubraMS, "isViajar:", isViajar);
       
-      // Redirecionar mantendo contexto do tenant (para Descubra MS, usar sempre 'descubramatogrossodosul')
-      const redirectUrl = isDescubraMS 
-        ? `${window.location.origin}/descubramatogrossodosul` 
-        : (isTenantPath ? `${window.location.origin}/${currentTenant}` : `${window.location.origin}/descubramatogrossodosul`);
+      // Redirecionar mantendo contexto do tenant
+      let redirectUrl: string;
+      if (isDescubraMS) {
+        redirectUrl = `${window.location.origin}/descubramatogrossodosul`;
+      } else if (isViajar) {
+        redirectUrl = `${window.location.origin}/viajar/onboarding`;
+      } else {
+        redirectUrl = `${window.location.origin}/viajar/onboarding`; // Default para ViaJAR
+      }
       console.log("🔄 SIGNUP: Redirecionando para:", redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({
@@ -304,18 +309,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (error) throw error;
-      
-      toast({
-        title: "Cadastro realizado!",
-        description: "Verifique seu email para confirmar a conta.",
-      });
+      if (error) {
+        console.error("❌ SIGNUP: Erro detalhado:", {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          error: error
+        });
+        throw error;
+      }
+
+      // Se não há sessão retornada (email confirmation habilitado), tentar login automático
+      if (data.user && !data.session) {
+        console.log("🔄 SIGNUP: Sem sessão retornada, tentando login automático...");
+        // Tentar fazer login imediatamente após signup
+        // Isso funcionará se email confirmation estiver desabilitado no Supabase
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          console.log("⚠️ SIGNUP: Login automático falhou (email confirmation necessário):", signInError.message);
+          toast({
+            title: "Cadastro realizado!",
+            description: "Verifique seu email para confirmar a conta antes de fazer login.",
+          });
+        } else if (signInData.session) {
+          console.log("✅ SIGNUP: Login automático bem-sucedido!");
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Você já está logado. Bem-vindo!",
+          });
+          // Retornar dados com a sessão de login
+          return { data: { user: signInData.user, session: signInData.session }, error: null };
+        }
+      } else if (data.session) {
+        console.log("✅ SIGNUP: Sessão retornada diretamente do signup");
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Você já está logado. Bem-vindo!",
+        });
+      } else {
+        toast({
+          title: "Cadastro realizado!",
+          description: "Verifique seu email para confirmar a conta.",
+        });
+      }
 
       return { data, error: null };
     } catch (error: any) {
+      let errorMessage = error.message || "Ocorreu um erro inesperado.";
+      
+      // Tratamento específico para email já cadastrado
+      if (error.message?.includes('User already registered') || error.message?.includes('already registered')) {
+        errorMessage = "Este email já está cadastrado. Por favor, faça login em vez de criar uma nova conta.";
+      } else if (error.message?.includes('Password should be')) {
+        errorMessage = "A senha deve ter pelo menos 6 caracteres.";
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = "Email inválido. Verifique o formato do email.";
+      }
+      
       toast({
-        title: "Erro no cadastro",
-        description: error.message || "Ocorreu um erro inesperado.",
+        title: error.message?.includes('already registered') ? "Email já cadastrado" : "Erro no cadastro",
+        description: errorMessage,
         variant: "destructive",
       });
       return { data: null, error };

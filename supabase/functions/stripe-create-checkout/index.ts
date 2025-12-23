@@ -15,9 +15,16 @@ serve(async (req) => {
   }
 
   try {
-    // Verificar autenticação
+    // #region agent log
     const authHeader = req.headers.get('Authorization');
+    console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:19',message:'Edge Function entry - auth header check',data:{hasAuthHeader:!!authHeader,authHeaderPreview:authHeader?.substring(0,30)+'...',allHeaders:Object.fromEntries(req.headers.entries())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'}));
+    // #endregion
+
+    // Verificar autenticação
     if (!authHeader) {
+      // #region agent log
+      console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:25',message:'Missing auth header - returning 401',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'}));
+      // #endregion
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { 
@@ -39,7 +46,15 @@ serve(async (req) => {
 
     // Obter usuário atual
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    // #region agent log
+    console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:52',message:'getUser result',data:{hasUser:!!user,hasError:!!userError,userError:userError?.message,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'}));
+    // #endregion
+    
     if (userError || !user) {
+      // #region agent log
+      console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:57',message:'Unauthorized - returning 401',data:{userError:userError?.message,hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'}));
+      // #endregion
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { 
@@ -69,19 +84,23 @@ serve(async (req) => {
       );
     }
 
-    // Mapear planos para preços do Stripe (em centavos)
-    // ViaJAR Tur: apenas 2 planos (Secretárias e Empresários)
-    const planPrices: Record<string, { monthly: number; annual: number }> = {
-      freemium: { monthly: 0, annual: 0 }, // Não usado em ViaJAR Tur
-      professional: { monthly: 20000, annual: 192000 }, // R$ 200/mês ou R$ 1920/ano (Empresários ViaJAR Tur)
-      enterprise: { monthly: 49900, annual: 479200 }, // R$ 499/mês ou R$ 4792/ano (não usado em ViaJAR Tur)
-      government: { monthly: 200000, annual: 1920000 }, // R$ 2000/mês ou R$ 19200/ano (Secretárias ViaJAR Tur)
+    // Mapear planos para Product IDs do Stripe
+    // ViaJAR Tur: Empresários (professional) e Governo (government)
+    const planProducts: Record<string, { productId: string; monthlyAmount: number }> = {
+      professional: { 
+        productId: 'prod_Tebg3KDIPBYNZC', // Empresários - R$ 199,00/mês
+        monthlyAmount: 19900 
+      },
+      government: { 
+        productId: 'prod_Tebhwjsw65UnRQ', // Governo - R$ 2.000,00/mês
+        monthlyAmount: 200000 
+      },
     };
 
-    const planPrice = planPrices[planId];
-    if (!planPrice) {
+    const planProduct = planProducts[planId];
+    if (!planProduct) {
       return new Response(
-        JSON.stringify({ error: 'Invalid plan ID' }),
+        JSON.stringify({ error: 'Invalid plan ID. Only professional and government plans are available.' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -89,19 +108,34 @@ serve(async (req) => {
       );
     }
 
-    const amount = billingPeriod === 'annual' ? planPrice.annual : planPrice.monthly;
+    // Buscar preços associados ao produto
+    const prices = await stripe.prices.list({
+      product: planProduct.productId,
+      active: true,
+    });
 
-    // Se for freemium, não precisa de checkout
-    if (amount === 0) {
+    if (prices.data.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Freemium plan - no payment required',
-          checkoutUrl: null 
-        }),
+        JSON.stringify({ error: `No prices found for product ${planProduct.productId}` }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
+          status: 400 
+        }
+      );
+    }
+
+    // Encontrar o preço que corresponde ao intervalo desejado
+    const interval = billingPeriod === 'annual' ? 'year' : 'month';
+    const price = prices.data.find(p => 
+      p.recurring?.interval === interval && p.active
+    );
+
+    if (!price) {
+      return new Response(
+        JSON.stringify({ error: `No ${billingPeriod} price found for product ${planProduct.productId}` }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
         }
       );
     }
@@ -172,7 +206,7 @@ serve(async (req) => {
         paymentMethodTypes = ['card'];
     }
 
-    // Criar sessão de checkout
+    // Criar sessão de checkout usando o Price ID do Stripe
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -180,17 +214,7 @@ serve(async (req) => {
       payment_method_options: paymentMethodOptions,
       line_items: [
         {
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: `ViaJAR ${planId.charAt(0).toUpperCase() + planId.slice(1)}`,
-              description: `Plano ${planId} - ${billingPeriod === 'annual' ? 'Anual' : 'Mensal'}`,
-            },
-            unit_amount: amount,
-            recurring: {
-              interval: billingPeriod === 'annual' ? 'year' : 'month',
-            },
-          },
+          price: price.id, // Usa o Price ID encontrado
           quantity: 1,
         },
       ],
@@ -201,6 +225,7 @@ serve(async (req) => {
           billing_period: billingPeriod,
           supabase_user_id: user.id,
           platform: 'viajar_tur', // Identificador para ViaJAR Tur
+          stripe_product_id: planProduct.productId,
         },
       },
       success_url: defaultSuccessUrl,
@@ -210,6 +235,7 @@ serve(async (req) => {
         billing_period: billingPeriod,
         payment_method: paymentMethod,
         supabase_user_id: user.id,
+        stripe_product_id: planProduct.productId,
       },
       locale: 'pt-BR',
       allow_promotion_codes: true,

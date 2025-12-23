@@ -181,7 +181,7 @@ const ProfilePageFixed: React.FC = () => {
         .select('*')
         .eq('user_id', user?.id)
         .maybeSingle();
-
+      
       const mockProfile: UserProfile = {
         id: user?.id || '1',
         full_name: dbProfile?.full_name || user?.user_metadata?.full_name || 'Usuário',
@@ -257,7 +257,7 @@ const ProfilePageFixed: React.FC = () => {
         setProfile({
           ...updatedProfile,
           avatar_custom_name: dbProfile.avatar_custom_name || undefined
-        });
+      });
       }
       
       toast({

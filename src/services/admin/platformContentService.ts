@@ -195,13 +195,22 @@ export const platformContentService = {
   },
 
   async getContentByPrefix(prefix: string): Promise<PlatformContent[]> {
+    console.log(`🔍 [platformContentService] Buscando conteúdo com prefixo: ${prefix}`);
     const { data, error } = await supabase
       .from('institutional_content')
       .select('*')
       .ilike('content_key', `${prefix}%`)
+      .eq('is_active', true)
       .order('content_key');
 
-    if (error) throw error;
+    if (error) {
+      console.error(`❌ [platformContentService] Erro ao buscar conteúdo com prefixo ${prefix}:`, error);
+      throw error;
+    }
+    
+    console.log(`✅ [platformContentService] Encontrados ${data?.length || 0} itens com prefixo ${prefix}:`, 
+      data?.map(item => ({ key: item.content_key, hasValue: !!item.content_value, isActive: item.is_active })));
+    
     return (data || []) as PlatformContent[];
   },
 
@@ -229,27 +238,69 @@ export const platformContentService = {
   },
 
   async upsertContent(key: string, value: string, type: string = 'text', description?: string): Promise<void> {
+    console.log('🔄 [platformContentService] upsertContent chamado:', { key, value: value.substring(0, 50) + '...', type, description });
+    
+    // Verificar se o usuário está autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Você precisa estar autenticado para salvar conteúdo.');
+    }
+    
+    // Verificar role do usuário
+    const { data: userRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'tech', 'master_admin']);
+    
+    if (!userRoles || userRoles.length === 0) {
+      throw new Error('Você não tem permissão para salvar conteúdo. É necessário ter role de admin ou tech.');
+    }
+    
+    console.log('✅ [platformContentService] Usuário autorizado:', { userId: user.id, roles: userRoles.map(r => r.role) });
+    
     // Primeiro, verificar se o conteúdo já existe
-    const { data: existing } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from('institutional_content')
-      .select('id')
+      .select('id, content_key, content_value')
       .eq('content_key', key)
-      .single();
+      .maybeSingle();
 
-    if (existing) {
-      // Atualizar
-      const { error } = await supabase
+    console.log('🔍 [platformContentService] Verificação existente:', { existing, selectError });
+
+    // Se houver erro diferente de "não encontrado", lançar
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.error('❌ [platformContentService] Erro ao buscar existente:', selectError);
+      throw new Error(`Erro ao verificar conteúdo existente: ${selectError.message || selectError.details || 'Erro desconhecido'}`);
+    }
+
+    if (existing && existing.id) {
+      // Atualizar existente
+      console.log('📝 [platformContentService] Atualizando conteúdo existente:', existing.id);
+      const { data: updated, error: updateError } = await supabase
         .from('institutional_content')
         .update({ 
           content_value: value,
           updated_at: new Date().toISOString()
         })
-        .eq('id', existing.id);
+        .eq('id', existing.id)
+        .select();
 
-      if (error) throw error;
+      if (updateError) {
+        console.error('❌ [platformContentService] Erro ao atualizar:', updateError);
+        
+        // Mensagem mais clara para erros de permissão
+        if (updateError.code === '42501' || updateError.message?.includes('permission') || updateError.message?.includes('policy')) {
+          throw new Error('Você não tem permissão para atualizar conteúdo. Verifique se você tem role de admin ou tech no sistema.');
+        }
+        
+        throw new Error(`Erro ao atualizar conteúdo: ${updateError.message || updateError.details || 'Erro desconhecido'}`);
+      }
+      console.log('✅ [platformContentService] Conteúdo atualizado:', updated);
     } else {
-      // Criar
-      const { error } = await supabase
+      // Criar novo
+      console.log('➕ [platformContentService] Criando novo conteúdo');
+      const { data: inserted, error: insertError } = await supabase
         .from('institutional_content')
         .insert([{
           content_key: key,
@@ -257,9 +308,20 @@ export const platformContentService = {
           content_type: type,
           description: description || null,
           is_active: true,
-        }]);
+        }])
+        .select();
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('❌ [platformContentService] Erro ao inserir:', insertError);
+        console.error('❌ [platformContentService] Detalhes:', {
+          message: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+        throw new Error(`Erro ao inserir conteúdo: ${insertError.message || insertError.details || insertError.hint || 'Erro desconhecido'}`);
+      }
+      console.log('✅ [platformContentService] Conteúdo criado:', inserted);
     }
   },
 

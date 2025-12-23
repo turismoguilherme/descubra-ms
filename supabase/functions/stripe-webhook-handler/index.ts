@@ -51,6 +51,13 @@ serve(async (req) => {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log('Checkout session completed:', {
+          id: session.id,
+          mode: session.mode,
+          client_reference_id: session.client_reference_id,
+          metadata: session.metadata,
+        });
+        
         // Verificar tipo de pagamento
         if (session.metadata?.type === 'event_sponsorship') {
           await handleEventPaymentCompleted(session, supabase);
@@ -58,6 +65,12 @@ serve(async (req) => {
           await handleReservationPaymentCompleted(session, supabase);
         } else if (session.metadata?.type === 'data_sale_report') {
           await handleDataSalePaymentCompleted(session, supabase);
+        } else if (session.mode === 'subscription' && session.client_reference_id) {
+          // Payment Link de assinatura ViaJARTur (client_reference_id = user_id)
+          await handlePaymentLinkSubscriptionCompleted(session, supabase);
+        } else if (session.client_reference_id && !session.metadata?.type) {
+          // Payment Link de evento (client_reference_id = event_id)
+          await handlePaymentLinkEventCompleted(session, supabase);
         } else {
           await handleCheckoutCompleted(session, supabase);
         }
@@ -95,6 +108,265 @@ serve(async (req) => {
 });
 
 // Funções de manipulação de eventos
+
+// Handler para Payment Link de assinaturas ViaJARTur (usa client_reference_id = user_id)
+async function handlePaymentLinkSubscriptionCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Assinatura via Payment Link completada:', session.id);
+  
+  try {
+    const userId = session.client_reference_id;
+    const customerEmail = session.customer_email || session.customer_details?.email;
+    const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
+
+    if (!userId) {
+      console.error('User ID (client_reference_id) não encontrado');
+      return;
+    }
+
+    console.log(`Processando assinatura para usuário ${userId}`);
+
+    // Buscar detalhes da subscription no Stripe
+    let planId = 'professional'; // default
+    let billingPeriod = 'monthly';
+    let monthlyAmount = 200;
+
+    if (subscriptionId) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const priceItem = subscription.items.data[0];
+        
+        // Detectar plano pelo preço
+        const unitAmount = priceItem?.price.unit_amount || 0;
+        if (unitAmount >= 200000) { // R$ 2.000 = Secretárias
+          planId = 'government';
+          monthlyAmount = 2000;
+        } else if (unitAmount >= 19900) { // R$ 199+ = Empresários
+          planId = 'professional';
+          monthlyAmount = unitAmount / 100;
+        }
+
+        billingPeriod = priceItem?.price.recurring?.interval === 'year' ? 'annual' : 'monthly';
+        
+        console.log(`Plano detectado: ${planId}, Período: ${billingPeriod}, Valor: R$ ${monthlyAmount}`);
+      } catch (stripeErr) {
+        console.error('Erro ao buscar subscription no Stripe:', stripeErr);
+      }
+    }
+
+    // Criar/atualizar registro na tabela subscriptions
+    const now = new Date();
+    const periodEnd = new Date(now);
+    if (billingPeriod === 'annual') {
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+    } else {
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+    }
+
+    const { error: subError } = await supabase
+      .from('subscriptions')
+      .upsert({
+        user_id: userId,
+        plan_id: planId,
+        plan_name: planId === 'government' ? 'Secretárias' : 'Empresários',
+        status: 'active',
+        billing_period: billingPeriod,
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        cancel_at_period_end: false,
+        amount: monthlyAmount,
+        currency: 'BRL',
+        stripe_subscription_id: subscriptionId,
+        stripe_customer_id: customerId,
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (subError) {
+      console.error('Erro ao criar/atualizar subscription:', subError);
+    } else {
+      console.log('Subscription criada/atualizada com sucesso');
+    }
+
+    // Criar/atualizar registro na tabela master_clients
+    const { error: clientError } = await supabase
+      .from('master_clients')
+      .upsert({
+        contact_email: customerEmail,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        subscription_plan: planId,
+        monthly_fee: monthlyAmount,
+        status: 'active',
+        contract_start_date: now.toISOString().split('T')[0],
+        contract_end_date: periodEnd.toISOString().split('T')[0],
+        auto_renewal: true,
+        client_name: customerEmail?.split('@')[0] || 'Cliente ViaJARTur',
+      }, {
+        onConflict: 'contact_email'
+      });
+
+    if (clientError) {
+      console.error('Erro ao criar/atualizar master_client:', clientError);
+    } else {
+      console.log('Master client criado/atualizado com sucesso');
+    }
+
+    // Registrar receita
+    const amountPaid = session.amount_total ? session.amount_total / 100 : monthlyAmount;
+    await supabase
+      .from('master_financial_records')
+      .insert({
+        record_type: 'revenue',
+        amount: amountPaid,
+        description: `Assinatura ViaJARTur (Payment Link): ${planId === 'government' ? 'Secretárias' : 'Empresários'}`,
+        stripe_invoice_id: session.payment_intent as string,
+        stripe_subscription_id: subscriptionId,
+        status: 'paid',
+        paid_date: now.toISOString().split('T')[0],
+        source: 'subscription',
+        currency: 'BRL',
+        metadata: {
+          user_id: userId,
+          plan_id: planId,
+          billing_period: billingPeriod,
+          customer_email: customerEmail,
+          checkout_session_id: session.id,
+          payment_method: 'payment_link',
+        },
+      });
+
+    console.log('Receita registrada com sucesso');
+
+    // Enviar email de boas-vindas
+    if (customerEmail) {
+      try {
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-notification-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'subscription_welcome',
+            to: customerEmail,
+            data: {
+              planName: planId === 'government' ? 'Secretárias' : 'Empresários',
+              billingPeriod: billingPeriod === 'annual' ? 'anual' : 'mensal',
+              amount: amountPaid,
+            },
+          }),
+        });
+        console.log('Email de boas-vindas enviado');
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError);
+      }
+    }
+
+  } catch (error) {
+    console.error('Erro ao processar Payment Link de assinatura:', error);
+  }
+}
+
+// Handler para Payment Link de eventos (usa client_reference_id)
+async function handlePaymentLinkEventCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Pagamento via Payment Link completado:', session.id);
+  
+  try {
+    const eventId = session.client_reference_id;
+    const customerEmail = session.customer_email || session.customer_details?.email;
+
+    if (!eventId) {
+      console.error('Event ID (client_reference_id) não encontrado');
+      return;
+    }
+
+    console.log(`Processando pagamento para evento ${eventId}`);
+
+    // Buscar dados do evento
+    const { data: eventData, error: fetchError } = await supabase
+      .from('events')
+      .select('name, organizador_nome, organizador_email')
+      .eq('id', eventId)
+      .single();
+
+    const eventName = eventData?.name || 'Evento';
+    const organizerEmail = eventData?.organizador_email || customerEmail;
+    const organizerName = eventData?.organizador_nome || 'Organizador';
+
+    // Atualizar evento para patrocinado
+    const { error: eventError } = await supabase
+      .from('events')
+      .update({
+        is_sponsored: true,
+        is_visible: true,
+        sponsor_tier: 'destaque',
+        sponsor_payment_status: 'paid',
+        sponsor_start_date: new Date().toISOString().split('T')[0],
+        sponsor_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      })
+      .eq('id', eventId);
+
+    if (eventError) {
+      console.error('Erro ao atualizar evento:', eventError);
+    } else {
+      console.log(`Evento ${eventId} marcado como patrocinado via Payment Link`);
+      
+      // Registrar pagamento
+      const amountPaid = session.amount_total ? session.amount_total / 100 : 499.90;
+      await supabase
+        .from('master_financial_records')
+        .insert({
+          record_type: 'revenue',
+          amount: amountPaid,
+          description: `Pagamento de evento em destaque (Payment Link): ${eventName}`,
+          stripe_invoice_id: session.payment_intent as string,
+          status: 'paid',
+          paid_date: new Date().toISOString().split('T')[0],
+          source: 'event_sponsor',
+          currency: 'BRL',
+          metadata: {
+            event_id: eventId,
+            event_name: eventName,
+            organizer_email: organizerEmail,
+            checkout_session_id: session.id,
+            payment_method: 'payment_link',
+          },
+        });
+
+      console.log('Pagamento registrado via Payment Link');
+
+      // Enviar email de confirmação
+      if (organizerEmail) {
+        try {
+          const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR');
+          
+          await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-notification-email`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'event_payment_confirmed',
+              to: organizerEmail,
+              data: {
+                organizerName: organizerName,
+                eventName: eventName,
+                validUntil: validUntil,
+              },
+            }),
+          });
+          console.log('Email de confirmação enviado');
+        } catch (emailError) {
+          console.error('Erro ao enviar email:', emailError);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao processar Payment Link:', error);
+  }
+}
 
 // Handler específico para pagamento de eventos em destaque
 async function handleEventPaymentCompleted(session: Stripe.Checkout.Session, supabase: any) {

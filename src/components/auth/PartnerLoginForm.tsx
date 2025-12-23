@@ -75,20 +75,89 @@ const PartnerLoginForm = () => {
       
       if (!error) {
         console.log("✅ Login realizado com sucesso");
+        console.log("📧 Email usado para busca:", sanitizedData.email);
         
-        // Verificar se é parceiro
-        const { data: partner, error: partnerError } = await supabase
+        // Verificar se é parceiro - tentar com email exato e também lowercase
+        let partner = null;
+        let partnerError = null;
+        
+        // Primeira tentativa: email exato
+        const { data: partnerData1, error: error1 } = await supabase
           .from('institutional_partners')
-          .select('id, is_active')
+          .select('id, name, contact_email, is_active')
           .eq('contact_email', sanitizedData.email)
           .maybeSingle();
         
+        if (error1) {
+          console.error('❌ Erro ao buscar parceiro (tentativa 1 - email exato):', error1);
+          partnerError = error1;
+        } else if (partnerData1) {
+          partner = partnerData1;
+          console.log("✅ Parceiro encontrado (email exato):", partner);
+        } else {
+          // Segunda tentativa: lowercase
+          console.log("🔍 Tentando busca com email em lowercase...");
+          const { data: partnerData2, error: error2 } = await supabase
+            .from('institutional_partners')
+            .select('id, name, contact_email, is_active')
+            .ilike('contact_email', sanitizedData.email)
+            .maybeSingle();
+          
+          if (error2) {
+            console.error('❌ Erro ao buscar parceiro (tentativa 2 - lowercase):', error2);
+            partnerError = error2;
+          } else if (partnerData2) {
+            partner = partnerData2;
+            console.log("✅ Parceiro encontrado (lowercase):", partner);
+          } else {
+            // Terceira tentativa: buscar todos e filtrar no cliente
+            console.log("🔍 Tentando busca ampla...");
+            const { data: allPartners, error: error3 } = await supabase
+              .from('institutional_partners')
+              .select('id, name, contact_email, is_active');
+            
+            if (error3) {
+              console.error('❌ Erro ao buscar todos os parceiros:', error3);
+              partnerError = error3;
+            } else {
+              console.log("📋 Total de parceiros encontrados:", allPartners?.length || 0);
+              const foundPartner = allPartners?.find(p => 
+                p.contact_email?.toLowerCase().trim() === sanitizedData.email.toLowerCase().trim()
+              );
+              if (foundPartner) {
+                partner = foundPartner;
+                console.log("✅ Parceiro encontrado (busca ampla):", partner);
+              } else {
+                console.log("❌ Parceiro não encontrado em nenhuma tentativa");
+                console.log("📋 Emails disponíveis:", allPartners?.map(p => p.contact_email));
+              }
+            }
+          }
+        }
+        
         if (partnerError) {
-          console.error('Erro ao buscar parceiro:', partnerError);
-          // Continuar mesmo se houver erro na query
+          console.error('❌ Erro final ao buscar parceiro:', partnerError);
+          toast({
+            title: "Erro ao verificar parceiro",
+            description: "Ocorreu um erro ao verificar seu cadastro. Tente novamente ou entre em contato.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          return;
         }
         
         if (partner) {
+          if (!partner.is_active) {
+            console.log("⚠️ Parceiro encontrado mas inativo");
+            toast({
+              title: "Acesso negado",
+              description: "Sua conta de parceiro está inativa. Entre em contato conosco.",
+              variant: "destructive",
+              duration: 5000,
+            });
+            return;
+          }
+          
           console.log("🤝 LOGIN: Parceiro detectado, redirecionando para dashboard");
           toast({
             title: "Login realizado!",
@@ -99,6 +168,7 @@ const PartnerLoginForm = () => {
           return;
         } else {
           // Se não for parceiro, mostrar erro
+          console.log("❌ Parceiro não encontrado para email:", sanitizedData.email);
           toast({
             title: "Acesso negado",
             description: "Este email não está cadastrado como parceiro. Se você é um parceiro, entre em contato conosco.",

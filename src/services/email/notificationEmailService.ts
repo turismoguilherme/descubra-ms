@@ -6,6 +6,7 @@ type NotificationType =
   | 'event_payment_confirmed'
   | 'partner_approved'
   | 'partner_rejected'
+  | 'partner_notification'
   | 'welcome'
   | 'data_report_ready'
   | 'data_report_approved';

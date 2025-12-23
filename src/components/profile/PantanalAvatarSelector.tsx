@@ -152,7 +152,7 @@ const PantanalAvatarSelector: React.FC<PantanalAvatarSelectorProps> = ({
                           e.preventDefault();
                           // Chamar onSelect que já fecha o modal internamente
                           if (typeof onSelect === 'function') {
-                            onSelect(animal.id);
+                          onSelect(animal.id);
                           }
                         }}
                       >

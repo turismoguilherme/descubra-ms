@@ -1,15 +1,15 @@
 /**
  * Plan Selector Component
  * Seleção de planos de assinatura com comparação de features
+ * ViaJARTur: apenas planos mensais (sem opção anual)
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Check, X, Star, Sparkles, Info } from 'lucide-react';
-import { PLANS, calculateAnnualSavings, type PlanTier } from '@/services/subscriptionService';
+import { Check, X, Star, Info } from 'lucide-react';
+import { PLANS, type PlanTier } from '@/services/subscriptionService';
 import { cn } from '@/lib/utils';
 
 interface PlanSelectorProps {
@@ -21,8 +21,8 @@ interface PlanSelectorProps {
 }
 
 export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelectedPlan, preSelectedBilling, isViaJARTur = false }: PlanSelectorProps) {
-  const [isAnnual, setIsAnnual] = useState(preSelectedBilling === 'annual' || false);
-
+  // ViaJARTur: apenas planos mensais, sem toggle anual
+  
   // ViaJAR Tur: apenas 2 planos (Empresários e Secretárias)
   // Descubra MS ou outros: todos os planos
   const planOrder: PlanTier[] = isViaJARTur 
@@ -36,7 +36,7 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
         <h2 className="text-3xl font-bold">Escolha Seu Plano</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           {isViaJARTur 
-            ? 'Selecione o plano ideal para o seu negócio. Assinatura recorrente mensal ou anual.'
+            ? 'Selecione o plano ideal para o seu negócio. Assinatura mensal recorrente.'
             : 'Selecione o plano ideal para o seu negócio.'}
         </p>
         
@@ -45,11 +45,7 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
             <div className="flex items-center gap-2 text-sm text-green-700">
               <span className="font-semibold">Plano Pré-selecionado:</span>
               <span className="capitalize font-bold">{preSelectedPlan}</span>
-              {preSelectedBilling && (
-                <span className="text-green-600">
-                  ({preSelectedBilling === 'annual' ? 'Anual' : 'Mensal'})
-                </span>
-              )}
+              <span className="text-green-600">(Mensal)</span>
             </div>
             <p className="text-xs text-green-600 mt-1">
               Este plano será ativado após o cadastro e pagamento
@@ -57,39 +53,24 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
           </div>
         )}
 
-        {/* Toggle Mensal/Anual */}
-        <div className="flex items-center justify-center gap-4 py-4">
-          <span className={cn(
-            "text-sm font-medium transition-colors",
-            !isAnnual ? "text-foreground" : "text-muted-foreground"
-          )}>
-            Mensal
-          </span>
-          <Switch
-            checked={isAnnual}
-            onCheckedChange={setIsAnnual}
-            className="data-[state=checked]:bg-purple-600"
-          />
-          <span className={cn(
-            "text-sm font-medium transition-colors",
-            isAnnual ? "text-foreground" : "text-muted-foreground"
-          )}>
-            Anual
-          </span>
-          <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700 border-green-300">
-            <Sparkles className="h-3 w-3" />
-            Economize 20%
-          </Badge>
-        </div>
+        {/* Informação de cobrança mensal */}
+        {isViaJARTur && (
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">
+            🔄 Cobrança mensal recorrente
+          </div>
+        )}
       </div>
 
       {/* Grid de Planos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={cn(
+        "grid gap-6",
+        isViaJARTur 
+          ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto" // ViaJARTur: 2 planos centralizados
+          : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" // Outros: 4 planos
+      )}>
         {planOrder.map((planId) => {
           const plan = PLANS[planId];
-          const price = isAnnual ? plan.annualPrice : plan.price;
-          const monthlyPrice = isAnnual ? Math.round(plan.annualPrice / 12) : plan.price;
-          const savings = isAnnual && plan.price > 0 ? calculateAnnualSavings(plan.price) : 0;
+          const monthlyPrice = plan.price;
           const isRecommended = recommendedPlan === planId || plan.recommended;
 
           return (
@@ -144,15 +125,9 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
                     )}
                   </div>
                   
-                  {isAnnual && plan.price > 0 && (
-                    <div className="text-xs text-green-600 font-medium mt-1">
-                      Economize R$ {savings.toLocaleString('pt-BR')}/ano
-                    </div>
-                  )}
-                  
-                  {!isAnnual && plan.price > 0 && (
+                  {plan.price > 0 && (
                     <div className="text-xs text-muted-foreground mt-1">
-                      ou R$ {plan.annualPrice.toLocaleString('pt-BR')}/ano
+                      Cobrança mensal recorrente
                     </div>
                   )}
                 </div>
@@ -195,7 +170,7 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
                     isRecommended && "bg-purple-600 hover:bg-purple-700"
                   )}
                   variant={isRecommended ? "default" : "outline"}
-                  onClick={() => onSelectPlan(planId, isAnnual ? 'annual' : 'monthly')}
+                  onClick={() => onSelectPlan(planId, 'monthly')} // Sempre mensal
                 >
                   {plan.price === 0 ? 'Começar Grátis' : 'Selecionar Plano'}
                 </Button>

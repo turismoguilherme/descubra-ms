@@ -25,13 +25,13 @@ const PassportDigital: React.FC = () => {
 
   return (
     <PassportProfileGate>
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <Navbar />
-        <main className="flex-grow py-8">
-          <PassportDocument routeId={routeId} />
-        </main>
-        <Footer />
-      </div>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-green-50">
+      <Navbar />
+      <main className="flex-grow py-8">
+        <PassportDocument routeId={routeId} />
+      </main>
+      <Footer />
+    </div>
     </PassportProfileGate>
   );
 };
