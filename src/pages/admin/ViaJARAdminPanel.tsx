@@ -51,6 +51,7 @@ const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
+const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
@@ -108,6 +109,11 @@ export default function ViaJARAdminPanel() {
             <Route path="viajar/subscriptions" element={
               <Suspense fallback={<LoadingFallback />}>
                 <SubscriptionsManagement />
+              </Suspense>
+            } />
+            <Route path="viajar/plan-settings" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ViaJARTurSettingsManager />
               </Suspense>
             } />
             

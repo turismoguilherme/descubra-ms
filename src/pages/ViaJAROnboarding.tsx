@@ -20,12 +20,7 @@ import type { PlanTier, BillingPeriod } from '@/services/subscriptionService';
 import type { QuestionnaireAnswers } from '@/types/diagnostic';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-
-// Payment Links do Stripe (teste)
-const STRIPE_PAYMENT_LINKS = {
-  professional: 'https://buy.stripe.com/test_7sY28t9gG5y5dsH2vxbfO00', // Empresários - R$ 200/mês
-  government: 'https://buy.stripe.com/test_fZu5kF50q7GdgET1rtbfO03', // Secretárias - R$ 2.000/mês
-};
+import { useViaJARTurSettings } from '@/hooks/useViaJARTurSettings';
 
 interface OnboardingStep {
   id: number;
@@ -39,6 +34,7 @@ export default function ViaJAROnboarding() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { settings: planSettings, loading: loadingSettings } = useViaJARTurSettings();
   const [currentStep, setCurrentStep] = useState(1);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [onboardingData, setOnboardingData] = useState({
@@ -153,7 +149,7 @@ export default function ViaJAROnboarding() {
     }
   }, [searchParams, toast, navigate]);
 
-  // Redirecionar para Payment Link do Stripe (chamado automaticamente ao entrar na página)
+  // Redirecionar para Payment Link do Stripe (carregado do banco de dados)
   const handlePaymentRedirect = () => {
     if (!onboardingData.plan) {
       toast({
@@ -166,7 +162,11 @@ export default function ViaJAROnboarding() {
     }
 
     const { planId } = onboardingData.plan;
-    const paymentLink = STRIPE_PAYMENT_LINKS[planId as keyof typeof STRIPE_PAYMENT_LINKS];
+    
+    // Buscar Payment Link do banco de dados (via hook)
+    const paymentLink = planId === 'professional' 
+      ? planSettings.professional.paymentLink 
+      : planSettings.government.paymentLink;
 
     if (!paymentLink) {
       toast({
@@ -357,7 +357,9 @@ export default function ViaJAROnboarding() {
                       <div className="flex justify-between items-center">
                         <div className="text-left">
                           <p className="font-semibold">
-                            {onboardingData.plan.planId === 'professional' ? 'Plano Empresários' : 'Plano Secretárias'}
+                            {onboardingData.plan.planId === 'professional' 
+                              ? planSettings.professional.name 
+                              : planSettings.government.name}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             Cobrança mensal recorrente
@@ -365,7 +367,9 @@ export default function ViaJAROnboarding() {
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-purple-600">
-                            R$ {onboardingData.plan.planId === 'professional' ? '200' : '2.000'}
+                            R$ {onboardingData.plan.planId === 'professional' 
+                              ? planSettings.professional.price.toLocaleString('pt-BR') 
+                              : planSettings.government.price.toLocaleString('pt-BR')}
                             <span className="text-sm font-normal text-muted-foreground">/mês</span>
                           </p>
                         </div>

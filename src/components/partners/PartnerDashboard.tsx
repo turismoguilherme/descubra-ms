@@ -27,6 +27,7 @@ import { PartnerNotifications } from './PartnerNotifications';
 import { ReservationChat } from './ReservationChat';
 import { ReservationMessageService } from '@/services/partners/reservationMessageService';
 import UniversalLayout from '@/components/layout/UniversalLayout';
+import PartnerRewardsManager from './PartnerRewardsManager';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -396,6 +397,27 @@ export default function PartnerDashboard() {
             </div>
           </div>
         </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('rewards');
+            if (isMobile) setSidebarOpen(false);
+          }}
+          className={cn(
+            'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3',
+            activeTab === 'rewards'
+              ? 'bg-ms-primary-blue text-white shadow-md'
+              : 'text-gray-700 hover:bg-gray-100'
+          )}
+        >
+          <TrendingUp className={cn('w-5 h-5', activeTab === 'rewards' ? 'text-white' : 'text-gray-500')} />
+          <div className="flex-1">
+            <div className="font-medium">Recompensas</div>
+            <div className={cn('text-xs', activeTab === 'rewards' ? 'text-white/80' : 'text-gray-500')}>
+              Passaporte Digital
+            </div>
+          </div>
+        </button>
       </nav>
     </div>
   );
@@ -612,6 +634,11 @@ export default function PartnerDashboard() {
                       </TabsContent>
                     </Tabs>
                   </div>
+                ) : activeTab === 'rewards' ? (
+                  <PartnerRewardsManager 
+                    partnerId={partner.id} 
+                    partnerName={partner.name} 
+                  />
                 ) : null}
               </CardContent>
             </Card>

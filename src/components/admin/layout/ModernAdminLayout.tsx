@@ -94,6 +94,7 @@ const navigationItems: NavItem[] = [
     platform: 'viajar',
         children: [
           { id: 'viajar-content', label: 'Conteúdo e Menu', icon: FileText, path: '/viajar/admin/viajar/content', permission: 'viajar', platform: 'viajar' },
+          { id: 'viajar-plans', label: 'Configuração de Planos', icon: CreditCard, path: '/viajar/admin/viajar/plan-settings', permission: 'viajar', platform: 'viajar' },
           // Clientes e Assinaturas movidos para Financeiro
         ],
   },

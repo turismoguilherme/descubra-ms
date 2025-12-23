@@ -6,8 +6,9 @@ import PassportRouteManager from '@/components/admin/passport/PassportRouteManag
 import PassportStampConfig from '@/components/admin/passport/PassportStampConfig';
 import PassportCheckpointManager from '@/components/admin/passport/PassportCheckpointManager';
 import PassportRewardsManager from '@/components/admin/passport/PassportRewardsManager';
+import PendingPartnerRewards from '@/components/admin/passport/PendingPartnerRewards';
 import PassportAnalytics from '@/components/admin/passport/PassportAnalytics';
-import { Route, Settings, Gift, MapPin, BarChart3 } from 'lucide-react';
+import { Route, Settings, Gift, MapPin, BarChart3, Clock } from 'lucide-react';
 
 const PassportAdmin: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -72,6 +73,10 @@ const PassportAdmin: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="rewards" className="space-y-4">
+          {/* Recompensas pendentes dos parceiros */}
+          <PendingPartnerRewards />
+          
+          {/* Gerenciamento manual de recompensas */}
           <PassportRewardsManager />
         </TabsContent>
 
