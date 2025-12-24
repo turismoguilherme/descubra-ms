@@ -28,8 +28,12 @@ import { ReservationChat } from './ReservationChat';
 import { ReservationMessageService } from '@/services/partners/reservationMessageService';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import PartnerRewardsManager from './PartnerRewardsManager';
+import PendingApprovalBanner from './PendingApprovalBanner';
+import StripeConnectBanner from './StripeConnectBanner';
+import WelcomeModal from './WelcomeModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
+import { useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface PartnerReservation {
@@ -61,6 +65,8 @@ interface Partner {
   subscription_end_date?: string;
   status: string;
   is_active: boolean;
+  stripe_account_id?: string;
+  stripe_connect_status?: 'pending' | 'connected' | 'restricted' | 'disabled';
 }
 
 export default function PartnerDashboard() {
@@ -77,6 +83,30 @@ export default function PartnerDashboard() {
   const [selectedReservationForChat, setSelectedReservationForChat] = useState<string | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState<Record<string, number>>({});
   const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing'>('info');
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Verificar se veio do onboarding (welcome=true)
+  useEffect(() => {
+    if (searchParams.get('welcome') === 'true') {
+      setShowWelcomeModal(true);
+      // Limpar o parâmetro da URL
+      searchParams.delete('welcome');
+      setSearchParams(searchParams, { replace: true });
+    }
+    
+    // Verificar retorno do Stripe Connect
+    if (searchParams.get('stripe_connect') === 'success') {
+      toast({
+        title: '✅ Stripe conectado!',
+        description: 'Sua conta Stripe foi configurada com sucesso.',
+      });
+      searchParams.delete('stripe_connect');
+      setSearchParams(searchParams, { replace: true });
+      // Recarregar dados do parceiro
+      loadPartnerData();
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadPartnerData();
@@ -483,6 +513,24 @@ export default function PartnerDashboard() {
 
           {/* Conteúdo Principal */}
           <div className="flex-1 ms-container py-8">
+            {/* Banners de Status */}
+            <div className="space-y-4 mb-6">
+              {/* Banner: Aguardando Aprovação */}
+              {partner.status === 'pending' && !partner.is_active && (
+                <PendingApprovalBanner />
+              )}
+
+              {/* Banner: Stripe Connect não configurado */}
+              {partner.stripe_connect_status !== 'connected' && (
+                <StripeConnectBanner
+                  partnerId={partner.id}
+                  partnerEmail={partner.contact_email}
+                  partnerName={partner.name}
+                  onConnected={() => loadPartnerData()}
+                />
+              )}
+            </div>
+
             {/* Cards de Métricas com Gráficos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <PartnerMetricCard
@@ -683,6 +731,14 @@ export default function PartnerDashboard() {
             />
           );
         })()}
+
+        {/* Modal de Boas-Vindas */}
+        <WelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          partnerName={partner.name}
+          hasStripeConnected={partner.stripe_connect_status === 'connected'}
+        />
       </main>
     </UniversalLayout>
   );

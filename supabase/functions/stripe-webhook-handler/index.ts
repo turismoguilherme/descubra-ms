@@ -63,6 +63,8 @@ serve(async (req) => {
           await handleEventPaymentCompleted(session, supabase);
         } else if (session.metadata?.type === 'partner_reservation') {
           await handleReservationPaymentCompleted(session, supabase);
+        } else if (session.metadata?.type === 'partner_reservation_connect') {
+          await handleReservationConnectPaymentCompleted(session, supabase);
         } else if (session.metadata?.type === 'data_sale_report') {
           await handleDataSalePaymentCompleted(session, supabase);
         } else if (session.mode === 'subscription' && session.client_reference_id) {
@@ -89,6 +91,10 @@ serve(async (req) => {
         break;
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, supabase);
+        break;
+      case 'account.updated':
+        // Evento do Stripe Connect - conta do parceiro atualizada
+        await handleStripeConnectAccountUpdated(event.data.object as Stripe.Account, supabase);
         break;
       default:
         console.log(`Evento não processado: ${event.type}`);
@@ -1314,9 +1320,231 @@ async function handleDataSalePaymentCompleted(session: Stripe.Checkout.Session, 
   }
 }
 
+// Handler para pagamentos de reserva via Stripe Connect (com split automático)
+async function handleReservationConnectPaymentCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Pagamento de reserva via Stripe Connect completado:', session.id);
 
+  try {
+    const metadata = session.metadata || {};
+    const reservationId = metadata.reservation_id;
+    const partnerId = metadata.partner_id;
+    const commissionAmount = parseFloat(metadata.commission_amount || '0');
+    const partnerAmount = parseFloat(metadata.partner_amount || '0');
+    const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
 
+    if (!reservationId) {
+      console.error('Reservation ID não encontrado no metadata');
+      return;
+    }
 
+    console.log('Processando reserva:', {
+      reservationId,
+      partnerId,
+      totalAmount,
+      commissionAmount,
+      partnerAmount,
+    });
+
+    // Buscar dados do parceiro para notificação
+    const { data: partner } = await supabase
+      .from('institutional_partners')
+      .select('id, name, contact_email')
+      .eq('id', partnerId)
+      .single();
+
+    // Atualizar status da reserva para 'confirmed'
+    const { error: reservationError } = await supabase
+      .from('partner_reservations')
+      .update({
+        status: 'confirmed',
+        payment_status: 'paid',
+        payment_amount: totalAmount,
+        platform_fee: commissionAmount,
+        partner_earnings: partnerAmount,
+        stripe_payment_intent_id: session.payment_intent as string,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', reservationId);
+
+    if (reservationError) {
+      console.error('Erro ao atualizar reserva:', reservationError);
+    } else {
+      console.log('Reserva atualizada com sucesso - Pagamento via Connect');
+    }
+
+    // Registrar transação do parceiro
+    try {
+      await supabase.from('partner_transactions').insert({
+        partner_id: partnerId,
+        reservation_id: reservationId,
+        type: 'reservation_payment',
+        amount: partnerAmount,
+        platform_fee: commissionAmount,
+        total_amount: totalAmount,
+        status: 'completed',
+        stripe_transfer_id: session.payment_intent as string,
+        description: `Reserva ${metadata.reservation_code || reservationId} - Split automático via Stripe Connect`,
+        metadata: {
+          checkout_session_id: session.id,
+          commission_rate: metadata.commission_rate,
+        },
+      });
+      console.log('Transação do parceiro registrada');
+    } catch (txError) {
+      console.warn('Erro ao registrar transação (não crítico):', txError);
+    }
+
+    // Criar notificação de reserva confirmada
+    if (partner) {
+      try {
+        await supabase.from('partner_notifications').insert({
+          partner_id: partnerId,
+          type: 'reservation_confirmed',
+          title: 'Reserva Confirmada - Pagamento Recebido',
+          message: `Pagamento confirmado! Valor total: R$ ${totalAmount.toFixed(2)}. Você receberá R$ ${partnerAmount.toFixed(2)} diretamente na sua conta Stripe.`,
+          reservation_id: reservationId,
+          email_sent: false,
+          action_url: `/partner/dashboard?tab=reservations`,
+          action_label: 'Ver Reserva',
+        });
+        console.log('Notificação criada para parceiro');
+      } catch (notifError) {
+        console.warn('Erro ao criar notificação (não crítico):', notifError);
+      }
+
+      // Enviar email de notificação
+      if (partner.contact_email) {
+        try {
+          await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-notification-email`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'reservation_payment_received',
+              to: partner.contact_email,
+              data: {
+                partnerName: partner.name,
+                reservationId,
+                totalAmount: totalAmount.toFixed(2),
+                partnerAmount: partnerAmount.toFixed(2),
+                platformFee: commissionAmount.toFixed(2),
+              },
+            }),
+          });
+        } catch (emailError) {
+          console.warn('Erro ao enviar email (não crítico):', emailError);
+        }
+      }
+    }
+
+    // Registrar receita da plataforma
+    try {
+      await supabase.from('master_financial_records').insert({
+        record_type: 'revenue',
+        source: 'reservation_commission',
+        amount: commissionAmount,
+        description: `Comissão de reserva - ${partner?.name || partnerId}`,
+        status: 'paid',
+        paid_date: new Date().toISOString().split('T')[0],
+        currency: 'BRL',
+        metadata: {
+          reservation_id: reservationId,
+          partner_id: partnerId,
+          partner_name: partner?.name,
+          total_reservation_amount: totalAmount,
+          commission_rate: metadata.commission_rate,
+          checkout_session_id: session.id,
+        },
+      });
+      console.log('Receita da plataforma registrada');
+    } catch (financeError) {
+      console.warn('Erro ao registrar receita (não crítico):', financeError);
+    }
+
+  } catch (error) {
+    console.error('Erro ao processar pagamento de reserva via Connect:', error);
+  }
+}
+
+// Handler para eventos do Stripe Connect - atualização de conta do parceiro
+async function handleStripeConnectAccountUpdated(account: Stripe.Account, supabase: any) {
+  console.log('Conta Stripe Connect atualizada:', account.id);
+
+  try {
+    // Determinar o status baseado nas capacidades da conta
+    let connectStatus = 'pending';
+    
+    if (account.charges_enabled && account.payouts_enabled) {
+      connectStatus = 'connected';
+    } else if (account.details_submitted) {
+      connectStatus = 'restricted'; // Documentos em análise ou pendências
+    } else if (account.requirements?.disabled_reason) {
+      connectStatus = 'disabled';
+    }
+
+    console.log('Status determinado:', connectStatus, {
+      charges_enabled: account.charges_enabled,
+      payouts_enabled: account.payouts_enabled,
+      details_submitted: account.details_submitted,
+    });
+
+    // Atualizar o parceiro com base no stripe_account_id
+    const { data: partner, error: fetchError } = await supabase
+      .from('institutional_partners')
+      .select('id, name, contact_email')
+      .eq('stripe_account_id', account.id)
+      .single();
+
+    if (fetchError || !partner) {
+      console.log('Parceiro não encontrado para conta:', account.id);
+      return;
+    }
+
+    // Atualizar status
+    const { error: updateError } = await supabase
+      .from('institutional_partners')
+      .update({
+        stripe_connect_status: connectStatus,
+        stripe_connected_at: connectStatus === 'connected' ? new Date().toISOString() : null,
+      })
+      .eq('stripe_account_id', account.id);
+
+    if (updateError) {
+      console.error('Erro ao atualizar status do parceiro:', updateError);
+      return;
+    }
+
+    console.log('Status do parceiro atualizado com sucesso:', partner.name);
+
+    // Se acabou de ser conectado, enviar email de confirmação
+    if (connectStatus === 'connected' && partner.contact_email) {
+      try {
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-notification-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'stripe_connect_complete',
+            to: partner.contact_email,
+            data: {
+              partnerName: partner.name,
+            },
+          }),
+        });
+        console.log('Email de confirmação Stripe Connect enviado para:', partner.contact_email);
+      } catch (emailError) {
+        console.warn('Erro ao enviar email de confirmação (não crítico):', emailError);
+      }
+    }
+
+  } catch (error) {
+    console.error('Erro ao processar atualização de conta Stripe Connect:', error);
+  }
+}
 
 
 

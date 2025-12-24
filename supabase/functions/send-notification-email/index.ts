@@ -9,7 +9,11 @@ type NotificationType =
   | 'event_payment_confirmed'
   | 'partner_approved'
   | 'partner_rejected'
+  | 'partner_welcome'
+  | 'stripe_connect_complete'
+  | 'reservation_payment_received'
   | 'welcome'
+  | 'welcome_subscription'
   | 'system_alert'
   | 'data_report_ready'
   | 'data_report_approved'
@@ -327,6 +331,146 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
       </div>
     `;
     },
+  },
+  partner_welcome: {
+    subject: '🎉 Bem-vindo ao Descubra Mato Grosso do Sul!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a, #3d9970); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">🎉 Bem-vindo!</h1>
+          <p style="color: white; margin-top: 10px;">Descubra Mato Grosso do Sul</p>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Olá, ${data.partnerName || 'Parceiro'}!</h2>
+          <p>Seu cadastro como parceiro do <strong>Descubra Mato Grosso do Sul</strong> foi recebido com sucesso!</p>
+          
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-top: 0;">✅ O que já foi feito:</h3>
+            <ul style="color: #333; padding-left: 20px;">
+              <li>Conta criada com sucesso</li>
+              <li>Pagamento da assinatura confirmado</li>
+              <li>Acesso ao dashboard liberado</li>
+            </ul>
+          </div>
+          
+          <div style="background: #fff3e0; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ff9800;">
+            <h3 style="color: #e65100; margin-top: 0;">📋 Próximos passos:</h3>
+            <ul style="color: #333; padding-left: 20px;">
+              <li>Explore o dashboard e configure seu negócio</li>
+              <li>Adicione mais fotos e informações</li>
+              <li>Configure seus preços e disponibilidade</li>
+              <li>Nossa equipe entrará em contato em até 48h</li>
+            </ul>
+          </div>
+          
+          <p>Enquanto aguarda a aprovação, você já pode explorar todas as funcionalidades do dashboard!</p>
+          
+          <a href="${data.dashboardUrl || 'https://viajartur.com/partner/dashboard'}" 
+             style="display: inline-block; background: linear-gradient(to right, #1e3a5f, #2d8a8a); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Acessar Dashboard
+          </a>
+          
+          <p style="margin-top: 30px; color: #666;">
+            <strong>Dúvidas?</strong> Nossa equipe está pronta para ajudar você a aproveitar ao máximo a plataforma!
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Turismo e Cultura</p>
+        </div>
+      </div>
+    `,
+  },
+  stripe_connect_complete: {
+    subject: '✅ Conta Stripe conectada com sucesso!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #635BFF; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">✅ Stripe Conectado!</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Parabéns, ${data.partnerName || 'Parceiro'}!</h2>
+          <p>Sua conta Stripe foi conectada com sucesso! Agora você pode receber pagamentos de reservas diretamente na sua conta.</p>
+          
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-top: 0;">💰 Como funciona:</h3>
+            <ul style="color: #333; padding-left: 20px;">
+              <li>Quando um turista fizer uma reserva, o pagamento é processado automaticamente</li>
+              <li>Você recebe o valor diretamente na sua conta Stripe</li>
+              <li>Uma pequena comissão é retida pela plataforma (10%)</li>
+            </ul>
+          </div>
+          
+          <a href="https://viajartur.com/partner/dashboard" 
+             style="display: inline-block; background: #635BFF; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Acessar Dashboard
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Área do Parceiro</p>
+        </div>
+      </div>
+    `,
+  },
+  reservation_payment_received: {
+    subject: '💰 Pagamento de reserva recebido!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #4caf50, #2e7d32); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">💰 Pagamento Recebido!</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Olá, ${data.partnerName || 'Parceiro'}!</h2>
+          <p>Uma nova reserva foi paga e você receberá o valor diretamente na sua conta Stripe!</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-top: 0;">📋 Detalhes da Reserva:</h3>
+            <p><strong>Reserva:</strong> #${data.reservationId || '---'}</p>
+            <p><strong>Valor Total:</strong> R$ ${data.totalAmount || '0,00'}</p>
+            <p><strong>Comissão da Plataforma:</strong> R$ ${data.platformFee || '0,00'}</p>
+            <p style="font-size: 18px; color: #2e7d32;"><strong>Você Recebe:</strong> R$ ${data.partnerAmount || '0,00'}</p>
+          </div>
+          
+          <p>O valor será transferido automaticamente para sua conta Stripe.</p>
+          
+          <a href="https://viajartur.com/partner/dashboard?tab=reservations" 
+             style="display: inline-block; background: #4caf50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Ver Reserva
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Área do Parceiro</p>
+        </div>
+      </div>
+    `,
+  },
+  welcome_subscription: {
+    subject: '🎉 Bem-vindo ao ViaJAR Tur!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">🎉 Bem-vindo!</h1>
+          <p style="color: white; margin-top: 10px;">ViaJAR Tur</p>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Olá, ${data.userName || 'Usuário'}!</h2>
+          <p>Sua assinatura do <strong>ViaJAR Tur</strong> foi confirmada com sucesso!</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #1e3a5f;">
+            <p><strong>Plano:</strong> ${data.planName || 'Plano Profissional'}</p>
+            <p><strong>Período:</strong> ${data.billingPeriod === 'annual' ? 'Anual' : 'Mensal'}</p>
+            <p><strong>Valor:</strong> R$ ${data.amount || '0,00'}</p>
+          </div>
+          
+          <a href="https://viajartur.com/viajar/dashboard" 
+             style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Acessar Plataforma
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>ViaJAR Tur - Turismo Inteligente</p>
+        </div>
+      </div>
+    `,
   },
 };
 

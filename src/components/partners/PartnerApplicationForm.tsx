@@ -23,13 +23,19 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Lock
+  Lock,
+  User,
+  Briefcase
 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const partnerSchema = z.object({
   name: z.string().min(2, 'Nome da empresa é obrigatório'),
   description: z.string().min(20, 'Descrição deve ter pelo menos 20 caracteres'),
   partner_type: z.string().min(1, 'Selecione o tipo de negócio'),
+  person_type: z.enum(['pf', 'pj'], { required_error: 'Selecione o tipo de pessoa' }),
+  cpf: z.string().optional(),
+  cnpj: z.string().optional(),
   youtube_url: z.string().url('URL inválida').optional().or(z.literal('')),
   website_url: z.string().url('URL inválida').optional().or(z.literal('')),
   contact_email: z.string().email('Email inválido'),
@@ -40,6 +46,24 @@ const partnerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não coincidem',
   path: ['confirmPassword'],
+}).refine((data) => {
+  // CPF obrigatório para pessoa física
+  if (data.person_type === 'pf') {
+    return data.cpf && data.cpf.length >= 11;
+  }
+  return true;
+}, {
+  message: 'CPF é obrigatório para pessoa física',
+  path: ['cpf'],
+}).refine((data) => {
+  // CNPJ obrigatório para pessoa jurídica
+  if (data.person_type === 'pj') {
+    return data.cnpj && data.cnpj.length >= 14;
+  }
+  return true;
+}, {
+  message: 'CNPJ é obrigatório para pessoa jurídica',
+  path: ['cnpj'],
 });
 
 type FormData = z.infer<typeof partnerSchema>;
@@ -92,6 +116,9 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
       name: '',
       description: '',
       partner_type: '',
+      person_type: 'pj' as const,
+      cpf: '',
+      cnpj: '',
       youtube_url: '',
       website_url: '',
       contact_email: '',
@@ -219,6 +246,9 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
           name: data.name,
           description: data.description,
           partner_type: data.partner_type,
+          person_type: data.person_type,
+          cpf: data.person_type === 'pf' ? data.cpf : null,
+          cnpj: data.person_type === 'pj' ? data.cnpj : null,
           website_url: data.website_url || null,
           contact_email: data.contact_email,
           contact_phone: data.contact_phone || null,
@@ -227,6 +257,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
           status: 'pending',
           is_active: false,
           created_by: authUserId,
+          stripe_connect_status: 'pending',
         }])
         .select()
         .single();
@@ -347,9 +378,6 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="partner_type">Tipo de Negócio *</Label>
             <Select onValueChange={(value) => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:303',message:'partner_type changed',data:{value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
               setValue('partner_type', value);
             }}>
               <SelectTrigger>
@@ -367,6 +395,69 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
               <p className="text-sm text-red-500">{errors.partner_type.message}</p>
             )}
           </div>
+
+          {/* Tipo de Pessoa (PF/PJ) */}
+          <div className="space-y-3 md:col-span-2">
+            <Label>Tipo de Cadastro *</Label>
+            <RadioGroup
+              defaultValue="pj"
+              onValueChange={(value: 'pf' | 'pj') => setValue('person_type', value)}
+              className="flex gap-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pj" id="pj" />
+                <Label htmlFor="pj" className="flex items-center gap-2 cursor-pointer">
+                  <Briefcase className="w-4 h-4 text-ms-primary-blue" />
+                  Pessoa Jurídica (CNPJ)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pf" id="pf" />
+                <Label htmlFor="pf" className="flex items-center gap-2 cursor-pointer">
+                  <User className="w-4 h-4 text-ms-primary-blue" />
+                  Pessoa Física (CPF)
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* CNPJ (para PJ) */}
+          {watch('person_type') === 'pj' && (
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="cnpj">CNPJ *</Label>
+              <Input
+                id="cnpj"
+                {...register('cnpj')}
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+              />
+              {errors.cnpj && (
+                <p className="text-sm text-red-500">{errors.cnpj.message}</p>
+              )}
+              <p className="text-xs text-gray-500">
+                Necessário para receber pagamentos via Stripe
+              </p>
+            </div>
+          )}
+
+          {/* CPF (para PF) */}
+          {watch('person_type') === 'pf' && (
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="cpf">CPF *</Label>
+              <Input
+                id="cpf"
+                {...register('cpf')}
+                placeholder="000.000.000-00"
+                maxLength={14}
+              />
+              {errors.cpf && (
+                <p className="text-sm text-red-500">{errors.cpf.message}</p>
+              )}
+              <p className="text-xs text-gray-500">
+                Necessário para receber pagamentos via Stripe
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
