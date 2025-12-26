@@ -50,8 +50,8 @@ import { AdminNotifications } from '@/components/admin/notifications/AdminNotifi
 // Definição das permissões por cargo
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
   master_admin: ['*'],
-  admin: ['*'],
-  tech: ['*'],
+  admin: ['*', 'communication'],
+  tech: ['*', 'communication'],
   financeiro: ['dashboard', 'financial', 'reports'],
   rh: ['dashboard', 'employees', 'salaries'],
   comercial: ['dashboard', 'clients', 'subscriptions', 'partners'],
@@ -170,6 +170,7 @@ const navigationItems: NavItem[] = [
     platform: 'system',
     children: [
       { id: 'database', label: 'Banco de Dados', icon: Database, path: '/viajar/admin/database', permission: 'database', platform: 'system' },
+      { id: 'emails', label: 'Gestão de Emails', icon: Mail, path: '/viajar/admin/communication/emails', permission: 'communication', platform: 'system' },
       { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
       { id: 'system-logs', label: 'Auditoria', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
       { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },

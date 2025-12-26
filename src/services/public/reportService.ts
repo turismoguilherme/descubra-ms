@@ -1,20 +1,31 @@
 /**
  * Public Sector Report Service
  * Serviço para geração de relatórios municipais
+ * Com análises explicativas baseadas em dados reais
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import { pdfTemplateService, ReportConfig } from '@/services/reports/pdfTemplateService';
+import { 
+  analyzeSecretaryReport, 
+  SecretaryReportData, 
+  AnalysisContext 
+} from '@/services/reports/reportAnalysisService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface ReportData {
   metrics: {
     totalCATs: number;
+    activeCATs: number;
     touristsToday: number;
+    touristsPeriod: number;
+    previousPeriodTourists?: number;
     totalAttractions: number;
+    activeAttractions: number;
     totalEvents: number;
+    confirmedEvents: number;
+    planningEvents: number;
     touristsByDay: Array<{ date: string; count: number }>;
     touristsByOrigin: Array<{ origin: string; count: number }>;
   };
@@ -37,6 +48,7 @@ export interface ReportData {
     name: string;
     date: string;
     participants: number;
+    status: string;
   }>;
 }
 
@@ -59,32 +71,38 @@ export class PublicReportService {
    */
   async fetchReportData(period: { start: Date; end: Date }): Promise<ReportData> {
     try {
+      // Calcular período anterior para comparação
+      const periodDuration = period.end.getTime() - period.start.getTime();
+      const previousPeriodStart = new Date(period.start.getTime() - periodDuration);
+      const previousPeriodEnd = new Date(period.start.getTime() - 1);
+
       // Buscar métricas
-      const [catsResult, touristsResult, attractionsResult, eventsResult] = await Promise.all([
+      const [catsResult, touristsResult, previousTouristsResult, attractionsResult, eventsResult] = await Promise.all([
         supabase
           .from('cat_locations')
-          .select('id, name, address, city, is_active')
-          .eq('is_active', true),
+          .select('id, name, address, city, is_active'),
         
         supabase
           .from('cat_tourists')
-          .select('id, visit_date, origin_state, origin_country')
+          .select('id, visit_date, origin_state, origin_country, cat_id')
           .gte('visit_date', period.start.toISOString().split('T')[0])
           .lte('visit_date', period.end.toISOString().split('T')[0]),
         
         supabase
+          .from('cat_tourists')
+          .select('id', { count: 'exact', head: true })
+          .gte('visit_date', previousPeriodStart.toISOString().split('T')[0])
+          .lte('visit_date', previousPeriodEnd.toISOString().split('T')[0]),
+        
+        supabase
           .from('tourism_inventory')
-          .select('id, name, category, is_active')
-          .eq('is_active', true)
-          .limit(50),
+          .select('id, name, category, is_active, status'),
         
         supabase
           .from('events')
-          .select('id, name, start_date, is_visible')
+          .select('id, name, start_date, is_visible, status')
           .gte('start_date', period.start.toISOString())
           .lte('start_date', period.end.toISOString())
-          .eq('is_visible', true)
-          .limit(50)
       ]);
 
       // Processar turistas por dia
@@ -110,47 +128,67 @@ export class PublicReportService {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
+      // Processar turistas de hoje
+      const today = new Date().toISOString().split('T')[0];
+      const touristsToday = (touristsResult.data || []).filter(t => t.visit_date === today).length;
+
       // Processar CATs
+      const allCats = catsResult.data || [];
+      const activeCats = allCats.filter(cat => cat.is_active);
+
       const cats = await Promise.all(
-        (catsResult.data || []).map(async (cat) => {
-          const { count } = await supabase
-            .from('cat_tourists')
-            .select('id', { count: 'exact', head: true })
-            .eq('visit_date', new Date().toISOString().split('T')[0])
-            .eq('cat_id', cat.id);
+        allCats.map(async (cat) => {
+          // Contar turistas por CAT no período
+          const catTourists = (touristsResult.data || []).filter(t => t.cat_id === cat.id);
           
           return {
             id: cat.id,
             name: cat.name,
             location: cat.address || cat.city || 'N/A',
-            tourists: count || 0,
-            rating: 4.5,
-            status: 'active'
+            tourists: catTourists.length,
+            rating: 4.5, // TODO: buscar avaliações reais
+            status: cat.is_active ? 'Ativo' : 'Inativo'
           };
         })
       );
 
+      // Processar atrações
+      const allAttractions = attractionsResult.data || [];
+      const activeAttractions = allAttractions.filter(a => a.is_active);
+
+      // Processar eventos
+      const allEvents = eventsResult.data || [];
+      const confirmedEvents = allEvents.filter(e => e.status === 'confirmed' || e.status === 'published');
+      const planningEvents = allEvents.filter(e => e.status === 'draft' || e.status === 'pending');
+
       return {
         metrics: {
-          totalCATs: catsResult.data?.length || 0,
-          touristsToday: touristsResult.data?.length || 0,
-          totalAttractions: attractionsResult.data?.length || 0,
-          totalEvents: eventsResult.data?.length || 0,
+          totalCATs: allCats.length,
+          activeCATs: activeCats.length,
+          touristsToday,
+          touristsPeriod: touristsResult.data?.length || 0,
+          previousPeriodTourists: previousTouristsResult.count || undefined,
+          totalAttractions: allAttractions.length,
+          activeAttractions: activeAttractions.length,
+          totalEvents: allEvents.length,
+          confirmedEvents: confirmedEvents.length,
+          planningEvents: planningEvents.length,
           touristsByDay,
           touristsByOrigin
         },
-        cats,
-        attractions: (attractionsResult.data || []).map(item => ({
+        cats: cats.sort((a, b) => b.tourists - a.tourists),
+        attractions: allAttractions.map(item => ({
           id: item.id,
           name: item.name || '',
           category: item.category || 'outros',
           visitors: 0
         })),
-        events: (eventsResult.data || []).map(item => ({
+        events: allEvents.map(item => ({
           id: item.id,
           name: item.name || '',
           date: item.start_date || '',
-          participants: 0
+          participants: 0,
+          status: item.status || 'pending'
         }))
       };
     } catch (error) {
@@ -160,176 +198,121 @@ export class PublicReportService {
   }
 
   /**
-   * Gerar relatório em PDF
+   * Gerar relatório em PDF usando o novo template
    */
   async generatePDFReport(options: ReportOptions): Promise<Blob> {
     const data = await this.fetchReportData(options.period);
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    let yPosition = 20;
 
-    // Cabeçalho
-    doc.setFontSize(20);
-    doc.setTextColor(59, 130, 246); // Azul
-    doc.text('ViaJAR - Relatório Municipal', pageWidth / 2, yPosition, { align: 'center' });
-    
-    yPosition += 10;
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text(options.title, pageWidth / 2, yPosition, { align: 'center' });
-    
-    yPosition += 8;
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      `Período: ${format(options.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(options.period.end, 'dd/MM/yyyy', { locale: ptBR })}`,
-      pageWidth / 2,
-      yPosition,
-      { align: 'center' }
-    );
-    
-    yPosition += 6;
-    doc.text(
-      `Gerado em: ${format(new Date(), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}`,
-      pageWidth / 2,
-      yPosition,
-      { align: 'center' }
-    );
+    // Preparar dados para análise
+    const analysisData: SecretaryReportData = {
+      cats: {
+        total: data.metrics.totalCATs,
+        active: data.metrics.activeCATs
+      },
+      tourists: {
+        total: data.metrics.touristsPeriod,
+        today: data.metrics.touristsToday,
+        previousPeriod: data.metrics.previousPeriodTourists
+      },
+      attractions: {
+        total: data.metrics.totalAttractions,
+        active: data.metrics.activeAttractions
+      },
+      events: {
+        total: data.metrics.totalEvents,
+        confirmed: data.metrics.confirmedEvents,
+        planning: data.metrics.planningEvents
+      },
+      topOrigins: data.metrics.touristsByOrigin.slice(0, 5)
+    };
 
-    yPosition += 15;
+    const analysisContext: AnalysisContext = {
+      reportType: 'municipal_report',
+      period: options.period,
+      generatedBy: 'Secretaria de Turismo',
+      userRole: 'secretary'
+    };
 
-    // Métricas Principais
-    if (options.includeMetrics !== false) {
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Métricas Principais', 20, yPosition);
-      yPosition += 10;
+    // Gerar análise
+    const analysis = analyzeSecretaryReport(analysisData, analysisContext);
 
-      const metricsData = [
-        ['Indicador', 'Valor'],
-        ['Total de CATs', data.metrics.totalCATs.toString()],
-        ['Turistas Hoje', data.metrics.touristsToday.toString()],
-        ['Total de Atrações', data.metrics.totalAttractions.toString()],
-        ['Total de Eventos', data.metrics.totalEvents.toString()]
-      ];
+    // Preparar configuração do relatório
+    const reportConfig: ReportConfig = {
+      reportType: 'municipal_report',
+      title: options.title,
+      period: options.period,
+      generatedBy: 'Secretaria de Turismo',
+      customFields: [
+        { label: 'Total de CATs', value: data.metrics.totalCATs },
+        { label: 'CATs Ativos', value: data.metrics.activeCATs },
+        { label: 'Turistas no Período', value: data.metrics.touristsPeriod },
+        { label: 'Total de Atrações', value: data.metrics.totalAttractions },
+        { label: 'Total de Eventos', value: data.metrics.totalEvents }
+      ],
+      analysis
+    };
 
-      (doc as any).autoTable({
-        startY: yPosition,
-        head: [metricsData[0]],
-        body: metricsData.slice(1),
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 10 },
-        margin: { left: 20, right: 20 }
-      });
-
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
-    }
-
-    // Performance dos CATs
+    // Adicionar tabela de CATs
     if (options.includeCATs !== false && data.cats.length > 0) {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(14);
-      doc.text('Performance dos CATs', 20, yPosition);
-      yPosition += 10;
-
-      const catsData = data.cats.map(cat => [
-        cat.name,
-        cat.location,
-        cat.tourists.toString(),
-        cat.rating.toFixed(1),
-        cat.status
-      ]);
-
-      (doc as any).autoTable({
-        startY: yPosition,
-        head: [['Nome', 'Localização', 'Turistas Hoje', 'Avaliação', 'Status']],
-        body: catsData,
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 9 },
-        margin: { left: 20, right: 20 }
-      });
-
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
+      reportConfig.tableData = {
+        headers: ['CAT', 'Localização', 'Turistas', 'Avaliação', 'Status'],
+        rows: data.cats.map(cat => [
+          cat.name,
+          cat.location,
+          cat.tourists,
+          cat.rating.toFixed(1),
+          cat.status
+        ])
+      };
     }
 
-    // Turistas por Origem
+    // Adicionar seções adicionais
+    const sections: Array<{ title: string; content: string | string[] | (string | number)[][] }> = [];
+
+    // Seção de origem dos turistas
     if (data.metrics.touristsByOrigin.length > 0) {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(14);
-      doc.text('Origem dos Turistas (Top 10)', 20, yPosition);
-      yPosition += 10;
-
-      const originData = data.metrics.touristsByOrigin.map(item => [
-        item.origin,
-        item.count.toString()
-      ]);
-
-      (doc as any).autoTable({
-        startY: yPosition,
-        head: [['Origem', 'Quantidade']],
-        body: originData,
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 10 },
-        margin: { left: 20, right: 20 }
+      sections.push({
+        title: 'Origem dos Turistas (Top 10)',
+        content: [
+          ['Origem', 'Quantidade'],
+          ...data.metrics.touristsByOrigin.map(item => [item.origin, item.count])
+        ]
       });
-
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
     }
 
-    // Eventos
+    // Seção de eventos
     if (options.includeEvents !== false && data.events.length > 0) {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(14);
-      doc.text('Eventos Programados', 20, yPosition);
-      yPosition += 10;
-
-      const eventsData = data.events.map(event => [
-        event.name,
-        format(new Date(event.date), 'dd/MM/yyyy', { locale: ptBR }),
-        event.participants.toString()
-      ]);
-
-      (doc as any).autoTable({
-        startY: yPosition,
-        head: [['Nome', 'Data', 'Participantes']],
-        body: eventsData,
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 9 },
-        margin: { left: 20, right: 20 }
+      sections.push({
+        title: 'Eventos no Período',
+        content: [
+          ['Nome', 'Data', 'Status'],
+          ...data.events.map(event => [
+            event.name,
+            event.date ? format(new Date(event.date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A',
+            event.status === 'confirmed' || event.status === 'published' ? 'Confirmado' : 
+            event.status === 'draft' ? 'Rascunho' : 'Pendente'
+          ])
+        ]
       });
     }
 
-    // Rodapé
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(
-        `Página ${i} de ${pageCount}`,
-        pageWidth / 2,
-        doc.internal.pageSize.height - 10,
-        { align: 'center' }
-      );
+    // Seção de atrações
+    if (options.includeAttractions !== false && data.attractions.length > 0) {
+      sections.push({
+        title: 'Inventário Turístico',
+        content: [
+          ['Atração', 'Categoria'],
+          ...data.attractions.slice(0, 20).map(item => [item.name, item.category])
+        ]
+      });
     }
 
-    return doc.output('blob');
+    if (sections.length > 0) {
+      reportConfig.sections = sections;
+    }
+
+    // Gerar PDF usando o template padrão
+    return pdfTemplateService.generateReport(reportConfig);
   }
 
   /**
@@ -354,4 +337,3 @@ export class PublicReportService {
 }
 
 export const publicReportService = new PublicReportService();
-

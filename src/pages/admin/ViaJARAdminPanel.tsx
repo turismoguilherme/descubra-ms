@@ -52,6 +52,7 @@ const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/C
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
+const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
@@ -308,7 +309,14 @@ export default function ViaJARAdminPanel() {
                 <SystemHealthMonitor />
               </Suspense>
             } />
-            
+
+            {/* Email Management */}
+            <Route path="communication/emails" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <EmailDashboard />
+              </Suspense>
+            } />
+
             <Route path="*" element={<Navigate to="/viajar/admin" replace />} />
           </Routes>
     </ModernAdminLayout>

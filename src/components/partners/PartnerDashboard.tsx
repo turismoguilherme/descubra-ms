@@ -15,8 +15,11 @@ import {
   Building2,
   AlertCircle,
   LogOut,
-  Menu
+  Menu,
+  FileText
 } from 'lucide-react';
+import PDFReportButton from '@/components/exports/PDFReportButton';
+import { format, subDays, startOfMonth } from 'date-fns';
 import PartnerBusinessEditor from './PartnerBusinessEditor';
 import PartnerPricingEditor from './PartnerPricingEditor';
 import { PartnerMetricCard } from './PartnerMetricCard';
@@ -28,6 +31,7 @@ import { ReservationChat } from './ReservationChat';
 import { ReservationMessageService } from '@/services/partners/reservationMessageService';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import PartnerRewardsManager from './PartnerRewardsManager';
+import PartnerReportsSection from './PartnerReportsSection';
 import PendingApprovalBanner from './PendingApprovalBanner';
 import StripeConnectBanner from './StripeConnectBanner';
 import WelcomeModal from './WelcomeModal';
@@ -448,6 +452,27 @@ export default function PartnerDashboard() {
             </div>
           </div>
         </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('reports');
+            if (isMobile) setSidebarOpen(false);
+          }}
+          className={cn(
+            'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3',
+            activeTab === 'reports'
+              ? 'bg-ms-primary-blue text-white shadow-md'
+              : 'text-gray-700 hover:bg-gray-100'
+          )}
+        >
+          <FileText className={cn('w-5 h-5', activeTab === 'reports' ? 'text-white' : 'text-gray-500')} />
+          <div className="flex-1">
+            <div className="font-medium">Relatórios</div>
+            <div className={cn('text-xs', activeTab === 'reports' ? 'text-white/80' : 'text-gray-500')}>
+              Exportar dados
+            </div>
+          </div>
+        </button>
       </nav>
     </div>
   );
@@ -573,6 +598,8 @@ export default function PartnerDashboard() {
                 <CardTitle className="text-xl text-ms-primary-blue">
                   {activeTab === 'reservations' ? 'Reservas' : 
                    activeTab === 'transactions' ? 'Transações' :
+                   activeTab === 'reports' ? 'Relatórios' :
+                   activeTab === 'rewards' ? 'Recompensas' :
                    'Meu Negócio'}
                 </CardTitle>
                 <CardDescription>
@@ -580,6 +607,10 @@ export default function PartnerDashboard() {
                     ? 'Gerencie suas reservas e acompanhe o status'
                     : activeTab === 'transactions'
                     ? 'Histórico completo de transações financeiras'
+                    : activeTab === 'reports'
+                    ? 'Exporte relatórios em PDF'
+                    : activeTab === 'rewards'
+                    ? 'Gerencie o Passaporte Digital'
                     : 'Atualize as informações do seu negócio'}
                 </CardDescription>
               </CardHeader>
@@ -686,6 +717,11 @@ export default function PartnerDashboard() {
                   <PartnerRewardsManager 
                     partnerId={partner.id} 
                     partnerName={partner.name} 
+                  />
+                ) : activeTab === 'reports' ? (
+                  <PartnerReportsSection 
+                    partner={partner} 
+                    reservations={reservations} 
                   />
                 ) : null}
               </CardContent>

@@ -474,12 +474,89 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
   },
 };
 
+// Função helper para substituir variáveis em templates
+function replaceTemplateVariables(template: string, data: Record<string, any>): string {
+  let result = template;
+  
+  // Substituir variáveis no formato {{variable}}
+  for (const [key, value] of Object.entries(data)) {
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(regex, value !== null && value !== undefined ? String(value) : '');
+  }
+  
+  // Substituir condicionais simples {{#if variable}}...{{/if}}
+  // Por enquanto, apenas remove se variável não existir ou for falsy
+  result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, varName, content) => {
+    if (data[varName]) {
+      return content;
+    }
+    return '';
+  });
+  
+  return result;
+}
+
+// Função para buscar template do banco
+async function getTemplateFromDatabase(
+  supabase: any,
+  type: NotificationType
+): Promise<{ subject: string; html: string } | null> {
+  try {
+    // Mapear tipos para nomes de templates
+    const templateNameMap: Record<NotificationType, string> = {
+      event_approved: 'Event Approved',
+      event_rejected: 'Event Rejected',
+      event_payment_confirmed: 'Event Payment Confirmed',
+      partner_approved: 'Partner Approved',
+      partner_rejected: 'Partner Rejected',
+      partner_welcome: 'Partner Welcome',
+      welcome: 'Welcome',
+      welcome_subscription: 'Welcome Subscription',
+      system_alert: 'System Alert',
+      data_report_approved: 'Data Report Approved',
+      data_report_ready: 'Data Report Ready',
+      partner_notification: 'Partner Notification',
+      stripe_connect_complete: 'Stripe Connect Complete',
+      reservation_payment_received: 'Reservation Payment Received',
+    };
+
+    const templateName = templateNameMap[type];
+    if (!templateName) return null;
+
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('subject_template, body_template, is_active')
+      .eq('name', templateName)
+      .eq('channel', 'email')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.log(`⚠️ [send-notification-email] Template "${templateName}" não encontrado no banco, usando fallback`);
+      return null;
+    }
+
+    return {
+      subject: data.subject_template || '',
+      html: data.body_template || '',
+    };
+  } catch (error) {
+    console.error('❌ [send-notification-email] Erro ao buscar template do banco:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     let requestData: EmailRequest;
     try {
       // Usar req.json() diretamente como outras Edge Functions fazem
@@ -535,47 +612,61 @@ serve(async (req) => {
       );
     }
 
-    if (!templates[type]) {
-      console.error('❌ [send-notification-email] Tipo de template não encontrado:', {
-        requestedType: type,
-        availableTypes: Object.keys(templates),
-        templatesCount: Object.keys(templates).length
-      });
-      return new Response(
-        JSON.stringify({ 
-          error: `Invalid template type: ${type}. Available: ${Object.keys(templates).join(', ')}`,
-          requestedType: type,
-          availableTypes: Object.keys(templates)
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    const template = templates[type];
+    // Tentar buscar template do banco primeiro
+    const dbTemplate = await getTemplateFromDatabase(supabase, type);
     
-    // Determinar subject (pode ser string ou função)
     let subject: string;
-    if (typeof template.subject === 'function') {
-      subject = template.subject(data);
-    } else if (type === 'system_alert' && data?.service_name) {
-      subject = `🚨 Alerta: ${data.service_name} - Descubra MS`;
-    } else {
-      subject = template.subject;
-    }
-    
-    // Gerar HTML do template
     let htmlContent: string;
-    try {
-      htmlContent = template.html(data || {});
-      if (!htmlContent) {
-        throw new Error('Template HTML retornou vazio');
+
+    if (dbTemplate) {
+      // Usar template do banco
+      console.log(`✅ [send-notification-email] Usando template do banco para tipo: ${type}`);
+      subject = replaceTemplateVariables(dbTemplate.subject, data || {});
+      htmlContent = replaceTemplateVariables(dbTemplate.html, data || {});
+    } else {
+      // Fallback para template hardcoded
+      console.log(`⚠️ [send-notification-email] Usando template hardcoded (fallback) para tipo: ${type}`);
+      
+      if (!templates[type]) {
+        console.error('❌ [send-notification-email] Tipo de template não encontrado:', {
+          requestedType: type,
+          availableTypes: Object.keys(templates),
+          templatesCount: Object.keys(templates).length
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: `Invalid template type: ${type}. Available: ${Object.keys(templates).join(', ')}`,
+            requestedType: type,
+            availableTypes: Object.keys(templates)
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
       }
-    } catch (htmlError: any) {
-      console.error('❌ [send-notification-email] Erro ao gerar HTML do template:', htmlError);
-      return new Response(
-        JSON.stringify({ error: `Error generating email HTML: ${htmlError.message}` }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+
+      const template = templates[type];
+      
+      // Determinar subject (pode ser string ou função)
+      if (typeof template.subject === 'function') {
+        subject = template.subject(data);
+      } else if (type === 'system_alert' && data?.service_name) {
+        subject = `🚨 Alerta: ${data.service_name} - Descubra MS`;
+      } else {
+        subject = template.subject;
+      }
+      
+      // Gerar HTML do template
+      try {
+        htmlContent = template.html(data || {});
+        if (!htmlContent) {
+          throw new Error('Template HTML retornou vazio');
+        }
+      } catch (htmlError: any) {
+        console.error('❌ [send-notification-email] Erro ao gerar HTML do template:', htmlError);
+        return new Response(
+          JSON.stringify({ error: `Error generating email HTML: ${htmlError.message}` }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
     }
     
     const emailContent = {

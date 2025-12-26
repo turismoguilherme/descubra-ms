@@ -473,13 +473,194 @@ async function executeAnomalyDetection(supabase: any) {
   }
 }
 
+// Lista de palavrões em português brasileiro
+const PROFANITY_WORDS = [
+  'caralho', 'porra', 'puta', 'puto', 'foda', 'foder', 'fodido', 'fodida',
+  'merda', 'bosta', 'cacete', 'caceta', 'cu', 'buceta', 'xoxota', 'xavasca',
+  'viado', 'viadão', 'bicha', 'baitola', 'traveco', 'travesti',
+  'filho da puta', 'fdp', 'vsf', 'vai se foder', 'vai tomar no cu',
+  'crl', 'pqp', 'ptqp', 'vtnc', 'vtmnc',
+  'idiota', 'imbecil', 'burro', 'burra', 'retardado', 'retardada',
+];
+
+// Temas proibidos
+const PROHIBITED_TOPICS = [
+  'assassinato', 'homicídio', 'matar', 'morte violenta', 'sangue', 'arma', 'tiro',
+  'maconha', 'cocaína', 'crack', 'heroína', 'lsd', 'ecstasy', 'drogas ilícitas',
+  'racismo', 'nazismo', 'fascismo', 'homofobia', 'xenofobia', 'preconceito',
+  'pornografia', 'sexo explícito', 'nudez', 'erótico explícito',
+  'terrorismo', 'extremismo', 'apologia ao crime',
+];
+
+// Palavras de spam
+const SPAM_WORDS = [
+  'teste', 'test', 'spam', 'xxx', 'promoção urgente', 'clique aqui agora',
+  'ganhe dinheiro fácil', 'trabalhe em casa', 'enriquecer rápido',
+];
+
+// Função para verificar palavrões
+function checkProfanity(content: string): boolean {
+  const normalized = content.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return PROFANITY_WORDS.some(word => 
+    normalized.includes(word.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+  );
+}
+
+// Função para verificar temas proibidos
+function checkProhibitedTopics(content: string): boolean {
+  const normalized = content.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return PROHIBITED_TOPICS.some(topic => 
+    normalized.includes(topic.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+  );
+}
+
+// Função para verificar spam
+function checkSpam(content: string): boolean {
+  const normalized = content.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return SPAM_WORDS.some(spam => 
+    normalized.includes(spam.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+  );
+}
+
+// Função para analisar conteúdo com Gemini
+async function analyzeContentWithAI(content: string): Promise<{
+  isAppropriate: boolean;
+  confidence: number;
+  reason?: string;
+}> {
+  try {
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      console.warn('⚠️ GEMINI_API_KEY não configurada, pulando análise de IA');
+      return { isAppropriate: true, confidence: 0.5, reason: 'IA não disponível' };
+    }
+
+    const prompt = `Você é um moderador de conteúdo para uma plataforma de turismo do Mato Grosso do Sul.
+
+Analise o seguinte conteúdo e determine se é apropriado para ser publicado em uma plataforma de turismo familiar.
+
+CONTEÚDO:
+"${content}"
+
+INSTRUÇÕES:
+1. Verifique se contém palavrões, linguagem ofensiva ou inadequada
+2. Verifique se faz apologia a violência, drogas, discriminação ou outros temas proibidos
+3. Verifique se é spam ou conteúdo duplicado
+4. Verifique se é apropriado para uma plataforma de turismo familiar
+5. Verifique se o tom e linguagem são profissionais
+
+RESPONDA APENAS EM JSON:
+{
+  "isAppropriate": true/false,
+  "confidence": 0.0-1.0,
+  "reason": "explicação breve"
+}
+
+Seja rigoroso mas justo. Conteúdo de turismo deve ser profissional e adequado para todas as idades.`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Tentar extrair JSON
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        isAppropriate: parsed.isAppropriate !== false,
+        confidence: parsed.confidence || 0.5,
+        reason: parsed.reason,
+      };
+    }
+
+    // Fallback: analisar texto
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('não apropriado') || lowerText.includes('inadequado') || lowerText.includes('rejeitar')) {
+      return { isAppropriate: false, confidence: 0.7, reason: 'IA identificou conteúdo inadequado' };
+    }
+
+    return { isAppropriate: true, confidence: 0.8, reason: 'IA não identificou problemas' };
+  } catch (error: any) {
+    console.error('❌ Erro na análise com IA:', error);
+    return { isAppropriate: true, confidence: 0.5, reason: 'Erro na análise de IA' };
+  }
+}
+
+// Função para moderar evento
+async function moderateEvent(event: any): Promise<{
+  approved: boolean;
+  score: number;
+  reason?: string;
+  needsHumanReview: boolean;
+}> {
+  const contentParts: string[] = [];
+  if (event.name) contentParts.push(event.name);
+  if (event.title) contentParts.push(event.title);
+  if (event.description) contentParts.push(event.description);
+
+  const fullContent = contentParts.join(' ');
+
+  // Verificações básicas
+  const hasProfanity = checkProfanity(fullContent);
+  const hasProhibitedTopic = checkProhibitedTopics(fullContent);
+  const hasSpam = checkSpam(fullContent);
+
+  // Análise com IA
+  const aiAnalysis = await analyzeContentWithAI(fullContent);
+
+  // Calcular pontuação (0-100)
+  let score = 100;
+  if (hasProfanity) score -= 40;
+  if (hasProhibitedTopic) score -= 50;
+  if (hasSpam) score -= 30;
+  if (!aiAnalysis.isAppropriate) {
+    score -= (1 - aiAnalysis.confidence) * 30;
+  }
+  if (aiAnalysis.isAppropriate && aiAnalysis.confidence > 0.8) {
+    score += 10;
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  const approved = score >= 90;
+  const needsHumanReview = score >= 70 && score < 90;
+
+  let reason: string | undefined;
+  if (!approved) {
+    const reasons: string[] = [];
+    if (hasProfanity) reasons.push('contém palavrões');
+    if (hasProhibitedTopic) reasons.push('faz apologia a temas proibidos');
+    if (hasSpam) reasons.push('identificado como spam');
+    if (!aiAnalysis.isAppropriate) reasons.push(aiAnalysis.reason || 'conteúdo inadequado');
+    reason = reasons.join(', ');
+  }
+
+  return { approved, score: Math.round(score), reason, needsHumanReview };
+}
+
 // Função para aprovar eventos automaticamente
 async function executeAutoApproveEvents(supabase: any) {
   try {
+    console.log('🔍 [AutoApproveEvents] Iniciando verificação de eventos pendentes...');
+
     // Buscar eventos pendentes gratuitos
     const { data: pendingEvents, error } = await supabase
       .from('events')
-      .select('id, name, title, start_date, is_free, price, approval_status')
+      .select('id, name, title, description, start_date, is_free, price, approval_status')
       .eq('approval_status', 'pending')
       .or('is_free.eq.true,price.eq.0')
       .limit(50);
@@ -487,23 +668,34 @@ async function executeAutoApproveEvents(supabase: any) {
     if (error) throw error;
 
     const approvedEvents: any[] = [];
+    const rejectedEvents: any[] = [];
+    const needsReviewEvents: any[] = [];
     const today = new Date();
     const minDate = new Date(today);
     minDate.setDate(minDate.getDate() + 7); // Mínimo 7 dias no futuro
 
-    const blockedWords = ['teste', 'test', 'spam', 'xxx'];
-
     for (const event of pendingEvents || []) {
-      const eventName = (event.name || event.title || '').toLowerCase();
       const startDate = event.start_date ? new Date(event.start_date) : null;
       const isFree = event.is_free === true || event.price === 0 || event.price === null;
-      
-      const hasBlockedWords = blockedWords.some(word => eventName.includes(word));
       const hasValidDate = startDate && startDate >= minDate;
       const hasRequiredFields = event.name || event.title;
 
-      if (isFree && hasValidDate && hasRequiredFields && !hasBlockedWords) {
-        // Aprovar
+      // Verificações básicas primeiro
+      if (!isFree || !hasValidDate || !hasRequiredFields) {
+        rejectedEvents.push({
+          event,
+          reason: !isFree ? 'Evento não é gratuito' :
+                 !hasValidDate ? 'Data muito próxima ou inválida' :
+                 !hasRequiredFields ? 'Campos obrigatórios faltando' : 'Outro motivo',
+        });
+        continue;
+      }
+
+      // Moderação de conteúdo
+      const moderation = await moderateEvent(event);
+
+      if (moderation.approved) {
+        // Aprovar automaticamente
         const { error: updateError } = await supabase
           .from('events')
           .update({
@@ -518,29 +710,95 @@ async function executeAutoApproveEvents(supabase: any) {
           
           await supabase.from('ai_auto_approvals').insert({
             event_id: event.id,
-            approval_reason: 'Evento gratuito com data válida e campos obrigatórios preenchidos',
+            approval_reason: `Aprovado automaticamente - Score: ${moderation.score}/100`,
             rules_applied: {
               isFree: true,
               hasValidDate: true,
               hasRequiredFields: true,
-              hasBlockedWords: false,
+              moderationScore: moderation.score,
+              flags: {
+                hasProfanity: false,
+                hasProhibitedTopic: false,
+                hasSpam: false,
+              },
             },
             event_data: event,
           });
+
+          console.log(`✅ [AutoApproveEvents] Evento aprovado: ${event.name || event.title} (Score: ${moderation.score})`);
+        }
+      } else if (moderation.needsHumanReview) {
+        // Encaminhar para revisão humana
+        needsReviewEvents.push({
+          event,
+          reason: moderation.reason,
+          score: moderation.score,
+        });
+
+        await supabase.from('ai_auto_approvals').insert({
+          event_id: event.id,
+          approval_reason: `Necessita revisão humana - Score: ${moderation.score}/100 - ${moderation.reason}`,
+          rules_applied: {
+            isFree: true,
+            hasValidDate: true,
+            hasRequiredFields: true,
+            moderationScore: moderation.score,
+            needsHumanReview: true,
+          },
+          event_data: event,
+        });
+
+        console.log(`⚠️ [AutoApproveEvents] Evento precisa de revisão: ${event.name || event.title} (Score: ${moderation.score})`);
+      } else {
+        // Rejeitar automaticamente
+        rejectedEvents.push({
+          event,
+          reason: moderation.reason || 'Conteúdo inadequado',
+          score: moderation.score,
+        });
+
+        const { error: updateError } = await supabase
+          .from('events')
+          .update({
+            approval_status: 'rejected',
+            rejection_reason: moderation.reason || 'Conteúdo não atende aos critérios de aprovação automática',
+          })
+          .eq('id', event.id);
+
+        if (!updateError) {
+          await supabase.from('ai_auto_approvals').insert({
+            event_id: event.id,
+            approval_reason: `Rejeitado automaticamente - Score: ${moderation.score}/100 - ${moderation.reason}`,
+            rules_applied: {
+              isFree: true,
+              hasValidDate: true,
+              hasRequiredFields: true,
+              moderationScore: moderation.score,
+              rejected: true,
+            },
+            event_data: event,
+          });
+
+          console.log(`❌ [AutoApproveEvents] Evento rejeitado: ${event.name || event.title} (Score: ${moderation.score}) - ${moderation.reason}`);
         }
       }
     }
 
+    console.log(`📊 [AutoApproveEvents] Resumo: ${approvedEvents.length} aprovados, ${rejectedEvents.length} rejeitados, ${needsReviewEvents.length} precisam revisão`);
+
     return {
       success: true,
-      message: `${approvedEvents.length} evento(s) aprovado(s) automaticamente`,
+      message: `${approvedEvents.length} evento(s) aprovado(s), ${rejectedEvents.length} rejeitado(s), ${needsReviewEvents.length} precisam revisão`,
       data: {
         totalChecked: pendingEvents?.length || 0,
         approved: approvedEvents.length,
+        rejected: rejectedEvents.length,
+        needsReview: needsReviewEvents.length,
         timestamp: new Date().toISOString(),
       },
     };
   } catch (error: any) {
+    console.error('❌ [AutoApproveEvents] Erro:', error);
     return { success: false, message: 'Erro na aprovação automática', error: error.message };
   }
 }

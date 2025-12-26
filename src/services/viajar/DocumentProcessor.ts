@@ -86,7 +86,7 @@ export class DocumentProcessor {
       const prompt = this.buildExtractionPrompt(businessCategory);
 
       // Processar arquivo
-      const result = await model.generateContent([
+      const geminiResult = await model.generateContent([
         {
           inlineData: {
             data: fileData.base64,
@@ -96,7 +96,7 @@ export class DocumentProcessor {
         prompt,
       ]);
 
-      const responseText = result.response.text();
+      const responseText = geminiResult.response.text();
       console.log('✅ [DocumentProcessor] Resposta do Gemini:', responseText.substring(0, 200));
 
       // Parsear resposta JSON
