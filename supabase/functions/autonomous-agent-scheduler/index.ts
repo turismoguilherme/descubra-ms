@@ -820,6 +820,55 @@ async function executeAutoApproveEvents(supabase: any) {
   }
 }
 
+// Função para executar agente Cris de email
+async function executeCrisEmailAgent(supabase: any) {
+  try {
+    console.log('📧 [Cris Email Agent] Iniciando processamento de emails...');
+
+    // Chamar Edge Function do Cris
+    const functionUrl = Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '/functions/v1');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+    if (!functionUrl || !anonKey) {
+      throw new Error('Configuração de URL ou chave do Supabase não encontrada');
+    }
+
+    const response = await fetch(`${functionUrl}/cris-email-agent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        source: 'autonomous-agent-scheduler',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro ao chamar Cris Email Agent: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      message: result.message || 'Emails processados pelo Cris',
+      data: result,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error: any) {
+    console.error('❌ [Cris Email Agent] Erro:', error);
+    return {
+      success: false,
+      message: 'Erro ao processar emails com Cris',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
 // Função para limpeza de cache
 async function executeCacheCleanup(supabase: any) {
   try {
