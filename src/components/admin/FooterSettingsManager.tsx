@@ -20,6 +20,11 @@ interface FooterSettings {
     linkedin?: string;
   };
   copyright?: string;
+  business_hours?: {
+    weekdays?: string;
+    saturday?: string;
+    sunday?: string;
+  };
 }
 
 const DEFAULT_SETTINGS: FooterSettings = {
@@ -352,6 +357,60 @@ export default function FooterSettingsManager() {
               value={settings.copyright || ''}
               onChange={(e) => setSettings({ ...settings, copyright: e.target.value })}
               placeholder="© 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Horário de Atendimento</CardTitle>
+          <CardDescription>Configure os horários de atendimento que aparecerão na página de contato</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="business_hours_weekdays">Segunda a Sexta</Label>
+            <Input
+              id="business_hours_weekdays"
+              value={settings.business_hours?.weekdays || ''}
+              onChange={(e) => setSettings({ 
+                ...settings, 
+                business_hours: { 
+                  ...settings.business_hours, 
+                  weekdays: e.target.value 
+                } 
+              })}
+              placeholder="8h às 18h"
+            />
+          </div>
+          <div>
+            <Label htmlFor="business_hours_saturday">Sábado</Label>
+            <Input
+              id="business_hours_saturday"
+              value={settings.business_hours?.saturday || ''}
+              onChange={(e) => setSettings({ 
+                ...settings, 
+                business_hours: { 
+                  ...settings.business_hours, 
+                  saturday: e.target.value 
+                } 
+              })}
+              placeholder="9h às 13h"
+            />
+          </div>
+          <div>
+            <Label htmlFor="business_hours_sunday">Domingo</Label>
+            <Input
+              id="business_hours_sunday"
+              value={settings.business_hours?.sunday || ''}
+              onChange={(e) => setSettings({ 
+                ...settings, 
+                business_hours: { 
+                  ...settings.business_hours, 
+                  sunday: e.target.value 
+                } 
+              })}
+              placeholder="Fechado"
             />
           </div>
         </CardContent>

@@ -12,6 +12,11 @@ interface FooterSettings {
     linkedin?: string;
   };
   copyright?: string;
+  business_hours?: {
+    weekdays?: string;
+    saturday?: string;
+    sunday?: string;
+  };
 }
 
 const DEFAULT_SETTINGS: FooterSettings = {

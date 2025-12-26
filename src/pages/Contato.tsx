@@ -12,7 +12,12 @@ import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const Contato = () => {
   const { toast } = useToast();
-  const { settings: footerSettings } = useFooterSettings('viajar');
+  const { settings: footerSettings, loading: footerLoading } = useFooterSettings('viajar');
+
+  // Log para debug
+  useEffect(() => {
+    console.log('📄 [Contato] Footer settings carregados:', footerSettings);
+  }, [footerSettings]);
 
   // Garantir que a página role para o topo ao carregar
   useEffect(() => {
@@ -296,26 +301,37 @@ const Contato = () => {
               </div>
 
               {/* Business Hours */}
-              <div className="bg-card rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-4">
-                  <Clock className="h-5 w-5 text-viajar-cyan" />
-                  <h3 className="font-semibold text-foreground">Horário de Atendimento</h3>
+              {footerSettings.business_hours && (
+                <div className="bg-card rounded-2xl p-6 border border-border">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Clock className="h-5 w-5 text-viajar-cyan" />
+                    <h3 className="font-semibold text-foreground">Horário de Atendimento</h3>
+                  </div>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    {footerSettings.business_hours.weekdays && (
+                      <div className="flex justify-between">
+                        <span>Segunda a Sexta</span>
+                        <span className="text-foreground">{footerSettings.business_hours.weekdays}</span>
+                      </div>
+                    )}
+                    {footerSettings.business_hours.saturday && (
+                      <div className="flex justify-between">
+                        <span>Sábado</span>
+                        <span className="text-foreground">{footerSettings.business_hours.saturday}</span>
+                      </div>
+                    )}
+                    {footerSettings.business_hours.sunday && (
+                      <div className="flex justify-between">
+                        <span>Domingo</span>
+                        <span className="text-muted-foreground">{footerSettings.business_hours.sunday}</span>
+                      </div>
+                    )}
+                    {!footerSettings.business_hours.weekdays && !footerSettings.business_hours.saturday && !footerSettings.business_hours.sunday && (
+                      <p className="text-muted-foreground">Não informado</p>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Segunda a Sexta</span>
-                    <span className="text-foreground">8h às 18h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sábado</span>
-                    <span className="text-foreground">9h às 13h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Domingo</span>
-                    <span className="text-muted-foreground">Fechado</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Contact Form */}
