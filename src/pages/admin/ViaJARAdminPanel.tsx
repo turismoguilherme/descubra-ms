@@ -29,6 +29,7 @@ const DestinationManager = lazy(() => import('@/components/admin/descubra_ms/Des
 const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
+const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
 const FinancialReports = lazy(() => import('@/components/admin/financial/FinancialReports'));
 const FinancialManagement = lazy(() => import('@/components/admin/financial/FinancialManagement'));
@@ -132,6 +133,11 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/footer" element={
               <Suspense fallback={<LoadingFallback />}>
                 <FooterSettingsManager />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/tourist-regions" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <TouristRegionsManager />
               </Suspense>
             } />
             {/* Rota de Menus removida - desnecessária */}
