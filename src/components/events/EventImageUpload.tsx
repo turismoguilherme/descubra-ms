@@ -161,6 +161,9 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
               </div>
               <p className="text-sm text-gray-600 mb-1">{placeholder}</p>
               <p className="text-xs text-gray-400">PNG, JPG ou WebP (máx. 5MB)</p>
+              <p className="text-xs text-blue-600 mt-1">
+                💡 Ideal: 1920x1080px (16:9) para imagem principal ou 512x512px para logo
+              </p>
             </div>
           )}
         </div>

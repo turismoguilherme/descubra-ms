@@ -104,15 +104,71 @@ export const EventSubmissionForm: React.FC = () => {
     },
   });
 
+  // Função para detectar a região turística baseada na cidade
+  const detectTouristRegion = async (cidade: string): Promise<string | null> => {
+    try {
+      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+
+      const cidadeLower = cidade.toLowerCase().trim();
+
+      // Mapeamento de cidades para slugs de regiões
+      const regionMappings: Record<string, string[]> = {
+        'pantanal': ['corumbá', 'ladário', 'aquidauana', 'miranda', 'anastácio'],
+        'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+        'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+        'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+        'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+        'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+        'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+        'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+        'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina']
+      };
+
+      // Encontrar a região correspondente
+      for (const [regionSlug, cities] of Object.entries(regionMappings)) {
+        if (cities.some(city => cidadeLower.includes(city))) {
+          // Buscar o ID da região no banco
+          const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/tourist_regions?slug=eq.${regionSlug}&select=id`,
+            {
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+              }
+            }
+          );
+
+          if (response.ok) {
+            const regions = await response.json();
+            if (regions.length > 0) {
+              return regions[0].id;
+            }
+          }
+          break;
+        }
+      }
+
+      return null; // Nenhuma região encontrada
+    } catch (error) {
+      console.error('Erro ao detectar região turística:', error);
+      return null;
+    }
+  };
+
   const onSubmit = async (data: EventFormData) => {
     setIsSubmitting(true);
     try {
       const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
       const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
-      
+
+      // Detectar automaticamente a região turística baseada na cidade
+      const touristRegionId = await detectTouristRegion(data.cidade);
+
       const eventData = {
         name: data.titulo,
         description: data.descricao,
+        category: data.categoria, // Adicionar categoria
         start_date: data.data_inicio,
         end_date: data.data_fim || data.data_inicio,
         start_time: data.horario_inicio,
@@ -120,10 +176,12 @@ export const EventSubmissionForm: React.FC = () => {
         location: `${data.local}, ${data.cidade}`,
         site_oficial: data.site_oficial || null,
         video_url: data.video_promocional || null,
-        logo_evento: data.logo_evento || null,
+        image_url: data.logo_evento || null, // Usar image_url ao invés de logo_evento
+        logo_evento: data.logo_evento || null, // Manter para compatibilidade
         organizador_nome: data.organizador_nome,
         organizador_email: data.organizador_email,
         organizador_telefone: data.organizador_telefone,
+        tourist_region_id: touristRegionId, // Nova coluna
         is_visible: false, // Precisa de aprovação
         is_sponsored: data.tipo === "destaque",
         sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
@@ -446,6 +504,9 @@ export const EventSubmissionForm: React.FC = () => {
           <div>
             <Label htmlFor="video_promocional">Vídeo Promocional (YouTube)</Label>
             <Input id="video_promocional" {...register("video_promocional")} placeholder="https://www.youtube.com/watch?v=..." />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Vídeos do YouTube são exibidos automaticamente. Proporção ideal: 16:9
+            </p>
             {errors.video_promocional && (
               <p className="text-red-500 text-sm mt-1">{errors.video_promocional.message}</p>
             )}
@@ -459,6 +520,9 @@ export const EventSubmissionForm: React.FC = () => {
               folder="event-images"
               placeholder="Clique para fazer upload do logotipo"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Tamanho ideal: 1920x1080px (16:9) para imagem principal ou 512x512px (quadrado) para logo
+            </p>
             {tipoSelecionado === "destaque" && (
               <p className="text-sm text-amber-600 mt-1">
                 ⚠️ Para eventos em destaque, vídeo OU logotipo é obrigatório

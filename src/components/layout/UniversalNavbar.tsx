@@ -7,9 +7,15 @@ import { useBrand } from "@/context/BrandContext";
 import UserMenu from "./UserMenu";
 
 const UniversalNavbar = () => {
+  const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
+  const safeLog = (payload: any) => {
+    if (!enableDebugLogs) return;
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,timestamp:Date.now(),sessionId:'debug-session',runId:'run1'})}).catch(()=>{});
+  };
+
   console.log("🧭 NAVBAR: Componente UniversalNavbar sendo renderizado");
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:9',message:'UniversalNavbar iniciando renderização',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  safeLog({location:'UniversalNavbar.tsx:9',message:'UniversalNavbar iniciando renderização',data:{timestamp:Date.now()},hypothesisId:'D'});
   // #endregion
   
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +27,7 @@ const UniversalNavbar = () => {
   } catch (error) {
     console.error('UniversalNavbar: AuthProvider não disponível:', error);
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:19',message:'UniversalNavbar AuthProvider erro capturado',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    safeLog({location:'UniversalNavbar.tsx:19',message:'UniversalNavbar AuthProvider erro capturado',data:{error:String(error)},hypothesisId:'C'});
     // #endregion
     // Retornar navbar sem funcionalidades de usuário
     return (
@@ -42,17 +48,17 @@ const UniversalNavbar = () => {
   
   // Verificar se o BrandProvider está disponível
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:37',message:'UniversalNavbar ANTES de chamar useBrand',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  safeLog({location:'UniversalNavbar.tsx:37',message:'UniversalNavbar ANTES de chamar useBrand',data:{timestamp:Date.now()},hypothesisId:'B'});
   // #endregion
   let brandContext = null;
   try {
     brandContext = useBrand();
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:40',message:'UniversalNavbar useBrand sucesso',data:{hasContext:!!brandContext},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    safeLog({location:'UniversalNavbar.tsx:40',message:'UniversalNavbar useBrand sucesso',data:{hasContext:!!brandContext},hypothesisId:'B'});
     // #endregion
   } catch (error) {
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:42',message:'UniversalNavbar BrandProvider erro capturado',data:{error:String(error),errorMessage:error instanceof Error?error.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    safeLog({location:'UniversalNavbar.tsx:42',message:'UniversalNavbar BrandProvider erro capturado',data:{error:String(error),errorMessage:error instanceof Error?error.message:'unknown'},hypothesisId:'C'});
     // #endregion
     console.error('UniversalNavbar: BrandProvider não disponível:', error);
     // Retornar navbar básica sem branding
@@ -90,7 +96,7 @@ const UniversalNavbar = () => {
   // Log do link do logo (fora do JSX)
   useEffect(() => {
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:95',message:'UniversalNavbar logo link',data:{isOverflowOne,linkTo:isOverflowOne?'/':'/descubramatogrossodosul',pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    safeLog({location:'UniversalNavbar.tsx:95',message:'UniversalNavbar logo link',data:{isOverflowOne,linkTo:isOverflowOne?'/':'/descubramatogrossodosul',pathname:location.pathname},hypothesisId:'C'});
     // #endregion
   }, [isOverflowOne, location.pathname]);
 
@@ -101,10 +107,10 @@ const UniversalNavbar = () => {
           {/* Logo */}
           <Link to={isOverflowOne ? "/" : "/descubramatogrossodosul"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
-              <img 
+              <img
                 key={`logo-${Date.now()}-${Math.random()}`}
                 alt={config.logo.alt}
-                src={`${config.logo.src}?v=3`}
+                src={`${config.logo.src}?v=${Date.now()}`}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain"
                 loading="eager"
                 onError={(e) => {

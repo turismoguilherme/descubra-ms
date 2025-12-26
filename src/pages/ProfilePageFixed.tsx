@@ -210,6 +210,56 @@ const ProfilePageFixed: React.FC = () => {
     }
   ];
 
+  const loadAvatars = async (): Promise<PantanalAnimal[]> => {
+    try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Carregando avatares do banco',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      const { data, error } = await supabase
+        .from('pantanal_avatars')
+        .select('*')
+        .eq('is_active', true) // Apenas avatares ativos
+        .order('display_order', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('Erro ao carregar avatares:', error);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Erro ao carregar avatares',data:{error:error.message,code:error.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        // Retornar dados mockados como fallback
+        return pantanalAnimals;
+      }
+
+      // Converter dados do banco para o formato esperado
+      const avatares: PantanalAnimal[] = (data || []).map((avatar) => ({
+        id: avatar.id,
+        name: avatar.name,
+        scientific_name: avatar.scientific_name || '',
+        image: avatar.image_url || '', // Usar image_url do banco
+        description: avatar.description || '',
+        habitat: avatar.habitat || '',
+        diet: avatar.diet || '',
+        curiosities: avatar.curiosities || [],
+        is_unlocked: avatar.is_unlocked ?? true,
+        rarity: avatar.rarity || 'common',
+        unlock_requirement: avatar.unlock_requirement || undefined
+      }));
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Avatares carregados com sucesso',data:{count:avatares.length,hasImages:avatares.filter(a=>a.image).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      console.log('✅ Avatares carregados do banco:', avatares.length);
+      return avatares.length > 0 ? avatares : pantanalAnimals; // Fallback para mockados se não houver dados
+    } catch (error: any) {
+      console.error('Erro ao carregar avatares:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Erro geral ao carregar avatares',data:{error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      return pantanalAnimals; // Fallback para mockados
+    }
+  };
+
   const loadUserProfile = async () => {
     try {
       setLoading(true);
@@ -223,6 +273,9 @@ const ProfilePageFixed: React.FC = () => {
         .eq('user_id', user?.id)
         .maybeSingle();
       
+      // Carregar avatares do banco
+      const avatares = await loadAvatars();
+      
       const mockProfile: UserProfile = {
         id: user?.id || '1',
         full_name: dbProfile?.full_name || user?.user_metadata?.full_name || 'Usuário',
@@ -231,7 +284,7 @@ const ProfilePageFixed: React.FC = () => {
         selected_avatar: dbProfile?.selected_avatar || 'jaguar',
         avatar_custom_name: dbProfile?.avatar_custom_name || null,
         achievements: mockAchievements,
-        pantanal_animals: pantanalAnimals,
+        pantanal_animals: avatares, // Usar avatares do banco
         created_at: dbProfile?.created_at || new Date().toISOString(),
         updated_at: dbProfile?.updated_at || new Date().toISOString()
       };
@@ -535,8 +588,9 @@ const ProfilePageFixed: React.FC = () => {
   // IMPORTANTE: useMemo deve estar antes dos returns condicionais
   const selectedAnimal = useMemo(() => {
     if (!profile) return null;
-    return pantanalAnimals.find(animal => animal.id === profile.selected_avatar);
-  }, [profile?.selected_avatar, pantanalAnimals]);
+    const animals = profile?.pantanal_animals || pantanalAnimals;
+    return animals.find(animal => animal.id === profile.selected_avatar);
+  }, [profile?.selected_avatar, profile?.pantanal_animals]);
 
   if (loading) {
     return (
@@ -750,7 +804,7 @@ const ProfilePageFixed: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {pantanalAnimals.map((animal) => (
+                    {(profile?.pantanal_animals || pantanalAnimals).map((animal) => (
                       <Card key={animal.id} className="overflow-hidden">
                         <div className="aspect-square bg-gradient-to-br from-green-100 to-blue-100">
                           <img 
@@ -1167,7 +1221,7 @@ const ProfilePageFixed: React.FC = () => {
         {/* Avatar Selector Modal */}
         {showAvatarSelector && (
           <PantanalAvatarSelector
-            animals={pantanalAnimals}
+            animals={profile?.pantanal_animals || pantanalAnimals}
             selectedAvatar={profile.selected_avatar || null}
             onSelect={handleAvatarSelect}
             onClose={() => setShowAvatarSelector(false)}

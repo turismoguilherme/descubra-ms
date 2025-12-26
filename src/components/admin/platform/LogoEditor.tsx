@@ -33,7 +33,7 @@ const LOGO_CONFIGS = {
     key: 'guata_avatar_url',
     label: 'Avatar Guatá',
     description: 'Avatar do assistente virtual Guatá',
-    currentPath: '/images/guata-avatar.png',
+    currentPath: '/guata-mascote.jpg',
   },
 };
 
@@ -440,6 +440,10 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
     </div>
   );
 }
+
+
+
+
 
 
 

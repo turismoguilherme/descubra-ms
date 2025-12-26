@@ -21,7 +21,10 @@ export const usePassport = () => {
    * Criar ou obter passaporte
    */
   const initializePassport = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -37,6 +40,7 @@ export const usePassport = () => {
           if (createError.message?.includes('não existe') || createError.message?.includes('does not exist')) {
             console.warn('Tabelas do passaporte não existem. Execute a migration primeiro.');
             setError('Sistema de passaporte não configurado. Contate o administrador.');
+            setLoading(false);
             return;
           }
           throw createError;
@@ -53,6 +57,7 @@ export const usePassport = () => {
         setError('Sistema de passaporte não configurado. Execute a migration primeiro.');
       }
     } finally {
+      // Garantir que loading sempre seja false
       setLoading(false);
     }
   }, [user]);

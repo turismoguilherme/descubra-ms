@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   fetchTouristRoutes, 
@@ -15,6 +15,11 @@ export const useRouteManagement = (userRegion?: string) => {
   const [routes, setRoutes] = useState<TouristRoute[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  // Carregar rotas automaticamente ao montar o hook
+  useEffect(() => {
+    loadRoutes();
+  }, [loadRoutes]);
 
   const loadRoutes = useCallback(async () => {
     try {

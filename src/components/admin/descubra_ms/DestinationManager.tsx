@@ -14,6 +14,7 @@ import {
   Instagram, Facebook, Youtube, ExternalLink, Star
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import LocationPicker from '@/components/admin/LocationPicker';
 
 interface Destination {
   id: string;
@@ -36,6 +37,7 @@ interface DestinationDetails {
   video_type: 'youtube' | 'upload' | null;
   map_latitude: number | null;
   map_longitude: number | null;
+  address: string | null; // Novo campo para endereço
   tourism_tags: string[] | null;
   image_gallery: string[] | null;
   official_website: string | null;
@@ -77,6 +79,7 @@ export default function DestinationManager() {
     video_type: 'youtube' as 'youtube' | 'upload' | null,
     map_latitude: '',
     map_longitude: '',
+    address: '', // Novo campo para endereço
     tourism_tags: '',
     official_website: '',
     contact_phone: '',
@@ -92,6 +95,11 @@ export default function DestinationManager() {
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  
+  // Estados para imagem principal e localização
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   useEffect(() => {
     loadDestinations();
@@ -136,6 +144,7 @@ export default function DestinationManager() {
           video_type: (data.video_type as 'youtube' | 'upload' | null) || 'youtube',
           map_latitude: data.map_latitude?.toString() || '',
           map_longitude: data.map_longitude?.toString() || '',
+          address: data.address || '', // Novo campo
           tourism_tags: data.tourism_tags?.join(', ') || '',
           official_website: data.official_website || '',
           contact_phone: data.contact_phone || '',
@@ -148,6 +157,10 @@ export default function DestinationManager() {
           social_youtube: (data.social_links as any)?.youtube || '',
         });
         setGalleryImages(data.image_gallery || []);
+        // Carregar preview da imagem principal se houver
+        if (editingDestination?.image_url) {
+          setMainImagePreview(editingDestination.image_url);
+        }
       } else {
         // Reset if no details found
         setEditingDetails(null);
@@ -157,6 +170,7 @@ export default function DestinationManager() {
           video_type: 'youtube',
           map_latitude: '',
           map_longitude: '',
+          address: '', // Novo campo
           tourism_tags: '',
           official_website: '',
           contact_phone: '',
@@ -191,6 +205,7 @@ export default function DestinationManager() {
       video_type: 'youtube',
       map_latitude: '',
       map_longitude: '',
+      address: '', // Novo campo
       tourism_tags: '',
       official_website: '',
       contact_phone: '',
@@ -205,6 +220,8 @@ export default function DestinationManager() {
     setGalleryImages([]);
     setNewGalleryFiles([]);
     setGalleryPreviews([]);
+    setMainImageFile(null);
+    setMainImagePreview(null);
     setDialogOpen(true);
   };
 
@@ -218,6 +235,11 @@ export default function DestinationManager() {
       image_url: destination.image_url || '',
     });
     await loadDestinationDetails(destination.id);
+    // Carregar preview da imagem principal se houver
+    if (destination.image_url) {
+      setMainImagePreview(destination.image_url);
+    }
+    setMainImageFile(null); // Reset arquivo ao editar
     setDialogOpen(true);
   };
 
@@ -246,6 +268,96 @@ export default function DestinationManager() {
     } else {
       setGalleryImages(galleryImages.filter((_, i) => i !== index));
     }
+  };
+
+  // Função para upload de imagem principal (similar aos avatares)
+  const uploadMainImage = async (destinationId: string): Promise<string | null> => {
+    if (!mainImageFile) return null;
+
+    try {
+      const fileExt = mainImageFile.name.split('.').pop();
+      const fileName = `destinations/${destinationId}/main_${uuidv4()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, mainImageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        // Se o bucket não existir, apenas avisar mas continuar sem upload de imagem
+        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+          console.warn('⚠️ [DestinationManager] Bucket não encontrado, continuando sem upload de imagem');
+          toast({
+            title: 'Bucket não encontrado',
+            description: 'O bucket "tourism-images" não existe. Execute o SQL em supabase/create_tourism_images_bucket.sql para criá-lo. O destino será salvo preservando a URL existente se houver.',
+            variant: 'default',
+            duration: 10000,
+          });
+          // Retornar URL existente se houver, senão null
+          return formData.image_url || null;
+        }
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+      return publicUrlData?.publicUrl || null;
+    } catch (error: any) {
+      console.error('Erro no upload da imagem principal:', error);
+      // Preservar URL existente se upload falhar
+      return formData.image_url || null;
+    }
+  };
+
+  // Função para selecionar imagem principal
+  const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Arquivo inválido',
+        description: 'Por favor, selecione uma imagem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'A imagem deve ter no máximo 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setMainImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setMainImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Função para selecionar localização do LocationPicker
+  const handleLocationSelect = (location: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    name?: string;
+  }) => {
+    setDetailsData({
+      ...detailsData,
+      map_latitude: location.latitude.toString(),
+      map_longitude: location.longitude.toString(),
+      address: location.address || location.name || '', // Usar endereço do LocationPicker
+    });
+    setShowLocationPicker(false);
   };
 
   const uploadGalleryImages = async (destinationId: string): Promise<string[]> => {
@@ -317,7 +429,11 @@ export default function DestinationManager() {
     try {
       let destinationId = editingDestination?.id;
 
-      // Salvar ou atualizar destino
+      // Preservar URL original do destino sendo editado
+      const originalImageUrl = editingDestination?.image_url || formData.image_url || '';
+      let finalImageUrl = originalImageUrl;
+
+      // Salvar ou atualizar destino PRIMEIRO para obter o ID
       if (editingDestination) {
         const { error } = await supabase
           .from('destinations')
@@ -326,7 +442,7 @@ export default function DestinationManager() {
             description: formData.description || null,
             location: formData.location || null,
             region: formData.region || null,
-            image_url: formData.image_url || null,
+            image_url: formData.image_url || null, // Temporário, será atualizado após upload
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingDestination.id);
@@ -341,13 +457,43 @@ export default function DestinationManager() {
             description: formData.description || null,
             location: formData.location || null,
             region: formData.region || null,
-            image_url: formData.image_url || null,
+            image_url: formData.image_url || null, // Temporário, será atualizado após upload
           })
           .select()
           .single();
 
         if (error) throw error;
         destinationId = data.id;
+      }
+
+      // Upload da imagem principal se houver nova (agora temos o destinationId)
+      if (mainImageFile && destinationId) {
+        console.log('📤 [DestinationManager] Iniciando upload de imagem principal...');
+        const uploadedUrl = await uploadMainImage(destinationId);
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+          console.log('✅ [DestinationManager] Imagem principal enviada com sucesso:', uploadedUrl);
+          
+          // Atualizar destino com a URL da imagem enviada
+          const { error: updateError } = await supabase
+            .from('destinations')
+            .update({ image_url: finalImageUrl })
+            .eq('id', destinationId);
+          
+          if (updateError) {
+            console.error('Erro ao atualizar URL da imagem:', updateError);
+          }
+        } else {
+          console.warn('⚠️ [DestinationManager] Upload de imagem principal falhou, preservando URL existente');
+          // Preservar URL original se o upload falhar
+          if (originalImageUrl && originalImageUrl.trim()) {
+            finalImageUrl = originalImageUrl;
+            console.log('✅ [DestinationManager] Preservando URL original do destino:', finalImageUrl);
+          }
+        }
+      } else {
+        // Se não há arquivo novo, usar a URL do formulário (que pode ter sido atualizada manualmente)
+        finalImageUrl = formData.image_url || originalImageUrl;
       }
 
       // Upload de novas imagens da galeria
@@ -376,6 +522,7 @@ export default function DestinationManager() {
         video_type: detailsData.video_type,
         map_latitude: detailsData.map_latitude ? parseFloat(detailsData.map_latitude) : null,
         map_longitude: detailsData.map_longitude ? parseFloat(detailsData.map_longitude) : null,
+        address: detailsData.address || null, // Novo campo para endereço
         tourism_tags: tourismTags,
         image_gallery: allGalleryImages.length > 0 ? allGalleryImages : null,
         official_website: detailsData.official_website || null,
@@ -582,13 +729,78 @@ export default function DestinationManager() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="image_url">URL da Imagem Principal</Label>
-                  <Input
-                    id="image_url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://..."
-                  />
+                  <Label htmlFor="image_url">Imagem Principal</Label>
+                  <div className="space-y-2">
+                    {/* Preview da imagem */}
+                    {(mainImagePreview || formData.image_url) && (
+                      <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                        <img
+                          src={mainImagePreview || formData.image_url || ''}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.warn('Erro ao carregar imagem:', mainImagePreview || formData.image_url);
+                            const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                              <rect width="400" height="300" fill="#e5e7eb"/>
+                              <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
+                                Imagem não disponível
+                              </text>
+                            </svg>`)}`;
+                            (e.target as HTMLImageElement).src = placeholderSvg;
+                          }}
+                        />
+                        {mainImageFile && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={() => {
+                              setMainImageFile(null);
+                              setMainImagePreview(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Upload de arquivo */}
+                    <div className="flex gap-2">
+                      <Input
+                        id="main_image_file"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMainImageSelect}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          document.getElementById('main_image_file')?.click();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </Button>
+                    </div>
+                    
+                    {/* URL manual (fallback) */}
+                    <div>
+                      <Label htmlFor="image_url" className="text-xs text-muted-foreground">
+                        Ou cole uma URL de imagem:
+                      </Label>
+                      <Input
+                        id="image_url"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        placeholder="https://..."
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -629,9 +841,33 @@ export default function DestinationManager() {
                   )}
                 </div>
 
+                <div>
+                  <Label htmlFor="address">Endereço do Destino</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="address"
+                      value={detailsData.address}
+                      onChange={(e) => setDetailsData({ ...detailsData, address: e.target.value })}
+                      placeholder="Ex: Rua das Flores, 123, Bonito - MS"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowLocationPicker(true)}
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Escolher no Mapa
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Digite o endereço ou clique em "Escolher no Mapa" para buscar e converter automaticamente em coordenadas
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="map_latitude">Latitude</Label>
+                    <Label htmlFor="map_latitude">Latitude (preenchida automaticamente)</Label>
                     <Input
                       id="map_latitude"
                       type="number"
@@ -639,10 +875,12 @@ export default function DestinationManager() {
                       value={detailsData.map_latitude}
                       onChange={(e) => setDetailsData({ ...detailsData, map_latitude: e.target.value })}
                       placeholder="-20.4697"
+                      readOnly
+                      className="bg-gray-50"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="map_longitude">Longitude</Label>
+                    <Label htmlFor="map_longitude">Longitude (preenchida automaticamente)</Label>
                     <Input
                       id="map_longitude"
                       type="number"
@@ -650,6 +888,8 @@ export default function DestinationManager() {
                       value={detailsData.map_longitude}
                       onChange={(e) => setDetailsData({ ...detailsData, map_longitude: e.target.value })}
                       placeholder="-54.6201"
+                      readOnly
+                      className="bg-gray-50"
                     />
                   </div>
                 </div>
@@ -832,6 +1072,22 @@ export default function DestinationManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* LocationPicker para selecionar endereço e coordenadas */}
+      <LocationPicker
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationSelect={handleLocationSelect}
+        initialLocation={
+          detailsData.map_latitude && detailsData.map_longitude
+            ? {
+                latitude: parseFloat(detailsData.map_latitude),
+                longitude: parseFloat(detailsData.map_longitude),
+                address: detailsData.address || undefined,
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

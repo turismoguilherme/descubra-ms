@@ -4,24 +4,32 @@ import { Link } from 'react-router-dom';
 import { useBrand } from '@/context/BrandContext';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
 
+// Controle de logs de debug locais
+const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
+const safeLog = (payload: any) => {
+  if (!enableDebugLogs) return;
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...payload,
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: payload?.runId || 'run1'
+    })
+  }).catch(() => {});
+};
+
 const UniversalFooter = () => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:5',message:'UniversalFooter iniciando renderização',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
+  safeLog({location:'UniversalFooter.tsx:5',message:'UniversalFooter iniciando renderização',data:{timestamp:Date.now()},hypothesisId:'D'});
   // Verificar se o BrandProvider está disponível
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:8',message:'UniversalFooter ANTES de chamar useBrand',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
+  safeLog({location:'UniversalFooter.tsx:8',message:'UniversalFooter ANTES de chamar useBrand',data:{timestamp:Date.now()},hypothesisId:'B'});
   let brandContext = null;
   try {
     brandContext = useBrand();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:11',message:'UniversalFooter useBrand sucesso',data:{hasContext:!!brandContext},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
+    safeLog({location:'UniversalFooter.tsx:11',message:'UniversalFooter useBrand sucesso',data:{hasContext:!!brandContext},hypothesisId:'B'});
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:13',message:'UniversalFooter BrandProvider erro capturado',data:{error:String(error),errorMessage:error instanceof Error?error.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
+    safeLog({location:'UniversalFooter.tsx:13',message:'UniversalFooter BrandProvider erro capturado',data:{error:String(error),errorMessage:error instanceof Error?error.message:'unknown'},hypothesisId:'C'});
     console.error('UniversalFooter: BrandProvider não disponível:', error);
     // Retornar footer básico sem branding
     return (
@@ -38,9 +46,7 @@ const UniversalFooter = () => {
   }
 
   const { isOverflowOne } = brandContext;
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:40',message:'UniversalFooter verificando isOverflowOne',data:{isOverflowOne},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
+  safeLog({location:'UniversalFooter.tsx:40',message:'UniversalFooter verificando isOverflowOne',data:{isOverflowOne},hypothesisId:'B'});
   const { settings: msSettings, loading: msLoading, refetch: refetchMsSettings } = useFooterSettings('ms');
   
   // Log para debug
@@ -49,9 +55,7 @@ const UniversalFooter = () => {
   }, [msSettings]);
 
   if (isOverflowOne) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:43',message:'UniversalFooter renderizando footer overflow-one',data:{isOverflowOne},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
+    safeLog({location:'UniversalFooter.tsx:43',message:'UniversalFooter renderizando footer overflow-one',data:{isOverflowOne},hypothesisId:'B'});
     // Footer para OverFlow One
     return (
       <footer className="bg-gray-900 text-white">

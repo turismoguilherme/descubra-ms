@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Target, Eye, Award, Users, MapPin, Compass, Heart, TreePine, Star, ArrowRight } from 'lucide-react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
+import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 
 const SobreMS = () => {
   return (
@@ -14,9 +15,12 @@ const SobreMS = () => {
           <div className="relative ms-container text-center">
             <div className="flex justify-center mb-6">
               <img 
-                src="/images/logo-descubra-ms.png" 
+                src={logoDescubra} 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-20 w-auto drop-shadow-lg"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/logo-descubra-ms.png";
+                }}
               />
             </div>
             <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">

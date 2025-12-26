@@ -120,21 +120,50 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     
     setIsSearching(true);
     
-    // Simulação de busca por endereço
-    // Em produção, usar API do Google Places ou Nominatim
-    setTimeout(() => {
-      const mockResults = [
+    try {
+      // Usar Nominatim (OpenStreetMap) - gratuito e não requer API key
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery + ', Mato Grosso do Sul, Brasil')}&limit=5&addressdetails=1`,
         {
+          headers: {
+            'User-Agent': 'ViaJAR-Tourism-Platform/1.0'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const results = data.map((item: any) => ({
+          name: item.display_name.split(',')[0] || searchQuery,
+          address: item.display_name,
+          latitude: parseFloat(item.lat),
+          longitude: parseFloat(item.lon),
+          type: 'busca'
+        }));
+        setSearchResults(results);
+      } else {
+        // Fallback para resultado mockado se API falhar
+        setSearchResults([{
           name: searchQuery,
           address: `${searchQuery}, MS`,
-          latitude: -20.4428 + (Math.random() - 0.5) * 0.1,
-          longitude: -54.6464 + (Math.random() - 0.5) * 0.1,
+          latitude: -20.4428,
+          longitude: -54.6464,
           type: 'busca'
-        }
-      ];
-      setSearchResults(mockResults);
+        }]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar endereço:', error);
+      // Fallback para resultado mockado em caso de erro
+      setSearchResults([{
+        name: searchQuery,
+        address: `${searchQuery}, MS`,
+        latitude: -20.4428,
+        longitude: -54.6464,
+        type: 'busca'
+      }]);
+    } finally {
       setIsSearching(false);
-    }, 1000);
+    }
   };
 
   const handleLocationSelect = (location) => {
