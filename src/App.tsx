@@ -25,6 +25,22 @@ import "@/services/events/IntelligentEventService";
 import "@/services/events/IntelligentEventActivator";
 import "@/services/events/EventSystemTester";
 
+// Flag de logs locais para evitar ingest flood
+const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === "true";
+const safeLog = (payload: any) => {
+  if (!enableDebugLogs) return;
+  fetch("http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...payload,
+      timestamp: Date.now(),
+      sessionId: "debug-session",
+      runId: payload?.runId || "run1",
+    }),
+  }).catch(() => {});
+};
+
 // ViaJAR SaaS Pages
 import ViaJARSaaS from "@/pages/ViaJARSaaS";
 import Solucoes from "@/pages/Solucoes";
@@ -32,19 +48,14 @@ import CasosSucesso from "@/pages/CasosSucesso";
 import Precos from "@/pages/Precos";
 import Sobre from "@/pages/Sobre";
 import Contato from "@/pages/Contato";
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:35',message:'Antes do import DadosTurismo',data:{timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'A',timestamp:Date.now()})}).catch(()=>{});
-// #endregion
 import DadosTurismo from "@/pages/DadosTurismo";
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:37',message:'Após import DadosTurismo',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',dadosTurismoValue:DadosTurismo?.toString?.()?.substring(0,50)||'undefined',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'A',timestamp:Date.now()})}).catch(()=>{});
-// #endregion
 
 // ViaJAR Dashboard Pages (Lazy loaded)
 const ViaJARUnifiedDashboard = lazy(() => import("@/pages/ViaJARUnifiedDashboard"));
 const ViaJARLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const ViaJARRegister = lazy(() => import("@/pages/OverflowOneRegister"));
 const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
+const IARoutePaymentSuccess = lazy(() => import("@/pages/IARoutePaymentSuccess"));
 const ViaJARForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
 const ViaJARInventory = lazy(() => import("@/pages/OverflowOneInventory"));
 const ViaJARReports = lazy(() => import("@/pages/ReportsPage"));
@@ -262,6 +273,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/passaporte" element={<PassaporteLista />} />
                             <Route path="/descubramatogrossodosul/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                             <Route path="/descubramatogrossodosul/profile" element={<ProfilePageFixed />} />
+                            <Route path="/descubramatogrossodosul/roteiros-ia/success" element={<Suspense fallback={<LoadingFallback />}><IARoutePaymentSuccess /></Suspense>} />
                             
                             {/* Descubra MS Auth Routes */}
                             <Route path="/descubramatogrossodosul/login" element={<AuthPage />} />

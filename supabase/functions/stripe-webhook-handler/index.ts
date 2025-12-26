@@ -67,6 +67,9 @@ serve(async (req) => {
           await handleReservationConnectPaymentCompleted(session, supabase);
         } else if (session.metadata?.type === 'data_sale_report') {
           await handleDataSalePaymentCompleted(session, supabase);
+        } else if (session.metadata?.type === 'ia_route_access') {
+          // Pagamento de acesso aos Roteiros IA
+          await handleIARoutePaymentCompleted(session, supabase);
         } else if (session.mode === 'subscription' && session.client_reference_id) {
           // Payment Link de assinatura ViaJARTur (client_reference_id = user_id)
           await handlePaymentLinkSubscriptionCompleted(session, supabase);
@@ -1317,6 +1320,105 @@ async function handleDataSalePaymentCompleted(session: Stripe.Checkout.Session, 
     console.log('Pagamento de relatório processado com sucesso');
   } catch (error) {
     console.error('Erro ao processar pagamento de relatório:', error);
+  }
+}
+
+// Handler para pagamentos de acesso aos Roteiros IA
+async function handleIARoutePaymentCompleted(session: Stripe.Checkout.Session, supabase: any) {
+  console.log('Pagamento de acesso aos Roteiros IA completado:', session.id);
+  
+  try {
+    const customerEmail = session.customer_email || session.customer_details?.email;
+    const userId = session.metadata?.user_id || session.client_reference_id;
+    const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+
+    if (!customerEmail && !userId) {
+      console.error('Email do cliente ou User ID não encontrado');
+      return;
+    }
+
+    // Se não tiver userId, buscar por email
+    let finalUserId = userId;
+    if (!finalUserId && customerEmail) {
+      // Buscar usuário por email usando RPC ou query direta
+      const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+      
+      if (!userError && users) {
+        const foundUser = users.users.find((u: any) => u.email === customerEmail);
+        if (foundUser) {
+          finalUserId = foundUser.id;
+        }
+      }
+
+      // Se ainda não encontrou, tentar buscar em user_profiles
+      if (!finalUserId) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('user_id')
+          .eq('email', customerEmail)
+          .maybeSingle();
+        
+        if (profile) {
+          finalUserId = profile.user_id;
+        }
+      }
+    }
+
+    if (!finalUserId) {
+      console.error('Não foi possível identificar o usuário. Email:', customerEmail);
+      // Mesmo sem userId, podemos tentar atualizar via email depois
+      return;
+    }
+
+    console.log(`Processando acesso aos Roteiros IA para usuário ${finalUserId}`);
+
+    // Atualizar user_metadata para marcar acesso pago
+    try {
+      const { error: updateError } = await supabase.auth.admin.updateUserById(finalUserId, {
+        user_metadata: {
+          ia_route_paid: true,
+          ia_route_paid_at: new Date().toISOString(),
+          ia_route_payment_session_id: session.id,
+        }
+      });
+
+      if (updateError) {
+        console.error('Erro ao atualizar user_metadata:', updateError);
+      } else {
+        console.log('User metadata atualizado com sucesso');
+      }
+    } catch (updateErr) {
+      console.error('Erro ao atualizar user_metadata:', updateErr);
+    }
+
+    // Registrar pagamento na tabela user_feature_payments (se existir)
+    try {
+      const { error: paymentError } = await supabase
+        .from('user_feature_payments')
+        .insert({
+          user_id: finalUserId,
+          feature: 'ia_routes',
+          amount: amountPaid,
+          status: 'paid',
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: session.payment_intent as string,
+          paid_at: new Date().toISOString(),
+        });
+
+      if (paymentError && paymentError.code !== '42P01') { // 42P01 = tabela não existe
+        console.error('Erro ao registrar pagamento:', paymentError);
+      } else if (!paymentError) {
+        console.log('Pagamento registrado na tabela user_feature_payments');
+      }
+    } catch (err: any) {
+      if (err.code !== '42P01') {
+        console.log('Tabela user_feature_payments não existe ou erro ao inserir (não crítico):', err.message);
+      }
+    }
+
+    console.log('Acesso aos Roteiros IA ativado com sucesso para usuário:', finalUserId);
+  } catch (error) {
+    console.error('Erro ao processar pagamento de acesso aos Roteiros IA:', error);
   }
 }
 
