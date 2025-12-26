@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Globe, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useBrand } from '@/context/BrandContext';
@@ -41,7 +41,12 @@ const UniversalFooter = () => {
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:40',message:'UniversalFooter verificando isOverflowOne',data:{isOverflowOne},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
   // #endregion
-  const { settings: msSettings, loading: msLoading } = useFooterSettings('ms');
+  const { settings: msSettings, loading: msLoading, refetch: refetchMsSettings } = useFooterSettings('ms');
+  
+  // Log para debug
+  useEffect(() => {
+    console.log('📄 [UniversalFooter] Settings do MS carregados:', msSettings);
+  }, [msSettings]);
 
   if (isOverflowOne) {
     // #region agent log

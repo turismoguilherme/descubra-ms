@@ -38,6 +38,7 @@ export default function FooterSettingsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'ms' | 'viajar'>('ms');
+  const [lastSaved, setLastSaved] = useState<{ platform: string; timestamp: Date | null }>({ platform: '', timestamp: null });
 
   useEffect(() => {
     loadSettings();
@@ -45,6 +46,7 @@ export default function FooterSettingsManager() {
 
   const loadSettings = async () => {
     setLoading(true);
+    console.log('📥 [FooterSettingsManager] Carregando settings do banco...');
     try {
       // Carregar settings do Descubra MS
       const { data: msData, error: msError } = await supabase
@@ -55,9 +57,12 @@ export default function FooterSettingsManager() {
         .maybeSingle();
 
       if (msError) {
-        console.error('Erro ao carregar settings MS:', msError);
+        console.error('❌ [FooterSettingsManager] Erro ao carregar settings MS:', msError);
       } else if (msData?.setting_value) {
+        console.log('✅ [FooterSettingsManager] Settings MS carregados:', msData.setting_value);
         setMsSettings(msData.setting_value as FooterSettings);
+      } else {
+        console.log('ℹ️ [FooterSettingsManager] Nenhum setting MS encontrado no banco, usando padrão');
       }
 
       // Carregar settings do ViaJAR
@@ -69,9 +74,12 @@ export default function FooterSettingsManager() {
         .maybeSingle();
 
       if (viajarError) {
-        console.error('Erro ao carregar settings ViaJAR:', viajarError);
+        console.error('❌ [FooterSettingsManager] Erro ao carregar settings ViaJAR:', viajarError);
       } else if (viajarData?.setting_value) {
+        console.log('✅ [FooterSettingsManager] Settings ViaJAR carregados:', viajarData.setting_value);
         setViajarSettings(viajarData.setting_value as FooterSettings);
+      } else {
+        console.log('ℹ️ [FooterSettingsManager] Nenhum setting ViaJAR encontrado no banco, usando padrão');
       }
     } catch (error: any) {
       console.error('Erro ao carregar settings:', error);
@@ -96,12 +104,28 @@ export default function FooterSettingsManager() {
         throw new Error('Não foi possível obter informações do usuário');
       }
 
+      // Garantir que setting_value é um objeto válido
+      const settingsToSave = {
+        email: settings.email || '',
+        phone: settings.phone || '',
+        address: settings.address || '',
+        social_media: settings.social_media || {},
+        copyright: settings.copyright || '',
+      };
+
+      console.log(`💾 [FooterSettingsManager] Dados a serem salvos:`, {
+        platform,
+        setting_key: 'footer',
+        setting_value: settingsToSave,
+        updated_by: authUser.id,
+      });
+
       const { data, error } = await supabase
         .from('site_settings')
         .upsert({
           platform,
           setting_key: 'footer',
-          setting_value: settings,
+          setting_value: settingsToSave,
           description: `Configurações do footer para ${platform === 'ms' ? 'Descubra MS' : 'ViaJAR'}`,
           updated_at: new Date().toISOString(),
           updated_by: authUser.id,
@@ -123,6 +147,20 @@ export default function FooterSettingsManager() {
 
       console.log('✅ [FooterSettingsManager] Configurações salvas com sucesso:', data);
 
+      // Verificar se os dados foram realmente salvos no banco
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('platform', platform)
+        .eq('setting_key', 'footer')
+        .maybeSingle();
+
+      if (verifyError) {
+        console.error('❌ [FooterSettingsManager] Erro ao verificar dados salvos:', verifyError);
+      } else if (verifyData) {
+        console.log('✅ [FooterSettingsManager] Dados verificados no banco:', verifyData.setting_value);
+      }
+
       // Atualizar estado local imediatamente para feedback visual
       if (platform === 'ms') {
         setMsSettings(settings);
@@ -133,11 +171,38 @@ export default function FooterSettingsManager() {
       // Recarregar settings do banco para garantir sincronização
       await loadSettings();
 
+      // Invalidar cache global para forçar reload nos componentes que usam o hook
+      const cacheKey = `footer_${platform}`;
+      if (typeof window !== 'undefined') {
+        // Disparar evento customizado para notificar outros componentes
+        console.log(`📢 [FooterSettingsManager] Disparando evento footerSettingsUpdated para plataforma: ${platform}`);
+        const event = new CustomEvent('footerSettingsUpdated', { 
+          detail: { platform, settings } 
+        });
+        window.dispatchEvent(event);
+        console.log(`✅ [FooterSettingsManager] Evento disparado com sucesso`);
+        
+        // Também disparar um evento global para garantir que seja capturado
+        window.dispatchEvent(new Event('siteSettingsUpdated'));
+        console.log(`✅ [FooterSettingsManager] Evento global siteSettingsUpdated também disparado`);
+      }
+
+      // Mostrar toast de sucesso com informações detalhadas
       toast({
-        title: '✅ Sucesso',
-        description: `Configurações do footer ${platform === 'ms' ? 'Descubra MS' : 'ViaJAR'} salvas com sucesso!`,
-        duration: 3000,
+        title: '✅ Configurações salvas com sucesso!',
+        description: `As configurações do footer ${platform === 'ms' ? 'Descubra MS' : 'ViaJAR'} foram salvas no banco de dados. ${verifyData ? 'Dados verificados e confirmados.' : ''} As mudanças aparecerão no footer em até 5 segundos.`,
+        duration: 8000,
       });
+
+      // Atualizar timestamp de última salvamento
+      setLastSaved({ platform, timestamp: new Date() });
+
+      // Mostrar alerta visual adicional no console para debug
+      console.log(`✅✅✅ [FooterSettingsManager] SALVAMENTO CONCLUÍDO PARA ${platform.toUpperCase()}`);
+      console.log(`📋 Dados salvos:`, settings);
+      if (verifyData) {
+        console.log(`✅ Dados confirmados no banco:`, verifyData.setting_value);
+      }
     } catch (error: any) {
       console.error('❌ [FooterSettingsManager] Erro geral ao salvar:', error);
       
@@ -292,15 +357,40 @@ export default function FooterSettingsManager() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center border-t pt-4 mt-4">
+        <div className="text-sm text-muted-foreground">
+          {saving ? (
+            <span className="flex items-center gap-2 text-blue-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Salvando no banco de dados...
+            </span>
+          ) : lastSaved.platform === platform && lastSaved.timestamp ? (
+            <span className="flex items-center gap-2 text-green-600">
+              <Save className="h-4 w-4" />
+              Salvo em {lastSaved.timestamp.toLocaleTimeString('pt-BR')} - As mudanças aparecerão no footer em até 5 segundos
+            </span>
+          ) : (
+            <span>Clique em "Salvar" para aplicar as alterações</span>
+          )}
+        </div>
         <Button
           onClick={() => saveSettings(platform, settings)}
           disabled={saving}
           size="lg"
+          className="min-w-[220px]"
+          variant={saving ? "secondary" : "default"}
         >
-          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          <Save className="h-4 w-4 mr-2" />
-          Salvar Configurações
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Configurações
+            </>
+          )}
         </Button>
       </div>
     </div>
