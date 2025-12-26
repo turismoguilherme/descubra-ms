@@ -27,16 +27,20 @@ serve(async (req) => {
     );
 
     // Registrar o e-mail recebido no log de comunicação
-    const { error: logError } = await supabaseAdmin.from('communication_logs').insert({
-      direction: 'in',
-      channel: 'email',
-      from_address: fromAddress,
-      to_address: toAddress,
-      subject_or_topic: subject,
-      body: emailBody,
-      status: 'received',
-      // related_ticket_id e ai_generated_response seriam definidos por uma lógica de IA posterior
-    });
+    const { data: loggedEmail, error: logError } = await supabaseAdmin
+      .from('communication_logs')
+      .insert({
+        direction: 'in',
+        channel: 'email',
+        from_address: fromAddress,
+        to_address: toAddress,
+        subject_or_topic: subject,
+        body: emailBody,
+        status: 'received',
+        ai_generated_response: false, // Será atualizado quando Cris responder
+      })
+      .select()
+      .single();
 
     if (logError) {
       console.error('Erro ao registrar e-mail recebido no Supabase:', logError);
@@ -45,7 +49,15 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ message: 'E-mail recebido e log registrado' }), {
+    // Tentar processar com Cris automaticamente (opcional - pode ser feito via scheduler)
+    // Por enquanto, apenas registrar. O scheduler vai processar periodicamente.
+    console.log(`✅ [receive-email-webhook] Email registrado. ID: ${loggedEmail?.id}. Será processado pelo Cris no próximo ciclo.`);
+
+    return new Response(JSON.stringify({ 
+      message: 'E-mail recebido e log registrado',
+      email_id: loggedEmail?.id,
+      will_be_processed_by_cris: true
+    }), {
       status: 200,
     });
 

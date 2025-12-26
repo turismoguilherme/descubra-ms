@@ -121,6 +121,13 @@ serve(async (req) => {
           schedule: 'A cada hora',
           enabled: false, // Desabilitado por padrão - admin pode ativar
         },
+        {
+          id: '6',
+          type: 'email',
+          name: 'Agente Cris - Responder Emails',
+          schedule: 'A cada 15 minutos',
+          enabled: true, // Ativo por padrão
+        },
       ];
     }
 
@@ -166,6 +173,11 @@ serve(async (req) => {
               result = await executeAutoApproveEvents(supabase);
             } else {
               result = await executeAnomalyDetection(supabase);
+            }
+            break;
+          case 'email':
+            if (task.name === 'Agente Cris - Responder Emails') {
+              result = await executeCrisEmailAgent(supabase);
             }
             break;
           case 'cleanup':
@@ -250,6 +262,11 @@ function checkIfTaskShouldRun(task: AITask, hour: number, minute: number, day: n
   // A cada hora
   if (schedule.includes('a cada hora')) {
     return minute === 0; // Executa no início de cada hora
+  }
+
+  // A cada 15 minutos
+  if (schedule.includes('a cada 15 minutos')) {
+    return minute % 15 === 0; // Executa a cada 15 minutos (0, 15, 30, 45)
   }
 
   return false;
