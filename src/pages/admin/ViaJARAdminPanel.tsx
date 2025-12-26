@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import ModernAdminLayout from '@/components/admin/layout/ModernAdminLayout';
 import AdminLogin from '@/components/admin/AdminLogin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Users, DollarSign, FileText, TrendingUp, AlertTriangle, Calendar, Brain, Sparkles } from 'lucide-react';
+import { Activity, Users, DollarSign, FileText, TrendingUp, AlertTriangle, Calendar, Brain, Sparkles, MessageSquare } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import LoadingFallback from '@/components/ui/loading-fallback';
 import { financialDashboardService } from '@/services/admin/financialDashboardService';
@@ -26,6 +26,7 @@ const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/Event
 const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
 const PartnerSettingsManager = lazy(() => import('@/components/admin/PartnerSettingsManager'));
 const DestinationManager = lazy(() => import('@/components/admin/descubra_ms/DestinationManager'));
+const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
@@ -47,6 +48,11 @@ const VisualContentEditor = lazy(() => import('@/components/admin/editor/VisualC
 const SystemHealthMonitor = lazy(() => import('@/components/admin/system/SystemHealthMonitor'));
 const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIAgent'));
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
+const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
+const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
+const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
+const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
+const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
@@ -91,6 +97,11 @@ export default function ViaJARAdminPanel() {
             <Route index element={<DashboardOverview />} />
             
             {/* ViaJAR Routes */}
+            <Route path="viajar/content" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <UnifiedPlatformEditor initialPlatform="viajar" />
+              </Suspense>
+            } />
             <Route path="viajar/clients" element={
               <Suspense fallback={<LoadingFallback />}>
                 <ClientsManagement />
@@ -99,6 +110,11 @@ export default function ViaJARAdminPanel() {
             <Route path="viajar/subscriptions" element={
               <Suspense fallback={<LoadingFallback />}>
                 <SubscriptionsManagement />
+              </Suspense>
+            } />
+            <Route path="viajar/plan-settings" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ViaJARTurSettingsManager />
               </Suspense>
             } />
             
@@ -149,6 +165,11 @@ export default function ViaJARAdminPanel() {
                 <PassportAdmin />
               </Suspense>
             } />
+            <Route path="descubra-ms/avatars" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PantanalAvatarsManager />
+              </Suspense>
+            } />
             
         {/* Financial Routes - Novo dashboard moderno */}
             <Route path="financial" element={
@@ -186,6 +207,11 @@ export default function ViaJARAdminPanel() {
             <FinancialReports />
           </Suspense>
         } />
+            <Route path="financial/contact-leads" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ContactLeadsManagement />
+              </Suspense>
+            } />
         <Route path="financial/accounts" element={
           <Suspense fallback={<LoadingFallback />}>
             <BankAccountsManager />
@@ -208,6 +234,11 @@ export default function ViaJARAdminPanel() {
         <Route path="settings/policies" element={
           <Suspense fallback={<LoadingFallback />}>
             <PoliciesEditor />
+          </Suspense>
+        } />
+        <Route path="settings/metrics" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PlatformMetricsEditor />
           </Suspense>
         } />
             
@@ -278,7 +309,14 @@ export default function ViaJARAdminPanel() {
                 <SystemHealthMonitor />
               </Suspense>
             } />
-            
+
+            {/* Email Management */}
+            <Route path="communication/emails" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <EmailDashboard />
+              </Suspense>
+            } />
+
             <Route path="*" element={<Navigate to="/viajar/admin" replace />} />
           </Routes>
     </ModernAdminLayout>

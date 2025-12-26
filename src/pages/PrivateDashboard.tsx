@@ -23,6 +23,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { QuestionnaireAnswers } from '@/types/diagnostic';
 import { AnalysisResult, analyzeBusinessProfile } from '@/services/diagnostic/analysisService';
 import { diagnosticService } from '@/services/viajar/diagnosticService';
+import { useBusinessSegment } from '@/hooks/useBusinessSegment';
+import { businessMetricsService } from '@/services/viajar/businessMetricsService';
+import { SegmentedMetricsInput } from '@/components/viajar/SegmentedMetricsInput';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import DocumentUpload from '@/components/private/DocumentUpload';
@@ -73,6 +76,10 @@ const PrivateDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const businessSegment = useBusinessSegment();
+  const segmentConfig = businessSegment.config;
+  const businessCategory = businessSegment.category;
+  const cityId = businessSegment.cityId;
   const [activeSection, setActiveSection] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<QuestionnaireAnswers | null>(null);
@@ -80,10 +87,12 @@ const PrivateDashboard = () => {
   const [businessMetrics, setBusinessMetrics] = useState<{
     monthlyRevenue: number;
     occupancyRate: number | null;
+    [key: string]: number | null;
   }>({
     monthlyRevenue: 0,
     occupancyRate: null,
   });
+  const [recentMetrics, setRecentMetrics] = useState<any[]>([]);
   const [showIntelligence, setShowIntelligence] = useState(false);
   const [intelligenceTab, setIntelligenceTab] = useState('revenue');
   const [intelligenceKey, setIntelligenceKey] = useState(0); // Para forçar atualização
@@ -170,33 +179,72 @@ const PrivateDashboard = () => {
 
     loadDiagnosticData();
 
-    // Verificar dados faltantes do perfil e buscar métricas do negócio
-    const checkMissingData = async () => {
-      if (!user?.id) return;
+  // Verificar dados faltantes do perfil e buscar métricas do negócio
+  const checkMissingData = async () => {
+    if (!user?.id) return;
 
-      try {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('description, phone, website, city, state, address, business_category')
-          .eq('user_id', user.id)
-          .maybeSingle();
+    try {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('description, phone, website, city, state, address, business_category')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        if (profile) {
-          const missing = !profile.description || !profile.phone || !profile.city || !profile.state;
-          setHasMissingData(missing);
-          
-          // Buscar métricas do negócio (campos podem não existir na tabela)
-          setBusinessMetrics({
-            monthlyRevenue: 0, // Campo não existe na tabela user_profiles
-            occupancyRate: null, // Campo não existe na tabela user_profiles
-          });
-        }
-      } catch (error) {
-        console.log('Erro ao verificar dados faltantes:', error);
+      if (profile) {
+        const missing = !profile.description || !profile.phone || !profile.city || !profile.state;
+        setHasMissingData(missing);
       }
-    };
+
+      // Buscar métricas reais do banco de dados
+      await loadBusinessMetrics();
+    } catch (error) {
+      console.log('Erro ao verificar dados faltantes:', error);
+    }
+  };
+
+  // Carregar métricas do negócio do banco
+  const loadBusinessMetrics = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Buscar métricas dos últimos 30 dias
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      const metrics = await businessMetricsService.getMetrics(user.id, startDate, endDate);
+      
+      // Agrupar por tipo e calcular totais/médias
+      const metricsByType = metrics.reduce((acc, m) => {
+        if (!acc[m.metric_type]) {
+          acc[m.metric_type] = [];
+        }
+        acc[m.metric_type].push(m.value);
+        return acc;
+      }, {} as Record<string, number[]>);
+
+      // Calcular receita mensal (soma de revenue)
+      const monthlyRevenue = metricsByType.revenue?.reduce((a, b) => a + b, 0) || 0;
+      
+      // Calcular taxa de ocupação média (média de occupancy)
+      const occupancyValues = metricsByType.occupancy || [];
+      const occupancyRate = occupancyValues.length > 0
+        ? occupancyValues.reduce((a, b) => a + b, 0) / occupancyValues.length
+        : null;
+
+      setBusinessMetrics({
+        monthlyRevenue,
+        occupancyRate: occupancyRate ? Math.round(occupancyRate) : null,
+      });
+
+      // Salvar métricas recentes para exibição
+      setRecentMetrics(metrics.slice(0, 10));
+    } catch (error) {
+      console.error('Erro ao carregar métricas:', error);
+    }
+  };
 
     checkMissingData();
+    loadBusinessMetrics();
 
     return () => {
       clearTimeout(loadingTimeout);
@@ -830,7 +878,7 @@ const PrivateDashboard = () => {
                       </CardBox>
                     )}
 
-                    {/* Cards de Métricas Principais */}
+                    {/* Cards de Métricas Principais - Adaptados por Segmento */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                       <CardBox>
                         <div className="flex items-center gap-2 mb-2">
@@ -847,32 +895,45 @@ const PrivateDashboard = () => {
                         </div>
                       </CardBox>
                       
-                      <CardBox>
-                        <div className="flex items-center gap-2 mb-2">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-slate-600">Receita Mensal</span>
-                        </div>
-                        <div className="text-3xl font-bold text-green-600 mb-1">
-                          {businessMetrics.monthlyRevenue > 0 
-                            ? `R$ ${(businessMetrics.monthlyRevenue / 1000).toFixed(1)}K`
-                            : 'N/A'}
-                        </div>
-                        <div className="text-xs text-slate-500">Receita do último mês</div>
-                      </CardBox>
+                      {/* Métricas específicas do segmento */}
+                      {segmentConfig && segmentConfig.kpis.primary.map((metricId) => {
+                        const metric = segmentConfig.metrics.find(m => m.id === metricId);
+                        if (!metric) return null;
 
-                      {businessMetrics.occupancyRate !== null && (
-                        <CardBox>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Users className="h-4 w-4 text-purple-600" />
-                            <span className="text-sm font-medium text-slate-600">Taxa de Ocupação</span>
-                          </div>
-                          <div className="text-3xl font-bold text-purple-600 mb-1">
-                            {businessMetrics.occupancyRate}%
-                          </div>
-                          <div className="text-xs text-slate-500">Ocupação média</div>
-                        </CardBox>
-                      )}
-                      
+                        // Buscar valor da métrica
+                        const metricValue = recentMetrics.find(m => {
+                          const typeMap: Record<string, string> = {
+                            'occupancy_rate': 'occupancy',
+                            'adr': 'adr',
+                            'revpar': 'revpar',
+                            'avg_ticket': 'ticket_avg',
+                            'tables_turnover': 'table_turnover',
+                            'visitors': 'visitors',
+                          };
+                          return m.metric_type === typeMap[metricId];
+                        });
+
+                        const value = metricValue?.value || businessMetrics[metricId] || 0;
+                        const displayValue = metric.unit === '%' 
+                          ? `${Math.round(value)}%`
+                          : metric.unit === 'R$'
+                          ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : value.toLocaleString('pt-BR');
+
+                        return (
+                          <CardBox key={metricId}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium text-slate-600">{metric.label}</span>
+                            </div>
+                            <div className="text-3xl font-bold text-green-600 mb-1">
+                              {value > 0 ? displayValue : 'N/A'}
+                            </div>
+                            <div className="text-xs text-slate-500">{metric.description}</div>
+                          </CardBox>
+                        );
+                      })}
+
                       <CardBox>
                         <div className="flex items-center gap-2 mb-2">
                           <Brain className="h-4 w-4 text-indigo-600" />
@@ -895,6 +956,13 @@ const PrivateDashboard = () => {
                         <div className="text-xs text-slate-500">Potencial de crescimento</div>
                       </CardBox>
                     </div>
+
+                    {/* Componente de Entrada de Métricas Segmentadas */}
+                    {segmentConfig && (
+                      <div className="mb-6">
+                        <SegmentedMetricsInput onSave={loadBusinessMetrics} />
+                      </div>
+                    )}
 
                     {/* Status do Negócio */}
                     <CardBox className="border-l-4 border-l-blue-500 bg-blue-50">

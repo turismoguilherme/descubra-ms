@@ -3,11 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  FileText, Menu, Image, Settings, Globe, Building2 
+  FileText, Image, Globe, Building2 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import PlatformContentEditor from './PlatformContentEditor';
-import PlatformMenuEditor from './PlatformMenuEditor';
+import SimpleTextEditor from './SimpleTextEditor';
+import LogoEditor from './LogoEditor';
 
 interface UnifiedPlatformEditorProps {
   initialPlatform?: 'viajar' | 'descubra_ms';
@@ -90,23 +90,23 @@ export default function UnifiedPlatformEditor({ initialPlatform = 'viajar' }: Un
             Conteúdo
           </TabsTrigger>
           <TabsTrigger
-            value="menus"
+            value="logos"
             className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
-            <Menu className="h-4 w-4 mr-2" />
-            Menus
+            <Image className="h-4 w-4 mr-2" />
+            Logos
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="content" className="mt-6">
-          <PlatformContentEditor 
+          <SimpleTextEditor 
             key={selectedPlatform} 
             platform={selectedPlatform} 
           />
         </TabsContent>
 
-        <TabsContent value="menus" className="mt-6">
-          <PlatformMenuEditor 
+        <TabsContent value="logos" className="mt-6">
+          <LogoEditor 
             key={selectedPlatform} 
             platform={selectedPlatform} 
           />

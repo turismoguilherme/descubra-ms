@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UniversalLayout from '@/components/layout/UniversalLayout';
+import PassportProfileGate from '@/components/passport/PassportProfileGate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -284,6 +285,7 @@ const PassaporteLista = () => {
   console.log("📱 PASSAPORTE LISTA: Renderizando lista de rotas");
 
   return (
+    <PassportProfileGate>
     <UniversalLayout>
       <main className="flex-grow bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -472,6 +474,7 @@ const PassaporteLista = () => {
         </div>
       </main>
     </UniversalLayout>
+    </PassportProfileGate>
   );
 };
 

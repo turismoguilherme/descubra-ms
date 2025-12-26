@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
+import { CitySelectionModal } from '@/components/viajar/CitySelectionModal';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -125,11 +127,45 @@ export default function ViaJARUnifiedDashboard() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editFormData, setEditFormData] = useState<any>({});
 
+  // Estado para verificar city_id (obrigatório para usuários privados)
+  const [needsCitySelection, setNeedsCitySelection] = useState(false);
+  const [isCheckingCity, setIsCheckingCity] = useState(true);
+
   // Detectar tipo de usuário
   const isSecretary = userRole === 'gestor_municipal';
   const isAttendant = userRole === 'atendente';
   const isPrivate = userRole === 'user';
   const isAdmin = userRole === 'admin';
+
+  // Verificar se precisa selecionar cidade (apenas para usuários privados)
+  useEffect(() => {
+    const checkCityId = async () => {
+      if (!user?.id || !isPrivate) {
+        setIsCheckingCity(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('city_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data?.city_id) {
+          setNeedsCitySelection(true);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar city_id:', err);
+      } finally {
+        setIsCheckingCity(false);
+      }
+    };
+
+    checkCityId();
+  }, [user?.id, isPrivate]);
 
   // Debug: Log do role do usuário
   console.log('🔍 DEBUG - userRole:', userRole);
@@ -150,8 +186,35 @@ export default function ViaJARUnifiedDashboard() {
     return <AttendantDashboardRestored />;
   }
 
-  // Se for usuário privado, mostrar dashboard específico
+  // Se for usuário privado, verificar city_id primeiro
   if (isPrivate) {
+    // Se ainda está verificando, mostrar loading
+    if (isCheckingCity) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Carregando...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Se precisa selecionar cidade, mostrar modal obrigatório
+    if (needsCitySelection) {
+      return (
+        <CitySelectionModal
+          userId={user?.id || ''}
+          onCitySelected={async (cityId) => {
+            setNeedsCitySelection(false);
+            // Recarregar página para aplicar mudanças
+            window.location.reload();
+          }}
+        />
+      );
+    }
+
+    // Se tudo ok, mostrar dashboard
     return <PrivateDashboard />;
   }
 

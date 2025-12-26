@@ -244,18 +244,18 @@ const Solucoes = () => {
             Pronto para Transformar seu Turismo?
           </h2>
           <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-            Teste grátis por 14 dias. Sem cartão de crédito. Cancele quando quiser.
+            Escolha o plano ideal e comece a transformar seu negócio hoje mesmo.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/viajar/register">
+            <Link to="/precos">
               <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
-                Começar Teste Grátis
+                Ver Planos e Preços
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/precos">
+            <Link to="/contato">
               <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 h-14 text-lg">
-                Ver Todos os Planos
+                Falar com Especialista
               </Button>
             </Link>
           </div>

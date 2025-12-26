@@ -11,26 +11,50 @@ export interface TaskResult {
 
 export const autonomousAgentService = {
   /**
-   * Executa análise de métricas
+   * Executa análise de métricas UNIFICADA (ViajARTur + Descubra MS)
    */
   async runMetricsAnalysis(): Promise<TaskResult> {
     try {
-      console.log('📊 [AutonomousAgent] Iniciando análise de métricas...');
+      console.log('📊 [AutonomousAgent] Iniciando análise de métricas unificada...');
       
-      // Buscar dados reais
-      const [usersResult, eventsResult, revenueResult] = await Promise.all([
+      // Buscar dados de AMBAS as plataformas
+      const [
+        usersResult, 
+        eventsResult, 
+        revenueResult,
+        passportsResult,
+        destinationsResult,
+        inventoryResult
+      ] = await Promise.all([
+        // Usuários (unificado)
         supabase.from('user_profiles').select('id, created_at', { count: 'exact', head: false }).limit(1000),
-        supabase.from('events').select('id, created_at, is_visible').limit(1000),
+        // Eventos (unificado)
+        supabase.from('events').select('id, created_at, is_visible, source').limit(1000),
+        // Receitas (ViajARTur)
         supabase.from('master_financial_records')
           .select('amount, record_type, paid_date')
           .eq('record_type', 'revenue')
           .gte('paid_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
           .limit(1000),
+        // Passaportes (Descubra MS)
+        supabase.from('user_passports').select('id', { count: 'exact', head: true }),
+        // Destinos (Descubra MS)
+        supabase.from('destinations').select('id', { count: 'exact', head: true }),
+        // Inventário (Descubra MS)
+        supabase.from('tourism_inventory')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .eq('status', 'approved'),
       ]);
 
       const totalUsers = usersResult.count || 0;
       const activeEvents = eventsResult.data?.filter(e => e.is_visible).length || 0;
+      const eventsViajar = eventsResult.data?.filter(e => e.source === 'viajar' && e.is_visible).length || 0;
+      const eventsDescubra = eventsResult.data?.filter(e => (e.source === 'ms' || !e.source) && e.is_visible).length || 0;
       const totalRevenue = revenueResult.data?.reduce((sum, r) => sum + (Number(r.amount) || 0), 0) || 0;
+      const totalPassports = passportsResult.count || 0;
+      const totalDestinations = destinationsResult.count || 0;
+      const totalInventory = inventoryResult.count || 0;
 
       // Calcular métricas
       const newUsersLast30Days = usersResult.data?.filter(u => {
@@ -38,40 +62,75 @@ export const autonomousAgentService = {
         return created >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       }).length || 0;
 
-      // Gerar análise com IA
-      const analysisPrompt = `Analise as seguintes métricas do sistema de turismo do Mato Grosso do Sul e forneça insights:
+      // Gerar análise com IA (unificada)
+      const analysisPrompt = `Analise as seguintes métricas UNIFICADAS das plataformas ViajARTur e Descubra MS e forneça insights:
 
-MÉTRICAS:
-- Total de usuários: ${totalUsers}
+MÉTRICAS UNIFICADAS:
+- Total de usuários (ambas plataformas): ${totalUsers}
 - Novos usuários (últimos 30 dias): ${newUsersLast30Days}
-- Eventos ativos: ${activeEvents}
-- Receita (últimos 30 dias): R$ ${totalRevenue.toFixed(2)}
+- Eventos ativos (total): ${activeEvents}
+  - ViajARTur: ${eventsViajar}
+  - Descubra MS: ${eventsDescubra}
+- Receita ViajARTur (últimos 30 dias): R$ ${totalRevenue.toFixed(2)}
+- Passaportes Digitais (Descubra MS): ${totalPassports}
+- Destinos cadastrados (Descubra MS): ${totalDestinations}
+- Itens de inventário (Descubra MS): ${totalInventory}
 
 Forneça:
-1. Principais insights sobre o crescimento
-2. Tendências identificadas
-3. Recomendações de ação
-4. Pontos de atenção
+1. Principais insights sobre o crescimento (unificado)
+2. Comparação entre as plataformas
+3. Tendências identificadas
+4. Recomendações de ação
+5. Pontos de atenção
 
 Seja conciso e objetivo.`;
 
       const aiAnalysis = await generateContent(analysisPrompt);
       
       const result = {
-        totalUsers,
-        newUsersLast30Days,
-        activeEvents,
-        totalRevenue,
-        analysis: aiAnalysis.ok ? aiAnalysis.text : 'Análise não disponível no momento',
+        // ViajARTur
+        viajar: {
+          users: totalUsers, // Aproximado - usuários podem estar em ambas
+          events: eventsViajar,
+          revenue: totalRevenue,
+        },
+        // Descubra MS
+        descubra: {
+          users: totalUsers, // Aproximado
+          events: eventsDescubra,
+          passports: totalPassports,
+          destinations: totalDestinations,
+          inventory: totalInventory,
+        },
+        // Unificado
+        unified: {
+          totalUsers,
+          newUsersLast30Days,
+          totalEvents: activeEvents,
+        },
+        insights: aiAnalysis.ok ? aiAnalysis.text : 'Análise não disponível no momento',
         timestamp: new Date().toISOString(),
       };
 
-      // Salvar análise (opcional - pode criar tabela para isso)
-      console.log('✅ [AutonomousAgent] Análise de métricas concluída');
+      // Salvar análise no banco
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        await supabase.from('ai_analyses').insert({
+          type: 'metrics',
+          analysis_data: result,
+          insights: aiAnalysis.ok ? aiAnalysis.text : null,
+          created_by: user.user?.id,
+        });
+        console.log('✅ [AutonomousAgent] Análise salva no banco');
+      } catch (saveError) {
+        console.warn('⚠️ [AutonomousAgent] Erro ao salvar análise no banco:', saveError);
+      }
+
+      console.log('✅ [AutonomousAgent] Análise de métricas unificada concluída');
 
       return {
         success: true,
-        message: 'Análise de métricas concluída com sucesso',
+        message: 'Análise de métricas unificada concluída com sucesso',
         data: result,
       };
     } catch (error: any) {
@@ -153,6 +212,20 @@ Formato: Relatório profissional e objetivo.`;
         timestamp: new Date().toISOString(),
       };
 
+      // Salvar relatório no banco
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        await supabase.from('ai_analyses').insert({
+          type: 'financial',
+          analysis_data: result,
+          insights: aiReport.ok ? aiReport.text : null,
+          created_by: user.user?.id,
+        });
+        console.log('✅ [AutonomousAgent] Relatório salvo no banco');
+      } catch (saveError) {
+        console.warn('⚠️ [AutonomousAgent] Erro ao salvar relatório no banco:', saveError);
+      }
+
       console.log('✅ [AutonomousAgent] Relatório financeiro gerado');
 
       return {
@@ -174,10 +247,14 @@ Formato: Relatório profissional e objetivo.`;
    * Detecta anomalias e envia alertas
    */
   async detectAnomalies(): Promise<TaskResult> {
+    // Definir variável de anomalias ANTES do try para garantir escopo
+    let anomalies: string[] = [];
+    
     try {
       console.log('🔍 [AutonomousAgent] Detectando anomalias...');
       
-      const anomalies: string[] = [];
+      // Reinicializar array de anomalias
+      anomalies = [];
 
       // Verificar métricas anômalas
       const [usersResult, eventsResult, healthChecks] = await Promise.all([
@@ -203,7 +280,7 @@ Formato: Relatório profissional e objetivo.`;
       }
 
       // Anomalia 2: Serviços offline
-      const offlineServices = healthChecks.data?.filter(h => h.status === 'offline').length || 0;
+      const offlineServices = healthChecks.data?.filter((h: any) => h.status === 'offline').length || 0;
       if (offlineServices > 5) {
         anomalies.push(`⚠️ ${offlineServices} verificações de serviços offline nas últimas 24h`);
       }
@@ -214,27 +291,36 @@ Formato: Relatório profissional e objetivo.`;
         anomalies.push(`⚠️ Apenas ${activeEvents} eventos ativos - considere adicionar mais conteúdo`);
       }
 
+      // Garantir que anomalies está definida
+      const anomaliesList = anomalies || [];
+      
       const result = {
-        anomaliesFound: anomalies.length,
-        anomalies,
+        anomaliesFound: anomaliesList.length,
+        anomalies: anomaliesList,
         timestamp: new Date().toISOString(),
       };
 
-      console.log('✅ [AutonomousAgent] Detecção de anomalias concluída:', anomalies.length, 'anomalias encontradas');
+      console.log('✅ [AutonomousAgent] Detecção de anomalias concluída:', anomaliesList.length, 'anomalias encontradas');
 
       return {
         success: true,
-        message: anomalies.length > 0 
-          ? `${anomalias.length} anomalia(s) detectada(s)`
+        message: anomaliesList.length > 0 
+          ? `${anomaliesList.length} anomalia(s) detectada(s)`
           : 'Nenhuma anomalia detectada',
         data: result,
       };
     } catch (error: any) {
+      // Garantir que anomalies está definida mesmo em caso de erro
+      const safeAnomalies = anomalies || [];
       console.error('❌ [AutonomousAgent] Erro na detecção de anomalias:', error);
       return {
         success: false,
         message: 'Erro ao detectar anomalias',
         error: error.message,
+        data: {
+          anomaliesFound: safeAnomalies.length,
+          anomalies: safeAnomalies,
+        },
       };
     }
   },
@@ -415,6 +501,105 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
       return {
         success: false,
         message: 'Erro ao limpar cache',
+        error: error.message,
+      };
+    }
+  },
+
+  /**
+   * Aprova automaticamente eventos gratuitos que atendem aos critérios
+   */
+  async autoApproveFreeEvents(): Promise<TaskResult> {
+    try {
+      console.log('✅ [AutonomousAgent] Verificando eventos gratuitos para aprovação automática...');
+      
+      // Buscar eventos pendentes que são gratuitos
+      const { data: pendingEvents, error } = await supabase
+        .from('events')
+        .select('id, name, title, start_date, end_date, price, is_free, approval_status, source')
+        .eq('approval_status', 'pending')
+        .or('is_free.eq.true,price.eq.0')
+        .limit(50);
+
+      if (error) throw error;
+
+      const approvedEvents: any[] = [];
+      const rejectedEvents: any[] = [];
+      const today = new Date();
+      const minDate = new Date(today);
+      minDate.setDate(minDate.getDate() + 7); // Mínimo 7 dias no futuro
+
+      // Palavras bloqueadas (configurável)
+      const blockedWords = ['teste', 'test', 'spam', 'xxx']; // Pode vir de configuração
+
+      for (const event of pendingEvents || []) {
+        const eventName = (event.name || event.title || '').toLowerCase();
+        const startDate = event.start_date ? new Date(event.start_date) : null;
+        const isFree = event.is_free === true || event.price === 0 || event.price === null;
+        
+        // Verificar critérios de aprovação
+        const hasBlockedWords = blockedWords.some(word => eventName.includes(word));
+        const hasValidDate = startDate && startDate >= minDate;
+        const hasRequiredFields = event.name || event.title;
+
+        if (isFree && hasValidDate && hasRequiredFields && !hasBlockedWords) {
+          // Aprovar evento
+          const { error: updateError } = await supabase
+            .from('events')
+            .update({
+              approval_status: 'approved',
+              is_visible: true,
+              approved_at: new Date().toISOString(),
+            })
+            .eq('id', event.id);
+
+          if (!updateError) {
+            approvedEvents.push(event);
+            
+            // Salvar registro da aprovação
+            await supabase.from('ai_auto_approvals').insert({
+              event_id: event.id,
+              approval_reason: 'Evento gratuito com data válida e campos obrigatórios preenchidos',
+              rules_applied: {
+                isFree: true,
+                hasValidDate: true,
+                hasRequiredFields: true,
+                hasBlockedWords: false,
+              },
+              event_data: event,
+            });
+          }
+        } else {
+          rejectedEvents.push({
+            event,
+            reason: !isFree ? 'Evento não é gratuito' :
+                   !hasValidDate ? 'Data muito próxima ou inválida' :
+                   !hasRequiredFields ? 'Campos obrigatórios faltando' :
+                   hasBlockedWords ? 'Contém palavras bloqueadas' : 'Outro motivo',
+          });
+        }
+      }
+
+      const result = {
+        totalChecked: pendingEvents?.length || 0,
+        approved: approvedEvents.length,
+        rejected: rejectedEvents.length,
+        approvedEvents: approvedEvents.map(e => ({ id: e.id, name: e.name || e.title })),
+        timestamp: new Date().toISOString(),
+      };
+
+      console.log(`✅ [AutonomousAgent] Aprovação automática: ${approvedEvents.length} aprovados, ${rejectedEvents.length} rejeitados`);
+
+      return {
+        success: true,
+        message: `${approvedEvents.length} evento(s) aprovado(s) automaticamente`,
+        data: result,
+      };
+    } catch (error: any) {
+      console.error('❌ [AutonomousAgent] Erro na aprovação automática:', error);
+      return {
+        success: false,
+        message: 'Erro ao aprovar eventos automaticamente',
         error: error.message,
       };
     }

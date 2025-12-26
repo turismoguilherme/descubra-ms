@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { autonomousAgentService } from '@/services/admin/autonomousAgentService';
 import { generateContent } from '@/config/gemini';
@@ -158,11 +158,24 @@ const getDefaultTasks = (): AITask[] => {
         return next;
       })(),
     },
+    {
+      id: '8',
+      type: 'notification',
+      name: 'Aprovação Automática de Eventos',
+      description: 'Aprova automaticamente eventos gratuitos que atendem aos critérios.',
+      schedule: 'A cada hora',
+      enabled: false, // Desabilitado por padrão - admin pode ativar
+      status: 'idle',
+      nextRun: (() => {
+        const next = new Date(now);
+        next.setHours(next.getHours() + 1, 0, 0, 0);
+        return next;
+      })(),
+    },
   ];
 };
 
 export default function AutonomousAIAgent() {
-  const { toast } = useToast();
   const [agentActive, setAgentActive] = useState(false);
   const [tasks, setTasks] = useState<AITask[]>(getDefaultTasks());
   const [logs, setLogs] = useState<AILog[]>([]);
@@ -173,6 +186,13 @@ export default function AutonomousAIAgent() {
   const [processing, setProcessing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   
+  // Estados para novas abas
+  const [lastMetricsAnalysis, setLastMetricsAnalysis] = useState<any>(null);
+  const [lastFinancialReport, setLastFinancialReport] = useState<any>(null);
+  const [seoImprovements, setSeoImprovements] = useState<any[]>([]);
+  const [autoApprovals, setAutoApprovals] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+  
   // Estados para as permissões
   const [permissions, setPermissions] = useState({
     modifyDatabase: false,
@@ -182,45 +202,116 @@ export default function AutonomousAIAgent() {
   });
 
   useEffect(() => {
-    // Load saved state
-    const saved = localStorage.getItem('ai_agent_config');
-    if (saved) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Componente montado, iniciando carregamento de configurações',data:{hasLocalStorage:typeof localStorage !== 'undefined',navigatorOnline:navigator.onLine},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    // Carregar configuração do Supabase (prioridade) ou localStorage (fallback)
+    const loadConfig = async () => {
       try {
-        const config = JSON.parse(saved);
-        setAgentActive(config.active || false);
-        setAutonomyLevel([config.autonomyLevel || 50]);
-        if (config.tasks) setTasks(config.tasks);
-        
-        // Carregar permissões salvas
-        if (config.permissions) {
-          setPermissions({
-            modifyDatabase: config.permissions.modifyDatabase ?? false,
-            sendNotifications: config.permissions.sendNotifications ?? true,
-            generateReports: config.permissions.generateReports ?? true,
-            accessFinancialData: config.permissions.accessFinancialData ?? false,
-          });
+        // Tentar carregar do Supabase primeiro (última configuração, ativa ou inativa)
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadConfig',message:'Iniciando query ao Supabase para ai_agent_config',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        const { data: dbConfig, error: dbError } = await supabase
+          .from('ai_agent_config')
+          .select('*')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadConfig',message:'Resultado da query ai_agent_config recebido',data:{hasError:!!dbError,errorMessage:dbError?.message,errorCode:dbError?.code,errorDetails:dbError?.details,errorHint:dbError?.hint,hasData:!!dbConfig,dataKeys:dbConfig ? Object.keys(dbConfig) : []},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+
+        if (!dbError && dbConfig) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Configuração encontrada no Supabase, aplicando estado',data:{configActive:dbConfig.active,configAutonomyLevel:dbConfig.autonomy_level,configUpdatedAt:dbConfig.updated_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
+          setAgentActive(dbConfig.active || false);
+          setAutonomyLevel([dbConfig.autonomy_level || 50]);
+          if (dbConfig.tasks && Array.isArray(dbConfig.tasks)) {
+            setTasks(dbConfig.tasks);
+          }
+          
+          // Carregar permissões
+          if (dbConfig.permissions && typeof dbConfig.permissions === 'object') {
+            setPermissions({
+              modifyDatabase: dbConfig.permissions.modifyDatabase ?? false,
+              sendNotifications: dbConfig.permissions.sendNotifications ?? true,
+              generateReports: dbConfig.permissions.generateReports ?? true,
+              accessFinancialData: dbConfig.permissions.accessFinancialData ?? false,
+            });
+          } else {
+            const initialAutonomy = dbConfig.autonomy_level || 50;
+            setPermissions({
+              modifyDatabase: initialAutonomy > 50,
+              sendNotifications: true,
+              generateReports: true,
+              accessFinancialData: initialAutonomy > 70,
+            });
+          }
+          return; // Configuração carregada do banco
+        }
+
+        // Fallback: tentar localStorage
+        const saved = localStorage.getItem('ai_agent_config');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Verificando localStorage para configurações (fallback)',data:{hasSavedConfig:!!saved,savedConfigLength:saved?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        if (saved) {
+          try {
+            const config = JSON.parse(saved);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Configuração encontrada no localStorage, aplicando estado',data:{configActive:config.active,configAutonomyLevel:config.autonomyLevel,configSavedAt:config.savedAt},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            setAgentActive(config.active || false);
+            setAutonomyLevel([config.autonomyLevel || 50]);
+            if (config.tasks) setTasks(config.tasks);
+            
+            // Carregar permissões salvas
+            if (config.permissions) {
+              setPermissions({
+                modifyDatabase: config.permissions.modifyDatabase ?? false,
+                sendNotifications: config.permissions.sendNotifications ?? true,
+                generateReports: config.permissions.generateReports ?? true,
+                accessFinancialData: config.permissions.accessFinancialData ?? false,
+              });
+            } else {
+              const initialAutonomy = config.autonomyLevel || 50;
+              setPermissions({
+                modifyDatabase: initialAutonomy > 50,
+                sendNotifications: true,
+                generateReports: true,
+                accessFinancialData: initialAutonomy > 70,
+              });
+            }
+          } catch (error) {
+            console.error('Erro ao carregar configurações salvas:', error);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Erro ao parsear configuração do localStorage',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
+          }
         } else {
-          // Valores padrão baseados no nível de autonomia inicial
-          const initialAutonomy = config.autonomyLevel || 50;
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Nenhuma configuração encontrada, usando valores padrão',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+          // #endregion
+          // Valores padrão baseados no nível de autonomia inicial (50)
           setPermissions({
-            modifyDatabase: initialAutonomy > 50,
+            modifyDatabase: false,
             sendNotifications: true,
             generateReports: true,
-            accessFinancialData: initialAutonomy > 70,
+            accessFinancialData: false,
           });
         }
       } catch (error) {
-        console.error('Erro ao carregar configurações salvas:', error);
+        console.error('Erro ao carregar configuração:', error);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Erro ao carregar configuração do Supabase',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
       }
-    } else {
-      // Valores padrão baseados no nível de autonomia inicial (50)
-      setPermissions({
-        modifyDatabase: false,
-        sendNotifications: true,
-        generateReports: true,
-        accessFinancialData: false,
-      });
-    }
+    };
+
+    loadConfig();
 
     // Add welcome message
     setChatMessages([
@@ -229,16 +320,116 @@ export default function AutonomousAIAgent() {
         content: 'Olá! Sou seu Agente de IA Autônomo. Posso ajudar com análises, relatórios, e executar tarefas automáticas. O que você gostaria de fazer hoje?'
       }
     ]);
+
+    // Carregar dados das novas abas
+    loadAnalysesData();
+    loadSEOImprovements();
+    loadAutoApprovals();
   }, []);
+
+  // Carregar análises salvas
+  const loadAnalysesData = async () => {
+    try {
+      setLoadingData(true);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Iniciando carregamento de análises',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      const [metricsResult, financialResult] = await Promise.all([
+        supabase
+          .from('ai_analyses')
+          .select('*')
+          .eq('type', 'metrics')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('ai_analyses')
+          .select('*')
+          .eq('type', 'financial')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Resultados das queries recebidos',data:{metricsError:metricsResult.error?.message,metricsStatusCode:metricsResult.error?.status,financialError:financialResult.error?.message,financialStatusCode:financialResult.error?.status,hasMetricsData:!!metricsResult.data,hasFinancialData:!!financialResult.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+
+      if (metricsResult.error) {
+        console.error('Erro ao carregar análise de métricas:', metricsResult.error);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Erro ao carregar análise de métricas',data:{error:metricsResult.error.message,code:metricsResult.error.code,details:metricsResult.error.details,hint:metricsResult.error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+      } else if (metricsResult.data) {
+        setLastMetricsAnalysis(metricsResult.data);
+      }
+      
+      if (financialResult.error) {
+        console.error('Erro ao carregar relatório financeiro:', financialResult.error);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Erro ao carregar relatório financeiro',data:{error:financialResult.error.message,code:financialResult.error.code,details:financialResult.error.details,hint:financialResult.error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+      } else if (financialResult.data) {
+        setLastFinancialReport(financialResult.data);
+      }
+    } catch (error: any) {
+      console.warn('Erro ao carregar análises:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Exceção ao carregar análises',data:{error:error?.message,errorString:String(error),stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Carregar melhorias de SEO
+  const loadSEOImprovements = async () => {
+    try {
+      const { data } = await supabase
+        .from('ai_seo_improvements')
+        .select('*')
+        .eq('status', 'pending')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (data) setSeoImprovements(data);
+    } catch (error) {
+      console.warn('Erro ao carregar melhorias de SEO:', error);
+    }
+  };
+
+  // Carregar aprovações automáticas
+  const loadAutoApprovals = async () => {
+    try {
+      const { data } = await supabase
+        .from('ai_auto_approvals')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (data) setAutoApprovals(data);
+    } catch (error) {
+      console.warn('Erro ao carregar aprovações:', error);
+    }
+  };
 
   // Sistema de agendamento automático
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:scheduling',message:'Sistema de agendamento verificado',data:{agentActive,navigatorOnline:navigator.onLine,pageVisible:!document.hidden},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
     if (!agentActive) {
       console.log('🤖 [AutonomousAgent] Agente desativado - tarefas automáticas pausadas');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:scheduling',message:'Agente desativado, sistema de agendamento não iniciado',data:{agentActive},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+      // #endregion
       return;
     }
 
     console.log('🤖 [AutonomousAgent] Agente ativado - iniciando verificação de tarefas agendadas');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:scheduling',message:'Agente ativado, iniciando sistema de agendamento',data:{agentActive,navigatorOnline:navigator.onLine,pageVisible:!document.hidden},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
 
     const checkScheduledTasks = () => {
       const now = new Date();
@@ -365,7 +556,7 @@ export default function AutonomousAIAgent() {
       return day === 0 && hour === 8 && minute === 0;
     }
 
-    // A cada hora
+    // A cada hora (inclui aprovação automática e alertas)
     if (schedule.includes('a cada hora')) {
       return minute === 0; // Executa no início de cada hora
     }
@@ -377,34 +568,162 @@ export default function AutonomousAIAgent() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  const saveConfig = () => {
-    const config = {
-      active: agentActive,
-      autonomyLevel: autonomyLevel[0],
-      tasks: tasks,
-      permissions: permissions,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem('ai_agent_config', JSON.stringify(config));
-    return config;
+  const saveConfig = async () => {
+    console.log('🔵 [DEBUG] saveConfig chamado', { agentActive, autonomyLevel: autonomyLevel[0], permissions });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Iniciando salvamento de configurações',data:{agentActive,autonomyLevel:autonomyLevel[0],permissions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    try {
+      const config = {
+        active: agentActive,
+        autonomyLevel: autonomyLevel[0],
+        tasks: tasks,
+        permissions: permissions,
+        savedAt: new Date().toISOString()
+      };
+      console.log('🔵 [DEBUG] Configuração preparada:', config);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Configuração preparada, salvando no Supabase e localStorage',data:{config},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
+      // Salvar no Supabase (prioridade para execução 24/7)
+      // Buscar última configuração (ativa ou inativa)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Buscando configuração existente no Supabase',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      const { data: existingConfig, error: queryError } = await supabase
+        .from('ai_agent_config')
+        .select('id')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da busca de configuração existente',data:{hasError:!!queryError,errorMessage:queryError?.message,errorCode:queryError?.code,errorDetails:queryError?.details,errorHint:queryError?.hint,hasExistingConfig:!!existingConfig,existingConfigId:existingConfig?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+
+      const configData = {
+        active: agentActive,
+        autonomy_level: autonomyLevel[0],
+        tasks: tasks,
+        permissions: permissions,
+        updated_at: new Date().toISOString()
+      };
+
+      if (queryError && queryError.code !== 'PGRST116') { // PGRST116 = no rows returned (normal)
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Erro ao buscar configuração existente, tentando criar nova',data:{error:queryError.message,code:queryError.code,details:queryError.details,hint:queryError.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+      }
+
+      if (existingConfig) {
+        // Atualizar configuração existente
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Atualizando configuração existente',data:{configId:existingConfig.id,configData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        const { error: updateError } = await supabase
+          .from('ai_agent_config')
+          .update(configData)
+          .eq('id', existingConfig.id);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da atualização',data:{hasError:!!updateError,errorMessage:updateError?.message,errorCode:updateError?.code,errorDetails:updateError?.details,errorHint:updateError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+
+        if (updateError) throw updateError;
+        console.log('🔵 [DEBUG] Configuração atualizada no Supabase');
+      } else {
+        // Criar nova configuração
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Criando nova configuração',data:{configData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        const { error: insertError } = await supabase
+          .from('ai_agent_config')
+          .insert([configData]);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da inserção',data:{hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError?.details,errorHint:insertError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+
+        if (insertError) throw insertError;
+        console.log('🔵 [DEBUG] Configuração criada no Supabase');
+      }
+
+      // Também salvar no localStorage como backup
+      localStorage.setItem('ai_agent_config', JSON.stringify(config));
+      console.log('🔵 [DEBUG] Configuração salva no localStorage (backup)');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Configuração salva com sucesso no Supabase e localStorage',data:{saved:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      return config;
+    } catch (error: any) {
+      console.error('🔴 [DEBUG] Erro em saveConfig:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Erro ao salvar configuração',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      throw error;
+    }
   };
 
   useEffect(() => {
-    // Salvar automaticamente quando mudanças relevantes ocorrerem
-    const config = {
-      active: agentActive,
-      autonomyLevel: autonomyLevel[0],
-      tasks: tasks,
-      permissions: permissions,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem('ai_agent_config', JSON.stringify(config));
+    // Salvar automaticamente quando mudanças relevantes ocorrerem (debounced)
+    const timeoutId = setTimeout(async () => {
+      try {
+        const config = {
+          active: agentActive,
+          autonomyLevel: autonomyLevel[0],
+          tasks: tasks,
+          permissions: permissions,
+          savedAt: new Date().toISOString()
+        };
+        
+        // Salvar no Supabase (async, não bloqueia)
+        // Buscar última configuração (ativa ou inativa)
+        const { data: existingConfig } = await supabase
+          .from('ai_agent_config')
+          .select('id')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const configData = {
+          active: agentActive,
+          autonomy_level: autonomyLevel[0],
+          tasks: tasks,
+          permissions: permissions,
+          updated_at: new Date().toISOString()
+        };
+
+        if (existingConfig) {
+          await supabase
+            .from('ai_agent_config')
+            .update(configData)
+            .eq('id', existingConfig.id);
+        } else {
+          await supabase
+            .from('ai_agent_config')
+            .insert([configData]);
+        }
+
+        // Também salvar no localStorage como backup
+        localStorage.setItem('ai_agent_config', JSON.stringify(config));
+      } catch (error) {
+        console.warn('Erro ao salvar configuração automaticamente:', error);
+        // Fallback: salvar apenas no localStorage
+        const config = {
+          active: agentActive,
+          autonomyLevel: autonomyLevel[0],
+          tasks: tasks,
+          permissions: permissions,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('ai_agent_config', JSON.stringify(config));
+      }
+    }, 2000); // Debounce de 2 segundos
+
+    return () => clearTimeout(timeoutId);
   }, [agentActive, autonomyLevel, tasks, permissions]);
 
   const toggleAgent = () => {
     setAgentActive(!agentActive);
-    toast({
-      title: !agentActive ? 'Agente IA Ativado!' : 'Agente IA Desativado',
+                    toast.success(!agentActive ? 'Agente IA Ativado!' : 'Agente IA Desativado', {
       description: !agentActive 
         ? 'O agente irá executar tarefas automaticamente conforme configurado.'
         : 'Todas as tarefas automáticas foram pausadas.',
@@ -498,11 +817,26 @@ export default function AutonomousAIAgent() {
           : errorMessage
       });
 
-      toast({
-        title: success ? 'Tarefa concluída!' : 'Erro na tarefa',
-        description: result.message || task.name,
-        variant: success ? 'default' : 'destructive',
-      });
+      if (success) {
+        toast.success('Tarefa concluída!', {
+          description: result.message || task.name,
+        });
+      } else {
+        toast.error('Erro na tarefa', {
+          description: result.message || task.name,
+        });
+      }
+
+      // Recarregar dados após execução
+      if (task.type === 'analysis' || task.type === 'report') {
+        loadAnalysesData();
+      }
+      if (task.type === 'optimization') {
+        loadSEOImprovements();
+      }
+      if (task.name === 'Aprovação Automática de Eventos') {
+        loadAutoApprovals();
+      }
 
     } catch (error: any) {
       success = false;
@@ -525,10 +859,8 @@ export default function AutonomousAIAgent() {
         details: errorMessage
       });
 
-      toast({
-        title: 'Erro na tarefa',
+      toast.error('Erro na tarefa', {
         description: errorMessage,
-        variant: 'destructive',
       });
     }
 
@@ -556,6 +888,9 @@ export default function AutonomousAIAgent() {
     } else if (schedule.includes('semanalmente')) {
       next.setDate(next.getDate() + 7);
       next.setHours(8, 0, 0, 0);
+    } else {
+      // Fallback: próxima hora
+      next.setHours(next.getHours() + 1, 0, 0, 0);
     }
     
     return next;
@@ -769,6 +1104,7 @@ RESPOSTA:`;
       <Tabs defaultValue="tasks" className="space-y-4">
         <TabsList className="bg-white border border-slate-200">
           <TabsTrigger value="tasks">Tarefas Automáticas</TabsTrigger>
+          <TabsTrigger value="analyses">📊 Análises</TabsTrigger>
           <TabsTrigger value="chat">Chat com IA</TabsTrigger>
           <TabsTrigger value="logs">Histórico de Execuções</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
@@ -852,6 +1188,258 @@ RESPOSTA:`;
             })}
           </div>
         </TabsContent>
+
+        {/* Análises */}
+        <TabsContent value="analyses">
+          <div className="space-y-4">
+            {/* Análise de Métricas */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-emerald-600" />
+                  Análise de Métricas Unificada
+                </CardTitle>
+                <CardDescription>
+                  Métricas combinadas das plataformas ViajARTur e Descubra MS
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                    <p className="text-sm text-slate-500 mt-2">Carregando análise...</p>
+                  </div>
+                ) : lastMetricsAnalysis ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {lastMetricsAnalysis.analysis_data?.unified?.totalUsers || 0}
+                        </div>
+                        <div className="text-sm text-slate-600">Total de Usuários</div>
+                      </div>
+                      <div className="p-4 bg-emerald-50 rounded-lg">
+                        <div className="text-2xl font-bold text-emerald-600">
+                          {lastMetricsAnalysis.analysis_data?.unified?.newUsersLast30Days || 0}
+                        </div>
+                        <div className="text-sm text-slate-600">Novos (30 dias)</div>
+                      </div>
+                      <div className="p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {lastMetricsAnalysis.analysis_data?.unified?.totalEvents || 0}
+                        </div>
+                        <div className="text-sm text-slate-600">Eventos Ativos</div>
+                      </div>
+                      <div className="p-4 bg-amber-50 rounded-lg">
+                        <div className="text-2xl font-bold text-amber-600">
+                          R$ {((lastMetricsAnalysis.analysis_data?.viajar?.revenue || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Receita (30 dias)</div>
+                      </div>
+                    </div>
+                    {lastMetricsAnalysis.insights && (
+                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h4 className="font-semibold text-slate-800 mb-2">Insights da IA</h4>
+                        <p className="text-sm text-slate-700 whitespace-pre-line">
+                          {lastMetricsAnalysis.insights}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Gerado em {format(new Date(lastMetricsAnalysis.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhuma análise disponível</p>
+                    <p className="text-sm mt-1">Execute a tarefa "Análise de Métricas" para gerar</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Relatório Financeiro */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Relatório Financeiro
+                </CardTitle>
+                <CardDescription>
+                  Relatório financeiro mensal gerado automaticamente
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {lastFinancialReport ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="p-4 bg-emerald-50 rounded-lg">
+                        <div className="text-xl font-bold text-emerald-600">
+                          R$ {((lastFinancialReport.analysis_data?.revenue || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Receitas</div>
+                      </div>
+                      <div className="p-4 bg-red-50 rounded-lg">
+                        <div className="text-xl font-bold text-red-600">
+                          R$ {((lastFinancialReport.analysis_data?.expenses || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Despesas</div>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="text-xl font-bold text-blue-600">
+                          R$ {((lastFinancialReport.analysis_data?.profit || 0) / 1000).toFixed(1)}k
+                        </div>
+                        <div className="text-sm text-slate-600">Lucro</div>
+                      </div>
+                    </div>
+                    {lastFinancialReport.insights && (
+                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h4 className="font-semibold text-slate-800 mb-2">Relatório Completo</h4>
+                        <p className="text-sm text-slate-700 whitespace-pre-line">
+                          {lastFinancialReport.insights}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Período: {lastFinancialReport.analysis_data?.period?.start} a {lastFinancialReport.analysis_data?.period?.end}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhum relatório disponível</p>
+                    <p className="text-sm mt-1">Execute a tarefa "Relatório Financeiro" para gerar</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SEO - Dentro de Análises */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                  Melhorias de SEO Sugeridas
+                </CardTitle>
+                <CardDescription>
+                  Melhorias sugeridas pela IA para eventos e destinos existentes
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                  </div>
+                ) : seoImprovements.length > 0 ? (
+                  <div className="space-y-4">
+                    {seoImprovements.map((improvement) => (
+                      <div key={improvement.id} className="p-4 border border-slate-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant={improvement.priority === 'high' ? 'destructive' : improvement.priority === 'medium' ? 'default' : 'secondary'}>
+                                {improvement.priority === 'high' ? 'Alta' : improvement.priority === 'medium' ? 'Média' : 'Baixa'}
+                              </Badge>
+                              <span className="text-sm text-slate-500">
+                                {improvement.content_type === 'event' ? 'Evento' : 'Destino'} ID: {improvement.content_id}
+                              </span>
+                            </div>
+                            {improvement.seo_analysis && (
+                              <p className="text-sm text-slate-700 mb-2">{improvement.seo_analysis}</p>
+                            )}
+                            {improvement.improvements && typeof improvement.improvements === 'object' && (
+                              <div className="text-xs text-slate-600 space-y-1">
+                                {Object.entries(improvement.improvements).map(([key, value]) => (
+                                  <div key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              // TODO: Implementar aplicação de melhorias
+                              toast.info('Em desenvolvimento', {
+                                description: 'Funcionalidade de aplicar melhorias será implementada em breve',
+                              });
+                            }}
+                          >
+                            Aplicar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhuma melhoria de SEO pendente</p>
+                    <p className="text-sm mt-1">Execute a tarefa "Otimização de SEO" para gerar sugestões</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Aprovações - Dentro de Análises */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  Aprovações Automáticas
+                </CardTitle>
+                <CardDescription>
+                  Eventos aprovados automaticamente pela IA
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                  </div>
+                ) : autoApprovals.length > 0 ? (
+                  <div className="space-y-3">
+                    {autoApprovals.map((approval) => (
+                      <div key={approval.id} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CheckCircle className="h-4 w-4 text-emerald-600" />
+                              <span className="font-medium text-slate-800">
+                                Evento ID: {approval.event_id}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-700 mb-1">
+                              {approval.approval_reason}
+                            </p>
+                            {approval.event_data && (
+                              <p className="text-xs text-slate-500">
+                                {approval.event_data.name || approval.event_data.title}
+                              </p>
+                            )}
+                            <p className="text-xs text-slate-400 mt-2">
+                              {format(new Date(approval.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <CheckCircle className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>Nenhuma aprovação automática registrada</p>
+                    <p className="text-sm mt-1">Ative a tarefa "Aprovação Automática de Eventos" para começar</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
 
         {/* Chat com IA */}
         <TabsContent value="chat">
@@ -1110,13 +1698,40 @@ RESPOSTA:`;
               </div>
 
               <Button 
-                onClick={() => {
-                  const config = saveConfig();
-                  toast({ 
-                    title: '✅ Configurações salvas!', 
-                    description: `Nível de autonomia: ${config.autonomyLevel}% | Agente: ${config.active ? 'Ativo' : 'Inativo'}`,
-                    duration: 3000
-                  });
+                type="button"
+                onClick={async (e) => {
+                  console.log('🔵 [DEBUG] Botão Salvar Configurações clicado!', { event: e, type: e.type });
+                  // #region agent log
+                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Botão Salvar Configurações clicado',data:{eventType:e.type,currentTarget:e.currentTarget?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                  // #endregion
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('🔵 [DEBUG] Prevenindo comportamento padrão, iniciando saveConfig...');
+                  try {
+                    const config = await saveConfig();
+                    console.log('🔵 [DEBUG] Configuração salva:', config);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Chamando toast para exibir sucesso',data:{config},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    console.log('🔵 [DEBUG] Chamando toast...');
+                    toast.success('✅ Configurações salvas!', {
+                      description: `Nível de autonomia: ${config.autonomyLevel}% | Agente: ${config.active ? 'Ativo' : 'Inativo'}`,
+                      duration: 3000
+                    });
+                    console.log('🔵 [DEBUG] Toast chamado com sucesso!', { toastFunction: typeof toast });
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Toast chamado com sucesso',data:{toastCalled:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                  } catch (error: any) {
+                    console.error('🔴 [DEBUG] Erro ao salvar configurações:', error);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Erro ao salvar configurações',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    toast.error('❌ Erro ao salvar', {
+                      description: error?.message || 'Não foi possível salvar as configurações',
+                      duration: 5000
+                    });
+                  }
                 }}
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
               >

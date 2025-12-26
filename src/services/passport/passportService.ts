@@ -36,6 +36,60 @@ class PassportService {
   }
 
   /**
+   * Resumo de disponibilidade de recompensas de uma rota.
+   * Usado para exibir uma mensagem amigável quando a rota foi concluída,
+   * mas nenhum voucher foi gerado (ex.: estoque esgotado).
+   */
+  async getRewardAvailabilitySummary(routeId: string): Promise<{
+    hasActiveRewards: boolean;
+    anyAvailable: boolean;
+  }> {
+    const { data: rewards, error: rewardsError } = await supabase
+      .from('passport_rewards')
+      .select('id, max_vouchers, is_active, expires_at')
+      .eq('route_id', routeId)
+      .eq('is_active', true);
+
+    if (rewardsError) throw rewardsError;
+
+    const activeRewards = (rewards || []).filter((r: any) => {
+      if (!r.expires_at) return true;
+      return new Date(r.expires_at).getTime() > Date.now();
+    });
+
+    if (activeRewards.length === 0) {
+      return { hasActiveRewards: false, anyAvailable: false };
+    }
+
+    // Se alguma recompensa não tem estoque (max_vouchers null), consideramos disponível
+    const unlimitedExists = activeRewards.some((r: any) => r.max_vouchers == null);
+    if (unlimitedExists) {
+      return { hasActiveRewards: true, anyAvailable: true };
+    }
+
+    const rewardIds = activeRewards.map((r: any) => r.id);
+    const { data: userRewardsData, error: userRewardsError } = await supabase
+      .from('user_rewards')
+      .select('reward_id')
+      .in('reward_id', rewardIds);
+
+    if (userRewardsError) throw userRewardsError;
+
+    const emittedById = (userRewardsData || []).reduce((acc: Record<string, number>, row: any) => {
+      acc[row.reward_id] = (acc[row.reward_id] || 0) + 1;
+      return acc;
+    }, {});
+
+    const anyAvailable = activeRewards.some((r: any) => {
+      const emitted = emittedById[r.id] || 0;
+      const max = r.max_vouchers ?? 0;
+      return emitted < max;
+    });
+
+    return { hasActiveRewards: true, anyAvailable };
+  }
+
+  /**
    * Criar ou obter passaporte do usuário
    */
   async createPassport(userId: string, prefix: string = 'MS'): Promise<UserPassport> {
@@ -402,22 +456,9 @@ class PassportService {
         }
       }
 
-      // 2) Validar código do parceiro quando aplicável
+      // 2) Validar código do parceiro quando aplicável (SERVER-SIDE)
       if (validationMode === 'code' || validationMode === 'mixed') {
-        const expectedCode: string | null = checkpoint.partner_code || null;
         const inputCode = (partnerCodeInput || '').trim();
-
-        if (!expectedCode) {
-          return {
-            success: false,
-            checkpoint_id: checkpointId,
-            route_id: routeId,
-            stamp_earned: false,
-            points_earned: 0,
-            route_completed: false,
-            error: 'Este ponto exige código do parceiro, mas nenhum código foi configurado.',
-          };
-        }
 
         if (!inputCode) {
           return {
@@ -431,9 +472,53 @@ class PassportService {
           };
         }
 
-        // Comparação case-insensitive e ignorando espaços
-        const normalize = (value: string) => value.replace(/\s+/g, '').toUpperCase();
-        if (normalize(inputCode) !== normalize(expectedCode)) {
+        // Validação server-side com rate limiting e auditoria
+        try {
+          // Obter IP do cliente (se disponível)
+          const ipAddress = null; // TODO: Passar IP real se disponível no contexto
+          
+          const { data: validationResult, error: validationError } = await supabase.rpc(
+            'validate_partner_code',
+            {
+              p_checkpoint_id: checkpointId,
+              p_code_input: inputCode,
+              p_user_id: userId,
+              p_ip_address: ipAddress,
+              p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+            }
+          );
+
+          if (validationError) {
+            console.error('Erro ao validar código do parceiro:', validationError);
+            return {
+              success: false,
+              checkpoint_id: checkpointId,
+              route_id: routeId,
+              stamp_earned: false,
+              points_earned: 0,
+              route_completed: false,
+              error: 'Erro ao validar código. Tente novamente.',
+            };
+          }
+
+          // Verificar resultado da validação
+          if (!validationResult?.success) {
+            return {
+              success: false,
+              checkpoint_id: checkpointId,
+              route_id: routeId,
+              stamp_earned: false,
+              points_earned: 0,
+              route_completed: false,
+              error: validationResult?.error || 'Código do parceiro inválido. Confirme o código no balcão.',
+              blocked: validationResult?.blocked || false,
+            };
+          }
+
+          // Código válido! Continuar com check-in
+          console.log('✅ Código do parceiro validado com sucesso');
+        } catch (error: any) {
+          console.error('Erro inesperado ao validar código:', error);
           return {
             success: false,
             checkpoint_id: checkpointId,
@@ -441,7 +526,7 @@ class PassportService {
             stamp_earned: false,
             points_earned: 0,
             route_completed: false,
-            error: 'Código do parceiro inválido. Confirme o código no balcão.',
+            error: 'Erro ao validar código. Tente novamente.',
           };
         }
       }

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Building2, FileText, CreditCard, Loader2 } from 'lucide-react';
+import { CheckCircle2, Building2, FileText, CreditCard, Loader2, Link2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PartnerApplicationForm } from './PartnerApplicationForm';
 import PartnerTermsAcceptance from './PartnerTermsAcceptance';
 import PartnerPaymentStep from './PartnerPaymentStep';
+import StripeConnectStep from './StripeConnectStep';
+import WelcomeModal from './WelcomeModal';
 
 interface OnboardingData {
   partnerId?: string;
@@ -21,6 +24,7 @@ const steps = [
   { id: 1, title: 'Dados da Empresa', icon: Building2 },
   { id: 2, title: 'Termo de Parceria', icon: FileText },
   { id: 3, title: 'Pagamento', icon: CreditCard },
+  { id: 4, title: 'Stripe Connect', icon: Link2 },
 ];
 
 export default function PartnerOnboardingWizard() {
@@ -28,6 +32,7 @@ export default function PartnerOnboardingWizard() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const progress = (currentStep / steps.length) * 100;
 
@@ -56,14 +61,45 @@ export default function PartnerOnboardingWizard() {
   };
 
   const handleStep3Complete = () => {
-    toast({
-      title: '🎉 Parabéns!',
-      description: 'Você é agora um parceiro ativo do Descubra MS!',
-    });
-    // Redirecionar para dashboard após 2 segundos
-    setTimeout(() => {
-      navigate('/partner/dashboard');
-    }, 2000);
+    // Avançar para a etapa do Stripe Connect
+    setCurrentStep(4);
+  };
+
+  const handleStep4Complete = () => {
+    // Enviar email de boas-vindas
+    sendWelcomeEmail();
+    // Mostrar modal de boas-vindas
+    setShowWelcomeModal(true);
+  };
+
+  const handleSkipStripeConnect = () => {
+    // Enviar email de boas-vindas (mesmo pulando Stripe)
+    sendWelcomeEmail();
+    // Mostrar modal de boas-vindas
+    setShowWelcomeModal(true);
+  };
+
+  const handleCloseWelcomeModal = () => {
+    setShowWelcomeModal(false);
+    // Redirecionar para dashboard
+    navigate('/partner/dashboard?welcome=true');
+  };
+
+  const sendWelcomeEmail = async () => {
+    try {
+      await supabase.functions.invoke('send-notification-email', {
+        body: {
+          type: 'partner_welcome',
+          to: onboardingData.partnerEmail,
+          data: {
+            partnerName: onboardingData.partnerName,
+            dashboardUrl: `${window.location.origin}/partner/dashboard`,
+          },
+        },
+      });
+    } catch (error) {
+      console.warn('Erro ao enviar email de boas-vindas (não crítico):', error);
+    }
   };
 
   return (
@@ -143,6 +179,7 @@ export default function PartnerOnboardingWizard() {
               {currentStep === 1 && 'Preencha os dados da sua empresa e crie sua senha'}
               {currentStep === 2 && 'Leia e aceite o termo de parceria'}
               {currentStep === 3 && 'Complete o pagamento da assinatura mensal'}
+              {currentStep === 4 && 'Conecte sua conta Stripe para receber pagamentos'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -174,9 +211,28 @@ export default function PartnerOnboardingWizard() {
                 onBack={() => setCurrentStep(2)}
               />
             )}
+
+            {currentStep === 4 && onboardingData.partnerId && (
+              <StripeConnectStep
+                partnerId={onboardingData.partnerId}
+                partnerName={onboardingData.partnerName || ''}
+                partnerEmail={onboardingData.partnerEmail || ''}
+                onComplete={handleStep4Complete}
+                onBack={() => setCurrentStep(3)}
+                onSkip={handleSkipStripeConnect}
+              />
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Boas-Vindas */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={handleCloseWelcomeModal}
+        partnerName={onboardingData.partnerName || 'Parceiro'}
+        hasStripeConnected={currentStep === 4}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,20 +8,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import PantanalAvatarSelector, { PantanalAnimal } from '@/components/profile/PantanalAvatarSelector';
-import AchievementSystemSimple from '@/components/profile/AchievementSystemSimple';
-import EnvironmentalQuizSimple from '@/components/profile/EnvironmentalQuizSimple';
 import UserSettingsModal from '@/components/profile/UserSettingsModal';
 import ShareProfileModal from '@/components/profile/ShareProfileModal';
 import { 
   User, 
-  Trophy, 
-  BookOpen, 
   Heart, 
   History, 
   Settings,
   Share2,
-  Edit3
+  Edit3,
+  Pencil
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface UserProfile {
   id: string;
@@ -29,6 +28,7 @@ export interface UserProfile {
   email: string;
   avatar_url?: string;
   selected_avatar?: string;
+  avatar_custom_name?: string;
   achievements: any[];
   pantanal_animals: PantanalAnimal[];
   created_at: string;
@@ -41,9 +41,10 @@ const ProfilePageFixed: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const [showQuiz, setShowQuiz] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [isEditingAvatarName, setIsEditingAvatarName] = useState(false);
+  const [avatarCustomName, setAvatarCustomName] = useState('');
 
   // Dados mockados dos animais do Pantanal
   const pantanalAnimals: PantanalAnimal[] = [
@@ -174,19 +175,28 @@ const ProfilePageFixed: React.FC = () => {
       // Simular carregamento do perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Buscar perfil do banco de dados
+      const { data: dbProfile, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      
       const mockProfile: UserProfile = {
         id: user?.id || '1',
-        full_name: user?.user_metadata?.full_name || 'Usuário',
+        full_name: dbProfile?.full_name || user?.user_metadata?.full_name || 'Usuário',
         email: user?.email || 'usuario@exemplo.com',
-        avatar_url: user?.user_metadata?.avatar_url,
-        selected_avatar: 'jaguar',
+        avatar_url: dbProfile?.avatar_url || user?.user_metadata?.avatar_url,
+        selected_avatar: dbProfile?.selected_avatar || 'jaguar',
+        avatar_custom_name: dbProfile?.avatar_custom_name || null,
         achievements: mockAchievements,
         pantanal_animals: pantanalAnimals,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: dbProfile?.created_at || new Date().toISOString(),
+        updated_at: dbProfile?.updated_at || new Date().toISOString()
       };
       
       setProfile(mockProfile);
+      setAvatarCustomName(mockProfile.avatar_custom_name || '');
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
       toast({
@@ -205,32 +215,108 @@ const ProfilePageFixed: React.FC = () => {
     }
   }, [user, profile]);
 
-  const handleAvatarSelect = (animalId: string) => {
-    if (profile) {
-      setProfile({
+  const handleAvatarSelect = async (animalId: string) => {
+    if (!profile || !user) {
+      setShowAvatarSelector(false);
+      return;
+    }
+
+    try {
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ selected_avatar: animalId })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao atualizar avatar:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar o avatar.",
+          variant: "destructive",
+        });
+        setShowAvatarSelector(false);
+        return;
+      }
+
+      // Atualizar estado local imediatamente para feedback visual
+      const updatedProfile = {
         ...profile,
         selected_avatar: animalId
+      };
+      setProfile(updatedProfile);
+      
+      // Recarregar perfil completo do banco em background para garantir sincronização
+      const { data: dbProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (dbProfile) {
+        setProfile({
+          ...updatedProfile,
+          avatar_custom_name: dbProfile.avatar_custom_name || undefined
       });
+      }
       
       toast({
         title: "Avatar Atualizado!",
         description: "Seu avatar foi alterado com sucesso.",
       });
+    } catch (error) {
+      console.error('Erro ao atualizar avatar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o avatar.",
+        variant: "destructive",
+      });
+    } finally {
+      // Sempre fechar o modal
+      setShowAvatarSelector(false);
     }
-    setShowAvatarSelector(false);
   };
 
-  const handleQuizComplete = (score: number) => {
-    toast({
-      title: "Quiz Concluído!",
-      description: `Você acertou ${Math.round(score)}% das perguntas!`,
+  const handleSaveAvatarName = async () => {
+    if (!user || !profile) return;
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ avatar_custom_name: avatarCustomName || null })
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Erro ao salvar nome do avatar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o nome personalizado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProfile({
+      ...profile,
+      avatar_custom_name: avatarCustomName || undefined
     });
-    setShowQuiz(false);
+
+    setIsEditingAvatarName(false);
+    toast({
+      title: "Nome Salvo!",
+      description: "O nome personalizado do avatar foi salvo com sucesso.",
+    });
   };
 
   const handleProfileUpdate = (updatedProfile: any) => {
     setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
   };
+
+  // Recalcular selectedAnimal sempre que profile.selected_avatar mudar
+  // IMPORTANTE: useMemo deve estar antes dos returns condicionais
+  const selectedAnimal = useMemo(() => {
+    if (!profile) return null;
+    return pantanalAnimals.find(animal => animal.id === profile.selected_avatar);
+  }, [profile?.selected_avatar, pantanalAnimals]);
 
   if (loading) {
     return (
@@ -258,8 +344,6 @@ const ProfilePageFixed: React.FC = () => {
     );
   }
 
-  const selectedAnimal = pantanalAnimals.find(animal => animal.id === profile.selected_avatar);
-
   return (
     <UniversalLayout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -277,7 +361,7 @@ const ProfilePageFixed: React.FC = () => {
                   </Avatar>
                   {selectedAnimal && (
                     <Badge className="absolute -bottom-2 -right-2 bg-green-600 text-white">
-                      {selectedAnimal.name}
+                      {profile.avatar_custom_name || selectedAnimal.name}
                     </Badge>
                   )}
                 </div>
@@ -312,18 +396,10 @@ const ProfilePageFixed: React.FC = () => {
 
           {/* Tabs do Perfil */}
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-white shadow-sm">
+            <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm">
               <TabsTrigger value="profile" className="flex items-center">
                 <User className="h-4 w-4 mr-2" />
                 Perfil
-              </TabsTrigger>
-              <TabsTrigger value="achievements" className="flex items-center">
-                <Trophy className="h-4 w-4 mr-2" />
-                Conquistas
-              </TabsTrigger>
-              <TabsTrigger value="quiz" className="flex items-center">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Quiz
               </TabsTrigger>
               <TabsTrigger value="animals" className="flex items-center">
                 <Heart className="h-4 w-4 mr-2" />
@@ -353,9 +429,72 @@ const ProfilePageFixed: React.FC = () => {
                       <label className="text-sm font-medium text-gray-700">Email</label>
                       <p className="text-gray-900">{profile.email}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Avatar Atual</label>
-                      <p className="text-gray-900">{selectedAnimal?.name || 'Nenhum selecionado'}</p>
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Avatar Atual
+                        {selectedAnimal && (
+                          <span className="text-xs text-gray-500 ml-2 font-normal">
+                            (Clique no ícone de lápis para personalizar o nome)
+                          </span>
+                        )}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {isEditingAvatarName ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <Input
+                              value={avatarCustomName}
+                              onChange={(e) => setAvatarCustomName(e.target.value)}
+                              placeholder={`Nome personalizado (ex: ${selectedAnimal?.name})`}
+                              className="flex-1"
+                              maxLength={50}
+                            />
+                            <Button
+                              size="sm"
+                              onClick={handleSaveAvatarName}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Salvar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setIsEditingAvatarName(false);
+                                setAvatarCustomName(profile.avatar_custom_name || '');
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex-1">
+                              <p className="text-gray-900 font-medium">
+                                {profile.avatar_custom_name || selectedAnimal?.name || 'Nenhum selecionado'}
+                              </p>
+                              {profile.avatar_custom_name && selectedAnimal && (
+                                <p className="text-gray-500 text-sm mt-1">
+                                  Espécie: {selectedAnimal.name}
+                                </p>
+                              )}
+                            </div>
+                            {selectedAnimal && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setIsEditingAvatarName(true);
+                                  setAvatarCustomName(profile.avatar_custom_name || '');
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Pencil className="h-4 w-4" />
+                                <span className="hidden sm:inline">Personalizar Nome</span>
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Membro desde</label>
@@ -368,71 +507,21 @@ const ProfilePageFixed: React.FC = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="achievements">
-              <AchievementSystemSimple 
-                achievements={profile?.achievements || []}
-                pantanalAnimals={pantanalAnimals || []}
-              />
-            </TabsContent>
-
-            <TabsContent value="quiz">
-              <div className="space-y-6">
-                {/* Quiz Component */}
-                {showQuiz ? (
-                  <EnvironmentalQuizSimple 
-                    animals={pantanalAnimals || []}
-                    onQuizComplete={handleQuizComplete}
-                    onClose={() => setShowQuiz(false)}
-                  />
-                ) : (
-                  <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-blue-50">
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-2xl font-bold text-gray-900">
-                        Quiz Educativo do Pantanal
-                      </CardTitle>
-                      <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
-                        Teste seus conhecimentos sobre a biodiversidade do Pantanal e aprenda sobre a conservação da fauna sul-mato-grossense. Cada pergunta é uma oportunidade de aprender mais sobre este bioma único!
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-6 text-center">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <div className="p-4 bg-white/50 rounded-lg text-center">
-                          <div className="text-2xl font-bold text-blue-600">5</div>
-                          <div className="text-sm text-gray-600">Perguntas</div>
-                        </div>
-                        <div className="p-4 bg-white/50 rounded-lg text-center">
-                          <div className="text-2xl font-bold text-green-600">4</div>
-                          <div className="text-sm text-gray-600">Categorias</div>
-                        </div>
-                        <div className="p-4 bg-white/50 rounded-lg text-center">
-                          <div className="text-2xl font-bold text-purple-600">100%</div>
-                          <div className="text-sm text-gray-600">Educativo</div>
-                        </div>
-                      </div>
-                      <div className="flex justify-center">
-                        <Button 
-                          onClick={() => setShowQuiz(true)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
-                        >
-                          <BookOpen className="h-5 w-5 mr-2" />
-                          Iniciar Quiz Educativo
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
-
             <TabsContent value="animals">
               <Card className="shadow-lg border-0">
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-gray-900">
                     Animais do Pantanal
                   </CardTitle>
-                  <p className="text-gray-600">
-                    Conheça os animais que podem ser seu avatar
-                  </p>
+                  <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-l-4 border-green-500">
+                    <p className="text-gray-700 leading-relaxed">
+                      <strong className="text-green-700">Os avatares do Pantanal</strong> são uma forma única de se conectar com a biodiversidade de Mato Grosso do Sul. 
+                      Cada animal representa traços de personalidade e características especiais que podem refletir quem você é. 
+                      Ao escolher um avatar, você não apenas personaliza seu perfil, mas também aprende sobre a importância de cada espécie 
+                      para o ecossistema do Pantanal. Explore os animais abaixo, descubra suas características e escolha aquele que mais 
+                      representa você!
+                    </p>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

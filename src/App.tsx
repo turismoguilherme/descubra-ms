@@ -32,6 +32,13 @@ import CasosSucesso from "@/pages/CasosSucesso";
 import Precos from "@/pages/Precos";
 import Sobre from "@/pages/Sobre";
 import Contato from "@/pages/Contato";
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:35',message:'Antes do import DadosTurismo',data:{timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'A',timestamp:Date.now()})}).catch(()=>{});
+// #endregion
+import DadosTurismo from "@/pages/DadosTurismo";
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:37',message:'Após import DadosTurismo',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',dadosTurismoValue:DadosTurismo?.toString?.()?.substring(0,50)||'undefined',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'A',timestamp:Date.now()})}).catch(()=>{});
+// #endregion
 
 // ViaJAR Dashboard Pages (Lazy loaded)
 const ViaJARUnifiedDashboard = lazy(() => import("@/pages/ViaJARUnifiedDashboard"));
@@ -77,6 +84,7 @@ import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
 import PartnerDashboard from "@/components/partners/PartnerDashboard";
 import PartnerLoginPage from "@/pages/PartnerLoginPage";
 import PartnerSuccessPage from "@/pages/PartnerSuccessPage";
+import UserReservationsPage from "@/pages/UserReservationsPage";
 import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
 import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
@@ -126,6 +134,13 @@ function App() {
                             <Route path="/precos" element={<Precos />} />
                             <Route path="/sobre" element={<Sobre />} />
                             <Route path="/contato" element={<Contato />} />
+                            {/* #region agent log */}
+                            {(() => {
+                              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:130',message:'Verificando DadosTurismo antes de usar na rota',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',dadosTurismoType:typeof DadosTurismo,dadosTurismoIsFunction:typeof DadosTurismo==='function',dadosTurismoIsObject:typeof DadosTurismo==='object',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'B',timestamp:Date.now()})}).catch(()=>{});
+                              return null;
+                            })()}
+                            {/* #endregion */}
+                            <Route path="/dados-turismo" element={typeof DadosTurismo !== 'undefined' ? <DadosTurismo /> : <div>Erro: DadosTurismo não carregado</div>} />
                             
                             {/* Chatbot Guatá Standalone - Totem */}
                             <Route path="/chatguata" element={<ChatGuata />} />
@@ -232,12 +247,14 @@ function App() {
                             <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
                             <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />
                             <Route path="/descubramatogrossodosul/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/promover-evento" element={<Navigate to="/descubramatogrossodosul/cadastrar-evento" replace />} />
+                            <Route path="/descubramatogrossodosul/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/partner/login" element={<PartnerLoginPage />} />
                             <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
+                            <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
+                            <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/sobre" element={<SobreMS />} />
                             <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
                             <Route path="/descubramatogrossodosul/chatguata" element={<ChatGuata />} />

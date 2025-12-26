@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePassportRewards } from '@/hooks/usePassportRewards';
-import { Copy, Gift, MapPin, Phone, Mail, CheckCircle2 } from 'lucide-react';
+import { Copy, Gift, MapPin, Phone, Mail, CheckCircle2, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface RewardsPanelProps {
   routeId: string;
@@ -102,9 +103,24 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ routeId }) => {
                     {/* Código do Voucher */}
                     <div className="bg-muted p-3 rounded-md">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1">
-                            Código do Voucher
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="text-xs text-muted-foreground">
+                              Código do Voucher
+                            </div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <p><strong>⚠️ Este é diferente do "Código do Parceiro" usado nos checkpoints!</strong></p>
+                                  <p className="mt-2 text-xs">Este código foi gerado automaticamente quando você ganhou esta recompensa.</p>
+                                  <p className="mt-2 text-xs"><strong>Use este código</strong> para resgatar a recompensa no estabelecimento parceiro.</p>
+                                  <p className="mt-2 text-xs">Cada turista recebe um código único. Este é o seu código pessoal.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                           <div className="font-mono font-semibold text-lg">
                             {reward.voucher_code}

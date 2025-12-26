@@ -1,6 +1,7 @@
 /**
  * ViaJAR Pricing Page
  * Página pública de preços e planos
+ * Fluxo: Usuário escolhe plano → Cadastro → Pagamento (Stripe)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -14,24 +15,19 @@ export default function ViaJARPricing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [preSelectedPlan, setPreSelectedPlan] = useState<PlanTier | null>(null);
-  const [preSelectedBilling, setPreSelectedBilling] = useState<BillingPeriod | null>(null);
 
   // Capturar parâmetros de plano da URL
   useEffect(() => {
     const plan = searchParams.get('plan') as PlanTier;
-    const billing = searchParams.get('billing') as BillingPeriod;
     
     if (plan) {
       setPreSelectedPlan(plan);
     }
-    if (billing) {
-      setPreSelectedBilling(billing);
-    }
   }, [searchParams]);
 
   const handleSelectPlan = (planId: PlanTier, billingPeriod: BillingPeriod) => {
-    // Redireciona para registro com plano pré-selecionado
-    navigate(`/viajar/register?plan=${planId}&billing=${billingPeriod}`);
+    // Redireciona para registro com plano pré-selecionado (apenas mensal)
+    navigate(`/viajar/register?plan=${planId}&billing=monthly`);
   };
 
   return (
@@ -49,7 +45,6 @@ export default function ViaJARPricing() {
           
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Do pequeno estabelecimento ao grande hotel, temos o plano ideal para impulsionar seu turismo.
-            <strong> Todos os planos incluem 14 dias grátis.</strong>
           </p>
         </div>
       </div>
@@ -60,7 +55,8 @@ export default function ViaJARPricing() {
           onSelectPlan={handleSelectPlan} 
           recommendedPlan={preSelectedPlan || "professional"}
           preSelectedPlan={preSelectedPlan}
-          preSelectedBilling={preSelectedBilling}
+          preSelectedBilling="monthly"
+          isViaJARTur={true}
         />
       </div>
 
@@ -95,7 +91,7 @@ export default function ViaJARPricing() {
 
             <div className="p-6 bg-white rounded-lg border shadow-sm">
               <div className="text-3xl mb-4">⚡</div>
-              <h3 className="font-semibold mb-2">Atualizações Grátis</h3>
+              <h3 className="font-semibold mb-2">Atualizações Incluídas</h3>
               <p className="text-sm text-muted-foreground">
                 Novas funcionalidades adicionadas regularmente sem custo extra
               </p>
@@ -209,15 +205,6 @@ export default function ViaJARPricing() {
           </div>
 
           <div className="space-y-6">
-            <div className="p-6 bg-white rounded-lg border">
-              <h3 className="font-semibold mb-2">
-                Como funciona o teste grátis de 14 dias?
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Você tem acesso completo a todas as funcionalidades do plano escolhido por 14 dias, 
-                sem precisar informar cartão de crédito. Se não gostar, basta não renovar e não será cobrado nada.
-              </p>
-            </div>
 
             <div className="p-6 bg-white rounded-lg border">
               <h3 className="font-semibold mb-2">
@@ -241,12 +228,11 @@ export default function ViaJARPricing() {
 
             <div className="p-6 bg-white rounded-lg border">
               <h3 className="font-semibold mb-2">
-                O CADASTUR é realmente obrigatório?
+                O CNPJ é obrigatório?
               </h3>
               <p className="text-sm text-muted-foreground">
-                Para estabelecimentos turísticos no Brasil (hotéis, pousadas, agências, guias), 
-                sim. Mas oferecemos 60 dias de período de graça para você obter o registro. 
-                É gratuito e ajudamos você no processo!
+                Para empresas brasileiras, sim. O CNPJ é necessário para emissão de notas fiscais 
+                e conformidade legal. Empresas internacionais podem usar documento equivalente.
               </p>
             </div>
 
@@ -284,11 +270,11 @@ export default function ViaJARPricing() {
 
             <div className="p-6 bg-white rounded-lg border">
               <h3 className="font-semibold mb-2">
-                Vocês têm desconto para pagamento anual?
+                Como funciona a cobrança?
               </h3>
               <p className="text-sm text-muted-foreground">
-                Sim! Pagando anualmente você economiza 20% (2 meses grátis). 
-                Por exemplo, o plano Professional sai de R$ 2.388/ano para R$ 1.912/ano.
+                A cobrança é mensal e recorrente. O valor é debitado automaticamente do seu cartão 
+                ou enviamos boleto/PIX todo mês. Você pode cancelar quando quiser.
               </p>
             </div>
           </div>
@@ -311,7 +297,7 @@ export default function ViaJARPricing() {
               className="text-lg px-8"
               onClick={() => navigate('/viajar/register')}
             >
-              Começar Teste Grátis de 14 Dias
+              Começar Agora
             </Button>
             <Button 
               size="lg" 

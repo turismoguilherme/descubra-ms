@@ -9,8 +9,15 @@ type NotificationType =
   | 'event_payment_confirmed'
   | 'partner_approved'
   | 'partner_rejected'
+  | 'partner_welcome'
+  | 'stripe_connect_complete'
+  | 'reservation_payment_received'
   | 'welcome'
-  | 'system_alert';
+  | 'welcome_subscription'
+  | 'system_alert'
+  | 'data_report_ready'
+  | 'data_report_approved'
+  | 'partner_notification';
 
 interface EmailRequest {
   type: NotificationType;
@@ -19,7 +26,7 @@ interface EmailRequest {
 }
 
 // Templates de email
-const templates: Record<NotificationType, { subject: string; html: (data: any) => string }> = {
+const templates: Record<NotificationType, { subject: string | ((data: any) => string); html: (data: any) => string }> = {
   event_approved: {
     subject: '✅ Seu evento foi aprovado! - Descubra MS',
     html: (data) => `
@@ -194,7 +201,350 @@ const templates: Record<NotificationType, { subject: string; html: (data: any) =
       `;
     },
   },
+  data_report_approved: {
+    subject: '✅ Solicitação de Relatório Aprovada - ViajARTur',
+    html: (data) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">ViajARTur</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Sua solicitação foi aprovada! ✅</h2>
+          <p>Olá, <strong>${data.requesterName || 'Cliente'}</strong>!</p>
+          <p>Sua solicitação de relatório de dados de turismo foi aprovada e está pronta para pagamento.</p>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #22c55e;">
+            <p><strong>📊 Tipo de Relatório:</strong> ${data.reportType === 'explanatory' ? 'Dados Tratados' : data.reportType === 'raw_data' ? 'Dados Brutos' : 'Tratados + Brutos'}</p>
+            <p><strong>📅 Período:</strong> ${data.periodStart} a ${data.periodEnd}</p>
+            <p><strong>💰 Valor:</strong> R$ ${data.price || '300,00'}</p>
+          </div>
+          <p>Para finalizar e receber seu relatório, clique no botão abaixo para realizar o pagamento:</p>
+          ${data.checkoutUrl ? `
+            <a href="${data.checkoutUrl}" 
+               style="display: inline-block; background: #22c55e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+              💳 Realizar Pagamento
+            </a>
+          ` : ''}
+          <p style="margin-top: 20px; font-size: 12px; color: #666;">
+            Após o pagamento confirmado, seu relatório será gerado e enviado por email em até 24 horas.
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>ViajARTur - Plataforma de Inteligência Turística</p>
+        </div>
+      </div>
+    `,
+  },
+  data_report_ready: {
+    subject: '📊 Seu Relatório de Dados está Pronto! - ViajARTur',
+    html: (data) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">ViajARTur</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Seu relatório está pronto! 📊</h2>
+          <p>Olá, <strong>${data.requesterName || 'Cliente'}</strong>!</p>
+          <p>Seu relatório de dados de turismo foi gerado com sucesso e está disponível para download.</p>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+            <p><strong>📊 Tipo de Relatório:</strong> ${data.reportType === 'explanatory' ? 'Dados Tratados' : data.reportType === 'raw_data' ? 'Dados Brutos' : 'Tratados + Brutos'}</p>
+            <p><strong>📅 Período:</strong> ${data.periodStart} a ${data.periodEnd}</p>
+            <p><strong>📈 Total de Registros:</strong> ${data.totalRecords?.toLocaleString('pt-BR') || 'N/A'}</p>
+          </div>
+          <div style="margin: 20px 0;">
+            ${data.reportUrl ? `
+              <a href="${data.reportUrl}" 
+                 style="display: inline-block; background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold;">
+                📄 Baixar Relatório Tratado (PDF)
+              </a>
+            ` : ''}
+            ${data.rawDataUrl ? `
+              <a href="${data.rawDataUrl}" 
+                 style="display: inline-block; background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold;">
+                📊 Baixar Dados Brutos (Excel)
+              </a>
+            ` : ''}
+          </div>
+          <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; font-size: 13px; color: #92400e;">
+              <strong>⚠️ Importante:</strong> Este relatório contém dados reais e verificados, respeitando a LGPD. 
+              Os links de download expiram em 30 dias por segurança.
+            </p>
+          </div>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>ViajARTur - Plataforma de Inteligência Turística</p>
+          <p style="margin-top: 10px; font-size: 11px; color: #999;">
+            Dúvidas? Entre em contato: contato@viajartur.com.br
+          </p>
+        </div>
+      </div>
+    `,
+  },
+  partner_notification: {
+    subject: (data: any) => `${data.title || 'Notificação'} - Descubra MS`,
+    html: (data: any) => {
+      const getIcon = (type: string) => {
+        switch (type) {
+          case 'new_reservation':
+            return '📅';
+          case 'payment_confirmed':
+          case 'commission_paid':
+            return '💰';
+          case 'reservation_cancelled':
+            return '⚠️';
+          case 'subscription_expiring':
+            return '⏰';
+          case 'subscription_renewed':
+            return '✅';
+          case 'payout_completed':
+            return '💳';
+          default:
+            return '🔔';
+        }
+      };
+
+      return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Descubra MS</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">${getIcon(data.type || '')} ${data.title || 'Notificação'}</h2>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #1e3a5f;">
+            <p style="color: #333; line-height: 1.6;">${data.message || 'Você tem uma nova notificação no seu dashboard.'}</p>
+          </div>
+          ${data.reservationId ? `
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+              <p style="margin: 0; font-size: 13px; color: #1e40af;">
+                <strong>Reserva:</strong> ${data.reservationId}
+              </p>
+            </div>
+          ` : ''}
+          <a href="https://descubramatogrossodosul.com.br/partner/dashboard" 
+             style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Ver no Dashboard
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Área do Parceiro</p>
+        </div>
+      </div>
+    `;
+    },
+  },
+  partner_welcome: {
+    subject: '🎉 Bem-vindo ao Descubra Mato Grosso do Sul!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a, #3d9970); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">🎉 Bem-vindo!</h1>
+          <p style="color: white; margin-top: 10px;">Descubra Mato Grosso do Sul</p>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Olá, ${data.partnerName || 'Parceiro'}!</h2>
+          <p>Seu cadastro como parceiro do <strong>Descubra Mato Grosso do Sul</strong> foi recebido com sucesso!</p>
+          
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-top: 0;">✅ O que já foi feito:</h3>
+            <ul style="color: #333; padding-left: 20px;">
+              <li>Conta criada com sucesso</li>
+              <li>Pagamento da assinatura confirmado</li>
+              <li>Acesso ao dashboard liberado</li>
+            </ul>
+          </div>
+          
+          <div style="background: #fff3e0; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ff9800;">
+            <h3 style="color: #e65100; margin-top: 0;">📋 Próximos passos:</h3>
+            <ul style="color: #333; padding-left: 20px;">
+              <li>Explore o dashboard e configure seu negócio</li>
+              <li>Adicione mais fotos e informações</li>
+              <li>Configure seus preços e disponibilidade</li>
+              <li>Nossa equipe entrará em contato em até 48h</li>
+            </ul>
+          </div>
+          
+          <p>Enquanto aguarda a aprovação, você já pode explorar todas as funcionalidades do dashboard!</p>
+          
+          <a href="${data.dashboardUrl || 'https://viajartur.com/partner/dashboard'}" 
+             style="display: inline-block; background: linear-gradient(to right, #1e3a5f, #2d8a8a); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Acessar Dashboard
+          </a>
+          
+          <p style="margin-top: 30px; color: #666;">
+            <strong>Dúvidas?</strong> Nossa equipe está pronta para ajudar você a aproveitar ao máximo a plataforma!
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Turismo e Cultura</p>
+        </div>
+      </div>
+    `,
+  },
+  stripe_connect_complete: {
+    subject: '✅ Conta Stripe conectada com sucesso!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #635BFF; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">✅ Stripe Conectado!</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Parabéns, ${data.partnerName || 'Parceiro'}!</h2>
+          <p>Sua conta Stripe foi conectada com sucesso! Agora você pode receber pagamentos de reservas diretamente na sua conta.</p>
+          
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-top: 0;">💰 Como funciona:</h3>
+            <ul style="color: #333; padding-left: 20px;">
+              <li>Quando um turista fizer uma reserva, o pagamento é processado automaticamente</li>
+              <li>Você recebe o valor diretamente na sua conta Stripe</li>
+              <li>Uma pequena comissão é retida pela plataforma (10%)</li>
+            </ul>
+          </div>
+          
+          <a href="https://viajartur.com/partner/dashboard" 
+             style="display: inline-block; background: #635BFF; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Acessar Dashboard
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Área do Parceiro</p>
+        </div>
+      </div>
+    `,
+  },
+  reservation_payment_received: {
+    subject: '💰 Pagamento de reserva recebido!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #4caf50, #2e7d32); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">💰 Pagamento Recebido!</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Olá, ${data.partnerName || 'Parceiro'}!</h2>
+          <p>Uma nova reserva foi paga e você receberá o valor diretamente na sua conta Stripe!</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-top: 0;">📋 Detalhes da Reserva:</h3>
+            <p><strong>Reserva:</strong> #${data.reservationId || '---'}</p>
+            <p><strong>Valor Total:</strong> R$ ${data.totalAmount || '0,00'}</p>
+            <p><strong>Comissão da Plataforma:</strong> R$ ${data.platformFee || '0,00'}</p>
+            <p style="font-size: 18px; color: #2e7d32;"><strong>Você Recebe:</strong> R$ ${data.partnerAmount || '0,00'}</p>
+          </div>
+          
+          <p>O valor será transferido automaticamente para sua conta Stripe.</p>
+          
+          <a href="https://viajartur.com/partner/dashboard?tab=reservations" 
+             style="display: inline-block; background: #4caf50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Ver Reserva
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Área do Parceiro</p>
+        </div>
+      </div>
+    `,
+  },
+  welcome_subscription: {
+    subject: '🎉 Bem-vindo ao ViaJAR Tur!',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">🎉 Bem-vindo!</h1>
+          <p style="color: white; margin-top: 10px;">ViaJAR Tur</p>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Olá, ${data.userName || 'Usuário'}!</h2>
+          <p>Sua assinatura do <strong>ViaJAR Tur</strong> foi confirmada com sucesso!</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #1e3a5f;">
+            <p><strong>Plano:</strong> ${data.planName || 'Plano Profissional'}</p>
+            <p><strong>Período:</strong> ${data.billingPeriod === 'annual' ? 'Anual' : 'Mensal'}</p>
+            <p><strong>Valor:</strong> R$ ${data.amount || '0,00'}</p>
+          </div>
+          
+          <a href="https://viajartur.com/viajar/dashboard" 
+             style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">
+            Acessar Plataforma
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>ViaJAR Tur - Turismo Inteligente</p>
+        </div>
+      </div>
+    `,
+  },
 };
+
+// Função helper para substituir variáveis em templates
+function replaceTemplateVariables(template: string, data: Record<string, any>): string {
+  let result = template;
+  
+  // Substituir variáveis no formato {{variable}}
+  for (const [key, value] of Object.entries(data)) {
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(regex, value !== null && value !== undefined ? String(value) : '');
+  }
+  
+  // Substituir condicionais simples {{#if variable}}...{{/if}}
+  // Por enquanto, apenas remove se variável não existir ou for falsy
+  result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, varName, content) => {
+    if (data[varName]) {
+      return content;
+    }
+    return '';
+  });
+  
+  return result;
+}
+
+// Função para buscar template do banco
+async function getTemplateFromDatabase(
+  supabase: any,
+  type: NotificationType
+): Promise<{ subject: string; html: string } | null> {
+  try {
+    // Mapear tipos para nomes de templates
+    const templateNameMap: Record<NotificationType, string> = {
+      event_approved: 'Event Approved',
+      event_rejected: 'Event Rejected',
+      event_payment_confirmed: 'Event Payment Confirmed',
+      partner_approved: 'Partner Approved',
+      partner_rejected: 'Partner Rejected',
+      partner_welcome: 'Partner Welcome',
+      welcome: 'Welcome',
+      welcome_subscription: 'Welcome Subscription',
+      system_alert: 'System Alert',
+      data_report_approved: 'Data Report Approved',
+      data_report_ready: 'Data Report Ready',
+      partner_notification: 'Partner Notification',
+      stripe_connect_complete: 'Stripe Connect Complete',
+      reservation_payment_received: 'Reservation Payment Received',
+    };
+
+    const templateName = templateNameMap[type];
+    if (!templateName) return null;
+
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('subject_template, body_template, is_active')
+      .eq('name', templateName)
+      .eq('channel', 'email')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.log(`⚠️ [send-notification-email] Template "${templateName}" não encontrado no banco, usando fallback`);
+      return null;
+    }
+
+    return {
+      subject: data.subject_template || '',
+      html: data.body_template || '',
+    };
+  } catch (error) {
+    console.error('❌ [send-notification-email] Erro ao buscar template do banco:', error);
+    return null;
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -202,6 +552,11 @@ serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     let requestData: EmailRequest;
     try {
       // Usar req.json() diretamente como outras Edge Functions fazem
@@ -257,43 +612,61 @@ serve(async (req) => {
       );
     }
 
-    if (!templates[type]) {
-      console.error('❌ [send-notification-email] Tipo de template não encontrado:', {
-        requestedType: type,
-        availableTypes: Object.keys(templates),
-        templatesCount: Object.keys(templates).length
-      });
-      return new Response(
-        JSON.stringify({ 
-          error: `Invalid template type: ${type}. Available: ${Object.keys(templates).join(', ')}`,
-          requestedType: type,
-          availableTypes: Object.keys(templates)
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    const template = templates[type];
+    // Tentar buscar template do banco primeiro
+    const dbTemplate = await getTemplateFromDatabase(supabase, type);
     
-    // Para system_alert, personalizar o subject com o nome do serviço
-    let subject = template.subject;
-    if (type === 'system_alert' && data?.service_name) {
-      subject = `🚨 Alerta: ${data.service_name} - Descubra MS`;
-    }
-    
-    // Gerar HTML do template
+    let subject: string;
     let htmlContent: string;
-    try {
-      htmlContent = template.html(data || {});
-      if (!htmlContent) {
-        throw new Error('Template HTML retornou vazio');
+
+    if (dbTemplate) {
+      // Usar template do banco
+      console.log(`✅ [send-notification-email] Usando template do banco para tipo: ${type}`);
+      subject = replaceTemplateVariables(dbTemplate.subject, data || {});
+      htmlContent = replaceTemplateVariables(dbTemplate.html, data || {});
+    } else {
+      // Fallback para template hardcoded
+      console.log(`⚠️ [send-notification-email] Usando template hardcoded (fallback) para tipo: ${type}`);
+      
+      if (!templates[type]) {
+        console.error('❌ [send-notification-email] Tipo de template não encontrado:', {
+          requestedType: type,
+          availableTypes: Object.keys(templates),
+          templatesCount: Object.keys(templates).length
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: `Invalid template type: ${type}. Available: ${Object.keys(templates).join(', ')}`,
+            requestedType: type,
+            availableTypes: Object.keys(templates)
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
       }
-    } catch (htmlError: any) {
-      console.error('❌ [send-notification-email] Erro ao gerar HTML do template:', htmlError);
-      return new Response(
-        JSON.stringify({ error: `Error generating email HTML: ${htmlError.message}` }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+
+      const template = templates[type];
+      
+      // Determinar subject (pode ser string ou função)
+      if (typeof template.subject === 'function') {
+        subject = template.subject(data);
+      } else if (type === 'system_alert' && data?.service_name) {
+        subject = `🚨 Alerta: ${data.service_name} - Descubra MS`;
+      } else {
+        subject = template.subject;
+      }
+      
+      // Gerar HTML do template
+      try {
+        htmlContent = template.html(data || {});
+        if (!htmlContent) {
+          throw new Error('Template HTML retornou vazio');
+        }
+      } catch (htmlError: any) {
+        console.error('❌ [send-notification-email] Erro ao gerar HTML do template:', htmlError);
+        return new Response(
+          JSON.stringify({ error: `Error generating email HTML: ${htmlError.message}` }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
     }
     
     const emailContent = {

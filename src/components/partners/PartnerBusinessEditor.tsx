@@ -240,9 +240,9 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
+          <CardTitle className="flex items-center gap-2 text-ms-primary-blue">
             <Building2 className="w-5 h-5" />
             Informações Básicas
           </CardTitle>
@@ -327,9 +327,9 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
+          <CardTitle className="flex items-center gap-2 text-ms-primary-blue">
             <ImageIcon className="w-5 h-5" />
             Imagens
           </CardTitle>
@@ -413,7 +413,12 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} size="lg">
+        <Button 
+          onClick={handleSave} 
+          disabled={saving} 
+          size="lg"
+          className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white"
+        >
           {saving ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

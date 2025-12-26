@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { documentService, Document } from '@/services/viajar/documentService';
 import { useBusinessType } from '@/hooks/useBusinessType';
+import { documentProcessor, ExtractedMetric } from '@/services/viajar/DocumentProcessor';
+import { useBusinessSegment } from '@/hooks/useBusinessSegment';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import CardBox from '@/components/ui/CardBox';
 import { Button } from '@/components/ui/button';
@@ -44,7 +46,8 @@ import {
   FileType,
   X,
   Brain,
-  Eye
+  Eye,
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -53,6 +56,7 @@ const DocumentUpload: React.FC = () => {
     const auth = useAuth();
     const { user } = auth || { user: null };
     const { businessType } = useBusinessType();
+    const { category: businessCategory } = useBusinessSegment();
     const { toast } = useToast();
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +64,9 @@ const DocumentUpload: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
     const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
     const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
+    const [extractedMetrics, setExtractedMetrics] = useState<ExtractedMetric[]>([]);
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [processingDocumentId, setProcessingDocumentId] = useState<string | null>(null);
     const [uploadForm, setUploadForm] = useState({
       file: null as File | null,
       title: '',
@@ -164,24 +171,41 @@ const DocumentUpload: React.FC = () => {
 
         await loadDocuments();
 
-        // Iniciar análise automática
+        // Processar documento com DocumentProcessor (Gemini 1.5 Flash)
         try {
           setIsAnalyzing(uploadedDoc.id);
-          await documentService.analyzeDocument(uploadedDoc.id, businessType || undefined);
-          toast({
-            title: 'Análise concluída',
-            description: 'Documento analisado com sucesso!'
-          });
-          await loadDocuments();
+          setProcessingDocumentId(uploadedDoc.id);
+          
+          // Processar arquivo com DocumentProcessor
+          const result = await documentProcessor.processFile(
+            uploadForm.file!,
+            user.id,
+            businessCategory || undefined
+          );
+
+          if (result.success && result.extractedMetrics.length > 0) {
+            // Mostrar modal de confirmação com métricas extraídas
+            setExtractedMetrics(result.extractedMetrics);
+            setIsConfirmDialogOpen(true);
+          } else {
+            // Se não extraiu métricas, usar análise tradicional
+            await documentService.analyzeDocument(uploadedDoc.id, businessType || undefined);
+            toast({
+              title: 'Análise concluída',
+              description: 'Documento analisado com sucesso!'
+            });
+            await loadDocuments();
+          }
         } catch (err) {
-          console.error('Erro ao analisar documento:', err);
+          console.error('Erro ao processar documento:', err);
           toast({
             title: 'Aviso',
-            description: 'Documento enviado, mas análise falhou. Você pode tentar analisar manualmente.',
+            description: 'Documento enviado, mas processamento falhou. Você pode tentar analisar manualmente.',
             variant: 'destructive'
           });
         } finally {
           setIsAnalyzing(null);
+          setProcessingDocumentId(null);
         }
       } catch (err: any) {
         console.error('Erro ao fazer upload:', err);
@@ -591,6 +615,106 @@ const DocumentUpload: React.FC = () => {
             </div>
           )}
         </SectionWrapper>
+
+        {/* Dialog de Confirmação de Métricas Extraídas */}
+        <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Métricas Extraídas do Documento</DialogTitle>
+              <DialogDescription>
+                Confirme os dados extraídos antes de salvar no sistema
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              {extractedMetrics.length > 0 ? (
+                <>
+                  <div className="space-y-3">
+                    {extractedMetrics.map((metric, index) => (
+                      <CardBox key={index} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-slate-800 capitalize">
+                              {metric.metric_type.replace(/_/g, ' ')}
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              Data: {new Date(metric.metric_date).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-green-600">
+                              {metric.value.toLocaleString('pt-BR', { 
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2 
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </CardBox>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 justify-end pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsConfirmDialogOpen(false);
+                        setExtractedMetrics([]);
+                        setProcessingDocumentId(null);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        if (!user?.id || !processingDocumentId) return;
+                        
+                        try {
+                          // Salvar métricas no banco
+                          const { saved, errors } = await documentProcessor.saveMetrics(
+                            user.id,
+                            processingDocumentId,
+                            extractedMetrics
+                          );
+
+                          if (saved > 0) {
+                            toast({
+                              title: 'Sucesso',
+                              description: `${saved} métrica(s) salva(s) com sucesso!`
+                            });
+                          }
+
+                          if (errors > 0) {
+                            toast({
+                              title: 'Aviso',
+                              description: `${errors} métrica(s) não puderam ser salvas.`,
+                              variant: 'destructive'
+                            });
+                          }
+
+                          setIsConfirmDialogOpen(false);
+                          setExtractedMetrics([]);
+                          setProcessingDocumentId(null);
+                          await loadDocuments();
+                        } catch (err: any) {
+                          console.error('Erro ao salvar métricas:', err);
+                          toast({
+                            title: 'Erro',
+                            description: 'Não foi possível salvar as métricas.',
+                            variant: 'destructive'
+                          });
+                        }
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirmar e Salvar
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-slate-600">Nenhuma métrica extraída.</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog de Análise */}
         <Dialog open={isAnalysisDialogOpen} onOpenChange={setIsAnalysisDialogOpen}>

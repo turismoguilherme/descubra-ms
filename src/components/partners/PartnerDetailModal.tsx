@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { usePartnerLeads, PartnerLeadRequestType } from '@/hooks/usePartnerLeads';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { PartnerReservationSection } from './PartnerReservationSection';
 
 interface PartnerDetailModalProps {
   partner: Partner | null;
@@ -244,8 +245,20 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
             </div>
           )}
 
+          {/* Reserva Direta */}
+          <PartnerReservationSection 
+            partnerId={partner.id}
+            partnerName={partner.name}
+          />
+
           {/* Ação: Pedido de reserva/orçamento via Descubra MS */}
           <div className="bg-ms-primary-blue/5 rounded-2xl p-5 space-y-4 border border-ms-primary-blue/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Inbox className="w-5 h-5 text-ms-primary-blue" />
+              <h4 className="font-semibold text-gray-900 text-lg">
+                Ou envie seu interesse
+              </h4>
+            </div>
             <div className="flex items-center gap-2 mb-1">
               <Inbox className="w-5 h-5 text-ms-primary-blue" />
               <h4 className="font-semibold text-gray-900 text-lg">

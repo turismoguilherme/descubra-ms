@@ -1,139 +1,133 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
-import { corsHeaders } from '../_shared/cors.ts';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2024-11-20.acacia',
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const EVENTO_DESTAQUE_PRICE_CENTS = 49990; // R$ 499,90
 
 serve(async (req) => {
+  console.log('=== EVENT CHECKOUT FUNCTION STARTED ===');
+  console.log('Method:', req.method);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Parse request body
-    const body = await req.json();
-    const { 
-      eventId,
-      eventName,
-      organizerEmail,
-      organizerName,
-      successUrl, 
-      cancelUrl 
-    } = body;
-
-    if (!eventId || !eventName || !organizerEmail) {
+    // Step 1: Verificar chave do Stripe
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    console.log('Step 1 - STRIPE_SECRET_KEY exists:', !!stripeKey);
+    console.log('Step 1 - Key starts with:', stripeKey ? stripeKey.substring(0, 7) : 'NOT SET');
+    
+    if (!stripeKey) {
+      console.error('ERRO: STRIPE_SECRET_KEY não configurada');
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: eventId, eventName, organizerEmail' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
+        JSON.stringify({ error: 'STRIPE_SECRET_KEY não configurada nas Edge Function Secrets' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Preço do evento em destaque: R$ 499,90 = 49990 centavos
-    const EVENTO_DESTAQUE_PRICE = 49990;
-
-    // Buscar ou criar cliente no Stripe
-    let customerId: string;
-    
-    const existingCustomers = await stripe.customers.list({
-      email: organizerEmail,
-      limit: 1,
-    });
-
-    if (existingCustomers.data.length > 0) {
-      customerId = existingCustomers.data[0].id;
-    } else {
-      const customer = await stripe.customers.create({
-        email: organizerEmail,
-        name: organizerName,
-        metadata: {
-          event_id: eventId,
-          type: 'event_sponsor',
-        },
-      });
-      customerId = customer.id;
+    // Step 2: Parse body
+    console.log('Step 2 - Parsing request body...');
+    let body;
+    try {
+      body = await req.json();
+      console.log('Step 2 - Body parsed:', JSON.stringify(body));
+    } catch (parseError) {
+      console.error('Step 2 - ERRO ao parsear body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao processar dados da requisição' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
-    // URLs de callback
-    const baseUrl = 'https://descubramatogrossodosul.com.br';
-    const defaultSuccessUrl = successUrl || `${baseUrl}/descubramatogrossodosul/eventos?payment=success&event_id=${eventId}`;
-    const defaultCancelUrl = cancelUrl || `${baseUrl}/descubramatogrossodosul/cadastrar-evento?payment=cancelled`;
+    const { eventId, eventName, organizerEmail, successUrl, cancelUrl } = body;
 
-    // Criar sessão de checkout (pagamento único)
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'payment', // Pagamento único, não assinatura
-      payment_method_types: ['card', 'boleto'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: 'Evento Em Destaque - Descubra MS',
-              description: `Destaque para: ${eventName}`,
-              images: ['https://descubramatogrossodosul.com.br/images/logo-descubra-ms.png'],
-            },
-            unit_amount: EVENTO_DESTAQUE_PRICE,
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: defaultSuccessUrl,
-      cancel_url: defaultCancelUrl,
-      metadata: {
-        type: 'event_sponsorship',
-        event_id: eventId,
-        event_name: eventName,
-        organizer_email: organizerEmail,
-        organizer_name: organizerName || '',
+    if (!eventId || !eventName || !organizerEmail) {
+      console.error('Step 2 - Campos faltando:', { eventId: !!eventId, eventName: !!eventName, organizerEmail: !!organizerEmail });
+      return new Response(
+        JSON.stringify({ error: 'Campos obrigatórios: eventId, eventName, organizerEmail' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Step 3: Preparar URLs
+    console.log('Step 3 - Preparando URLs...');
+    const baseUrl = 'https://descubramatogrossodosul.com.br';
+    const finalSuccessUrl = successUrl || `${baseUrl}/descubramatogrossodosul/eventos?payment=success&event_id=${eventId}`;
+    const finalCancelUrl = cancelUrl || `${baseUrl}/descubramatogrossodosul/cadastrar-evento?payment=cancelled`;
+    console.log('Step 3 - Success URL:', finalSuccessUrl);
+    console.log('Step 3 - Cancel URL:', finalCancelUrl);
+
+    // Step 4: Chamar API do Stripe
+    console.log('Step 4 - Chamando API do Stripe...');
+    
+    const formData = new URLSearchParams();
+    formData.append('mode', 'payment');
+    formData.append('customer_email', organizerEmail);
+    formData.append('line_items[0][price_data][currency]', 'brl');
+    formData.append('line_items[0][price_data][product_data][name]', 'Evento Em Destaque - Descubra MS');
+    formData.append('line_items[0][price_data][product_data][description]', `Destaque por 30 dias: ${eventName}`);
+    formData.append('line_items[0][price_data][unit_amount]', EVENTO_DESTAQUE_PRICE_CENTS.toString());
+    formData.append('line_items[0][quantity]', '1');
+    formData.append('success_url', finalSuccessUrl);
+    formData.append('cancel_url', finalCancelUrl);
+    formData.append('metadata[type]', 'event_sponsorship');
+    formData.append('metadata[event_id]', eventId);
+    formData.append('metadata[event_name]', eventName);
+
+    console.log('Step 4 - Form data prepared');
+
+    const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${stripeKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      locale: 'pt-BR',
-      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // Expira em 30 minutos
+      body: formData.toString(),
     });
 
-    // Atualizar evento com status de pagamento pendente
-    await supabase
-      .from('events')
-      .update({
-        sponsor_payment_status: 'pending',
-        sponsor_amount: EVENTO_DESTAQUE_PRICE / 100,
-      })
-      .eq('id', eventId);
+    console.log('Step 4 - Stripe response status:', stripeResponse.status);
+
+    const stripeData = await stripeResponse.json();
+    console.log('Step 4 - Stripe response data:', JSON.stringify(stripeData));
+
+    if (!stripeResponse.ok) {
+      console.error('Step 4 - ERRO do Stripe:', stripeData.error);
+      return new Response(
+        JSON.stringify({ 
+          error: stripeData.error?.message || 'Erro no Stripe',
+          stripe_error_type: stripeData.error?.type,
+          stripe_error_code: stripeData.error?.code
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    // Step 5: Sucesso!
+    console.log('Step 5 - SUCESSO! Session ID:', stripeData.id);
+    console.log('Step 5 - Checkout URL:', stripeData.url);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        checkoutUrl: session.url,
-        sessionId: session.id 
+        checkoutUrl: stripeData.url, 
+        sessionId: stripeData.id 
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error: any) {
-    console.error('Erro ao criar checkout de evento:', error);
+    console.error('=== ERRO GERAL ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Erro ao criar sessão de checkout' 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
+      JSON.stringify({ error: error.message || 'Erro interno desconhecido' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useMultiTenant } from '../hooks/useMultiTenant';
+import { platformContentService } from '@/services/admin/platformContentService';
 import logoDescubraMS from '@/assets/images/logo-descubra-ms-v2.png';
 
 export interface BrandConfig {
@@ -116,13 +117,59 @@ interface BrandProviderProps {
 export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   const { currentTenant, tenantConfig, loading: tenantLoading } = useMultiTenant();
   const location = useLocation();
+  const [logosFromDB, setLogosFromDB] = useState<Record<string, string>>({});
+
+  // Carregar logos do banco de dados
+  useEffect(() => {
+    const loadLogos = async () => {
+      try {
+        const logoKeys = ['ms_logo_url', 'viajar_logo_url', 'guata_avatar_url'];
+        const data = await platformContentService.getContent(logoKeys);
+        const logoMap: Record<string, string> = {};
+        data.forEach(item => {
+          if (item.content_value) {
+            logoMap[item.content_key] = item.content_value;
+          }
+        });
+        setLogosFromDB(logoMap);
+        console.log('🔄 [BrandContext] Logos carregados do banco:', logoMap);
+      } catch (error) {
+        console.error('Erro ao carregar logos do banco:', error);
+      }
+    };
+    loadLogos();
+    
+    // Recarregar logos a cada 30 segundos para pegar atualizações
+    const interval = setInterval(loadLogos, 30000);
+    
+    // Escutar eventos de atualização de logo
+    const handleLogoUpdate = (event: CustomEvent) => {
+      console.log('📢 [BrandContext] Logo atualizado, recarregando:', event.detail);
+      loadLogos();
+    };
+    window.addEventListener('logo-updated', handleLogoUpdate as EventListener);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('logo-updated', handleLogoUpdate as EventListener);
+    };
+  }, []);
 
   // Função para detectar o tenant baseado no path atual
   const detectTenantFromPath = (pathname: string): 'ms' | 'overflow-one' => {
     const path = pathname.toLowerCase();
-    if (path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms')) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',data:{pathname,path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    if (path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms') || path.startsWith('/partner')) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:162',message:'detectTenantFromPath retornando ms',data:{pathname,path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return 'ms';
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:165',message:'detectTenantFromPath retornando overflow-one',data:{pathname,path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return 'overflow-one';
   };
 
@@ -140,7 +187,7 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
         ...baseConfig,
         logo: {
           ...baseConfig.logo,
-          src: tenantConfig.logo_url || baseConfig.logo.src,
+          src: tenantConfig.logo_url || logosFromDB['ms_logo_url'] || baseConfig.logo.src,
           alt: `${tenantConfig.name} - Plataforma de Turismo`,
           fallback: tenantConfig.name || baseConfig.logo.fallback
         },
@@ -157,20 +204,42 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
     // Detectar tenant do path se não estivermos no modo multi-tenant
     const detectedTenant = detectTenantFromPath(location.pathname);
     console.log('🎨 BRAND: Tenant detectado:', detectedTenant);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:196',message:'BrandContext config useMemo - tenant detectado',data:{pathname:location.pathname,detectedTenant,isMS:detectedTenant==='ms'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     if (detectedTenant === 'ms') {
-      return msConfig;
+      // Usar logo do banco se disponível, senão usar padrão
+      return {
+        ...msConfig,
+        logo: {
+          ...msConfig.logo,
+          src: logosFromDB['ms_logo_url'] || msConfig.logo.src,
+        }
+      };
     }
 
-    // Fallback para Overflow One
-    return overflowOneConfig;
-  }, [currentTenant, tenantConfig, tenantLoading, location.pathname]);
+    // Fallback para Overflow One - também pode usar logo do banco
+    return {
+      ...overflowOneConfig,
+      logo: {
+        ...overflowOneConfig.logo,
+        src: logosFromDB['viajar_logo_url'] || overflowOneConfig.logo.src,
+      }
+    };
+  }, [currentTenant, tenantConfig, tenantLoading, location.pathname, logosFromDB]);
   
   const isOverflowOne = config.brand === 'overflow-one';
   const isMS = config.brand === 'ms';
   
   console.log('🎨 BRAND: isMS:', isMS, 'isOverflowOne:', isOverflowOne, 'path:', location.pathname);
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:223',message:'BrandContext valores finais',data:{pathname:location.pathname,isMS,isOverflowOne,brand:config.brand},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:225',message:'BrandProvider fornecendo contexto',data:{isMS,isOverflowOne,hasConfig:!!config},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   return (
     <BrandContext.Provider value={{ config, isOverflowOne, isMS }}>
       {children}
@@ -179,10 +248,34 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
 };
 
 export const useBrand = (): BrandContextType => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:232',message:'useBrand chamado',data:{contextUndefined:false},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const context = useContext(BrandContext);
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:234',message:'useBrand contexto obtido',data:{contextIsUndefined:context===undefined,hasContext:!!context},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   if (context === undefined) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:235',message:'useBrand contexto undefined - retornando fallback',data:{isDev:import.meta.env.DEV},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    // Durante HMR, o contexto pode estar temporariamente indisponível
+    // Retornar um valor padrão em vez de lançar erro para evitar quebrar a aplicação
+    if (import.meta.env.DEV) {
+      // Em desenvolvimento, retornar um fallback silencioso
+      console.warn('useBrand: BrandProvider não disponível temporariamente (provavelmente durante HMR). Usando fallback.');
+      return {
+        config: msConfig, // Fallback para MS como padrão
+        isOverflowOne: false,
+        isMS: true
+      };
+    }
+    // Em produção, ainda lançar erro para detectar problemas reais
     throw new Error('useBrand must be used within a BrandProvider');
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:248',message:'useBrand retornando contexto',data:{hasConfig:!!context?.config},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   return context;
 };
 

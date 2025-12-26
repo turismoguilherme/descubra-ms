@@ -5,8 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { usePassport } from '@/hooks/usePassport';
 import { geolocationService } from '@/services/passport/geolocationService';
+import { passportService } from '@/services/passport/passportService';
 import { useToast } from '@/hooks/use-toast';
-import { MapPin, Camera, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { MapPin, Camera, CheckCircle2, AlertCircle, Loader2, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RouteCheckpointExtended, GeofenceValidation } from '@/types/passportDigital';
 
 interface CheckpointCheckinProps {
@@ -143,6 +145,26 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           });
         }
 
+        // Se completou a rota mas não ganhou voucher, explicar o motivo (sem travar selo/pontos)
+        if (result.route_completed && (!result.rewards_unlocked || result.rewards_unlocked.length === 0)) {
+          try {
+            const summary = await passportService.getRewardAvailabilitySummary(result.route_id);
+            if (!summary.hasActiveRewards) {
+              toast({
+                title: 'Roteiro concluído ✅',
+                description: 'Seu selo e pontos foram garantidos. No momento não há recompensas cadastradas para este roteiro.',
+              });
+            } else if (!summary.anyAvailable) {
+              toast({
+                title: 'Roteiro concluído ✅',
+                description: 'A campanha de recompensas está esgotada. Seu selo e pontos foram garantidos normalmente.',
+              });
+            }
+          } catch {
+            // Se falhar a checagem, não bloquear a experiência
+          }
+        }
+
         onCheckinSuccess?.();
       } else {
         toast({
@@ -263,13 +285,32 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
         {/* Código do parceiro (quando necessário) */}
         {(checkpoint.validation_mode === 'code' || checkpoint.validation_mode === 'mixed') && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Código do parceiro
-            </label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">
+                Código do parceiro *
+              </label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <p><strong>⚠️ Este é diferente do "Código do Voucher" usado nas recompensas!</strong></p>
+                    <p className="mt-2 text-xs">O <strong>Código do Parceiro</strong> é fornecido pelo estabelecimento para validar seu check-in neste checkpoint.</p>
+                    <p className="mt-2 text-xs"><strong>Como usar:</strong></p>
+                    <p className="text-xs">1. Chegue no local físico</p>
+                    <p className="text-xs">2. Peça o código ao atendente/parceiro</p>
+                    <p className="text-xs">3. Digite o código aqui</p>
+                    <p className="mt-2 text-xs text-yellow-600">💡 O "Código do Voucher" é usado depois, quando você ganha uma recompensa ao completar a rota.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               value={partnerCode}
-              onChange={(e) => setPartnerCode(e.target.value)}
+              onChange={(e) => setPartnerCode(e.target.value.toUpperCase())}
               placeholder="Peça o código no balcão e digite aqui (ex.: MS-4281)"
+              maxLength={20}
             />
             <p className="text-xs text-muted-foreground">
               Este ponto exige confirmação do estabelecimento. Mostre seu passaporte digital e peça o código.

@@ -11,6 +11,18 @@ export const SecurityHeaders = () => {
   useEffect(() => {
     // CSP permissivo para desenvolvimento e VLibras
     // Em produção, configurar CSP mais restritivo via headers HTTP no servidor
+    // #region agent log
+    const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const debugLogEndpoint = isDev ? 'http://127.0.0.1:7242' : '';
+    // #endregion
+    
+    // Remover meta tags CSP existentes ANTES de criar novas (evita múltiplas meta tags)
+    const existingCSP = document.querySelectorAll('meta[http-equiv="Content-Security-Policy"]');
+    existingCSP.forEach(meta => meta.remove());
+    
+    const connectSrc = isDev 
+      ? "'self' https: wss: blob: http://127.0.0.1:* http://localhost:*"
+      : "'self' https: wss: blob:";
     const cspDirectives = [
       "default-src 'self' https: blob: data:",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:",
@@ -18,7 +30,7 @@ export const SecurityHeaders = () => {
       "style-src 'self' 'unsafe-inline' https:",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
-      "connect-src 'self' https: wss: blob:",
+      `connect-src ${connectSrc}`,
       "frame-src 'self' https:",
       "worker-src 'self' blob: https:",
       "media-src 'self' blob: https:",
@@ -38,13 +50,23 @@ export const SecurityHeaders = () => {
       { name: 'viewport', content: 'width=device-width, initial-scale=1' }
     ];
 
-    // Adicionar meta tags
+    // Adicionar meta tags (inserir no início do head para garantir prioridade)
     securityMetas.forEach(({ name, httpEquiv, content }) => {
-      const meta = document.createElement('meta');
-      if (name) meta.name = name;
-      if (httpEquiv) meta.httpEquiv = httpEquiv;
-      meta.content = content;
-      document.head.appendChild(meta);
+      // Verificar se já existe antes de criar
+      const existing = name 
+        ? document.querySelector(`meta[name="${name}"]`)
+        : document.querySelector(`meta[http-equiv="${httpEquiv}"]`);
+      
+      if (existing) {
+        existing.setAttribute('content', content);
+      } else {
+        const meta = document.createElement('meta');
+        if (name) meta.name = name;
+        if (httpEquiv) meta.httpEquiv = httpEquiv;
+        meta.content = content;
+        // Inserir no início do head para garantir que seja aplicado primeiro
+        document.head.insertBefore(meta, document.head.firstChild);
+      }
     });
 
     // Cleanup function

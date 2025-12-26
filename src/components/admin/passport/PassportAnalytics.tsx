@@ -8,17 +8,36 @@ const PassportAnalytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔵 [PassportAnalytics] Componente montado, carregando estatísticas...');
     loadStats();
   }, []);
 
+  // Log de renderização apenas quando estados importantes mudam
+  useEffect(() => {
+    console.log('🔵 [PassportAnalytics] Estado atual:', {
+      loading,
+      stats,
+    });
+  }, [loading, stats]);
+
   const loadStats = async () => {
+    console.log('🔵 [PassportAnalytics] ========== loadStats INICIADO ==========');
     try {
+      console.log('🔵 [PassportAnalytics] Buscando estatísticas...');
       const data = await passportAdminService.getStatistics();
+      console.log('✅ [PassportAnalytics] Estatísticas carregadas:', data);
       setStats(data);
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+    } catch (error: any) {
+      console.error('❌ [PassportAnalytics] Erro completo ao carregar estatísticas:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        stack: error?.stack,
+      });
     } finally {
       setLoading(false);
+      console.log('🔵 [PassportAnalytics] loadStats finalizado');
     }
   };
 

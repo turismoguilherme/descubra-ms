@@ -190,7 +190,28 @@ export default function PlatformContentEditor({ platform }: PlatformContentEdito
           )}
         </div>
         
-        {field.type === 'textarea' || field.type === 'html' ? (
+        {field.type === 'json' ? (
+          <Textarea
+            value={typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+            onChange={(e) => {
+              try {
+                // Validar JSON ao digitar
+                const parsed = JSON.parse(e.target.value);
+                updateField(field.key, JSON.stringify(parsed, null, 2));
+              } catch {
+                // Se não for JSON válido ainda, apenas atualizar o texto
+                updateField(field.key, e.target.value);
+              }
+            }}
+            placeholder={field.placeholder || '[] ou {}'}
+            rows={8}
+            className={cn(
+              "border-border transition-colors font-mono text-sm",
+              changed && "border-amber-300 bg-amber-50/50",
+              saved && "border-green-300 bg-green-50/50"
+            )}
+          />
+        ) : field.type === 'textarea' || field.type === 'html' ? (
           <Textarea
             value={value}
             onChange={(e) => updateField(field.key, e.target.value)}

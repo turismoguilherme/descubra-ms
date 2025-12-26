@@ -79,11 +79,112 @@ export default function StripeCheckout({
     setLoading(true);
 
     try {
-      // Obter sessão do usuário
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Usuário não autenticado');
+      // #region agent log
+      console.log('[DEBUG] handleCreateCheckout entry', { planId, billingPeriod, selectedMethod });
+      // #endregion
+
+      // #region agent log
+      console.log('[DEBUG] ========== handleCreateCheckout START ==========');
+      // #endregion
+
+      // Obter usuário atual (isso força validação e renovação do token se necessário)
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      // #region agent log
+      console.log('[DEBUG] getUser result', { 
+        hasUser: !!user, 
+        hasError: !!userError, 
+        userError: userError?.message,
+        userId: user?.id
+      });
+      // #endregion
+      
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado. Por favor, recarregue a página e faça login novamente.');
       }
+
+      // Obter sessão atual após getUser (garantir que está sincronizada)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      // #region agent log
+      console.log('[DEBUG] getSession after getUser', { 
+        hasSession: !!session, 
+        hasError: !!sessionError, 
+        sessionError: sessionError?.message,
+        hasAccessToken: !!session?.access_token,
+        tokenExpiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null,
+        currentTime: new Date().toISOString(),
+        tokenPreview: session?.access_token?.substring(0, 30) + '...'
+      });
+      // #endregion
+      
+      if (sessionError || !session || !session.access_token) {
+        throw new Error('Sessão inválida. Por favor, recarregue a página e faça login novamente.');
+      }
+
+      // Verificar se o token está expirado e tentar renovar se necessário
+      if (session.expires_at) {
+        const expiresAt = session.expires_at * 1000;
+        const now = Date.now();
+        const timeUntilExpiry = expiresAt - now;
+        const isExpired = timeUntilExpiry <= 0;
+        const shouldRefresh = timeUntilExpiry < 5 * 60 * 1000; // Menos de 5 minutos
+        
+        // #region agent log
+        console.log('[DEBUG] Token expiry analysis', { 
+          expiresAt: new Date(expiresAt).toISOString(),
+          now: new Date(now).toISOString(),
+          timeUntilExpiryMs: timeUntilExpiry,
+          timeUntilExpiryMinutes: Math.floor(timeUntilExpiry / 60000),
+          isExpired,
+          shouldRefresh,
+          hasRefreshToken: !!session.refresh_token
+        });
+        // #endregion
+        
+        // Renovar token se estiver expirado ou próximo de expirar
+        if ((isExpired || shouldRefresh) && session.refresh_token) {
+          console.log('[DEBUG] Attempting token refresh...');
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          // #region agent log
+          console.log('[DEBUG] refreshSession result', { 
+            hasSession: !!refreshedSession,
+            hasError: !!refreshError,
+            refreshError: refreshError?.message,
+            newTokenPreview: refreshedSession?.access_token?.substring(0, 30) + '...'
+          });
+          // #endregion
+          
+          if (refreshError) {
+            console.error('[DEBUG] Token refresh failed:', refreshError);
+            throw new Error('Token expirado e não foi possível renovar. Por favor, recarregue a página e faça login novamente.');
+          }
+          
+          if (!refreshedSession?.access_token) {
+            throw new Error('Renovação de token não retornou sessão válida. Por favor, recarregue a página e faça login novamente.');
+          }
+          
+          console.log('[DEBUG] ✅ Token refreshed successfully');
+        }
+      }
+
+      // Obter sessão final após possíveis renovações
+      const { data: { session: finalSession } } = await supabase.auth.getSession();
+      
+      if (!finalSession?.access_token) {
+        throw new Error('Sessão inválida após renovação. Por favor, recarregue a página e faça login novamente.');
+      }
+
+      // #region agent log
+      console.log('[DEBUG] Before invoke - final session check', { 
+        hasToken: !!finalSession.access_token,
+        tokenLength: finalSession.access_token.length,
+        tokenPreview: finalSession.access_token.substring(0, 30) + '...',
+        tokenExpiresAt: finalSession.expires_at ? new Date(finalSession.expires_at * 1000).toISOString() : null,
+        currentTime: new Date().toISOString()
+      });
+      // #endregion
 
       // Chamar Edge Function para criar checkout
       const { data, error } = await supabase.functions.invoke('stripe-create-checkout', {
@@ -95,6 +196,16 @@ export default function StripeCheckout({
           cancelUrl: `${window.location.origin}/viajar/onboarding?step=2`,
         },
       });
+
+      // #region agent log
+      console.log('[DEBUG] invoke result', { 
+        hasData: !!data, 
+        hasError: !!error, 
+        errorStatus: error?.status, 
+        errorMessage: error?.message, 
+        dataSuccess: data?.success 
+      });
+      // #endregion
 
       if (error) {
         throw error;
@@ -160,10 +271,10 @@ export default function StripeCheckout({
           <div className="pt-4 border-t">
             <div className="flex items-center gap-2 text-sm text-green-600">
               <Check className="w-4 h-4" />
-              <span>14 dias grátis para testar</span>
+              <span>Pagamento seguro via Stripe</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Cancele antes do vencimento e não será cobrado
+              Cancele quando quiser
             </p>
           </div>
         </CardContent>

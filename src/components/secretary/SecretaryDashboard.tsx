@@ -61,6 +61,9 @@ import {
 import QuickTestLogin from '@/components/auth/QuickTestLogin';
 import { getCurrentTestUser } from '@/services/auth/TestUsers';
 import { useAuth } from '@/hooks/useAuth';
+import { businessMetricsService, CityAverage } from '@/services/viajar/businessMetricsService';
+import { supabase } from '@/integrations/supabase/client';
+import { Map } from 'lucide-react';
 
 interface Attraction {
   id: string;
@@ -108,6 +111,9 @@ export default function SecretaryDashboard() {
   const [autoInsights, setAutoInsights] = useState<any>(null);
   const [loadingAutoInsights, setLoadingAutoInsights] = useState(false);
   const [showTestLogin, setShowTestLogin] = useState(false);
+  const [heatmapData, setHeatmapData] = useState<CityAverage[]>([]);
+  const [loadingHeatmap, setLoadingHeatmap] = useState(false);
+  const [userCityId, setUserCityId] = useState<string | null>(null);
 
   // Dados mock para métricas
   const loading = false;
@@ -278,6 +284,49 @@ export default function SecretaryDashboard() {
       setShowTestLogin(true);
     }
   }, [user]);
+
+  // Carregar city_id do usuário
+  useEffect(() => {
+    const loadUserCity = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('city_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data?.city_id) {
+          setUserCityId(data.city_id);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar city_id:', error);
+      }
+    };
+
+    loadUserCity();
+  }, [user?.id]);
+
+  // Carregar dados do mapa de calor
+  const loadHeatmapData = useCallback(async () => {
+    if (!userCityId || loadingHeatmap) return;
+
+    setLoadingHeatmap(true);
+    try {
+      const averages = await businessMetricsService.getCityAverages(userCityId);
+      setHeatmapData(averages);
+    } catch (error) {
+      console.error('Erro ao carregar dados do mapa de calor:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar dados do mapa de calor.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingHeatmap(false);
+    }
+  }, [userCityId, loadingHeatmap, toast]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -474,6 +523,25 @@ export default function SecretaryDashboard() {
               >
                 <FileBarChart className="h-4 w-4" />
                 Relatórios
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setActiveSection('heatmap');
+                  if (userCityId && !heatmapData.length) {
+                    loadHeatmapData();
+                  }
+                }}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                  activeSection === 'heatmap' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Map className="h-4 w-4" />
+                Mapa de Calor
               </button>
             </nav>
           </div>
@@ -1318,6 +1386,145 @@ export default function SecretaryDashboard() {
 
           {activeSection === 'reports' && (
             <ReportGenerator />
+          )}
+
+          {/* Mapa de Calor */}
+          {activeSection === 'heatmap' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900 mb-2">Mapa de Calor de Métricas</h1>
+                  <p className="text-slate-600">
+                    Dados agregados e anonimizados dos negócios da sua cidade (LGPD compliant)
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={loadHeatmapData}
+                  disabled={loadingHeatmap || !userCityId}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${loadingHeatmap ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+              </div>
+
+              {!userCityId ? (
+                <CardBox className="p-8 text-center">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-amber-500" />
+                  <p className="text-lg font-medium text-slate-800 mb-2">
+                    Cidade não configurada
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    Configure sua cidade no perfil para visualizar o mapa de calor.
+                  </p>
+                </CardBox>
+              ) : loadingHeatmap ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <CardBox key={i} className="p-6">
+                      <Skeleton className="h-8 w-48 mb-4" />
+                      <Skeleton className="h-24 w-full" />
+                    </CardBox>
+                  ))}
+                </div>
+              ) : heatmapData.length === 0 ? (
+                <CardBox className="p-8 text-center">
+                  <Map className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg font-medium text-slate-800 mb-2">
+                    Dados insuficientes
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    É necessário no mínimo 5 negócios na cidade para exibir dados agregados (LGPD).
+                    <br />
+                    Atualmente não há dados suficientes para gerar o mapa de calor.
+                  </p>
+                </CardBox>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {heatmapData.map((metric) => {
+                    const getMetricLabel = (type: string) => {
+                      const labels: Record<string, string> = {
+                        occupancy: 'Taxa de Ocupação',
+                        revenue: 'Receita',
+                        visitors: 'Visitantes',
+                        ticket_avg: 'Ticket Médio',
+                        table_turnover: 'Giro de Mesas',
+                        pax: 'Passageiros',
+                        adr: 'ADR',
+                        revpar: 'RevPAR',
+                      };
+                      return labels[type] || type;
+                    };
+
+                    const getMetricUnit = (type: string) => {
+                      if (type === 'occupancy') return '%';
+                      if (type === 'revenue' || type === 'ticket_avg' || type === 'adr' || type === 'revpar') return 'R$';
+                      return '';
+                    };
+
+                    const unit = getMetricUnit(metric.metric_type);
+                    const formatValue = (value: number) => {
+                      if (unit === 'R$') {
+                        return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                      }
+                      if (unit === '%') {
+                        return `${Math.round(value)}%`;
+                      }
+                      return value.toLocaleString('pt-BR');
+                    };
+
+                    return (
+                      <CardBox key={metric.metric_type} className="p-6 hover:shadow-lg transition-shadow">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-slate-800">
+                            {getMetricLabel(metric.metric_type)}
+                          </h3>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {metric.count} negócios
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <span className="text-3xl font-bold text-blue-600">
+                                {formatValue(metric.average)}
+                              </span>
+                              {unit && <span className="text-sm text-slate-500">{unit}</span>}
+                            </div>
+                            <p className="text-xs text-slate-500">Média da cidade</p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Mínimo</p>
+                              <p className="text-sm font-medium text-slate-700">
+                                {formatValue(metric.min)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Máximo</p>
+                              <p className="text-sm font-medium text-slate-700">
+                                {formatValue(metric.max)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="pt-2">
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <AlertCircle className="h-3 w-3" />
+                              <span>Dados anonimizados (LGPD)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardBox>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Modal de Adicionar/Editar */}

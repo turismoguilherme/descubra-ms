@@ -5,10 +5,48 @@ import { useBrand } from '@/context/BrandContext';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const UniversalFooter = () => {
-  const { isOverflowOne } = useBrand();
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:5',message:'UniversalFooter iniciando renderização',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
+  // Verificar se o BrandProvider está disponível
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:8',message:'UniversalFooter ANTES de chamar useBrand',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  let brandContext = null;
+  try {
+    brandContext = useBrand();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:11',message:'UniversalFooter useBrand sucesso',data:{hasContext:!!brandContext},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+  } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:13',message:'UniversalFooter BrandProvider erro capturado',data:{error:String(error),errorMessage:error instanceof Error?error.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    console.error('UniversalFooter: BrandProvider não disponível:', error);
+    // Retornar footer básico sem branding
+    return (
+      <footer className="bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-gray-300 text-sm">
+              © 2025. Todos os direitos reservados.
+            </p>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  const { isOverflowOne } = brandContext;
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:40',message:'UniversalFooter verificando isOverflowOne',data:{isOverflowOne},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const { settings: msSettings, loading: msLoading } = useFooterSettings('ms');
 
   if (isOverflowOne) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:43',message:'UniversalFooter renderizando footer overflow-one',data:{isOverflowOne},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     // Footer para OverFlow One
     return (
       <footer className="bg-gray-900 text-white">
@@ -160,6 +198,11 @@ const UniversalFooter = () => {
                 <li>
                   <Link to="/descubramatogrossodosul/partner/login" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Área do Parceiro
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dados-turismo" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                    Dados de Turismo
                   </Link>
                 </li>
               </ul>

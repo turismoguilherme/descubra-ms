@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -193,6 +194,8 @@ const DEPARTMENTS = [
 
 export default function TeamManagement() {
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<TeamMember[]>(mockMembers);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(mockActivityLogs);
   const [searchTerm, setSearchTerm] = useState('');
@@ -201,6 +204,49 @@ export default function TeamManagement() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  // Detectar aba ativa baseada na URL
+  const getActiveTabFromUrl = (): string => {
+    const path = location.pathname;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamManagement.tsx:getActiveTabFromUrl',message:'Detectando aba da URL',data:{path,pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    if (path.includes('/team/permissions')) return 'permissions';
+    if (path.includes('/team/activities')) return 'activity';
+    return 'members'; // default
+  };
+
+  const [activeTab, setActiveTab] = useState<string>(getActiveTabFromUrl());
+
+  // Sincronizar aba quando URL mudar
+  useEffect(() => {
+    const tab = getActiveTabFromUrl();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamManagement.tsx:useEffect',message:'URL mudou, atualizando aba',data:{pathname:location.pathname,detectedTab:tab,currentActiveTab:activeTab},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    setActiveTab(tab);
+  }, [location.pathname]);
+
+  // Atualizar URL quando aba mudar
+  const handleTabChange = (value: string) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamManagement.tsx:handleTabChange',message:'Aba mudou, atualizando URL',data:{newTab:value,currentPath:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    setActiveTab(value);
+    const basePath = '/viajar/admin/team';
+    switch (value) {
+      case 'permissions':
+        navigate(`${basePath}/permissions`);
+        break;
+      case 'activity':
+        navigate(`${basePath}/activities`);
+        break;
+      case 'members':
+      default:
+        navigate(`${basePath}/members`);
+        break;
+    }
+  };
 
   const [newMember, setNewMember] = useState({
     name: '',
@@ -467,7 +513,7 @@ export default function TeamManagement() {
         </Card>
       </div>
 
-      <Tabs defaultValue="members" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="bg-white border border-slate-200">
           <TabsTrigger value="members">Funcionários</TabsTrigger>
           <TabsTrigger value="activity">Auditoria</TabsTrigger>

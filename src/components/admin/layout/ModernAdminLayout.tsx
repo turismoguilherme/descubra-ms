@@ -40,15 +40,18 @@ import {
   Gift,
   BarChart3,
   CreditCard as CreditCardIcon,
-  RefreshCw
+  RefreshCw,
+  Mail,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AdminNotifications } from '@/components/admin/notifications/AdminNotifications';
 
 // Definição das permissões por cargo
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
   master_admin: ['*'],
-  admin: ['*'],
-  tech: ['*'],
+  admin: ['*', 'communication'],
+  tech: ['*', 'communication'],
   financeiro: ['dashboard', 'financial', 'reports'],
   rh: ['dashboard', 'employees', 'salaries'],
   comercial: ['dashboard', 'clients', 'subscriptions', 'partners'],
@@ -90,6 +93,8 @@ const navigationItems: NavItem[] = [
     permission: 'viajar',
     platform: 'viajar',
         children: [
+          { id: 'viajar-content', label: 'Conteúdo e Menu', icon: FileText, path: '/viajar/admin/viajar/content', permission: 'viajar', platform: 'viajar' },
+          { id: 'viajar-plans', label: 'Configuração de Planos', icon: CreditCard, path: '/viajar/admin/viajar/plan-settings', permission: 'viajar', platform: 'viajar' },
           // Clientes e Assinaturas movidos para Financeiro
         ],
   },
@@ -105,6 +110,7 @@ const navigationItems: NavItem[] = [
       { id: 'footer', label: 'Footer', icon: Globe, path: '/viajar/admin/descubra-ms/footer', permission: 'content', platform: 'descubra-ms' },
       { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
       { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
+      { id: 'avatars', label: 'Avatares', icon: Users, path: '/viajar/admin/descubra-ms/avatars', permission: 'content', platform: 'descubra-ms' },
           {
             id: 'passport',
             label: 'Passaporte Digital',
@@ -141,6 +147,7 @@ const navigationItems: NavItem[] = [
       { id: 'accounts', label: 'Contas Bancárias', icon: CreditCard, path: '/viajar/admin/financial/accounts', permission: 'financial', platform: 'system' },
       { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/viajar/admin/financial/suppliers', permission: 'financial', platform: 'system' },
       { id: 'reports', label: 'Relatórios', icon: FileText, path: '/viajar/admin/financial/reports', permission: 'reports', platform: 'system' },
+      { id: 'contact-leads', label: 'Leads de Contato', icon: Mail, path: '/viajar/admin/financial/contact-leads', permission: 'financial', platform: 'system' },
     ],
   },
   {
@@ -163,10 +170,12 @@ const navigationItems: NavItem[] = [
     platform: 'system',
     children: [
       { id: 'database', label: 'Banco de Dados', icon: Database, path: '/viajar/admin/database', permission: 'database', platform: 'system' },
+      { id: 'emails', label: 'Gestão de Emails', icon: Mail, path: '/viajar/admin/communication/emails', permission: 'communication', platform: 'system' },
       { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
       { id: 'system-logs', label: 'Auditoria', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
       { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
       { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
+      { id: 'settings-metrics', label: 'Métricas Públicas', icon: TrendingUp, path: '/viajar/admin/settings/metrics', permission: 'settings', platform: 'system' },
     ],
   },
   {
@@ -279,7 +288,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                 {userProfile?.full_name || 'Administrador'} - {userRole === 'master_admin' ? 'Master Admin' : userRole}
               </p>
               </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
             {/* Platform Badge */}
             {currentPlatform !== 'system' && (
               <div className={cn(
@@ -301,6 +310,8 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                 )}
               </div>
             )}
+              {/* Notificações */}
+              <AdminNotifications />
               <Button 
                 variant="secondary" 
                 size="sm"

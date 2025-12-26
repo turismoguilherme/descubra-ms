@@ -4,11 +4,52 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, Shield, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ViaJARLogo from "./ViaJARLogo";
+import { menuService } from "@/services/admin/menuService";
 
 const ViaJARNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [navigationItems, setNavigationItems] = useState([
+    { name: "Início", path: "/" },
+    { name: "Soluções", path: "/solucoes" },
+    { name: "Cases", path: "/casos-sucesso" },
+    { name: "Preços", path: "/precos" },
+    { name: "Dados de Turismo", path: "/dados-turismo" },
+    { name: "Sobre", path: "/sobre" },
+    { name: "Contato", path: "/contato" },
+  ]);
+  
+  // Carregar menu do banco de dados
+  useEffect(() => {
+    const loadMenu = async () => {
+      try {
+        const menus = await menuService.getMenus('viajar', 'main');
+        if (menus && menus.length > 0) {
+          const activeMenus = menus
+            .filter((menu: any) => menu.is_active)
+            .map((menu: any) => ({
+              name: menu.label,
+              path: menu.path || '/',
+            }))
+            .sort((a: any, b: any) => {
+              const menuA = menus.find((m: any) => m.label === a.name);
+              const menuB = menus.find((m: any) => m.label === b.name);
+              return (menuA?.order_index || 0) - (menuB?.order_index || 0);
+            });
+          
+          if (activeMenus.length > 0) {
+            setNavigationItems(activeMenus);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar menu do banco:', error);
+        // Manter itens padrão em caso de erro
+      }
+    };
+    
+    loadMenu();
+  }, []);
   
   // Handle scroll effect
   useEffect(() => {
@@ -61,15 +102,6 @@ const ViaJARNavbar = () => {
   }, []);
 
   const isActivePath = (path: string) => location.pathname === path;
-
-  const navigationItems = [
-    { name: "Início", path: "/" },
-    { name: "Soluções", path: "/solucoes" },
-    { name: "Cases", path: "/casos-sucesso" },
-    { name: "Preços", path: "/precos" },
-    { name: "Sobre", path: "/sobre" },
-    { name: "Contato", path: "/contato" },
-  ];
 
   const dashboardItems = [
     { name: "Dashboard", path: "/viajar/dashboard" },
@@ -168,7 +200,7 @@ const ViaJARNavbar = () => {
                 </Link>
                 <Link to="/viajar/register">
                   <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
-                    Começar Grátis
+                    Começar Agora
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -246,7 +278,7 @@ const ViaJARNavbar = () => {
                     </Link>
                     <Link to="/viajar/register" onClick={() => setIsOpen(false)}>
                       <Button className="w-full bg-viajar-slate hover:bg-viajar-slate/90 text-white">
-                        Começar Grátis
+                        Começar Agora
                       </Button>
                     </Link>
                   </div>

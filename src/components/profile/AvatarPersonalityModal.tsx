@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Heart, Target, X } from 'lucide-react';
+import { Shield, Heart, Target } from 'lucide-react';
 import { PantanalAnimal } from './PantanalAvatarSelector';
 
 interface AvatarPersonalityModalProps {
@@ -149,20 +149,20 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-3xl max-h-[90vh] overflow-y-auto"
+        overlayClassName="bg-transparent"
+      >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-gray-900 flex items-center justify-between">
-            <span>Personalidade do {animal.name}</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle className="text-2xl font-bold text-center text-gray-900">
+            Personalidade do {animal.name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
           {/* Personalidade */}
           <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50">
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Heart className="h-5 w-5 mr-2 text-purple-600" />
                 Personalidade
@@ -188,7 +188,7 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
 
           {/* Sobre o Animal */}
           <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-cyan-50">
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Target className="h-5 w-5 mr-2 text-blue-600" />
                 Sobre o {animal.name}
@@ -219,7 +219,7 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
 
           {/* Consciência Ambiental */}
           <Card className="shadow-lg border-0 bg-gradient-to-r from-green-50 to-blue-50">
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Shield className="h-5 w-5 mr-2 text-green-600" />
                 Consciência Ambiental

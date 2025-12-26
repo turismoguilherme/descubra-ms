@@ -16,11 +16,19 @@ const VLibrasWidget = () => {
                          location.pathname.startsWith('/ms') ||
                          location.pathname === '/chatguata';
     
+    // Ocultar VLibras na área admin
+    const isAdminArea = location.pathname.startsWith('/viajar/admin') || 
+                        location.pathname.startsWith('/admin');
+    
     // Encontrar o container do VLibras
     const vlibrasContainer = document.querySelector('[vw]') as HTMLElement;
     
     if (vlibrasContainer) {
-      if (isDescubraMS) {
+      if (isAdminArea) {
+        // Esconder VLibras na área admin
+        vlibrasContainer.style.display = 'none';
+        console.log('🔵 VLibras oculto - Área Admin');
+      } else if (isDescubraMS) {
         // Mostrar VLibras nas páginas do Descubra MS
         vlibrasContainer.style.display = 'block';
         console.log('✅ VLibras visível - Descubra MS');

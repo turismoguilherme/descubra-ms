@@ -1,10 +1,12 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { platformContentService } from "@/services/admin/platformContentService";
+import { ENV } from "@/config/environment";
 
 interface ChatMessageProps {
   message: AIMessage;
@@ -13,6 +15,42 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   const isGuata = !message.isUser;
+  const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
+
+  useEffect(() => {
+    if (!isGuata) return;
+    
+    const loadAvatar = async () => {
+      try {
+        const data = await platformContentService.getContent(['guata_avatar_url']);
+        if (data.length > 0 && data[0].content_value) {
+          console.log('🔄 [ChatMessage] Avatar carregado do banco:', data[0].content_value);
+          setAvatarUrl(data[0].content_value);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar avatar do Guatá:', error);
+      }
+    };
+    loadAvatar();
+    
+    // Recarregar avatar a cada 30 segundos para pegar atualizações
+    const interval = setInterval(loadAvatar, 30000);
+    
+    // Escutar eventos de atualização de logo
+    const handleLogoUpdate = (event: CustomEvent) => {
+      if (event.detail?.key === 'guata_avatar_url') {
+        console.log('📢 [ChatMessage] Avatar atualizado, recarregando:', event.detail);
+        loadAvatar();
+      }
+    };
+    window.addEventListener('logo-updated', handleLogoUpdate as EventListener);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('logo-updated', handleLogoUpdate as EventListener);
+    };
+  }, [isGuata]);
+
   return (
     <motion.div 
       className={cn("flex items-start gap-3 mb-4", isGuata ? "justify-start" : "justify-end")}
@@ -22,7 +60,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
     >
       {isGuata && (
         <Avatar className="w-8 h-8 flex-shrink-0">
-          <AvatarImage src="/guata-mascote.jpg" alt="Guatá AI" className="object-cover" />
+          <AvatarImage src={avatarUrl} alt="Guatá AI" className="object-cover" />
           <AvatarFallback className="bg-ms-primary-blue text-white font-bold text-sm">G</AvatarFallback>
         </Avatar>
       )}

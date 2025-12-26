@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,16 +7,27 @@ import { Mail, Phone, MapPin, Send, MessageSquare, Building2, Landmark, ArrowRig
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Contato = () => {
   const { toast } = useToast();
+
+  // Garantir que a página role para o topo ao carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     organization: '',
     role: '',
-    message: ''
+    message: '',
+    requestData: false, // Nova opção: solicitar dados
+    dataReportType: 'both' as 'explanatory' | 'raw_data' | 'both',
+    dataPeriodStart: '',
+    dataPeriodEnd: '',
+    dataCity: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -23,12 +35,138 @@ const Contato = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulação de envio
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Verificar autenticação do usuário (opcional - para rastreamento)
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // IDs fixos da tabela leads (criados na migration)
+      const WEBSITE_SOURCE_ID = "1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a"; // Website
+      const STATUS_NEW_ID = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"; // New
+      const PRIORITY_MEDIUM_ID = "2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c"; // Medium
+
+      // Montar notas com informações do formulário
+      const notesLines: string[] = [];
+      if (formData.role) {
+        notesLines.push(`Tipo: ${formData.role === 'empresario' ? 'Empresário do setor turístico' : formData.role === 'secretaria' ? 'Secretaria de Turismo / Prefeitura' : 'Outro'}`);
+      }
+      
+      // DESTACAR se solicitou relatório de dados
+      if (formData.requestData) {
+        notesLines.push('');
+        notesLines.push('🚨 SOLICITAÇÃO DE RELATÓRIO DE DADOS 🚨');
+        notesLines.push(`Tipo de Relatório: ${formData.dataReportType === 'explanatory' ? 'Apenas Tratado' : formData.dataReportType === 'raw_data' ? 'Apenas Bruto' : 'Tratado + Bruto'}`);
+        if (formData.dataPeriodStart && formData.dataPeriodEnd) {
+          notesLines.push(`Período: ${formData.dataPeriodStart} a ${formData.dataPeriodEnd}`);
+        }
+        if (formData.dataCity) {
+          notesLines.push(`Cidade/Região: ${formData.dataCity}`);
+        }
+        notesLines.push('Ver solicitação completa em: Leads de Contato (Financeiro)');
+      }
+      
+      if (formData.message) {
+        notesLines.push('');
+        notesLines.push('Mensagem:');
+        notesLines.push(formData.message);
+      }
+
+      const notes = notesLines.join('\n');
+
+      // Preparar dados para inserção
+      const leadData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        company: formData.organization || null,
+        source_id: WEBSITE_SOURCE_ID,
+        status_id: STATUS_NEW_ID,
+        priority_id: PRIORITY_MEDIUM_ID,
+        notes: notes || null,
+        custom_fields: {
+          origin: 'viajartur',
+          role: formData.role || null,
+          form_type: 'contact',
+          requestData: formData.requestData || false,
+          dataReportType: formData.requestData ? formData.dataReportType : null,
+          dataPeriodStart: formData.requestData ? formData.dataPeriodStart : null,
+          dataPeriodEnd: formData.requestData ? formData.dataPeriodEnd : null,
+          dataCity: formData.requestData ? formData.dataCity : null,
+        },
+        ...(user?.id ? { created_by: user.id } : {}),
+      };
+
+      // Salvar na tabela leads
+      const { data: insertedLead, error: leadError } = await supabase
+        .from('leads')
+        .insert(leadData as any)
+        .select()
+        .single();
+
+      if (leadError) {
+        console.error('Erro ao salvar lead:', leadError);
+        throw leadError;
+      }
+
+      // Se o cliente solicitou dados, criar registro em data_sale_requests
+      if (formData.requestData && insertedLead?.id) {
+        const periodStart = formData.dataPeriodStart ? new Date(formData.dataPeriodStart) : new Date();
+        const periodEnd = formData.dataPeriodEnd ? new Date(formData.dataPeriodEnd) : new Date();
+        
+        // Se não especificou período, usar últimos 3 meses
+        if (!formData.dataPeriodStart || !formData.dataPeriodEnd) {
+          periodEnd.setTime(Date.now());
+          periodStart.setTime(Date.now());
+          periodStart.setMonth(periodStart.getMonth() - 3);
+        }
+
+        const { data: dataSaleRequest, error: dataSaleError } = await supabase
+          .from('data_sale_requests')
+          .insert({
+            lead_id: insertedLead.id,
+            requester_name: formData.name,
+            requester_email: formData.email,
+            requester_phone: formData.phone || null,
+            requester_organization: formData.organization || null,
+            requester_city: formData.dataCity || null,
+            report_type: formData.dataReportType,
+            period_start: periodStart.toISOString().split('T')[0],
+            period_end: periodEnd.toISOString().split('T')[0],
+            status: 'pending',
+            data_validation_status: 'pending',
+            ...(user?.id ? { created_by: user.id } : {})
+          })
+          .select()
+          .single();
+
+        if (dataSaleError) {
+          console.error('Erro ao criar solicitação de dados:', dataSaleError);
+          // Não falhar o formulário se apenas a solicitação de dados falhar
+        } else if (dataSaleRequest) {
+          // Disparar notificação para admin
+          try {
+            const { addAdminNotification } = await import('@/components/admin/notifications/AdminNotifications');
+            addAdminNotification({
+              type: 'info',
+              title: 'Nova Solicitação de Relatório de Dados',
+              message: `${formData.name} (${formData.organization || formData.email}) solicitou relatório de dados. Ver em Leads de Contato.`,
+              action: {
+                label: 'Ver Solicitação',
+                onClick: () => {
+                  window.location.href = '/viajar/admin/financial/contact-leads';
+                }
+              }
+            });
+          } catch (notifError) {
+            console.warn('Erro ao criar notificação:', notifError);
+          }
+        }
+      }
     
     toast({
       title: "✅ Mensagem enviada!",
-      description: "Entraremos em contato em até 24 horas.",
+      description: formData.requestData 
+        ? "Sua solicitação foi recebida! Entraremos em contato em até 24 horas para aprovação e pagamento."
+        : "Entraremos em contato em até 24 horas.",
     });
     
     setFormData({
@@ -37,9 +175,23 @@ const Contato = () => {
       phone: '',
       organization: '',
       role: '',
-      message: ''
+      message: '',
+      requestData: false,
+      dataReportType: 'both',
+      dataPeriodStart: '',
+      dataPeriodEnd: '',
+      dataCity: ''
     });
+    } catch (error: any) {
+      console.error('Erro ao enviar formulário:', error);
+      toast({
+        title: "Erro ao enviar",
+        description: error.message || "Não foi possível enviar sua mensagem. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
     setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -258,6 +410,108 @@ const Contato = () => {
                     placeholder="Como podemos ajudar?"
                     className="min-h-[120px] resize-none"
                   />
+                </div>
+
+                {/* Opção para solicitar dados */}
+                <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                  <div className="flex items-start gap-3 mb-4">
+                    <input
+                      type="checkbox"
+                      id="requestData"
+                      name="requestData"
+                      checked={formData.requestData}
+                      onChange={(e) => setFormData({ ...formData, requestData: e.target.checked })}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-viajar-cyan focus:ring-viajar-cyan"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="requestData" className="block text-sm font-medium text-foreground cursor-pointer">
+                        Solicitar Relatório de Dados de Turismo
+                      </label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Para <strong>secretarias de turismo</strong> e <strong>empresários do setor turístico</strong>: 
+                        relatórios com dados agregados e anonimizados do Descubra MS. 
+                        <Link 
+                          to="/dados-turismo" 
+                          className="text-viajar-cyan hover:text-viajar-cyan/80 font-medium underline underline-offset-2 hover:underline-offset-4 transition-all ml-1 inline-flex items-center gap-1"
+                        >
+                          Saiba mais sobre os dados disponíveis
+                          <ArrowRight className="h-3 w-3 inline" />
+                        </Link>
+                      </p>
+                    </div>
+                  </div>
+
+                  {formData.requestData && (
+                    <div className="space-y-4 mt-4 pl-7">
+                      <div>
+                        <label htmlFor="dataReportType" className="block text-sm font-medium text-foreground mb-2">
+                          Tipo de Relatório
+                        </label>
+                        <select
+                          id="dataReportType"
+                          name="dataReportType"
+                          value={formData.dataReportType}
+                          onChange={handleChange}
+                          className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-viajar-cyan focus:border-transparent"
+                        >
+                          <option value="explanatory">Apenas Dados Tratados (Explicativo)</option>
+                          <option value="raw_data">Apenas Dados Brutos</option>
+                          <option value="both">Ambos (Tratados + Brutos)</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="dataPeriodStart" className="block text-sm font-medium text-foreground mb-2">
+                            Período Inicial
+                          </label>
+                          <Input
+                            id="dataPeriodStart"
+                            name="dataPeriodStart"
+                            type="date"
+                            value={formData.dataPeriodStart}
+                            onChange={handleChange}
+                            className="h-10"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="dataPeriodEnd" className="block text-sm font-medium text-foreground mb-2">
+                            Período Final
+                          </label>
+                          <Input
+                            id="dataPeriodEnd"
+                            name="dataPeriodEnd"
+                            type="date"
+                            value={formData.dataPeriodEnd}
+                            onChange={handleChange}
+                            className="h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="dataCity" className="block text-sm font-medium text-foreground mb-2">
+                          Cidade/Região de Interesse (opcional)
+                        </label>
+                        <Input
+                          id="dataCity"
+                          name="dataCity"
+                          type="text"
+                          value={formData.dataCity}
+                          onChange={handleChange}
+                          placeholder="Ex: Campo Grande, Bonito, etc."
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                        <p className="text-xs text-blue-900 dark:text-blue-200">
+                          <strong>Importante:</strong> O pagamento será solicitado após a aprovação da solicitação. 
+                          Os dados são reais, verificados e respeitam a LGPD (apenas dados com consentimento).
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button 

@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { InteractionTracker } from "@/services/tracking/InteractionTrackerService";
 import { MapPin, ArrowRight, Compass } from "lucide-react";
+import { platformContentService } from '@/services/admin/platformContentService';
 
 const destinos = [
   {
@@ -34,6 +36,26 @@ const destinos = [
 ];
 
 const DestaquesSection = () => {
+  const [content, setContent] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('ms_destinations_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      }
+    };
+    loadContent();
+  }, []);
+
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
+
   const handleDestinationClick = (destino: { id: number; nome: string }) => {
     InteractionTracker.track({
       interaction_type: 'destination_click',
@@ -53,10 +75,10 @@ const DestaquesSection = () => {
             </div>
           </div>
           <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
-            Destinos em Destaque
+            {getContent('ms_destinations_title', 'Destinos em Destaque')}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Descubra os principais destinos turísticos de Mato Grosso do Sul
+            {getContent('ms_destinations_description', 'Descubra os principais destinos turísticos de Mato Grosso do Sul')}
           </p>
         </div>
 
@@ -110,7 +132,7 @@ const DestaquesSection = () => {
             to="/descubramatogrossodosul/destinos" 
             className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
           >
-            Ver Todos os Destinos
+            {getContent('ms_destinations_button', 'Ver Todos os Destinos')}
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

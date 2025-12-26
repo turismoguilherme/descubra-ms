@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Save, Loader2, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Linkedin, Globe } from 'lucide-react';
 
 interface FooterSettings {
@@ -31,6 +32,7 @@ const DEFAULT_SETTINGS: FooterSettings = {
 
 export default function FooterSettingsManager() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [msSettings, setMsSettings] = useState<FooterSettings>(DEFAULT_SETTINGS);
   const [viajarSettings, setViajarSettings] = useState<FooterSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -81,7 +83,20 @@ export default function FooterSettingsManager() {
   const saveSettings = async (platform: 'ms' | 'viajar', settings: FooterSettings) => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      // Verificar se usuário está autenticado
+      if (!user) {
+        throw new Error('Usuário não autenticado. Faça login novamente.');
+      }
+
+      console.log(`💾 [FooterSettingsManager] Salvando configurações do footer para ${platform}:`, settings);
+
+      // Obter ID do usuário atual
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        throw new Error('Não foi possível obter informações do usuário');
+      }
+
+      const { data, error } = await supabase
         .from('site_settings')
         .upsert({
           platform,
@@ -89,20 +104,55 @@ export default function FooterSettingsManager() {
           setting_value: settings,
           description: `Configurações do footer para ${platform === 'ms' ? 'Descubra MS' : 'ViaJAR'}`,
           updated_at: new Date().toISOString(),
+          updated_by: authUser.id,
         }, {
           onConflict: 'platform,setting_key'
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [FooterSettingsManager] Erro ao salvar:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        throw error;
+      }
+
+      console.log('✅ [FooterSettingsManager] Configurações salvas com sucesso:', data);
+
+      // Atualizar estado local imediatamente para feedback visual
+      if (platform === 'ms') {
+        setMsSettings(settings);
+      } else {
+        setViajarSettings(settings);
+      }
+
+      // Recarregar settings do banco para garantir sincronização
+      await loadSettings();
 
       toast({
-        title: 'Sucesso',
+        title: '✅ Sucesso',
         description: `Configurações do footer ${platform === 'ms' ? 'Descubra MS' : 'ViaJAR'} salvas com sucesso!`,
+        duration: 3000,
       });
     } catch (error: any) {
+      console.error('❌ [FooterSettingsManager] Erro geral ao salvar:', error);
+      
+      let errorMessage = 'Erro ao salvar configurações';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.details) {
+        errorMessage = error.details;
+      } else if (error.hint) {
+        errorMessage = error.hint;
+      }
+
       toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao salvar configurações',
+        title: 'Erro ao salvar',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
