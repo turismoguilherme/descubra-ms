@@ -8,9 +8,11 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const Contato = () => {
   const { toast } = useToast();
+  const { settings: footerSettings } = useFooterSettings('viajar');
 
   // Garantir que a página role para o topo ao carregar
   useEffect(() => {
@@ -250,42 +252,47 @@ const Contato = () => {
               </p>
 
               <div className="space-y-6 mb-10">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-6 w-6 text-white" />
+                {footerSettings.email && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center flex-shrink-0">
+                      <Mail className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Email</h3>
+                      <a href={`mailto:${footerSettings.email}`} className="text-viajar-cyan hover:underline">
+                        {footerSettings.email}
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                    <a href="mailto:contato@viajartur.com.br" className="text-viajar-cyan hover:underline">
-                      contato@viajartur.com.br
-                    </a>
-                  </div>
-                </div>
+                )}
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-6 w-6 text-white" />
+                {footerSettings.phone && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                      <Phone className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Telefone</h3>
+                      <a href={`tel:${footerSettings.phone.replace(/\D/g, '')}`} className="text-muted-foreground hover:text-foreground">
+                        {footerSettings.phone}
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Telefone</h3>
-                    <a href="tel:+556730000000" className="text-muted-foreground hover:text-foreground">
-                      (67) 3000-0000
-                    </a>
-                  </div>
-                </div>
+                )}
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-6 w-6 text-white" />
+                {footerSettings.address && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Endereço</h3>
+                      <p className="text-muted-foreground">
+                        {footerSettings.address}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Endereço</h3>
-                    <p className="text-muted-foreground">
-                      Campo Grande - MS<br />
-                      Brasil
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Business Hours */}
