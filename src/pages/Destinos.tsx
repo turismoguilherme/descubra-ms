@@ -162,7 +162,7 @@ const Destinos = () => {
     };
 
     fetchDestinos();
-  }, [toast, regiaoSlug, cidadeParam, touristRegions]);
+  }, [toast, regiaoFiltrada, cidadeParam]);
 
   // Função auxiliar para dados mock
   const getMockDestinations = (): Destination[] => [
