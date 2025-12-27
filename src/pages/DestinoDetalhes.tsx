@@ -559,7 +559,7 @@ const DestinoDetalhes = () => {
               <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
                 <DialogContent 
                   className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 bg-transparent border-none shadow-none m-0"
-                  overlayClassName="bg-transparent"
+                  hideOverlay={true}
                 >
                   <DialogTitle className="sr-only">
                     Galeria de Fotos - {destination.name}
