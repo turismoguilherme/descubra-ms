@@ -245,6 +245,36 @@ const TermosUsoMS = () => {
                       </p>
                     </div>
                   </div>
+                  <div className="bg-purple-50 p-5 rounded-lg border-l-4 border-purple-500">
+                    <strong className="text-purple-700 text-lg">Roteiros Turísticos por Inteligência Artificial</strong>
+                    <p className="text-sm text-gray-700 mt-2">
+                      Sistema que gera roteiros turísticos personalizados utilizando Inteligência Artificial:
+                    </p>
+                    <ul className="text-sm text-gray-700 mt-2 ml-4 space-y-1 list-disc">
+                      <li><strong>Roteiros personalizados:</strong> receba sugestões de roteiros baseadas em seus interesses, perfil e histórico de visitas</li>
+                      <li><strong>Parâmetros customizáveis:</strong> defina duração, orçamento, nível de dificuldade e necessidades de acessibilidade</li>
+                      <li><strong>Roteiros por localização:</strong> descubra roteiros próximos à sua localização atual</li>
+                      <li><strong>Histórico integrado:</strong> roteiros consideram destinos já visitados no Passaporte Digital</li>
+                      <li><strong>Diversos tipos de roteiros:</strong> ecoturismo, cultura, aventura, gastronomia, entre outros</li>
+                    </ul>
+                    <div className="bg-yellow-50 border border-yellow-400 p-3 rounded mt-3">
+                      <p className="text-xs text-gray-700 mb-2">
+                        <strong>⚠️ Limitações e Responsabilidades:</strong>
+                      </p>
+                      <ul className="text-xs text-gray-700 ml-4 space-y-1 list-disc">
+                        <li>Os roteiros são <strong>sugestões geradas por IA</strong> e devem ser usados como referência inicial</li>
+                        <li>As sugestões são baseadas em informações disponíveis na plataforma e podem não incluir todos os destinos ou atrações</li>
+                        <li>Recomendamos <strong>verificar informações</strong> (horários, preços, disponibilidade) diretamente com os estabelecimentos antes de visitar</li>
+                        <li>A plataforma <strong>não se responsabiliza</strong> por alterações em horários, preços ou disponibilidade dos destinos sugeridos</li>
+                        <li>Roteiros podem não considerar condições climáticas, eventos temporários ou restrições locais</li>
+                        <li>Para decisões importantes, consulte fontes oficiais e verifique detalhes com os estabelecimentos</li>
+                      </ul>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-2 italic">
+                      Os roteiros são gerados utilizando seus dados de perfil, preferências e histórico para criar sugestões 
+                      personalizadas. Você pode salvar, compartilhar e avaliar os roteiros sugeridos para melhorar futuras recomendações.
+                    </p>
+                  </div>
                   <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-ms-primary-blue">
                     <strong className="text-ms-primary-blue text-lg">Cadastro de Eventos</strong>
                     <p className="text-sm text-gray-700 mt-2">
@@ -260,6 +290,25 @@ const TermosUsoMS = () => {
                       Os eventos são cadastrados por terceiros (organizadores, parceiros, órgãos públicos). A viajARTUR 
                       não se responsabiliza pela veracidade das informações ou pela realização dos eventos.
                     </p>
+                    <div className="bg-teal-50 border-l-4 border-ms-discovery-teal p-4 rounded-r-lg mt-3">
+                      <p className="text-sm text-gray-800 font-semibold mb-2">Para Empresas e Órgãos que Desejam Cadastrar Eventos:</p>
+                      <p className="text-xs text-gray-700 mb-2">
+                        Organizadores interessados em cadastrar eventos na plataforma devem:
+                      </p>
+                      <ul className="text-xs text-gray-700 ml-4 space-y-1 list-disc">
+                        <li>Preencher formulário de cadastro com dados do evento (título, descrição, categoria, datas, horários, localização)</li>
+                        <li>Fornecer dados do organizador (nome, e-mail, telefone de contato)</li>
+                        <li>Enviar materiais promocionais (imagens, vídeos, logos) - obrigatório para eventos em destaque</li>
+                        <li>Informar links oficiais (site, inscrição, ingressos) quando disponíveis</li>
+                        <li>Aguardar processo de aprovação pela equipe da plataforma</li>
+                        <li>Efetuar pagamento (quando optar por evento em destaque)</li>
+                      </ul>
+                      <p className="text-xs text-gray-600 mt-2 italic">
+                        O cadastro de eventos é gratuito, mas eventos em destaque têm custo. Todos os eventos precisam de 
+                        aprovação antes de serem publicados. Organizadores são responsáveis pela veracidade das informações 
+                        e pela realização dos eventos conforme anunciado.
+                      </p>
+                    </div>
                   </div>
                   <div className="bg-green-50 p-5 rounded-lg border-l-4 border-ms-pantanal-green">
                     <strong className="text-ms-pantanal-green text-lg">Programa de Parceiros</strong>
@@ -277,6 +326,25 @@ const TermosUsoMS = () => {
                       para viabilizar reservas. A viajARTUR atua como intermediária e não se responsabiliza por serviços 
                       prestados pelos parceiros.
                     </p>
+                    <div className="bg-blue-50 border-l-4 border-ms-primary-blue p-4 rounded-r-lg mt-3">
+                      <p className="text-sm text-gray-800 font-semibold mb-2">Para Empresas que Desejam se Tornar Parceiros:</p>
+                      <p className="text-xs text-gray-700 mb-2">
+                        Empresas interessadas em se cadastrar como parceiros devem:
+                      </p>
+                      <ul className="text-xs text-gray-700 ml-4 space-y-1 list-disc">
+                        <li>Preencher formulário de cadastro com dados da empresa (nome, descrição, tipo de negócio)</li>
+                        <li>Fornecer dados de identificação (CPF para pessoa física ou CNPJ para pessoa jurídica)</li>
+                        <li>Informar dados de contato (e-mail, telefone, endereço)</li>
+                        <li>Enviar fotos, logos e materiais promocionais (opcional)</li>
+                        <li>Aguardar processo de aprovação pela equipe da plataforma</li>
+                        <li>Integrar com sistema de pagamento (Stripe Connect) se desejar processar pagamentos</li>
+                      </ul>
+                      <p className="text-xs text-gray-600 mt-2 italic">
+                        O cadastro é gratuito, mas está sujeito a aprovação. Empresas aprovadas poderão oferecer serviços, 
+                        criar ofertas e participar do programa de recompensas. A plataforma se reserva o direito de recusar 
+                        ou suspender parceiros que não cumpram os termos ou ofereçam serviços de baixa qualidade.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -563,6 +631,28 @@ const TermosUsoMS = () => {
                       <li>Cancelamentos, alterações ou problemas com eventos devem ser <strong>resolvidos diretamente com os organizadores</strong></li>
                       <li>A viajARTUR não se responsabiliza por <strong>ingressos, reembolsos ou danos</strong> relacionados a eventos</li>
                     </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">6.5 Sobre Roteiros por Inteligência Artificial</h3>
+                  <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
+                    <p className="text-gray-700 leading-relaxed mb-2">
+                      <strong>Limitações dos Roteiros Gerados por IA:</strong>
+                    </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                      <li>Os roteiros são <strong>sugestões geradas automaticamente</strong> por Inteligência Artificial e devem ser usados como referência inicial</li>
+                      <li>As sugestões são baseadas em <strong>informações disponíveis na plataforma</strong> e podem não incluir todos os destinos, atrações ou estabelecimentos disponíveis</li>
+                      <li>A viajARTUR <strong>não garante</strong> a precisão, completude ou atualização das informações incluídas nos roteiros</li>
+                      <li>Roteiros podem não considerar <strong>condições climáticas, eventos temporários, restrições locais ou alterações</strong> em horários, preços ou disponibilidade</li>
+                      <li>Recomendamos <strong>verificar informações</strong> (horários, preços, disponibilidade, acessibilidade) diretamente com os estabelecimentos antes de visitar</li>
+                      <li>Para decisões importantes, consulte <strong>fontes oficiais</strong> e verifique detalhes com os estabelecimentos ou órgãos responsáveis</li>
+                      <li>A viajARTUR não se responsabiliza por <strong>experiências que não atendam às expectativas</strong> baseadas nos roteiros sugeridos</li>
+                    </ul>
+                    <p className="text-gray-600 text-sm mt-3 italic">
+                      Os roteiros são uma ferramenta de apoio para planejamento de viagens. A responsabilidade final sobre 
+                      decisões de viagem, verificações e planejamento detalhado é do usuário.
+                    </p>
                   </div>
                 </div>
 

@@ -269,6 +269,62 @@ const PrivacidadeMS = () => {
                     A geolocalização é solicitada apenas quando necessário para funcionalidades específicas (como check-in no Passaporte Digital). Você pode desativar a geolocalização nas configurações do seu dispositivo a qualquer momento.
                   </p>
                 </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">1.7 Dados de Empresas Parceiras</h3>
+                  <p className="text-gray-700 leading-relaxed mb-2">
+                    Quando uma empresa se cadastra como parceiro na plataforma, coletamos:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li><strong>Dados da empresa:</strong> nome, descrição, tipo de negócio (hotel, restaurante, agência, etc.)</li>
+                    <li><strong>Dados de identificação:</strong> CPF (pessoa física) ou CNPJ (pessoa jurídica)</li>
+                    <li><strong>Dados de contato:</strong> e-mail, telefone, endereço completo</li>
+                    <li><strong>Dados de mídia:</strong> fotos, logos, vídeos promocionais, galeria de imagens</li>
+                    <li><strong>Dados de integração:</strong> URLs de site oficial, YouTube, redes sociais</li>
+                    <li><strong>Dados de pagamento:</strong> informações para integração com Stripe Connect (quando aplicável)</li>
+                    <li><strong>Status de aprovação:</strong> informações sobre o processo de cadastro e aprovação</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Esses dados são coletados para viabilizar o cadastro e aprovação de parceiros, permitir que eles ofereçam serviços na plataforma e facilitar a conexão com usuários interessados em reservas e experiências turísticas.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">1.8 Dados de Organizadores de Eventos</h3>
+                  <p className="text-gray-700 leading-relaxed mb-2">
+                    Quando uma empresa ou órgão cadastra um evento na plataforma, coletamos:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li><strong>Dados do evento:</strong> título, descrição, categoria, datas, horários, localização</li>
+                    <li><strong>Dados do organizador:</strong> nome, e-mail, telefone de contato</li>
+                    <li><strong>Dados de mídia:</strong> imagens, vídeos promocionais, logos do evento</li>
+                    <li><strong>Links oficiais:</strong> site oficial, links de inscrição ou compra de ingressos</li>
+                    <li><strong>Dados de pagamento:</strong> informações sobre pagamento para eventos em destaque (quando aplicável)</li>
+                    <li><strong>Região turística:</strong> identificação automática da região baseada na localização</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Esses dados são coletados para permitir que organizadores cadastrem eventos na plataforma, facilitar a descoberta de eventos pelos usuários e gerenciar o processo de aprovação e publicação dos eventos.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">1.9 Dados para Roteiros por Inteligência Artificial</h3>
+                  <p className="text-gray-700 leading-relaxed mb-2">
+                    Quando você solicita ou utiliza roteiros turísticos gerados por IA, coletamos:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li><strong>Preferências de viagem:</strong> interesses (ecoturismo, cultura, aventura, gastronomia, etc.)</li>
+                    <li><strong>Dados de perfil:</strong> tipo de viajante (turista ou morador), faixa etária, origem</li>
+                    <li><strong>Histórico de visitas:</strong> destinos já visitados (do Passaporte Digital)</li>
+                    <li><strong>Localização atual:</strong> quando você solicita roteiros próximos</li>
+                    <li><strong>Parâmetros do roteiro:</strong> duração desejada, orçamento, nível de dificuldade, acessibilidade</li>
+                    <li><strong>Interações com roteiros:</strong> roteiros visualizados, salvos, compartilhados</li>
+                    <li><strong>Feedback sobre roteiros:</strong> avaliações, sugestões de melhoria</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Esses dados são utilizados para personalizar e melhorar as sugestões de roteiros geradas pela Inteligência Artificial, oferecendo experiências turísticas mais relevantes e adequadas ao seu perfil e preferências.
+                  </p>
+                </div>
               </div>
             </section>
 
@@ -343,7 +399,97 @@ const PrivacidadeMS = () => {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.5 Melhorias e Análises</h3>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.5 Gestão de Parceiros Cadastrados</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Processar e avaliar solicitações de cadastro de empresas como parceiros</li>
+                    <li>Validar informações fornecidas (CNPJ, CPF, dados de contato)</li>
+                    <li>Gerenciar processo de aprovação e ativação de parceiros</li>
+                    <li>Facilitar integração com sistemas de pagamento (Stripe Connect)</li>
+                    <li>Exibir informações de parceiros na plataforma para usuários</li>
+                    <li>Gerenciar ofertas, recompensas e benefícios oferecidos por parceiros</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Os dados de parceiros são tratados para viabilizar o programa de parcerias, permitir que empresas ofereçam serviços na plataforma e facilitar a conexão entre parceiros e usuários interessados.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.6 Gestão de Eventos Cadastrados</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Processar e avaliar solicitações de cadastro de eventos</li>
+                    <li>Validar informações fornecidas pelos organizadores</li>
+                    <li>Gerenciar processo de aprovação e publicação de eventos</li>
+                    <li>Facilitar descoberta de eventos pelos usuários (busca, filtros, recomendações)</li>
+                    <li>Processar pagamentos para eventos em destaque (quando aplicável)</li>
+                    <li>Identificar automaticamente a região turística do evento</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Os dados de eventos são tratados para permitir que organizadores cadastrem eventos na plataforma, facilitar a descoberta de eventos pelos usuários e gerenciar o processo de aprovação e publicação.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.7 Geração de Roteiros por Inteligência Artificial</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Analisar suas preferências e perfil de viajante para personalizar roteiros</li>
+                    <li>Gerar sugestões de roteiros turísticos baseadas em seus interesses e histórico</li>
+                    <li>Considerar sua localização atual para sugerir destinos próximos</li>
+                    <li>Adaptar roteiros conforme parâmetros fornecidos (duração, orçamento, acessibilidade)</li>
+                    <li>Melhorar continuamente a qualidade das sugestões através de aprendizado</li>
+                    <li>Fornecer informações sobre destinos, atrações e experiências incluídas nos roteiros</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Os roteiros são gerados utilizando Inteligência Artificial que analisa seus dados de perfil, preferências e histórico para criar sugestões personalizadas. As sugestões são baseadas em informações disponíveis na plataforma e podem não incluir todos os destinos ou atrações disponíveis.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.5 Gestão de Parceiros Cadastrados</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Processar e avaliar solicitações de cadastro de empresas como parceiros</li>
+                    <li>Validar informações fornecidas (CNPJ, CPF, dados de contato)</li>
+                    <li>Gerenciar processo de aprovação e ativação de parceiros</li>
+                    <li>Facilitar integração com sistemas de pagamento (Stripe Connect)</li>
+                    <li>Exibir informações de parceiros na plataforma para usuários</li>
+                    <li>Gerenciar ofertas, recompensas e benefícios oferecidos por parceiros</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Os dados de parceiros são tratados para viabilizar o programa de parcerias, permitir que empresas ofereçam serviços na plataforma e facilitar a conexão entre parceiros e usuários interessados.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.6 Gestão de Eventos Cadastrados</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Processar e avaliar solicitações de cadastro de eventos</li>
+                    <li>Validar informações fornecidas pelos organizadores</li>
+                    <li>Gerenciar processo de aprovação e publicação de eventos</li>
+                    <li>Facilitar descoberta de eventos pelos usuários (busca, filtros, recomendações)</li>
+                    <li>Processar pagamentos para eventos em destaque (quando aplicável)</li>
+                    <li>Identificar automaticamente a região turística do evento</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Os dados de eventos são tratados para permitir que organizadores cadastrem eventos na plataforma, facilitar a descoberta de eventos pelos usuários e gerenciar o processo de aprovação e publicação.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.7 Geração de Roteiros por Inteligência Artificial</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Analisar suas preferências e perfil de viajante para personalizar roteiros</li>
+                    <li>Gerar sugestões de roteiros turísticos baseadas em seus interesses e histórico</li>
+                    <li>Considerar sua localização atual para sugerir destinos próximos</li>
+                    <li>Adaptar roteiros conforme parâmetros fornecidos (duração, orçamento, acessibilidade)</li>
+                    <li>Melhorar continuamente a qualidade das sugestões através de aprendizado</li>
+                    <li>Fornecer informações sobre destinos, atrações e experiências incluídas nos roteiros</li>
+                  </ul>
+                  <p className="text-gray-600 text-sm mt-2 italic">
+                    Os roteiros são gerados utilizando Inteligência Artificial que analisa seus dados de perfil, preferências e histórico para criar sugestões personalizadas. As sugestões são baseadas em informações disponíveis na plataforma e podem não incluir todos os destinos ou atrações disponíveis.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.8 Melhorias e Análises</h3>
                   <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
                     <li>Realizar análises estatísticas sobre uso da plataforma</li>
                     <li>Identificar padrões de uso para melhorar funcionalidades</li>
@@ -354,7 +500,7 @@ const PrivacidadeMS = () => {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.6 Comunicações e Marketing</h3>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">2.9 Comunicações e Marketing</h3>
                   <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
                     <li>Enviar comunicações sobre destinos, eventos e promoções (apenas com seu consentimento)</li>
                     <li>Notificar sobre novas funcionalidades e atualizações da plataforma</li>
