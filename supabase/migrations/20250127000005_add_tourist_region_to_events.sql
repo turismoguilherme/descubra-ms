@@ -132,3 +132,6 @@ BEGIN
   RAISE NOTICE 'Migração concluída. % eventos associados a regiões turísticas.', updated_count;
 END $$;
 
+
+
+

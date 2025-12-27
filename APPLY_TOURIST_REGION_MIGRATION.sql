@@ -123,3 +123,6 @@ SELECT
   COUNT(CASE WHEN tourist_region_id IS NOT NULL THEN 1 END) as eventos_com_regiao
 FROM events;
 
+
+
+

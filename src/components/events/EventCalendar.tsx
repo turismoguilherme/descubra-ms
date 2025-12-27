@@ -165,9 +165,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       
       return matchesSearch && matchesRegion;
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventCalendar.tsx:193',message:'Erro ao filtrar evento',data:{eventId:event?.id,error:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
-      // #endregion
       return false; // Excluir eventos com erro
     }
   });
@@ -272,9 +269,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
         return 'descubra-ms'; // Fallback
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventCalendar.tsx:286',message:'Erro em getTouristRegion',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-        // #endregion
         return 'descubra-ms'; // Fallback seguro
       }
     };
