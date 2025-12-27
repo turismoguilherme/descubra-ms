@@ -3,9 +3,10 @@ import UniversalLayout from "@/components/layout/UniversalLayout";
 import { Compass, MapPin, Star, ArrowRight, Palmtree, Mountain, Waves, Building2, Calendar, X, Fish, TreePine, Camera } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useTouristRegions } from "@/hooks/useTouristRegions";
+import { useBrand } from "@/context/BrandContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -31,16 +32,29 @@ interface Destination {
 const Destinos = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { isMS } = useBrand();
+  
+  // Usar useTouristRegions apenas para MS
   const { regions: touristRegions } = useTouristRegions();
   
   const regiaoSlug = searchParams.get('regiao');
   const cidadeParam = searchParams.get('cidade');
   
-  // Buscar região filtrada pelo slug
-  const regiaoFiltrada = regiaoSlug 
+  // Buscar região filtrada pelo slug (apenas para MS)
+  const regiaoFiltrada = isMS && regiaoSlug 
     ? touristRegions.find(r => r.slug === regiaoSlug)
     : null;
+  
+  // Determinar o path base da plataforma
+  const getBasePath = () => {
+    if (location.pathname.startsWith('/descubramatogrossodosul')) {
+      return '/descubramatogrossodosul/destinos';
+    }
+    // Para ViajARTur ou outras plataformas, usar path atual sem parâmetros
+    return location.pathname.split('?')[0];
+  };
   
   const [destinos, setDestinos] = useState<Destination[]>([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
@@ -63,7 +77,7 @@ const Destinos = () => {
   
   // Função para remover filtro
   const handleRemoveFilter = () => {
-    navigate('/descubramatogrossodosul/destinos');
+    navigate(getBasePath());
   };
 
   useEffect(() => {
@@ -88,8 +102,8 @@ const Destinos = () => {
         // Construir query base
         let query = supabase.from('destinations').select('*');
         
-        // Aplicar filtros
-        if (regiaoFiltrada && regiaoFiltrada.cities.length > 0) {
+        // Aplicar filtros (apenas para MS com regiões turísticas)
+        if (isMS && regiaoFiltrada && regiaoFiltrada.cities.length > 0) {
           // Filtrar por cidades da região usando ilike para matching parcial
           // Como location pode ser "Bonito - MS", precisamos fazer matching parcial
           const cityFilters = regiaoFiltrada.cities.map(city => 
@@ -112,7 +126,7 @@ const Destinos = () => {
             // Tentar buscar novamente após renovar (aplicar mesmos filtros)
             let retryQuery = supabase.from('destinations').select('*');
             
-            if (regiaoFiltrada && regiaoFiltrada.cities.length > 0) {
+            if (isMS && regiaoFiltrada && regiaoFiltrada.cities.length > 0) {
               const cityFilters = regiaoFiltrada.cities.map(city => 
                 `location.ilike.%${city}%`
               ).join(',');
@@ -162,7 +176,7 @@ const Destinos = () => {
     };
 
     fetchDestinos();
-  }, [toast, regiaoFiltrada, cidadeParam]);
+  }, [toast, regiaoFiltrada, cidadeParam, isMS]);
 
   // Função auxiliar para dados mock
   const getMockDestinations = (): Destination[] => [
@@ -227,9 +241,9 @@ const Destinos = () => {
     ? destinos 
     : destinos.filter(d => d.category === categoriaAtiva);
   
-  // Se houver região filtrada, aplicar filtro adicional por cidades da região
+  // Se houver região filtrada, aplicar filtro adicional por cidades da região (apenas para MS)
   // (Isso é necessário para dados mock, pois a query do Supabase já filtra os dados do banco)
-  if (regiaoFiltrada && regiaoFiltrada.cities.length > 0) {
+  if (isMS && regiaoFiltrada && regiaoFiltrada.cities.length > 0) {
     destinosFiltrados = destinosFiltrados.filter(destino => {
       // Verificar se a location do destino contém alguma das cidades da região
       return regiaoFiltrada.cities.some(city => 
@@ -247,8 +261,8 @@ const Destinos = () => {
   return (
     <UniversalLayout>
       <main className="flex-grow bg-gradient-to-b from-blue-50 via-white to-green-50">
-        {/* Hero Section - Adaptado para região filtrada */}
-        {regiaoFiltrada ? (
+        {/* Hero Section - Adaptado para região filtrada (apenas MS) */}
+        {isMS && regiaoFiltrada ? (
           <div 
             className="relative py-20"
             style={{ backgroundColor: regiaoFiltrada.color }}
@@ -288,8 +302,8 @@ const Destinos = () => {
           </div>
         )}
 
-        {/* Seção de Informações da Região (quando filtrado) */}
-        {regiaoFiltrada && (
+        {/* Seção de Informações da Região (quando filtrado - apenas MS) */}
+        {isMS && regiaoFiltrada && (
           <div className="ms-container py-8">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-in slide-in-from-top duration-300">
               {/* Destaques */}
@@ -394,7 +408,7 @@ const Destinos = () => {
                 {destinosFiltrados.map((destino) => (
                 <Link 
                   key={destino.id} 
-                    to={`/descubramatogrossodosul/destinos/${destino.id}`}
+                    to={`${getBasePath()}/${destino.id}`}
                     className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
                 >
                     <div className="relative h-64 overflow-hidden">
