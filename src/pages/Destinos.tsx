@@ -36,14 +36,14 @@ const Destinos = () => {
   const [searchParams] = useSearchParams();
   const { isMS } = useBrand();
   
-  // Usar useTouristRegions apenas para MS
-  const { regions: touristRegions } = useTouristRegions();
+  // Usar useTouristRegions - sempre chamado (regra dos hooks), mas usado apenas para MS
+  const { regions: touristRegions = [], error: regionsError } = useTouristRegions();
   
   const regiaoSlug = searchParams.get('regiao');
   const cidadeParam = searchParams.get('cidade');
   
-  // Buscar região filtrada pelo slug (apenas para MS)
-  const regiaoFiltrada = isMS && regiaoSlug 
+  // Buscar região filtrada pelo slug (apenas para MS e se não houver erro)
+  const regiaoFiltrada = isMS && regiaoSlug && !regionsError && touristRegions.length > 0
     ? touristRegions.find(r => r.slug === regiaoSlug)
     : null;
   
@@ -162,14 +162,10 @@ const Destinos = () => {
       } catch (error: any) {
         console.error('❌ Erro ao buscar destinos:', error);
         // Sempre usar dados mock em caso de erro
-        setDestinos(getMockDestinations());
-        if (toast) {
-          toast({
-            title: "Aviso",
-            description: "Carregando destinos de exemplo.",
-            variant: "default",
-          });
-        }
+        const mockData = getMockDestinations();
+        setDestinos(mockData);
+        console.log('✅ DESTINOS: Usando dados mock devido ao erro:', mockData.length, 'destinos');
+        // Não mostrar toast de erro para não assustar o usuário - dados mock já são carregados
       } finally {
         setLoading(false);
       }
