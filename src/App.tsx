@@ -25,21 +25,12 @@ import "@/services/events/IntelligentEventService";
 import "@/services/events/IntelligentEventActivator";
 import "@/services/events/EventSystemTester";
 
-// Flag de logs locais para evitar ingest flood
-const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === "true";
-const safeLog = (payload: any) => {
-  if (!enableDebugLogs) return;
-  fetch("http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ...payload,
-      timestamp: Date.now(),
-      sessionId: "debug-session",
-      runId: payload?.runId || "run1",
-    }),
-  }).catch(() => {});
-};
+// Importar utilitário centralizado de log seguro
+import { safeLog } from "@/utils/safeLog";
+import { initSupabaseInterceptor } from "@/utils/supabaseInterceptor";
+
+// Inicializar interceptor do Supabase para renovação automática de tokens
+initSupabaseInterceptor();
 
 // ViaJAR SaaS Pages
 import ViaJARSaaS from "@/pages/ViaJARSaaS";

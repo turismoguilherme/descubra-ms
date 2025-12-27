@@ -163,41 +163,110 @@ const Privacidade = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">1. Informações Coletadas</h2>
               </div>
-              <div className="ml-12 space-y-4">
-                <h3 className="font-semibold text-foreground">1.1 Dados de Identificação</h3>
-                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                  <li>Nome completo e nome da empresa/órgão;</li>
-                  <li>CNPJ ou CPF;</li>
-                  <li>E-mail corporativo e pessoal;</li>
-                  <li>Telefone de contato;</li>
-                  <li>Endereço comercial;</li>
-                  <li>Cargo ou função.</li>
-                </ul>
-
-                <h3 className="font-semibold text-foreground mt-6">1.2 Dados de Navegação</h3>
-                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                  <li>Endereço IP;</li>
-                  <li>Tipo de navegador e dispositivo;</li>
-                  <li>Páginas visitadas e tempo de permanência;</li>
-                  <li>Origem do acesso (referrer);</li>
-                  <li>Data e hora de acessos.</li>
-                </ul>
-
-                <h3 className="font-semibold text-foreground mt-6">1.3 Dados de Uso da Plataforma</h3>
-                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                  <li>Funcionalidades utilizadas;</li>
-                  <li>Relatórios gerados;</li>
-                  <li>Dados inseridos (receitas, ocupação, preços, etc.);</li>
-                  <li>Interações com o Guilherme IA;</li>
-                  <li>Configurações e preferências.</li>
-                </ul>
-
-                <h3 className="font-semibold text-foreground mt-6">1.4 Dados de Pagamento</h3>
-                <p className="text-muted-foreground">
-                  Informações de pagamento são processadas diretamente pelo <strong>Stripe</strong>. 
-                  A ViajARTur <strong>não armazena</strong> dados completos de cartão de crédito. 
-                  Recebemos apenas: últimos 4 dígitos, bandeira e status da transação.
+              <div className="ml-12 space-y-6">
+                <p className="text-muted-foreground leading-relaxed">
+                  Coletamos os seguintes tipos de informações quando você utiliza a plataforma SaaS ViajARTur:
                 </p>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">1.1 Dados de Cadastro e Conta</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-2">
+                    Quando você cria uma conta na plataforma, coletamos:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Dados pessoais:</strong> nome completo, CPF (para pessoa física) ou CNPJ (para pessoa jurídica)</li>
+                    <li><strong>Dados da empresa/órgão:</strong> razão social, nome fantasia, área de atuação</li>
+                    <li><strong>Dados de contato:</strong> e-mail corporativo e pessoal, telefone de contato</li>
+                    <li><strong>Endereço comercial:</strong> logradouro, número, complemento, cidade, estado, CEP</li>
+                    <li><strong>Dados profissionais:</strong> cargo ou função, departamento</li>
+                    <li><strong>Credenciais de acesso:</strong> senha (criptografada), tokens de autenticação</li>
+                  </ul>
+                  <p className="text-muted-foreground text-sm mt-2 italic">
+                    Esses dados são necessários para criar e gerenciar sua conta, processar assinaturas e fornecer suporte.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">1.2 Dados de Uso da Plataforma SaaS</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-2">
+                    Quando você utiliza as funcionalidades da plataforma, coletamos:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Dados de receitas e ocupação:</strong> valores de receita, taxa de ocupação, número de visitantes</li>
+                    <li><strong>Dados de precificação:</strong> preços de serviços, tarifas, políticas de preços</li>
+                    <li><strong>Dados de inventário turístico:</strong> informações sobre atrativos, pontos turísticos, serviços oferecidos</li>
+                    <li><strong>Dados de CATs (Centros de Atendimento ao Turista):</strong> informações sobre atendimentos, métricas de performance</li>
+                    <li><strong>Documentos e arquivos:</strong> documentos enviados, relatórios gerados, análises exportadas</li>
+                    <li><strong>Funcionalidades utilizadas:</strong> quais módulos e ferramentas você acessa com mais frequência</li>
+                    <li><strong>Configurações e preferências:</strong> preferências de visualização, notificações, integrações configuradas</li>
+                  </ul>
+                  <p className="text-muted-foreground text-sm mt-2 italic">
+                    Esses dados são essenciais para fornecer as funcionalidades do SaaS, gerar análises e insights personalizados.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">1.3 Dados de Interação com Guilherme IA</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-2">
+                    Quando você interage com o <strong>Guilherme IA</strong>, nosso assistente de análise com Inteligência Artificial, coletamos:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Conversas completas:</strong> todas as perguntas feitas e respostas recebidas</li>
+                    <li><strong>Análises solicitadas:</strong> tipos de análises e insights solicitados</li>
+                    <li><strong>Dados utilizados nas análises:</strong> quais dados da sua conta foram utilizados para gerar insights</li>
+                    <li><strong>Preferências identificadas:</strong> padrões e preferências identificadas pela IA baseadas nas interações</li>
+                    <li><strong>Feedback sobre respostas:</strong> quando você avalia ou fornece feedback sobre as respostas da IA</li>
+                  </ul>
+                  <div className="bg-viajar-cyan/5 border-l-4 border-viajar-cyan p-4 rounded-r-lg mt-3">
+                    <p className="text-muted-foreground text-sm">
+                      <strong>Informação:</strong> O Guilherme IA utiliza Inteligência Artificial (Google Gemini) para gerar análises 
+                      e insights estratégicos. As recomendações são baseadas em padrões identificados nos dados e devem ser consideradas 
+                      como ferramentas de apoio à decisão. Para decisões estratégicas importantes, recomendamos considerar múltiplas 
+                      fontes de informação e consultar especialistas quando necessário.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">1.4 Dados de Pagamento</h3>
+                  <div className="bg-viajar-cyan/5 border-l-4 border-viajar-cyan p-4 rounded-r-lg">
+                    <p className="text-muted-foreground leading-relaxed mb-2">
+                      Informações de pagamento são processadas diretamente pelo <strong>Stripe</strong>, plataforma segura de pagamentos 
+                      certificada PCI DSS (Payment Card Industry Data Security Standard).
+                    </p>
+                    <p className="text-muted-foreground text-sm mb-2">
+                      A ViajARTur <strong>não armazena</strong> dados completos de cartão de crédito ou informações bancárias sensíveis.
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      Recebemos apenas informações necessárias para gerenciar assinaturas:
+                    </p>
+                    <ul className="space-y-1 list-disc list-inside text-muted-foreground ml-4 mt-2">
+                      <li>Últimos 4 dígitos do cartão</li>
+                      <li>Bandeira do cartão (Visa, Mastercard, etc.)</li>
+                      <li>Status da transação (aprovada, recusada, pendente)</li>
+                      <li>Data de vencimento da assinatura</li>
+                      <li>Histórico de pagamentos e faturas</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">1.5 Dados de Navegação e Uso</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-2">
+                    Quando você navega pela plataforma, coletamos automaticamente:
+                  </p>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Dados técnicos:</strong> endereço IP, tipo de navegador, dispositivo utilizado, sistema operacional</li>
+                    <li><strong>Dados de navegação:</strong> páginas visitadas, tempo de permanência em cada página, fluxo de navegação</li>
+                    <li><strong>Dados de origem:</strong> referrer (de onde você veio), campanhas de marketing que o trouxeram</li>
+                    <li><strong>Dados de sessão:</strong> data e hora de cada acesso, duração da sessão, ações realizadas</li>
+                    <li><strong>Dados de performance:</strong> tempo de carregamento de páginas, erros encontrados</li>
+                  </ul>
+                  <p className="text-muted-foreground text-sm mt-2 italic">
+                    Esses dados são coletados através de cookies e tecnologias similares para melhorar a experiência, 
+                    analisar o uso da plataforma e identificar problemas técnicos.
+                  </p>
+                </div>
               </div>
             </section>
 
@@ -253,21 +322,98 @@ const Privacidade = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">3. Finalidade do Tratamento</h2>
               </div>
-              <div className="ml-12 space-y-3">
+              <div className="ml-12 space-y-6">
                 <p className="text-muted-foreground leading-relaxed">
-                  Utilizamos seus dados pessoais para as seguintes finalidades:
+                  Utilizamos seus dados pessoais para as seguintes finalidades específicas:
                 </p>
-                <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                  <li>Fornecer e melhorar nossos serviços de gestão turística;</li>
-                  <li>Personalizar sua experiência na plataforma;</li>
-                  <li>Processar assinaturas e pagamentos;</li>
-                  <li>Gerar análises, relatórios e insights de IA;</li>
-                  <li>Realizar benchmarking com dados agregados (mediante consentimento);</li>
-                  <li>Enviar comunicações sobre atualizações e novidades (com seu consentimento);</li>
-                  <li>Fornecer suporte ao cliente;</li>
-                  <li>Cumprir obrigações legais e regulatórias;</li>
-                  <li>Prevenir fraudes e garantir a segurança.</li>
-                </ul>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.1 Fornecer o Serviço SaaS</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Processar e gerenciar sua assinatura e acesso à plataforma</li>
+                    <li>Fornecer funcionalidades de gestão turística (dashboard, análises, relatórios)</li>
+                    <li>Armazenar e processar dados inseridos na plataforma (receitas, ocupação, inventário, etc.)</li>
+                    <li>Gerar relatórios e análises personalizados baseados nos seus dados</li>
+                    <li>Gerenciar inventário turístico e dados de CATs (Centros de Atendimento ao Turista)</li>
+                    <li>Fornecer funcionalidades de Revenue Optimizer e Market Intelligence</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.2 Funcionalidades de IA (Guilherme IA)</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Processar suas perguntas e gerar análises e insights estratégicos</li>
+                    <li>Fornecer recomendações de precificação e otimização de receita</li>
+                    <li>Melhorar a qualidade das respostas através de aprendizado das conversas</li>
+                    <li>Personalizar análises baseadas nos seus dados e histórico de uso</li>
+                    <li>Gerar previsões e estimativas baseadas em dados de mercado</li>
+                  </ul>
+                  <div className="bg-viajar-cyan/5 border-l-4 border-viajar-cyan p-4 rounded-r-lg mt-3">
+                    <p className="text-muted-foreground text-sm">
+                      <strong>Informação:</strong> O Guilherme IA utiliza modelos de Inteligência Artificial para gerar análises 
+                      e insights. As recomendações são baseadas em padrões identificados nos dados históricos e de mercado, e devem 
+                      ser consideradas como ferramentas de apoio à decisão. Para decisões estratégicas importantes, recomendamos 
+                      considerar múltiplas fontes de informação e consultar especialistas quando necessário.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.3 Benchmarking e Inteligência de Mercado</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Agregar dados de múltiplos usuários para criar análises comparativas (benchmarking)</li>
+                    <li>Gerar insights de mercado baseados em dados agregados e anonimizados</li>
+                    <li>Fornecer comparações de performance com o mercado</li>
+                    <li>Desenvolver inteligência de mercado para o setor turístico</li>
+                  </ul>
+                  <p className="text-muted-foreground text-sm mt-2 italic">
+                    O benchmarking é realizado apenas com dados agregados e anonimizados, mediante seu consentimento 
+                    expresso através do Termo de Consentimento para Benchmarking.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.4 Processamento de Pagamentos</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Processar pagamentos de assinaturas através do Stripe</li>
+                    <li>Gerenciar renovações automáticas de assinaturas</li>
+                    <li>Emitir recibos e faturas</li>
+                    <li>Processar reembolsos quando aplicável</li>
+                    <li>Cumprir obrigações fiscais e contábeis relacionadas a pagamentos</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.5 Melhorias do Serviço</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Realizar análises estatísticas sobre uso da plataforma</li>
+                    <li>Identificar padrões de uso para desenvolver novas funcionalidades</li>
+                    <li>Corrigir bugs e otimizar performance</li>
+                    <li>Medir eficácia de funcionalidades e melhorias</li>
+                    <li>Desenvolver novas funcionalidades baseadas no feedback dos usuários</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.6 Comunicações e Suporte</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Enviar comunicações sobre atualizações, novidades e melhorias (com seu consentimento)</li>
+                    <li>Fornecer suporte técnico e responder a solicitações</li>
+                    <li>Notificar sobre mudanças importantes nos termos ou políticas</li>
+                    <li>Enviar alertas sobre segurança e manutenções programadas</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">3.7 Segurança e Conformidade Legal</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li>Prevenir fraudes e garantir a segurança da plataforma</li>
+                    <li>Detectar e prevenir atividades suspeitas ou não autorizadas</li>
+                    <li>Cumprir obrigações legais e regulatórias (LGPD, legislação tributária, etc.)</li>
+                    <li>Atender solicitações de autoridades competentes quando exigido por lei</li>
+                    <li>Manter registros de segurança e auditoria</li>
+                  </ul>
+                </div>
               </div>
             </section>
 
@@ -517,12 +663,43 @@ const Privacidade = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">9. Retenção de Dados</h2>
               </div>
-              <div className="ml-12 space-y-4">
+              <div className="ml-12 space-y-6">
                 <p className="text-muted-foreground">
-                  Mantemos seus dados pelo tempo necessário para cumprir as finalidades descritas:
+                  Mantemos seus dados pelo tempo necessário para cumprir as finalidades descritas nesta política. 
+                  Critérios específicos de retenção:
                 </p>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">9.1 Dados da Conta</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Dados de cadastro e perfil:</strong> mantidos enquanto sua conta estiver ativa e por 5 anos após o encerramento (obrigação legal)</li>
+                    <li><strong>Credenciais de acesso:</strong> mantidas enquanto sua conta estiver ativa</li>
+                    <li><strong>Configurações e preferências:</strong> mantidas enquanto sua conta estiver ativa</li>
+                    <li><strong>Histórico de assinaturas:</strong> mantido por 5 anos após o encerramento (obrigação fiscal)</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">9.2 Dados de Análise e Uso da Plataforma</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Dados inseridos (receitas, ocupação, inventário):</strong> mantidos enquanto sua conta estiver ativa e por 2 anos após o encerramento</li>
+                    <li><strong>Relatórios gerados:</strong> mantidos enquanto sua conta estiver ativa e por 1 ano após o encerramento</li>
+                    <li><strong>Dados de navegação e uso:</strong> mantidos por 12 meses para análises e melhorias</li>
+                    <li><strong>Logs de acesso:</strong> mantidos por 6 meses para segurança e auditoria</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-3">9.3 Conversas com IA</h3>
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground ml-4">
+                    <li><strong>Histórico de conversas com Guilherme IA:</strong> mantido por 12 meses para melhorar a qualidade das respostas</li>
+                    <li><strong>Análises e insights gerados:</strong> mantidos enquanto sua conta estiver ativa</li>
+                    <li>Você pode solicitar a exclusão do histórico de conversas a qualquer momento</li>
+                  </ul>
+                </div>
+
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
+                  <table className="w-full border-collapse text-sm border border-border">
                     <thead>
                       <tr className="bg-muted/50">
                         <th className="border border-border p-3 text-left font-semibold">Tipo de Dado</th>
@@ -552,10 +729,25 @@ const Privacidade = () => {
                       </tr>
                       <tr>
                         <td className="border border-border p-3">Dados de benchmarking (anonimizados)</td>
-                        <td className="border border-border p-3">Indeterminado</td>
+                        <td className="border border-border p-3">Indeterminado (dados agregados e anonimizados)</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-3">Histórico de conversas com IA</td>
+                        <td className="border border-border p-3">12 meses (ou até solicitação de exclusão)</td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mt-4">
+                  <p className="text-amber-900 font-medium mb-2">
+                    <strong>Exceções Legais:</strong>
+                  </p>
+                  <p className="text-amber-800 text-sm">
+                    Alguns dados podem ser retidos por períodos mais longos quando exigido por lei, como dados fiscais 
+                    (5 anos), dados de segurança (conforme legislação aplicável) ou quando necessário para exercício 
+                    de direitos em processos judiciais.
+                  </p>
                 </div>
               </div>
             </section>

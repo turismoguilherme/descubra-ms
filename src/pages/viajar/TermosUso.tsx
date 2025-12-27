@@ -222,40 +222,104 @@ const TermosUso = () => {
               </div>
               <div className="ml-12 space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
-                  A plataforma <strong className="text-foreground">ViajARTur</strong> oferece:
+                  A plataforma <strong className="text-foreground">ViajARTur</strong> é um sistema SaaS (Software as a Service) 
+                  completo de gestão turística inteligente que oferece:
                 </p>
-                <div className="grid gap-3">
-                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border-l-4 border-viajar-cyan">
-                    <strong className="text-viajar-cyan">Guilherme IA</strong>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Assistente virtual inteligente com insights estratégicos. <em>Atenção: respostas geradas 
-                      por IA podem conter imprecisões.</em>
+                <div className="space-y-4">
+                  <div className="bg-viajar-cyan/5 p-5 rounded-lg border-l-4 border-viajar-cyan">
+                    <strong className="text-viajar-cyan text-lg">Dashboard de Gestão Turística</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Painel centralizado para visualizar e gerenciar todas as informações do seu negócio turístico:
+                    </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Visão geral de receitas, ocupação e performance</li>
+                      <li>Gráficos e métricas em tempo real</li>
+                      <li>Análises comparativas e tendências</li>
+                      <li>Exportação de relatórios em múltiplos formatos</li>
+                    </ul>
+                  </div>
+                  <div className="bg-viajar-blue/5 p-5 rounded-lg border-l-4 border-viajar-blue">
+                    <strong className="text-viajar-blue text-lg">Análise de Dados e Inteligência de Mercado</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Ferramentas avançadas de análise e inteligência de mercado:
+                    </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Análises de receita, ocupação e demanda</li>
+                      <li>Benchmarking competitivo com dados agregados do mercado</li>
+                      <li>Previsões e estimativas baseadas em dados históricos</li>
+                      <li>Market Intelligence com insights do setor turístico</li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      O benchmarking utiliza dados agregados e anonimizados, mediante seu consentimento expresso.
                     </p>
                   </div>
-                  <div className="bg-viajar-blue/5 p-4 rounded-lg border-l-4 border-viajar-blue">
-                    <strong className="text-viajar-blue">Revenue Optimizer</strong>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Sugestões de precificação dinâmica baseadas em IA. <em>Decisões finais são de 
-                      responsabilidade do usuário.</em>
+                  <div className="bg-viajar-cyan/5 p-5 rounded-lg border-l-4 border-viajar-cyan">
+                    <strong className="text-viajar-cyan text-lg">Guilherme IA - Assistente de Análise</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Assistente virtual inteligente que oferece:
+                    </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Análises estratégicas e insights personalizados</li>
+                      <li>Recomendações de precificação e otimização de receita</li>
+                      <li>Respostas a perguntas sobre seus dados e performance</li>
+                      <li>Previsões e estimativas baseadas em IA</li>
+                    </ul>
+                    <div className="bg-viajar-cyan/5 border border-viajar-cyan p-3 rounded mt-3">
+                      <p className="text-xs text-muted-foreground">
+                        <strong>ℹ️ Informação:</strong> O Guilherme IA utiliza Inteligência Artificial (Google Gemini) para gerar 
+                        análises e insights estratégicos. As recomendações são baseadas em padrões identificados nos dados e devem 
+                        ser consideradas como ferramentas de apoio à decisão. Para decisões estratégicas importantes, recomendamos 
+                        considerar múltiplas fontes de informação e consultar especialistas quando necessário.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-viajar-blue/5 p-5 rounded-lg border-l-4 border-viajar-blue">
+                    <strong className="text-viajar-blue text-lg">Revenue Optimizer</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Sistema de otimização de receita com sugestões de precificação dinâmica:
+                    </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Sugestões de precificação baseadas em IA e dados de mercado</li>
+                      <li>Análise de demanda e recomendações de ajustes de preço</li>
+                      <li>Comparação com preços do mercado</li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      As sugestões são recomendações - as decisões finais de precificação são de sua responsabilidade.
                     </p>
                   </div>
-                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border-l-4 border-viajar-cyan">
-                    <strong className="text-viajar-cyan">Market Intelligence</strong>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Análises de mercado e benchmarking competitivo com dados agregados.
+                  <div className="bg-viajar-cyan/5 p-5 rounded-lg border-l-4 border-viajar-cyan">
+                    <strong className="text-viajar-cyan text-lg">Inventário Turístico</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Gestão completa de atrativos e pontos turísticos:
                     </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Cadastro e gestão de atrativos com padronização SeTur</li>
+                      <li>Validação inteligente de dados</li>
+                      <li>Organização e categorização de pontos turísticos</li>
+                    </ul>
                   </div>
-                  <div className="bg-viajar-blue/5 p-4 rounded-lg border-l-4 border-viajar-blue">
-                    <strong className="text-viajar-blue">Inventário Turístico</strong>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Gestão de atrativos com padronização SeTur e validação inteligente.
+                  <div className="bg-viajar-blue/5 p-5 rounded-lg border-l-4 border-viajar-blue">
+                    <strong className="text-viajar-blue text-lg">Gestão de CATs (Centros de Atendimento ao Turista)</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Controle e análise de Centros de Atendimento ao Turista:
                     </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Métricas de atendimento em tempo real</li>
+                      <li>Análise de performance dos CATs</li>
+                      <li>Relatórios de atendimento e demanda</li>
+                    </ul>
                   </div>
-                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border-l-4 border-viajar-cyan">
-                    <strong className="text-viajar-cyan">Gestão de CATs</strong>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Controle de Centros de Atendimento ao Turista com métricas em tempo real.
+                  <div className="bg-viajar-cyan/5 p-5 rounded-lg border-l-4 border-viajar-cyan">
+                    <strong className="text-viajar-cyan text-lg">Sistema de Assinaturas</strong>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Planos flexíveis de assinatura com diferentes níveis de funcionalidades:
                     </p>
+                    <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1 list-disc">
+                      <li>Planos mensais e anuais</li>
+                      <li>Renovação automática</li>
+                      <li>Processamento seguro de pagamentos através do Stripe</li>
+                      <li>Gerenciamento de assinatura através do dashboard</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -343,27 +407,179 @@ const TermosUso = () => {
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-foreground">4.4 Política de Reembolso</h3>
-                <div className="space-y-3 text-muted-foreground">
-                  <p><strong className="text-foreground">Planos Mensais:</strong></p>
-                  <ul className="list-disc list-inside ml-4">
-                    <li>Cancelamento nos primeiros <strong>7 dias</strong>: reembolso integral;</li>
-                    <li>Após 7 dias: sem reembolso, acesso até o fim do período.</li>
-                  </ul>
+                <h3 className="font-semibold text-foreground">4.4 Política de Reembolso e Cancelamento</h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-muted-foreground mb-2"><strong className="text-foreground">Planos Mensais:</strong></p>
+                    <ul className="list-disc list-inside ml-4 text-muted-foreground space-y-1">
+                      <li>Cancelamento nos primeiros <strong>7 dias</strong> após a assinatura: reembolso integral do valor pago</li>
+                      <li>Após 7 dias: sem reembolso, mas você mantém acesso até o fim do período já pago</li>
+                      <li>Renovação automática: você pode cancelar a qualquer momento para evitar cobrança do próximo período</li>
+                    </ul>
+                  </div>
                   
-                  <p className="mt-4"><strong className="text-foreground">Planos Anuais:</strong></p>
-                  <ul className="list-disc list-inside ml-4">
-                    <li>Cancelamento nos primeiros <strong>14 dias</strong>: reembolso integral;</li>
-                    <li>Após 14 dias: reembolso proporcional aos meses não utilizados (mínimo 3 meses restantes);</li>
-                    <li>Menos de 3 meses restantes: sem reembolso.</li>
-                  </ul>
+                  <div>
+                    <p className="text-muted-foreground mb-2"><strong className="text-foreground">Planos Anuais:</strong></p>
+                    <ul className="list-disc list-inside ml-4 text-muted-foreground space-y-1">
+                      <li>Cancelamento nos primeiros <strong>14 dias</strong> após a assinatura: reembolso integral do valor pago</li>
+                      <li>Após 14 dias: reembolso proporcional aos meses não utilizados, desde que restem pelo menos <strong>3 meses</strong> no período</li>
+                      <li>Menos de 3 meses restantes: sem reembolso, mas você mantém acesso até o fim do período</li>
+                      <li>O reembolso proporcional é calculado com base no valor mensal equivalente do plano anual</li>
+                    </ul>
+                  </div>
 
-                  <p className="mt-4"><strong className="text-foreground">Casos não elegíveis para reembolso:</strong></p>
-                  <ul className="list-disc list-inside ml-4">
-                    <li>Violação dos Termos de Uso;</li>
-                    <li>Uso indevido ou fraudulento da plataforma;</li>
-                    <li>Conta suspensa por motivos de segurança.</li>
+                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border border-viajar-cyan/20">
+                    <p className="text-muted-foreground mb-2"><strong className="text-foreground">Processamento de Reembolso:</strong></p>
+                    <ul className="list-disc list-inside ml-4 text-muted-foreground space-y-1 text-sm">
+                      <li>Reembolsos são processados em até <strong>10 dias úteis</strong> após a aprovação</li>
+                      <li>O valor será creditado na mesma forma de pagamento utilizada na assinatura</li>
+                      <li>Você receberá confirmação por e-mail quando o reembolso for processado</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <p className="text-red-900 font-medium mb-2"><strong>Casos não elegíveis para reembolso:</strong></p>
+                    <ul className="list-disc list-inside ml-4 text-red-800 space-y-1 text-sm">
+                      <li>Violação dos Termos de Uso ou Política de Privacidade</li>
+                      <li>Uso indevido ou fraudulento da plataforma</li>
+                      <li>Conta suspensa ou encerrada por motivos de segurança</li>
+                      <li>Cancelamento após o período de garantia (7 dias para mensal, 14 dias para anual)</li>
+                      <li>Planos anuais com menos de 3 meses restantes</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Seção 4.5 - SLA e Garantias */}
+            <section className="mb-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-blue to-viajar-cyan p-2 rounded-lg flex-shrink-0">
+                  <CheckCircle className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">4.5. SLA e Garantias</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Disponibilidade do Serviço</h3>
+                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border border-viajar-cyan/20">
+                    <p className="text-muted-foreground mb-2">
+                      Nos esforçamos para manter a plataforma disponível <strong>99.5% do tempo</strong> (uptime).
+                    </p>
+                    <ul className="list-disc list-inside ml-4 text-muted-foreground space-y-1 text-sm">
+                      <li>Manutenções programadas são comunicadas com <strong>48 horas de antecedência</strong> por e-mail</li>
+                      <li>Manutenções de emergência podem ocorrer sem aviso prévio quando necessário para segurança</li>
+                      <li>Interrupções não programadas são minimizadas e corrigidas o mais rápido possível</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Tempo de Resposta de Suporte</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm border border-border">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="border border-border p-3 text-left font-semibold">Tipo de Solicitação</th>
+                          <th className="border border-border p-3 text-left font-semibold">Tempo de Resposta</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-muted-foreground">
+                        <tr>
+                          <td className="border border-border p-3">Suporte Técnico Crítico (plataforma inacessível)</td>
+                          <td className="border border-border p-3">Até 4 horas úteis</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-border p-3">Suporte Técnico Geral</td>
+                          <td className="border border-border p-3">Até 24 horas úteis</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-border p-3">Dúvidas e Consultas</td>
+                          <td className="border border-border p-3">Até 48 horas úteis</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-border p-3">Solicitações de Funcionalidades</td>
+                          <td className="border border-border p-3">Até 5 dias úteis (confirmação de recebimento)</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                  <h3 className="font-semibold text-amber-900 mb-2">Limitações do SLA</h3>
+                  <ul className="list-disc list-inside ml-4 text-amber-800 space-y-1 text-sm">
+                    <li>O SLA não se aplica a interrupções causadas por fatores fora do nosso controle (força maior, falhas de internet do usuário, etc.)</li>
+                    <li>Manutenções programadas não contam como indisponibilidade</li>
+                    <li>Problemas causados por uso indevido ou violação dos Termos de Uso não são cobertos pelo SLA</li>
+                    <li>A plataforma está em constante evolução e podem ocorrer bugs ou erros técnicos</li>
                   </ul>
+                </div>
+              </div>
+            </section>
+
+            {/* Seção 4.6 - Limites de Uso */}
+            <section className="mb-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-viajar-cyan to-viajar-blue p-2 rounded-lg flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">4.6. Limites de Uso</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Limites por Plano</h3>
+                  <p className="text-muted-foreground mb-3">
+                    Cada plano de assinatura possui limites específicos de uso, conforme descrito na 
+                    <Link to="/precos" className="text-viajar-cyan hover:underline"> página de preços</Link>. 
+                    Limites podem incluir:
+                  </p>
+                  <ul className="list-disc list-inside ml-4 text-muted-foreground space-y-2">
+                    <li><strong>Número de usuários:</strong> quantidade máxima de usuários que podem acessar a conta</li>
+                    <li><strong>Volume de dados:</strong> quantidade de dados que podem ser inseridos e armazenados</li>
+                    <li><strong>Funcionalidades disponíveis:</strong> quais módulos e ferramentas estão incluídos no plano</li>
+                    <li><strong>Limites de API:</strong> número de requisições ou interações com funcionalidades de IA</li>
+                    <li><strong>Armazenamento:</strong> espaço disponível para documentos e arquivos</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Uso Razoável</h3>
+                  <div className="bg-viajar-cyan/5 p-4 rounded-lg border border-viajar-cyan/20">
+                    <p className="text-muted-foreground mb-2">
+                      Mesmo dentro dos limites do plano, o uso deve ser razoável e conforme a finalidade da plataforma:
+                    </p>
+                    <ul className="list-disc list-inside ml-4 text-muted-foreground space-y-1 text-sm">
+                      <li>Não utilize a plataforma para atividades que sobrecarreguem os servidores</li>
+                      <li>Não faça requisições automatizadas excessivas ou abusivas</li>
+                      <li>Não utilize a plataforma para atividades ilegais ou não autorizadas</li>
+                      <li>Respeite os limites técnicos e não tente contorná-los</li>
+                    </ul>
+                    <p className="text-muted-foreground text-sm mt-3">
+                      A ViajARTur se reserva o direito de limitar ou suspender contas que excedam o uso razoável, 
+                      mesmo dentro dos limites do plano.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Responsabilidade sobre Dados Inseridos</h3>
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <p className="text-blue-900 mb-2">
+                      <strong>Você é responsável por:</strong>
+                    </p>
+                    <ul className="list-disc list-inside ml-4 text-blue-800 space-y-1 text-sm">
+                      <li>A veracidade e precisão dos dados inseridos na plataforma</li>
+                      <li>Garantir que possui direito de inserir e processar os dados fornecidos</li>
+                      <li>Manter backups dos seus dados importantes</li>
+                      <li>Verificar que os dados inseridos não violam direitos de terceiros</li>
+                      <li>Assegurar que os dados estão em conformidade com leis aplicáveis</li>
+                    </ul>
+                    <p className="text-blue-800 text-sm mt-3">
+                      A ViajARTur não se responsabiliza por erros, inconsistências ou problemas decorrentes de 
+                      dados incorretos ou incompletos inseridos pelo usuário.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -406,28 +622,32 @@ const TermosUso = () => {
               </div>
               <div className="ml-12 space-y-4">
                 <h3 className="font-semibold text-foreground">6.1 Uso da Inteligência Artificial</h3>
-                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                <div className="bg-viajar-cyan/5 border-l-4 border-viajar-cyan p-4 rounded-r-lg">
                   <div className="flex items-start gap-3">
-                    <Brain className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <Brain className="w-6 h-6 text-viajar-cyan flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-amber-900 font-medium mb-2">Aviso sobre IA:</p>
-                      <ul className="text-amber-800 text-sm space-y-1">
-                        <li>• O <strong>Guilherme IA</strong> e outros sistemas de IA podem gerar respostas imprecisas;</li>
-                        <li>• Previsões de receita, ocupação e demanda são <strong>estimativas</strong>, não garantias;</li>
-                        <li>• Recomendações de preços são <strong>sugestões</strong> - a decisão final é sua;</li>
-                        <li>• <strong>Consulte especialistas</strong> antes de tomar decisões estratégicas importantes.</li>
+                      <p className="text-foreground font-medium mb-2">Sobre o Guilherme IA:</p>
+                      <ul className="text-muted-foreground text-sm space-y-1">
+                        <li>• O <strong>Guilherme IA</strong> utiliza modelos de IA para gerar análises e insights estratégicos;</li>
+                        <li>• Previsões de receita, ocupação e demanda são baseadas em <strong>padrões identificados nos dados</strong> e devem ser consideradas como estimativas;</li>
+                        <li>• Recomendações de preços são <strong>sugestões baseadas em análise de mercado</strong> - a decisão final é sua;</li>
+                        <li>• As análises são <strong>ferramentas de apoio à decisão</strong> - recomendamos considerar múltiplas fontes de informação para decisões estratégicas importantes.</li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-foreground mt-6">6.2 A ViajARTur NÃO se responsabiliza por:</h3>
+                <h3 className="font-semibold text-foreground mt-6">6.2 Limitações de Responsabilidade</h3>
+                <p className="text-muted-foreground mb-3">
+                  A ViajARTur fornece ferramentas de análise e apoio à decisão. As análises e recomendações devem ser 
+                  consideradas como parte de um processo de tomada de decisão mais amplo. A ViajARTur não se responsabiliza por:
+                </p>
                 <ul className="space-y-2 list-disc list-inside text-muted-foreground">
-                  <li>Decisões comerciais baseadas exclusivamente nas análises da plataforma;</li>
-                  <li>Perdas financeiras decorrentes de recomendações de precificação;</li>
-                  <li>Indisponibilidade temporária dos serviços;</li>
-                  <li>Erros em dados fornecidos por integrações de terceiros;</li>
-                  <li>Resultados de benchmarking que não reflitam a realidade do mercado.</li>
+                  <li>Decisões comerciais tomadas exclusivamente com base nas análises da plataforma, sem considerar outras fontes de informação;</li>
+                  <li>Resultados financeiros decorrentes de decisões de precificação ou estratégicas;</li>
+                  <li>Indisponibilidade temporária dos serviços devido a manutenções ou fatores fora do nosso controle;</li>
+                  <li>Erros ou inconsistências em dados fornecidos por integrações de terceiros;</li>
+                  <li>Variações entre resultados de benchmarking e a realidade específica do seu negócio ou mercado local.</li>
                 </ul>
 
                 <h3 className="font-semibold text-foreground mt-6">6.3 Disponibilidade do Serviço</h3>
