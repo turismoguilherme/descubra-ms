@@ -248,3 +248,4 @@ Com essas informações, posso ajudar a resolver o problema de forma mais direci
 - Documentação existente: `SOLUCAO_VERCEL_LOCALHOST.md`
 - Bucket SQL: `supabase/create_tourism_images_bucket.sql`
 
+
