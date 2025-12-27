@@ -78,11 +78,49 @@ export default function PantanalAvatarsManager() {
     console.log('🔄 [PantanalAvatarsManager] Carregando avatares...');
     setLoading(true);
     try {
+      // Tentar renovar token se necessário antes de fazer a requisição
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.expires_at) {
+        const expiresAt = session.expires_at * 1000;
+        const timeUntilExpiry = expiresAt - Date.now();
+        // Se expira em menos de 5 minutos, renovar
+        if (timeUntilExpiry < 5 * 60 * 1000 && session.refresh_token) {
+          console.log('🔄 [PantanalAvatarsManager] Token próximo de expirar, renovando...');
+          await supabase.auth.refreshSession();
+        }
+      }
+
       const { data, error } = await supabase
         .from('pantanal_avatars')
         .select('*')
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
+
+      // Se for erro 401, tentar renovar e retentar
+      if (error && (error.code === 'PGRST301' || error.message?.includes('JWT expired') || error.status === 401)) {
+        console.log('🔄 [PantanalAvatarsManager] Token expirado, tentando renovar...');
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (!refreshError && refreshedSession) {
+          console.log('✅ [PantanalAvatarsManager] Token renovado, retentando...');
+          // Retentar a operação
+          const { data: retryData, error: retryError } = await supabase
+            .from('pantanal_avatars')
+            .select('*')
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+          
+          if (retryError) {
+            console.error('❌ [PantanalAvatarsManager] Erro após renovar token:', retryError);
+            throw retryError;
+          }
+          
+          console.log('✅ [PantanalAvatarsManager] Avatares carregados após renovação:', retryData?.length || 0, 'itens');
+          setAvatars(retryData || []);
+          setLoading(false);
+          return;
+        }
+      }
 
       if (error) {
         console.error('❌ [PantanalAvatarsManager] Erro ao carregar avatares:', error);
