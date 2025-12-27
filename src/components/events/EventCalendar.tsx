@@ -11,9 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { 
-  Calendar, 
-  MapPin, 
+import {
+  Calendar,
+  MapPin,
   Play,
   Globe,
   Phone,
@@ -22,7 +22,8 @@ import {
   Star,
   Megaphone,
   ExternalLink,
-  Clock
+  Clock,
+  User
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -48,6 +49,14 @@ interface EventItem {
   organizador_telefone?: string;
   organizador_email?: string;
   organizador_nome?: string;
+  tourist_region_id?: string;
+  tourist_region?: {
+    id: string;
+    name: string;
+    slug: string;
+    color: string;
+    color_hover: string;
+  };
 }
 
 const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
@@ -70,9 +79,9 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       // Usar fetch direto (workaround para problema com cliente Supabase)
       const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
       const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
-      
+
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*`,
+        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*,tourist_region:tourist_regions(id,name,slug,color,color_hover)`,
         {
           headers: {
             'apikey': SUPABASE_KEY,
@@ -80,63 +89,84 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           }
         }
       );
-      
+
       if (!response.ok) {
         console.error("Erro ao carregar eventos");
+        setLoading(false);
         return;
       }
-      
+
       const data = await response.json();
 
-      const events: EventItem[] = (data || []).map((event: any) => ({
-        id: event.id,
-        name: event.name,
-        description: event.description || '',
-        start_date: event.start_date,
-        end_date: event.end_date,
-        start_time: event.start_time,
-        end_time: event.end_time,
-        location: event.location || '',
-        image_url: event.image_url,
-        is_sponsored: event.is_sponsored && event.sponsor_payment_status === 'paid',
-        site_oficial: event.site_oficial,
-        video_url: event.video_url,
-        organizador_telefone: event.organizador_telefone,
-        organizador_email: event.organizador_email,
-        organizador_nome: event.organizador_nome,
-      }));
+      const events: EventItem[] = (data || []).map((event: any) => {
+        try {
+          return {
+            id: event.id,
+            name: event.name || '',
+            description: event.description || '',
+            start_date: event.start_date,
+            end_date: event.end_date,
+            start_time: event.start_time,
+            end_time: event.end_time,
+            location: event.location || '',
+            image_url: event.image_url,
+            is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status), // Fix: tratar caso onde sponsor_payment_status não existe
+            site_oficial: event.site_oficial,
+            video_url: event.video_url,
+            organizador_telefone: event.organizador_telefone,
+            organizador_email: event.organizador_email,
+            organizador_nome: event.organizador_nome,
+            tourist_region_id: event.tourist_region_id,
+            tourist_region: event.tourist_region || null,
+          };
+        } catch (error) {
+          console.error('Erro ao mapear evento:', error, event);
+          return null;
+        }
+      }).filter((event): event is EventItem => event !== null);
 
       // Ordenar: patrocinados primeiro, depois por data
       events.sort((a, b) => {
         if (a.is_sponsored && !b.is_sponsored) return -1;
         if (!a.is_sponsored && b.is_sponsored) return 1;
-        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+        try {
+          return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+        } catch {
+          return 0;
+        }
       });
 
       setAllEvents(events);
     } catch (error) {
       console.error("Erro ao carregar eventos:", error);
+      setAllEvents([]); // Garantir que não fique undefined
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredEvents = allEvents.filter(event => {
-    const matchesSearch = !searchTerm || 
-      event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredEvents = (allEvents || []).filter(event => {
+    if (!event || !event.name) return false; // Validar evento antes de processar
     
-    // Filtro por região turística
-    let matchesRegion = selectedRegion === 'all';
-    if (!matchesRegion && selectedRegion in regionCities) {
-      const cities = regionCities[selectedRegion];
-      matchesRegion = cities.some(city => 
-        event.location.toLowerCase().includes(city.toLowerCase())
-      );
+    try {
+      const matchesSearch = !searchTerm || 
+        (event.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.location || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filtro por região turística
+      let matchesRegion = selectedRegion === 'all';
+      if (!matchesRegion && selectedRegion in regionCities) {
+        const cities = regionCities[selectedRegion];
+        matchesRegion = cities.some(city => 
+          (event.location || '').toLowerCase().includes(city.toLowerCase())
+        );
+      }
+      
+      return matchesSearch && matchesRegion;
+    } catch (error) {
+      return false; // Excluir eventos com erro
     }
-    
-    return matchesSearch && matchesRegion;
   });
 
   const sponsoredEvents = filteredEvents.filter(e => e.is_sponsored);
@@ -207,63 +237,147 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     );
   }
 
-  const EventCard = ({ event, showBadge = false }: { event: EventItem; showBadge?: boolean }) => (
-    <Card 
-      className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group ${
-        showBadge ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
-      }`}
-      onClick={() => setSelectedEvent(event)}
-    >
-      {/* Badge Destaque */}
-      {showBadge && (
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-2 flex items-center gap-2">
-          <Star className="w-4 h-4 text-white" />
-          <span className="text-white text-sm font-semibold">Em Destaque</span>
-        </div>
-      )}
-      
-      {/* Imagem */}
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal">
-        {event.image_url ? (
-          <img 
-            src={event.image_url} 
-            alt={event.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Calendar className="w-16 h-16 text-white/50" />
-          </div>
-        )}
-        {/* Indicador de vídeo */}
-        {event.video_url && (
-          <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-            <Play className="w-3 h-3" />
-            Vídeo
-          </div>
-        )}
-        </div>
-        
-      <CardContent className="p-5">
-        {/* Título */}
-        <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-ms-primary-blue transition-colors line-clamp-2">
-          {event.name}
-        </h3>
-        
-        {/* Data */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-          <Calendar className="w-4 h-4 text-ms-primary-blue flex-shrink-0" />
-          <span>{formatShortDate(event.start_date)}</span>
-      </div>
+  const EventCard = ({ event, showBadge = false }: { event: EventItem; showBadge?: boolean }) => {
+    
+    // Função para determinar a região turística (do banco ou baseada na localização)
+    const getTouristRegion = () => {
+      try {
+        // Se o evento já tem uma região associada no banco, usar ela
+        if (event?.tourist_region) {
+          return event.tourist_region.slug;
+        }
 
-        {/* Local */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin className="w-4 h-4 text-ms-primary-blue flex-shrink-0" />
-          <span className="line-clamp-1">{event.location}</span>
+        // Fallback: detectar baseada na localização
+        const locationLower = (event?.location || '').toLowerCase();
+      const regionMappings = {
+        'pantanal': ['corumbá', 'ladário', 'aquidauana', 'miranda', 'anastácio'],
+        'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+        'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+        'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+        'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+        'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+        'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+        'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+        'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina']
+      };
+
+        for (const [region, cities] of Object.entries(regionMappings)) {
+          if (cities.some(city => locationLower.includes(city))) {
+            return region;
+          }
+        }
+
+        return 'descubra-ms'; // Fallback
+      } catch (error) {
+        return 'descubra-ms'; // Fallback seguro
+      }
+    };
+
+    const touristRegion = getTouristRegion();
+
+    // Cores por região turística
+    const regionColors = {
+      'pantanal': 'from-blue-600 to-cyan-600',
+      'bonito-serra-bodoquena': 'from-green-600 to-emerald-600',
+      'vale-aguas': 'from-purple-600 to-indigo-600',
+      'vale-apore': 'from-orange-600 to-red-600',
+      'rota-norte': 'from-yellow-600 to-amber-600',
+      'caminho-ipes': 'from-pink-600 to-rose-600',
+      'caminhos-fronteira': 'from-teal-600 to-cyan-600',
+      'costa-leste': 'from-indigo-600 to-purple-600',
+      'grande-dourados': 'from-lime-600 to-green-600',
+      'descubra-ms': 'from-ms-primary-blue to-ms-discovery-teal'
+    };
+
+    const regionEmojis = {
+      'pantanal': '🐊',
+      'bonito-serra-bodoquena': '🏔️',
+      'vale-aguas': '💧',
+      'vale-apore': '🏞️',
+      'rota-norte': '🧭',
+      'caminho-ipes': '🌸',
+      'caminhos-fronteira': '🌎',
+      'costa-leste': '🌊',
+      'grande-dourados': '🌾',
+      'descubra-ms': '🇧🇷'
+    };
+
+    const regionNames = {
+      'pantanal': 'Pantanal',
+      'bonito-serra-bodoquena': 'Bonito-Serra da Bodoquena',
+      'vale-aguas': 'Vale das Águas',
+      'vale-apore': 'Vale do Aporé',
+      'rota-norte': 'Rota Norte',
+      'caminho-ipes': 'Caminho dos Ipês',
+      'caminhos-fronteira': 'Caminhos da Fronteira',
+      'costa-leste': 'Costa Leste',
+      'grande-dourados': 'Grande Dourados',
+      'descubra-ms': 'Descubra MS'
+    };
+
+    return (
+      <Card
+        className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group ${
+          showBadge ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
+        }`}
+        onClick={() => setSelectedEvent(event)}
+      >
+        {/* Badge Destaque */}
+        {showBadge && (
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-2 flex items-center gap-2">
+            <Star className="w-4 h-4 text-white" />
+            <span className="text-white text-sm font-semibold">Em Destaque</span>
+          </div>
+        )}
+
+        {/* Imagem */}
+        <div className={`relative h-48 overflow-hidden bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']}`}>
+          {event.image_url ? (
+            <img
+              src={event.image_url}
+              alt={event.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Calendar className="w-16 h-16 text-white/50" />
+            </div>
+          )}
+          {/* Indicador de vídeo */}
+          {event.video_url && (
+            <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+              <Play className="w-3 h-3" />
+              Vídeo
+            </div>
+          )}
+          {/* Badge da Região Turística */}
+          <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+            <span>{regionEmojis[touristRegion as keyof typeof regionEmojis] || regionEmojis['descubra-ms']}</span>
+            <span>{regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}</span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
-  );
+
+        <CardContent className="p-5">
+          {/* Título */}
+          <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-ms-primary-blue transition-colors line-clamp-2">
+            {event.name}
+          </h3>
+
+          {/* Data */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <Calendar className="w-4 h-4 text-ms-primary-blue flex-shrink-0" />
+            <span>{formatShortDate(event.start_date)}</span>
+          </div>
+
+          {/* Local */}
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <MapPin className="w-4 h-4 text-ms-primary-blue flex-shrink-0" />
+            <span className="line-clamp-1">{event.location}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -313,17 +427,17 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             <Megaphone className="w-6 h-6 text-white" />
                         </div>
           <div className="text-white">
-            <h3 className="font-bold text-lg">Tem um evento para divulgar?</h3>
+                            <h3 className="font-bold text-lg">Tem um evento para divulgar?</h3>
             <p className="text-white/80 text-sm">Cadastre gratuitamente ou destaque seu evento</p>
-                              </div>
-                            </div>
+          </div>
+        </div>
         <Link to="/descubramatogrossodosul/cadastrar-evento">
           <Button className="bg-white text-ms-primary-blue hover:bg-white/90 font-semibold">
             <Calendar className="w-4 h-4 mr-2" />
             Cadastrar Evento
           </Button>
         </Link>
-                          </div>
+      </div>
                           
       {/* Eventos em Destaque */}
       {sponsoredEvents.length > 0 && (
@@ -362,110 +476,234 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
       {/* Modal de Detalhes - MODERNO */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-2xl [&>button]:hidden">
-      {selectedEvent && (
-            <div className="relative max-h-[90vh] overflow-y-auto">
-              {/* Header com imagem/vídeo */}
-              <div className="relative h-64 bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal flex-shrink-0">
-                {selectedEvent.video_url && getYouTubeEmbedUrl(selectedEvent.video_url) ? (
-                  <iframe
-                    src={getYouTubeEmbedUrl(selectedEvent.video_url)!}
-                    className="w-full h-full"
-                    allowFullScreen
-                    title="Vídeo do evento"
-                  />
-                ) : selectedEvent.image_url ? (
-                  <img 
-                    src={selectedEvent.image_url} 
-                    alt={selectedEvent.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Calendar className="w-24 h-24 text-white/30" />
-                </div>
-              )}
+        <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-2xl [&>button]:hidden">
+          {selectedEvent && (() => {
+            // Função para determinar a região turística (igual ao card)
+            const getTouristRegion = (location: string) => {
+              const locationLower = location.toLowerCase();
+              const regionMappings = {
+                'pantanal': ['corumbá', 'ladário', 'aquidauana', 'miranda', 'anastácio'],
+                'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+                'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+                'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+                'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+                'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+                'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+                'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+                'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina']
+              };
 
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                
-                {/* Badge destaque no modal */}
-                {selectedEvent.is_sponsored && (
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-3 py-1">
-                      <Star className="w-3 h-3 mr-1" />
-                      Em Destaque
+              for (const [region, cities] of Object.entries(regionMappings)) {
+                if (cities.some(city => locationLower.includes(city))) {
+                  return region;
+                }
+              }
+              return 'descubra-ms';
+            };
+
+            const touristRegion = getTouristRegion(selectedEvent.location);
+            const regionColors = {
+              'pantanal': 'from-blue-600 to-cyan-600',
+              'bonito-serra-bodoquena': 'from-green-600 to-emerald-600',
+              'vale-aguas': 'from-purple-600 to-indigo-600',
+              'vale-apore': 'from-orange-600 to-red-600',
+              'rota-norte': 'from-yellow-600 to-amber-600',
+              'caminho-ipes': 'from-pink-600 to-rose-600',
+              'caminhos-fronteira': 'from-teal-600 to-cyan-600',
+              'costa-leste': 'from-indigo-600 to-purple-600',
+              'grande-dourados': 'from-lime-600 to-green-600',
+              'descubra-ms': 'from-ms-primary-blue to-ms-discovery-teal'
+            };
+
+            const regionEmojis = {
+              'pantanal': '🐊',
+              'bonito-serra-bodoquena': '🏔️',
+              'vale-aguas': '💧',
+              'vale-apore': '🏞️',
+              'rota-norte': '🧭',
+              'caminho-ipes': '🌸',
+              'caminhos-fronteira': '🌎',
+              'costa-leste': '🌊',
+              'grande-dourados': '🌾',
+              'descubra-ms': '🇧🇷'
+            };
+
+            const regionNames = {
+              'pantanal': 'Pantanal',
+              'bonito-serra-bodoquena': 'Bonito-Serra da Bodoquena',
+              'vale-aguas': 'Vale das Águas',
+              'vale-apore': 'Vale do Aporé',
+              'rota-norte': 'Rota Norte',
+              'caminho-ipes': 'Caminho dos Ipês',
+              'caminhos-fronteira': 'Caminhos da Fronteira',
+              'costa-leste': 'Costa Leste',
+              'grande-dourados': 'Grande Dourados',
+              'descubra-ms': 'Descubra MS'
+            };
+
+            const regionDescriptions = {
+              'pantanal': 'A maior planície alagável do mundo, santuário de vida selvagem com onças-pintadas, ariranhas e mais de 650 espécies de aves.',
+              'bonito-serra-bodoquena': 'Paraíso das águas cristalinas, cachoeiras e grutas. Experiência única de mergulho em rios e contato com a natureza.',
+              'vale-aguas': 'Região de águas termais e cachoeiras, com cultura rica e tradições preservadas.',
+              'vale-apore': 'Terra de belezas naturais exuberantes, com serras, vales e uma cultura profundamente enraizada.',
+              'rota-norte': 'Rota de descobertas que conecta diferentes ecossistemas, da fauna à cultura local.',
+              'caminho-ipes': 'Rota histórica que floresce na primavera, conectando cidades com riquezas culturais e naturais.',
+              'caminhos-fronteira': 'Região de fronteira viva, com história rica e cultura diversificada.',
+              'costa-leste': 'Costa verde com praias paradisíacas, cultura caiçara e belezas naturais deslumbrantes.',
+              'grande-dourados': 'Região produtiva com história rica, cultura diversificada e belezas naturais.',
+              'descubra-ms': 'Descubra toda a diversidade turística de Mato Grosso do Sul.'
+            };
+
+            return (
+              <div className="relative max-h-[90vh] overflow-y-auto">
+                {/* Header com imagem/vídeo */}
+                <div className={`relative h-72 bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']} flex-shrink-0`}>
+                  {selectedEvent.video_url && getYouTubeEmbedUrl(selectedEvent.video_url) ? (
+                    <iframe
+                      src={getYouTubeEmbedUrl(selectedEvent.video_url)!}
+                      className="w-full h-full"
+                      allowFullScreen
+                      title="Vídeo do evento"
+                    />
+                  ) : selectedEvent.image_url ? (
+                    <img
+                      src={selectedEvent.image_url}
+                      alt={selectedEvent.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Calendar className="w-24 h-24 text-white/30" />
+                    </div>
+                  )}
+
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                  {/* Badges no topo */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {/* Badge destaque */}
+                    {selectedEvent.is_sponsored && (
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-3 py-1">
+                        <Star className="w-3 h-3 mr-1" />
+                        Em Destaque
+                      </Badge>
+                    )}
+
+                    {/* Badge da região turística */}
+                    <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-3 py-1">
+                      <span className="mr-2">{regionEmojis[touristRegion as keyof typeof regionEmojis] || regionEmojis['descubra-ms']}</span>
+                      <span className="font-medium">{regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}</span>
                     </Badge>
                   </div>
-                )}
-                </div>
-                
-              {/* Conteúdo */}
-              <div className="p-6 space-y-5">
-                {/* Título */}
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {selectedEvent.name}
-                </h2>
-                
-                {/* Data, Hora e Local */}
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 bg-blue-50 text-ms-primary-blue px-4 py-2 rounded-full">
-                    <Calendar className="w-4 h-4" />
-                    <span className="font-medium text-sm">{formatDate(selectedEvent.start_date)}</span>
+
+                  {/* Título e região no overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                      {selectedEvent.name}
+                    </h2>
+                    <p className="text-white/90 text-sm drop-shadow">
+                      {regionDescriptions[touristRegion as keyof typeof regionDescriptions] || regionDescriptions['descubra-ms']}
+                    </p>
                   </div>
-                  {selectedEvent.start_time && (
-                    <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full">
-                      <Clock className="w-4 h-4" />
-                      <span className="font-medium text-sm">
-                        {selectedEvent.start_time}
-                        {selectedEvent.end_time && ` - ${selectedEvent.end_time}`}
-                      </span>
                 </div>
+
+                {/* Conteúdo */}
+                <div className="p-6 space-y-6">
+                  {/* Informações principais */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Data e horário */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-ms-primary-blue" />
+                        Data e Horário
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 bg-blue-50 text-ms-primary-blue px-4 py-2 rounded-lg">
+                          <Calendar className="w-4 h-4" />
+                          <span className="font-medium">{formatDate(selectedEvent.start_date)}</span>
+                        </div>
+                        {selectedEvent.start_time && (
+                          <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg">
+                            <Clock className="w-4 h-4" />
+                            <span className="font-medium">
+                              {selectedEvent.start_time}
+                              {selectedEvent.end_time && ` - ${selectedEvent.end_time}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Localização */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-ms-primary-blue" />
+                        Localização
+                      </h3>
+                      <div className="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p className="text-gray-700 font-medium">{selectedEvent.location}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descrição */}
+                  {selectedEvent.description && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900">Sobre o Evento</h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
+                      </div>
+                    </div>
                   )}
-              </div>
 
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="w-5 h-5 text-ms-primary-blue" />
-                  <span className="font-medium">{selectedEvent.location}</span>
-              </div>
+                  {/* Informações do organizador */}
+                  {selectedEvent.organizador_nome && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <User className="w-5 h-5 text-ms-primary-blue" />
+                        Organização
+                      </h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-gray-700">
+                          <span className="font-medium">Organizado por:</span> {selectedEvent.organizador_nome}
+                        </p>
+                        {selectedEvent.organizador_email && (
+                          <p className="text-gray-600 text-sm mt-2">
+                            <span className="font-medium">Email:</span> {selectedEvent.organizador_email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                {/* Descrição */}
-                {selectedEvent.description && (
-                  <div className="border-t pt-5">
-                    <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
+                  {/* Botões de Ação */}
+                  <div className="flex flex-wrap gap-3 pt-4 border-t">
+                    {selectedEvent.site_oficial && (
+                      <Button asChild size="lg" className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full">
+                        <a href={selectedEvent.site_oficial} target="_blank" rel="noopener noreferrer">
+                          <Globe className="w-4 h-4 mr-2" />
+                          Visitar Site Oficial
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      </Button>
+                    )}
+                    {selectedEvent.organizador_telefone && (
+                      <Button variant="outline" size="lg" asChild className="rounded-full border-2">
+                        <a href={`https://wa.me/55${selectedEvent.organizador_telefone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                          <Phone className="w-4 h-4 mr-2" />
+                          WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              )}
-
-                {/* Contato */}
-                {selectedEvent.organizador_nome && (
-                  <div className="text-sm text-gray-500">
-                    Organizado por: <span className="font-medium text-gray-700">{selectedEvent.organizador_nome}</span>
-                </div>
-              )}
-
-                {/* Botões de Ação */}
-                <div className="flex flex-wrap gap-3 pt-2">
-                {selectedEvent.site_oficial && (
-                    <Button asChild size="lg" className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full">
-                      <a href={selectedEvent.site_oficial} target="_blank" rel="noopener noreferrer">
-                        <Globe className="w-4 h-4 mr-2" />
-                        Visitar Site Oficial
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </a>
-                  </Button>
-                )}
-                  {selectedEvent.organizador_telefone && (
-                    <Button variant="outline" size="lg" asChild className="rounded-full border-2">
-                      <a href={`https://wa.me/55${selectedEvent.organizador_telefone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
-                        <Phone className="w-4 h-4 mr-2" />
-                        WhatsApp
-                      </a>
-                  </Button>
-                )}
               </div>
-              </div>
-        </div>
-      )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>

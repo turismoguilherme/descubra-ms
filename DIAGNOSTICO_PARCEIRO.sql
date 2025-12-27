@@ -60,3 +60,9 @@ WHERE LOWER(TRIM(contact_email)) = LOWER(TRIM('parceiro.teste@descubrams.com.br'
 
 
 
+
+
+
+
+
+

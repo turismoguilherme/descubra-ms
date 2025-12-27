@@ -2,22 +2,29 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import MSInteractiveMap from '@/components/map/MSInteractiveMap';
-import { touristRegions2025, TouristRegion2025 } from '@/data/touristRegions2025';
+import { TouristRegion2025 } from '@/data/touristRegions2025';
+import { useTouristRegions } from '@/hooks/useTouristRegions';
 import { MapPin, ArrowRight, ArrowLeft, X, Star, Camera, Fish, TreePine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const MapaTuristico: React.FC = () => {
   const navigate = useNavigate();
+  const { regions: touristRegions, loading: regionsLoading } = useTouristRegions();
   const [selectedRegion, setSelectedRegion] = useState<TouristRegion2025 | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<TouristRegion2025 | null>(null);
 
+  console.log(`🔄 [MapaTuristico] Render - selectedRegion: ${selectedRegion?.slug || 'null'}`);
+
   const handleRegionClick = (region: TouristRegion2025) => {
-    // Garantir que apenas uma região seja selecionada por vez
-    // Se clicar na mesma região, deselecionar
-    if (selectedRegion?.id === region.id) {
+    console.log(`🗺️ [Mapa] Clique em: ${region.name} (${region.slug})`);
+
+    // Verificar se já está selecionada
+    if (selectedRegion?.slug === region.slug) {
+      console.log(`🗺️ [Mapa] Deselecionando: ${region.name}`);
       setSelectedRegion(null);
     } else {
+      console.log(`🗺️ [Mapa] Selecionando: ${region.name}`);
       setSelectedRegion(region);
     }
   };
@@ -168,14 +175,14 @@ const MapaTuristico: React.FC = () => {
                       </h3>
                     </div>
                     <div className="divide-y divide-gray-100">
-                      {touristRegions2025.map((region) => (
+                      {touristRegions.map((region) => (
                         <button
                           key={region.id}
                           onClick={() => handleRegionClick(region)}
                           onMouseEnter={() => setHoveredRegion(region)}
                           onMouseLeave={() => setHoveredRegion(null)}
                           className={`w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-all duration-200 ${
-                            hoveredRegion?.id === region.id ? 'bg-gray-50' : ''
+                            hoveredRegion?.slug === region.slug ? 'bg-gray-50' : ''
                           }`}
                         >
                           <div
@@ -205,19 +212,25 @@ const MapaTuristico: React.FC = () => {
             <div className="lg:col-span-3 order-1 lg:order-2">
               <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
                 <div className="aspect-square lg:aspect-auto lg:h-[850px]">
-                  <MSInteractiveMap
-                    onRegionClick={handleRegionClick}
-                    onRegionHover={handleRegionHover}
-                    selectedRegion={selectedRegion?.id}
-                    className="w-full h-full"
-                  />
+                  {regionsLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-ms-primary-blue border-t-transparent"></div>
+                    </div>
+                  ) : (
+                    <MSInteractiveMap
+                      onRegionClick={handleRegionClick}
+                      onRegionHover={handleRegionHover}
+                      selectedRegion={selectedRegion?.slug || null}
+                      className="w-full h-full"
+                    />
+                  )}
                 </div>
 
                 {/* Legenda de cores */}
                 <div className="mt-6 pt-6 border-t border-gray-100">
                   <h4 className="text-sm font-semibold text-gray-600 mb-3">Legenda</h4>
                   <div className="grid grid-cols-3 gap-2">
-                    {touristRegions2025.slice(0, 9).map((region) => (
+                    {touristRegions.slice(0, 9).map((region) => (
                       <div 
                         key={region.id}
                         className="flex items-center gap-2 text-xs"
@@ -245,7 +258,7 @@ const MapaTuristico: React.FC = () => {
               Não sabe por onde começar?
             </h2>
             <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              Converse com o Guatá, nossa IA turística, e receba recomendações personalizadas!
+              Converse com o Guatá, Chatbot Guia Inteligente de Turismo do MS, e receba recomendações personalizadas!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/descubramatogrossodosul/guata">
@@ -254,7 +267,7 @@ const MapaTuristico: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/descubramatogrossodosul/destinos">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="border-white bg-white/10 text-white hover:bg-white/20 hover:text-white">
                   Ver Todos os Destinos
                 </Button>
               </Link>

@@ -138,11 +138,13 @@ export default function PantanalAvatarsManager() {
 
   const openEditDialog = (avatar: PantanalAvatar) => {
     setEditingAvatar(avatar);
+    // Preservar a URL original do avatar mesmo quando um novo arquivo for selecionado
+    const originalImageUrl = avatar.image_url || '';
     setFormData({
       name: avatar.name,
       scientific_name: avatar.scientific_name || '',
       description: avatar.description || '',
-      image_url: avatar.image_url || '',
+      image_url: originalImageUrl, // Sempre preservar URL original
       habitat: avatar.habitat || '',
       diet: avatar.diet || '',
       curiosities: (avatar.curiosities || []).join('\n'),
@@ -199,6 +201,9 @@ export default function PantanalAvatarsManager() {
       const fileName = `avatars/${uuidv4()}.${fileExt}`;
 
       console.log('📤 [PantanalAvatarsManager] Tentando upload para:', BUCKET_NAME, fileName);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:201',message:'uploadImage - início',data:{bucketName:BUCKET_NAME,fileName,hasExistingUrl:!!formData.image_url,existingUrl:formData.image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
@@ -209,15 +214,24 @@ export default function PantanalAvatarsManager() {
 
       if (uploadError) {
         console.error('❌ [PantanalAvatarsManager] Erro no upload:', uploadError);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:211',message:'uploadImage - erro no upload',data:{errorMessage:uploadError.message,errorCode:uploadError.statusCode,isBucketNotFound:uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket'),hasExistingUrl:!!formData.image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         // Se o bucket não existir, apenas avisar mas continuar sem imagem
         if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
           console.warn('⚠️ [PantanalAvatarsManager] Bucket não encontrado, continuando sem upload de imagem');
           toast({
-            title: 'Aviso',
-            description: 'Bucket de imagens não encontrado. O avatar será salvo sem imagem. Você pode adicionar uma URL de imagem manualmente.',
+            title: 'Bucket não encontrado',
+            description: 'O bucket "tourism-images" não existe. Execute o SQL em supabase/create_tourism_images_bucket.sql para criá-lo. O avatar será salvo preservando a URL existente se houver.',
             variant: 'default',
+            duration: 10000,
           });
-          return null;
+          // Retornar URL existente se houver, senão null
+          const fallbackUrl = formData.image_url || null;
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:225',message:'uploadImage - retornando fallback',data:{fallbackUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
+          return fallbackUrl;
         }
         throw uploadError;
       }
@@ -262,16 +276,49 @@ export default function PantanalAvatarsManager() {
     setUploading(true);
     try {
       // Upload da imagem se houver nova
-      let imageUrl = formData.image_url;
+      // Preservar URL original do avatar sendo editado (fallback se formData.image_url estiver vazio)
+      const originalImageUrl = editingAvatar?.image_url || formData.image_url || '';
+      let imageUrl = formData.image_url || originalImageUrl;
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:279',message:'handleSave - antes do upload',data:{hasImageFile:!!imageFile,formDataImageUrl:formData.image_url,originalImageUrl,imageUrl,editingAvatarId:editingAvatar?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       if (imageFile) {
         console.log('📤 [PantanalAvatarsManager] Iniciando upload de imagem...');
         const uploadedUrl = await uploadImage();
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:285',message:'handleSave - após upload',data:{uploadedUrl,originalImageUrl,willUseOriginal:!uploadedUrl && !!originalImageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         if (uploadedUrl) {
           imageUrl = uploadedUrl;
           console.log('✅ [PantanalAvatarsManager] Imagem enviada com sucesso:', uploadedUrl);
         } else {
-          console.warn('⚠️ [PantanalAvatarsManager] Upload de imagem falhou, usando URL existente');
+          console.warn('⚠️ [PantanalAvatarsManager] Upload de imagem falhou');
+          // Preservar URL original se o upload falhar
+          if (originalImageUrl && originalImageUrl.trim()) {
+            imageUrl = originalImageUrl;
+            console.log('✅ [PantanalAvatarsManager] Preservando URL original do avatar:', imageUrl);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:295',message:'handleSave - preservando URL original',data:{preservedUrl:imageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+          } else if (formData.image_url && formData.image_url.trim()) {
+            // Tentar usar URL do formulário se houver
+            imageUrl = formData.image_url;
+            console.log('✅ [PantanalAvatarsManager] Usando URL do formulário:', imageUrl);
+          } else if (imagePreview && (imagePreview.startsWith('data:') || imagePreview.startsWith('blob:'))) {
+            // Se há preview mas não há URL válida, alertar o usuário
+            console.warn('⚠️ [PantanalAvatarsManager] Preview disponível mas não pode ser salvo sem upload');
+            toast({
+              title: 'Aviso',
+              description: 'O upload falhou e não há URL de imagem válida. Por favor, forneça uma URL de imagem manualmente ou verifique se o bucket de imagens está configurado.',
+              variant: 'default',
+              duration: 8000,
+            });
+            // Não definir imageUrl, deixar null para que o usuário saiba que precisa fornecer uma URL
+          }
         }
+      } else {
+        // Se não há arquivo novo, usar a URL do formulário (que pode ter sido atualizada manualmente)
+        imageUrl = formData.image_url || originalImageUrl;
       }
 
       // Converter strings de arrays para arrays
@@ -296,11 +343,27 @@ export default function PantanalAvatarsManager() {
         .map(a => a.trim())
         .filter(a => a.length > 0);
 
+      // Validar URL da imagem se fornecida
+      let finalImageUrl = imageUrl || null;
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:300',message:'handleSave - antes da validação',data:{imageUrl,finalImageUrl,startsWithHttp:finalImageUrl?.startsWith('http'),startsWithData:finalImageUrl?.startsWith('data:'),startsWithBlob:finalImageUrl?.startsWith('blob:')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      if (finalImageUrl && !finalImageUrl.startsWith('http') && !finalImageUrl.startsWith('data:') && !finalImageUrl.startsWith('blob:')) {
+        console.warn('⚠️ [PantanalAvatarsManager] URL de imagem inválida, removendo:', finalImageUrl);
+        finalImageUrl = null;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:303',message:'handleSave - URL removida por validação',data:{removedUrl:imageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+      }
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:305',message:'handleSave - após validação',data:{finalImageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
       const avatarData: any = {
         name: formData.name.trim(),
         scientific_name: formData.scientific_name.trim() || null,
         description: formData.description.trim() || null,
-        image_url: imageUrl || null,
+        image_url: finalImageUrl,
         habitat: formData.habitat.trim() || null,
         diet: formData.diet.trim() || null,
         curiosities: curiositiesArray.length > 0 ? curiositiesArray : null,
@@ -323,6 +386,8 @@ export default function PantanalAvatarsManager() {
         const cleanAvatarData = Object.fromEntries(
           Object.entries(avatarData).filter(([_, v]) => v !== undefined)
         );
+        // Forçar atualização do updated_at para garantir cache-busting das imagens
+        cleanAvatarData.updated_at = new Date().toISOString();
         console.log('🧹 [PantanalAvatarsManager] Dados limpos para update:', cleanAvatarData);
         
         const { data, error } = await supabase
@@ -409,6 +474,8 @@ export default function PantanalAvatarsManager() {
 
       console.log('🔄 [PantanalAvatarsManager] Fechando dialog e recarregando lista...');
       setDialogOpen(false);
+      setImagePreview(null);
+      setImageFile(null);
       await loadAvatars();
       console.log('✅ [PantanalAvatarsManager] Processo concluído com sucesso!');
     } catch (error: any) {
@@ -768,11 +835,32 @@ export default function PantanalAvatarsManager() {
             <CardContent>
               {avatar.image_url && (
                 <div className="aspect-square mb-4 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg overflow-hidden">
+                  {avatar.image_url ? (
                   <img 
-                    src={avatar.image_url} 
+                      key={`${avatar.id}-${avatar.updated_at || avatar.created_at || Date.now()}`}
+                      src={`${avatar.image_url}?t=${avatar.updated_at ? new Date(avatar.updated_at).getTime() : avatar.created_at ? new Date(avatar.created_at).getTime() : Date.now()}`}
                     alt={avatar.name}
                     className="w-full h-full object-cover"
-                  />
+                    onError={(e) => {
+                      console.warn('Erro ao carregar imagem do avatar:', avatar.image_url);
+                        // Criar um placeholder SVG inline
+                        const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="300" height="300" fill="#e5e7eb"/>
+                          <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
+                            Imagem não disponível
+                          </text>
+                        </svg>`)}`;
+                        (e.target as HTMLImageElement).src = placeholderSvg;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                      <div className="text-center text-gray-400">
+                        <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                        <p className="text-sm">Sem imagem</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {avatar.description && (
@@ -930,9 +1018,23 @@ export default function PantanalAvatarsManager() {
               {imagePreview && (
                 <div className="relative w-48 h-48 rounded-lg overflow-hidden border">
                   <img 
-                    src={imagePreview} 
+                    key={`preview-${imageFile ? imageFile.name + imageFile.lastModified : imagePreview}`}
+                    src={imagePreview.includes('blob:') || imagePreview.includes('data:') 
+                      ? imagePreview 
+                      : `${imagePreview}?t=${Date.now()}`} 
                     alt="Preview"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.warn('Erro ao carregar preview da imagem');
+                      // Criar um placeholder SVG inline
+                      const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="300" height="300" fill="#e5e7eb"/>
+                        <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
+                          Preview não disponível
+                        </text>
+                      </svg>`)}`;
+                      (e.target as HTMLImageElement).src = placeholderSvg;
+                    }}
                   />
                   <Button
                     variant="destructive"

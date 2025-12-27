@@ -8,9 +8,16 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const Contato = () => {
   const { toast } = useToast();
+  const { settings: footerSettings, loading: footerLoading } = useFooterSettings('viajar');
+
+  // Log para debug
+  useEffect(() => {
+    console.log('📄 [Contato] Footer settings carregados:', footerSettings);
+  }, [footerSettings]);
 
   // Garantir que a página role para o topo ao carregar
   useEffect(() => {
@@ -250,65 +257,81 @@ const Contato = () => {
               </p>
 
               <div className="space-y-6 mb-10">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-6 w-6 text-white" />
+                {footerSettings.email && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center flex-shrink-0">
+                      <Mail className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Email</h3>
+                      <a href={`mailto:${footerSettings.email}`} className="text-viajar-cyan hover:underline">
+                        {footerSettings.email}
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                    <a href="mailto:contato@viajartur.com.br" className="text-viajar-cyan hover:underline">
-                      contato@viajartur.com.br
-                    </a>
-                  </div>
-                </div>
+                )}
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-6 w-6 text-white" />
+                {footerSettings.phone && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                      <Phone className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Telefone</h3>
+                      <a href={`tel:${footerSettings.phone.replace(/\D/g, '')}`} className="text-muted-foreground hover:text-foreground">
+                        {footerSettings.phone}
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Telefone</h3>
-                    <a href="tel:+556730000000" className="text-muted-foreground hover:text-foreground">
-                      (67) 3000-0000
-                    </a>
-                  </div>
-                </div>
+                )}
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-6 w-6 text-white" />
+                {footerSettings.address && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Endereço</h3>
+                      <p className="text-muted-foreground">
+                        {footerSettings.address}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Endereço</h3>
-                    <p className="text-muted-foreground">
-                      Campo Grande - MS<br />
-                      Brasil
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Business Hours */}
-              <div className="bg-card rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-4">
-                  <Clock className="h-5 w-5 text-viajar-cyan" />
-                  <h3 className="font-semibold text-foreground">Horário de Atendimento</h3>
+              {footerSettings.business_hours && (
+                <div className="bg-card rounded-2xl p-6 border border-border">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Clock className="h-5 w-5 text-viajar-cyan" />
+                    <h3 className="font-semibold text-foreground">Horário de Atendimento</h3>
+                  </div>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    {footerSettings.business_hours.weekdays && (
+                      <div className="flex justify-between">
+                        <span>Segunda a Sexta</span>
+                        <span className="text-foreground">{footerSettings.business_hours.weekdays}</span>
+                      </div>
+                    )}
+                    {footerSettings.business_hours.saturday && (
+                      <div className="flex justify-between">
+                        <span>Sábado</span>
+                        <span className="text-foreground">{footerSettings.business_hours.saturday}</span>
+                      </div>
+                    )}
+                    {footerSettings.business_hours.sunday && (
+                      <div className="flex justify-between">
+                        <span>Domingo</span>
+                        <span className="text-muted-foreground">{footerSettings.business_hours.sunday}</span>
+                      </div>
+                    )}
+                    {!footerSettings.business_hours.weekdays && !footerSettings.business_hours.saturday && !footerSettings.business_hours.sunday && (
+                      <p className="text-muted-foreground">Não informado</p>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Segunda a Sexta</span>
-                    <span className="text-foreground">8h às 18h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sábado</span>
-                    <span className="text-foreground">9h às 13h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Domingo</span>
-                    <span className="text-muted-foreground">Fechado</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Contact Form */}

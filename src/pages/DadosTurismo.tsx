@@ -19,16 +19,18 @@ import {
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DadosTurismo.tsx:22',message:'Módulo DadosTurismo sendo carregado',data:{timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'C',timestamp:Date.now()})}).catch(()=>{});
-// #endregion
+const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
+const safeLog = (payload: any) => {
+  if (!enableDebugLogs) return;
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,timestamp:Date.now(),sessionId:'debug-session',runId:payload?.runId||'run1'})}).catch(()=>{});
+};
+
+safeLog({location:'DadosTurismo.tsx:22',message:'Módulo DadosTurismo sendo carregado',data:{timestamp:Date.now()},hypothesisId:'C'});
 
 const DadosTurismo = () => {
   const navigate = useNavigate();
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DadosTurismo.tsx:25',message:'Componente DadosTurismo renderizando',data:{timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'C',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
+  safeLog({location:'DadosTurismo.tsx:25',message:'Componente DadosTurismo renderizando',data:{timestamp:Date.now()},hypothesisId:'C'});
 
   // Handler para scroll suave até a seção "Como Funciona"
   const handleScrollToComoFunciona = (e: React.MouseEvent<HTMLAnchorElement>) => {

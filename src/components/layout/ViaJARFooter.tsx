@@ -5,7 +5,12 @@ import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const ViaJARFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const { settings } = useFooterSettings('viajar');
+  const { settings, loading } = useFooterSettings('viajar');
+  
+  // Log para debug
+  React.useEffect(() => {
+    console.log('📄 [ViaJARFooter] Settings do ViaJAR carregados:', settings);
+  }, [settings]);
 
   return (
     <footer className="bg-viajar-slate text-white">

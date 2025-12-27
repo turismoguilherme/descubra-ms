@@ -28,6 +28,9 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
 
   // Verificar se o perfil está completo
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let isMounted = true;
+
     const checkProfile = async () => {
       if (authLoading) return;
       
@@ -38,6 +41,15 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
       }
 
       try {
+        // Timeout de segurança para evitar loading infinito
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            console.warn('Timeout ao verificar perfil. Permitindo acesso.');
+            setProfileComplete(true); // Permitir acesso mesmo se timeout
+            setCheckingProfile(false);
+          }
+        }, 5000); // 5 segundos de timeout
+
         // Verificar se tem perfil completo na tabela user_profiles
         const { data: profile, error } = await supabase
           .from('user_profiles')
@@ -45,37 +57,60 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
           .eq('user_id', user.id)
           .maybeSingle();
 
+        clearTimeout(timeoutId);
+
+        if (!isMounted) return;
+
         if (error) {
           console.error('Erro ao verificar perfil:', error);
-          setProfileComplete(false);
+          // Se tabela não existe ou erro, permitir acesso (não bloquear)
+          if (error.code === '42P01' || error.message?.includes('does not exist') || error.message?.includes('não existe')) {
+            console.warn('Tabela user_profiles não existe. Permitindo acesso.');
+            setProfileComplete(true);
+          } else {
+            setProfileComplete(false);
+          }
           setCheckingProfile(false);
           return;
         }
 
-        // Perfil está completo se tem pelo menos as informações básicas obrigatórias
-        // Verificamos se tem gender, state (origin_state) e travel_motives
-        const hasRequiredFields = profile && 
-          profile.gender && 
-          profile.state && 
-          profile.travel_motives && 
-          Array.isArray(profile.travel_motives) && 
-          profile.travel_motives.length > 0;
+        // Perfil está completo se tem registro na tabela user_profiles
+        // Tornamos a verificação mais permissiva - se tem registro, permite acesso
+        // Mesmo que alguns campos estejam faltando, não bloqueamos o acesso ao passaporte
+        const hasProfile = !!profile;
+        
+        console.log('🔍 [PassportProfileGate] Verificação de perfil:', {
+          hasProfile,
+          profileExists: !!profile,
+          userId: user.id
+        });
 
-        setProfileComplete(!!hasRequiredFields);
+        setProfileComplete(hasProfile);
 
-        // Se perfil incompleto, redirecionar para /register
-        if (!hasRequiredFields) {
-          navigate('/descubramatogrossodosul/register');
-        }
-      } catch (error) {
+        // Não redirecionar automaticamente - deixar o usuário acessar o passaporte
+        // Se quiser completar o perfil, pode fazer depois
+      } catch (error: any) {
+        clearTimeout(timeoutId);
         console.error('Erro ao verificar perfil:', error);
-        setProfileComplete(false);
+        // Em caso de erro, permitir acesso para não bloquear o usuário
+        if (isMounted) {
+          setProfileComplete(true);
+          setCheckingProfile(false);
+        }
       } finally {
-        setCheckingProfile(false);
+        if (isMounted) {
+          clearTimeout(timeoutId);
+          setCheckingProfile(false);
+        }
       }
     };
 
     checkProfile();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [user, authLoading, navigate]);
 
   // Se ainda está verificando
@@ -122,9 +157,31 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
     );
   }
 
-  // Perfil completo - renderizar conteúdo filho
-  if (profileComplete) {
+  // Se perfil completo ou se não tem perfil mas tem usuário autenticado, permitir acesso
+  // Tornamos mais permissivo para não bloquear o uso do passaporte
+  if (profileComplete || (user && profileComplete !== false)) {
     return <>{children}</>;
+  }
+
+  // Se perfil não completo mas tem usuário, mostrar aviso mas permitir acesso
+  if (user && profileComplete === false) {
+    return (
+      <>
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Dica:</strong> Complete seu perfil para uma experiência personalizada. 
+                <Link to="/descubramatogrossodosul/register" className="underline ml-1">
+                  Completar perfil
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+        {children}
+      </>
+    );
   }
 
   // Caso ainda esteja verificando (fallback)

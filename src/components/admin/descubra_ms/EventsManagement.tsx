@@ -17,7 +17,11 @@ import {
   Globe,
   Mail,
   Building2,
-  Loader2
+  Loader2,
+  Video,
+  Image as ImageIcon,
+  User,
+  ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { notifyEventApproved, notifyEventRejected } from '@/services/email/notificationEmailService';
@@ -35,12 +39,14 @@ interface Event {
   id: string;
   name: string;
   description: string;
+  category?: string; // Adicionar categoria
   location: string;
   start_date: string;
   end_date: string;
   start_time?: string;
   end_time?: string;
   image_url?: string;
+  logo_evento?: string; // Adicionar logo_evento
   site_oficial?: string;
   video_url?: string;
   is_visible: boolean;
@@ -52,6 +58,7 @@ interface Event {
   organizador_email?: string;
   organizador_telefone?: string;
   organizador_empresa?: string;
+  approval_status?: string; // pending, approved, rejected
   created_at: string;
 }
 
@@ -72,6 +79,17 @@ export default function EventsManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('📥 Eventos carregados:', data?.length || 0);
+      if (data && data.length > 0) {
+        console.log('📊 Exemplo de evento:', {
+          id: data[0].id,
+          name: data[0].name,
+          is_visible: data[0].is_visible,
+          approval_status: (data[0] as any).approval_status,
+        });
+      }
+      
       setEvents(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar eventos:', error);
@@ -111,21 +129,44 @@ export default function EventsManagement() {
 
       console.log('Aprovando evento:', eventId, event.name);
 
-      // Atualizar evento: tornar visível
+      // Atualizar evento: tornar visível e marcar como aprovado
       const updateData: any = {
         is_visible: true,
+        approval_status: 'approved',
+        updated_at: new Date().toISOString(),
       };
 
+      // Não adicionar approved_by ou approved_at pois podem não existir na tabela
       console.log('Dados para atualização:', updateData);
 
-      // Atualizar evento
-      const { data: updatedEvent, error } = await supabase
+      // Atualizar evento com todos os campos de uma vez
+      let { data: updatedEvent, error } = await supabase
         .from('events')
         .update(updateData)
         .eq('id', eventId)
         .select();
 
-      if (error) {
+      // Se der erro porque approval_status não existe, tentar sem ele
+      if (error && error.code === 'PGRST204' && error.message?.includes('approval_status')) {
+        console.warn('⚠️ Campo approval_status não existe, atualizando apenas is_visible');
+        const fallbackData = {
+          is_visible: true,
+          updated_at: new Date().toISOString(),
+        };
+        const result = await supabase
+          .from('events')
+          .update(fallbackData)
+          .eq('id', eventId)
+          .select();
+        
+        if (result.error) {
+          console.error('Erro ao atualizar evento:', result.error);
+          throw result.error;
+        }
+        
+        updatedEvent = result.data;
+        error = null;
+      } else if (error) {
         console.error('Erro ao atualizar evento:', error);
         throw error;
       }
@@ -134,23 +175,16 @@ export default function EventsManagement() {
         throw new Error('Nenhum evento foi atualizado. Verifique se você tem permissão para atualizar este evento.');
       }
 
-      console.log('Evento atualizado com sucesso:', updatedEvent);
+      console.log('✅ Evento atualizado com sucesso:', updatedEvent);
 
-      // Tentar atualizar approval_status separadamente (pode não existir ainda)
-      try {
-        const { error: approvalError } = await supabase
-          .from('events')
-          .update({ approval_status: 'approved' })
-          .eq('id', eventId);
-        
-        if (approvalError && approvalError.code !== 'PGRST204') {
-          console.warn('Aviso ao atualizar approval_status:', approvalError);
-        } else if (!approvalError) {
-          console.log('approval_status atualizado para approved');
-        }
-      } catch (err) {
-        console.warn('Não foi possível atualizar approval_status (campo pode não existir):', err);
-      }
+      // Atualizar estado local imediatamente para feedback visual instantâneo
+      setEvents(prevEvents => 
+        prevEvents.map(e => 
+          e.id === eventId 
+            ? { ...e, is_visible: true, approval_status: 'approved' }
+            : e
+        )
+      );
 
       // MOSTRAR TOAST DE SUCESSO IMEDIATAMENTE (antes do email)
       toast({
@@ -216,50 +250,127 @@ export default function EventsManagement() {
         return;
       }
 
-      // Marcar como rejeitado ao invés de deletar (melhor para auditoria)
+      // Marcar como rejeitado - atualizar apenas campos que existem na tabela
       const updateData: any = {
         is_visible: false,
+        updated_at: new Date().toISOString(),
       };
 
-      // Tentar atualizar approval_status se existir
-      try {
-        const { error: approvalError } = await supabase
-          .from('events')
-          .update({ approval_status: 'rejected' })
-          .eq('id', eventId);
-        
-        if (approvalError && approvalError.code !== 'PGRST204') {
-          console.warn('Aviso ao atualizar approval_status:', approvalError);
-        }
-      } catch (err) {
-        console.warn('Não foi possível atualizar approval_status:', err);
-      }
+      // Tentar adicionar approval_status (pode não existir na tabela ainda)
+      // Se der erro, será ignorado e apenas is_visible será atualizado
+      updateData.approval_status = 'rejected';
+      
+      // Não adicionar approved_by, approved_at ou rejection_reason pois podem não existir
+      // Esses campos serão adicionados apenas se as migrações estiverem aplicadas
 
-      // Atualizar evento
-      const { data: updatedEvent, error } = await supabase
+      console.log('🔄 Atualizando evento com dados:', updateData);
+
+      // Tentar atualizar com approval_status primeiro
+      let { data: updatedEvent, error } = await supabase
         .from('events')
         .update(updateData)
         .eq('id', eventId)
-        .select();
+        .select('*');
 
-      if (error) {
-        console.error('Erro ao rejeitar evento:', error);
-        throw error;
+      // Se der erro porque approval_status não existe, tentar sem ele
+      if (error && error.code === 'PGRST204' && error.message?.includes('approval_status')) {
+        console.warn('⚠️ Campo approval_status não existe, atualizando apenas is_visible');
+        const fallbackData = {
+          is_visible: false,
+          updated_at: new Date().toISOString(),
+        };
+        const result = await supabase
+          .from('events')
+          .update(fallbackData)
+          .eq('id', eventId)
+          .select('*');
+        
+        if (result.error) {
+          console.error('❌ Erro ao rejeitar evento (fallback):', result.error);
+          throw result.error;
+        }
+        
+        updatedEvent = result.data;
+        error = null;
+      } else if (error) {
+        // Se o erro for por outro campo (como approved_by), tentar sem campos opcionais
+        if (error.code === 'PGRST204' && error.message?.includes('approved_by')) {
+          console.warn('⚠️ Campo approved_by não existe, removendo do update');
+          const fallbackData = {
+            is_visible: false,
+            updated_at: new Date().toISOString(),
+            approval_status: 'rejected',
+          };
+          const result = await supabase
+            .from('events')
+            .update(fallbackData)
+            .eq('id', eventId)
+            .select('*');
+          
+          if (result.error) {
+            console.error('❌ Erro ao rejeitar evento (fallback 2):', result.error);
+            throw result.error;
+          }
+          
+          updatedEvent = result.data;
+          error = null;
+        } else {
+          console.error('❌ Erro ao rejeitar evento:', error);
+          console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+          throw error;
+        }
       }
 
       if (!updatedEvent || updatedEvent.length === 0) {
         throw new Error('Nenhum evento foi atualizado. Verifique se você tem permissão.');
       }
 
+      console.log('✅ Evento rejeitado com sucesso:', updatedEvent);
+      console.log('📊 approval_status do evento atualizado:', updatedEvent[0]?.approval_status);
+
       // MOSTRAR TOAST DE SUCESSO IMEDIATAMENTE
       toast({
-        title: '❌ Evento rejeitado',
-        description: `O evento "${event.name}" foi rejeitado e não está mais visível.`,
+        title: '✅ Evento rejeitado',
+        description: `O evento "${event.name}" foi rejeitado e removido da lista de pendentes.`,
         duration: 5000,
       });
 
-      // Recarregar eventos para atualizar a lista
-      await loadEvents();
+      // Atualizar estado local imediatamente para feedback visual instantâneo
+      // Usar os dados retornados do banco para garantir sincronização
+      setEvents(prevEvents => {
+        const updated = prevEvents.map(e => {
+          if (e.id === eventId) {
+            // Usar os dados atualizados do banco se disponíveis
+            const updatedFromDb = updatedEvent[0] as any;
+            const newEvent = {
+              ...e,
+              is_visible: false,
+            };
+            // Adicionar approval_status se existir
+            if (updatedFromDb?.approval_status !== undefined) {
+              (newEvent as any).approval_status = updatedFromDb.approval_status;
+            } else {
+              // Se não existir no banco, marcar como rejeitado no estado local
+              (newEvent as any).approval_status = 'rejected';
+            }
+            return newEvent;
+          }
+          return e;
+        });
+        const pending = updated.filter(e => {
+          const approvalStatus = (e as any).approval_status;
+          return !e.is_visible && approvalStatus !== 'rejected';
+        });
+        const rejected = updated.filter(e => (e as any).approval_status === 'rejected');
+        console.log('🔄 Estado atualizado. Eventos pendentes agora:', pending.length);
+        console.log('🔄 Eventos rejeitados agora:', rejected.length);
+        return updated;
+      });
+
+      // Recarregar eventos após um pequeno delay para garantir sincronização completa
+      setTimeout(async () => {
+        await loadEvents();
+      }, 500);
 
       // Enviar email de notificação em background (não bloqueia)
       if (event?.organizador_email) {
@@ -321,9 +432,73 @@ export default function EventsManagement() {
     }
   };
 
-  const pendingEvents = events.filter(e => !e.is_visible);
+  // Filtrar eventos: pendentes são os que não estão visíveis E não foram rejeitados
+  // Se approval_status não existir, considerar apenas is_visible
+  const pendingEvents = events.filter(e => {
+    const approvalStatus = (e as any).approval_status;
+    // Se não tem approval_status definido e não está visível, é pendente
+    if (approvalStatus === undefined || approvalStatus === null) {
+      return !e.is_visible; // Considerar pendente se não estiver visível
+    }
+    // Se tem approval_status, verificar se não é rejeitado
+    return !e.is_visible && approvalStatus !== 'rejected';
+  });
   const approvedEvents = events.filter(e => e.is_visible && !e.is_sponsored);
   const sponsoredEvents = events.filter(e => e.is_sponsored);
+  const rejectedEvents = events.filter(e => {
+    const approvalStatus = (e as any).approval_status;
+    return approvalStatus === 'rejected';
+  });
+
+  // Função para extrair ID do YouTube
+  const extractYouTubeId = (url: string): string | null => {
+    if (!url) return null;
+    
+    // Padrões comuns de URLs do YouTube
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  };
+
+  // Função para obter URL de embed do YouTube
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (!url) return null;
+    const videoId = extractYouTubeId(url);
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+  };
+
+  // Função para determinar região turística
+  const getTouristRegion = (location: string) => {
+    const locationLower = location.toLowerCase();
+    const regionMappings = {
+      'pantanal': ['corumbá', 'ladário', 'aquidauana', 'miranda', 'anastácio'],
+      'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+      'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+      'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+      'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+      'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+      'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+      'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+      'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina']
+    };
+
+    for (const [region, cities] of Object.entries(regionMappings)) {
+      if (cities.some(city => locationLower.includes(city))) {
+        return region;
+      }
+    }
+    return 'descubra-ms';
+  };
 
   const formatDate = (date: string) => {
     try {
@@ -365,7 +540,13 @@ export default function EventsManagement() {
                     Destaque
                   </Badge>
                 )}
-                {!event.is_visible && (
+                {event.approval_status === 'rejected' && (
+                  <Badge variant="destructive">
+                    <X className="w-3 h-3 mr-1" />
+                    Rejeitado
+                  </Badge>
+                )}
+                {!event.is_visible && event.approval_status !== 'rejected' && (
                   <Badge variant="secondary">
                     <Clock className="w-3 h-3 mr-1" />
                     Pendente
@@ -393,7 +574,24 @@ export default function EventsManagement() {
                   Ver Detalhes
                 </Button>
                 
-                {!event.is_visible && (
+                {event.approval_status === 'rejected' && (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => approveEvent(event.id)}
+                    disabled={approvingEventId === event.id}
+                  >
+                    {approvingEventId === event.id ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-1" />
+                    )}
+                    {approvingEventId === event.id ? 'Reativando...' : 'Reativar'}
+                  </Button>
+                )}
+                
+                {!event.is_visible && event.approval_status !== 'rejected' && (
                   <>
                     <Button
                       size="sm"
@@ -456,7 +654,7 @@ export default function EventsManagement() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-yellow-800">Pendentes</CardTitle>
@@ -486,6 +684,16 @@ export default function EventsManagement() {
             <p className="text-xs text-purple-600">Eventos patrocinados</p>
           </CardContent>
         </Card>
+
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-red-800">Rejeitados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-red-900">{rejectedEvents.length}</div>
+            <p className="text-xs text-red-600">Eventos rejeitados</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabs de eventos */}
@@ -502,6 +710,10 @@ export default function EventsManagement() {
           <TabsTrigger value="sponsored" className="gap-2">
             <Star className="w-4 h-4" />
             Em Destaque ({sponsoredEvents.length})
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="gap-2">
+            <X className="w-4 h-4" />
+            Rejeitados ({rejectedEvents.length})
           </TabsTrigger>
         </TabsList>
 
@@ -542,264 +754,349 @@ export default function EventsManagement() {
             ))
           )}
         </TabsContent>
+
+        <TabsContent value="rejected" className="space-y-4 mt-4">
+          {rejectedEvents.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Nenhum evento rejeitado
+            </div>
+          ) : (
+            rejectedEvents.map(event => (
+              <EventCard key={event.id} event={event} />
+            ))
+          )}
+        </TabsContent>
       </Tabs>
 
-      {/* Modal de detalhes - Melhorado */}
+      {/* Modal de detalhes - Prévia do que aparece para os usuários */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">
-                  {selectedEvent?.name}
-                </DialogTitle>
-                <DialogDescription className="text-gray-600">
-                  Detalhes completos do evento para revisão
-                </DialogDescription>
-              </div>
-              {selectedEvent && (
-                <div className="flex gap-2">
-                  {!selectedEvent.is_visible && (
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Pendente
-                    </Badge>
-                  )}
-                  {selectedEvent.is_sponsored && (
-                    <Badge className="bg-yellow-500">
-                      <Star className="w-3 h-3 mr-1" />
-                      Destaque
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
-          </DialogHeader>
-          
-          {selectedEvent && (
-            <div className="space-y-6">
-              {/* Imagem do evento */}
-              {selectedEvent.image_url && (
-                <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                  <img 
-                    src={selectedEvent.image_url} 
-                    alt={selectedEvent.name}
-                    className="w-full h-64 object-cover"
-                  />
-                </div>
-              )}
+        <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-2xl [&>button]:hidden">
+          {selectedEvent && (() => {
+            const touristRegion = getTouristRegion(selectedEvent.location);
+            const regionColors = {
+              'pantanal': 'from-blue-600 to-cyan-600',
+              'bonito-serra-bodoquena': 'from-green-600 to-emerald-600',
+              'vale-aguas': 'from-purple-600 to-indigo-600',
+              'vale-apore': 'from-orange-600 to-red-600',
+              'rota-norte': 'from-yellow-600 to-amber-600',
+              'caminho-ipes': 'from-pink-600 to-rose-600',
+              'caminhos-fronteira': 'from-teal-600 to-cyan-600',
+              'costa-leste': 'from-indigo-600 to-purple-600',
+              'grande-dourados': 'from-lime-600 to-green-600',
+              'descubra-ms': 'from-ms-primary-blue to-ms-discovery-teal'
+            };
 
-              {/* Informações principais em cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <MapPin className="w-5 h-5 text-blue-600" />
+            const regionEmojis = {
+              'pantanal': '🐊',
+              'bonito-serra-bodoquena': '🏔️',
+              'vale-aguas': '💧',
+              'vale-apore': '🏞️',
+              'rota-norte': '🧭',
+              'caminho-ipes': '🌸',
+              'caminhos-fronteira': '🌎',
+              'costa-leste': '🌊',
+              'grande-dourados': '🌾',
+              'descubra-ms': '🇧🇷'
+            };
+
+            const regionNames = {
+              'pantanal': 'Pantanal',
+              'bonito-serra-bodoquena': 'Bonito-Serra da Bodoquena',
+              'vale-aguas': 'Vale das Águas',
+              'vale-apore': 'Vale do Aporé',
+              'rota-norte': 'Rota Norte',
+              'caminho-ipes': 'Caminho dos Ipês',
+              'caminhos-fronteira': 'Caminhos da Fronteira',
+              'costa-leste': 'Costa Leste',
+              'grande-dourados': 'Grande Dourados',
+              'descubra-ms': 'Descubra MS'
+            };
+
+            return (
+              <div className="relative max-h-[90vh] overflow-y-auto">
+                {/* Header com imagem/vídeo - Igual ao que aparece para usuários */}
+                <div className={`relative h-72 bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']} flex-shrink-0`}>
+                  {selectedEvent.video_url && getYouTubeEmbedUrl(selectedEvent.video_url) ? (
+                    <iframe
+                      src={getYouTubeEmbedUrl(selectedEvent.video_url)!}
+                      className="w-full h-full"
+                      allowFullScreen
+                      title="Vídeo do evento"
+                    />
+                  ) : (selectedEvent.logo_evento || selectedEvent.image_url) ? (
+                    <img
+                      src={selectedEvent.logo_evento || selectedEvent.image_url}
+                      alt={selectedEvent.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Calendar className="w-24 h-24 text-white/30" />
+                    </div>
+                  )}
+
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                  {/* Badges no topo */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {/* Badge Pendente (apenas admin) */}
+                    {!selectedEvent.is_visible && (
+                      <Badge className="bg-amber-500 text-white border-0 px-3 py-1">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pendente de Aprovação
+                      </Badge>
+                    )}
+                    {/* Badge destaque */}
+                    {selectedEvent.is_sponsored && (
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-3 py-1">
+                        <Star className="w-3 h-3 mr-1" />
+                        Em Destaque
+                      </Badge>
+                    )}
+                    {/* Badge da região turística */}
+                    <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-3 py-1">
+                      <span className="mr-2">{regionEmojis[touristRegion as keyof typeof regionEmojis] || regionEmojis['descubra-ms']}</span>
+                      <span className="font-medium">{regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}</span>
+                    </Badge>
+                    {/* Badge categoria */}
+                    {selectedEvent.category && (
+                      <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-3 py-1 capitalize">
+                        {selectedEvent.category}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Título no overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                      {selectedEvent.name}
+                    </h2>
+                    <p className="text-white/90 text-sm drop-shadow">
+                      {selectedEvent.description?.substring(0, 150)}...
+                    </p>
+                  </div>
+                </div>
+
+                {/* Conteúdo principal */}
+                <div className="p-6 space-y-6 bg-white">
+                  {/* Informações principais */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Data e horário */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-ms-primary-blue" />
+                        Data e Horário
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 bg-blue-50 text-ms-primary-blue px-4 py-2 rounded-lg">
+                          <Calendar className="w-4 h-4" />
+                          <span className="font-medium">{formatDate(selectedEvent.start_date)}</span>
+                          {selectedEvent.end_date && selectedEvent.end_date !== selectedEvent.start_date && (
+                            <span className="text-sm"> até {formatDate(selectedEvent.end_date)}</span>
+                          )}
+                        </div>
+                        {selectedEvent.start_time && (
+                          <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg">
+                            <Clock className="w-4 h-4" />
+                            <span className="font-medium">
+                              {selectedEvent.start_time}
+                              {selectedEvent.end_time && ` - ${selectedEvent.end_time}`}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-blue-700 uppercase">Local</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-1">
-                          {selectedEvent.location}
+                    </div>
+
+                    {/* Localização */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-ms-primary-blue" />
+                        Localização
+                      </h3>
+                      <div className="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p className="text-gray-700 font-medium">{selectedEvent.location}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}
                         </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
 
-                <Card className="bg-purple-50 border-purple-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Calendar className="w-5 h-5 text-purple-600" />
+                  {/* Descrição completa */}
+                  {selectedEvent.description && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900">Sobre o Evento</h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedEvent.description}</p>
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-purple-700 uppercase">Data e Hora</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-1">
-                          {formatDate(selectedEvent.start_date)}
-                          {selectedEvent.start_time && ` às ${selectedEvent.start_time}`}
-                        </p>
-                        {selectedEvent.end_date && selectedEvent.end_date !== selectedEvent.start_date && (
-                          <p className="text-xs text-gray-600 mt-1">
-                            até {formatDate(selectedEvent.end_date)}
+                    </div>
+                  )}
+
+                  {/* Categoria */}
+                  {selectedEvent.category && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900">Categoria</h3>
+                      <div className="bg-indigo-50 px-4 py-2 rounded-lg inline-block">
+                        <Badge className="bg-indigo-600 text-white capitalize">
+                          {selectedEvent.category}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Logo do Evento (se diferente da imagem principal) */}
+                  {selectedEvent.logo_evento && selectedEvent.logo_evento !== selectedEvent.image_url && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <ImageIcon className="w-5 h-5 text-ms-primary-blue" />
+                        Logo do Evento
+                      </h3>
+                      <div className="bg-gray-50 p-4 rounded-lg flex justify-center">
+                        <img 
+                          src={selectedEvent.logo_evento} 
+                          alt="Logo do evento"
+                          className="max-w-xs max-h-48 object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Informações do organizador */}
+                  {(selectedEvent.organizador_nome || selectedEvent.organizador_email || selectedEvent.organizador_telefone) && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <User className="w-5 h-5 text-ms-primary-blue" />
+                        Organização
+                      </h3>
+                      <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                        {selectedEvent.organizador_nome && (
+                          <p className="text-gray-700">
+                            <span className="font-medium">Organizado por:</span> {selectedEvent.organizador_nome}
+                            {selectedEvent.organizador_empresa && ` - ${selectedEvent.organizador_empresa}`}
+                          </p>
+                        )}
+                        {selectedEvent.organizador_email && (
+                          <p className="text-gray-600 text-sm">
+                            <span className="font-medium">Email:</span>{' '}
+                            <a href={`mailto:${selectedEvent.organizador_email}`} className="text-blue-600 hover:underline">
+                              {selectedEvent.organizador_email}
+                            </a>
+                          </p>
+                        )}
+                        {selectedEvent.organizador_telefone && (
+                          <p className="text-gray-600 text-sm">
+                            <span className="font-medium">Telefone:</span>{' '}
+                            <a href={`tel:${selectedEvent.organizador_telefone}`} className="text-blue-600 hover:underline">
+                              {selectedEvent.organizador_telefone}
+                            </a>
                           </p>
                         )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  )}
 
-              {/* Descrição */}
-              {selectedEvent.description && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Descrição do Evento</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                      {selectedEvent.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+                  {/* Site oficial */}
+                  {selectedEvent.site_oficial && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-ms-primary-blue" />
+                        Site Oficial
+                      </h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <a 
+                          href={selectedEvent.site_oficial} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline inline-flex items-center gap-2"
+                        >
+                          {selectedEvent.site_oficial}
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Informações do Organizador */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-gray-600" />
-                    Informações do Organizador
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedEvent.organizador_nome && (
-                      <div className="flex items-start gap-3">
-                        <Building2 className="w-5 h-5 text-gray-400 mt-0.5" />
+                  {/* Informações de Patrocínio */}
+                  <div className="space-y-3 border-t pt-4">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-yellow-600" />
+                      Informações de Patrocínio
+                    </h3>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-xs text-gray-500 uppercase">Instituição</p>
-                          <p className="text-sm font-medium text-gray-900 mt-1">
-                            {selectedEvent.organizador_nome}
-                            {selectedEvent.organizador_empresa && ` - ${selectedEvent.organizador_empresa}`}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {selectedEvent.organizador_email && (
-                      <div className="flex items-start gap-3">
-                        <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase">Email</p>
-                          <a 
-                            href={`mailto:${selectedEvent.organizador_email}`}
-                            className="text-sm font-medium text-blue-600 hover:underline mt-1 block"
+                          <p className="text-xs text-gray-600 uppercase mb-2">Status do Pagamento</p>
+                          <Badge 
+                            variant={selectedEvent.sponsor_payment_status === 'paid' ? 'default' : 'secondary'}
+                            className={selectedEvent.sponsor_payment_status === 'paid' ? 'bg-green-600' : 'bg-amber-500'}
                           >
-                            {selectedEvent.organizador_email}
-                          </a>
+                            {selectedEvent.sponsor_payment_status === 'paid' ? 'Pago' : selectedEvent.sponsor_payment_status || 'Gratuito'}
+                          </Badge>
                         </div>
+                        {selectedEvent.sponsor_amount && (
+                          <div>
+                            <p className="text-xs text-gray-600 uppercase mb-2">Valor</p>
+                            <p className="text-lg font-bold text-gray-900">
+                              R$ {selectedEvent.sponsor_amount.toFixed(2)}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {selectedEvent.organizador_telefone && (
-                      <div className="flex items-start gap-3">
-                        <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase">Telefone</p>
-                          <a 
-                            href={`tel:${selectedEvent.organizador_telefone}`}
-                            className="text-sm font-medium text-gray-900 mt-1 block"
-                          >
-                            {selectedEvent.organizador_telefone}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                    {selectedEvent.site_oficial && (
-                      <div className="flex items-start gap-3">
-                        <Globe className="w-5 h-5 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase">Site Oficial</p>
-                          <a 
-                            href={selectedEvent.site_oficial} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="text-sm font-medium text-blue-600 hover:underline mt-1 block"
-                          >
-                            {selectedEvent.site_oficial}
-                          </a>
-                        </div>
-                      </div>
-                    )}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Informações de Patrocínio - Sempre visível (igual para pago e não pago) */}
-              <Card className="bg-yellow-50 border-yellow-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-yellow-600" />
-                    Informações de Patrocínio
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase mb-2">Status do Pagamento</p>
-                      <Badge 
-                        variant={selectedEvent.sponsor_payment_status === 'paid' ? 'default' : 'secondary'}
-                        className={selectedEvent.sponsor_payment_status === 'paid' ? 'bg-green-600' : 'bg-amber-500'}
+                  {/* Botões de Ação - Apenas para admin */}
+                  {!selectedEvent.is_visible && (
+                    <div className="flex flex-wrap gap-3 pt-4 border-t">
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full"
+                        onClick={() => {
+                          approveEvent(selectedEvent.id);
+                          setSelectedEvent(null);
+                        }}
+                        disabled={approvingEventId === selectedEvent.id}
+                        size="lg"
                       >
-                        {selectedEvent.sponsor_payment_status === 'paid' ? 'Pago' : selectedEvent.sponsor_payment_status || 'Não informado'}
-                      </Badge>
+                        {approvingEventId === selectedEvent.id ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4 mr-2" />
+                        )}
+                        {approvingEventId === selectedEvent.id ? 'Aprovando...' : 'Aprovar Evento'}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1 rounded-full"
+                        onClick={async () => {
+                          try {
+                            await rejectEvent(selectedEvent.id);
+                            // Fechar modal após atualização
+                            setSelectedEvent(null);
+                          } catch (error) {
+                            console.error('Erro ao rejeitar evento:', error);
+                            // Não fechar modal se houver erro
+                          }
+                        }}
+                        disabled={approvingEventId === selectedEvent.id}
+                        size="lg"
+                      >
+                        {approvingEventId === selectedEvent.id ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <X className="w-4 h-4 mr-2" />
+                        )}
+                        {approvingEventId === selectedEvent.id ? 'Rejeitando...' : 'Rejeitar'}
+                      </Button>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase mb-2">Valor</p>
-                      {selectedEvent.sponsor_amount ? (
-                        <p className="text-lg font-bold text-gray-900">
-                          R$ {selectedEvent.sponsor_amount.toFixed(2)}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-gray-500">Não informado</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Ações */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                {!selectedEvent.is_visible && (
-                  <>
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => {
-                        approveEvent(selectedEvent.id);
-                        setSelectedEvent(null);
-                      }}
-                      disabled={approvingEventId === selectedEvent.id}
-                    >
-                      {approvingEventId === selectedEvent.id ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Check className="w-4 h-4 mr-2" />
-                      )}
-                      {approvingEventId === selectedEvent.id ? 'Aprovando...' : 'Aprovar Evento'}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      className="flex-1"
-                      onClick={() => {
-                        rejectEvent(selectedEvent.id);
-                        setSelectedEvent(null);
-                      }}
-                      disabled={approvingEventId === selectedEvent.id}
-                    >
-                      {approvingEventId === selectedEvent.id ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <X className="w-4 h-4 mr-2" />
-                      )}
-                      {approvingEventId === selectedEvent.id ? 'Rejeitando...' : 'Rejeitar'}
-                    </Button>
-                  </>
-                )}
-                {selectedEvent.is_visible && (
-                  <Button
-                    variant={selectedEvent.is_sponsored ? "secondary" : "default"}
-                    className="flex-1"
-                    onClick={() => {
-                      toggleSponsorship(selectedEvent.id, selectedEvent.is_sponsored);
-                      setSelectedEvent(null);
-                    }}
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    {selectedEvent.is_sponsored ? 'Remover Destaque' : 'Ativar Destaque'}
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>

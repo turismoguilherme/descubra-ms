@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
+import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 
 const AuthPage = () => {
   console.log('🔐 [AuthPage] ========== COMPONENTE RENDERIZADO ==========');
@@ -200,12 +201,12 @@ const AuthPage = () => {
     <div className="min-h-screen flex flex-col">
       {/* Header com logo */}
       <div className="flex justify-center py-6 bg-white">
-        <img 
-          src="/lovable-uploads/f9e61cb5-62ef-4f80-8b18-7fef17e3f64b.png" 
-          alt="Descubra Mato Grosso do Sul" 
+        <img
+          src={logoDescubra}
+          alt="Descubra Mato Grosso do Sul"
           className="h-[60px] w-auto"
           onError={(e) => {
-            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMkQ3MkQ5Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TVMGVGV4dD4KPC9zdmc+';
+            e.currentTarget.src = "/images/logo-descubra-ms.png";
           }}
         />
       </div>

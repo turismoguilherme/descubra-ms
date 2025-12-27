@@ -32,7 +32,7 @@ const PassaporteRouteMS = () => {
   const { toast } = useToast();
   
   console.log("📱 PASSAPORTE: routeId:", routeId);
-  const { routes } = useRouteManagement();
+  const { routes, loadRoutes, loading: routesLoading } = useRouteManagement();
   const [route, setRoute] = useState<TouristRoute | null>(null);
   const [checkpoints, setCheckpoints] = useState<RouteCheckpoint[]>([]);
   const [currentCheckpointIndex, setCurrentCheckpointIndex] = useState(0);
@@ -41,6 +41,10 @@ const PassaporteRouteMS = () => {
   const [showStampModal, setShowStampModal] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [totalPoints, setTotalPoints] = useState(0);
+
+  useEffect(() => {
+    loadRoutes();
+  }, [loadRoutes]);
 
   useEffect(() => {
     if (routeId && routes.length > 0) {
@@ -152,6 +156,31 @@ const PassaporteRouteMS = () => {
 
   const currentCheckpoint = checkpoints[currentCheckpointIndex];
   const progressPercentage = (completedCheckpoints.length / checkpoints.length) * 100;
+
+  if (routesLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-secondary-teal to-ms-accent-orange flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Carregando roteiros...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!routesLoading && routes.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-secondary-teal to-ms-accent-orange flex items-center justify-center">
+        <div className="bg-white/90 rounded-xl shadow-lg p-8 text-center max-w-md">
+          <h2 className="text-2xl font-semibold text-ms-primary-blue mb-2">Nenhum roteiro disponível</h2>
+          <p className="text-gray-600 mb-4">Não encontramos roteiros ativos para exibir no momento.</p>
+          <Button onClick={() => navigate('/descubramatogrossodosul/passaporte')} className="bg-white text-ms-primary-blue hover:bg-white/90">
+            Voltar para o Passaporte
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!route || checkpoints.length === 0) {
     return (

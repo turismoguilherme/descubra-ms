@@ -26,10 +26,13 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
         if (data.length > 0 && data[0].content_value) {
           console.log('🔄 [ChatMessage] Avatar carregado do banco:', data[0].content_value);
           setAvatarUrl(data[0].content_value);
+          return;
         }
       } catch (error) {
         console.error('Erro ao carregar avatar do Guatá:', error);
       }
+      // Fallback local
+      setAvatarUrl('/guata-mascote.jpg');
     };
     loadAvatar();
     

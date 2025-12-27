@@ -106,6 +106,7 @@ const navigationItems: NavItem[] = [
     platform: 'descubra-ms',
     children: [
       { id: 'destinations', label: 'Destinos', icon: MapPin, path: '/viajar/admin/descubra-ms/destinations', permission: 'content', platform: 'descubra-ms' },
+      { id: 'tourist-regions', label: 'Regiões Turísticas', icon: Map, path: '/viajar/admin/descubra-ms/tourist-regions', permission: 'content', platform: 'descubra-ms' },
       { id: 'cats', label: 'CATs', icon: MapPin, path: '/viajar/admin/descubra-ms/cats', permission: 'content', platform: 'descubra-ms' },
       { id: 'footer', label: 'Footer', icon: Globe, path: '/viajar/admin/descubra-ms/footer', permission: 'content', platform: 'descubra-ms' },
       { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },

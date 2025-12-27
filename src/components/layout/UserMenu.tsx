@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserAvatar } from "@/hooks/useUserAvatar";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 
 const UserMenu = () => {
@@ -28,6 +29,7 @@ const UserMenu = () => {
   const { user } = auth;
   const { userRole, isManager, isAdmin, handleSecureLogout } = useSecureAuth();
   const location = useLocation();
+  const { avatarUrl } = useUserAvatar(); // Buscar avatar do usuário do banco
   
   // Detectar tenant do path atual
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -84,7 +86,7 @@ const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
+            <AvatarImage src={avatarUrl || user.user_metadata?.avatar_url} alt="Avatar" />
             <AvatarFallback className="bg-ms-primary-blue text-white font-medium">
               {getUserInitials()}
             </AvatarFallback>

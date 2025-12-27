@@ -38,6 +38,9 @@ interface Partner {
   contact_phone?: string;
   address?: string;
   partner_type?: string;
+  person_type?: string; // PF ou PJ
+  cpf?: string; // CPF se pessoa física
+  cnpj?: string; // CNPJ se pessoa jurídica
   status: string;
   discount_offer?: string;
   gallery_images?: string[];
@@ -83,12 +86,56 @@ export default function PartnersManagement() {
       // Buscar dados do parceiro para o email
       const partner = partners.find(p => p.id === partnerId);
 
-      const { error } = await supabase
-        .from('institutional_partners')
-        .update({ status, is_active: status === 'approved' })
-        .eq('id', partnerId);
+      if (!partner) {
+        toast({
+          title: 'Erro',
+          description: 'Parceiro não encontrado',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-      if (error) throw error;
+      console.log(`🔄 [PartnersManagement] Atualizando parceiro ${partnerId} para status: ${status}`);
+      
+      const updateData: any = {
+        status,
+        is_active: status === 'approved',
+        updated_at: new Date().toISOString(),
+      };
+
+      // Se estiver aprovando, adicionar timestamp de aprovação
+      if (status === 'approved') {
+        updateData.approved_at = new Date().toISOString();
+        // Buscar usuário atual para registrar quem aprovou
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          updateData.approved_by = user.id;
+        }
+      }
+
+      const { data: updatedPartner, error } = await supabase
+        .from('institutional_partners')
+        .update(updateData)
+        .eq('id', partnerId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ [PartnersManagement] Erro ao atualizar parceiro:', error);
+        console.error('❌ [PartnersManagement] Detalhes:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+
+      if (!updatedPartner) {
+        throw new Error('Nenhum parceiro foi atualizado. Verifique se você tem permissão.');
+      }
+
+      console.log('✅ [PartnersManagement] Parceiro atualizado com sucesso:', updatedPartner);
 
       // Enviar email de notificação (não bloqueia a ação se falhar)
       if (partner?.contact_email) {
@@ -125,7 +172,18 @@ export default function PartnersManagement() {
       };
 
       toast(messages[status] || { title: 'Status atualizado', description: '' });
-      loadPartners();
+      
+      // Atualizar estado local imediatamente para feedback visual instantâneo
+      setPartners(prevPartners => 
+        prevPartners.map(p => 
+          p.id === partnerId 
+            ? { ...p, status, is_active: status === 'approved' }
+            : p
+        )
+      );
+      
+      // Recarregar lista completa do banco para garantir sincronização
+      await loadPartners();
     } catch (error: any) {
       toast({
         title: 'Erro',
@@ -397,6 +455,36 @@ export default function PartnersManagement() {
                   <p className="text-gray-700 mt-1">{selectedPartner.description}</p>
                 </div>
               )}
+
+              {/* Informações de Identificação */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedPartner.partner_type && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Tipo de Parceiro</label>
+                    <p className="text-gray-700 mt-1 capitalize">{selectedPartner.partner_type}</p>
+                  </div>
+                )}
+                {selectedPartner.person_type && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Tipo de Pessoa</label>
+                    <p className="text-gray-700 mt-1">
+                      {selectedPartner.person_type === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                    </p>
+                  </div>
+                )}
+                {selectedPartner.cpf && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">CPF</label>
+                    <p className="text-gray-700 mt-1 font-mono">{selectedPartner.cpf}</p>
+                  </div>
+                )}
+                {selectedPartner.cnpj && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">CNPJ</label>
+                    <p className="text-gray-700 mt-1 font-mono">{selectedPartner.cnpj}</p>
+                  </div>
+                )}
+              </div>
 
               {selectedPartner.discount_offer && (
                 <div className="bg-green-50 p-4 rounded-lg">

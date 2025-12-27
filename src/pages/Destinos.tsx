@@ -26,14 +26,12 @@ interface Destination {
 }
 
 const Destinos = () => {
-  console.log("🏞️ DESTINOS: Componente Destinos sendo renderizado");
-  
   const [destinos, setDestinos] = useState<Destination[]>([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+
+  try {
   
-  console.log("🏞️ DESTINOS: Estado - loading:", loading, "destinos.length:", destinos.length);
 
   useEffect(() => {
     const fetchDestinos = async () => {
@@ -110,10 +108,14 @@ const Destinos = () => {
         }
       } catch (error) {
         console.error('Erro ao buscar destinos:', error);
-        toast({
-          title: "Aviso",
-          description: "Carregando destinos de exemplo.",
-        });
+        if (toast) {
+          toast({
+            title: "Aviso",
+            description: "Carregando destinos de exemplo.",
+          });
+        } else {
+          console.log("🏞️ DESTINOS: Hook toast não disponível, usando dados mock");
+        }
         // Definir dados mock em caso de erro também
         setDestinos([
           {
@@ -146,6 +148,7 @@ const Destinos = () => {
   const destinosFiltrados = categoriaAtiva === "Todos" 
     ? destinos 
     : destinos.filter(d => d.category === categoriaAtiva);
+
 
   return (
     <UniversalLayout>
@@ -218,9 +221,19 @@ const Destinos = () => {
                 >
                     <div className="relative h-64 overflow-hidden">
                     <img 
-                      src={destino.image_url} 
+                      src={destino.image_url ? `${destino.image_url}?t=${destino.updated_at ? new Date(destino.updated_at).getTime() : Date.now()}` : ''} 
                       alt={destino.name} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      onError={(e) => {
+                        console.warn('Erro ao carregar imagem do destino:', destino.image_url);
+                        const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="400" height="300" fill="#e5e7eb"/>
+                          <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
+                            Imagem não disponível
+                          </text>
+                        </svg>`)}`;
+                        (e.target as HTMLImageElement).src = placeholderSvg;
+                      }}
                     />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute top-4 right-4 bg-gradient-to-r from-ms-pantanal-green to-ms-discovery-teal text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
@@ -270,6 +283,40 @@ const Destinos = () => {
       </main>
     </UniversalLayout>
   );
+  } catch (error) {
+    console.error("🏞️ DESTINOS: Erro no componente Destinos:", error);
+    return (
+      <UniversalLayout>
+        <main className="flex-grow">
+          <div className="bg-gradient-to-r from-ms-cerrado-orange to-ms-guavira-purple py-16">
+            <div className="ms-container text-center">
+              <Compass size={48} className="text-white mx-auto mb-4" />
+              <h1 className="text-4xl font-bold text-white mb-6">Destinos</h1>
+              <p className="text-white/90 text-xl max-w-2xl mx-auto">
+                Explore os melhores destinos turísticos de Mato Grosso do Sul
+              </p>
+            </div>
+          </div>
+
+          <div className="ms-container py-12">
+            <div className="text-center py-20">
+              <div className="bg-red-50 rounded-2xl p-12 max-w-md mx-auto">
+                <Compass size={64} className="text-red-500 mx-auto mb-4 opacity-50" />
+                <p className="text-red-600 text-lg mb-2">Erro ao carregar destinos</p>
+                <p className="text-gray-500 text-sm">Por favor, recarregue a página ou tente novamente mais tarde.</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-6 py-2 bg-ms-primary-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Recarregar Página
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </UniversalLayout>
+    );
+  }
 };
 
 export default Destinos;

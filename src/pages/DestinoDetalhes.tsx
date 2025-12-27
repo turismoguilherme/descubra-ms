@@ -279,9 +279,25 @@ const DestinoDetalhes = () => {
         {/* Hero com Imagem */}
         <div className="relative h-[60vh] min-h-[400px]">
           <img
-            src={allImages[currentImageIndex] || destination.image_url}
+            src={(() => {
+              const imgUrl = allImages[currentImageIndex] || destination.image_url;
+              if (!imgUrl) return '';
+              // Adicionar cache busting se for URL do Supabase Storage
+              const timestamp = destination.updated_at ? new Date(destination.updated_at).getTime() : Date.now();
+              return imgUrl.includes('supabase.co') ? `${imgUrl}?t=${timestamp}` : imgUrl;
+            })()}
             alt={destination.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              console.warn('Erro ao carregar imagem do destino:', allImages[currentImageIndex] || destination.image_url);
+              const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+                <rect width="800" height="600" fill="#e5e7eb"/>
+                <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
+                  Imagem não disponível
+                </text>
+              </svg>`)}`;
+              (e.target as HTMLImageElement).src = placeholderSvg;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           
