@@ -29,6 +29,7 @@ interface Destination {
 }
 
 const Destinos = () => {
+  // Componente Destinos - versão atualizada sem dependência de toast
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
