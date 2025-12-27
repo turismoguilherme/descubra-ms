@@ -17,10 +17,12 @@ import {
   ChevronRight,
   Calendar,
   Car,
-  Star
+  Star,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePageTracking } from "@/hooks/usePageTracking";
 
@@ -35,25 +37,25 @@ interface Destination {
 
 interface DestinationDetails {
   id: string;
-  promotional_text: string;
-  video_url: string;
-  video_type: 'youtube' | 'upload' | null;
-  map_latitude: number;
-  map_longitude: number;
-  tourism_tags: string[];
-  image_gallery: string[];
+  promotional_text?: string | null;
+  video_url?: string | null;
+  video_type?: 'youtube' | 'upload' | null;
+  map_latitude?: number | null;
+  map_longitude?: number | null;
+  tourism_tags?: string[] | null;
+  image_gallery?: string[] | null;
   // Novos campos
-  official_website?: string;
+  official_website?: string | null;
   social_links?: {
     instagram?: string;
     facebook?: string;
     youtube?: string;
-  };
-  contact_phone?: string;
-  contact_email?: string;
-  highlights?: string[];
-  best_time_to_visit?: string;
-  how_to_get_there?: string;
+  } | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  highlights?: string[] | null;
+  best_time_to_visit?: string | null;
+  how_to_get_there?: string | null;
 }
 
 const DestinoDetalhes = () => {
@@ -64,6 +66,8 @@ const DestinoDetalhes = () => {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
 
   usePageTracking({
     target_id: destination?.id,
@@ -188,21 +192,59 @@ const DestinoDetalhes = () => {
             promotional_text: `Descubra ${fallbackDestination.name}, ${mockDetails.promotional_text}`
           });
         } else {
+          console.log('✅ DestinoDetalhes: Destino encontrado:', destinationData.name);
           setDestination(destinationData);
           
-          const { data: detailsData } = await supabase
+          const { data: detailsData, error: detailsError } = await supabase
             .from('destination_details')
             .select('*')
             .eq('destination_id', id)
             .single();
 
-          if (detailsData) {
+          if (detailsError) {
+            console.warn('⚠️ DestinoDetalhes: Erro ao buscar detalhes:', detailsError);
+            console.log('📋 DestinoDetalhes: Usando detalhes mock como fallback');
+            // Usa detalhes mock se não encontrar no banco
             setDetails({
+              id: destinationData.id,
+              ...mockDetails
+            });
+          } else if (detailsData) {
+            console.log('✅ DestinoDetalhes: Detalhes encontrados no banco');
+            console.log('📹 DestinoDetalhes: video_url:', detailsData.video_url, '(tipo:', typeof detailsData.video_url, ')');
+            console.log('🗺️ DestinoDetalhes: map_latitude:', detailsData.map_latitude, '(tipo:', typeof detailsData.map_latitude, ')');
+            console.log('🗺️ DestinoDetalhes: map_longitude:', detailsData.map_longitude, '(tipo:', typeof detailsData.map_longitude, ')');
+            console.log('🖼️ DestinoDetalhes: image_gallery:', detailsData.image_gallery?.length || 0, 'imagens');
+            console.log('📋 DestinoDetalhes: Dados completos:', JSON.stringify(detailsData, null, 2));
+            
+            // Garantir que valores null sejam tratados corretamente
+            const processedDetails = {
               ...detailsData,
+              video_url: detailsData.video_url && detailsData.video_url.trim() ? detailsData.video_url.trim() : null,
+              map_latitude: detailsData.map_latitude != null && !isNaN(Number(detailsData.map_latitude)) ? Number(detailsData.map_latitude) : null,
+              map_longitude: detailsData.map_longitude != null && !isNaN(Number(detailsData.map_longitude)) ? Number(detailsData.map_longitude) : null,
               video_type: detailsData.video_type as 'youtube' | 'upload' | null,
               social_links: detailsData.social_links || {}
+            };
+            
+            console.log('✅ DestinoDetalhes: Dados processados:', {
+              video_url: processedDetails.video_url,
+              video_type: processedDetails.video_type,
+              map_latitude: processedDetails.map_latitude,
+              map_longitude: processedDetails.map_longitude,
             });
+            
+            // Log específico para debug do vídeo
+            if (!processedDetails.video_url && processedDetails.video_type === 'youtube') {
+              console.warn('⚠️ DestinoDetalhes: video_url é null mas video_type é youtube!');
+            }
+            if (processedDetails.video_url) {
+              console.log('✅ DestinoDetalhes: Vídeo encontrado:', processedDetails.video_url);
+            }
+            
+            setDetails(processedDetails);
           } else {
+            console.log('📋 DestinoDetalhes: Nenhum detalhe encontrado, usando mock');
             // Usa detalhes mock se não encontrar no banco
             setDetails({
               id: destinationData.id,
@@ -232,7 +274,9 @@ const DestinoDetalhes = () => {
     return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : url;
   };
 
-  const allImages = details?.image_gallery || (destination?.image_url ? [destination.image_url] : []);
+  const allImages = details?.image_gallery && details.image_gallery.length > 0 
+    ? details.image_gallery 
+    : (destination?.image_url ? [destination.image_url] : []);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -241,6 +285,44 @@ const DestinoDetalhes = () => {
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
+
+  const openLightbox = (index: number) => {
+    setLightboxImageIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
+
+  const nextLightboxImage = () => {
+    setLightboxImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevLightboxImage = () => {
+    setLightboxImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  // Navegação por teclado no lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setLightboxImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setLightboxImageIndex((prev) => (prev + 1) % allImages.length);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setLightboxOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, allImages.length]);
 
   if (loading) {
     return (
@@ -374,20 +456,17 @@ const DestinoDetalhes = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Coluna Principal */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Descrição */}
-                <div className="bg-white rounded-2xl p-8 shadow-sm">
-                  <h2 className="text-2xl font-bold text-ms-primary-blue mb-4">
-                    Sobre {destination.name}
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed text-lg mb-4">
-                    {destination.description}
-                  </p>
-                  {details?.promotional_text && (
-                    <p className="text-gray-600 leading-relaxed">
-                        {details.promotional_text}
-                      </p>
-                  )}
-                </div>
+              {/* Descrição - Apenas texto promocional */}
+                {details?.promotional_text && (
+                  <div className="bg-white rounded-2xl p-8 shadow-sm">
+                    <h2 className="text-2xl font-bold text-ms-primary-blue mb-4">
+                      Sobre {destination.name}
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-lg">
+                      {details.promotional_text}
+                    </p>
+                  </div>
+                )}
 
                 {/* Destaques */}
                 {details?.highlights && details.highlights.length > 0 && (
@@ -419,33 +498,127 @@ const DestinoDetalhes = () => {
                     <div className="aspect-video rounded-xl overflow-hidden shadow-lg">
                         <iframe
                           src={getYouTubeEmbedUrl(details.video_url)}
-                        className="w-full h-full"
+                          className="w-full h-full"
                           allowFullScreen
-                        title={`Vídeo de ${destination.name}`}
-                      />
+                          title={`Vídeo de ${destination.name}`}
+                        />
                     </div>
-                    </div>
-                )}
+                  </div>
+              )}
+              
+              {/* Debug vídeo - remover depois */}
+              {details?.video_url === null && details?.video_type === 'youtube' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
+                  ⚠️ Debug: video_url está null mas video_type é youtube. Verifique os dados salvos.
+                </div>
+              )}
 
                 {/* Galeria de Fotos */}
-                {allImages.length > 1 && (
+                {allImages.length > 0 && (
                   <div className="bg-white rounded-2xl p-8 shadow-sm">
                     <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">
                       Galeria de Fotos
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {allImages.map((image, index) => (
-                        <img
-                          key={index}
-                          src={image}
-                          alt={`${destination.name} - Foto ${index + 1}`}
-                          onClick={() => setCurrentImageIndex(index)}
-                          className="w-full aspect-square object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity shadow-md"
-                        />
-                      ))}
+                      {allImages.map((image, index) => {
+                        // Melhorar qualidade da imagem - remover parâmetros de compressão se houver
+                        const optimizedImageUrl = image.includes('supabase.co') 
+                          ? image.split('?')[0] + '?width=800&quality=90'
+                          : image;
+                        
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => openLightbox(index)}
+                            className="relative group cursor-pointer overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all bg-gray-100"
+                          >
+                            <img
+                              src={optimizedImageUrl}
+                              alt={`${destination.name} - Foto ${index + 1}`}
+                              className="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              style={{
+                                imageRendering: 'high-quality',
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="bg-white/95 rounded-full p-3 shadow-lg">
+                                  <ChevronRight className="w-5 h-5 text-ms-primary-blue" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
               )}
+
+              {/* Lightbox Modal - Modal mais compacto e elegante */}
+              <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+                <DialogContent 
+                  className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 bg-transparent border-none shadow-none m-0"
+                  hideOverlay={true}
+                >
+                  <DialogTitle className="sr-only">
+                    Galeria de Fotos - {destination.name}
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Visualizador de imagens da galeria. Use as setas ou teclas do teclado para navegar entre as imagens.
+                  </DialogDescription>
+                  
+                  {/* Fundo transparente - overlay removido */}
+                  
+                  {/* Container principal */}
+                  <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+                    {/* Botão Fechar removido - usando o X padrão do Dialog */}
+
+                    {/* Imagem */}
+                    <img
+                      src={(() => {
+                        const imgUrl = allImages[lightboxImageIndex];
+                        // Melhorar qualidade - remover compressão para imagens do Supabase
+                        if (imgUrl.includes('supabase.co')) {
+                          return imgUrl.split('?')[0] + '?width=1920&quality=95';
+                        }
+                        return imgUrl;
+                      })()}
+                      alt={`${destination.name} - Foto ${lightboxImageIndex + 1}`}
+                      className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+                    />
+
+                    {/* Navegação - Anterior */}
+                    {allImages.length > 1 && (
+                      <button
+                        onClick={prevLightboxImage}
+                        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-full transition-all shadow-lg"
+                        aria-label="Imagem anterior"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                    )}
+
+                    {/* Navegação - Próxima */}
+                    {allImages.length > 1 && (
+                      <button
+                        onClick={nextLightboxImage}
+                        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-full transition-all shadow-lg"
+                        aria-label="Próxima imagem"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    )}
+
+                    {/* Indicador de posição */}
+                    {allImages.length > 1 && (
+                      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white/90 text-gray-900 px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                        {lightboxImageIndex + 1} / {allImages.length}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Sidebar */}
@@ -492,6 +665,7 @@ const DestinoDetalhes = () => {
                         <ExternalLink className="w-4 h-4 ml-auto text-gray-400" />
                       </a>
                     )}
+                    {/* YouTube removido das redes sociais para não confundir com video_url */}
                   </div>
                 </div>
 

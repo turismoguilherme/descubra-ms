@@ -515,16 +515,25 @@ export default function DestinationManager() {
 
       // Upload de novas imagens da galeria
       const newUploadedUrls = await uploadGalleryImages(destinationId);
+      // IMPORTANTE: Usar galleryImages atualizado (já com imagens removidas pelo usuário) + novas imagens
       const allGalleryImages = [...galleryImages, ...newUploadedUrls];
+      
+      console.log('🖼️ [DestinationManager] Galeria sendo salva:', {
+        galleryImages_count: galleryImages.length,
+        newUploadedUrls_count: newUploadedUrls.length,
+        allGalleryImages_count: allGalleryImages.length,
+        galleryImages: galleryImages,
+        allGalleryImages: allGalleryImages
+      });
 
-      // Preparar dados de detalhes
+      // Preparar dados de detalhes - IMPORTANTE: sempre retornar arrays (mesmo vazios)
       const tourismTags = detailsData.tourism_tags
         ? detailsData.tourism_tags.split(',').map(t => t.trim()).filter(t => t)
-        : null;
+        : [];
 
       const highlights = detailsData.highlights
         ? detailsData.highlights.split('\n').map(h => h.trim()).filter(h => h)
-        : null;
+        : [];
 
       const socialLinks = {
         ...(detailsData.social_instagram && { instagram: detailsData.social_instagram }),
@@ -532,40 +541,85 @@ export default function DestinationManager() {
         ...(detailsData.social_youtube && { youtube: detailsData.social_youtube }),
       };
 
+      // Validar e converter strings vazias para null
+      // IMPORTANTE: Manter a string se não estiver vazia, apenas trim
+      const videoUrlRaw = detailsData.video_url?.trim();
+      const videoUrl = videoUrlRaw && videoUrlRaw.length > 0 ? videoUrlRaw : null;
+      
+      const mapLat = detailsData.map_latitude?.trim() 
+        ? (isNaN(parseFloat(detailsData.map_latitude)) ? null : parseFloat(detailsData.map_latitude))
+        : null;
+      const mapLng = detailsData.map_longitude?.trim()
+        ? (isNaN(parseFloat(detailsData.map_longitude)) ? null : parseFloat(detailsData.map_longitude))
+        : null;
+
+      console.log('💾 [DestinationManager] Salvando detalhes:', {
+        video_url_raw: detailsData.video_url,
+        video_url_trimmed: videoUrlRaw,
+        video_url_final: videoUrl,
+        video_url_length: detailsData.video_url?.length,
+        map_latitude: mapLat,
+        map_longitude: mapLng,
+        map_latitude_raw: detailsData.map_latitude,
+        map_longitude_raw: detailsData.map_longitude,
+      });
+
       const detailsPayload = {
         destination_id: destinationId,
-        promotional_text: detailsData.promotional_text || null,
-        video_url: detailsData.video_url || null,
+        promotional_text: detailsData.promotional_text?.trim() || null,
+        video_url: videoUrl,
         video_type: detailsData.video_type,
-        map_latitude: detailsData.map_latitude ? parseFloat(detailsData.map_latitude) : null,
-        map_longitude: detailsData.map_longitude ? parseFloat(detailsData.map_longitude) : null,
-        address: detailsData.address || null, // Novo campo para endereço
+        map_latitude: mapLat,
+        map_longitude: mapLng,
+        address: detailsData.address?.trim() || null,
+        // IMPORTANTE: Sempre salvar arrays (mesmo vazios) para garantir que sejam atualizados
         tourism_tags: tourismTags,
-        image_gallery: allGalleryImages.length > 0 ? allGalleryImages : null,
-        official_website: detailsData.official_website || null,
+        image_gallery: allGalleryImages,
+        official_website: detailsData.official_website?.trim() || null,
         social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
-        contact_phone: detailsData.contact_phone || null,
-        contact_email: detailsData.contact_email || null,
+        contact_phone: detailsData.contact_phone?.trim() || null,
+        contact_email: detailsData.contact_email?.trim() || null,
+        // IMPORTANTE: Arrays já são arrays (não null), então salvar diretamente
         highlights: highlights,
-        how_to_get_there: detailsData.how_to_get_there || null,
-        best_time_to_visit: detailsData.best_time_to_visit || null,
+        how_to_get_there: detailsData.how_to_get_there?.trim() || null,
+        best_time_to_visit: detailsData.best_time_to_visit?.trim() || null,
         updated_at: new Date().toISOString(),
       };
 
       // Salvar ou atualizar detalhes
+      console.log('💾 [DestinationManager] Payload completo sendo enviado:', JSON.stringify(detailsPayload, null, 2));
+      
       if (editingDetails) {
-        const { error } = await supabase
+        console.log('💾 [DestinationManager] Atualizando detalhes existentes:', editingDetails.id);
+        const { data: updateData, error } = await supabase
           .from('destination_details')
           .update(detailsPayload)
-          .eq('id', editingDetails.id);
+          .eq('id', editingDetails.id)
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ [DestinationManager] Erro ao atualizar detalhes:', error);
+          throw error;
+        }
+        console.log('✅ [DestinationManager] Detalhes atualizados:', updateData);
+        console.log('✅ [DestinationManager] video_url salvo no banco:', updateData.video_url);
       } else {
-        const { error } = await supabase
+        console.log('💾 [DestinationManager] Criando novos detalhes');
+        const { data: insertData, error } = await supabase
           .from('destination_details')
-          .insert(detailsPayload);
+          .insert(detailsPayload)
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ [DestinationManager] Erro ao criar detalhes:', error);
+          throw error;
+        }
+        console.log('✅ [DestinationManager] Detalhes criados:', insertData);
+        console.log('✅ [DestinationManager] video_url salvo no banco:', insertData.video_url);
+        console.log('✅ [DestinationManager] image_gallery salvo no banco:', insertData.image_gallery);
+        console.log('✅ [DestinationManager] highlights salvos no banco:', insertData.highlights);
       }
 
       toast({
