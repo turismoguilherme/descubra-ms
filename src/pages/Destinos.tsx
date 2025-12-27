@@ -4,7 +4,6 @@ import { Compass, MapPin, Star, ArrowRight, Palmtree, Mountain, Waves, Building2
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useSearchParams, useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { useBrand } from "@/context/BrandContext";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +29,6 @@ interface Destination {
 }
 
 const Destinos = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -172,7 +170,7 @@ const Destinos = () => {
     };
 
     fetchDestinos();
-  }, [toast, regiaoFiltrada, cidadeParam, isMS]);
+  }, [regiaoFiltrada, cidadeParam, isMS]);
 
   // Função auxiliar para dados mock
   const getMockDestinations = (): Destination[] => [
