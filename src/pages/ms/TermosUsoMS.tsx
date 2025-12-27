@@ -188,39 +188,94 @@ const TermosUsoMS = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-ms-pantanal-green">2. Descrição dos Serviços</h2>
               </div>
-              <div className="ml-12 space-y-3">
+              <div className="ml-12 space-y-4">
                 <p className="text-gray-700 leading-relaxed">
-                  A plataforma <strong>Descubra Mato Grosso do Sul</strong> oferece os seguintes serviços:
+                  A plataforma <strong>Descubra Mato Grosso do Sul</strong> é um portal completo de turismo que oferece 
+                  os seguintes serviços:
                 </p>
-                <div className="space-y-3">
-                  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-ms-primary-blue">
-                    <strong className="text-ms-primary-blue">Informações sobre Destinos Turísticos</strong>
-                    <p className="text-sm text-gray-700 mt-1">
-                      Informações detalhadas sobre pontos turísticos, atrações, roteiros e experiências no estado.
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-ms-primary-blue">
+                    <strong className="text-ms-primary-blue text-lg">Portal de Informações Turísticas</strong>
+                    <p className="text-sm text-gray-700 mt-2">
+                      Portal abrangente com informações detalhadas sobre:
+                    </p>
+                    <ul className="text-sm text-gray-700 mt-2 ml-4 space-y-1 list-disc">
+                      <li>Pontos turísticos, atrações naturais e culturais de Mato Grosso do Sul</li>
+                      <li>Roteiros turísticos personalizados e sugestões de viagem</li>
+                      <li>Experiências turísticas únicas no estado</li>
+                      <li>Mapas interativos com geolocalização</li>
+                      <li>Informações sobre hospedagem, gastronomia e serviços turísticos</li>
+                    </ul>
+                  </div>
+                  <div className="bg-green-50 p-5 rounded-lg border-l-4 border-ms-pantanal-green">
+                    <strong className="text-ms-pantanal-green text-lg">Passaporte Digital</strong>
+                    <p className="text-sm text-gray-700 mt-2">
+                      Sistema de gamificação que permite:
+                    </p>
+                    <ul className="text-sm text-gray-700 mt-2 ml-4 space-y-1 list-disc">
+                      <li><strong>Check-in em pontos turísticos:</strong> usando geolocalização GPS do seu dispositivo para validar visitas</li>
+                      <li><strong>Sistema de pontos e conquistas:</strong> ganhe pontos ao visitar destinos e desbloqueie conquistas</li>
+                      <li><strong>Histórico de rotas:</strong> registre todas as rotas turísticas que você completou</li>
+                      <li><strong>Recompensas:</strong> resgate benefícios e descontos oferecidos por parceiros turísticos</li>
+                      <li><strong>Compartilhamento social:</strong> compartilhe suas visitas, fotos e experiências</li>
+                    </ul>
+                    <p className="text-xs text-gray-600 mt-2 italic">
+                      O Passaporte Digital requer criação de conta e permissão de geolocalização. As recompensas são 
+                      oferecidas pelos parceiros e podem ter condições específicas.
                     </p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg border-l-4 border-ms-pantanal-green">
-                    <strong className="text-ms-pantanal-green">Passaporte Digital</strong>
-                    <p className="text-sm text-gray-700 mt-1">
-                      Sistema de check-in em pontos turísticos com registro de visitas e recompensas.
+                  <div className="bg-teal-50 p-5 rounded-lg border-l-4 border-ms-discovery-teal">
+                    <strong className="text-ms-discovery-teal text-lg">Guatá - Assistente Virtual com Inteligência Artificial</strong>
+                    <p className="text-sm text-gray-700 mt-2">
+                      Assistente virtual inteligente que oferece:
+                    </p>
+                    <ul className="text-sm text-gray-700 mt-2 ml-4 space-y-1 list-disc">
+                      <li><strong>Chatbot interativo:</strong> converse com o Guatá para tirar dúvidas sobre turismo em Mato Grosso do Sul</li>
+                      <li><strong>Recomendações personalizadas:</strong> receba sugestões de destinos baseadas nas suas preferências</li>
+                      <li><strong>Busca web integrada:</strong> o Guatá pode buscar informações atualizadas na internet quando necessário</li>
+                      <li><strong>Informações sobre destinos próximos:</strong> descubra atrações próximas à sua localização</li>
+                      <li><strong>Histórico de conversas:</strong> suas conversas são salvas para melhorar recomendações futuras</li>
+                    </ul>
+                    <div className="bg-blue-50 border border-ms-primary-blue p-3 rounded mt-3">
+                      <p className="text-xs text-gray-700">
+                        <strong>ℹ️ Informação:</strong> O Guatá utiliza Inteligência Artificial (Google Gemini) para fornecer 
+                        informações e recomendações sobre turismo. As respostas são geradas automaticamente e devem ser usadas como 
+                        referência inicial. Para informações oficiais e decisões importantes, recomendamos consultar fontes oficiais 
+                        e verificar detalhes diretamente com os estabelecimentos ou órgãos responsáveis.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-ms-primary-blue">
+                    <strong className="text-ms-primary-blue text-lg">Cadastro de Eventos</strong>
+                    <p className="text-sm text-gray-700 mt-2">
+                      Funcionalidade que permite:
+                    </p>
+                    <ul className="text-sm text-gray-700 mt-2 ml-4 space-y-1 list-disc">
+                      <li>Visualizar eventos turísticos e culturais cadastrados na plataforma</li>
+                      <li>Buscar eventos por data, localização ou categoria</li>
+                      <li>Salvar eventos nos favoritos para acompanhamento</li>
+                      <li>Receber notificações sobre eventos de interesse (com seu consentimento)</li>
+                    </ul>
+                    <p className="text-xs text-gray-600 mt-2 italic">
+                      Os eventos são cadastrados por terceiros (organizadores, parceiros, órgãos públicos). A viajARTUR 
+                      não se responsabiliza pela veracidade das informações ou pela realização dos eventos.
                     </p>
                   </div>
-                  <div className="bg-teal-50 p-4 rounded-lg border-l-4 border-ms-discovery-teal">
-                    <strong className="text-ms-discovery-teal">Guatá - Assistente Virtual com IA</strong>
-                    <p className="text-sm text-gray-700 mt-1">
-                      Assistente virtual inteligente para tirar dúvidas e fornecer informações sobre turismo.
+                  <div className="bg-green-50 p-5 rounded-lg border-l-4 border-ms-pantanal-green">
+                    <strong className="text-ms-pantanal-green text-lg">Programa de Parceiros</strong>
+                    <p className="text-sm text-gray-700 mt-2">
+                      Sistema que conecta você com estabelecimentos turísticos:
                     </p>
-                  </div>
-                  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-ms-primary-blue">
-                    <strong className="text-ms-primary-blue">Cadastro de Eventos</strong>
-                    <p className="text-sm text-gray-700 mt-1">
-                      Funcionalidade para cadastrar e promover eventos turísticos e culturais.
-                    </p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg border-l-4 border-ms-pantanal-green">
-                    <strong className="text-ms-pantanal-green">Programa de Parceiros</strong>
-                    <p className="text-sm text-gray-700 mt-1">
-                      Sistema para estabelecimentos turísticos se cadastrarem como parceiros da plataforma.
+                    <ul className="text-sm text-gray-700 mt-2 ml-4 space-y-1 list-disc">
+                      <li><strong>Diretório de parceiros:</strong> hotéis, restaurantes, agências de turismo, pontos turísticos</li>
+                      <li><strong>Reservas e transações:</strong> faça reservas diretamente através da plataforma</li>
+                      <li><strong>Recompensas exclusivas:</strong> parceiros oferecem benefícios para usuários do Passaporte Digital</li>
+                      <li><strong>Avaliações e comentários:</strong> compartilhe sua experiência com outros usuários</li>
+                    </ul>
+                    <p className="text-xs text-gray-600 mt-2 italic">
+                      Os parceiros são responsáveis pelos serviços oferecidos e pelo tratamento dos dados compartilhados 
+                      para viabilizar reservas. A viajARTUR atua como intermediária e não se responsabiliza por serviços 
+                      prestados pelos parceiros.
                     </p>
                   </div>
                 </div>
@@ -247,6 +302,87 @@ const TermosUsoMS = () => {
                   <li>Você deve ter pelo menos 18 anos ou ter autorização de responsável legal;</li>
                   <li>Reservamo-nos o direito de suspender ou encerrar contas que violem estes termos.</li>
                 </ul>
+              </div>
+            </section>
+
+            {/* Seção 3.1 - Recuperação e Redefinição de Senha */}
+            <section className="mb-8">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-2 rounded-lg flex-shrink-0">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-ms-primary-blue">3.1. Recuperação e Redefinição de Senha</h2>
+              </div>
+              <div className="ml-12 space-y-4">
+                <p className="text-gray-700 leading-relaxed">
+                  Se você esqueceu sua senha ou precisa redefini-la, siga o processo abaixo:
+                </p>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">Como Recuperar sua Senha</h3>
+                  <ol className="space-y-3 list-decimal list-inside text-gray-700 ml-4">
+                    <li>
+                      <strong>Acesse a página de recuperação de senha:</strong> Na tela de login, clique em "Esqueci minha senha" 
+                      ou "Recuperar senha"
+                    </li>
+                    <li>
+                      <strong>Informe seu e-mail cadastrado:</strong> Digite o endereço de e-mail associado à sua conta
+                    </li>
+                    <li>
+                      <strong>Verifique sua caixa de entrada:</strong> Você receberá um e-mail com um link para redefinir sua senha
+                    </li>
+                    <li>
+                      <strong>Clique no link recebido:</strong> O link direcionará você para uma página segura onde poderá criar uma nova senha
+                    </li>
+                    <li>
+                      <strong>Crie uma nova senha:</strong> Digite uma senha forte (mínimo de 8 caracteres, incluindo letras, números e símbolos)
+                    </li>
+                    <li>
+                      <strong>Confirme a nova senha:</strong> Digite a senha novamente para confirmar
+                    </li>
+                    <li>
+                      <strong>Faça login:</strong> Após redefinir, você poderá fazer login com sua nova senha
+                    </li>
+                  </ol>
+                </div>
+
+                <div className="bg-blue-50 border-l-4 border-ms-primary-blue p-4 rounded-r-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Segurança do Processo</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>O link de recuperação é <strong>único e temporário</strong> - cada solicitação gera um novo link</li>
+                    <li>O link expira após <strong>24 horas</strong> por motivos de segurança</li>
+                    <li>O link só pode ser usado <strong>uma vez</strong> - após o uso, ele se torna inválido</li>
+                    <li>O e-mail é enviado apenas para o <strong>endereço cadastrado</strong> na conta</li>
+                    <li>Não compartilhe o link de recuperação com terceiros</li>
+                  </ul>
+                </div>
+
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">O que fazer se não receber o e-mail</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li>Verifique sua <strong>caixa de spam ou lixo eletrônico</strong> - o e-mail pode ter sido filtrado</li>
+                    <li>Confirme que está usando o <strong>e-mail correto</strong> cadastrado na conta</li>
+                    <li>Aguarde alguns minutos - o e-mail pode demorar até <strong>5 minutos</strong> para chegar</li>
+                    <li>Se após 10 minutos você não receber o e-mail, <strong>solicite novamente</strong> o link de recuperação</li>
+                    <li>Se o problema persistir, entre em contato conosco pelo e-mail <strong>suporte@descubramsconline.com.br</strong></li>
+                  </ul>
+                </div>
+
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Importante sobre Segurança</h3>
+                  <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                    <li><strong>Nunca compartilhe sua senha</strong> com terceiros, mesmo que sejam pessoas de confiança</li>
+                    <li>Use uma <strong>senha forte e única</strong> - não reutilize senhas de outras contas</li>
+                    <li>Se você suspeitar que sua conta foi comprometida, <strong>redefina sua senha imediatamente</strong></li>
+                    <li>Mantenha seu <strong>e-mail cadastrado atualizado</strong> para garantir que você possa recuperar sua conta</li>
+                    <li>Se você não tem mais acesso ao e-mail cadastrado, entre em contato conosco para <strong>atualizar seu e-mail</strong></li>
+                  </ul>
+                </div>
+
+                <p className="text-gray-600 text-sm mt-4 italic">
+                  A viajARTUR se compromete a proteger seus dados e manter o processo de recuperação de senha seguro. 
+                  Se você identificar qualquer atividade suspeita relacionada à sua conta, entre em contato conosco imediatamente.
+                </p>
               </div>
             </section>
 
@@ -348,7 +484,7 @@ const TermosUsoMS = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-ms-pantanal-green">6. Limitação de Responsabilidade</h2>
               </div>
-              <div className="ml-12 space-y-3">
+              <div className="ml-12 space-y-6">
                 <p className="text-gray-700 leading-relaxed">
                   A plataforma é fornecida "como está" e "conforme disponível". A <strong>viajARTUR</strong> 
                   não garante que:
@@ -359,16 +495,87 @@ const TermosUsoMS = () => {
                   <li>Defeitos serão corrigidos;</li>
                   <li>A plataforma estará livre de vírus ou outros componentes prejudiciais.</li>
                 </ul>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">6.1 Sobre o Guatá (Assistente Virtual com IA)</h3>
+                  <div className="bg-blue-50 border-l-4 border-ms-primary-blue p-4 rounded-r-lg">
+                    <p className="text-gray-700 leading-relaxed mb-2">
+                      <strong>ℹ️ Informações sobre o Guatá:</strong>
+                    </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                      <li>O <strong>Guatá utiliza Inteligência Artificial (Google Gemini)</strong> para fornecer informações e recomendações sobre turismo</li>
+                      <li>As respostas são <strong>geradas automaticamente</strong> e devem ser usadas como referência inicial e ferramenta de apoio</li>
+                      <li>Recomendações de destinos e informações fornecidas são <strong>sugestões baseadas em padrões identificados</strong>, não garantias absolutas</li>
+                      <li>A busca web integrada utiliza fontes públicas que podem variar em atualização e precisão</li>
+                      <li>Para <strong>decisões importantes</strong>, recomendamos verificar informações através de fontes oficiais e contatar diretamente os estabelecimentos</li>
+                    </ul>
+                    <p className="text-gray-700 leading-relaxed mt-3">
+                      O Guatá é uma <strong>ferramenta de apoio</strong> que complementa, mas não substitui, a verificação direta 
+                      com fontes oficiais. A <strong>viajARTUR</strong> recomenda que decisões importantes sejam tomadas considerando 
+                      múltiplas fontes de informação.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">6.2 Sobre o Passaporte Digital</h3>
+                  <div className="bg-blue-50 border-l-4 border-ms-primary-blue p-4 rounded-r-lg">
+                    <p className="text-gray-700 leading-relaxed mb-2">
+                      <strong>Limitações e Responsabilidades:</strong>
+                    </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                      <li>As <strong>recompensas são oferecidas pelos parceiros</strong>, não pela viajARTUR. A viajARTUR não garante a disponibilidade, qualidade ou validade das recompensas</li>
+                      <li>Recompensas podem ter <strong>condições específicas</strong> definidas pelos parceiros (validade, quantidade limitada, etc.)</li>
+                      <li>O sistema de check-in depende da <strong>geolocalização GPS</strong> do seu dispositivo, que pode não estar sempre precisa</li>
+                      <li>A viajARTUR não se responsabiliza por <strong>fraudes ou uso indevido</strong> do sistema de pontos e recompensas</li>
+                      <li>Pontos e conquistas são <strong>virtuais</strong> e não têm valor monetário</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">6.3 Sobre Parceiros Turísticos</h3>
+                  <div className="bg-green-50 border-l-4 border-ms-pantanal-green p-4 rounded-r-lg">
+                    <p className="text-gray-700 leading-relaxed mb-2">
+                      <strong>Responsabilidade dos Parceiros:</strong>
+                    </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                      <li>Os <strong>parceiros são responsáveis</strong> pelos serviços oferecidos (hospedagem, alimentação, passeios, etc.)</li>
+                      <li>A viajARTUR atua como <strong>intermediária</strong> e não se responsabiliza pela qualidade, disponibilidade ou cumprimento dos serviços prestados pelos parceiros</li>
+                      <li>Informações sobre parceiros (preços, disponibilidade, avaliações) são fornecidas pelos próprios parceiros ou por terceiros</li>
+                      <li>A viajARTUR não garante a <strong>veracidade das informações</strong> fornecidas pelos parceiros</li>
+                      <li>Disputas relacionadas a reservas ou serviços devem ser <strong>resolvidas diretamente com o parceiro</strong></li>
+                      <li>Recomendamos que você leia os <strong>termos e condições</strong> de cada parceiro antes de fazer reservas</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg mb-3">6.4 Sobre Eventos</h3>
+                  <div className="bg-teal-50 border-l-4 border-ms-discovery-teal p-4 rounded-r-lg">
+                    <p className="text-gray-700 leading-relaxed mb-2">
+                      <strong>Eventos Cadastrados por Terceiros:</strong>
+                    </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
+                      <li>Os eventos são <strong>cadastrados por terceiros</strong> (organizadores, parceiros, órgãos públicos)</li>
+                      <li>A viajARTUR <strong>não se responsabiliza</strong> pela veracidade das informações sobre eventos (data, local, preço, disponibilidade)</li>
+                      <li>A viajARTUR não garante que os eventos serão <strong>realizados conforme anunciado</strong></li>
+                      <li>Cancelamentos, alterações ou problemas com eventos devem ser <strong>resolvidos diretamente com os organizadores</strong></li>
+                      <li>A viajARTUR não se responsabiliza por <strong>ingressos, reembolsos ou danos</strong> relacionados a eventos</li>
+                    </ul>
+                  </div>
+                </div>
+
                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg mt-4">
                   <p className="text-gray-700 leading-relaxed">
-                    <strong>Importante:</strong> A <strong>viajARTUR</strong> não se responsabiliza por:
+                    <strong>Limitações Gerais:</strong> A <strong>viajARTUR</strong> não se responsabiliza por:
                   </p>
                   <ul className="space-y-1 list-disc list-inside text-gray-700 mt-2">
                     <li>Danos diretos, indiretos, incidentais ou consequenciais decorrentes do uso da plataforma;</li>
                     <li>Perda de dados, lucros ou oportunidades de negócio;</li>
-                    <li>Informações incorretas fornecidas por terceiros (parceiros, prestadores de serviços);</li>
                     <li>Experiências turísticas que não atendam às expectativas do usuário;</li>
-                    <li>Cancelamentos ou alterações em eventos ou serviços de terceiros.</li>
+                    <li>Problemas técnicos, indisponibilidade temporária ou interrupções no serviço;</li>
+                    <li>Uso indevido ou não autorizado da plataforma por terceiros.</li>
                   </ul>
                 </div>
               </div>
