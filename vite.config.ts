@@ -22,10 +22,22 @@ export default defineConfig(({ mode }) => ({
     // Removido manualChunks para evitar problemas de ordem de inicialização no Vercel
     // O Vite gerenciará automaticamente o chunking de forma mais segura
     chunkSizeWarningLimit: 1000, // Aumentar limite para 1MB
+    rollupOptions: {
+      output: {
+        // Garantir nomes de arquivo consistentes
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        // Evitar problemas de carregamento dinâmico
+        manualChunks: undefined,
+      },
+    },
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
     },
+    // Garantir que os assets sejam servidos corretamente
+    assetsInlineLimit: 4096,
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'lucide-react', 'zod', '@hookform/resolvers'],
