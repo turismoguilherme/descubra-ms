@@ -108,19 +108,36 @@ export default function DestinationManager() {
   const loadDestinations = async () => {
     setLoading(true);
     try {
+      console.log('🔍 [DestinationManager] Carregando destinos...');
       const { data, error } = await supabase
         .from('destinations')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [DestinationManager] Erro ao carregar destinos:', error);
+        throw error;
+      }
+
+      console.log(`✅ [DestinationManager] ${data?.length || 0} destinos carregados:`, data);
       setDestinations(data || []);
+      
+      if (!data || data.length === 0) {
+        console.warn('⚠️ [DestinationManager] Nenhum destino encontrado no banco de dados');
+        toast({
+          title: 'Nenhum destino encontrado',
+          description: 'Não há destinos cadastrados no banco de dados. Crie um novo destino para começar.',
+          variant: 'default',
+        });
+      }
     } catch (error: any) {
+      console.error('❌ [DestinationManager] Erro ao carregar destinos:', error);
       toast({
         title: 'Erro ao carregar destinos',
-        description: error.message,
+        description: error.message || 'Erro desconhecido ao carregar destinos',
         variant: 'destructive',
       });
+      setDestinations([]);
     } finally {
       setLoading(false);
     }
@@ -623,6 +640,18 @@ export default function DestinationManager() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : destinations.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 bg-muted/50 rounded-lg border-2 border-dashed">
+          <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Nenhum destino encontrado</h3>
+          <p className="text-muted-foreground mb-4 text-center max-w-md">
+            Não há destinos cadastrados no sistema. Clique em "Novo Destino" para criar o primeiro destino.
+          </p>
+          <Button onClick={openCreateDialog}>
+            <Plus className="h-4 w-4 mr-2" />
+            Criar Primeiro Destino
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
