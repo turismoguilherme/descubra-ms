@@ -47,6 +47,7 @@ const ViaJARLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const ViaJARRegister = lazy(() => import("@/pages/OverflowOneRegister"));
 const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
 const IARoutePaymentSuccess = lazy(() => import("@/pages/IARoutePaymentSuccess"));
+const IARoutesPage = lazy(() => import("@/pages/IARoutesPage"));
 const ViaJARForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
 const ViaJARInventory = lazy(() => import("@/pages/OverflowOneInventory"));
 const ViaJARReports = lazy(() => import("@/pages/ReportsPage"));
@@ -266,6 +267,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/passaporte" element={<PassaporteLista />} />
                             <Route path="/descubramatogrossodosul/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                             <Route path="/descubramatogrossodosul/profile" element={<ProfilePageFixed />} />
+                            <Route path="/descubramatogrossodosul/roteiros-personalizados" element={<Suspense fallback={<LoadingFallback />}><IARoutesPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/roteiros-ia/success" element={<Suspense fallback={<LoadingFallback />}><IARoutePaymentSuccess /></Suspense>} />
                             
                             {/* Descubra MS Auth Routes */}
