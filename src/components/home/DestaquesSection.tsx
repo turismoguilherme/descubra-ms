@@ -1,42 +1,58 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { InteractionTracker } from "@/services/tracking/InteractionTrackerService";
-import { MapPin, ArrowRight, Compass } from "lucide-react";
+import { MapPin, ArrowRight, Compass, Loader2 } from "lucide-react";
 import { platformContentService } from '@/services/admin/platformContentService';
+import { supabase } from "@/integrations/supabase/client";
 
-const destinos = [
+interface Destination {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  region?: string;
+  image_url: string;
+}
+
+const destinosMock = [
   {
-    id: 1,
-    nome: "Bonito",
-    imagem: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800",
-    descricao: "Águas cristalinas e ecoturismo de classe mundial",
-    regiao: "Sudoeste"
+    id: "1",
+    name: "Bonito",
+    image_url: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800",
+    description: "Águas cristalinas e ecoturismo de classe mundial",
+    location: "Bonito - MS",
+    region: "Sudoeste"
   },
   {
-    id: 2,
-    nome: "Pantanal",
-    imagem: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800",
-    descricao: "A maior planície alagável do mundo e sua biodiversidade única",
-    regiao: "Pantanal"
+    id: "2",
+    name: "Pantanal",
+    image_url: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800",
+    description: "A maior planície alagável do mundo e sua biodiversidade única",
+    location: "Pantanal - MS",
+    region: "Pantanal"
   },
   {
-    id: 3,
-    nome: "Corumbá",
-    imagem: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800",
-    descricao: "A capital do Pantanal, com rica história e cultura",
-    regiao: "Pantanal"
+    id: "3",
+    name: "Corumbá",
+    image_url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800",
+    description: "A capital do Pantanal, com rica história e cultura",
+    location: "Corumbá - MS",
+    region: "Pantanal"
   },
   {
-    id: 4,
-    nome: "Campo Grande",
-    imagem: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800",
-    descricao: "A capital do estado, com atrativos urbanos e culturais",
-    regiao: "Centro"
+    id: "4",
+    name: "Campo Grande",
+    image_url: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800",
+    description: "A capital do estado, com atrativos urbanos e culturais",
+    location: "Campo Grande - MS",
+    region: "Centro"
   }
 ];
 
 const DestaquesSection = () => {
   const [content, setContent] = useState<Record<string, string>>({});
+  const [destinos, setDestinos] = useState<Destination[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -54,14 +70,102 @@ const DestaquesSection = () => {
     loadContent();
   }, []);
 
+  useEffect(() => {
+    const fetchDestinos = async () => {
+      setLoading(true);
+      try {
+        // Tentar renovar a sessão se necessário (para evitar 401)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.expires_at) {
+          const expiresAtMs = session.expires_at * 1000;
+          const nowMs = Date.now();
+          const timeLeftMs = expiresAtMs - nowMs;
+          
+          if (timeLeftMs < 5 * 60 * 1000 && timeLeftMs > 0) {
+            await supabase.auth.refreshSession();
+          } else if (timeLeftMs <= 0) {
+            await supabase.auth.refreshSession();
+          }
+        }
+
+        // Buscar os primeiros 4 destinos do banco de dados
+        const { data, error } = await supabase
+          .from('destinations')
+          .select('*')
+          .order('name')
+          .limit(4);
+
+        // Se erro 401 (JWT expirado), tentar renovar e buscar novamente
+        if (error && (error.message?.includes('JWT') || error.message?.includes('expired') || error.message?.includes('401'))) {
+          console.log("🔄 DESTAQUES: Token expirado, tentando renovar...");
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (!refreshError && refreshData.session) {
+            const { data: retryData, error: retryError } = await supabase
+              .from('destinations')
+              .select('*')
+              .order('name')
+              .limit(4);
+            
+            if (retryError) {
+              throw retryError;
+            }
+            
+            if (!retryData || retryData.length === 0) {
+              console.log("🏞️ DESTAQUES: Nenhum destino encontrado, usando dados mock");
+              setDestinos(destinosMock);
+            } else {
+              setDestinos(retryData || []);
+            }
+          } else {
+            // Se não conseguir renovar, usar dados mock
+            throw error;
+          }
+        } else if (error) {
+          throw error;
+        } else if (!data || data.length === 0) {
+          console.log("🏞️ DESTAQUES: Nenhum destino encontrado, usando dados mock");
+          setDestinos(destinosMock);
+        } else {
+          console.log(`✅ DESTAQUES: ${data.length} destinos carregados do banco`);
+          setDestinos(data || []);
+        }
+      } catch (error: any) {
+        console.error('❌ Erro ao buscar destinos em destaque:', error);
+        // Em caso de erro, usar dados mock
+        setDestinos(destinosMock);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDestinos();
+  }, []);
+
   const getContent = (key: string, fallback: string) => content[key] || fallback;
 
-  const handleDestinationClick = (destino: { id: number; nome: string }) => {
+  const handleDestinationClick = (destino: Destination) => {
     InteractionTracker.track({
       interaction_type: 'destination_click',
-      target_id: destino.id.toString(),
-      target_name: destino.nome,
+      target_id: destino.id,
+      target_name: destino.name,
     });
+  };
+
+  // Extrair região do location (ex: "Bonito - MS" -> "Sudoeste")
+  const getRegionFromLocation = (location: string): string => {
+    const locationLower = location.toLowerCase();
+    if (locationLower.includes('bonito') || locationLower.includes('bodoquena')) {
+      return 'Sudoeste';
+    }
+    if (locationLower.includes('pantanal') || locationLower.includes('corumbá') || locationLower.includes('corumba')) {
+      return 'Pantanal';
+    }
+    if (locationLower.includes('campo grande')) {
+      return 'Centro';
+    }
+    // Tentar extrair do location ou usar padrão
+    return location.split('-')[0].trim() || 'MS';
   };
 
   return (
@@ -83,48 +187,70 @@ const DestaquesSection = () => {
         </div>
 
         {/* Grid de Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {destinos.map((destino) => (
-            <Link 
-              key={destino.id} 
-              to={`/descubramatogrossodosul/destinos/${destino.id}`} 
-              className="group block"
-              onClick={() => handleDestinationClick(destino)}
-            >
-              <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full border border-gray-100">
-                <div className="h-56 overflow-hidden relative">
-                  <img 
-                    src={destino.imagem} 
-                    alt={destino.nome} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-ms-pantanal-green to-ms-discovery-teal text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
-                    {destino.regiao}
-                  </div>
-                </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-md h-full border border-gray-100 animate-pulse">
+                <div className="h-56 bg-gray-200"></div>
                 <div className="p-5">
-                  <h3 className="text-xl font-bold text-ms-primary-blue mb-2 group-hover:text-ms-discovery-teal transition-colors">
-                    {destino.nome}
-                  </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                    {destino.descricao}
-                  </p>
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-1.5 text-gray-500">
-                      <MapPin size={14} className="text-ms-pantanal-green" />
-                      <span className="text-xs font-medium">{destino.regiao}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-ms-primary-blue font-medium text-sm group-hover:gap-2 transition-all">
-                      <span>Explorar</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {destinos.map((destino) => {
+              const regiao = destino.region || getRegionFromLocation(destino.location);
+              return (
+                <Link 
+                  key={destino.id} 
+                  to={`/descubramatogrossodosul/destinos?cidade=${encodeURIComponent(destino.name)}`} 
+                  className="group block"
+                  onClick={() => handleDestinationClick(destino)}
+                >
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full border border-gray-100">
+                    <div className="h-56 overflow-hidden relative">
+                      <img 
+                        src={destino.image_url || "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800"} 
+                        alt={destino.name} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute top-4 right-4 bg-gradient-to-r from-ms-pantanal-green to-ms-discovery-teal text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
+                        {regiao}
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <h3 className="text-xl font-bold text-ms-primary-blue mb-2 group-hover:text-ms-discovery-teal transition-colors">
+                        {destino.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-3">
+                        {destino.description || 'Descubra este destino incrível em Mato Grosso do Sul'}
+                      </p>
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5 text-gray-500">
+                          <MapPin size={14} className="text-ms-pantanal-green" />
+                          <span className="text-xs font-medium">{regiao}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-ms-primary-blue font-medium text-sm group-hover:gap-2 transition-all">
+                          <span>Explorar</span>
+                          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* Botão Ver Todos */}
         <div className="mt-12 text-center">
