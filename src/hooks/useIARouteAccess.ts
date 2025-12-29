@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Hook para verificar se o usuário tem acesso pago aos Roteiros por IA
+ * Hook para verificar se o usuário tem acesso pago aos Roteiros Personalizados
  */
 export const useIARouteAccess = () => {
   const { user } = useAuth();
@@ -19,7 +19,7 @@ export const useIARouteAccess = () => {
       }
 
       try {
-        // Verificar se usuário tem pagamento registrado para Roteiros IA
+        // Verificar se usuário tem pagamento registrado para Roteiros Personalizados
         // Por enquanto, vamos verificar em uma tabela de pagamentos ou user_metadata
         // Se não existir, criar uma forma simples de verificar
         

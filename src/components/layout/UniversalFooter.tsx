@@ -195,18 +195,8 @@ const UniversalFooter = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/seja-um-parceiro" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Seja um Parceiro
-                  </Link>
-                </li>
-                <li>
                   <Link to="/descubramatogrossodosul/partner/login" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Área do Parceiro
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/dados-turismo" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Dados de Turismo
                   </Link>
                 </li>
               </ul>
@@ -259,6 +249,29 @@ const UniversalFooter = () => {
             </div>
           </div>
         </div>
+
+        {/* Logos de Parceiros */}
+        {msSettings.partner_logos && msSettings.partner_logos.length > 0 && (
+          <div className="border-t border-blue-300/30 pt-6 mt-4">
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              {msSettings.partner_logos
+                .sort((a, b) => a.order - b.order)
+                .map((logo) => (
+                  <div key={logo.id} className="flex items-center justify-center">
+                    <img
+                      src={logo.logo_url}
+                      alt={logo.alt_text || logo.name}
+                      className="h-12 w-auto object-contain max-w-[150px] opacity-90 hover:opacity-100 transition-opacity"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `data:image/svg+xml,${encodeURIComponent(`<svg width="150" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="150" height="60" fill="#e5e7eb"/><text x="50%" y="50%" font-family="Arial" font-size="12" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">Logo não disponível</text></svg>`)}`;
+                      }}
+                    />
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Linha separadora e Copyright */}
         <div className="border-t border-blue-300/30 pt-3 mt-4">

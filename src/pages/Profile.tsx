@@ -242,7 +242,7 @@ const Profile = () => {
                 </TabsTrigger>
                 <TabsTrigger value="roteiros-ia" className="flex items-center space-x-2 py-4 px-6 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600">
                   <Sparkles className="w-4 h-4" />
-                  <span>Roteiros IA</span>
+                  <span>Roteiros Personalizados</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -426,12 +426,12 @@ const Profile = () => {
                 </div>
               </TabsContent>
 
-            {/* Aba Roteiros IA */}
+            {/* Aba Roteiros Personalizados */}
             <TabsContent value="roteiros-ia" className="p-6">
               <div className="max-w-5xl mx-auto space-y-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-5 h-5 text-blue-600" />
-                  <h2 className="text-xl font-semibold">Roteiros personalizados por IA (MS)</h2>
+                  <h2 className="text-xl font-semibold">Roteiros Personalizados (MS)</h2>
                 </div>
                 <p className="text-sm text-gray-600">
                   Use suas preferências já coletadas no perfil. Ajuste qualquer campo, gere um roteiro rápido e ative pelo link do Stripe (valor editável no admin). Parceiros e Passaporte aparecem só se fizerem sentido para a região/tema.

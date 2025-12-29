@@ -73,7 +73,7 @@ const ProfilePageFixed: React.FC = () => {
   const [showSaveNote, setShowSaveNote] = useState(false);
   const [partnersData, setPartnersData] = useState<any[]>([]);
   
-  // Verificar acesso pago aos Roteiros IA
+  // Verificar acesso pago aos Roteiros Personalizados
   const { hasAccess: hasIAAccess, loading: loadingAccess } = useIARouteAccess();
 
   const [formData, setFormData] = useState({
@@ -309,7 +309,7 @@ const ProfilePageFixed: React.FC = () => {
     }
   }, [user, profile]);
 
-  // Carregar configurações (preço/link) do admin para Roteiros IA
+  // Carregar configurações (preço/link) do admin para Roteiros Personalizados
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -686,7 +686,7 @@ const ProfilePageFixed: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger value="roteiros-ia" className="flex items-center">
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Roteiros IA
+                  Roteiros Personalizados
                 </TabsTrigger>
               </TabsList>
 
@@ -867,13 +867,13 @@ const ProfilePageFixed: React.FC = () => {
               </Card>
             </TabsContent>
 
-            {/* Aba Roteiros IA */}
+            {/* Aba Roteiros Personalizados */}
             <TabsContent value="roteiros-ia">
               <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-ms-primary-blue/5">
                 <CardHeader className="bg-gradient-to-r from-ms-primary-blue/10 to-ms-discovery-teal/10 border-b border-ms-primary-blue/20">
                   <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                     <Sparkles className="w-6 h-6 text-ms-primary-blue" />
-                    Roteiros personalizados por IA (MS)
+                    Roteiros Personalizados (MS)
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 p-6">
@@ -890,7 +890,7 @@ const ProfilePageFixed: React.FC = () => {
                           <h3 className="text-xl font-bold">Acesso Premium Necessário</h3>
                         </div>
                         <p className="text-gray-700">
-                          Para gerar roteiros personalizados por IA, é necessário ativar o acesso premium.
+                          Para gerar roteiros personalizados, é necessário ativar o acesso premium.
                         </p>
                         <div className="bg-white rounded-lg p-4 border border-ms-primary-blue/20">
                           <p className="text-3xl font-bold text-ms-primary-blue mb-2">

@@ -108,16 +108,18 @@ const UniversalNavbar = () => {
           <Link to={isOverflowOne ? "/" : "/descubramatogrossodosul"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img
-                key={`logo-${Date.now()}-${Math.random()}`}
+                key={config.logo.src}
                 alt={config.logo.alt}
-                src={`${config.logo.src}?v=${Date.now()}`}
+                src={config.logo.src}
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain"
                 loading="eager"
                 onError={(e) => {
                   console.error('❌ Erro ao carregar logo PNG:', e);
                   console.log('Tentando fallback...');
                   const target = e.target as HTMLImageElement;
-                  target.src = `/images/logo-descubra-ms.png?v=${Date.now()}&fallback=true`;
+                  if (!target.src.includes('fallback=true')) {
+                    target.src = `/images/logo-descubra-ms.png?fallback=true`;
+                  }
                 }}
               />
               <span 
