@@ -81,12 +81,20 @@ const PartnerLoginForm = () => {
         let partner = null;
         let partnerError = null;
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerLoginForm.tsx:85',message:'Antes de buscar parceiro (tentativa 1)',data:{userEmail:sanitizedData.email,hasAuth:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+        // #endregion
+
         // Primeira tentativa: email exato
         const { data: partnerData1, error: error1 } = await supabase
           .from('institutional_partners')
           .select('id, name, contact_email, is_active')
           .eq('contact_email', sanitizedData.email)
           .maybeSingle();
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerLoginForm.tsx:92',message:'Resultado busca parceiro (tentativa 1)',data:{hasError:!!error1,errorCode:error1?.code,errorMessage:error1?.message,errorDetails:error1?.details,hasPartnerData:!!partnerData1},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+        // #endregion
         
         if (error1) {
           console.error('❌ Erro ao buscar parceiro (tentativa 1 - email exato):', error1);
@@ -135,14 +143,29 @@ const PartnerLoginForm = () => {
           }
         }
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerLoginForm.tsx:146',message:'Erro final ao buscar parceiro',data:{errorCode:partnerError?.code,errorMessage:partnerError?.message,errorDetails:partnerError?.details,errorHint:partnerError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+        // #endregion
+
         if (partnerError) {
           console.error('❌ Erro final ao buscar parceiro:', partnerError);
-          toast({
-            title: "Erro ao verificar parceiro",
-            description: "Ocorreu um erro ao verificar seu cadastro. Tente novamente ou entre em contato.",
-            variant: "destructive",
-            duration: 5000,
-          });
+          
+          // Se for erro 403, é problema de RLS
+          if (partnerError.code === 'PGRST301' || partnerError.message?.includes('403') || partnerError.message?.includes('permission denied') || partnerError.code === '42501') {
+            toast({
+              title: "Erro de permissão (RLS)",
+              description: "Você não tem permissão para acessar seus dados. Execute o script CORRIGIR_RLS_SELECT_PARCEIROS.sql no Supabase SQL Editor.",
+              variant: "destructive",
+              duration: 10000,
+            });
+          } else {
+            toast({
+              title: "Erro ao verificar parceiro",
+              description: "Ocorreu um erro ao verificar seu cadastro. Tente novamente ou entre em contato.",
+              variant: "destructive",
+              duration: 5000,
+            });
+          }
           return;
         }
         

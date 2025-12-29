@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Save, DollarSign, X } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, X, Search, Copy, Filter, Calendar, FileText, Image as ImageIcon, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import PartnerPricingWizard from './PartnerPricingWizard';
 
 interface PartnerPricing {
   id: string;
@@ -22,6 +24,7 @@ interface PartnerPricing {
   min_guests: number;
   max_guests?: number;
   description?: string;
+  gallery_images?: string[];
   is_active: boolean;
 }
 
@@ -33,23 +36,12 @@ interface PartnerPricingEditorProps {
 export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPricingEditorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [pricingList, setPricingList] = useState<PartnerPricing[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingPricing, setEditingPricing] = useState<PartnerPricing | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  const [formData, setFormData] = useState<Partial<PartnerPricing>>({
-    service_type: 'other',
-    service_name: '',
-    pricing_type: 'fixed',
-    base_price: 0,
-    price_per_person: undefined,
-    price_per_night: undefined,
-    min_guests: 1,
-    max_guests: undefined,
-    description: '',
-    is_active: true,
-  });
 
   useEffect(() => {
     loadPricing();
@@ -79,77 +71,6 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
     }
   };
 
-  const handleSave = async () => {
-    if (!formData.service_name || !formData.base_price) {
-      toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha nome do serviço e preço base',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (editingId) {
-        // Atualizar existente
-        const { error } = await supabase
-          .from('partner_pricing')
-          .update({
-            service_type: formData.service_type,
-            service_name: formData.service_name,
-            pricing_type: formData.pricing_type,
-            base_price: formData.base_price,
-            price_per_person: formData.price_per_person || null,
-            price_per_night: formData.price_per_night || null,
-            min_guests: formData.min_guests || 1,
-            max_guests: formData.max_guests || null,
-            description: formData.description || null,
-            is_active: formData.is_active !== false,
-          })
-          .eq('id', editingId);
-
-        if (error) throw error;
-      } else {
-        // Criar novo
-        const { error } = await supabase
-          .from('partner_pricing')
-          .insert({
-            partner_id: partnerId,
-            service_type: formData.service_type,
-            service_name: formData.service_name,
-            pricing_type: formData.pricing_type,
-            base_price: formData.base_price,
-            price_per_person: formData.price_per_person || null,
-            price_per_night: formData.price_per_night || null,
-            min_guests: formData.min_guests || 1,
-            max_guests: formData.max_guests || null,
-            description: formData.description || null,
-            is_active: true,
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: 'Salvo com sucesso!',
-        description: 'Preço salvo com sucesso',
-      });
-
-      resetForm();
-      loadPricing();
-      if (onUpdate) onUpdate();
-    } catch (error: any) {
-      console.error('Erro ao salvar preço:', error);
-      toast({
-        title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar o preço',
-        variant: 'destructive',
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este preço?')) return;
@@ -179,26 +100,15 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
   };
 
   const handleEdit = (pricing: PartnerPricing) => {
-    setFormData(pricing);
-    setEditingId(pricing.id);
-    setShowAddForm(true);
+    setEditingPricing(pricing);
+    setWizardOpen(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      service_type: 'other',
-      service_name: '',
-      pricing_type: 'fixed',
-      base_price: 0,
-      price_per_person: undefined,
-      price_per_night: undefined,
-      min_guests: 1,
-      max_guests: undefined,
-      description: '',
-      is_active: true,
-    });
-    setEditingId(null);
-    setShowAddForm(false);
+  const handleWizardSuccess = () => {
+    setWizardOpen(false);
+    setEditingPricing(null);
+    loadPricing();
+    if (onUpdate) onUpdate();
   };
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
@@ -238,6 +148,56 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
     return labels[type as keyof typeof labels] || type;
   };
 
+  const handleDuplicate = async (pricing: PartnerPricing) => {
+    try {
+      const { data, error } = await supabase
+        .from('partner_pricing')
+        .insert({
+          partner_id: partnerId,
+          service_type: pricing.service_type,
+          service_name: `${pricing.service_name} (Cópia)`,
+          pricing_type: pricing.pricing_type,
+          base_price: pricing.base_price,
+          price_per_person: pricing.price_per_person || null,
+          price_per_night: pricing.price_per_night || null,
+          min_guests: pricing.min_guests,
+          max_guests: pricing.max_guests || null,
+          description: pricing.description || null,
+          gallery_images: pricing.gallery_images || [],
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Produto duplicado',
+        description: 'Produto duplicado com sucesso',
+      });
+
+      loadPricing();
+    } catch (error: any) {
+      console.error('Erro ao duplicar:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível duplicar o produto',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Filtrar produtos por busca e categoria
+  const filteredPricingList = pricingList.filter((pricing) => {
+    const matchesSearch = searchQuery === '' || 
+      pricing.service_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (pricing.description && pricing.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesCategory = filterCategory === 'all' || pricing.service_type === filterCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -251,13 +211,28 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Preços e Disponibilidade</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-semibold text-gray-900">Preços e Disponibilidade</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <HelpCircle className="w-4 h-4 text-gray-400" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>Crie produtos/serviços com preço, disponibilidade e política de cancelamento. Configure tudo em um fluxo guiado.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <p className="text-sm text-gray-600 mt-1">
             Configure os preços dos seus serviços para que clientes possam reservar diretamente
           </p>
         </div>
         <Button
-          onClick={() => setShowAddForm(true)}
+          onClick={() => {
+            setEditingPricing(null);
+            setWizardOpen(true);
+          }}
           className="bg-ms-primary-blue hover:bg-ms-primary-blue/90"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -265,29 +240,44 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
         </Button>
       </div>
 
-      {/* Formulário de Adicionar/Editar */}
-      {showAddForm && (
+      {/* Wizard Modal */}
+      <PartnerPricingWizard
+        open={wizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) setEditingPricing(null);
+        }}
+        partnerId={partnerId}
+        editingPricing={editingPricing}
+        onSuccess={handleWizardSuccess}
+      />
+
+
+      {/* Filtros e Busca */}
+      {pricingList.length > 0 && (
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{editingId ? 'Editar Preço' : 'Novo Preço'}</CardTitle>
-              <Button variant="ghost" size="sm" onClick={resetForm}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="service_type">Tipo de Serviço</Label>
-                <Select
-                  value={formData.service_type}
-                  onValueChange={(value) => setFormData({ ...formData, service_type: value as any })}
-                >
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Busca */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar por nome ou descrição..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Filtro por Categoria */}
+              <div className="w-full md:w-48">
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Todas as categorias" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
                     <SelectItem value="hotel">Hotel</SelectItem>
                     <SelectItem value="restaurant">Restaurante</SelectItem>
                     <SelectItem value="tour">Tour</SelectItem>
@@ -297,122 +287,12 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <Label htmlFor="service_name">Nome do Serviço *</Label>
-                <Input
-                  id="service_name"
-                  value={formData.service_name}
-                  onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
-                  placeholder="Ex: Quarto Standard, Tour Pantanal, etc."
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pricing_type">Tipo de Preço</Label>
-                <Select
-                  value={formData.pricing_type}
-                  onValueChange={(value) => setFormData({ ...formData, pricing_type: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fixed">Preço Fixo</SelectItem>
-                    <SelectItem value="per_person">Por Pessoa</SelectItem>
-                    <SelectItem value="per_night">Por Noite</SelectItem>
-                    <SelectItem value="package">Pacote</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="base_price">Preço Base (R$) *</Label>
-                <Input
-                  id="base_price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.base_price}
-                  onChange={(e) => setFormData({ ...formData, base_price: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-
-              {formData.pricing_type === 'per_person' && (
-                <div>
-                  <Label htmlFor="price_per_person">Preço por Pessoa (R$)</Label>
-                  <Input
-                    id="price_per_person"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price_per_person || ''}
-                    onChange={(e) => setFormData({ ...formData, price_per_person: parseFloat(e.target.value) || undefined })}
-                  />
-                </div>
-              )}
-
-              {formData.pricing_type === 'per_night' && (
-                <div>
-                  <Label htmlFor="price_per_night">Preço por Noite (R$)</Label>
-                  <Input
-                    id="price_per_night"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price_per_night || ''}
-                    onChange={(e) => setFormData({ ...formData, price_per_night: parseFloat(e.target.value) || undefined })}
-                  />
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="min_guests">Mínimo de Pessoas</Label>
-                <Input
-                  id="min_guests"
-                  type="number"
-                  min="1"
-                  value={formData.min_guests || 1}
-                  onChange={(e) => setFormData({ ...formData, min_guests: parseInt(e.target.value) || 1 })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="max_guests">Máximo de Pessoas (opcional)</Label>
-                <Input
-                  id="max_guests"
-                  type="number"
-                  min="1"
-                  value={formData.max_guests || ''}
-                  onChange={(e) => setFormData({ ...formData, max_guests: parseInt(e.target.value) || undefined })}
-                />
-              </div>
             </div>
-
-            <div>
-              <Label htmlFor="description">Descrição (opcional)</Label>
-              <Textarea
-                id="description"
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descreva o serviço, o que está incluído, etc."
-                rows={3}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? 'Salvando...' : 'Salvar'}
-              </Button>
-              <Button variant="outline" onClick={resetForm}>
-                Cancelar
-              </Button>
-            </div>
+            {searchQuery || filterCategory !== 'all' ? (
+              <p className="text-sm text-gray-500 mt-2">
+                {filteredPricingList.length} de {pricingList.length} produtos encontrados
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       )}
@@ -428,10 +308,51 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
             </p>
           </CardContent>
         </Card>
+      ) : filteredPricingList.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 font-medium">Nenhum produto encontrado</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Tente ajustar os filtros de busca ou categoria
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery('');
+                setFilterCategory('all');
+              }}
+              className="mt-4"
+            >
+              Limpar Filtros
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {pricingList.map((pricing) => (
-            <Card key={pricing.id}>
+          {filteredPricingList.map((pricing) => (
+            <Card key={pricing.id} className="overflow-hidden">
+              {/* Foto Principal */}
+              {pricing.gallery_images && pricing.gallery_images.length > 0 ? (
+                <div className="relative h-48 bg-gray-200">
+                  <img
+                    src={pricing.gallery_images[0]}
+                    alt={pricing.service_name}
+                    className="w-full h-full object-cover"
+                  />
+                  {pricing.gallery_images.length > 1 && (
+                    <Badge className="absolute top-2 right-2 bg-black/50 text-white">
+                      <ImageIcon className="w-3 h-3 mr-1" />
+                      +{pricing.gallery_images.length - 1}
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+              
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -471,7 +392,7 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
                   {pricing.max_guests && ` até ${pricing.max_guests} pessoas`}
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t">
+                <div className="flex flex-wrap gap-2 pt-2 border-t">
                   <Button
                     size="sm"
                     variant="outline"
@@ -479,6 +400,14 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
                     className="flex-1"
                   >
                     Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDuplicate(pricing)}
+                    title="Duplicar produto"
+                  >
+                    <Copy className="w-4 h-4" />
                   </Button>
                   <Button
                     size="sm"

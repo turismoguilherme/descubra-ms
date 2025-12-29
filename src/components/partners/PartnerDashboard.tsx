@@ -16,12 +16,13 @@ import {
   AlertCircle,
   LogOut,
   Menu,
-  FileText
 } from 'lucide-react';
 import PDFReportButton from '@/components/exports/PDFReportButton';
 import { format, subDays, startOfMonth } from 'date-fns';
 import PartnerBusinessEditor from './PartnerBusinessEditor';
 import PartnerPricingEditor from './PartnerPricingEditor';
+import PartnerAvailabilityEditor from './PartnerAvailabilityEditor';
+import PartnerCancellationPolicyEditor from './PartnerCancellationPolicyEditor';
 import { PartnerMetricCard } from './PartnerMetricCard';
 import { PartnerReservationsTable } from './PartnerReservationsTable';
 import { PartnerCancellationDialog } from './PartnerCancellationDialog';
@@ -31,7 +32,6 @@ import { ReservationChat } from './ReservationChat';
 import { ReservationMessageService } from '@/services/partners/reservationMessageService';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import PartnerRewardsManager from './PartnerRewardsManager';
-import PartnerReportsSection from './PartnerReportsSection';
 import PendingApprovalBanner from './PendingApprovalBanner';
 import StripeConnectBanner from './StripeConnectBanner';
 import WelcomeModal from './WelcomeModal';
@@ -86,7 +86,7 @@ export default function PartnerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedReservationForChat, setSelectedReservationForChat] = useState<string | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState<Record<string, number>>({});
-  const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing'>('info');
+  const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing' | 'availability' | 'policies'>('info');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -118,7 +118,16 @@ export default function PartnerDashboard() {
 
   const loadPartnerData = async () => {
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:119',message:'Iniciando loadPartnerData',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:122',message:'Usuário obtido do auth',data:{hasUser:!!user,userEmail:user?.email,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+
       if (!user?.email) {
         toast({
           title: 'Erro',
@@ -128,13 +137,24 @@ export default function PartnerDashboard() {
         return;
       }
 
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:131',message:'Antes de buscar parceiro',data:{userEmail:user.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+
       const { data: partnerData, error: partnerError } = await supabase
         .from('institutional_partners')
         .select('*')
         .eq('contact_email', user.email)
         .single();
 
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:135',message:'Resultado da busca do parceiro',data:{hasError:!!partnerError,errorCode:partnerError?.code,errorMessage:partnerError?.message,hasPartnerData:!!partnerData,partnerId:partnerData?.id,partnerEmail:partnerData?.contact_email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+
       if (partnerError || !partnerData) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:137',message:'Erro ao encontrar parceiro',data:{errorCode:partnerError?.code,errorMessage:partnerError?.message,errorDetails:partnerError?.details,errorHint:partnerError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+        // #endregion
         toast({
           title: 'Parceiro não encontrado',
           description: 'Você não está cadastrado como parceiro',
@@ -453,26 +473,6 @@ export default function PartnerDashboard() {
           </div>
         </button>
 
-        <button
-          onClick={() => {
-            setActiveTab('reports');
-            if (isMobile) setSidebarOpen(false);
-          }}
-          className={cn(
-            'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3',
-            activeTab === 'reports'
-              ? 'bg-ms-primary-blue text-white shadow-md'
-              : 'text-gray-700 hover:bg-gray-100'
-          )}
-        >
-          <FileText className={cn('w-5 h-5', activeTab === 'reports' ? 'text-white' : 'text-gray-500')} />
-          <div className="flex-1">
-            <div className="font-medium">Relatórios</div>
-            <div className={cn('text-xs', activeTab === 'reports' ? 'text-white/80' : 'text-gray-500')}>
-              Exportar dados
-            </div>
-          </div>
-        </button>
       </nav>
     </div>
   );
@@ -556,41 +556,43 @@ export default function PartnerDashboard() {
               )}
             </div>
 
-            {/* Cards de Métricas com Gráficos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <PartnerMetricCard
-                title="Reservas Pendentes"
-                value={pendingReservations.length}
-                icon={Clock}
-                variant="warning"
-                trend={reservationsTrend}
-                chartData={pendingChartData}
-              />
-              <PartnerMetricCard
-                title="Total de Reservas"
-                value={allReservations.length}
-                icon={Calendar}
-                variant="primary"
-                trend={reservationsTrend}
-                chartData={reservationsChartData}
-              />
-              <PartnerMetricCard
-                title="Receita Total"
-                value={`R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                icon={DollarSign}
-                variant="success"
-                trend={revenueTrend}
-                chartData={revenueChartData}
-              />
-              <PartnerMetricCard
-                title="Comissões Geradas"
-                value={`R$ ${totalCommissions.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                icon={TrendingUp}
-                variant="info"
-                trend={commissionsTrend}
-                chartData={commissionsChartData}
-              />
-            </div>
+            {/* Cards de Métricas com Gráficos - Apenas na aba Reservas */}
+            {activeTab === 'reservations' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <PartnerMetricCard
+                  title="Reservas Pendentes"
+                  value={pendingReservations.length}
+                  icon={Clock}
+                  variant="warning"
+                  trend={reservationsTrend}
+                  chartData={pendingChartData}
+                />
+                <PartnerMetricCard
+                  title="Total de Reservas"
+                  value={allReservations.length}
+                  icon={Calendar}
+                  variant="primary"
+                  trend={reservationsTrend}
+                  chartData={reservationsChartData}
+                />
+                <PartnerMetricCard
+                  title="Receita Total"
+                  value={`R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  icon={DollarSign}
+                  variant="success"
+                  trend={revenueTrend}
+                  chartData={revenueChartData}
+                />
+                <PartnerMetricCard
+                  title="Comissões Geradas"
+                  value={`R$ ${totalCommissions.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  icon={TrendingUp}
+                  variant="info"
+                  trend={commissionsTrend}
+                  chartData={commissionsChartData}
+                />
+              </div>
+            )}
 
             {/* Seção de Conteúdo */}
             <Card className="border-gray-200 shadow-sm">
@@ -598,7 +600,6 @@ export default function PartnerDashboard() {
                 <CardTitle className="text-xl text-ms-primary-blue">
                   {activeTab === 'reservations' ? 'Reservas' : 
                    activeTab === 'transactions' ? 'Transações' :
-                   activeTab === 'reports' ? 'Relatórios' :
                    activeTab === 'rewards' ? 'Recompensas' :
                    'Meu Negócio'}
                 </CardTitle>
@@ -607,8 +608,6 @@ export default function PartnerDashboard() {
                     ? 'Gerencie suas reservas e acompanhe o status'
                     : activeTab === 'transactions'
                     ? 'Histórico completo de transações financeiras'
-                    : activeTab === 'reports'
-                    ? 'Exporte relatórios em PDF'
                     : activeTab === 'rewards'
                     ? 'Gerencie o Passaporte Digital'
                     : 'Atualize as informações do seu negócio'}
@@ -694,10 +693,12 @@ export default function PartnerDashboard() {
                   <PartnerTransactionHistory partnerId={partner.id} />
                 ) : activeTab === 'business' ? (
                   <div className="space-y-6">
-                    <Tabs value={businessSubTab} onValueChange={(v) => setBusinessSubTab(v as 'info' | 'pricing')}>
+                    <Tabs value={businessSubTab} onValueChange={(v) => setBusinessSubTab(v as 'info' | 'pricing' | 'availability' | 'policies')}>
                       <TabsList>
                         <TabsTrigger value="info">Informações</TabsTrigger>
-                        <TabsTrigger value="pricing">Preços e Disponibilidade</TabsTrigger>
+                        <TabsTrigger value="pricing">Preços</TabsTrigger>
+                        <TabsTrigger value="availability">Disponibilidade</TabsTrigger>
+                        <TabsTrigger value="policies">Políticas</TabsTrigger>
                       </TabsList>
                       <TabsContent value="info">
                         <PartnerBusinessEditor
@@ -711,17 +712,24 @@ export default function PartnerDashboard() {
                           onUpdate={loadPartnerData}
                         />
                       </TabsContent>
+                      <TabsContent value="availability">
+                        <PartnerAvailabilityEditor
+                          partnerId={partner.id}
+                          onUpdate={loadPartnerData}
+                        />
+                      </TabsContent>
+                      <TabsContent value="policies">
+                        <PartnerCancellationPolicyEditor
+                          partnerId={partner.id}
+                          onUpdate={loadPartnerData}
+                        />
+                      </TabsContent>
                     </Tabs>
                   </div>
                 ) : activeTab === 'rewards' ? (
                   <PartnerRewardsManager 
                     partnerId={partner.id} 
                     partnerName={partner.name} 
-                  />
-                ) : activeTab === 'reports' ? (
-                  <PartnerReportsSection 
-                    partner={partner} 
-                    reservations={reservations} 
                   />
                 ) : null}
               </CardContent>

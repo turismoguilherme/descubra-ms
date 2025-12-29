@@ -249,3 +249,5 @@ Com essas informações, posso ajudar a resolver o problema de forma mais direci
 - Bucket SQL: `supabase/create_tourism_images_bucket.sql`
 
 
+
+
