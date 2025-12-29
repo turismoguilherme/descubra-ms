@@ -1,5 +1,5 @@
 /**
- * Página de Sucesso - Pagamento Roteiros IA
+ * Página de Sucesso - Pagamento Roteiros Personalizados
  * Exibida após pagamento bem-sucedido do Payment Link do Stripe
  */
 
@@ -42,7 +42,7 @@ export default function IARoutePaymentSuccess() {
           setVerified(true);
           toast({
             title: "✅ Acesso ativado!",
-            description: "Você já pode gerar roteiros personalizados por IA.",
+            description: "Você já pode gerar roteiros personalizados.",
           });
         } else {
           // Se ainda não foi processado, verificar diretamente no banco
@@ -113,7 +113,7 @@ export default function IARoutePaymentSuccess() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Verificando pagamento...</h2>
                 <p className="text-gray-600 mt-2">
-                  Aguarde enquanto confirmamos seu acesso aos Roteiros IA
+                  Aguarde enquanto confirmamos seu acesso aos Roteiros Personalizados
                 </p>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function IARoutePaymentSuccess() {
                 🎉 Acesso Premium Ativado!
               </h2>
               <p className="text-lg text-gray-600">
-                Você já pode gerar roteiros personalizados por IA
+                Você já pode gerar roteiros personalizados
               </p>
             </div>
 

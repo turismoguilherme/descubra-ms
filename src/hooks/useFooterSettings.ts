@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface PartnerLogo {
+  id: string;
+  name: string;
+  logo_url: string;
+  alt_text?: string;
+  order: number;
+}
+
 interface FooterSettings {
   email: string;
   phone: string;
@@ -17,6 +25,7 @@ interface FooterSettings {
     saturday?: string;
     sunday?: string;
   };
+  partner_logos?: PartnerLogo[];
 }
 
 const DEFAULT_SETTINGS: FooterSettings = {

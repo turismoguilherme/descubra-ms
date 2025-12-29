@@ -24,7 +24,7 @@ const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
   
-  // Obter URL de redirect dos parâmetros da query
+  // Obter URL de redirect dos parâmetros da query, ou padrão para Descubra MS
   const redirectUrl = searchParams.get('redirect') || '/descubramatogrossodosul';
   
   console.log('🔐 [AuthPage] Estado inicial:', {

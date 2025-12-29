@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Calendar as CalendarIcon, Users, DollarSign, Loader2, ArrowLeft, MapPin, Lock, Shield, Check, Play } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, DollarSign, Loader2, ArrowLeft, MapPin, Lock, Shield, Check, Play, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { ProductDetailModal } from '@/components/partners/ProductDetailModal';
 
 interface PartnerPricing {
   id: string;
@@ -52,6 +53,8 @@ export default function PartnerReservationPage() {
   const [specialRequests, setSpecialRequests] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState<Record<string, boolean>>({});
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [viewingProduct, setViewingProduct] = useState<PartnerPricing | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -571,15 +574,11 @@ export default function PartnerReservationPage() {
                         <Card
                           key={pricing.id}
                           className={cn(
-                            "overflow-hidden cursor-pointer transition-all duration-300 h-full",
+                            "overflow-hidden transition-all duration-300 h-full",
                             isSelected 
                               ? "ring-2 ring-ms-primary-blue ring-offset-2 bg-ms-primary-blue/5 shadow-lg" 
                               : "hover:shadow-md border-gray-200"
                           )}
-                          onClick={() => {
-                            setSelectedService(pricing.id);
-                            setGuests(pricing.min_guests);
-                          }}
                         >
                           {/* Imagem ou Vídeo */}
                           <div className="relative h-56 overflow-hidden bg-gradient-to-br from-ms-primary-blue/10 to-ms-discovery-teal/10">
@@ -642,7 +641,13 @@ export default function PartnerReservationPage() {
                           
                           {/* Conteúdo do Card */}
                           <div className="p-5">
-                            <h3 className="text-xl font-bold text-ms-primary-blue mb-2">
+                            <h3 
+                              className="text-xl font-bold text-ms-primary-blue mb-2 cursor-pointer hover:text-ms-discovery-teal transition-colors"
+                              onClick={() => {
+                                setViewingProduct(pricing);
+                                setProductModalOpen(true);
+                              }}
+                            >
                               {pricing.service_name}
                             </h3>
                             {pricing.description && (
@@ -658,6 +663,19 @@ export default function PartnerReservationPage() {
                                   {pricing.max_guests && ` • ${pricing.max_guests} máx.`}
                                 </span>
                               </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingProduct(pricing);
+                                  setProductModalOpen(true);
+                                }}
+                                className="text-ms-primary-blue border-ms-primary-blue hover:bg-ms-primary-blue hover:text-white"
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Ver Detalhes
+                              </Button>
                             </div>
                           </div>
                         </Card>
@@ -684,13 +702,15 @@ export default function PartnerReservationPage() {
                               ? "ring-2 ring-ms-primary-blue ring-offset-2 bg-ms-primary-blue/5 shadow-lg transform hover:-translate-y-1" 
                               : "hover:shadow-xl border-gray-200 transform hover:-translate-y-1"
                           )}
-                          onClick={() => {
-                            setSelectedService(pricing.id);
-                            setGuests(pricing.min_guests);
-                          }}
                         >
                           {/* Imagem ou Vídeo */}
-                          <div className="relative h-56 overflow-hidden bg-gradient-to-br from-ms-primary-blue/10 to-ms-discovery-teal/10">
+                          <div 
+                            className="relative h-56 overflow-hidden bg-gradient-to-br from-ms-primary-blue/10 to-ms-discovery-teal/10 cursor-pointer"
+                            onClick={() => {
+                              setViewingProduct(pricing);
+                              setProductModalOpen(true);
+                            }}
+                          >
                             {youtubeVideoId && !isVideoPlaying ? (
                               <div 
                                 className="relative w-full h-full cursor-pointer"
@@ -753,7 +773,13 @@ export default function PartnerReservationPage() {
                           
                           {/* Conteúdo do Card */}
                           <div className="p-5">
-                            <h3 className="text-xl font-bold text-ms-primary-blue mb-2 group-hover:text-ms-discovery-teal transition-colors">
+                            <h3 
+                              className="text-xl font-bold text-ms-primary-blue mb-2 group-hover:text-ms-discovery-teal transition-colors cursor-pointer"
+                              onClick={() => {
+                                setViewingProduct(pricing);
+                                setProductModalOpen(true);
+                              }}
+                            >
                               {pricing.service_name}
                             </h3>
                             {pricing.description && (
@@ -769,6 +795,19 @@ export default function PartnerReservationPage() {
                                   {pricing.max_guests && ` • ${pricing.max_guests} máx.`}
                                 </span>
                               </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingProduct(pricing);
+                                  setProductModalOpen(true);
+                                }}
+                                className="text-ms-primary-blue border-ms-primary-blue hover:bg-ms-primary-blue hover:text-white"
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Ver Detalhes
+                              </Button>
                             </div>
                           </div>
                         </Card>
@@ -777,6 +816,24 @@ export default function PartnerReservationPage() {
                   </div>
                 )}
               </div>
+
+              {/* Modal de Detalhes do Produto */}
+              <ProductDetailModal
+                product={viewingProduct}
+                open={productModalOpen}
+                onClose={() => {
+                  setProductModalOpen(false);
+                  setViewingProduct(null);
+                }}
+                onSelect={(productId) => {
+                  setSelectedService(productId);
+                  const selectedPricing = pricingList.find(p => p.id === productId);
+                  if (selectedPricing) {
+                    setGuests(selectedPricing.min_guests);
+                  }
+                }}
+                isSelected={viewingProduct ? selectedService === viewingProduct.id : false}
+              />
 
               {/* Formulário de Reserva */}
               {selectedService && (
@@ -912,7 +969,7 @@ export default function PartnerReservationPage() {
                       asChild
                       className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white"
                     >
-                      <Link to={`/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
+                      <Link to={`/descubramatogrossodosul/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
                         Fazer Login
                       </Link>
                     </Button>
@@ -949,6 +1006,24 @@ export default function PartnerReservationPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal de Detalhes do Produto */}
+      <ProductDetailModal
+        product={viewingProduct}
+        open={productModalOpen}
+        onClose={() => {
+          setProductModalOpen(false);
+          setViewingProduct(null);
+        }}
+        onSelect={(productId) => {
+          setSelectedService(productId);
+          const selectedPricing = pricingList.find(p => p.id === productId);
+          if (selectedPricing) {
+            setGuests(selectedPricing.min_guests);
+          }
+        }}
+        isSelected={viewingProduct ? selectedService === viewingProduct.id : false}
+      />
     </UniversalLayout>
   );
 }
