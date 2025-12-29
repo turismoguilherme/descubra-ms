@@ -91,6 +91,7 @@ import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
 import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
 import TermosUsoMS from "@/pages/ms/TermosUsoMS";
+import PartnerReservationPage from "@/pages/PartnerReservationPage";
 
 // ViaJAR Legal Pages
 import ViaJARPrivacidade from "@/pages/viajar/Privacidade";
@@ -251,6 +252,7 @@ function App() {
                             <Route path="/descubramatogrossodosul/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
+                            <Route path="/descubramatogrossodosul/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
                             <Route path="/descubramatogrossodosul/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
                             <Route path="/descubramatogrossodosul/partner/login" element={<PartnerLoginPage />} />

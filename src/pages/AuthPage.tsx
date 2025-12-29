@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,22 +21,27 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
+  
+  // Obter URL de redirect dos parâmetros da query
+  const redirectUrl = searchParams.get('redirect') || '/descubramatogrossodosul';
   
   console.log('🔐 [AuthPage] Estado inicial:', {
     isAuthenticated,
     authLoading,
     email: email ? 'preenchido' : 'vazio',
-    password: password ? 'preenchido' : 'vazio'
+    password: password ? 'preenchido' : 'vazio',
+    redirectUrl
   });
 
   // Redirecionar se já autenticado
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      console.log('✅ [AuthPage] Usuário já autenticado, redirecionando...');
-      navigate('/descubramatogrossodosul', { replace: true });
+      console.log('✅ [AuthPage] Usuário já autenticado, redirecionando para:', redirectUrl);
+      navigate(redirectUrl, { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate, redirectUrl]);
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     console.log(`🔐 [AuthPage] SOCIAL LOGIN: Tentativa de login com ${provider}`);
@@ -146,8 +151,8 @@ const AuthPage = () => {
         // Aguardar um pouco para garantir que a sessão foi estabelecida
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Redirecionar para /descubramatogrossodosul
-        const redirectPath = '/descubramatogrossodosul';
+        // Redirecionar para a URL especificada no parâmetro redirect, ou padrão para Descubra MS
+        const redirectPath = redirectUrl || '/descubramatogrossodosul';
         console.log('✅ [AuthPage] Redirecionando para:', redirectPath);
         window.location.href = redirectPath;
       } else {

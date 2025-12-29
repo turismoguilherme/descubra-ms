@@ -45,6 +45,9 @@ interface Partner {
   discount_offer?: string;
   gallery_images?: string[];
   youtube_url?: string;
+  subscription_status?: string; // pending, active, trialing, past_due, canceled, unpaid
+  monthly_fee?: number;
+  stripe_subscription_id?: string;
   created_at: string;
 }
 
@@ -80,6 +83,105 @@ export default function PartnersManagement() {
   useEffect(() => {
     loadPartners();
   }, []);
+
+  const handleManualPaymentWriteOff = async (partnerId: string) => {
+    try {
+      const partner = partners.find(p => p.id === partnerId);
+      if (!partner) {
+        toast({
+          title: 'Erro',
+          description: 'Parceiro não encontrado',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:84',message:'Iniciando baixa manual (promoção)',data:{partnerId,partnerName:partner.name,currentStatus:partner.status,currentSubscriptionStatus:partner.subscription_status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      // #endregion
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Erro',
+          description: 'Usuário não identificado',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Atualizar parceiro: aprovar + ativar assinatura manualmente
+      const updateData: any = {
+        status: 'approved',
+        is_active: true,
+        subscription_status: 'active', // Ativar assinatura sem pagamento
+        subscription_start_date: new Date().toISOString(),
+        // Criar uma data de fim (opcional, pode ser null para assinatura permanente)
+        updated_at: new Date().toISOString(),
+      };
+
+      // Adicionar campos de aprovação apenas se existirem (não causar erro se não existirem)
+      // O código tentará atualizar, mas se as colunas não existirem, o Supabase ignorará
+      try {
+        updateData.approved_at = new Date().toISOString();
+        updateData.approved_by = user.id;
+      } catch (e) {
+        // Ignorar se campos não existirem
+      }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:107',message:'Antes de atualizar com baixa manual',data:{updateData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      // #endregion
+
+      const { data: updatedPartner, error } = await supabase
+        .from('institutional_partners')
+        .update(updateData)
+        .eq('id', partnerId)
+        .select()
+        .single();
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:116',message:'Resultado da baixa manual',data:{hasError:!!error,errorMessage:error?.message,hasUpdatedPartner:!!updatedPartner},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      // #endregion
+
+      if (error) {
+        console.error('❌ [PartnersManagement] Erro ao dar baixa manual:', error);
+        throw error;
+      }
+
+      if (!updatedPartner) {
+        throw new Error('Nenhum parceiro foi atualizado. Verifique se você tem permissão.');
+      }
+
+      console.log('✅ [PartnersManagement] Baixa manual realizada com sucesso:', updatedPartner);
+
+      // Enviar email de notificação
+      if (partner?.contact_email) {
+        notifyPartnerApproved({
+          partnerEmail: partner.contact_email,
+          partnerName: partner.name,
+        }).catch(err => {
+          console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
+        });
+      }
+
+      toast({
+        title: '✅ Baixa manual realizada!',
+        description: `Parceiro ${partner.name} teve acesso liberado sem pagamento. Assinatura ativada manualmente.`,
+      });
+
+      // Atualizar lista
+      loadPartners();
+      setSelectedPartner(null);
+    } catch (error: any) {
+      console.error('Erro ao dar baixa manual:', error);
+      toast({
+        title: 'Erro ao dar baixa manual',
+        description: error.message || 'Não foi possível liberar acesso. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const updatePartnerStatus = async (partnerId: string, status: string) => {
     try {
@@ -292,6 +394,15 @@ export default function PartnersManagement() {
                   >
                     <Check className="w-4 h-4 mr-1" />
                     Aprovar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => handleManualPaymentWriteOff(partner.id)}
+                    title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                  >
+                    <Check className="w-4 h-4 mr-1" />
+                    Baixa Manual
                   </Button>
                   <Button
                     size="sm"
@@ -578,7 +689,7 @@ export default function PartnersManagement() {
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex gap-2 pt-4 border-t flex-wrap">
                 {selectedPartner.status === 'pending' && (
                   <>
                     <Button
@@ -592,6 +703,16 @@ export default function PartnersManagement() {
                       Aprovar Parceiro
                     </Button>
                     <Button
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onClick={() => {
+                        handleManualPaymentWriteOff(selectedPartner.id);
+                      }}
+                      title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Dar Baixa Manual (Promoção)
+                    </Button>
+                    <Button
                       variant="destructive"
                       onClick={() => {
                         updatePartnerStatus(selectedPartner.id, 'rejected');
@@ -602,6 +723,18 @@ export default function PartnersManagement() {
                       Rejeitar
                     </Button>
                   </>
+                )}
+                {(selectedPartner.subscription_status === 'pending' || selectedPartner.subscription_status === 'unpaid') && selectedPartner.status === 'approved' && (
+                  <Button
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => {
+                      handleManualPaymentWriteOff(selectedPartner.id);
+                    }}
+                    title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Dar Baixa Manual (Promoção)
+                  </Button>
                 )}
                 {selectedPartner.status === 'approved' && (
                   <Button

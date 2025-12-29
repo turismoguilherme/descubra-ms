@@ -905,11 +905,19 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       .eq('id', partnerId)
       .single();
 
+    // Buscar dados da reserva antes de atualizar
+    const { data: reservation, error: reservationFetchError } = await supabase
+      .from('partner_reservations')
+      .select('service_id, reservation_date, guests, service_name')
+      .eq('id', reservationId)
+      .single();
+
     // Atualizar status da reserva para 'confirmed' (aguardando confirmação do parceiro)
     const { error: reservationError } = await supabase
       .from('partner_reservations')
       .update({
         status: 'confirmed', // Pagamento confirmado, aguardando parceiro confirmar
+        confirmed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', reservationId);
@@ -918,6 +926,60 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       console.error('Erro ao atualizar reserva:', reservationError);
     } else {
       console.log('Reserva atualizada com sucesso');
+
+      // Atualizar disponibilidade (ocupar vagas)
+      if (reservation?.service_id && reservation.reservation_date && reservation.guests) {
+        try {
+          const { error: availabilityError } = await supabase.rpc(
+            'decrease_booked_guests',
+            {
+              p_partner_id: partnerId,
+              p_service_id: reservation.service_id,
+              p_date: reservation.reservation_date,
+              p_guests: reservation.guests, // Positivo para ocupar
+            }
+          );
+
+          if (availabilityError) {
+            console.warn('Erro ao atualizar disponibilidade via RPC (não crítico):', availabilityError);
+            // Tentar atualização manual
+            const { data: availability } = await supabase
+              .from('partner_availability')
+              .select('booked_guests, max_guests')
+              .eq('partner_id', partnerId)
+              .eq('service_id', reservation.service_id)
+              .eq('date', reservation.reservation_date)
+              .maybeSingle();
+
+            if (availability) {
+              const newBookedGuests = (availability.booked_guests || 0) + reservation.guests;
+              await supabase
+                .from('partner_availability')
+                .update({
+                  booked_guests: newBookedGuests,
+                })
+                .eq('partner_id', partnerId)
+                .eq('service_id', reservation.service_id)
+                .eq('date', reservation.reservation_date);
+            } else {
+              // Criar registro se não existir
+              await supabase
+                .from('partner_availability')
+                .insert({
+                  partner_id: partnerId,
+                  service_id: reservation.service_id,
+                  date: reservation.reservation_date,
+                  available: true,
+                  booked_guests: reservation.guests,
+                });
+            }
+          } else {
+            console.log('Disponibilidade atualizada com sucesso');
+          }
+        } catch (availabilityErr) {
+          console.warn('Erro ao atualizar disponibilidade (não crítico):', availabilityErr);
+        }
+      }
 
       // Criar notificação de reserva confirmada (pagamento recebido)
       if (partner) {
@@ -974,13 +1036,6 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
         }
       }
     }
-
-    // Buscar dados do parceiro para notificação
-    const { data: partner } = await supabase
-      .from('institutional_partners')
-      .select('id, name, contact_email')
-      .eq('id', partnerId)
-      .single();
 
     // Registrar comissão na tabela financeira como receita
     try {

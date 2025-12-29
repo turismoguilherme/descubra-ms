@@ -19,6 +19,7 @@ serve(async (req) => {
       partnerId, 
       reservationType, 
       serviceName,
+      serviceId, // ID do produto/serviço
       reservationDate,
       reservationTime,
       guests,
@@ -74,6 +75,31 @@ serve(async (req) => {
       );
     }
 
+    // Validar disponibilidade se serviceId foi fornecido
+    if (serviceId && reservationDate && guests) {
+      try {
+        const { data: availabilityCheck } = await supabase.rpc('check_availability', {
+          p_partner_id: partnerId,
+          p_service_id: serviceId,
+          p_date: reservationDate,
+          p_guests: guests,
+        });
+
+        if (!availabilityCheck) {
+          return new Response(
+            JSON.stringify({ error: 'Não há disponibilidade para esta data e número de pessoas' }),
+            { 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400 
+            }
+          );
+        }
+      } catch (availabilityError) {
+        console.warn('Erro ao verificar disponibilidade (continuando mesmo assim):', availabilityError);
+        // Continuar mesmo se houver erro na verificação (pode ser que a função não exista ainda)
+      }
+    }
+
     // Buscar percentual de comissão configurado no admin (padrão: 10%)
     const { data: commissionSetting } = await supabase
       .from('site_settings')
@@ -98,6 +124,7 @@ serve(async (req) => {
       .from('partner_reservations')
       .insert({
         partner_id: partnerId,
+        service_id: serviceId || null, // Salvar service_id se fornecido
         reservation_type: reservationType || 'other',
         service_name: serviceName || 'Serviço',
         reservation_date: reservationDate || new Date().toISOString().split('T')[0],
@@ -221,6 +248,17 @@ serve(async (req) => {
       locale: 'pt-BR',
       allow_promotion_codes: true,
     });
+
+    // Salvar stripe_checkout_session_id na reserva
+    if (session.id && reservation.id) {
+      await supabase
+        .from('partner_reservations')
+        .update({ stripe_checkout_session_id: session.id })
+        .eq('id', reservation.id);
+    }
+
+    // NOTA: A disponibilidade será atualizada quando o pagamento for confirmado via webhook do Stripe
+    // Isso evita bloquear vagas para reservas que não foram pagas
 
     return new Response(
       JSON.stringify({ 
