@@ -1,0 +1,105 @@
+{
+  "hero": {
+    "title": "Descubra Mato Grosso do Sul",
+    "subtitle": "Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul",
+    "button1": "Descubra Agora",
+    "button2": "Passaporte Digital",
+    "button3": "Converse com o Guatá"
+  },
+  "home": {
+    "title": "Descubra Mato Grosso do Sul",
+    "subtitle": "Explore destinos incríveis, crie roteiros únicos e viva experiências inesquecíveis",
+    "exploreDestinations": "Explorar Destinos",
+    "viewGalleries": "Ver Galerias",
+    "events": "Eventos",
+    "tourismDescription": {
+      "title": "Descubra Mato Grosso do Sul – Viva essa experiência!",
+      "paragraph1": "Prepare-se para descobrir o melhor de MS de um jeito inovador e inteligente. Com a ajuda do Guatá, seu guia virtual inspirado na cultura local, você explora atrativos como Bonito, Pantanal, Serra da Bodoquena e muito mais!",
+      "paragraph2": "Crie seu passaporte digital, desbloqueie selos temáticos com animais do Cerrado e do Pantanal, participe de roteiros interativos, receba recompensas e viva momentos inesquecíveis! Cadastre-se para explorar mais e ajudar a melhorar o turismo local!",
+      "signUp": "Cadastre-se"
+    },
+    "highlights": {
+      "title": "Destinos em Destaque",
+      "description": "Descubra os principais destinos turísticos de Mato Grosso do Sul",
+      "viewAll": "Ver Todos os Destinos",
+      "explore": "Explorar"
+    },
+    "experiences": {
+      "title": "Experiências Completas",
+      "subtitle": "Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis",
+      "explore": "Explorar",
+      "2": {
+        "title": "Agenda de Eventos",
+        "description": "Fique por dentro das festas, eventos culturais e gastronômicos no estado"
+      },
+      "3": {
+        "title": "Cultura Local",
+        "description": "Conheça a história, tradições e costumes sul-mato-grossenses"
+      },
+      "4": {
+        "title": "Galeria Visual",
+        "description": "Imagens e vídeos incríveis para te inspirar a conhecer cada cantinho"
+      }
+    },
+    "cats": {
+      "title": "Centros de Atendimento ao Turista",
+      "description": "Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul",
+      "region": "Região",
+      "city": "Cidade",
+      "phone": "Telefone"
+    }
+  },
+  "destinations": {
+    "title": "Destinos",
+    "description": "Explore os principais destinos turísticos de Mato Grosso do Sul",
+    "viewDetails": "Ver detalhes",
+    "sections": {
+      "about": "Sobre",
+      "highlights": "Principais Atrações",
+      "video": "Vídeo Promocional",
+      "gallery": "Galeria de Fotos",
+      "officialLinks": "Links Oficiais",
+      "howToGet": "Como Chegar",
+      "contactInfo": "Informações de Contato"
+    }
+  },
+  "events": {
+    "title": "Eventos",
+    "description": "Confira os principais eventos de Mato Grosso do Sul",
+    "upcoming": "Próximos eventos",
+    "past": "Eventos passados"
+  },
+  "routes": {
+    "title": "Roteiros Únicos de",
+    "subtitle": "Descubra Mato Grosso do Sul",
+    "description": "Descubra experiências autênticas através do nosso passaporte digital gamificado. Explore, colecione carimbos e ganhe recompensas únicas!",
+    "stats": {
+      "routes": "Roteiros",
+      "points": "Pontos",
+      "achievements": "Conquistas"
+    },
+    "filters": {
+      "search": "Buscar roteiros",
+      "searchPlaceholder": "Digite o nome do roteiro...",
+      "difficulty": "Dificuldade",
+      "region": "Região",
+      "all": "Todas",
+      "easy": "Fácil",
+      "medium": "Médio",
+      "hard": "Difícil",
+      "filter": "Filtrar"
+    },
+    "noResults": {
+      "title": "Nenhum roteiro encontrado",
+      "description": "Tente ajustar os filtros ou buscar por outros termos."
+    }
+  },
+  "partners": {
+    "title": "Parceiros",
+    "description": "Conheça nossos parceiros"
+  },
+  "about": {
+    "title": "Sobre",
+    "description": "Saiba mais sobre a plataforma"
+  }
+}

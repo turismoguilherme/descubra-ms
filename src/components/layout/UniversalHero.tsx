@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useBrand } from "@/context/BrandContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 import { platformContentService } from '@/services/admin/platformContentService';
 
 // Componente de loading otimizado
@@ -22,6 +23,7 @@ const HeroLoadingSkeleton = () => (
 
 const UniversalHero = () => {
   const { config, isMS } = useBrand();
+  const { t } = useTranslation('pages');
   const [msContent, setMsContent] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -44,10 +46,10 @@ const UniversalHero = () => {
 
   const getContent = (key: string, fallback: string) => msContent[key] || fallback;
 
-  // Para MS, sempre usar o título correto "Descubra Mato Grosso do Sul"
-  const title = isMS ? 'Descubra Mato Grosso do Sul' : config.hero.title;
+  // Para MS, usar tradução do i18next, com fallback para conteúdo do banco ou padrão
+  const title = isMS ? t('hero.title', { defaultValue: 'Descubra Mato Grosso do Sul' }) : config.hero.title;
   const subtitle = isMS 
-    ? getContent('ms_hero_universal_subtitle', 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul')
+    ? t('hero.subtitle', { defaultValue: getContent('ms_hero_universal_subtitle', 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul') })
     : config.hero.subtitle;
 
 
@@ -103,7 +105,7 @@ const UniversalHero = () => {
             className="bg-ms-secondary-yellow text-gray-800 font-bold px-8 py-4 rounded-xl hover:bg-ms-secondary-yellow/90 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
           >
             {isMS 
-              ? getContent('ms_hero_universal_button_1', config.hero.buttons.primary.text)
+              ? t('hero.button1', { defaultValue: getContent('ms_hero_universal_button_1', config.hero.buttons.primary.text) })
               : config.hero.buttons.primary.text
             }
           </Link>
@@ -112,7 +114,7 @@ const UniversalHero = () => {
             className="bg-ms-pantanal-green text-white font-medium px-8 py-4 rounded-xl hover:bg-ms-pantanal-green/90 transition-all duration-300 transform hover:scale-105 shadow-xl"
           >
             {isMS 
-              ? getContent('ms_hero_universal_button_2', config.hero.buttons.secondary.text)
+              ? t('hero.button2', { defaultValue: getContent('ms_hero_universal_button_2', config.hero.buttons.secondary.text) })
               : config.hero.buttons.secondary.text
             }
           </Link>
@@ -121,7 +123,7 @@ const UniversalHero = () => {
             className="bg-white/90 backdrop-blur-sm text-ms-primary-blue font-medium px-8 py-4 rounded-xl hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-xl"
           >
             {isMS 
-              ? getContent('ms_hero_universal_button_3', config.hero.buttons.tertiary.text)
+              ? t('hero.button3', { defaultValue: getContent('ms_hero_universal_button_3', config.hero.buttons.tertiary.text) })
               : config.hero.buttons.tertiary.text
             }
           </Link>

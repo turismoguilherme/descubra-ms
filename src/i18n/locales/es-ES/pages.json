@@ -1,0 +1,105 @@
+{
+  "hero": {
+    "title": "Descubre Mato Grosso do Sul",
+    "subtitle": "Del Pantanal al Cerrado, explora paisajes únicos y biodiversidad en el corazón de América del Sur",
+    "button1": "Descubre Ahora",
+    "button2": "Pasaporte Digital",
+    "button3": "Habla con Guatá"
+  },
+  "home": {
+    "title": "Descubre Mato Grosso do Sul",
+    "subtitle": "Explora destinos increíbles, crea rutas únicas y vive experiencias inolvidables",
+    "exploreDestinations": "Explorar Destinos",
+    "viewGalleries": "Ver Galerías",
+    "events": "Eventos",
+    "tourismDescription": {
+      "title": "Descubre Mato Grosso do Sul – ¡Vive esta experiencia!",
+      "paragraph1": "Prepárate para descubrir lo mejor de MS de una manera innovadora e inteligente. Con la ayuda de Guatá, tu guía virtual inspirado en la cultura local, explorarás atracciones como Bonito, Pantanal, Serra da Bodoquena y mucho más!",
+      "paragraph2": "Crea tu pasaporte digital, desbloquea sellos temáticos con animales del Cerrado y del Pantanal, participa en rutas interactivas, recibe recompensas y vive momentos inolvidables! ¡Regístrate para explorar más y ayudar a mejorar el turismo local!",
+      "signUp": "Registrarse"
+    },
+    "highlights": {
+      "title": "Destinos Destacados",
+      "description": "Descubre los principales destinos turísticos de Mato Grosso do Sul",
+      "viewAll": "Ver Todos los Destinos",
+      "explore": "Explorar"
+    },
+    "experiences": {
+      "title": "Experiencias Completas",
+      "subtitle": "Descubre todo lo que Mato Grosso do Sul tiene para ofrecer con experiencias únicas e inolvidables",
+      "explore": "Explorar",
+      "2": {
+        "title": "Calendario de Eventos",
+        "description": "Mantente al día con fiestas, eventos culturales y gastronómicos en el estado"
+      },
+      "3": {
+        "title": "Cultura Local",
+        "description": "Conoce la historia, tradiciones y costumbres de Mato Grosso do Sul"
+      },
+      "4": {
+        "title": "Galería Visual",
+        "description": "Imágenes y videos increíbles para inspirarte a descubrir cada rincón"
+      }
+    },
+    "cats": {
+      "title": "Centros de Atención al Turista",
+      "description": "Los CATs son puntos de apoyo donde puedes encontrar información y orientación para aprovechar al máximo tu experiencia en Mato Grosso do Sul",
+      "region": "Región",
+      "city": "Ciudad",
+      "phone": "Teléfono"
+    }
+  },
+  "destinations": {
+    "title": "Destinos",
+    "description": "Explora los principales destinos turísticos de Mato Grosso do Sul",
+    "viewDetails": "Ver detalles",
+    "sections": {
+      "about": "Acerca de",
+      "highlights": "Principales Atracciones",
+      "video": "Vídeo Promocional",
+      "gallery": "Galería de Fotos",
+      "officialLinks": "Enlaces Oficiales",
+      "howToGet": "Cómo Llegar",
+      "contactInfo": "Información de Contacto"
+    }
+  },
+  "events": {
+    "title": "Eventos",
+    "description": "Consulta los principales eventos de Mato Grosso do Sul",
+    "upcoming": "Próximos eventos",
+    "past": "Eventos pasados"
+  },
+  "routes": {
+    "title": "Rutas Únicas de",
+    "subtitle": "Descubre Mato Grosso do Sul",
+    "description": "Descubre experiencias auténticas a través de nuestro pasaporte digital gamificado. ¡Explora, colecciona sellos y gana recompensas únicas!",
+    "stats": {
+      "routes": "Rutas",
+      "points": "Puntos",
+      "achievements": "Logros"
+    },
+    "filters": {
+      "search": "Buscar rutas",
+      "searchPlaceholder": "Escribe el nombre de la ruta...",
+      "difficulty": "Dificultad",
+      "region": "Región",
+      "all": "Todas",
+      "easy": "Fácil",
+      "medium": "Medio",
+      "hard": "Difícil",
+      "filter": "Filtrar"
+    },
+    "noResults": {
+      "title": "No se encontraron rutas",
+      "description": "Intenta ajustar los filtros o buscar otros términos."
+    }
+  },
+  "partners": {
+    "title": "Socios",
+    "description": "Conoce a nuestros socios"
+  },
+  "about": {
+    "title": "Acerca de",
+    "description": "Conoce más sobre la plataforma"
+  }
+}

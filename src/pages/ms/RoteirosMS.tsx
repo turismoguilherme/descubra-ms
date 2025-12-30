@@ -10,10 +10,12 @@ import { TouristRoute } from '@/types/passport';
 import { useRouteManagement } from '@/hooks/useRouteManagement';
 import RoutePreviewCard from '@/components/routes/RoutePreviewCard';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const RoteirosMS = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation('pages');
   const { routes, loading, loadRoutes } = useRouteManagement();
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('');
@@ -83,29 +85,28 @@ const RoteirosMS = () => {
           <div className="container mx-auto px-4 py-12">
             <div className="text-center text-white max-w-4xl mx-auto">
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                Roteiros Únicos de
+                {t('routes.title', { defaultValue: 'Roteiros Únicos de' })}
                 <span className="bg-gradient-to-r from-ms-accent-orange to-ms-secondary-teal bg-clip-text text-transparent block">
-                  Descubra Mato Grosso do Sul
+                  {t('routes.subtitle', { defaultValue: 'Descubra Mato Grosso do Sul' })}
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-white/90 mb-8">
-                Descubra experiências autênticas através do nosso passaporte digital gamificado.
-                Explore, colecione carimbos e ganhe recompensas únicas!
+                {t('routes.description', { defaultValue: 'Descubra experiências autênticas através do nosso passaporte digital gamificado. Explore, colecione carimbos e ganhe recompensas únicas!' })}
               </p>
               
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-ms-accent-orange">{routes.length}</div>
-                  <div className="text-sm text-white/80">Roteiros</div>
+                  <div className="text-sm text-white/80">{t('routes.stats.routes', { defaultValue: 'Roteiros' })}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-ms-secondary-teal">100+</div>
-                  <div className="text-sm text-white/80">Pontos</div>
+                  <div className="text-sm text-white/80">{t('routes.stats.points', { defaultValue: 'Pontos' })}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">🏆</div>
-                  <div className="text-sm text-white/80">Conquistas</div>
+                  <div className="text-sm text-white/80">{t('routes.stats.achievements', { defaultValue: 'Conquistas' })}</div>
                 </div>
               </div>
             </div>
@@ -119,10 +120,10 @@ const RoteirosMS = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">
-                    Buscar roteiros
+                    {t('routes.filters.search', { defaultValue: 'Buscar roteiros' })}
                   </label>
                   <Input
-                    placeholder="Digite o nome do roteiro..."
+                    placeholder={t('routes.filters.searchPlaceholder', { defaultValue: 'Digite o nome do roteiro...' })}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
@@ -131,31 +132,31 @@ const RoteirosMS = () => {
                 
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">
-                    Dificuldade
+                    {t('routes.filters.difficulty', { defaultValue: 'Dificuldade' })}
                   </label>
                   <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
                     <SelectTrigger className="bg-white/20 border-white/30 text-white">
-                      <SelectValue placeholder="Todas" />
+                      <SelectValue placeholder={t('routes.filters.all', { defaultValue: 'Todas' })} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas</SelectItem>
-                      <SelectItem value="facil">Fácil</SelectItem>
-                      <SelectItem value="medio">Médio</SelectItem>
-                      <SelectItem value="dificil">Difícil</SelectItem>
+                      <SelectItem value="">{t('routes.filters.all', { defaultValue: 'Todas' })}</SelectItem>
+                      <SelectItem value="facil">{t('routes.filters.easy', { defaultValue: 'Fácil' })}</SelectItem>
+                      <SelectItem value="medio">{t('routes.filters.medium', { defaultValue: 'Médio' })}</SelectItem>
+                      <SelectItem value="dificil">{t('routes.filters.hard', { defaultValue: 'Difícil' })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="text-white text-sm font-medium mb-2 block">
-                    Região
+                    {t('routes.filters.region', { defaultValue: 'Região' })}
                   </label>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="bg-white/20 border-white/30 text-white">
-                      <SelectValue placeholder="Todas" />
+                      <SelectValue placeholder={t('routes.filters.all', { defaultValue: 'Todas' })} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas</SelectItem>
+                      <SelectItem value="">{t('routes.filters.all', { defaultValue: 'Todas' })}</SelectItem>
                       <SelectItem value="pantanal">Pantanal</SelectItem>
                       <SelectItem value="bonito">Bonito</SelectItem>
                       <SelectItem value="campo grande">Campo Grande</SelectItem>
@@ -169,7 +170,7 @@ const RoteirosMS = () => {
                   className="bg-ms-accent-orange hover:bg-ms-accent-orange/90 text-white"
                 >
                   <Filter className="w-4 h-4 mr-2" />
-                  Filtrar
+                  {t('routes.filters.filter', { defaultValue: 'Filtrar' })}
                 </Button>
               </div>
             </CardContent>
@@ -210,10 +211,10 @@ const RoteirosMS = () => {
               <CardContent className="p-12 text-center">
                 <MapPin className="w-16 h-16 text-white/60 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Nenhum roteiro encontrado
+                  {t('routes.noResults.title', { defaultValue: 'Nenhum roteiro encontrado' })}
                 </h3>
                 <p className="text-white/80">
-                  Tente ajustar os filtros ou buscar por outros termos.
+                  {t('routes.noResults.description', { defaultValue: 'Tente ajustar os filtros ou buscar por outros termos.' })}
                 </p>
               </CardContent>
             </Card>

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import UniversalLayout from "@/components/layout/UniversalLayout";
+import { useLanguage } from "@/hooks/useLanguage";
+import { destinationTranslationService } from "@/services/translation/DestinationTranslationService";
+import type { DestinationTranslation } from "@/services/translation/DestinationTranslationService";
 import { 
   MapPin, 
   ArrowLeft, 
@@ -61,9 +64,12 @@ interface DestinationDetails {
 const DestinoDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const { language } = useLanguage();
   const [destination, setDestination] = useState<Destination | null>(null);
   const [details, setDetails] = useState<DestinationDetails | null>(null);
+  const [translation, setTranslation] = useState<DestinationTranslation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingTranslation, setLoadingTranslation] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -269,6 +275,39 @@ const DestinoDetalhes = () => {
     fetchDestination();
   }, [id]);
 
+  // Buscar/criar tradução quando destino ou idioma mudar
+  useEffect(() => {
+    const loadTranslation = async () => {
+      if (!destination || !id || language === 'pt-BR') {
+        setTranslation(null);
+        return;
+      }
+
+      setLoadingTranslation(true);
+      try {
+        const translationData = await destinationTranslationService.getOrCreateTranslation(
+          {
+            id: destination.id,
+            name: destination.name,
+            description: destination.description || null,
+            promotional_text: details?.promotional_text || null,
+            highlights: details?.highlights || null,
+            how_to_get_there: details?.how_to_get_there || null,
+            best_time_to_visit: details?.best_time_to_visit || null,
+          },
+          language
+        );
+        setTranslation(translationData);
+      } catch (error) {
+        console.error('Erro ao carregar tradução:', error);
+      } finally {
+        setLoadingTranslation(false);
+      }
+    };
+
+    loadTranslation();
+  }, [destination, details, language, id]);
+
   const getYouTubeEmbedUrl = (url: string) => {
     const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
     return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : url;
@@ -301,6 +340,31 @@ const DestinoDetalhes = () => {
 
   const prevLightboxImage = () => {
     setLightboxImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  // Helpers para obter texto traduzido ou original
+  const getTranslatedName = () => {
+    return translation?.name || destination?.name || '';
+  };
+
+  const getTranslatedDescription = () => {
+    return translation?.description || destination?.description || '';
+  };
+
+  const getTranslatedPromotionalText = () => {
+    return translation?.promotional_text || details?.promotional_text || '';
+  };
+
+  const getTranslatedHighlights = () => {
+    return translation?.highlights || details?.highlights || [];
+  };
+
+  const getTranslatedHowToGetThere = () => {
+    return translation?.how_to_get_there || details?.how_to_get_there || '';
+  };
+
+  const getTranslatedBestTimeToVisit = () => {
+    return translation?.best_time_to_visit || details?.best_time_to_visit || '';
   };
 
   // Navegação por teclado no lightbox
@@ -440,7 +504,7 @@ const DestinoDetalhes = () => {
               )}
               
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-2">
-                {destination.name}
+                {getTranslatedName()}
               </h1>
               <p className="text-white/90 flex items-center text-lg">
                 <MapPin className="w-5 h-5 mr-2" />
@@ -460,10 +524,10 @@ const DestinoDetalhes = () => {
                 {details?.promotional_text && (
                   <div className="bg-white rounded-2xl p-8 shadow-sm">
                     <h2 className="text-2xl font-bold text-ms-primary-blue mb-4">
-                      Sobre {destination.name}
+                      Sobre {getTranslatedName()}
                     </h2>
                     <p className="text-gray-700 leading-relaxed text-lg">
-                      {details.promotional_text}
+                      {getTranslatedPromotionalText()}
                     </p>
                   </div>
                 )}
@@ -476,7 +540,7 @@ const DestinoDetalhes = () => {
                       Principais Atrações
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {details.highlights.map((highlight, index) => (
+                      {getTranslatedHighlights().map((highlight, index) => (
                         <div key={index} className="flex items-start gap-3 bg-ms-primary-blue/5 p-4 rounded-xl">
                           <div className="bg-ms-primary-blue text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-sm font-bold">
                             {index + 1}
@@ -706,7 +770,7 @@ const DestinoDetalhes = () => {
                       Melhor Época
                     </h3>
                     <p className="text-gray-600">
-                      {details.best_time_to_visit}
+                      {getTranslatedBestTimeToVisit()}
                     </p>
                   </div>
                 )}
@@ -719,7 +783,7 @@ const DestinoDetalhes = () => {
                       Como Chegar
                     </h3>
                     <p className="text-gray-600">
-                      {details.how_to_get_there}
+                      {getTranslatedHowToGetThere()}
                     </p>
                     </div>
               )}

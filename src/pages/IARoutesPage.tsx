@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import { PartnerReservationModal } from '@/components/partners/PartnerReservationModal';
 import { useIARouteAccess } from '@/hooks/useIARouteAccess';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { iaRouteService, RouteGenerationInput, GeneratedRoute } from '@/services/iaRouteService';
 import { 
   Sparkles,
   MapPin,
@@ -43,7 +45,18 @@ export default function IARoutesPage() {
   const [partnersData, setPartnersData] = useState<any[]>([]);
   
   // Verificar acesso pago aos Roteiros Personalizados
-  const { hasAccess: hasIAAccess, loading: loadingAccess } = useIARouteAccess();
+  const { hasAccess: hasIAAccess, isTestMode, loading: loadingAccess } = useIARouteAccess();
+  
+  // Buscar perfil do usuário para personalização
+  const {
+    profile: userProfile,
+    loading: profileLoading,
+    getInterestsFromProfile,
+    getTravelProfile,
+    getPreferredCity,
+    getPreferredDuration,
+    hasCompleteProfile,
+  } = useUserProfile();
 
   const [formData, setFormData] = useState({
     cidade: "Campo Grande",
@@ -55,6 +68,8 @@ export default function IARoutesPage() {
     perfil: "família",
     ocasiao: "férias",
   });
+  
+  const [hasAutoFilled, setHasAutoFilled] = useState(false);
 
   const [selectedPartnerForReservation, setSelectedPartnerForReservation] = useState<{
     id: string;
@@ -84,6 +99,34 @@ export default function IARoutesPage() {
 
     loadIARouteSettings();
   }, []);
+
+  // Preencher formulário automaticamente com dados do perfil
+  useEffect(() => {
+    if (!hasAutoFilled && !profileLoading && hasCompleteProfile && userProfile) {
+      const interests = getInterestsFromProfile();
+      const travelProfile = getTravelProfile();
+      const preferredCity = getPreferredCity();
+      const preferredDuration = getPreferredDuration();
+
+      setFormData(prev => ({
+        ...prev,
+        cidade: preferredCity,
+        duracao: preferredDuration,
+        interesses: interests.length > 0 ? interests : prev.interesses,
+        perfil: travelProfile,
+        // Mapear orçamento baseado em dados do perfil se disponível
+        orcamento: prev.orcamento, // Manter ou derivar de outros campos se necessário
+      }));
+
+      setHasAutoFilled(true);
+      
+      toast({
+        title: 'Formulário preenchido',
+        description: 'Preenchemos o formulário com base no seu perfil. Você pode editar qualquer campo.',
+        duration: 3000,
+      });
+    }
+  }, [userProfile, profileLoading, hasCompleteProfile, hasAutoFilled, getInterestsFromProfile, getTravelProfile, getPreferredCity, getPreferredDuration, toast]);
 
   // Carregar parceiros
   useEffect(() => {
@@ -125,66 +168,73 @@ export default function IARoutesPage() {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: 'Login necessário',
+        description: 'Você precisa estar logado para gerar roteiros.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      // Simulação de geração de roteiro (substituir por chamada real à API)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockPlan = {
-        resumo: {
-          cidade: formData.cidade,
-          duracao: formData.duracao,
-          interesses: formData.interesses,
-          hospedagem: formData.hospedagem,
-        },
-        dias: [
-          {
-            titulo: 'Dia 1',
-            atividades: [
-              'Chegada e check-in',
-              'Exploração do centro histórico',
-              'Almoço em restaurante local',
-              'Visita a pontos turísticos',
-            ],
-          },
-          {
-            titulo: 'Dia 2',
-            atividades: [
-              'Passeio matinal',
-              'Atividades relacionadas aos interesses',
-              'Jantar em restaurante típico',
-            ],
-          },
-          {
-            titulo: 'Dia 3',
-            atividades: [
-              'Últimas atividades',
-              'Check-out',
-              'Despedida',
-            ],
-          },
-        ],
-        eventos: partnersData.slice(0, 3).map((p, i) => ({
-          nome: `Evento ${i + 1}`,
-          data: 'Em breve',
-        })),
-        parceiros: partnersData.slice(0, 5).map((p) => ({
-          id: p.id,
-          nome: p.name,
-          tipo: p.partner_type || 'Parceiro',
-        })),
-        passaporte: formData.interesses.includes('cultura') ? {
-          match: true,
-          rota: 'Rota Cultural MS',
-        } : null,
+      toast({
+        title: 'Gerando roteiro...',
+        description: 'Estamos criando um roteiro personalizado para você. Isso pode levar alguns segundos.',
+        duration: 3000,
+      });
+
+      // Preparar dados de entrada
+      const routeInput: RouteGenerationInput = {
+        cidade: formData.cidade,
+        datas: formData.datas || undefined,
+        duracao: formData.duracao,
+        interesses: formData.interesses,
+        orcamento: formData.orcamento,
+        hospedagem: formData.hospedagem,
+        perfil: formData.perfil,
+        ocasiao: formData.ocasiao,
+        userProfile: userProfile || undefined,
       };
 
-      setGeneratedPlan(mockPlan);
+      // Gerar roteiro com IA
+      const generatedRoute = await iaRouteService.generateRoute(routeInput);
+
+      // Salvar roteiro no banco de dados
+      try {
+        const { error: saveError } = await supabase
+          .from('user_routes')
+          .insert({
+            user_id: user.id,
+            input_data: routeInput,
+            route_data: generatedRoute,
+            title: `Roteiro ${formData.cidade} - ${formData.duracao}`,
+          });
+
+        if (saveError) {
+          console.error('Erro ao salvar roteiro:', saveError);
+          // Não bloquear se falhar ao salvar
+        } else {
+          console.log('✅ Roteiro salvo com sucesso');
+        }
+      } catch (saveErr) {
+        console.error('Erro ao salvar roteiro:', saveErr);
+      }
+
+      setGeneratedPlan(generatedRoute);
       setShowSaveNote(true);
+
+      toast({
+        title: 'Roteiro gerado!',
+        description: 'Seu roteiro personalizado está pronto. Você pode salvá-lo ou exportá-lo.',
+        duration: 4000,
+      });
     } catch (error: any) {
+      console.error('Erro ao gerar roteiro:', error);
       toast({
         title: 'Erro ao gerar roteiro',
-        description: error.message || 'Não foi possível gerar o roteiro. Tente novamente.',
+        description: error.message || 'Não foi possível gerar o roteiro. Tente novamente em alguns instantes.',
         variant: 'destructive',
       });
     } finally {
@@ -278,11 +328,17 @@ export default function IARoutesPage() {
 
         {/* Acesso liberado - Badge */}
         {hasIAAccess && (
-          <div className="mb-6 flex justify-center md:justify-start">
+          <div className="mb-6 flex justify-center md:justify-start gap-2 flex-wrap">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-full px-4 py-2">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               <span className="text-sm font-semibold text-green-800">Acesso Premium Ativo</span>
             </div>
+            {isTestMode && (
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-full px-4 py-2">
+                <Sparkles className="w-5 h-5 text-yellow-600" />
+                <span className="text-sm font-semibold text-yellow-800">Modo de Teste Ativo</span>
+              </div>
+            )}
           </div>
         )}
 

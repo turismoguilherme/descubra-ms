@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { useBrand } from "@/context/BrandContext";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -55,9 +56,11 @@ const Destinos = () => {
     return location.pathname.split('?')[0];
   };
   
+  const { language } = useLanguage();
   const [destinos, setDestinos] = useState<Destination[]>([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
   const [loading, setLoading] = useState(true);
+  const [translations, setTranslations] = useState<Map<string, any>>(new Map());
   
   // Função para obter ícone do destaque (similar ao MapaTuristico)
   const getHighlightIcon = (highlight: string) => {
@@ -172,6 +175,54 @@ const Destinos = () => {
 
     fetchDestinos();
   }, [regiaoFiltrada, cidadeParam, isMS]);
+
+  // Buscar traduções quando idioma ou destinos mudarem
+  useEffect(() => {
+    const loadTranslations = async () => {
+      if (language === 'pt-BR' || destinos.length === 0) {
+        setTranslations(new Map());
+        return;
+      }
+
+      try {
+        const { destinationTranslationService } = await import('@/services/translation/DestinationTranslationService');
+        const translationMap = new Map();
+
+        // Buscar traduções para todos os destinos em paralelo
+        const translationPromises = destinos.map(async (destino) => {
+          try {
+            const translation = await destinationTranslationService.getTranslation(destino.id, language);
+            if (translation) {
+              translationMap.set(destino.id, translation);
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar tradução para destino ${destino.id}:`, error);
+          }
+        });
+
+        await Promise.all(translationPromises);
+        setTranslations(translationMap);
+      } catch (error) {
+        console.error('Erro ao carregar traduções:', error);
+      }
+    };
+
+    loadTranslations();
+  }, [destinos, language]);
+
+  // Helper para obter nome traduzido
+  const getTranslatedName = (destino: Destination) => {
+    if (language === 'pt-BR') return destino.name;
+    const translation = translations.get(destino.id);
+    return translation?.name || destino.name;
+  };
+
+  // Helper para obter descrição traduzida
+  const getTranslatedDescription = (destino: Destination) => {
+    if (language === 'pt-BR') return destino.description;
+    const translation = translations.get(destino.id);
+    return translation?.description || destino.description;
+  };
 
   // Função auxiliar para dados mock
   const getMockDestinations = (): Destination[] => [
@@ -434,10 +485,10 @@ const Destinos = () => {
                     </div>
                     <div className="p-6">
                       <h3 className="text-2xl font-bold text-ms-primary-blue mb-3 group-hover:text-ms-discovery-teal transition-colors">
-                        {destino.name}
+                        {getTranslatedName(destino)}
                       </h3>
                       <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-                        {destino.description}
+                        {getTranslatedDescription(destino)}
                       </p>
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-2 text-gray-500">

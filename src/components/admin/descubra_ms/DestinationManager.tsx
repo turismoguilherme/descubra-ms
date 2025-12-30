@@ -622,6 +622,50 @@ export default function DestinationManager() {
         console.log('✅ [DestinationManager] highlights salvos no banco:', insertData.highlights);
       }
 
+      // Traduzir automaticamente após salvar
+      try {
+        // Buscar destino completo com detalhes para tradução
+        const { data: fullDestination } = await supabase
+          .from('destinations')
+          .select(`
+            *,
+            destination_details (
+              promotional_text,
+              highlights,
+              how_to_get_there,
+              best_time_to_visit
+            )
+          `)
+          .eq('id', destinationId)
+          .single();
+
+        if (fullDestination) {
+          const { data: detailsData } = await supabase
+            .from('destination_details')
+            .select('promotional_text, highlights, how_to_get_there, best_time_to_visit')
+            .eq('destination_id', destinationId)
+            .single();
+
+          const destinationForTranslation = {
+            id: fullDestination.id,
+            name: fullDestination.name,
+            description: fullDestination.description || null,
+            promotional_text: detailsData?.promotional_text || null,
+            highlights: detailsData?.highlights || null,
+            how_to_get_there: detailsData?.how_to_get_there || null,
+            best_time_to_visit: detailsData?.best_time_to_visit || null,
+          };
+
+          // Traduzir em background (não bloquear UI)
+          import('@/utils/autoTranslation').then(({ autoTranslateDestination }) => {
+            autoTranslateDestination(destinationForTranslation);
+          });
+        }
+      } catch (translationError) {
+        console.error('Erro ao traduzir destino (não crítico):', translationError);
+        // Não bloquear o fluxo principal se a tradução falhar
+      }
+
       toast({
         title: 'Sucesso',
         description: `Destino ${editingDestination ? 'atualizado' : 'criado'} com sucesso!`,

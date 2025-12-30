@@ -21,7 +21,7 @@ const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsMa
 const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
 // MenuManager removido - desnecessário (menus são gerenciados via código)
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
-const PlatformSettings = lazy(() => import('@/components/admin/descubra_ms/PlatformSettings'));
+const WhatsAppSettingsManager = lazy(() => import('@/components/admin/descubra_ms/WhatsAppSettingsManager'));
 const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
 const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
 const PartnerSettingsManager = lazy(() => import('@/components/admin/PartnerSettingsManager'));
@@ -161,9 +161,9 @@ export default function ViaJARAdminPanel() {
                 <PartnerSettingsManager />
               </Suspense>
             } />
-            <Route path="descubra-ms/settings" element={
+            <Route path="descubra-ms/whatsapp" element={
               <Suspense fallback={<LoadingFallback />}>
-                <PlatformSettings />
+                <WhatsAppSettingsManager />
               </Suspense>
             } />
             <Route path="descubra-ms/passport" element={

@@ -1,5 +1,6 @@
 import { MapPin, Calendar, Book, Image, Sparkles, ArrowRight, LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface Experiencia {
   id: number;
@@ -12,15 +13,6 @@ interface Experiencia {
 }
 
 const experiencias: Experiencia[] = [
-  {
-    id: 1,
-    titulo: "Roteiros Personalizados",
-    descricao: "Planeje sua viagem com base nos seus interesses e tempo disponível",
-    icone: Sparkles,
-    corIcone: "text-ms-primary-blue",
-    corBg: "from-ms-primary-blue/10 to-ms-discovery-teal/10",
-    link: "/descubramatogrossodosul/roteiros-personalizados"
-  },
   {
     id: 2,
     titulo: "Agenda de Eventos",
@@ -51,6 +43,15 @@ const experiencias: Experiencia[] = [
 ];
 
 const ExperienceSection = () => {
+  const { t } = useTranslation('pages');
+  
+  // Traduzir experiências (conteúdo estático)
+  const experienciasTraduzidas = experiencias.map(exp => ({
+    ...exp,
+    titulo: t(`home.experiences.${exp.id}.title`, { defaultValue: exp.titulo }),
+    descricao: t(`home.experiences.${exp.id}.description`, { defaultValue: exp.descricao }),
+  }));
+
   return (
     <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="ms-container">
@@ -61,15 +62,15 @@ const ExperienceSection = () => {
             </div>
           </div>
           <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
-            Experiências Completas
+            {t('home.experiences.title', { defaultValue: 'Experiências Completas' })}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis
+            {t('home.experiences.subtitle', { defaultValue: 'Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis' })}
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {experiencias.map((exp) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {experienciasTraduzidas.map((exp) => {
             const IconComponent = exp.icone;
             return (
               <Link
@@ -90,7 +91,7 @@ const ExperienceSection = () => {
                     {exp.descricao}
                   </p>
                   <div className="flex items-center justify-center gap-2 text-ms-primary-blue font-medium text-sm group-hover:gap-3 transition-all pt-4 border-t border-gray-100">
-                    <span>Explorar</span>
+                    <span>{t('home.experiences.explore', { defaultValue: 'Explorar' })}</span>
                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>

@@ -132,6 +132,30 @@ export default function EventApprovalQueue() {
         // Não bloquear aprovação se integração falhar
       }
 
+      // Traduzir evento automaticamente após aprovação
+      try {
+        const { data: event } = await supabase
+          .from('events')
+          .select('id, name, description, location, category')
+          .eq('id', selectedEvent.id)
+          .single();
+
+        if (event) {
+          const { autoTranslateEvent } = await import('@/utils/autoTranslation');
+          // Traduzir em background (não bloquear UI)
+          autoTranslateEvent({
+            id: event.id,
+            name: event.name || selectedEvent.title || '',
+            description: event.description || null,
+            location: event.location || null,
+            category: event.category || null,
+          });
+        }
+      } catch (translationError) {
+        console.error('Erro ao traduzir evento (não crítico):', translationError);
+        // Não bloquear aprovação se tradução falhar
+      }
+
       toast({
         title: 'Evento aprovado!',
         description: 'O evento aparecerá no calendário público do Descubra MS.',

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
+import UniversalLayout from '@/components/layout/UniversalLayout';
 import PassportDocument from '@/components/passport/PassportDocument';
 import PassportProfileGate from '@/components/passport/PassportProfileGate';
 
@@ -25,13 +24,11 @@ const PassportDigital: React.FC = () => {
 
   return (
     <PassportProfileGate>
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <Navbar />
-      <main className="flex-grow py-8">
-        <PassportDocument routeId={routeId} />
-      </main>
-      <Footer />
-    </div>
+      <UniversalLayout>
+        <main className="flex-grow bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
+          <PassportDocument routeId={routeId} />
+        </main>
+      </UniversalLayout>
     </PassportProfileGate>
   );
 };

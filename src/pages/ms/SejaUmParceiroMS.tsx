@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import PartnerOnboardingWizard from '@/components/partners/PartnerOnboardingWizard';
 import { Building2, Gift, TrendingUp, Users } from 'lucide-react';
 
 const SejaUmParceiroMS = () => {
+  // Garantir que a página role para o topo ao carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   return (
     <UniversalLayout>
       <main className="flex-grow bg-gradient-to-b from-blue-50 via-white to-green-50">

@@ -8,12 +8,14 @@ import { ViaJARAuthProvider } from "@/hooks/auth/ViaJARAuthProvider";
 import { OverflowOneAuthProvider } from "@/hooks/auth/OverflowOneAuthProvider";
 import { CSRFProvider } from "@/components/security/CSRFProtection";
 import { BrandProvider } from "@/context/BrandContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import LoadingFallback from "@/components/ui/loading-fallback";
 import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import VLibrasWidget from "@/components/accessibility/VLibrasWidget";
+import "@/i18n/config";
 // Removendo imports complexos temporariamente
 // import DebugPanel from "@/components/debug/DebugPanel";
 // import { ErrorMonitorPanel } from "@/services/ErrorMonitor";
@@ -117,15 +119,16 @@ function App() {
                   sessionTimeoutMinutes={30}
                   sessionWarningMinutes={5}
                 >
-                  <TooltipProvider>
-                    <Toaster />
-                    <BrowserRouter
-                      future={{
-                        v7_startTransition: true,
-                        v7_relativeSplatPath: true,
-                      }}
-                    >
-                      <BrandProvider>
+                  <LanguageProvider>
+                    <TooltipProvider>
+                      <Toaster />
+                      <BrowserRouter
+                        future={{
+                          v7_startTransition: true,
+                          v7_relativeSplatPath: true,
+                        }}
+                      >
+                        <BrandProvider>
                         {/* VLibras - Controle de visibilidade por rota */}
                         <VLibrasWidget />
                         <div className="min-h-screen bg-background font-sans antialiased">
@@ -292,9 +295,10 @@ function App() {
                             <Route path="*" element={<ViaJARSaaS />} />
                           </Routes>
                         </div>
-                      </BrandProvider>
-                    </BrowserRouter>
-                  </TooltipProvider>
+                        </BrandProvider>
+                      </BrowserRouter>
+                    </TooltipProvider>
+                  </LanguageProvider>
                 </SecurityProvider>
               </CSRFProvider>
             </OverflowOneAuthProvider>

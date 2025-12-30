@@ -4,6 +4,8 @@ import { InteractionTracker } from "@/services/tracking/InteractionTrackerServic
 import { MapPin, ArrowRight, Compass, Loader2 } from "lucide-react";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from "react-i18next";
 
 interface Destination {
   id: string;
@@ -50,8 +52,11 @@ const destinosMock = [
 ];
 
 const DestaquesSection = () => {
+  const { language } = useLanguage();
+  const { t } = useTranslation('pages');
   const [content, setContent] = useState<Record<string, string>>({});
   const [destinos, setDestinos] = useState<Destination[]>([]);
+  const [translations, setTranslations] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -142,6 +147,54 @@ const DestaquesSection = () => {
     fetchDestinos();
   }, []);
 
+  // Buscar traduções quando idioma ou destinos mudarem
+  useEffect(() => {
+    const loadTranslations = async () => {
+      if (language === 'pt-BR' || destinos.length === 0) {
+        setTranslations(new Map());
+        return;
+      }
+
+      try {
+        const { destinationTranslationService } = await import('@/services/translation/DestinationTranslationService');
+        const translationMap = new Map();
+
+        // Buscar traduções para todos os destinos em paralelo
+        const translationPromises = destinos.map(async (destino) => {
+          try {
+            const translation = await destinationTranslationService.getTranslation(destino.id, language);
+            if (translation) {
+              translationMap.set(destino.id, translation);
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar tradução para destino ${destino.id}:`, error);
+          }
+        });
+
+        await Promise.all(translationPromises);
+        setTranslations(translationMap);
+      } catch (error) {
+        console.error('Erro ao carregar traduções:', error);
+      }
+    };
+
+    loadTranslations();
+  }, [destinos, language]);
+
+  // Helper para obter nome traduzido
+  const getTranslatedName = (destino: Destination) => {
+    if (language === 'pt-BR') return destino.name;
+    const translation = translations.get(destino.id);
+    return translation?.name || destino.name;
+  };
+
+  // Helper para obter descrição traduzida
+  const getTranslatedDescription = (destino: Destination) => {
+    if (language === 'pt-BR') return destino.description || 'Descubra este destino incrível em Mato Grosso do Sul';
+    const translation = translations.get(destino.id);
+    return translation?.description || destino.description || 'Descubra este destino incrível em Mato Grosso do Sul';
+  };
+
   const getContent = (key: string, fallback: string) => content[key] || fallback;
 
   const handleDestinationClick = (destino: Destination) => {
@@ -179,10 +232,10 @@ const DestaquesSection = () => {
             </div>
           </div>
           <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
-            {getContent('ms_destinations_title', 'Destinos em Destaque')}
+            {t('home.highlights.title', { defaultValue: getContent('ms_destinations_title', 'Destinos em Destaque') })}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {getContent('ms_destinations_description', 'Descubra os principais destinos turísticos de Mato Grosso do Sul')}
+            {t('home.highlights.description', { defaultValue: getContent('ms_destinations_description', 'Descubra os principais destinos turísticos de Mato Grosso do Sul') })}
           </p>
         </div>
 
@@ -229,10 +282,10 @@ const DestaquesSection = () => {
                     </div>
                     <div className="p-5">
                       <h3 className="text-xl font-bold text-ms-primary-blue mb-2 group-hover:text-ms-discovery-teal transition-colors">
-                        {destino.name}
+                        {getTranslatedName(destino)}
                       </h3>
                       <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                        {destino.description || 'Descubra este destino incrível em Mato Grosso do Sul'}
+                        {getTranslatedDescription(destino)}
                       </p>
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-1.5 text-gray-500">
@@ -240,7 +293,7 @@ const DestaquesSection = () => {
                           <span className="text-xs font-medium">{regiao}</span>
                         </div>
                         <div className="flex items-center gap-1 text-ms-primary-blue font-medium text-sm group-hover:gap-2 transition-all">
-                          <span>Explorar</span>
+                          <span>{t('home.highlights.explore', { defaultValue: 'Explorar' })}</span>
                           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
@@ -258,7 +311,7 @@ const DestaquesSection = () => {
             to="/descubramatogrossodosul/destinos" 
             className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
           >
-            {getContent('ms_destinations_button', 'Ver Todos os Destinos')}
+            {t('home.highlights.viewAll', { defaultValue: getContent('ms_destinations_button', 'Ver Todos os Destinos') })}
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

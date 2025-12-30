@@ -42,7 +42,8 @@ import {
   CreditCard as CreditCardIcon,
   RefreshCw,
   Mail,
-  TrendingUp
+  TrendingUp,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminNotifications } from '@/components/admin/notifications/AdminNotifications';
@@ -127,7 +128,8 @@ const navigationItems: NavItem[] = [
             ],
           },
       // Menus removido - desnecessário (menus são gerenciados via código)
-      { id: 'users', label: 'Usuários', icon: Users, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
+      { id: 'users', label: 'Usuários', icon: UserCog, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
+      { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, path: '/viajar/admin/descubra-ms/whatsapp', permission: 'settings', platform: 'descubra-ms' },
         ],
       },
     ],

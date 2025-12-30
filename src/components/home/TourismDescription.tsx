@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { platformContentService } from '@/services/admin/platformContentService';
 
 const TourismDescription = () => {
+  const { t } = useTranslation('pages');
   const [content, setContent] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -29,20 +31,20 @@ const TourismDescription = () => {
       <div className="ms-container">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            {getContent('ms_tourism_title', '"Descubra Mato Grosso do Sul" – Viva essa experiência!')}
+            {t('home.tourismDescription.title', { defaultValue: getContent('ms_tourism_title', '"Descubra Mato Grosso do Sul" – Viva essa experiência!') })}
           </h2>
           
           <p className="mb-6 text-lg">
-            {getContent('ms_tourism_paragraph_1', 'Prepare-se para descobrir o melhor de MS de um jeito inovador e inteligente. Com a ajuda do Guatá, seu guia virtual inspirado na cultura local, você explora atrativos como Bonito, Pantanal, Serra da Bodoquena e muito mais!')}
+            {t('home.tourismDescription.paragraph1', { defaultValue: getContent('ms_tourism_paragraph_1', 'Prepare-se para descobrir o melhor de MS de um jeito inovador e inteligente. Com a ajuda do Guatá, seu guia virtual inspirado na cultura local, você explora atrativos como Bonito, Pantanal, Serra da Bodoquena e muito mais!') })}
           </p>
           
           <p className="mb-8 text-lg">
-            {getContent('ms_tourism_paragraph_2', 'Crie seu passaporte digital, desbloqueie selos temáticos com animais do Cerrado e do Pantanal, participe de roteiros interativos, receba recompensas e viva momentos inesquecíveis! Cadastre-se para explorar mais e ajudar a melhorar o turismo local!')}
+            {t('home.tourismDescription.paragraph2', { defaultValue: getContent('ms_tourism_paragraph_2', 'Crie seu passaporte digital, desbloqueie selos temáticos com animais do Cerrado e do Pantanal, participe de roteiros interativos, receba recompensas e viva momentos inesquecíveis! Cadastre-se para explorar mais e ajudar a melhorar o turismo local!') })}
           </p>
           
           <Link to="/descubramatogrossodosul/register">
             <Button className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-black font-medium px-8 py-6 text-lg">
-              {getContent('ms_tourism_button', 'Cadastre-se')}
+              {t('home.tourismDescription.signUp', { defaultValue: getContent('ms_tourism_button', 'Cadastre-se') })}
             </Button>
           </Link>
         </div>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2, LogIn, UserPlus } from 'lucide-react';
+import UniversalLayout from '@/components/layout/UniversalLayout';
 
 interface PassportProfileGateProps {
   children: React.ReactNode;
@@ -125,35 +126,39 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
     );
   }
 
-  // Se não tem conta, mostrar opções de login/registro
+  // Se não tem conta, mostrar opções de login/registro com UniversalLayout
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 p-4">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-ms-primary-blue">
-              Acesso ao Passaporte Digital
-            </CardTitle>
-            <CardDescription className="text-base mt-2">
-              Para usar o Passaporte Digital, você precisa criar uma conta e completar seu perfil.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Link to="/descubramatogrossodosul/register" className="block">
-              <Button className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90" size="lg">
-                <UserPlus className="w-5 h-5 mr-2" />
-                Criar Conta
-              </Button>
-            </Link>
-            <Link to="/descubramatogrossodosul/login" className="block">
-              <Button variant="outline" className="w-full" size="lg">
-                <LogIn className="w-5 h-5 mr-2" />
-                Já tenho conta
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <main className="flex-grow py-16 px-4 bg-gradient-to-br from-blue-50 via-white to-green-50">
+          <div className="max-w-md mx-auto">
+            <Card className="shadow-xl border-0 bg-white">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-2xl font-bold text-ms-primary-blue">
+                  Acesso ao Passaporte Digital
+                </CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Para usar o Passaporte Digital, você precisa criar uma conta e completar seu perfil.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 px-6 pb-6">
+                <Link to="/descubramatogrossodosul/register" className="block">
+                  <Button className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90" size="lg">
+                    <UserPlus className="w-5 h-5 mr-2" />
+                    Criar Conta
+                  </Button>
+                </Link>
+                <Link to="/descubramatogrossodosul/login" className="block">
+                  <Button variant="outline" className="w-full" size="lg">
+                    <LogIn className="w-5 h-5 mr-2" />
+                    Já tenho conta
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </UniversalLayout>
     );
   }
 

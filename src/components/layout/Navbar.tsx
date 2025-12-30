@@ -3,12 +3,15 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import UserMenu from "./UserMenu";
+import { LanguageSelector } from "./LanguageSelector";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation('common');
   
   // Detectar tenant do path atual
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -38,30 +41,30 @@ const Navbar = () => {
   };
   
   const navItems = [{
-    name: "Início",
+    nameKey: "nav.home",
     path: "/"
   }, {
-    name: "Destinos",
+    nameKey: "nav.destinations",
     path: "/destinos"
   }, {
-    name: "Eventos",
+    nameKey: "nav.events",
     path: "/eventos"
   }, {
-    name: "Roteiros",
+    nameKey: "nav.routes",
     path: "/roteiros"
   }, {
-    name: "Parceiros",
+    nameKey: "nav.partners",
     path: "/parceiros"
   }, {
-    name: "Sobre",
+    nameKey: "nav.about",
     path: "/sobre"
   }];
   
   const authenticatedNavItems = [{
-    name: "Guatá IA",
+    nameKey: "nav.guata",
     path: "/guata"
   }, {
-    name: "Passaporte Digital",
+    nameKey: "nav.passport",
     path: "/passaporte"
   }];
   
@@ -85,39 +88,40 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map(item => (
               <Link 
-                key={item.name} 
+                key={item.nameKey} 
                 to={getPathWithTenant(item.path)} 
                 className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${isActivePath(item.path) ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" : "text-gray-700"}`}
               >
-                {item.name}
+                {t(item.nameKey)}
               </Link>
             ))}
             
             {user && authenticatedNavItems.map(item => (
               <Link 
-                key={item.name} 
+                key={item.nameKey} 
                 to={getPathWithTenant(item.path)} 
                 className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${isActivePath(item.path) ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" : "text-gray-700"}`}
               >
-                {item.name}
+                {t(item.nameKey)}
               </Link>
             ))}
           </div>
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
+            <LanguageSelector />
             {user ? (
               <UserMenu />
             ) : (
               <>
                 <Link to={getPathWithTenant("/login")}>
                   <Button variant="ghost" size="sm">
-                    Entrar
+                    {t('buttons.login')}
                   </Button>
                 </Link>
                 <Link to={getPathWithTenant("/register")}>
                   <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
-                    Cadastrar
+                    {t('buttons.register')}
                   </Button>
                 </Link>
               </>
@@ -138,28 +142,31 @@ const Navbar = () => {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
               {navItems.map(item => (
                 <Link 
-                  key={item.name} 
+                  key={item.nameKey} 
                   to={getPathWithTenant(item.path)} 
                   className={`block px-3 py-2 text-base font-medium transition-colors ${isActivePath(item.path) ? "text-ms-primary-blue bg-blue-50" : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"}`} 
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.name}
+                  {t(item.nameKey)}
                 </Link>
               ))}
               
               {user && authenticatedNavItems.map(item => (
                 <Link 
-                  key={item.name} 
+                  key={item.nameKey} 
                   to={getPathWithTenant(item.path)} 
                   className={`block px-3 py-2 text-base font-medium transition-colors ${isActivePath(item.path) ? "text-ms-primary-blue bg-blue-50" : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"}`} 
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.name}
+                  {t(item.nameKey)}
                 </Link>
               ))}
 
               {/* Mobile Auth */}
               <div className="pt-4 pb-3 border-t border-gray-200">
+                <div className="px-3 mb-3">
+                  <LanguageSelector />
+                </div>
                 {user ? (
                   <div className="px-3">
                     <UserMenu />
@@ -168,12 +175,12 @@ const Navbar = () => {
                   <div className="space-y-2 px-3">
                     <Link to={getPathWithTenant("/login")} onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" size="sm" className="w-full justify-start">
-                        Entrar
+                        {t('buttons.login')}
                       </Button>
                     </Link>
                     <Link to={getPathWithTenant("/register")} onClick={() => setIsOpen(false)}>
                       <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
-                        Cadastrar
+                        {t('buttons.register')}
                       </Button>
                     </Link>
                   </div>

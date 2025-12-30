@@ -94,9 +94,9 @@ const msConfig: BrandConfig = {
     { name: 'Parceiros', path: '/descubramatogrossodosul/parceiros' },
     { name: 'Sobre', path: '/descubramatogrossodosul/sobre' },
     { name: 'Guatá IA', path: '/descubramatogrossodosul/guata' },
+    { name: 'Passaporte Digital', path: '/descubramatogrossodosul/passaporte' },
   ],
   authenticatedNavigation: [
-    { name: 'Passaporte', path: '/descubramatogrossodosul/passaporte' },
     { name: 'Roteiros', path: '/descubramatogrossodosul/roteiros-personalizados' },
   ],
   cta: {

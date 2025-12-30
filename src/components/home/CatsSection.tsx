@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { MapPin, Clock, Info, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface CAT {
   id: string;
@@ -16,6 +17,7 @@ interface CAT {
 }
 
 const CatsSection = () => {
+  const { t } = useTranslation('pages');
   const [cats, setCats] = useState<CAT[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,11 +67,10 @@ const CatsSection = () => {
       <div className="ms-container">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
-            Centros de Atendimento ao Turista
+            {t('home.cats.title', { defaultValue: 'Centros de Atendimento ao Turista' })}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Os CATs são pontos de apoio onde você encontra informações e orientações para
-            aproveitar ao máximo sua experiência em Mato Grosso do Sul.
+            {t('home.cats.description', { defaultValue: 'Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul.' })}
           </p>
         </div>
         
@@ -105,16 +106,16 @@ const CatsSection = () => {
                   <Info size={20} className="text-ms-primary-blue mt-1 flex-shrink-0" />
                   <div>
                     {cat.region && (
-                      <p className="text-gray-800 font-medium">Região: {cat.region}</p>
+                      <p className="text-gray-800 font-medium">{t('home.cats.region', { defaultValue: 'Região' })}: {cat.region}</p>
                     )}
                     {cat.city && (
                       <p className="text-gray-700 text-sm mt-1">
-                        Cidade: {cat.city}
+                        {t('home.cats.city', { defaultValue: 'Cidade' })}: {cat.city}
                       </p>
                     )}
                     {cat.contact_phone && (
                       <p className="text-gray-700 text-sm mt-1">
-                        Telefone: {cat.contact_phone}
+                        {t('home.cats.phone', { defaultValue: 'Telefone' })}: {cat.contact_phone}
                       </p>
                     )}
                   </div>

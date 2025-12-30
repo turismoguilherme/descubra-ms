@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Calendar,
   MapPin,
@@ -23,11 +24,15 @@ import {
   Megaphone,
   ExternalLink,
   Clock,
-  User
+  User,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { usePersonalization } from '@/hooks/usePersonalization';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface EventCalendarProps {
   autoLoad?: boolean;
@@ -61,17 +66,86 @@ interface EventItem {
 
 const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+  const [translations, setTranslations] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [showPersonalization, setShowPersonalization] = useState(true);
+  const { language } = useLanguage();
+  
+  // Personalização baseada no perfil
+  const { eventFilters, personalizationMessage, isPersonalized } = usePersonalization();
+  
+  // Aplicar sugestões de personalização
+  useEffect(() => {
+    if (eventFilters && isPersonalized && !searchTerm && selectedRegion === 'all') {
+      // Sugerir cidade, mas não aplicar automaticamente
+      // O usuário pode ver a sugestão e aplicar se quiser
+    }
+  }, [eventFilters, isPersonalized, searchTerm, selectedRegion]);
 
   useEffect(() => {
     if (autoLoad) {
       loadAllEvents();
     }
   }, [autoLoad]);
+
+  // Buscar traduções quando idioma ou eventos mudarem
+  useEffect(() => {
+    const loadTranslations = async () => {
+      if (language === 'pt-BR' || allEvents.length === 0) {
+        setTranslations(new Map());
+        return;
+      }
+
+      try {
+        const { eventTranslationService } = await import('@/services/translation/EventTranslationService');
+        const translationMap = new Map();
+
+        // Buscar traduções para todos os eventos em paralelo
+        const translationPromises = allEvents.map(async (event) => {
+          try {
+            const translation = await eventTranslationService.getTranslation(event.id, language);
+            if (translation) {
+              translationMap.set(event.id, translation);
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar tradução para evento ${event.id}:`, error);
+          }
+        });
+
+        await Promise.all(translationPromises);
+        setTranslations(translationMap);
+      } catch (error) {
+        console.error('Erro ao carregar traduções:', error);
+      }
+    };
+
+    loadTranslations();
+  }, [allEvents, language]);
+
+  // Helper para obter nome traduzido
+  const getTranslatedName = (event: EventItem) => {
+    if (language === 'pt-BR') return event.name;
+    const translation = translations.get(event.id);
+    return translation?.name || event.name;
+  };
+
+  // Helper para obter descrição traduzida
+  const getTranslatedDescription = (event: EventItem) => {
+    if (language === 'pt-BR') return event.description;
+    const translation = translations.get(event.id);
+    return translation?.description || event.description;
+  };
+
+  // Helper para obter localização traduzida
+  const getTranslatedLocation = (event: EventItem) => {
+    if (language === 'pt-BR') return event.location;
+    const translation = translations.get(event.id);
+    return translation?.location || event.location;
+  };
 
   const loadAllEvents = async () => {
     setLoading(true);
@@ -381,6 +455,32 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
   return (
     <div className="space-y-8">
+      {/* Personalização - Alerta */}
+      {isPersonalized && showPersonalization && personalizationMessage && (
+        <Alert className="bg-gradient-to-r from-ms-primary-blue/10 to-ms-discovery-teal/10 border-ms-primary-blue/30">
+          <Sparkles className="h-4 w-4 text-ms-primary-blue" />
+          <AlertDescription className="flex items-center justify-between">
+            <div>
+              <strong className="text-ms-primary-blue">{personalizationMessage.title}</strong>
+              <p className="text-sm text-gray-700 mt-1">{personalizationMessage.description}</p>
+              {eventFilters?.suggestedCity && (
+                <p className="text-xs text-gray-600 mt-1">
+                  💡 Sugestão: Eventos em {eventFilters.suggestedCity}
+                </p>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPersonalization(false)}
+              className="ml-4"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Filtros - PRIMEIRO */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
@@ -600,7 +700,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                   {/* Título e região no overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
-                      {selectedEvent.name}
+                      {getTranslatedName(selectedEvent)}
                     </h2>
                     <p className="text-white/90 text-sm drop-shadow">
                       {regionDescriptions[touristRegion as keyof typeof regionDescriptions] || regionDescriptions['descubra-ms']}
@@ -642,7 +742,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                         Localização
                       </h3>
                       <div className="bg-gray-50 px-4 py-3 rounded-lg">
-                        <p className="text-gray-700 font-medium">{selectedEvent.location}</p>
+                        <p className="text-gray-700 font-medium">{getTranslatedLocation(selectedEvent)}</p>
                         <p className="text-sm text-gray-500 mt-1">
                           {regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}
                         </p>
@@ -651,11 +751,11 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                   </div>
 
                   {/* Descrição */}
-                  {selectedEvent.description && (
+                  {getTranslatedDescription(selectedEvent) && (
                     <div className="space-y-3">
                       <h3 className="font-semibold text-gray-900">Sobre o Evento</h3>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
+                        <p className="text-gray-700 leading-relaxed">{getTranslatedDescription(selectedEvent)}</p>
                       </div>
                     </div>
                   )}

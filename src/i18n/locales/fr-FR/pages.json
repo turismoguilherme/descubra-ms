@@ -1,0 +1,105 @@
+{
+  "hero": {
+    "title": "Découvrez Mato Grosso do Sul",
+    "subtitle": "Du Pantanal au Cerrado, explorez des paysages uniques et une biodiversité au cœur de l'Amérique du Sud",
+    "button1": "Découvrir maintenant",
+    "button2": "Passeport numérique",
+    "button3": "Parler à Guatá"
+  },
+  "home": {
+    "title": "Découvrez Mato Grosso do Sul",
+    "subtitle": "Explorez des destinations incroyables, créez des itinéraires uniques et vivez des expériences inoubliables",
+    "exploreDestinations": "Explorer les destinations",
+    "viewGalleries": "Voir les galeries",
+    "events": "Événements",
+    "tourismDescription": {
+      "title": "Découvrez Mato Grosso do Sul – Vivez cette expérience !",
+      "paragraph1": "Préparez-vous à découvrir le meilleur du MS de manière innovante et intelligente. Avec l'aide de Guatá, votre guide virtuel inspiré de la culture locale, vous explorerez des attractions comme Bonito, Pantanal, Serra da Bodoquena et bien plus encore !",
+      "paragraph2": "Créez votre passeport numérique, débloquez des timbres thématiques avec des animaux du Cerrado et du Pantanal, participez à des itinéraires interactifs, recevez des récompenses et vivez des moments inoubliables ! Inscrivez-vous pour explorer plus et aider à améliorer le tourisme local !",
+      "signUp": "S'inscrire"
+    },
+    "highlights": {
+      "title": "Destinations en vedette",
+      "description": "Découvrez les principales destinations touristiques du Mato Grosso do Sul",
+      "viewAll": "Voir toutes les destinations",
+      "explore": "Explorer"
+    },
+    "experiences": {
+      "title": "Expériences Complètes",
+      "subtitle": "Découvrez tout ce que le Mato Grosso do Sul a à offrir avec des expériences uniques et inoubliables",
+      "explore": "Explorer",
+      "2": {
+        "title": "Calendrier des Événements",
+        "description": "Restez au courant des fêtes, événements culturels et gastronomiques dans l'État"
+      },
+      "3": {
+        "title": "Culture Locale",
+        "description": "Découvrez l'histoire, les traditions et les coutumes du Mato Grosso do Sul"
+      },
+      "4": {
+        "title": "Galerie Visuelle",
+        "description": "Des images et vidéos incroyables pour vous inspirer à découvrir chaque coin"
+      }
+    },
+    "cats": {
+      "title": "Centres d'Information Touristique",
+      "description": "Les CAT sont des points d'appui où vous pouvez trouver des informations et des conseils pour profiter au maximum de votre expérience dans le Mato Grosso do Sul",
+      "region": "Région",
+      "city": "Ville",
+      "phone": "Téléphone"
+    }
+  },
+  "destinations": {
+    "title": "Destinations",
+    "description": "Explorez les principales destinations touristiques du Mato Grosso do Sul",
+    "viewDetails": "Voir les détails",
+    "sections": {
+      "about": "À propos",
+      "highlights": "Principales attractions",
+      "video": "Vidéo promotionnelle",
+      "gallery": "Galerie de photos",
+      "officialLinks": "Liens officiels",
+      "howToGet": "Comment s'y rendre",
+      "contactInfo": "Informations de contact"
+    }
+  },
+  "events": {
+    "title": "Événements",
+    "description": "Découvrez les principaux événements du Mato Grosso do Sul",
+    "upcoming": "Événements à venir",
+    "past": "Événements passés"
+  },
+  "routes": {
+    "title": "Itinéraires Uniques de",
+    "subtitle": "Découvrez Mato Grosso do Sul",
+    "description": "Découvrez des expériences authentiques grâce à notre passeport numérique gamifié. Explorez, collectionnez des tampons et gagnez des récompenses uniques !",
+    "stats": {
+      "routes": "Itinéraires",
+      "points": "Points",
+      "achievements": "Réalisations"
+    },
+    "filters": {
+      "search": "Rechercher des itinéraires",
+      "searchPlaceholder": "Tapez le nom de l'itinéraire...",
+      "difficulty": "Difficulté",
+      "region": "Région",
+      "all": "Toutes",
+      "easy": "Facile",
+      "medium": "Moyen",
+      "hard": "Difficile",
+      "filter": "Filtrer"
+    },
+    "noResults": {
+      "title": "Aucun itinéraire trouvé",
+      "description": "Essayez d'ajuster les filtres ou de rechercher d'autres termes."
+    }
+  },
+  "partners": {
+    "title": "Partenaires",
+    "description": "Rencontrez nos partenaires"
+  },
+  "about": {
+    "title": "À propos",
+    "description": "En savoir plus sur la plateforme"
+  }
+}

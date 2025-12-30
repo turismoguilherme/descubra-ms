@@ -1,0 +1,105 @@
+{
+  "hero": {
+    "title": "Discover Mato Grosso do Sul",
+    "subtitle": "From Pantanal to Cerrado, explore unique landscapes and biodiversity in the heart of South America",
+    "button1": "Discover Now",
+    "button2": "Digital Passport",
+    "button3": "Talk to Guatá"
+  },
+  "home": {
+    "title": "Discover Mato Grosso do Sul",
+    "subtitle": "Explore amazing destinations, create unique routes and live unforgettable experiences",
+    "exploreDestinations": "Explore Destinations",
+    "viewGalleries": "View Galleries",
+    "events": "Events",
+    "tourismDescription": {
+      "title": "Discover Mato Grosso do Sul – Live this experience!",
+      "paragraph1": "Get ready to discover the best of MS in an innovative and smart way. With the help of Guatá, your virtual guide inspired by local culture, you'll explore attractions like Bonito, Pantanal, Serra da Bodoquena and much more!",
+      "paragraph2": "Create your digital passport, unlock thematic stamps with Cerrado and Pantanal animals, participate in interactive routes, receive rewards and live unforgettable moments! Sign up to explore more and help improve local tourism!",
+      "signUp": "Sign Up"
+    },
+    "highlights": {
+      "title": "Featured Destinations",
+      "description": "Discover the main tourist destinations in Mato Grosso do Sul",
+      "viewAll": "View All Destinations",
+      "explore": "Explore"
+    },
+    "experiences": {
+      "title": "Complete Experiences",
+      "subtitle": "Discover everything Mato Grosso do Sul has to offer with unique and unforgettable experiences",
+      "explore": "Explore",
+      "2": {
+        "title": "Event Calendar",
+        "description": "Stay up to date with parties, cultural and gastronomic events in the state"
+      },
+      "3": {
+        "title": "Local Culture",
+        "description": "Learn about the history, traditions and customs of Mato Grosso do Sul"
+      },
+      "4": {
+        "title": "Visual Gallery",
+        "description": "Amazing images and videos to inspire you to discover every corner"
+      }
+    },
+    "cats": {
+      "title": "Tourist Information Centers",
+      "description": "CATs are support points where you can find information and guidance to make the most of your experience in Mato Grosso do Sul",
+      "region": "Region",
+      "city": "City",
+      "phone": "Phone"
+    }
+  },
+  "destinations": {
+    "title": "Destinations",
+    "description": "Explore the main tourist destinations in Mato Grosso do Sul",
+    "viewDetails": "View details",
+    "sections": {
+      "about": "About",
+      "highlights": "Main Attractions",
+      "video": "Promotional Video",
+      "gallery": "Photo Gallery",
+      "officialLinks": "Official Links",
+      "howToGet": "How to Get There",
+      "contactInfo": "Contact Information"
+    }
+  },
+  "events": {
+    "title": "Events",
+    "description": "Check out the main events in Mato Grosso do Sul",
+    "upcoming": "Upcoming events",
+    "past": "Past events"
+  },
+  "routes": {
+    "title": "Unique Routes from",
+    "subtitle": "Discover Mato Grosso do Sul",
+    "description": "Discover authentic experiences through our gamified digital passport. Explore, collect stamps and earn unique rewards!",
+    "stats": {
+      "routes": "Routes",
+      "points": "Points",
+      "achievements": "Achievements"
+    },
+    "filters": {
+      "search": "Search routes",
+      "searchPlaceholder": "Type the route name...",
+      "difficulty": "Difficulty",
+      "region": "Region",
+      "all": "All",
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "filter": "Filter"
+    },
+    "noResults": {
+      "title": "No routes found",
+      "description": "Try adjusting the filters or searching for other terms."
+    }
+  },
+  "partners": {
+    "title": "Partners",
+    "description": "Meet our partners"
+  },
+  "about": {
+    "title": "About",
+    "description": "Learn more about the platform"
+  }
+}

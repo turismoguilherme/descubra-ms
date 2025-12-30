@@ -193,6 +193,24 @@ export default function EventsManagement() {
         duration: 5000,
       });
 
+      // Traduzir evento automaticamente após aprovação
+      try {
+        if (updatedEvent && updatedEvent[0]) {
+          const { autoTranslateEvent } = await import('@/utils/autoTranslation');
+          // Traduzir em background (não bloquear UI)
+          autoTranslateEvent({
+            id: updatedEvent[0].id,
+            name: updatedEvent[0].name || event.name || '',
+            description: updatedEvent[0].description || null,
+            location: updatedEvent[0].location || null,
+            category: updatedEvent[0].category || null,
+          });
+        }
+      } catch (translationError) {
+        console.error('Erro ao traduzir evento (não crítico):', translationError);
+        // Não bloquear aprovação se tradução falhar
+      }
+
       // Recarregar eventos para atualizar a lista (fazer antes do email)
       await loadEvents();
 

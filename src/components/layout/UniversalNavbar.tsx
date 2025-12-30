@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrand } from "@/context/BrandContext";
 import UserMenu from "./UserMenu";
+import { LanguageSelector } from "./LanguageSelector";
 
 const UniversalNavbar = () => {
   const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
@@ -166,6 +167,7 @@ const UniversalNavbar = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
+            <LanguageSelector />
             {user ? (
               <UserMenu />
             ) : (
@@ -256,6 +258,9 @@ const UniversalNavbar = () => {
 
               {/* Mobile Auth */}
               <div className="pt-4 pb-3 border-t border-gray-200">
+                <div className="px-3 mb-3">
+                  <LanguageSelector />
+                </div>
                 {user ? (
                   <div className="px-3">
                     <UserMenu />

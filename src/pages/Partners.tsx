@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import UniversalLayout from "@/components/layout/UniversalLayout";
 import { usePartners, Partner } from "@/hooks/usePartners";
 import { PartnerCard } from "@/components/partners/PartnerCard";
@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { Users, Search, Briefcase } from "lucide-react";
+import { Users, Search, Sparkles, X } from "lucide-react";
+import { usePersonalization } from "@/hooks/usePersonalization";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Partners = () => {
     const { partners, isLoading } = usePartners('approved');
@@ -16,6 +18,26 @@ const Partners = () => {
     const [partnerType, setPartnerType] = useState<string>('all');
     const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [showPersonalization, setShowPersonalization] = useState(true);
+    
+    // Personalização baseada no perfil
+    const { partnerFilters, personalizationMessage, isPersonalized } = usePersonalization();
+    
+    // Aplicar filtros automáticos baseados no perfil
+    useEffect(() => {
+        if (partnerFilters && isPersonalized && partnerType === 'all') {
+            // Aplicar filtro de cidade se disponível
+            if (partnerFilters.suggestedCity && !search) {
+                // Não aplicar automaticamente, apenas sugerir
+            }
+            
+            // Aplicar filtro de tipo se disponível
+            if (partnerFilters.suggestedTypes && partnerFilters.suggestedTypes.length > 0) {
+                // Sugerir o primeiro tipo, mas não aplicar automaticamente
+                // O usuário pode ver a sugestão e aplicar se quiser
+            }
+        }
+    }, [partnerFilters, isPersonalized, partnerType, search]);
 
     const partnerTypes = [
         { value: 'all', label: 'Todos os tipos' },
@@ -47,7 +69,11 @@ const Partners = () => {
                 {/* Hero */}
                 <div className="bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-16">
                     <div className="ms-container text-center">
-                        <Briefcase size={48} className="text-white mx-auto mb-4" />
+                        <div className="flex justify-center mb-4">
+                            <div className="bg-white/20 backdrop-blur-sm p-4 rounded-full">
+                                <Users size={48} className="text-white" />
+                            </div>
+                        </div>
                         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                             Nossos Parceiros
                         </h1>
@@ -57,6 +83,34 @@ const Partners = () => {
                     </div>
                 </div>
 
+                {/* Personalização - Alerta */}
+                {isPersonalized && showPersonalization && personalizationMessage && (
+                    <div className="ms-container py-4">
+                        <Alert className="bg-gradient-to-r from-ms-primary-blue/10 to-ms-discovery-teal/10 border-ms-primary-blue/30">
+                            <Sparkles className="h-4 w-4 text-ms-primary-blue" />
+                            <AlertDescription className="flex items-center justify-between">
+                                <div>
+                                    <strong className="text-ms-primary-blue">{personalizationMessage.title}</strong>
+                                    <p className="text-sm text-gray-700 mt-1">{personalizationMessage.description}</p>
+                                    {partnerFilters?.suggestedCity && (
+                                        <p className="text-xs text-gray-600 mt-1">
+                                            💡 Sugestão: Parceiros em {partnerFilters.suggestedCity}
+                                        </p>
+                                    )}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowPersonalization(false)}
+                                    className="ml-4"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                )}
+
                 {/* Filtros */}
                 <div className="bg-white border-b sticky top-0 z-10">
                     <div className="ms-container py-4">
@@ -64,7 +118,7 @@ const Partners = () => {
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                 <Input 
-                                    placeholder="Buscar parceiro..." 
+                                    placeholder={partnerFilters?.suggestedCity ? `Buscar em ${partnerFilters.suggestedCity}...` : "Buscar parceiro..."} 
                                     value={search} 
                                     onChange={(e) => setSearch(e.target.value)}
                                     className="pl-10"
@@ -78,10 +132,29 @@ const Partners = () => {
                                     {partnerTypes.map(t => (
                                         <SelectItem key={t.value} value={t.value}>
                                             {t.label}
+                                            {partnerFilters?.suggestedTypes?.includes(t.value) && isPersonalized && (
+                                                <span className="ml-2 text-ms-primary-blue">⭐</span>
+                                            )}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {partnerFilters?.suggestedTypes && partnerFilters.suggestedTypes.length > 0 && isPersonalized && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        // Aplicar primeiro tipo sugerido
+                                        if (partnerFilters.suggestedTypes && partnerFilters.suggestedTypes.length > 0) {
+                                            setPartnerType(partnerFilters.suggestedTypes[0]);
+                                        }
+                                    }}
+                                    className="whitespace-nowrap"
+                                >
+                                    <Sparkles className="h-4 w-4 mr-2" />
+                                    Sugeridos para mim
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>

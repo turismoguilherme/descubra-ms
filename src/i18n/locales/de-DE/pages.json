@@ -1,0 +1,105 @@
+{
+  "hero": {
+    "title": "Entdecken Sie Mato Grosso do Sul",
+    "subtitle": "Vom Pantanal bis zum Cerrado, erkunden Sie einzigartige Landschaften und Biodiversität im Herzen Südamerikas",
+    "button1": "Jetzt entdecken",
+    "button2": "Digitaler Pass",
+    "button3": "Mit Guatá sprechen"
+  },
+  "home": {
+    "title": "Entdecken Sie Mato Grosso do Sul",
+    "subtitle": "Erkunden Sie erstaunliche Reiseziele, erstellen Sie einzigartige Routen und erleben Sie unvergessliche Erfahrungen",
+    "exploreDestinations": "Reiseziele erkunden",
+    "viewGalleries": "Galerien anzeigen",
+    "events": "Veranstaltungen",
+    "tourismDescription": {
+      "title": "Entdecken Sie Mato Grosso do Sul – Erleben Sie diese Erfahrung!",
+      "paragraph1": "Bereiten Sie sich darauf vor, das Beste von MS auf innovative und intelligente Weise zu entdecken. Mit der Hilfe von Guatá, Ihrem virtuellen Führer, inspiriert von der lokalen Kultur, erkunden Sie Attraktionen wie Bonito, Pantanal, Serra da Bodoquena und vieles mehr!",
+      "paragraph2": "Erstellen Sie Ihren digitalen Pass, schalten Sie thematische Stempel mit Tieren des Cerrado und Pantanal frei, nehmen Sie an interaktiven Routen teil, erhalten Sie Belohnungen und erleben Sie unvergessliche Momente! Melden Sie sich an, um mehr zu erkunden und den lokalen Tourismus zu verbessern!",
+      "signUp": "Registrieren"
+    },
+    "highlights": {
+      "title": "Ausgewählte Reiseziele",
+      "description": "Entdecken Sie die wichtigsten Reiseziele in Mato Grosso do Sul",
+      "viewAll": "Alle Reiseziele anzeigen",
+      "explore": "Erkunden"
+    },
+    "experiences": {
+      "title": "Vollständige Erfahrungen",
+      "subtitle": "Entdecken Sie alles, was Mato Grosso do Sul zu bieten hat, mit einzigartigen und unvergesslichen Erfahrungen",
+      "explore": "Erkunden",
+      "2": {
+        "title": "Veranstaltungskalender",
+        "description": "Bleiben Sie über Feste, kulturelle und gastronomische Veranstaltungen im Bundesstaat auf dem Laufenden"
+      },
+      "3": {
+        "title": "Lokale Kultur",
+        "description": "Erfahren Sie mehr über die Geschichte, Traditionen und Bräuche von Mato Grosso do Sul"
+      },
+      "4": {
+        "title": "Bildergalerie",
+        "description": "Erstaunliche Bilder und Videos, die Sie inspirieren, jede Ecke zu entdecken"
+      }
+    },
+    "cats": {
+      "title": "Touristeninformationszentren",
+      "description": "CATs sind Anlaufstellen, an denen Sie Informationen und Anleitungen finden, um Ihr Erlebnis in Mato Grosso do Sul optimal zu nutzen",
+      "region": "Region",
+      "city": "Stadt",
+      "phone": "Telefon"
+    }
+  },
+  "destinations": {
+    "title": "Reiseziele",
+    "description": "Erkunden Sie die wichtigsten Reiseziele in Mato Grosso do Sul",
+    "viewDetails": "Details anzeigen",
+    "sections": {
+      "about": "Über",
+      "highlights": "Hauptattraktionen",
+      "video": "Werbevideo",
+      "gallery": "Fotogalerie",
+      "officialLinks": "Offizielle Links",
+      "howToGet": "Wie man dorthin kommt",
+      "contactInfo": "Kontaktinformationen"
+    }
+  },
+  "events": {
+    "title": "Veranstaltungen",
+    "description": "Sehen Sie sich die wichtigsten Veranstaltungen in Mato Grosso do Sul an",
+    "upcoming": "Bevorstehende Veranstaltungen",
+    "past": "Vergangene Veranstaltungen"
+  },
+  "routes": {
+    "title": "Einzigartige Routen von",
+    "subtitle": "Entdecken Sie Mato Grosso do Sul",
+    "description": "Entdecken Sie authentische Erfahrungen durch unseren gamifizierten digitalen Pass. Erkunden Sie, sammeln Sie Stempel und verdienen Sie einzigartige Belohnungen!",
+    "stats": {
+      "routes": "Routen",
+      "points": "Punkte",
+      "achievements": "Errungenschaften"
+    },
+    "filters": {
+      "search": "Routen suchen",
+      "searchPlaceholder": "Geben Sie den Routennamen ein...",
+      "difficulty": "Schwierigkeit",
+      "region": "Region",
+      "all": "Alle",
+      "easy": "Einfach",
+      "medium": "Mittel",
+      "hard": "Schwer",
+      "filter": "Filtern"
+    },
+    "noResults": {
+      "title": "Keine Routen gefunden",
+      "description": "Versuchen Sie, die Filter anzupassen oder nach anderen Begriffen zu suchen."
+    }
+  },
+  "partners": {
+    "title": "Partner",
+    "description": "Lernen Sie unsere Partner kennen"
+  },
+  "about": {
+    "title": "Über",
+    "description": "Erfahren Sie mehr über die Plattform"
+  }
+}
