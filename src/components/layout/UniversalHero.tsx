@@ -4,6 +4,7 @@ import { useBrand } from "@/context/BrandContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { platformContentService } from '@/services/admin/platformContentService';
+import { ChevronDown } from "lucide-react";
 
 // Componente de loading otimizado
 const HeroLoadingSkeleton = () => (
@@ -205,8 +206,8 @@ const UniversalHero = () => {
         ></div>
       )}
       
-      {/* Overlay para melhor legibilidade do texto - similar ao Descubra Mato Grosso */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/10 to-black/30 z-[2]"></div>
+      {/* Overlay para melhor legibilidade do texto */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50 z-[2]"></div>
       
       {/* Content Container com animação */}
       <div 
@@ -216,18 +217,38 @@ const UniversalHero = () => {
           position: 'relative'
         }}
       >
+        {/* Título estilizado como na referência */}
         <h1 
-          className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-2xl"
+          className="mb-6 leading-tight drop-shadow-2xl"
           style={{ 
             zIndex: 1,
             position: 'relative',
             display: 'block',
             width: '100%',
             textAlign: 'center',
-            textShadow: '2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3)'
           }}
         >
-          {title}
+          <span 
+            className="block font-playfair italic text-4xl md:text-5xl lg:text-6xl mb-2"
+            style={{ 
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: 'none',
+              filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))'
+            }}
+          >
+            Descubra
+          </span>
+          <span 
+            className="block text-white font-bold text-3xl md:text-5xl lg:text-6xl"
+            style={{ 
+              textShadow: '2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            Mato Grosso do Sul
+          </span>
         </h1>
         
         <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-10 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
@@ -235,7 +256,7 @@ const UniversalHero = () => {
         </p>
         
         {/* Buttons melhorados */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
           <Link 
             to={config.hero.buttons.primary.path}
             className="group bg-ms-secondary-yellow text-gray-900 font-bold px-8 py-4 rounded-xl hover:bg-ms-secondary-yellow/95 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-ms-secondary-yellow/50"
@@ -264,10 +285,15 @@ const UniversalHero = () => {
             }
           </Link>
         </div>
+
+        {/* Scroll Indicator - como na referência */}
+        <div className="flex flex-col items-center animate-bounce">
+          <ChevronDown className="w-8 h-8 text-white/80" />
+        </div>
       </div>
       
-      {/* Bottom Gradient Transition - Gradiente suave e gradual */}
-      <div className="absolute bottom-0 left-0 w-full h-56 bg-gradient-to-t from-white/70 from-0% via-white/50 via-25% via-white/30 via-45% to-transparent to-70% z-[3]"></div>
+      {/* Bottom Gradient Transition */}
+      <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-white via-white/50 to-transparent z-[3]"></div>
     </div>
   );
 };

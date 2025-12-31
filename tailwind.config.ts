@@ -94,6 +94,7 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Poppins', 'sans-serif'],
+				playfair: ['Playfair Display', 'serif'],
 			},
 			keyframes: {
 				'accordion-down': {

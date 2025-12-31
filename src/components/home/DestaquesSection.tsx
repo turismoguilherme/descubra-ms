@@ -55,12 +55,12 @@ const DestaquesSection = () => {
             {t('home.highlights.title', { defaultValue: getContent('ms_destinations_title', 'Regiões Turísticas') })}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            {t('home.highlights.description', { defaultValue: getContent('ms_destinations_description', 'Descubra as principais regiões turísticas de Mato Grosso do Sul, cada uma com sua identidade única e atrativos especiais') })}
+            {t('home.highlights.description', { defaultValue: getContent('ms_destinations_description', 'Descubra as principais regiões turísticas de Mato Grosso do Sul') })}
           </p>
         </div>
 
-        {/* Grid de Cards - Regiões Turísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Grid de Cards - Regiões Turísticas com design melhorado */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {regioesDestaque.map((regiao, index) => (
               <Link
                 key={regiao.slug}
@@ -69,44 +69,48 @@ const DestaquesSection = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => handleRegionClick(regiao)}
               >
-                <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 h-full border border-gray-100 hover:border-ms-primary-blue/30">
-                  {/* Imagem com cor da região */}
+                <div className="relative h-80 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                  {/* Imagem de fundo com zoom no hover */}
                   <div 
-                    className="h-64 relative overflow-hidden"
+                    className="absolute inset-0 w-full h-full"
                     style={{ backgroundColor: regiao.color }}
                   >
                     {regiao.image && (
                       <img
                         src={regiao.image}
                         alt={regiao.name}
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800";
                         }}
                       />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl">
-                      {regiao.cities.length} cidades
-                    </div>
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-ms-primary-blue mb-3 group-hover:text-ms-discovery-teal transition-colors duration-300">
+                  
+                  {/* Overlay gradiente sempre visível */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                  
+                  {/* Badge de quantidade de cidades */}
+                  <div 
+                    className="absolute top-4 left-4 px-4 py-2 rounded-full text-xs font-bold text-white shadow-lg backdrop-blur-sm"
+                    style={{ backgroundColor: `${regiao.color}CC` }}
+                  >
+                    <MapPin size={12} className="inline mr-1" />
+                    {regiao.cities.length} cidades
+                  </div>
+                  
+                  {/* Conteúdo na parte inferior */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-2xl font-bold mb-2 drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300">
                       {regiao.name}
                     </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                    <p className="text-white/90 text-sm leading-relaxed line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       {regiao.description}
                     </p>
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-1.5 text-gray-500">
-                        <MapPin size={16} className="text-ms-pantanal-green" />
-                        <span className="text-xs font-semibold">{regiao.cities[0]}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-ms-primary-blue font-semibold text-sm group-hover:gap-2 transition-all duration-300">
-                        <span>{t('home.highlights.explore', { defaultValue: 'Explorar' })}</span>
-                        <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
-                      </div>
+                    <div className="flex items-center gap-2 text-white font-semibold text-sm opacity-80 group-hover:opacity-100 transition-all duration-300">
+                      <span>{t('home.highlights.explore', { defaultValue: 'Explorar região' })}</span>
+                      <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
                     </div>
                   </div>
                 </div>
@@ -118,7 +122,7 @@ const DestaquesSection = () => {
         <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
           <Link 
             to="/descubrams/mapa-turistico" 
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1"
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
           >
             {t('home.highlights.viewAll', { defaultValue: getContent('ms_destinations_button', 'Ver Mapa Turístico Completo') })}
             <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
