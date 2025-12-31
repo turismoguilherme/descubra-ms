@@ -49,8 +49,8 @@ const Destinos = () => {
   
   // Determinar o path base da plataforma
   const getBasePath = () => {
-    if (location.pathname.startsWith('/descubramatogrossodosul')) {
-      return '/descubramatogrossodosul/destinos';
+    if (location.pathname.startsWith('/descubrams')) {
+      return '/descubrams/destinos';
     }
     // Para ViajARTur ou outras plataformas, usar path atual sem parâmetros
     return location.pathname.split('?')[0];

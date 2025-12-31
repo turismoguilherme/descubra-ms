@@ -176,7 +176,7 @@ export function PartnerReservationModal({
           guestEmail: user.email,
           guestPhone: user.user_metadata?.phone || null,
           specialRequests: specialRequests || null,
-          successUrl: `${window.location.origin}/descubramatogrossodosul/profile?reservation_success=true`,
+          successUrl: `${window.location.origin}/descubrams/profile?reservation_success=true`,
           cancelUrl: window.location.href,
         },
       });

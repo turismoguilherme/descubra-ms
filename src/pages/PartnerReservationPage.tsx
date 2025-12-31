@@ -477,7 +477,7 @@ export default function PartnerReservationPage() {
           <div className="text-center">
             <p className="text-gray-500 mb-4">Parceiro não encontrado</p>
             <Button asChild>
-              <Link to="/descubramatogrossodosul/parceiros">Voltar para Parceiros</Link>
+              <Link to="/descubrams/parceiros">Voltar para Parceiros</Link>
             </Button>
           </div>
         </div>
@@ -493,7 +493,7 @@ export default function PartnerReservationPage() {
       <UniversalLayout>
         <div className="ms-container py-12">
           <Button variant="ghost" asChild className="mb-6">
-            <Link to="/descubramatogrossodosul/parceiros">
+            <Link to="/descubrams/parceiros">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar para Parceiros
             </Link>
@@ -508,7 +508,7 @@ export default function PartnerReservationPage() {
                 Este parceiro ainda não possui serviços disponíveis para reserva online.
               </p>
               <Button asChild>
-                <Link to="/descubramatogrossodosul/parceiros">Voltar para Parceiros</Link>
+                <Link to="/descubrams/parceiros">Voltar para Parceiros</Link>
               </Button>
             </CardContent>
           </Card>
@@ -524,7 +524,7 @@ export default function PartnerReservationPage() {
         <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal py-12">
           <div className="ms-container">
             <Button variant="ghost" asChild className="mb-6 text-white hover:text-white/80">
-              <Link to="/descubramatogrossodosul/parceiros">
+              <Link to="/descubrams/parceiros">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar para Parceiros
               </Link>
@@ -969,7 +969,7 @@ export default function PartnerReservationPage() {
                       asChild
                       className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white"
                     >
-                      <Link to={`/descubramatogrossodosul/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
+                      <Link to={`/descubrams/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
                         Fazer Login
                       </Link>
                     </Button>

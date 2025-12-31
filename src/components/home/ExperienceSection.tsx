@@ -20,7 +20,7 @@ const experiencias: Experiencia[] = [
     icone: Calendar,
     corIcone: "text-ms-cerrado-orange",
     corBg: "from-ms-cerrado-orange/10 to-amber-100/10",
-    link: "/descubramatogrossodosul/eventos"
+    link: "/descubrams/eventos"
   },
   {
     id: 3,
@@ -29,7 +29,7 @@ const experiencias: Experiencia[] = [
     icone: Book,
     corIcone: "text-ms-guavira-purple",
     corBg: "from-ms-guavira-purple/10 to-purple-100/10",
-    link: "/descubramatogrossodosul/sobre"
+    link: "/descubrams/sobre"
   },
   {
     id: 4,
@@ -38,7 +38,7 @@ const experiencias: Experiencia[] = [
     icone: Image,
     corIcone: "text-ms-rivers-blue",
     corBg: "from-ms-rivers-blue/10 to-blue-100/10",
-    link: "/descubramatogrossodosul/destinos"
+    link: "/descubrams/destinos"
   }
 ];
 

@@ -276,7 +276,7 @@ const PartnerLoginForm = () => {
 
         <div className="flex items-center justify-between text-sm">
           <Link
-            to="/descubramatogrossodosul/forgot-password"
+            to="/descubrams/forgot-password"
             className="text-ms-primary-blue hover:text-ms-discovery-teal transition-colors"
           >
             Esqueceu sua senha?

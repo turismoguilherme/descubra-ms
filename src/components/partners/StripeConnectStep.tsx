@@ -104,8 +104,8 @@ export default function StripeConnectStep({
           partnerId,
           partnerEmail,
           partnerName,
-          returnUrl: `${window.location.origin}/descubramatogrossodosul/seja-um-parceiro?stripe_connect=success`,
-          refreshUrl: `${window.location.origin}/descubramatogrossodosul/seja-um-parceiro?stripe_connect=refresh`,
+          returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=success`,
+          refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=refresh`,
         },
       });
 

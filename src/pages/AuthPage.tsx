@@ -25,7 +25,7 @@ const AuthPage = () => {
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
   
   // Obter URL de redirect dos parâmetros da query, ou padrão para Descubra MS
-  const redirectUrl = searchParams.get('redirect') || '/descubramatogrossodosul';
+  const redirectUrl = searchParams.get('redirect') || '/descubrams';
   
   console.log('🔐 [AuthPage] Estado inicial:', {
     isAuthenticated,
@@ -52,13 +52,13 @@ const AuthPage = () => {
       // Detectar tenant do path atual
       const currentPath = window.location.pathname;
       const pathSegments = currentPath.split('/').filter(Boolean);
-      const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
-      const isTenantPath = currentTenant && (currentTenant.length === 2 || currentTenant === 'descubramatogrossodosul');
+      const currentTenant = pathSegments[0]; // 'ms', 'descubrams', 'descubramatogrossodosul', etc.
+      const isTenantPath = currentTenant && (currentTenant.length === 2 || currentTenant === 'descubrams' || currentTenant === 'descubramatogrossodosul');
       
       console.log("🏛️ [AuthPage] SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
       
       // Redirecionar para /ms que processa o callback OAuth
-      // O componente OAuthCallback processará o token e redirecionará para /descubramatogrossodosul
+      // O componente OAuthCallback processará o token e redirecionará para /descubrams
       const redirectPath = '/ms';
       
       console.log("🔄 [AuthPage] SOCIAL LOGIN: Redirecionando para:", redirectPath);
@@ -152,7 +152,7 @@ const AuthPage = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Redirecionar para a URL especificada no parâmetro redirect, ou padrão para Descubra MS
-        const redirectPath = redirectUrl || '/descubramatogrossodosul';
+        const redirectPath = redirectUrl || '/descubrams';
         console.log('✅ [AuthPage] Redirecionando para:', redirectPath);
         window.location.href = redirectPath;
       } else {
@@ -359,7 +359,7 @@ const AuthPage = () => {
                   Não tem uma conta?{' '}
                   <button
                     type="button"
-                    onClick={() => navigate('/descubramatogrossodosul/register')}
+                    onClick={() => navigate('/descubrams/register')}
                     className="text-blue-600 hover:text-blue-500 font-medium"
                   >
                     Criar conta

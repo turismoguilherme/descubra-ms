@@ -403,12 +403,12 @@ const PassaporteLista = () => {
                       onClick={() => {
                         console.log('🔍 [PassaporteLista] Botão clicado - Rota:', route.id);
                         try {
-                          const targetUrl = `/descubramatogrossodosul/passaporte/${route.id}`;
+                          const targetUrl = `/descubrams/passaporte/${route.id}`;
                           console.log('✅ [PassaporteLista] Navegando para:', targetUrl);
                           navigate(targetUrl);
                         } catch (err) {
                           console.error('❌ [PassaporteLista] Erro:', err);
-                          window.location.href = `/descubramatogrossodosul/passaporte/${route.id}`;
+                          window.location.href = `/descubrams/passaporte/${route.id}`;
                         }
                       }}
                     >

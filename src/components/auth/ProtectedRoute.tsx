@@ -188,7 +188,7 @@ export function ProtectedRoute({
                          location.pathname.startsWith('/secretary-dashboard') || 
                          location.pathname.startsWith('/private-dashboard') || 
                          location.pathname.startsWith('/unified');
-    const loginPath = isViaJARRoute ? '/viajar/login' : '/descubramatogrossodosul/login';
+    const loginPath = isViaJARRoute ? '/viajar/login' : '/descubrams/login';
     console.warn('🔐 ProtectedRoute: usuário não autenticado. Redirecionando para', loginPath, { from: location.pathname });
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
@@ -201,7 +201,7 @@ export function ProtectedRoute({
                          location.pathname.startsWith('/secretary-dashboard') || 
                          location.pathname.startsWith('/private-dashboard') || 
                          location.pathname.startsWith('/unified');
-    const loginPath = isViaJARRoute ? '/viajar/login' : '/descubramatogrossodosul/login';
+    const loginPath = isViaJARRoute ? '/viajar/login' : '/descubrams/login';
     console.warn('🔐 ProtectedRoute: userProfile ausente. Redirecionando para', loginPath, { from: location.pathname });
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
@@ -228,7 +228,7 @@ export function ProtectedRoute({
                            location.pathname.startsWith('/secretary-dashboard') || 
                            location.pathname.startsWith('/private-dashboard') || 
                            location.pathname.startsWith('/unified');
-      const loginPath = isViaJARRoute ? '/viajar/login' : '/descubramatogrossodosul/login';
+      const loginPath = isViaJARRoute ? '/viajar/login' : '/descubrams/login';
       console.warn('🔐 ProtectedRoute: role não permitida.', { 
         userRole, 
         allowedRoles, 
@@ -241,14 +241,14 @@ export function ProtectedRoute({
 
   // Verificar região se necessário
   if (requireRegion && !userProfile.region_id) {
-    console.warn('🔐 ProtectedRoute: requireRegion habilitado e region_id ausente. Redirecionando para /descubramatogrossodosul/select-region', { from: location.pathname });
-    return <Navigate to="/descubramatogrossodosul/select-region" replace />;
+    console.warn('🔐 ProtectedRoute: requireRegion habilitado e region_id ausente. Redirecionando para /descubrams/select-region', { from: location.pathname });
+    return <Navigate to="/descubrams/select-region" replace />;
   }
 
   // Verificar cidade se necessário
   if (requireCity && !userProfile.city_id) {
-    console.warn('🔐 ProtectedRoute: requireCity habilitado e city_id ausente. Redirecionando para /descubramatogrossodosul/select-city', { from: location.pathname });
-    return <Navigate to="/descubramatogrossodosul/select-city" replace />;
+    console.warn('🔐 ProtectedRoute: requireCity habilitado e city_id ausente. Redirecionando para /descubrams/select-city', { from: location.pathname });
+    return <Navigate to="/descubrams/select-city" replace />;
   }
 
   // Verificações específicas por role
@@ -260,31 +260,31 @@ export function ProtectedRoute({
 
     case 'state_admin':
       if (!userProfile.region_id) {
-        console.warn('🔐 ProtectedRoute: state_admin sem region_id. Redirecionando para /descubramatogrossodosul/select-region');
-        return <Navigate to="/descubramatogrossodosul/select-region" replace />;
+        console.warn('🔐 ProtectedRoute: state_admin sem region_id. Redirecionando para /descubrams/select-region');
+        return <Navigate to="/descubrams/select-region" replace />;
       }
       break;
 
     case 'city_admin':
       if (!userProfile.city_id) {
-        console.warn('🔐 ProtectedRoute: city_admin sem city_id. Redirecionando para /descubramatogrossodosul/select-city');
-        return <Navigate to="/descubramatogrossodosul/select-city" replace />;
+        console.warn('🔐 ProtectedRoute: city_admin sem city_id. Redirecionando para /descubrams/select-city');
+        return <Navigate to="/descubrams/select-city" replace />;
       }
       break;
 
     case 'cat_attendant':
       // Verificar se tem CAT associado (apenas para usuários reais, não de teste)
       if (!(userProfile as any).cat_id && !testUserId) {
-        console.warn('🔐 ProtectedRoute: cat_attendant sem cat_id. Redirecionando para /descubramatogrossodosul/select-cat');
-        return <Navigate to="/descubramatogrossodosul/select-cat" replace />;
+        console.warn('🔐 ProtectedRoute: cat_attendant sem cat_id. Redirecionando para /descubrams/select-cat');
+        return <Navigate to="/descubrams/select-cat" replace />;
       }
       break;
 
     case 'collaborator':
       // Verificar se tem permissões necessárias
       if (!(userProfile as any).permissions?.length) {
-        console.warn('🔐 ProtectedRoute: collaborator sem permissions. Redirecionando para /descubramatogrossodosul/pending-approval');
-        return <Navigate to="/descubramatogrossodosul/pending-approval" replace />;
+        console.warn('🔐 ProtectedRoute: collaborator sem permissions. Redirecionando para /descubrams/pending-approval');
+        return <Navigate to="/descubrams/pending-approval" replace />;
       }
       break;
 

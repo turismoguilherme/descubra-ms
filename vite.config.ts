@@ -4,7 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  return {
   server: {
     host: "::",
     port: 8080,
@@ -17,6 +18,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    dedupe: ['react', 'react-dom'],
   },
   build: {
     // Removido manualChunks para evitar problemas de ordem de inicialização no Vercel
@@ -40,7 +42,9 @@ export default defineConfig(({ mode }) => ({
     assetsInlineLimit: 4096,
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'lucide-react', 'zod', '@hookform/resolvers'],
+    include: ['react', 'react-dom', 'lucide-react', 'zod', '@hookform/resolvers', 'i18next', 'react-i18next', 'i18next-browser-languagedetector', '@tanstack/react-query'],
     // Garantir que zod seja pré-otimizado para evitar problemas de inicialização
+    // Adicionar i18next e dependências ao optimizeDeps para forçar pré-otimização
+    // Adicionar @tanstack/react-query para garantir resolução correta do React
   },
-}));
+}});

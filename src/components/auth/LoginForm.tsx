@@ -102,14 +102,14 @@ const LoginForm = () => {
         // Detectar tenant do path atual para manter contexto
         const currentPath = window.location.pathname;
         const pathSegments = currentPath.split('/').filter(Boolean);
-        const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
-        const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
+        const currentTenant = pathSegments[0]; // 'ms', 'descubrams', 'descubramatogrossodosul', etc.
+        const isDescubraMS = currentTenant === 'descubrams' || currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
         const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
         
         console.log("🏛️ LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
         
-        // Redirecionar mantendo contexto do tenant (para Descubra MS, usar sempre 'descubramatogrossodosul')
-        const redirectPath = isDescubraMS ? '/descubramatogrossodosul' : (isTenantPath ? `/${currentTenant}` : '/');
+        // Redirecionar mantendo contexto do tenant (para Descubra MS, usar sempre 'descubrams')
+        const redirectPath = isDescubraMS ? '/descubrams' : (isTenantPath ? `/${currentTenant}` : '/');
         console.log("🔄 LOGIN: Redirecionando para:", redirectPath);
         
         toast({

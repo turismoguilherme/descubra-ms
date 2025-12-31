@@ -29,8 +29,8 @@ export async function createEventCheckout(params: EventCheckoutParams): Promise<
         eventName,
         organizerEmail,
         organizerName,
-        successUrl: `${window.location.origin}/descubramatogrossodosul/eventos?payment=success&event_id=${eventId}`,
-        cancelUrl: `${window.location.origin}/descubramatogrossodosul/cadastrar-evento?payment=cancelled`,
+        successUrl: `${window.location.origin}/descubrams/eventos?payment=success&event_id=${eventId}`,
+        cancelUrl: `${window.location.origin}/descubrams/cadastrar-evento?payment=cancelled`,
       },
     });
 

@@ -198,7 +198,7 @@ const OverflowOneRegister: React.FC = () => {
         
         // Redirecionar para onboarding com plano (vai direto para pagamento)
         const currentPath = window.location.pathname;
-        if (currentPath.includes('/descubramatogrossodosul/') || currentPath.includes('/ms/')) {
+        if (currentPath.includes('/descubrams/') || currentPath.includes('/ms/')) {
           navigate('/ms');
         } else {
           // Redirecionar para o onboarding do ViaJAR com plano na URL

@@ -95,7 +95,7 @@ const PrivacidadeMS = () => {
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative ms-container">
             <Link 
-              to="/descubramatogrossodosul" 
+              to="/descubrams" 
               className="inline-flex items-center text-white/90 hover:text-white mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

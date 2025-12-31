@@ -115,7 +115,7 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
                 ID da rota: <code className="bg-gray-100 px-2 py-1 rounded">{routeId}</code>
               </p>
               <div className="flex gap-2 justify-center">
-                <Button onClick={() => window.location.href = '/descubramatogrossodosul/passaporte'}>
+                <Button onClick={() => window.location.href = '/descubrams/passaporte'}>
                   Ver Todas as Rotas
                 </Button>
                 <Button 
@@ -141,7 +141,7 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
                     colecionar selos temáticos da nossa fauna pantaneira. Fique atento às novidades!
                   </p>
                   <Button 
-                    onClick={() => window.location.href = '/descubramatogrossodosul/passaporte'}
+                    onClick={() => window.location.href = '/descubrams/passaporte'}
                     className="mt-2"
                   >
                     Ver Rotas Disponíveis

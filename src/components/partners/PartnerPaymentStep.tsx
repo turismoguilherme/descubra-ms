@@ -60,8 +60,8 @@ export default function PartnerPaymentStep({
         body: {
           partnerId,
           monthlyFee,
-          successUrl: `${window.location.origin}/descubramatogrossodosul/seja-um-parceiro/success?partner_id=${partnerId}`,
-          cancelUrl: `${window.location.origin}/descubramatogrossodosul/seja-um-parceiro?step=3`,
+          successUrl: `${window.location.origin}/descubrams/seja-um-parceiro/success?partner_id=${partnerId}`,
+          cancelUrl: `${window.location.origin}/descubrams/seja-um-parceiro?step=3`,
         },
       });
 

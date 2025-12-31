@@ -88,16 +88,16 @@ const msConfig: BrandConfig = {
     fallback: 'Descubra MS'
   },
   navigation: [
-    { name: 'Mapa Turístico', path: '/descubramatogrossodosul/mapa-turistico' },
-    { name: 'Destinos', path: '/descubramatogrossodosul/destinos' },
-    { name: 'Eventos', path: '/descubramatogrossodosul/eventos' },
-    { name: 'Parceiros', path: '/descubramatogrossodosul/parceiros' },
-    { name: 'Sobre', path: '/descubramatogrossodosul/sobre' },
-    { name: 'Guatá IA', path: '/descubramatogrossodosul/guata' },
-    { name: 'Passaporte Digital', path: '/descubramatogrossodosul/passaporte' },
+    { name: 'Mapa Turístico', path: '/descubrams/mapa-turistico' },
+    { name: 'Destinos', path: '/descubrams/destinos' },
+    { name: 'Eventos', path: '/descubrams/eventos' },
+    { name: 'Parceiros', path: '/descubrams/parceiros' },
+    { name: 'Sobre', path: '/descubrams/sobre' },
+    { name: 'Guatá IA', path: '/descubrams/guata' },
+    { name: 'Passaporte Digital', path: '/descubrams/passaporte' },
   ],
   authenticatedNavigation: [
-    { name: 'Roteiros', path: '/descubramatogrossodosul/roteiros-personalizados' },
+    { name: 'Roteiros', path: '/descubrams/roteiros-personalizados' },
   ],
   cta: {
     primary: 'Cadastrar',
@@ -107,9 +107,9 @@ const msConfig: BrandConfig = {
     title: 'Descubra Mato Grosso do Sul',
     subtitle: 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul',
     buttons: {
-      primary: { text: 'Descubra Agora', path: '/descubramatogrossodosul/welcome' },
-      secondary: { text: 'Passaporte Digital', path: '/descubramatogrossodosul/passaporte' },
-      tertiary: { text: 'Converse com o Guatá', path: '/descubramatogrossodosul/guata' }
+      primary: { text: 'Descubra Agora', path: '/descubrams/welcome' },
+      secondary: { text: 'Passaporte Digital', path: '/descubrams/passaporte' },
+      tertiary: { text: 'Converse com o Guatá', path: '/descubrams/guata' }
     }
   }
 };
@@ -184,7 +184,7 @@ const safeLog = (payload: any) => {
 // #region agent log
 safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',data:{pathname,path},runId:'run1',hypothesisId:'A'});
 // #endregion
-    if (path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms') || path.startsWith('/partner')) {
+    if (path.startsWith('/descubrams') || path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms') || path.startsWith('/partner')) {
     // #region agent log
     safeLog({location:'BrandContext.tsx:162',message:'detectTenantFromPath retornando ms',data:{pathname,path},runId:'run1',hypothesisId:'A'});
     // #endregion

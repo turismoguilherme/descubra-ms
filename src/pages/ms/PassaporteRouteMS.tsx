@@ -146,7 +146,7 @@ const PassaporteRouteMS = () => {
   };
 
   const handleRouteComplete = () => {
-    navigate('/descubramatogrossodosul/passaporte', { 
+    navigate('/descubrams/passaporte', { 
       state: { 
         newStamp: route?.name,
         totalPoints: totalPoints + 50 // Bonus points for completion
@@ -174,7 +174,7 @@ const PassaporteRouteMS = () => {
         <div className="bg-white/90 rounded-xl shadow-lg p-8 text-center max-w-md">
           <h2 className="text-2xl font-semibold text-ms-primary-blue mb-2">Nenhum roteiro disponível</h2>
           <p className="text-gray-600 mb-4">Não encontramos roteiros ativos para exibir no momento.</p>
-          <Button onClick={() => navigate('/descubramatogrossodosul/passaporte')} className="bg-white text-ms-primary-blue hover:bg-white/90">
+          <Button onClick={() => navigate('/descubrams/passaporte')} className="bg-white text-ms-primary-blue hover:bg-white/90">
             Voltar para o Passaporte
           </Button>
         </div>
@@ -207,7 +207,7 @@ const PassaporteRouteMS = () => {
             <div className="flex items-center justify-between text-white mb-4">
               <Button
                 variant="ghost"
-                onClick={() => navigate(`/descubramatogrossodosul/roteiros/${routeId}`)}
+                onClick={() => navigate(`/descubrams/roteiros/${routeId}`)}
                 className="text-white hover:bg-white/10"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />

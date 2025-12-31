@@ -26,7 +26,7 @@ const RestoredNavbar = () => {
   };
 
   // Detectar se estamos no contexto FlowTrip (página principal) ou MS
-  const isFlowTrip = !location.pathname.startsWith('/descubramatogrossodosul') && !location.pathname.startsWith('/ms');
+  const isFlowTrip = !location.pathname.startsWith('/descubrams') && !location.pathname.startsWith('/ms');
 
   console.log("🧭 NAVBAR: Renderizando navbar, isFlowTrip:", isFlowTrip);
 
@@ -81,28 +81,28 @@ const RestoredNavbar = () => {
             ) : (
               // Menu MS (estado)
               <>
-                <Link to="/descubramatogrossodosul/destinos" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/descubramatogrossodosul/destinos') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/descubrams/destinos" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/descubrams/destinos') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Destinos
                 </Link>
-                <Link to="/descubramatogrossodosul/eventos" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/descubramatogrossodosul/eventos') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/descubrams/eventos" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/descubrams/eventos') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Eventos
                 </Link>
-                <Link to="/descubramatogrossodosul/roteiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/descubramatogrossodosul/roteiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/descubrams/roteiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/descubrams/roteiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Roteiros
                 </Link>
-                <Link to="/descubramatogrossodosul/parceiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/descubramatogrossodosul/parceiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/descubrams/parceiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/descubrams/parceiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Parceiros
                 </Link>
-                <Link to="/descubramatogrossodosul/sobre" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/descubramatogrossodosul/sobre') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                <Link to="/descubrams/sobre" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  isActivePath('/descubrams/sobre') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
                   Sobre
                 </Link>
@@ -129,13 +129,13 @@ const RestoredNavbar = () => {
                 ) : (
                   // Menu autenticado MS
                   <>
-                    <Link to="/descubramatogrossodosul/guata" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                      isActivePath('/descubramatogrossodosul/guata') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                    <Link to="/descubrams/guata" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                      isActivePath('/descubrams/guata') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                     }`}>
                       Guatá IA
                     </Link>
-                    <Link to="/descubramatogrossodosul/passaporte" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                      isActivePath('/descubramatogrossodosul/passaporte') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
+                    <Link to="/descubrams/passaporte" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                      isActivePath('/descubrams/passaporte') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                     }`}>
                       Passaporte Digital
                     </Link>
@@ -159,7 +159,7 @@ const RestoredNavbar = () => {
                         Entrar
                       </Button>
                     </Link>
-                    <Link to="/descubramatogrossodosul/register">
+                    <Link to="/descubrams/register">
                       <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
                         Cadastrar
                       </Button>
@@ -168,12 +168,12 @@ const RestoredNavbar = () => {
                 ) : (
                   // CTA MS
                   <>
-                    <Link to="/descubramatogrossodosul/login">
+                    <Link to="/descubrams/login">
                       <Button variant="ghost" size="sm">
                         Entrar
                       </Button>
                     </Link>
-                    <Link to="/descubramatogrossodosul/register">
+                    <Link to="/descubrams/register">
                       <Button size="sm" className="bg-yellow-400 text-blue-900 hover:bg-yellow-300 font-semibold">
                         Cadastrar
                       </Button>
@@ -246,28 +246,28 @@ const RestoredNavbar = () => {
               ) : (
                 // Menu mobile MS
                 <>
-                  <Link to="/descubramatogrossodosul/destinos" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubramatogrossodosul/destinos') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  <Link to="/descubrams/destinos" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/descubrams/destinos') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Destinos
                   </Link>
-                  <Link to="/descubramatogrossodosul/eventos" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubramatogrossodosul/eventos') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  <Link to="/descubrams/eventos" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/descubrams/eventos') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Eventos
                   </Link>
-                  <Link to="/descubramatogrossodosul/roteiros" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubramatogrossodosul/roteiros') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  <Link to="/descubrams/roteiros" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/descubrams/roteiros') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Roteiros
                   </Link>
-                  <Link to="/descubramatogrossodosul/parceiros" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubramatogrossodosul/parceiros') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  <Link to="/descubrams/parceiros" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/descubrams/parceiros') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Parceiros
                   </Link>
-                  <Link to="/descubramatogrossodosul/sobre" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubramatogrossodosul/sobre') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                  <Link to="/descubrams/sobre" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/descubrams/sobre') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Sobre
                   </Link>
@@ -295,13 +295,13 @@ const RestoredNavbar = () => {
                     ) : (
                       // Menu autenticado mobile MS
                       <>
-                        <Link to="/descubramatogrossodosul/guata" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                          isActivePath('/descubramatogrossodosul/guata') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                        <Link to="/descubrams/guata" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActivePath('/descubrams/guata') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                         }`} onClick={() => setIsOpen(false)}>
                           Guatá IA
                         </Link>
-                        <Link to="/descubramatogrossodosul/passaporte" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                          isActivePath('/descubramatogrossodosul/passaporte') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                        <Link to="/descubrams/passaporte" className={`block px-3 py-2 text-base font-medium transition-colors ${
+                          isActivePath('/descubrams/passaporte') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                         }`} onClick={() => setIsOpen(false)}>
                           Passaporte Digital
                         </Link>
@@ -320,16 +320,16 @@ const RestoredNavbar = () => {
                       <Link to="/viajar/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
                         Entrar
                       </Link>
-                      <Link to="/descubramatogrossodosul/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
+                      <Link to="/descubrams/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
                         Cadastrar
                       </Link>
                     </>
                   ) : (
                     <>
-                      <Link to="/descubramatogrossodosul/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
+                      <Link to="/descubrams/login" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50" onClick={() => setIsOpen(false)}>
                         Entrar
                       </Link>
-                      <Link to="/descubramatogrossodosul/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
+                      <Link to="/descubrams/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
                         Cadastrar
                       </Link>
                     </>

@@ -42,7 +42,7 @@ const TourismDescription = () => {
             {t('home.tourismDescription.paragraph2', { defaultValue: getContent('ms_tourism_paragraph_2', 'Crie seu passaporte digital, desbloqueie selos temáticos com animais do Cerrado e do Pantanal, participe de roteiros interativos, receba recompensas e viva momentos inesquecíveis! Cadastre-se para explorar mais e ajudar a melhorar o turismo local!') })}
           </p>
           
-          <Link to="/descubramatogrossodosul/register">
+          <Link to="/descubrams/register">
             <Button className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-black font-medium px-8 py-6 text-lg">
               {t('home.tourismDescription.signUp', { defaultValue: getContent('ms_tourism_button', 'Cadastre-se') })}
             </Button>

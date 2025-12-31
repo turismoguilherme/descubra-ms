@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Limpar hash da URL
             const currentPath = window.location.pathname;
             const redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/') 
-              ? '/descubramatogrossodosul' 
+              ? '/descubrams' 
               : currentPath;
             window.history.replaceState(null, '', redirectPath);
             // Forçar reload para garantir que o estado seja atualizado
@@ -290,7 +290,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Redirecionar mantendo contexto do tenant
       let redirectUrl: string;
       if (isDescubraMS) {
-        redirectUrl = `${window.location.origin}/descubramatogrossodosul`;
+        redirectUrl = `${window.location.origin}/descubrams`;
       } else if (isViajar) {
         redirectUrl = `${window.location.origin}/viajar/onboarding`;
       } else {
@@ -473,7 +473,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithProvider = async (provider: 'google' | 'facebook') => {
     try {
       // Redirecionar para /ms que processa o callback OAuth
-      // O componente OAuthCallback processará o token e redirecionará para /descubramatogrossodosul
+      // O componente OAuthCallback processará o token e redirecionará para /descubrams
       const redirectPath = `${window.location.origin}/ms`;
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
       

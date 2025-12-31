@@ -83,16 +83,16 @@ const msConfig: BrandConfig = {
     fallback: 'Descubra MS'
   },
   navigation: [
-    { name: 'Início', path: '/descubramatogrossodosul' },
-    { name: 'Destinos', path: '/descubramatogrossodosul/destinos' },
-    { name: 'Eventos', path: '/descubramatogrossodosul/eventos' },
-    { name: 'Roteiros', path: '/descubramatogrossodosul/roteiros' },
-    { name: 'Sobre', path: '/descubramatogrossodosul/sobre' }
+    { name: 'Início', path: '/descubrams' },
+    { name: 'Destinos', path: '/descubrams/destinos' },
+    { name: 'Eventos', path: '/descubrams/eventos' },
+    { name: 'Roteiros', path: '/descubrams/roteiros' },
+    { name: 'Sobre', path: '/descubrams/sobre' }
   ],
   authenticatedNavigation: [
-    { name: 'Dashboard', path: '/descubramatogrossodosul/dashboard' },
-    { name: 'Perfil', path: '/descubramatogrossodosul/profile' },
-    { name: 'Admin', path: '/descubramatogrossodosul/admin' }
+    { name: 'Dashboard', path: '/descubrams/dashboard' },
+    { name: 'Perfil', path: '/descubrams/profile' },
+    { name: 'Admin', path: '/descubrams/admin' }
   ],
   cta: {
     primary: 'Explorar MS',
@@ -102,9 +102,9 @@ const msConfig: BrandConfig = {
     title: 'Descubra Mato Grosso do Sul',
     subtitle: 'A beleza natural do Pantanal e muito mais',
     buttons: {
-      primary: { text: 'Explorar Destinos', path: '/descubramatogrossodosul/destinos' },
-      secondary: { text: 'Ver Roteiros', path: '/descubramatogrossodosul/roteiros' },
-      tertiary: { text: 'Criar Conta', path: '/descubramatogrossodosul/register' }
+      primary: { text: 'Explorar Destinos', path: '/descubrams/destinos' },
+      secondary: { text: 'Ver Roteiros', path: '/descubrams/roteiros' },
+      tertiary: { text: 'Criar Conta', path: '/descubrams/register' }
     }
   }
 };
@@ -113,7 +113,7 @@ export const SimpleBrandProvider = ({ children }: { children: React.ReactNode })
   const location = useLocation();
   
   const config = useMemo(() => {
-    const isMS = location.pathname.startsWith('/descubramatogrossodosul') || location.pathname.startsWith('/ms');
+    const isMS = location.pathname.startsWith('/descubrams') || location.pathname.startsWith('/descubramatogrossodosul') || location.pathname.startsWith('/ms');
     return isMS ? msConfig : overflowOneConfig;
   }, [location.pathname]);
 

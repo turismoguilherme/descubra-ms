@@ -219,7 +219,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
           email: data.contact_email,
           password: data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/descubramatogrossodosul/partner/login`,
+            emailRedirectTo: `${window.location.origin}/descubrams/partner/login`,
           },
         });
 

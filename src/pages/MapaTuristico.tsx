@@ -36,7 +36,7 @@ const MapaTuristico: React.FC = () => {
   const handleCityClick = (cityName: string) => {
     // Navegar para a página de destinos filtrada pela cidade
     // Por enquanto, vamos para a página de destinos
-    navigate(`/descubramatogrossodosul/destinos?cidade=${encodeURIComponent(cityName)}`);
+    navigate(`/descubrams/destinos?cidade=${encodeURIComponent(cityName)}`);
   };
 
   const handleCloseRegion = () => {
@@ -58,7 +58,7 @@ const MapaTuristico: React.FC = () => {
         <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white py-8">
           <div className="ms-container">
             <div className="flex items-center gap-2 text-white/80 mb-4">
-              <Link to="/descubramatogrossodosul" className="hover:text-white transition-colors">
+              <Link to="/descubrams" className="hover:text-white transition-colors">
                 Início
               </Link>
               <span>/</span>
@@ -159,7 +159,7 @@ const MapaTuristico: React.FC = () => {
                     <div className="p-6 pt-0">
                       <Button 
                         className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-                        onClick={() => navigate(`/descubramatogrossodosul/destinos?regiao=${selectedRegion.slug}`)}
+                        onClick={() => navigate(`/descubrams/destinos?regiao=${selectedRegion.slug}`)}
                       >
                         Explorar {selectedRegion.name}
                         <ArrowRight className="w-4 h-4 ml-2" />
@@ -261,12 +261,12 @@ const MapaTuristico: React.FC = () => {
               Converse com o Guatá, Chatbot Guia Inteligente de Turismo do MS, e receba recomendações personalizadas!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/descubramatogrossodosul/guata">
+              <Link to="/descubrams/guata">
                 <Button size="lg" className="bg-ms-secondary-yellow text-gray-900 hover:bg-ms-secondary-yellow/90 font-semibold">
                   🦜 Falar com o Guatá
                 </Button>
               </Link>
-              <Link to="/descubramatogrossodosul/destinos">
+              <Link to="/descubrams/destinos">
                 <Button size="lg" variant="outline" className="border-white bg-white/10 text-white hover:bg-white/20 hover:text-white">
                   Ver Todos os Destinos
                 </Button>

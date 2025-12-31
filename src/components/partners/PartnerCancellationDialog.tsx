@@ -56,7 +56,7 @@ export const PartnerCancellationDialog: React.FC<PartnerCancellationDialogProps>
         // Fazer logout e redirecionar
         setTimeout(() => {
           if (onCancel) onCancel();
-          window.location.href = '/descubramatogrossodosul';
+          window.location.href = '/descubrams';
         }, 2000);
       } else {
         throw new Error(result.error || 'Erro ao processar cancelamento');

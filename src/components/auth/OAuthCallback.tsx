@@ -33,7 +33,7 @@ export const OAuthCallback = () => {
           console.error('❌ [OAuthCallback] Erro ao obter sessão:', error);
           setStatus('error');
           setTimeout(() => {
-            navigate('/descubramatogrossodosul/login', { replace: true });
+            navigate('/descubrams/login', { replace: true });
           }, 2000);
           return;
         }
@@ -45,8 +45,8 @@ export const OAuthCallback = () => {
           // Limpar hash da URL
           const currentPath = window.location.pathname;
           const redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/') 
-            ? '/descubramatogrossodosul' 
-            : '/descubramatogrossodosul';
+            ? '/descubrams' 
+            : '/descubrams';
           
           console.log('🔄 [OAuthCallback] Redirecionando para:', redirectPath);
           
@@ -63,14 +63,14 @@ export const OAuthCallback = () => {
           console.warn('⚠️ [OAuthCallback] Nenhuma sessão encontrada após callback');
           setStatus('error');
           setTimeout(() => {
-            navigate('/descubramatogrossodosul/login', { replace: true });
+            navigate('/descubrams/login', { replace: true });
           }, 2000);
         }
       } catch (error: any) {
         console.error('❌ [OAuthCallback] Erro inesperado:', error);
         setStatus('error');
         setTimeout(() => {
-          navigate('/descubramatogrossodosul/login', { replace: true });
+          navigate('/descubrams/login', { replace: true });
         }, 2000);
       }
     };

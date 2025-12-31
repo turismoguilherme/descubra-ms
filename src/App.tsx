@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { ViaJARAuthProvider } from "@/hooks/auth/ViaJARAuthProvider";
 import { OverflowOneAuthProvider } from "@/hooks/auth/OverflowOneAuthProvider";
@@ -104,6 +104,16 @@ import MapaTuristico from "@/pages/MapaTuristico";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
+
+// Componente para redirecionar rotas antigas para /descubrams
+const RedirectOldMSRoute = () => {
+  const location = useLocation();
+  const path = location.pathname.replace('/descubramatogrossodosul', '/descubrams');
+  const search = location.search;
+  const newPath = path + search;
+  console.log(`🔄 [Redirect] Redirecionando ${location.pathname} -> ${newPath}`);
+  return <Navigate to={newPath} replace />;
+};
 
 function App() {
   
@@ -248,48 +258,55 @@ function App() {
                             } />
                             
                             {/* Descubra Mato Grosso do Sul Routes */}
-                            <Route path="/descubramatogrossodosul" element={<MSIndex />} />
-                            <Route path="/descubramatogrossodosul/mapa-turistico" element={<MapaTuristico />} />
-                            <Route path="/descubramatogrossodosul/destinos" element={<Destinos />} />
-                            <Route path="/descubramatogrossodosul/destinos/:id" element={<DestinoDetalhes />} />
-                            <Route path="/descubramatogrossodosul/eventos" element={<EventosMS />} />
-                            <Route path="/descubramatogrossodosul/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/parceiros" element={<Partners />} />
-                            <Route path="/descubramatogrossodosul/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/partner/login" element={<PartnerLoginPage />} />
+                            <Route path="/descubrams" element={<MSIndex />} />
+                            <Route path="/descubrams/mapa-turistico" element={<MapaTuristico />} />
+                            <Route path="/descubrams/destinos" element={<Destinos />} />
+                            <Route path="/descubrams/destinos/:id" element={<DestinoDetalhes />} />
+                            <Route path="/descubrams/eventos" element={<EventosMS />} />
+                            <Route path="/descubrams/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
+                            <Route path="/descubrams/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
+                            <Route path="/descubrams/parceiros" element={<Partners />} />
+                            <Route path="/descubrams/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
+                            <Route path="/descubrams/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
+                            <Route path="/descubrams/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
+                            <Route path="/descubrams/partner/login" element={<PartnerLoginPage />} />
                             <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
                             <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                             <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/sobre" element={<SobreMS />} />
-                            <Route path="/descubramatogrossodosul/guata" element={<Guata />} />
-                            <Route path="/descubramatogrossodosul/chatguata" element={<ChatGuata />} />
-                            <Route path="/descubramatogrossodosul/guata-test" element={<GuataTest />} />
-                            <Route path="/descubramatogrossodosul/passaporte" element={<PassaporteLista />} />
-                            <Route path="/descubramatogrossodosul/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/profile" element={<ProfilePageFixed />} />
-                            <Route path="/descubramatogrossodosul/roteiros-personalizados" element={<Suspense fallback={<LoadingFallback />}><IARoutesPage /></Suspense>} />
-                            <Route path="/descubramatogrossodosul/roteiros-ia/success" element={<Suspense fallback={<LoadingFallback />}><IARoutePaymentSuccess /></Suspense>} />
+                            <Route path="/descubrams/sobre" element={<SobreMS />} />
+                            <Route path="/descubrams/guata" element={<Guata />} />
+                            <Route path="/descubrams/chatguata" element={<ChatGuata />} />
+                            <Route path="/descubrams/guata-test" element={<GuataTest />} />
+                            <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
+                            <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
+                            <Route path="/descubrams/profile" element={<ProfilePageFixed />} />
+                            <Route path="/descubrams/roteiros-personalizados" element={<Suspense fallback={<LoadingFallback />}><IARoutesPage /></Suspense>} />
+                            <Route path="/descubrams/roteiros-ia/success" element={<Suspense fallback={<LoadingFallback />}><IARoutePaymentSuccess /></Suspense>} />
                             
                             {/* Descubra MS Auth Routes */}
-                            <Route path="/descubramatogrossodosul/login" element={<AuthPage />} />
-                            <Route path="/descubramatogrossodosul/register" element={<Register />} />
-                            <Route path="/descubramatogrossodosul/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
+                            <Route path="/descubrams/login" element={<AuthPage />} />
+                            <Route path="/descubrams/register" element={<Register />} />
+                            <Route path="/descubrams/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
                             
                             {/* Descubra MS - Políticas */}
-                            <Route path="/descubramatogrossodosul/privacidade" element={<PrivacidadeMS />} />
-                            <Route path="/descubramatogrossodosul/termos" element={<TermosUsoMS />} />
+                            <Route path="/descubrams/privacidade" element={<PrivacidadeMS />} />
+                            <Route path="/descubrams/termos" element={<TermosUsoMS />} />
                             
-                            <Route path="/descubramatogrossodosul/*" element={<MSIndex />} />
+                            <Route path="/descubrams/*" element={<MSIndex />} />
                             
-                            {/* Redirecionamentos legados de /ms para /descubramatogrossodosul */}
+                            {/* Redirecionamentos de /descubramatogrossodosul para /descubrams (compatibilidade) */}
+                            <Route path="/descubramatogrossodosul" element={<Navigate to="/descubrams" replace />} />
+                            <Route 
+                              path="/descubramatogrossodosul/:path*" 
+                              element={<RedirectOldMSRoute />} 
+                            />
+                            
+                            {/* Redirecionamentos legados de /ms para /descubrams */}
                             <Route path="/ms/login" element={<AuthPage />} />
                             <Route path="/ms/register" element={<Register />} />
                             {/* Callback OAuth - processar antes de redirecionar */}
                             <Route path="/ms" element={<Suspense fallback={<LoadingFallback />}><OAuthCallback /></Suspense>} />
-                            <Route path="/ms/*" element={<Navigate to="/descubramatogrossodosul" replace />} />
+                            <Route path="/ms/*" element={<Navigate to="/descubrams" replace />} />
                             
                             {/* Fallback */}
                             <Route path="*" element={<ViaJARSaaS />} />

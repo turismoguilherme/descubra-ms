@@ -515,7 +515,7 @@ export class DataSaleReportService {
     if (path.includes('/guata') || path.includes('/chat')) return '/guata-ia';
     if (path.includes('/passaporte')) return '/passaporte';
     if (path.includes('/sobre')) return '/sobre';
-    if (path.includes('/descubramatogrossodosul')) return '/descubramatogrossodosul';
+    if (path.includes('/descubrams')) return '/descubrams';
     
     // Se não for uma página principal conhecida, retornar null
     return null;

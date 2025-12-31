@@ -137,7 +137,7 @@ const OverflowOneLogin: React.FC = () => {
       } else {
         // Redirecionar baseado no contexto (MS ou ViaJAR)
         const currentPath = window.location.pathname;
-        if (currentPath.includes('/descubramatogrossodosul/') || currentPath.includes('/ms/')) {
+        if (currentPath.includes('/descubrams/') || currentPath.includes('/ms/')) {
           navigate('/ms');
         } else {
           navigate('/viajar/dashboard');

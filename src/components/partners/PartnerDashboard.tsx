@@ -319,7 +319,7 @@ export default function PartnerDashboard() {
               <p className="text-gray-600 mb-4">
                 Você não está cadastrado como parceiro ou não tem acesso a este dashboard.
               </p>
-              <Button onClick={() => window.location.href = '/descubramatogrossodosul/seja-um-parceiro'}>
+              <Button onClick={() => window.location.href = '/descubrams/seja-um-parceiro'}>
                 Seja um Parceiro
               </Button>
             </CardContent>

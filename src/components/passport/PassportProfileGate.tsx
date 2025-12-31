@@ -142,13 +142,13 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 px-6 pb-6">
-                <Link to="/descubramatogrossodosul/register" className="block">
+                <Link to="/descubrams/register" className="block">
                   <Button className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90" size="lg">
                     <UserPlus className="w-5 h-5 mr-2" />
                     Criar Conta
                   </Button>
                 </Link>
-                <Link to="/descubramatogrossodosul/login" className="block">
+                <Link to="/descubrams/login" className="block">
                   <Button variant="outline" className="w-full" size="lg">
                     <LogIn className="w-5 h-5 mr-2" />
                     Já tenho conta
@@ -177,7 +177,7 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
                 <strong>Dica:</strong> Complete seu perfil para uma experiência personalizada. 
-                <Link to="/descubramatogrossodosul/register" className="underline ml-1">
+                <Link to="/descubrams/register" className="underline ml-1">
                   Completar perfil
                 </Link>
               </p>

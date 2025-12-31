@@ -35,7 +35,7 @@ const Navbar = () => {
   const getPathWithTenant = (path: string) => {
     // Para Descubra MS, usar sempre 'descubramatogrossodosul' como prefixo
     if (isDescubraMS) {
-      return `/descubramatogrossodosul${path}`;
+      return `/descubrams${path}`;
     }
     return isTenantPath ? `/${currentTenant}${path}` : path;
   };

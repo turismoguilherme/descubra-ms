@@ -76,7 +76,7 @@ const UserMenu = () => {
   
   const getPathWithTenant = (path: string) => {
     if (isDescubraMS) {
-      return `/descubramatogrossodosul${path}`;
+      return `/descubrams${path}`;
     }
     return isTenantPath ? `/${currentTenant}${path}` : path;
   };

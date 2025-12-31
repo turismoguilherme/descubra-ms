@@ -531,7 +531,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             <p className="text-white/80 text-sm">Cadastre gratuitamente ou destaque seu evento</p>
           </div>
         </div>
-        <Link to="/descubramatogrossodosul/cadastrar-evento">
+        <Link to="/descubrams/cadastrar-evento">
           <Button className="bg-white text-ms-primary-blue hover:bg-white/90 font-semibold">
             <Calendar className="w-4 h-4 mr-2" />
             Cadastrar Evento

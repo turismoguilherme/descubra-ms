@@ -213,7 +213,7 @@ const Partners = () => {
                             size="lg" 
                             className="bg-ms-secondary-yellow text-black hover:bg-ms-secondary-yellow/90 font-bold shadow-lg px-8"
                         >
-                            <Link to="/descubramatogrossodosul/seja-um-parceiro">
+                            <Link to="/descubrams/seja-um-parceiro">
                                 Quero ser um parceiro
                             </Link>
                         </Button>

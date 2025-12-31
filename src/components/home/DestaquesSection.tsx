@@ -260,7 +260,7 @@ const DestaquesSection = () => {
               return (
                 <Link 
                   key={destino.id} 
-                  to={`/descubramatogrossodosul/destinos?cidade=${encodeURIComponent(destino.name)}`} 
+                  to={`/descubrams/destinos?cidade=${encodeURIComponent(destino.name)}`} 
                   className="group block"
                   onClick={() => handleDestinationClick(destino)}
                 >
@@ -308,7 +308,7 @@ const DestaquesSection = () => {
         {/* Botão Ver Todos */}
         <div className="mt-12 text-center">
           <Link 
-            to="/descubramatogrossodosul/destinos" 
+            to="/descubrams/destinos" 
             className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
           >
             {t('home.highlights.viewAll', { defaultValue: getContent('ms_destinations_button', 'Ver Todos os Destinos') })}

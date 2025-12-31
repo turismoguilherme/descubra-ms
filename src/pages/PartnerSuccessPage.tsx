@@ -87,7 +87,7 @@ export default function PartnerSuccessPage() {
                 Seu pagamento está sendo processado. Você receberá um email de confirmação em breve.
               </p>
               <Button
-                onClick={() => navigate('/descubramatogrossodosul')}
+                onClick={() => navigate('/descubrams')}
                 variant="outline"
                 className="w-full"
               >

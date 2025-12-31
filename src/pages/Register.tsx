@@ -26,7 +26,7 @@ const Register = () => {
       
       if (profileComplete) {
         console.log("👤 REGISTER: Perfil completo, redirecionando para home");
-        navigate('/descubramatogrossodosul');
+        navigate('/descubrams');
       } else {
         console.log("👤 REGISTER: Perfil incompleto, indo para etapa 2");
         setStep(2);

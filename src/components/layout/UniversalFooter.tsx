@@ -175,27 +175,27 @@ const UniversalFooter = () => {
               <h3 className="text-xs font-semibold mb-2 text-white">Explore</h3>
               <ul className="space-y-1.5">
                 <li>
-                  <Link to="/descubramatogrossodosul" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                  <Link to="/descubrams" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Início
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/destinos" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                  <Link to="/descubrams/destinos" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Destinos
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/eventos" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                  <Link to="/descubrams/eventos" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Eventos
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/parceiros" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                  <Link to="/descubrams/parceiros" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Parceiros
                   </Link>
                 </li>
                 <li>
-                  <Link to="/descubramatogrossodosul/partner/login" className="text-blue-100 hover:text-white text-xs transition-colors block">
+                  <Link to="/descubrams/partner/login" className="text-blue-100 hover:text-white text-xs transition-colors block">
                     Área do Parceiro
                   </Link>
                 </li>
@@ -231,7 +231,7 @@ const UniversalFooter = () => {
               <ul className="space-y-1.5">
                 <li>
                   <Link 
-                    to="/descubramatogrossodosul/privacidade" 
+                    to="/descubrams/privacidade" 
                     className="text-blue-100 hover:text-white text-xs transition-colors block"
                   >
                     Política de Privacidade
@@ -239,7 +239,7 @@ const UniversalFooter = () => {
                 </li>
                 <li>
                   <Link 
-                    to="/descubramatogrossodosul/termos" 
+                    to="/descubrams/termos" 
                     className="text-blue-100 hover:text-white text-xs transition-colors block"
                   >
                     Termos de Uso

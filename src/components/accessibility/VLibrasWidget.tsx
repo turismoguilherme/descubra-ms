@@ -12,7 +12,7 @@ const VLibrasWidget = () => {
   
   useEffect(() => {
     // Verificar se estamos em uma página do Descubra MS
-    const isDescubraMS = location.pathname.startsWith('/descubramatogrossodosul') || 
+    const isDescubraMS = location.pathname.startsWith('/descubrams') || 
                          location.pathname.startsWith('/ms') ||
                          location.pathname === '/chatguata';
     

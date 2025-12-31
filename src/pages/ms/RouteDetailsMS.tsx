@@ -83,7 +83,7 @@ const RouteDetailsMS = () => {
   };
 
   const handleStartRoute = () => {
-    navigate(`/descubramatogrossodosul/passaporte/${routeId}`);
+    navigate(`/descubrams/passaporte/${routeId}`);
   };
 
   const handleAddToPassport = () => {
@@ -147,7 +147,7 @@ const RouteDetailsMS = () => {
             <div className="flex items-center justify-between text-white">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/descubramatogrossodosul/roteiros')}
+                onClick={() => navigate('/descubrams/roteiros')}
                 className="text-white hover:bg-white/10"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />

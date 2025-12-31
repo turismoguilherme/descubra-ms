@@ -294,7 +294,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                   className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full flex-1"
                   onClick={() => {
                     // #region agent log
-                    const reservationUrl = `/descubramatogrossodosul/parceiros/${partner.id}/reservar`;
+                    const reservationUrl = `/descubrams/parceiros/${partner.id}/reservar`;
                     fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:186',message:'Reservar Agora button clicked',data:{partnerId:partner.id,reservationUrl,windowOpenAvailable:typeof window.open==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
                     // #endregion
                     const newWindow = window.open(reservationUrl, '_blank');

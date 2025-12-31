@@ -305,7 +305,7 @@ function MenuForm({ menu, onSuccess }: { menu: DynamicMenu | null; onSuccess: ()
           id="path"
           value={formData.path}
           onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-          placeholder="/descubramatogrossodosul/destinos"
+          placeholder="/descubrams/destinos"
         />
       </div>
       <div>

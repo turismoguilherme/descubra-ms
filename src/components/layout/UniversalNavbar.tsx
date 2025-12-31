@@ -97,7 +97,7 @@ const UniversalNavbar = () => {
   // Log do link do logo (fora do JSX)
   useEffect(() => {
     // #region agent log
-    safeLog({location:'UniversalNavbar.tsx:95',message:'UniversalNavbar logo link',data:{isOverflowOne,linkTo:isOverflowOne?'/':'/descubramatogrossodosul',pathname:location.pathname},hypothesisId:'C'});
+    safeLog({location:'UniversalNavbar.tsx:95',message:'UniversalNavbar logo link',data:{isOverflowOne,linkTo:isOverflowOne?'/':'/descubrams',pathname:location.pathname},hypothesisId:'C'});
     // #endregion
   }, [isOverflowOne, location.pathname]);
 
@@ -106,7 +106,7 @@ const UniversalNavbar = () => {
       <div className="ms-container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={isOverflowOne ? "/" : "/descubramatogrossodosul"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
+          <Link to={isOverflowOne ? "/" : "/descubrams"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img
                 key={config.logo.src}
@@ -179,7 +179,7 @@ const UniversalNavbar = () => {
                         {config.cta.primary}
                       </Button>
                     </Link>
-                    <Link to="/descubramatogrossodosul">
+                    <Link to="/descubrams">
                       <Button variant="outline" size="sm">
                         {config.cta.secondary}
                       </Button>
@@ -187,12 +187,12 @@ const UniversalNavbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/descubramatogrossodosul/login">
+                    <Link to="/descubrams/login">
                       <Button variant="ghost" size="sm">
                         {config.cta.secondary}
                       </Button>
                     </Link>
-                    <Link to="/descubramatogrossodosul/register">
+                    <Link to="/descubrams/register">
                       <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
                         {config.cta.primary}
                       </Button>
@@ -274,7 +274,7 @@ const UniversalNavbar = () => {
                             {config.cta.primary}
                           </Button>
                         </Link>
-                        <Link to="/descubramatogrossodosul" onClick={() => setIsOpen(false)}>
+                        <Link to="/descubrams" onClick={() => setIsOpen(false)}>
                           <Button variant="outline" size="sm" className="w-full">
                             {config.cta.secondary}
                           </Button>
@@ -282,12 +282,12 @@ const UniversalNavbar = () => {
                       </>
                     ) : (
                       <>
-                        <Link to="/descubramatogrossodosul/login" onClick={() => setIsOpen(false)}>
+                        <Link to="/descubrams/login" onClick={() => setIsOpen(false)}>
                           <Button variant="ghost" size="sm" className="w-full justify-start">
                             {config.cta.secondary}
                           </Button>
                         </Link>
-                        <Link to="/descubramatogrossodosul/register" onClick={() => setIsOpen(false)}>
+                        <Link to="/descubrams/register" onClick={() => setIsOpen(false)}>
                           <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
                             {config.cta.primary}
                           </Button>

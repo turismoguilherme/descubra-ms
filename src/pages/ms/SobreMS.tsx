@@ -193,13 +193,13 @@ const SobreMS = () => {
               com nosso Passaporte Digital.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/descubramatogrossodosul/destinos">
+              <Link to="/descubrams/destinos">
                 <Button size="lg" className="bg-white text-ms-primary-blue hover:bg-gray-100 font-semibold px-8 group">
                   Explorar Destinos
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link to="/descubramatogrossodosul/passaporte">
+              <Link to="/descubrams/passaporte">
                 <Button size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white/20 font-semibold px-8">
                   <Star className="mr-2 w-5 h-5" />
                   Passaporte Digital

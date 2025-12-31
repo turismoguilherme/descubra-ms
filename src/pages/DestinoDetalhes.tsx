@@ -410,7 +410,7 @@ const DestinoDetalhes = () => {
         <main className="flex-grow flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Destino não encontrado</h1>
-            <Link to="/descubramatogrossodosul/destinos" className="text-ms-primary-blue hover:underline">
+            <Link to="/descubrams/destinos" className="text-ms-primary-blue hover:underline">
               Voltar para destinos
             </Link>
           </div>
@@ -485,7 +485,7 @@ const DestinoDetalhes = () => {
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="ms-container">
                 <Link 
-                  to="/descubramatogrossodosul/destinos"
+                  to="/descubrams/destinos"
                 className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors"
                 >
                 <ArrowLeft size={18} className="mr-2" />

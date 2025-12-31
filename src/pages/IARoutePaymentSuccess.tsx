@@ -100,7 +100,7 @@ export default function IARoutePaymentSuccess() {
   }, [user, sessionId, toast, refreshUser]);
 
   const handleGoToProfile = () => {
-    navigate('/descubramatogrossodosul/profile?tab=roteiros-ia');
+    navigate('/descubrams/profile?tab=roteiros-ia');
   };
 
   if (loading) {
@@ -140,7 +140,7 @@ export default function IARoutePaymentSuccess() {
                 <Button
                   size="lg"
                   className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-                  onClick={() => navigate('/descubramatogrossodosul/profile')}
+                  onClick={() => navigate('/descubrams/profile')}
                 >
                   Voltar para o Perfil
                 </Button>
@@ -230,7 +230,7 @@ export default function IARoutePaymentSuccess() {
                 variant="outline"
                 size="lg"
                 className="w-full max-w-sm border-ms-primary-blue/30 hover:bg-ms-primary-blue/10"
-                onClick={() => navigate('/descubramatogrossodosul')}
+                onClick={() => navigate('/descubrams')}
               >
                 Explorar Destinos
               </Button>

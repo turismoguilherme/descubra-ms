@@ -11,7 +11,7 @@ const PartnerLoginPage = () => {
         {/* Header */}
         <div className="text-center mb-6">
           <Link 
-            to="/descubramatogrossodosul" 
+            to="/descubrams" 
             className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -47,7 +47,7 @@ const PartnerLoginPage = () => {
                 Ainda não é parceiro?
               </p>
               <Link 
-                to="/descubramatogrossodosul/seja-um-parceiro"
+                to="/descubrams/seja-um-parceiro"
                 className="block w-full text-center text-sm text-ms-primary-blue hover:text-ms-discovery-teal font-medium transition-colors"
               >
                 Seja um Parceiro →
