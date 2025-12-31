@@ -129,6 +129,7 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
         { key: 'ms_hero_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Descrição do Hero' },
         { key: 'ms_hero_cta_primary', label: 'Botão Principal', type: 'text' },
         { key: 'ms_hero_video_url', label: 'Vídeo de Fundo', type: 'url', placeholder: 'URL do vídeo' },
+        { key: 'ms_guata_roteiro_image_url', label: 'Imagem do Guatá (Banner Roteiro)', type: 'url', placeholder: 'URL da imagem do Guatá para o banner "Montamos seu roteiro"' },
       ]
     },
     {

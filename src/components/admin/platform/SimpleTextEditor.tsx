@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { platformContentService, PlatformContent } from '@/services/admin/platformContentService';
-import { Save, Loader2, Check, RotateCcw } from 'lucide-react';
+import { Save, Loader2, Check, RotateCcw, Upload, Image as ImageIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 interface TextField {
   key: string;
@@ -105,6 +107,8 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_hero_universal_button_1', label: 'Botão 1', type: 'text', placeholder: 'Descubra Agora', section: 'Hero Universal' },
     { key: 'ms_hero_universal_button_2', label: 'Botão 2', type: 'text', placeholder: 'Passaporte Digital', section: 'Hero Universal' },
     { key: 'ms_hero_universal_button_3', label: 'Botão 3', type: 'text', placeholder: 'Converse com o Guatá', section: 'Hero Universal' },
+    { key: 'ms_hero_video_url', label: 'Vídeo de Fundo (URL)', type: 'text', placeholder: 'URL do YouTube, Vimeo ou vídeo MP4', section: 'Hero Universal' },
+    { key: 'ms_guata_roteiro_image_url', label: 'Imagem do Guatá - Banner Roteiro (URL)', type: 'text', placeholder: 'URL da imagem do Guatá para o banner "Montamos seu roteiro"', section: 'Hero Universal' },
     
     // Descrição Turística
     { key: 'ms_tourism_title', label: 'Título', type: 'text', placeholder: 'Descubra Mato Grosso do Sul – Viva essa experiência!', section: 'Descrição Turística' },
@@ -133,6 +137,8 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
   ],
 };
 
+const BUCKET_NAME = 'tourism-images';
+
 export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   const { toast } = useToast();
   const [contents, setContents] = useState<Record<string, string>>({});
@@ -141,6 +147,9 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const fields = TEXT_FIELDS[platform] || [];
   const platformName = platform === 'viajar' ? 'ViajARTur' : 'Descubra MS';
@@ -216,10 +225,150 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     const originalValue = originalContents[key] || '';
     setContents(prev => ({ ...prev, [key]: originalValue }));
     setSaved(prev => ({ ...prev, [key]: false }));
+    setImagePreviews(prev => {
+      const newPreviews = { ...prev };
+      delete newPreviews[key];
+      return newPreviews;
+    });
     toast({
       title: 'Campo revertido',
       description: 'O campo foi restaurado ao valor original.',
     });
+  };
+
+  const handleImageSelect = (key: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Arquivo inválido',
+        description: 'Por favor, selecione uma imagem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'A imagem deve ter no máximo 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreviews(prev => ({ ...prev, [key]: e.target?.result as string }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImage = async (key: string, file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `platform-content/${key}/${uuidv4()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+          toast({
+            title: 'Aviso',
+            description: 'Bucket de imagens não encontrado. Você pode usar uma URL manualmente.',
+            variant: 'default',
+          });
+          return null;
+        }
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+      return publicUrlData?.publicUrl || null;
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: 'Erro no upload',
+        description: error.message || 'Não foi possível fazer upload da imagem.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  const handleImageUpload = async (key: string) => {
+    const input = fileInputRefs.current[key];
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    setUploading(prev => ({ ...prev, [key]: true }));
+
+    try {
+      const uploadedUrl = await uploadImage(key, file);
+      if (uploadedUrl) {
+        updateField(key, uploadedUrl);
+        setImagePreviews(prev => ({ ...prev, [key]: uploadedUrl }));
+        
+        // Salvar automaticamente após upload
+        try {
+          const field = fields.find(f => f.key === key);
+          const id = contentIds[key];
+          
+          if (id) {
+            await platformContentService.updateContent(id, uploadedUrl);
+          } else {
+            const newContent = await platformContentService.createContent({
+              content_key: key,
+              content_value: uploadedUrl,
+              content_type: field?.type || 'text',
+              description: field?.label || null,
+              is_active: true,
+            });
+            // Atualizar IDs
+            setContentIds(prev => ({ ...prev, [key]: newContent.id }));
+          }
+          
+          setSaved(prev => ({ ...prev, [key]: true }));
+          setOriginalContents(prev => ({ ...prev, [key]: uploadedUrl }));
+          
+          toast({
+            title: 'Sucesso!',
+            description: 'Imagem enviada e salva automaticamente.',
+          });
+          
+          // Remover indicador de salvo após 2 segundos
+          setTimeout(() => {
+            setSaved(prev => ({ ...prev, [key]: false }));
+          }, 2000);
+        } catch (saveError: any) {
+          console.error('Erro ao salvar automaticamente:', saveError);
+          toast({
+            title: 'Upload concluído',
+            description: 'Imagem enviada. Por favor, clique em "Salvar" para aplicar.',
+            variant: 'default',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      toast({
+        title: 'Erro no upload',
+        description: 'Não foi possível fazer upload da imagem.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(prev => ({ ...prev, [key]: false }));
+      if (input) input.value = '';
+    }
   };
 
   const saveField = async (key: string) => {
@@ -345,7 +494,95 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                       </Button>
                     </div>
                   </div>
-                  {field.type === 'textarea' ? (
+                  {/* Campo especial para imagem do Guatá com upload */}
+                  {field.key === 'ms_guata_roteiro_image_url' ? (
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <Input
+                          id={field.key}
+                          value={value}
+                          onChange={(e) => updateField(field.key, e.target.value)}
+                          placeholder={field.placeholder}
+                          className={cn(
+                            "flex-1",
+                            hasChanged && "border-amber-300 bg-amber-50/50",
+                            isSaved && "border-green-300 bg-green-50/50"
+                          )}
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={(el) => fileInputRefs.current[field.key] = el}
+                          onChange={(e) => handleImageSelect(field.key, e)}
+                          className="hidden"
+                          id={`file-${field.key}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById(`file-${field.key}`)?.click()}
+                          disabled={uploading[field.key]}
+                          className="flex items-center gap-2"
+                        >
+                          {uploading[field.key] ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4" />
+                          )}
+                          Upload
+                        </Button>
+                        {imagePreviews[field.key] && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleImageUpload.bind(null, field.key)}
+                            disabled={uploading[field.key]}
+                            className="flex items-center gap-2"
+                          >
+                            {uploading[field.key] ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <ImageIcon className="h-4 w-4" />
+                            )}
+                            Enviar
+                          </Button>
+                        )}
+                      </div>
+                      {(imagePreviews[field.key] || value) && (
+                        <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={imagePreviews[field.key] || value}
+                            alt="Preview"
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                          {imagePreviews[field.key] && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={() => {
+                                setImagePreviews(prev => {
+                                  const newPreviews = { ...prev };
+                                  delete newPreviews[field.key];
+                                  return newPreviews;
+                                });
+                                if (fileInputRefs.current[field.key]) {
+                                  fileInputRefs.current[field.key]!.value = '';
+                                }
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : field.type === 'textarea' ? (
                     <Textarea
                       id={field.key}
                       value={value}

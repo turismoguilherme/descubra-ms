@@ -1,7 +1,8 @@
 import UniversalLayout from "@/components/layout/UniversalLayout";
 import UniversalHero from "@/components/layout/UniversalHero";
 import DestaquesSection from "@/components/home/DestaquesSection";
-import ExperienceSection from "@/components/home/ExperienceSection";
+import EventosDestaqueSection from "@/components/home/EventosDestaqueSection";
+import RoteiroPersonalizadoBanner from "@/components/home/RoteiroPersonalizadoBanner";
 import CatsSection from "@/components/home/CatsSection";
 
 const MSIndex = () => {
@@ -9,7 +10,8 @@ const MSIndex = () => {
     <UniversalLayout>
       <UniversalHero />
       <DestaquesSection />
-      <ExperienceSection />
+      <EventosDestaqueSection />
+      <RoteiroPersonalizadoBanner />
       <CatsSection />
     </UniversalLayout>
   );
