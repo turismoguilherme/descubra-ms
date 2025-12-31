@@ -80,7 +80,7 @@ import ChatGuata from "@/pages/ChatGuata";
 import EventosMS from "@/pages/ms/EventosMS";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import PassportDigital from "@/pages/PassportDigital";
-import DestinoDetalhes from "@/pages/DestinoDetalhes";
+import RegiaoDetalhes from "@/pages/RegiaoDetalhes";
 import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
 import AuthPage from "@/pages/AuthPage";
@@ -261,7 +261,7 @@ function App() {
                             <Route path="/descubrams" element={<MSIndex />} />
                             <Route path="/descubrams/mapa-turistico" element={<MapaTuristico />} />
                             <Route path="/descubrams/destinos" element={<Destinos />} />
-                            <Route path="/descubrams/destinos/:id" element={<DestinoDetalhes />} />
+                            <Route path="/descubrams/regioes/:slug" element={<RegiaoDetalhes />} />
                             <Route path="/descubrams/eventos" element={<EventosMS />} />
                             <Route path="/descubrams/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
                             <Route path="/descubrams/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />

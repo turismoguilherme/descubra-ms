@@ -63,37 +63,38 @@ const CatsSection = () => {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-br from-ms-primary-blue/5 via-white to-ms-pantanal-green/5">
+    <section className="py-24 bg-gradient-to-br from-ms-primary-blue/5 via-white to-ms-pantanal-green/5">
       <div className="ms-container">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
+        <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h2 className="text-4xl md:text-5xl font-bold text-ms-primary-blue mb-5">
             {t('home.cats.title', { defaultValue: 'Centros de Atendimento ao Turista' })}
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             {t('home.cats.description', { defaultValue: 'Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul.' })}
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {cats.map((cat) => (
+          {cats.map((cat, index) => (
             <div 
               key={cat.id} 
-              className="group bg-white rounded-2xl p-8 shadow-lg border-t-4 border-ms-primary-blue transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+              className="group bg-white rounded-2xl p-8 shadow-lg border-t-4 border-ms-primary-blue transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="text-center mb-6">
-                <div className="bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <MapPin size={24} className="text-white" />
+              <div className="text-center mb-8">
+                <div className="bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
+                  <MapPin size={28} className="text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-ms-primary-blue group-hover:text-ms-discovery-teal transition-colors">
+                <h3 className="text-xl font-bold text-ms-primary-blue group-hover:text-ms-discovery-teal transition-colors duration-300">
                   {cat.name}
                 </h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {cat.address && (
                   <div className="flex items-start space-x-3">
                     <MapPin size={20} className="text-ms-cerrado-orange mt-1 flex-shrink-0" />
-                    <p className="text-gray-800 font-medium">{cat.address}</p>
+                    <p className="text-gray-800 font-medium leading-relaxed">{cat.address}</p>
                   </div>
                 )}
                 {cat.working_hours && (

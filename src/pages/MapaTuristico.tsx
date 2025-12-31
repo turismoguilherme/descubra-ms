@@ -34,9 +34,8 @@ const MapaTuristico: React.FC = () => {
   };
 
   const handleCityClick = (cityName: string) => {
-    // Navegar para a página de destinos filtrada pela cidade
-    // Por enquanto, vamos para a página de destinos
-    navigate(`/descubrams/destinos?cidade=${encodeURIComponent(cityName)}`);
+    // Navegar para a página de regiões turísticas (destinos agora mostra apenas regiões)
+    navigate(`/descubrams/destinos`);
   };
 
   const handleCloseRegion = () => {
@@ -159,7 +158,7 @@ const MapaTuristico: React.FC = () => {
                     <div className="p-6 pt-0">
                       <Button 
                         className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-                        onClick={() => navigate(`/descubrams/destinos?regiao=${selectedRegion.slug}`)}
+                        onClick={() => navigate(`/descubrams/regioes/${selectedRegion.slug}`)}
                       >
                         Explorar {selectedRegion.name}
                         <ArrowRight className="w-4 h-4 ml-2" />

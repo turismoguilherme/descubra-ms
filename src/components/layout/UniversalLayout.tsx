@@ -1,7 +1,6 @@
 import React from 'react';
 import UniversalNavbar from './UniversalNavbar';
 import UniversalFooter from './UniversalFooter';
-import WhatsAppFloatingButton from './WhatsAppFloatingButton';
 
 const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
 const safeLog = (payload: any) => {
@@ -24,7 +23,6 @@ const UniversalLayout = ({ children }: UniversalLayoutProps) => {
         {children}
       </main>
       <UniversalFooter />
-      <WhatsAppFloatingButton />
     </div>
   );
 };

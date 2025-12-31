@@ -1,11 +1,18 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrand } from "@/context/BrandContext";
 import UserMenu from "./UserMenu";
 import { LanguageSelector } from "./LanguageSelector";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { touristRegions2025 } from "@/data/touristRegions2025";
 
 const UniversalNavbar = () => {
   const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
@@ -132,9 +139,52 @@ const UniversalNavbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navigationItems.map(item => (
+          {/* Desktop Navigation - Simplificado */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Dropdown Regiões Turísticas (apenas para MS) */}
+            {isMS && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-ms-primary-blue text-gray-700 data-[state=open]:text-ms-primary-blue">
+                  Regiões Turísticas
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64 max-h-[400px] overflow-y-auto">
+                  {touristRegions2025.slice(0, 4).map(region => (
+                    <DropdownMenuItem key={region.slug} asChild>
+                      <Link 
+                        to={`/descubrams/regioes/${region.slug}`}
+                        className="cursor-pointer flex items-center gap-2"
+                      >
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0" 
+                          style={{ backgroundColor: region.color }}
+                        />
+                        <span>{region.name}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuItem asChild>
+                    <Link 
+                      to="/descubrams/mapa-turistico"
+                      className="cursor-pointer font-semibold text-ms-primary-blue"
+                    >
+                      Ver todas as regiões →
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Links principais - Eventos, Parceiros e Guatá */}
+            {navigationItems
+              .filter(item => {
+                // Mostrar apenas Eventos e Parceiros no menu principal (para MS)
+                if (isMS) {
+                  return ['Eventos', 'Parceiros'].includes(item.name);
+                }
+                return true;
+              })
+              .map(item => (
               <Link 
                 key={item.name} 
                 to={item.path}
@@ -149,27 +199,29 @@ const UniversalNavbar = () => {
               </Link>
             ))}
             
-            {user && authenticatedNavigationItems.map(item => (
+            {/* Guatá */}
+            {isMS && (
               <Link 
-                key={item.name} 
-                to={item.path}
-                onClick={() => console.log('🔗 NAVBAR: Clicou em (auth)', item.name, '->', item.path)}
+                to="/descubrams/guata"
+                onClick={() => console.log('🔗 NAVBAR: Clicou em Guatá -> /descubrams/guata')}
                 className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
-                  isActivePath(item.path) 
+                  isActivePath('/descubrams/guata') 
                     ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
                     : "text-gray-700"
                 }`}
               >
-                {item.name}
+                Guatá
               </Link>
-            ))}
+            )}
           </div>
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
             <LanguageSelector />
             {user ? (
+              <>
               <UserMenu />
+              </>
             ) : (
               <>
                 {isOverflowOne ? (
@@ -220,7 +272,42 @@ const UniversalNavbar = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-              {navigationItems.map(item => (
+              {/* Regiões Turísticas (Mobile) */}
+              {isMS && (
+                <>
+                  <div className="px-3 py-2 text-base font-semibold text-ms-primary-blue">
+                    Regiões Turísticas
+                  </div>
+                  {touristRegions2025.slice(0, 4).map(region => (
+                    <Link
+                      key={region.slug}
+                      to={`/descubrams/destinos?regiao=${region.slug}`}
+                      onClick={() => setIsOpen(false)}
+                      className="block px-6 py-2 text-sm text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
+                    >
+                      {region.name}
+                    </Link>
+                  ))}
+                  <Link
+                    to="/descubrams/mapa-turistico"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-6 py-2 text-sm font-semibold text-ms-primary-blue hover:bg-gray-50"
+                  >
+                    Ver todas as regiões →
+                  </Link>
+                  <div className="border-t border-gray-200 my-2"></div>
+                </>
+              )}
+
+              {/* Links principais - Eventos, Parceiros e Guatá */}
+              {navigationItems
+                .filter(item => {
+                  if (isMS) {
+                    return ['Eventos', 'Parceiros'].includes(item.name);
+                  }
+                  return true;
+                })
+                .map(item => (
                 <Link 
                   key={item.name} 
                   to={item.path}
@@ -237,6 +324,24 @@ const UniversalNavbar = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Guatá (Mobile) */}
+              {isMS && (
+                <Link 
+                  to="/descubrams/guata"
+                  onClick={() => {
+                    console.log('🔗 NAVBAR MOBILE: Clicou em Guatá -> /descubrams/guata');
+                    setIsOpen(false);
+                  }}
+                  className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActivePath('/descubrams/guata') 
+                      ? "text-ms-primary-blue bg-blue-50" 
+                      : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
+                  }`}
+                >
+                  Guatá
+                </Link>
+              )}
               
               {user && authenticatedNavigationItems.map(item => (
                 <Link 
@@ -262,9 +367,11 @@ const UniversalNavbar = () => {
                   <LanguageSelector />
                 </div>
                 {user ? (
+                  <>
                   <div className="px-3">
                     <UserMenu />
                   </div>
+                  </>
                 ) : (
                   <div className="space-y-2 px-3">
                     {isOverflowOne ? (

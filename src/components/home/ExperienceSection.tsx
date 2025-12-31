@@ -53,46 +53,47 @@ const ExperienceSection = () => {
   }));
 
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <section className="py-24 bg-gradient-to-br from-blue-50/50 via-white to-green-50/50">
       <div className="ms-container">
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-3 rounded-full">
-              <Sparkles size={32} className="text-white" />
+        <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex justify-center mb-6">
+            <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-4 rounded-full shadow-lg transform hover:scale-110 transition-transform duration-300">
+              <Sparkles size={36} className="text-white" />
             </div>
           </div>
-          <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-ms-primary-blue mb-5">
             {t('home.experiences.title', { defaultValue: 'Experiências Completas' })}
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             {t('home.experiences.subtitle', { defaultValue: 'Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis' })}
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {experienciasTraduzidas.map((exp) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {experienciasTraduzidas.map((exp, index) => {
             const IconComponent = exp.icone;
             return (
               <Link
                 key={exp.id}
                 to={exp.link}
-                className="group block"
+                className="group block animate-in fade-in slide-in-from-bottom-4 duration-700"
+                style={{ animationDelay: `${index * 150}ms` }}
               >
-                <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-gray-100 hover:border-ms-primary-blue/30 h-full flex flex-col">
-                  <div className="mb-6 flex justify-center">
-                    <div className={`bg-gradient-to-br ${exp.corBg} p-5 rounded-2xl group-hover:scale-110 transition-transform duration-300 border-2 border-transparent group-hover:border-ms-primary-blue/20`}>
-                      <IconComponent size={32} className={exp.corIcone} />
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 border-2 border-gray-100 hover:border-ms-primary-blue/40 h-full flex flex-col">
+                  <div className="mb-8 flex justify-center">
+                    <div className={`bg-gradient-to-br ${exp.corBg} p-6 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border-2 border-transparent group-hover:border-ms-primary-blue/30 shadow-md group-hover:shadow-xl`}>
+                      <IconComponent size={40} className={exp.corIcone} />
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-ms-primary-blue mb-3 text-center group-hover:text-ms-discovery-teal transition-colors">
+                  <h3 className="text-xl font-bold text-ms-primary-blue mb-4 text-center group-hover:text-ms-discovery-teal transition-colors duration-300">
                     {exp.titulo}
                   </h3>
-                  <p className="text-gray-600 text-center leading-relaxed mb-4 flex-grow group-hover:text-gray-700 transition-colors text-sm">
+                  <p className="text-gray-600 text-center leading-relaxed mb-6 flex-grow group-hover:text-gray-700 transition-colors duration-300">
                     {exp.descricao}
                   </p>
-                  <div className="flex items-center justify-center gap-2 text-ms-primary-blue font-medium text-sm group-hover:gap-3 transition-all pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-center gap-2 text-ms-primary-blue font-semibold text-sm group-hover:gap-3 transition-all duration-300 pt-5 border-t border-gray-100">
                     <span>{t('home.experiences.explore', { defaultValue: 'Explorar' })}</span>
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-300" />
                   </div>
                 </div>
               </Link>

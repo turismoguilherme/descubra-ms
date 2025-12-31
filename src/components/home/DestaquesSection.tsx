@@ -1,63 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { InteractionTracker } from "@/services/tracking/InteractionTrackerService";
-import { MapPin, ArrowRight, Compass, Loader2 } from "lucide-react";
+import { MapPin, ArrowRight, Compass } from "lucide-react";
 import { platformContentService } from '@/services/admin/platformContentService';
-import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from "react-i18next";
+import { touristRegions2025 } from "@/data/touristRegions2025";
 
-interface Destination {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  region?: string;
-  image_url: string;
-}
-
-const destinosMock = [
-  {
-    id: "1",
-    name: "Bonito",
-    image_url: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800",
-    description: "Águas cristalinas e ecoturismo de classe mundial",
-    location: "Bonito - MS",
-    region: "Sudoeste"
-  },
-  {
-    id: "2",
-    name: "Pantanal",
-    image_url: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800",
-    description: "A maior planície alagável do mundo e sua biodiversidade única",
-    location: "Pantanal - MS",
-    region: "Pantanal"
-  },
-  {
-    id: "3",
-    name: "Corumbá",
-    image_url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800",
-    description: "A capital do Pantanal, com rica história e cultura",
-    location: "Corumbá - MS",
-    region: "Pantanal"
-  },
-  {
-    id: "4",
-    name: "Campo Grande",
-    image_url: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800",
-    description: "A capital do estado, com atrativos urbanos e culturais",
-    location: "Campo Grande - MS",
-    region: "Centro"
-  }
-];
+// Usar regiões turísticas em vez de destinos individuais
 
 const DestaquesSection = () => {
-  const { language } = useLanguage();
   const { t } = useTranslation('pages');
   const [content, setContent] = useState<Record<string, string>>({});
-  const [destinos, setDestinos] = useState<Destination[]>([]);
-  const [translations, setTranslations] = useState<Map<string, any>>(new Map());
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -75,244 +28,100 @@ const DestaquesSection = () => {
     loadContent();
   }, []);
 
-  useEffect(() => {
-    const fetchDestinos = async () => {
-      setLoading(true);
-      try {
-        // Tentar renovar a sessão se necessário (para evitar 401)
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.expires_at) {
-          const expiresAtMs = session.expires_at * 1000;
-          const nowMs = Date.now();
-          const timeLeftMs = expiresAtMs - nowMs;
-          
-          if (timeLeftMs < 5 * 60 * 1000 && timeLeftMs > 0) {
-            await supabase.auth.refreshSession();
-          } else if (timeLeftMs <= 0) {
-            await supabase.auth.refreshSession();
-          }
-        }
-
-        // Buscar os primeiros 4 destinos do banco de dados
-        const { data, error } = await supabase
-          .from('destinations')
-          .select('*')
-          .order('name')
-          .limit(4);
-
-        // Se erro 401 (JWT expirado), tentar renovar e buscar novamente
-        if (error && (error.message?.includes('JWT') || error.message?.includes('expired') || error.message?.includes('401'))) {
-          console.log("🔄 DESTAQUES: Token expirado, tentando renovar...");
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (!refreshError && refreshData.session) {
-            const { data: retryData, error: retryError } = await supabase
-              .from('destinations')
-              .select('*')
-              .order('name')
-              .limit(4);
-            
-            if (retryError) {
-              throw retryError;
-            }
-            
-            if (!retryData || retryData.length === 0) {
-              console.log("🏞️ DESTAQUES: Nenhum destino encontrado, usando dados mock");
-              setDestinos(destinosMock);
-            } else {
-              setDestinos(retryData || []);
-            }
-          } else {
-            // Se não conseguir renovar, usar dados mock
-            throw error;
-          }
-        } else if (error) {
-          throw error;
-        } else if (!data || data.length === 0) {
-          console.log("🏞️ DESTAQUES: Nenhum destino encontrado, usando dados mock");
-          setDestinos(destinosMock);
-        } else {
-          console.log(`✅ DESTAQUES: ${data.length} destinos carregados do banco`);
-          setDestinos(data || []);
-        }
-      } catch (error: any) {
-        console.error('❌ Erro ao buscar destinos em destaque:', error);
-        // Em caso de erro, usar dados mock
-        setDestinos(destinosMock);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDestinos();
-  }, []);
-
-  // Buscar traduções quando idioma ou destinos mudarem
-  useEffect(() => {
-    const loadTranslations = async () => {
-      if (language === 'pt-BR' || destinos.length === 0) {
-        setTranslations(new Map());
-        return;
-      }
-
-      try {
-        const { destinationTranslationService } = await import('@/services/translation/DestinationTranslationService');
-        const translationMap = new Map();
-
-        // Buscar traduções para todos os destinos em paralelo
-        const translationPromises = destinos.map(async (destino) => {
-          try {
-            const translation = await destinationTranslationService.getTranslation(destino.id, language);
-            if (translation) {
-              translationMap.set(destino.id, translation);
-            }
-          } catch (error) {
-            console.error(`Erro ao buscar tradução para destino ${destino.id}:`, error);
-          }
-        });
-
-        await Promise.all(translationPromises);
-        setTranslations(translationMap);
-      } catch (error) {
-        console.error('Erro ao carregar traduções:', error);
-      }
-    };
-
-    loadTranslations();
-  }, [destinos, language]);
-
-  // Helper para obter nome traduzido
-  const getTranslatedName = (destino: Destination) => {
-    if (language === 'pt-BR') return destino.name;
-    const translation = translations.get(destino.id);
-    return translation?.name || destino.name;
-  };
-
-  // Helper para obter descrição traduzida
-  const getTranslatedDescription = (destino: Destination) => {
-    if (language === 'pt-BR') return destino.description || 'Descubra este destino incrível em Mato Grosso do Sul';
-    const translation = translations.get(destino.id);
-    return translation?.description || destino.description || 'Descubra este destino incrível em Mato Grosso do Sul';
-  };
+  // Pegar as 6 principais regiões turísticas
+  const regioesDestaque = touristRegions2025.slice(0, 6);
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;
 
-  const handleDestinationClick = (destino: Destination) => {
+  const handleRegionClick = (regiao: typeof touristRegions2025[0]) => {
     InteractionTracker.track({
       interaction_type: 'destination_click',
-      target_id: destino.id,
-      target_name: destino.name,
+      target_id: regiao.slug,
+      target_name: regiao.name,
     });
   };
 
-  // Extrair região do location (ex: "Bonito - MS" -> "Sudoeste")
-  const getRegionFromLocation = (location: string): string => {
-    const locationLower = location.toLowerCase();
-    if (locationLower.includes('bonito') || locationLower.includes('bodoquena')) {
-      return 'Sudoeste';
-    }
-    if (locationLower.includes('pantanal') || locationLower.includes('corumbá') || locationLower.includes('corumba')) {
-      return 'Pantanal';
-    }
-    if (locationLower.includes('campo grande')) {
-      return 'Centro';
-    }
-    // Tentar extrair do location ou usar padrão
-    return location.split('-')[0].trim() || 'MS';
-  };
-
   return (
-    <section className="bg-gradient-to-b from-white via-blue-50/50 to-green-50/50 pt-12 pb-20">
+    <section className="bg-gradient-to-b from-white via-blue-50/30 to-green-50/30 pt-16 pb-24">
       <div className="ms-container">
-        {/* Header simples */}
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-3 rounded-full">
-              <Compass size={32} className="text-white" />
+        {/* Header melhorado */}
+        <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex justify-center mb-6">
+            <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-4 rounded-full shadow-lg transform hover:scale-110 transition-transform duration-300">
+              <Compass size={36} className="text-white" />
             </div>
           </div>
-          <h2 className="text-4xl font-bold text-ms-primary-blue mb-4">
-            {t('home.highlights.title', { defaultValue: getContent('ms_destinations_title', 'Destinos em Destaque') })}
+          <h2 className="text-4xl md:text-5xl font-bold text-ms-primary-blue mb-5">
+            {t('home.highlights.title', { defaultValue: getContent('ms_destinations_title', 'Regiões Turísticas') })}
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {t('home.highlights.description', { defaultValue: getContent('ms_destinations_description', 'Descubra os principais destinos turísticos de Mato Grosso do Sul') })}
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            {t('home.highlights.description', { defaultValue: getContent('ms_destinations_description', 'Descubra as principais regiões turísticas de Mato Grosso do Sul, cada uma com sua identidade única e atrativos especiais') })}
           </p>
         </div>
 
-        {/* Grid de Cards */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-md h-full border border-gray-100 animate-pulse">
-                <div className="h-56 bg-gray-200"></div>
-                <div className="p-5">
-                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {destinos.map((destino) => {
-              const regiao = destino.region || getRegionFromLocation(destino.location);
-              return (
-                <Link 
-                  key={destino.id} 
-                  to={`/descubrams/destinos?cidade=${encodeURIComponent(destino.name)}`} 
-                  className="group block"
-                  onClick={() => handleDestinationClick(destino)}
-                >
-                  <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full border border-gray-100">
-                    <div className="h-56 overflow-hidden relative">
-                      <img 
-                        src={destino.image_url || "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800"} 
-                        alt={destino.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        {/* Grid de Cards - Regiões Turísticas */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {regioesDestaque.map((regiao, index) => (
+              <Link
+                key={regiao.slug}
+                to={`/descubrams/regioes/${regiao.slug}`}
+                className="group block animate-in fade-in slide-in-from-bottom-4 duration-700"
+                style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => handleRegionClick(regiao)}
+              >
+                <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 h-full border border-gray-100 hover:border-ms-primary-blue/30">
+                  {/* Imagem com cor da região */}
+                  <div 
+                    className="h-64 relative overflow-hidden"
+                    style={{ backgroundColor: regiao.color }}
+                  >
+                    {regiao.image && (
+                      <img
+                        src={regiao.image}
+                        alt={regiao.name}
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800";
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="absolute top-4 right-4 bg-gradient-to-r from-ms-pantanal-green to-ms-discovery-teal text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg">
-                        {regiao}
-                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl">
+                      {regiao.cities.length} cidades
                     </div>
-                    <div className="p-5">
-                      <h3 className="text-xl font-bold text-ms-primary-blue mb-2 group-hover:text-ms-discovery-teal transition-colors">
-                        {getTranslatedName(destino)}
-                      </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                        {getTranslatedDescription(destino)}
-                      </p>
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-1.5 text-gray-500">
-                          <MapPin size={14} className="text-ms-pantanal-green" />
-                          <span className="text-xs font-medium">{regiao}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-ms-primary-blue font-medium text-sm group-hover:gap-2 transition-all">
-                          <span>{t('home.highlights.explore', { defaultValue: 'Explorar' })}</span>
-                          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                        </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-ms-primary-blue mb-3 group-hover:text-ms-discovery-teal transition-colors duration-300">
+                      {regiao.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                      {regiao.description}
+                    </p>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 text-gray-500">
+                        <MapPin size={16} className="text-ms-pantanal-green" />
+                        <span className="text-xs font-semibold">{regiao.cities[0]}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-ms-primary-blue font-semibold text-sm group-hover:gap-2 transition-all duration-300">
+                        <span>{t('home.highlights.explore', { defaultValue: 'Explorar' })}</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
                       </div>
                     </div>
                   </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+                </div>
+              </Link>
+            ))}
+        </div>
 
-        {/* Botão Ver Todos */}
-        <div className="mt-12 text-center">
+        {/* Botão Ver Mapa Turístico */}
+        <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
           <Link 
-            to="/descubrams/destinos" 
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            to="/descubrams/mapa-turistico" 
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1"
           >
-            {t('home.highlights.viewAll', { defaultValue: getContent('ms_destinations_button', 'Ver Todos os Destinos') })}
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            {t('home.highlights.viewAll', { defaultValue: getContent('ms_destinations_button', 'Ver Mapa Turístico Completo') })}
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
           </Link>
         </div>
       </div>

@@ -12,8 +12,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   MapPin, Plus, Edit, Trash2, Save, X, Loader2, 
-  Palette, Image as ImageIcon, List, Star
+  Palette, Image as ImageIcon, List, Star,
+  Video, Upload, Globe, Phone, Mail, Instagram, Facebook, Youtube,
+  Calendar, Car, Play
 } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import LocationPicker from '@/components/admin/LocationPicker';
 
 interface TouristRegion {
   id: string;
@@ -53,6 +57,32 @@ export default function TouristRegionsManager() {
   const [newCity, setNewCity] = useState('');
   const [highlights, setHighlights] = useState<string[]>([]);
   const [newHighlight, setNewHighlight] = useState('');
+
+  // Estados para gerenciar detalhes da região
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [editingRegionForDetails, setEditingRegionForDetails] = useState<TouristRegion | null>(null);
+  const [detailsData, setDetailsData] = useState({
+    promotional_text: '',
+    video_url: '',
+    video_type: 'youtube' as 'youtube' | 'upload' | null,
+    map_latitude: '',
+    map_longitude: '',
+    official_website: '',
+    contact_phone: '',
+    contact_email: '',
+    highlights: '',
+    how_to_get_there: '',
+    best_time_to_visit: '',
+    social_instagram: '',
+    social_facebook: '',
+    social_youtube: '',
+  });
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [uploadingDetails, setUploadingDetails] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const BUCKET_NAME = 'tourism-images';
 
   useEffect(() => {
     loadRegions();
@@ -279,6 +309,280 @@ export default function TouristRegionsManager() {
     }
   };
 
+  // Funções para gerenciar detalhes da região
+  const handleManageDetails = async (region: TouristRegion) => {
+    setEditingRegionForDetails(region);
+    await loadRegionDetails(region.id);
+    setDetailsDialogOpen(true);
+  };
+
+  const loadRegionDetails = async (regionId: string) => {
+    try {
+      const { data: detailsData, error } = await supabase
+        .from('destination_details')
+        .select('*')
+        .eq('tourist_region_id', regionId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Erro ao carregar detalhes:', error);
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar detalhes da região',
+          variant: 'destructive',
+        });
+      }
+
+      if (detailsData) {
+        setDetailsData({
+          promotional_text: detailsData.promotional_text || '',
+          video_url: detailsData.video_url || '',
+          video_type: detailsData.video_type || 'youtube',
+          map_latitude: detailsData.map_latitude?.toString() || '',
+          map_longitude: detailsData.map_longitude?.toString() || '',
+          official_website: detailsData.official_website || '',
+          contact_phone: detailsData.contact_phone || '',
+          contact_email: detailsData.contact_email || '',
+          highlights: Array.isArray(detailsData.highlights) ? detailsData.highlights.join('\n') : '',
+          how_to_get_there: detailsData.how_to_get_there || '',
+          best_time_to_visit: detailsData.best_time_to_visit || '',
+          social_instagram: detailsData.social_links?.instagram || '',
+          social_facebook: detailsData.social_links?.facebook || '',
+          social_youtube: detailsData.social_links?.youtube || '',
+        });
+        setGalleryImages(detailsData.image_gallery || []);
+      } else {
+        // Limpar formulário se não houver detalhes
+        setDetailsData({
+          promotional_text: '',
+          video_url: '',
+          video_type: 'youtube',
+          map_latitude: '',
+          map_longitude: '',
+          official_website: '',
+          contact_phone: '',
+          contact_email: '',
+          highlights: '',
+          how_to_get_there: '',
+          best_time_to_visit: '',
+          social_instagram: '',
+          social_facebook: '',
+          social_youtube: '',
+        });
+        setGalleryImages([]);
+      }
+      setNewGalleryFiles([]);
+      setGalleryPreviews([]);
+    } catch (error: any) {
+      console.error('Erro ao carregar detalhes:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar detalhes da região',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setNewGalleryFiles([...newGalleryFiles, ...files]);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setGalleryPreviews(prev => [...prev, e.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeGalleryImage = (index: number, isNew: boolean) => {
+    if (isNew) {
+      const newFiles = [...newGalleryFiles];
+      const newPreviews = [...galleryPreviews];
+      newFiles.splice(index - galleryImages.length, 1);
+      newPreviews.splice(index - galleryImages.length, 1);
+      setNewGalleryFiles(newFiles);
+      setGalleryPreviews(newPreviews);
+    } else {
+      setGalleryImages(galleryImages.filter((_, i) => i !== index));
+    }
+  };
+
+  const uploadGalleryImages = async (regionId: string): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+    
+    for (const file of newGalleryFiles) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Arquivo inválido',
+          description: `${file.name} não é uma imagem válida.`,
+          variant: 'destructive',
+        });
+        continue;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: `${file.name} excede 10MB.`,
+          variant: 'destructive',
+        });
+        continue;
+      }
+
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `regions/${regionId}/${uuidv4()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+            console.warn('⚠️ Bucket não encontrado, continuando sem upload de imagem');
+            continue;
+          }
+          throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(fileName);
+
+        if (publicUrlData?.publicUrl) {
+          uploadedUrls.push(publicUrlData.publicUrl);
+        }
+      } catch (error: any) {
+        console.error('Erro no upload:', error);
+        toast({
+          title: 'Erro no upload',
+          description: `Erro ao fazer upload de ${file.name}`,
+          variant: 'destructive',
+        });
+      }
+    }
+
+    return uploadedUrls;
+  };
+
+  const handleLocationSelect = (location: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    name?: string;
+  }) => {
+    setDetailsData({
+      ...detailsData,
+      map_latitude: location.latitude.toString(),
+      map_longitude: location.longitude.toString(),
+    });
+    setShowLocationPicker(false);
+  };
+
+  const handleSaveDetails = async () => {
+    if (!editingRegionForDetails || !user) {
+      toast({
+        title: 'Erro',
+        description: 'Região não selecionada ou usuário não autenticado',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingDetails(true);
+    try {
+      const regionId = editingRegionForDetails.id;
+
+      // Upload de novas imagens da galeria
+      const newUploadedUrls = await uploadGalleryImages(regionId);
+      const allGalleryImages = [...galleryImages, ...newUploadedUrls];
+
+      // Preparar dados
+      const highlights = detailsData.highlights
+        ? detailsData.highlights.split('\n').map(h => h.trim()).filter(h => h)
+        : [];
+
+      const socialLinks = {
+        ...(detailsData.social_instagram && { instagram: detailsData.social_instagram }),
+        ...(detailsData.social_facebook && { facebook: detailsData.social_facebook }),
+        ...(detailsData.social_youtube && { youtube: detailsData.social_youtube }),
+      };
+
+      const videoUrlRaw = detailsData.video_url?.trim();
+      const videoUrl = videoUrlRaw && videoUrlRaw.length > 0 ? videoUrlRaw : null;
+      
+      const mapLat = detailsData.map_latitude?.trim() 
+        ? (isNaN(parseFloat(detailsData.map_latitude)) ? null : parseFloat(detailsData.map_latitude))
+        : null;
+      const mapLng = detailsData.map_longitude?.trim()
+        ? (isNaN(parseFloat(detailsData.map_longitude)) ? null : parseFloat(detailsData.map_longitude))
+        : null;
+
+      const detailsPayload = {
+        tourist_region_id: regionId,
+        promotional_text: detailsData.promotional_text?.trim() || null,
+        video_url: videoUrl,
+        video_type: detailsData.video_type,
+        map_latitude: mapLat,
+        map_longitude: mapLng,
+        image_gallery: allGalleryImages,
+        official_website: detailsData.official_website?.trim() || null,
+        social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
+        contact_phone: detailsData.contact_phone?.trim() || null,
+        contact_email: detailsData.contact_email?.trim() || null,
+        highlights: highlights,
+        how_to_get_there: detailsData.how_to_get_there?.trim() || null,
+        best_time_to_visit: detailsData.best_time_to_visit?.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Verificar se já existe detalhes para esta região
+      const { data: existingDetails } = await supabase
+        .from('destination_details')
+        .select('id')
+        .eq('tourist_region_id', regionId)
+        .single();
+
+      if (existingDetails) {
+        // Atualizar
+        const { error } = await supabase
+          .from('destination_details')
+          .update(detailsPayload)
+          .eq('id', existingDetails.id);
+
+        if (error) throw error;
+      } else {
+        // Criar
+        const { error } = await supabase
+          .from('destination_details')
+          .insert(detailsPayload);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Sucesso',
+        description: 'Detalhes da região salvos com sucesso!',
+      });
+
+      setDetailsDialogOpen(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar detalhes:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao salvar detalhes da região',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingDetails(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -333,23 +637,34 @@ export default function TouristRegionsManager() {
                   <strong>{region.highlights.length}</strong> destaques
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(region)}
+                    className="flex-1"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(region)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleEdit(region)}
-                  className="flex-1"
+                  onClick={() => handleManageDetails(region)}
+                  className="w-full"
                 >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(region)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
+                  <Star className="h-4 w-4 mr-1" />
+                  Gerenciar Detalhes
                 </Button>
               </div>
             </CardContent>
@@ -557,6 +872,255 @@ export default function TouristRegionsManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Gerenciar Detalhes da Região */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Gerenciar Detalhes - {editingRegionForDetails?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Texto Promocional */}
+            <div>
+              <Label htmlFor="promotional_text">Texto Promocional</Label>
+              <Textarea
+                id="promotional_text"
+                value={detailsData.promotional_text}
+                onChange={(e) => setDetailsData({ ...detailsData, promotional_text: e.target.value })}
+                placeholder="Texto promocional sobre a região..."
+                rows={4}
+              />
+            </div>
+
+            {/* Vídeo */}
+            <div>
+              <Label htmlFor="video_url">URL do Vídeo (YouTube)</Label>
+              <Input
+                id="video_url"
+                value={detailsData.video_url}
+                onChange={(e) => setDetailsData({ ...detailsData, video_url: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+              {detailsData.video_url && (
+                <div className="mt-2">
+                  <iframe
+                    src={detailsData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+                      ? `https://www.youtube.com/embed/${detailsData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1]}`
+                      : detailsData.video_url}
+                    className="w-full h-48 rounded"
+                    allowFullScreen
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Localização no Mapa */}
+            <div>
+              <Label>Localização no Mapa</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  placeholder="Latitude"
+                  type="number"
+                  step="any"
+                  value={detailsData.map_latitude}
+                  onChange={(e) => setDetailsData({ ...detailsData, map_latitude: e.target.value })}
+                  className="flex-1 bg-gray-50"
+                  readOnly
+                />
+                <Input
+                  placeholder="Longitude"
+                  type="number"
+                  step="any"
+                  value={detailsData.map_longitude}
+                  onChange={(e) => setDetailsData({ ...detailsData, map_longitude: e.target.value })}
+                  className="flex-1 bg-gray-50"
+                  readOnly
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowLocationPicker(true)}
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Escolher no Mapa
+                </Button>
+              </div>
+            </div>
+
+            {/* Highlights */}
+            <div>
+              <Label htmlFor="highlights">Principais Atrações (uma por linha)</Label>
+              <Textarea
+                id="highlights"
+                value={detailsData.highlights}
+                onChange={(e) => setDetailsData({ ...detailsData, highlights: e.target.value })}
+                placeholder="Flutuação em rios cristalinos&#10;Cachoeiras paradisíacas&#10;Grutas e cavernas"
+                rows={4}
+              />
+            </div>
+
+            {/* Como Chegar e Melhor Época */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="how_to_get_there">Como Chegar</Label>
+                <Textarea
+                  id="how_to_get_there"
+                  value={detailsData.how_to_get_there}
+                  onChange={(e) => setDetailsData({ ...detailsData, how_to_get_there: e.target.value })}
+                  placeholder="Instruções de como chegar..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="best_time_to_visit">Melhor Época</Label>
+                <Textarea
+                  id="best_time_to_visit"
+                  value={detailsData.best_time_to_visit}
+                  onChange={(e) => setDetailsData({ ...detailsData, best_time_to_visit: e.target.value })}
+                  placeholder="De março a novembro..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Contato */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contact_phone">Telefone</Label>
+                <Input
+                  id="contact_phone"
+                  value={detailsData.contact_phone}
+                  onChange={(e) => setDetailsData({ ...detailsData, contact_phone: e.target.value })}
+                  placeholder="(67) 3318-7600"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contact_email">E-mail</Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  value={detailsData.contact_email}
+                  onChange={(e) => setDetailsData({ ...detailsData, contact_email: e.target.value })}
+                  placeholder="contato@regiao.com"
+                />
+              </div>
+            </div>
+
+            {/* Links Oficiais */}
+            <div>
+              <Label htmlFor="official_website">Site Oficial</Label>
+              <Input
+                id="official_website"
+                value={detailsData.official_website}
+                onChange={(e) => setDetailsData({ ...detailsData, official_website: e.target.value })}
+                placeholder="https://www.regiao.com"
+              />
+            </div>
+
+            {/* Redes Sociais */}
+            <div>
+              <Label>Redes Sociais</Label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <Input
+                  placeholder="Instagram URL"
+                  value={detailsData.social_instagram}
+                  onChange={(e) => setDetailsData({ ...detailsData, social_instagram: e.target.value })}
+                />
+                <Input
+                  placeholder="Facebook URL"
+                  value={detailsData.social_facebook}
+                  onChange={(e) => setDetailsData({ ...detailsData, social_facebook: e.target.value })}
+                />
+                <Input
+                  placeholder="YouTube URL"
+                  value={detailsData.social_youtube}
+                  onChange={(e) => setDetailsData({ ...detailsData, social_youtube: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Galeria de Imagens */}
+            <div>
+              <Label>Galeria de Imagens</Label>
+              <div className="flex items-center gap-2 mt-2">
+                <Input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleGalleryFileSelect}
+                  className="flex-1"
+                />
+              </div>
+              {(galleryImages.length > 0 || galleryPreviews.length > 0) && (
+                <div className="grid grid-cols-4 gap-4 mt-4">
+                  {galleryImages.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={url}
+                        alt={`Galeria ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"
+                        onClick={() => removeGalleryImage(index, false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {galleryPreviews.map((preview, index) => (
+                    <div key={`preview-${index}`} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"
+                        onClick={() => removeGalleryImage(galleryImages.length + index, true)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveDetails} disabled={uploadingDetails}>
+              {uploadingDetails && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar Detalhes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* LocationPicker para selecionar coordenadas */}
+      <LocationPicker
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationSelect={handleLocationSelect}
+        initialLocation={
+          detailsData.map_latitude && detailsData.map_longitude
+            ? {
+                latitude: parseFloat(detailsData.map_latitude),
+                longitude: parseFloat(detailsData.map_longitude),
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react';
-import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Globe, Heart } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Globe, Heart, Send, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useBrand } from '@/context/BrandContext';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
 const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -132,121 +135,246 @@ const UniversalFooter = () => {
     );
   }
 
-  // Footer equilibrado para Descubra MS
+  // Footer reorganizado em 4 colunas para Descubra MS
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setNewsletterLoading(true);
+    // TODO: Integrar com backend quando disponível
+    setTimeout(() => {
+      toast({
+        title: "Inscrição realizada!",
+        description: "Você receberá nossas novidades em breve.",
+      });
+      setNewsletterEmail('');
+      setNewsletterLoading(false);
+    }, 1000);
+  };
+
   return (
     <footer className="bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green text-white">
       <div className="ms-container">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-6">
-          {/* Coluna Esquerda - Logo, Descrição e Redes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-12">
+          {/* Coluna 1 - Logo, Descrição e Contato */}
           <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start mb-2">
+            <div className="flex items-center justify-center lg:justify-start mb-4">
               <img 
                 src="/images/logo-descubra-ms.png?v=3" 
                 alt="Descubra Mato Grosso do Sul" 
-                className="h-10 w-auto"
+                className="h-12 w-auto"
               />
             </div>
-            <p className="text-blue-100 text-xs mb-3">
-              Descubra as maravilhas do Pantanal, Cerrado e muito mais.
+            <p className="text-blue-100 text-sm mb-4 leading-relaxed">
+              Viva experiências únicas e descubra as belezas de Mato Grosso do Sul.
             </p>
-            <div className="flex space-x-3 justify-center lg:justify-start">
+            
+            {/* Contato */}
+            <div className="space-y-2 mb-4">
+              {msSettings.phone && (
+                <div className="flex items-center justify-center lg:justify-start gap-2 text-blue-100 text-sm">
+                  <Phone className="h-4 w-4 flex-shrink-0" />
+                  <span>{msSettings.phone}</span>
+                </div>
+              )}
+              {msSettings.email && (
+                <div className="flex items-start justify-center lg:justify-start gap-2 text-blue-100 text-sm">
+                  <Mail className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span className="break-words">{msSettings.email}</span>
+                </div>
+              )}
+              {msSettings.address && (
+                <div className="flex items-start justify-center lg:justify-start gap-2 text-blue-100 text-sm">
+                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span className="break-words">{msSettings.address}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Redes Sociais */}
+            <div className="flex space-x-4 justify-center lg:justify-start">
               {msSettings.social_media.facebook && (
                 <a href={msSettings.social_media.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors" aria-label="Facebook">
-                  <Facebook className="h-4 w-4" />
+                  <Facebook className="h-5 w-5" />
                 </a>
               )}
               {msSettings.social_media.instagram && (
                 <a href={msSettings.social_media.instagram} target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors" aria-label="Instagram">
-                  <Instagram className="h-4 w-4" />
+                  <Instagram className="h-5 w-5" />
                 </a>
               )}
               {msSettings.social_media.twitter && (
                 <a href={msSettings.social_media.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors" aria-label="Twitter">
-                  <Twitter className="h-4 w-4" />
+                  <Twitter className="h-5 w-5" />
                 </a>
               )}
             </div>
           </div>
 
-          {/* Coluna Direita - Links em 3 Colunas */}
-          <div className="grid grid-cols-3 gap-3 lg:gap-4 items-start">
-            {/* Explore */}
-            <div className="text-center lg:text-left">
-              <h3 className="text-xs font-semibold mb-2 text-white">Explore</h3>
-              <ul className="space-y-1.5">
-                <li>
-                  <Link to="/descubrams" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Início
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/descubrams/destinos" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Destinos
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/descubrams/eventos" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Eventos
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/descubrams/parceiros" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Parceiros
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/descubrams/partner/login" className="text-blue-100 hover:text-white text-xs transition-colors block">
-                    Área do Parceiro
-                  </Link>
-                </li>
-              </ul>
-            </div>
+          {/* Coluna 2 - Explore */}
+          <div className="text-center lg:text-left">
+            <h3 className="text-sm font-bold mb-4 text-white">Explore</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/descubrams" className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  <ArrowRight className="h-3 w-3" />
+                  Início
+                </Link>
+              </li>
+              <li>
+                <Link to="/descubrams/destinos" className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  <ArrowRight className="h-3 w-3" />
+                  Destinos
+                </Link>
+              </li>
+              <li>
+                <Link to="/descubrams/eventos" className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  <ArrowRight className="h-3 w-3" />
+                  Eventos
+                </Link>
+              </li>
+              <li>
+                <Link to="/descubrams/parceiros" className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  <ArrowRight className="h-3 w-3" />
+                  Parceiros
+                </Link>
+              </li>
+              <li>
+                <Link to="/descubrams/mapa-turistico" className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  <ArrowRight className="h-3 w-3" />
+                  Mapa Turístico
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-            {/* Contato */}
-            <div className="text-center lg:text-left">
-              <h3 className="text-xs font-semibold mb-2 text-white">Contato</h3>
-              <ul className="space-y-2">
-                {msSettings.email && (
-                  <li className="text-blue-100 text-xs">
-                    <div className="flex items-start justify-center lg:justify-start gap-1.5 max-w-full">
-                      <Mail className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                      <span className="break-words leading-relaxed hyphens-auto" style={{ wordBreak: 'break-word', maxWidth: '100%' }}>
-                        {msSettings.email}
-                      </span>
-                    </div>
-                  </li>
-                )}
-                {msSettings.phone && (
-                  <li className="flex items-center justify-center lg:justify-start gap-1.5 text-blue-100 text-xs">
-                    <Phone className="h-3 w-3 flex-shrink-0" />
-                    <span>{msSettings.phone}</span>
-                  </li>
-                )}
-              </ul>
-            </div>
+          {/* Coluna 3 - Funcionalidades */}
+          <div className="text-center lg:text-left">
+            <h3 className="text-sm font-bold mb-4 text-white">Funcionalidades</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link 
+                  to="/descubrams/guata"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Guatá IA
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/descubrams/passaporte"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Passaporte Digital
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/descubrams/mapa-turistico"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Mapa Turístico
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/descubrams/sobre"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Sobre MS
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/descubrams/partner/login"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Área do Parceiro
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Coluna 4 - Newsletter e Legal */}
+          <div className="text-center lg:text-left">
+            {/* Newsletter */}
+            <h3 className="text-sm font-bold mb-4 text-white">Newsletter</h3>
+            <form onSubmit={handleNewsletterSubmit} className="mb-6">
+              <div className="flex flex-col gap-2">
+                <Input
+                  type="email"
+                  placeholder="Seu e-mail..."
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:bg-white/20"
+                />
+                <Button
+                  type="submit"
+                  disabled={newsletterLoading}
+                  className="bg-ms-secondary-yellow text-gray-900 hover:bg-ms-secondary-yellow/90 font-semibold w-full"
+                >
+                  {newsletterLoading ? (
+                    'Enviando...'
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-blue-200 text-xs mt-2 text-center lg:text-left">
+                Ao enviar você concorda com todos os termos e políticas.
+              </p>
+            </form>
 
             {/* Legal */}
-            <div className="text-center lg:text-left">
-              <h3 className="text-xs font-semibold mb-2 text-white">Legal</h3>
-              <ul className="space-y-1.5">
-                <li>
-                  <Link 
-                    to="/descubrams/privacidade" 
-                    className="text-blue-100 hover:text-white text-xs transition-colors block"
-                  >
-                    Política de Privacidade
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    to="/descubrams/termos" 
-                    className="text-blue-100 hover:text-white text-xs transition-colors block"
-                  >
-                    Termos de Uso
-                  </Link>
-                </li>
-              </ul>
-            </div>
+            <h3 className="text-sm font-bold mb-4 text-white mt-6">Legal</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link 
+                  to="/descubrams/privacidade" 
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Política de Privacidade
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/descubrams/termos" 
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Termos de Uso
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/descubrams/sobre" 
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Fale Conosco
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
 
