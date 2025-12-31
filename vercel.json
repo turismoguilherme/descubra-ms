@@ -1,9 +1,24 @@
 {
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/auth/callback", "status": 302, "headers": { "Location": "/" } },
-    { "src": "/auth/confirm", "status": 302, "headers": { "Location": "/" } },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/auth/callback",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/",
+      "permanent": false
+    }
   ],
   "headers": [
     {
@@ -16,7 +31,7 @@
       ]
     },
     {
-      "source": "/:path*",
+      "source": "/index.html",
       "headers": [
         {
           "key": "Cache-Control",
