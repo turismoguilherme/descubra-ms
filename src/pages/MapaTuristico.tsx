@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import MSInteractiveMap from '@/components/map/MSInteractiveMap';
@@ -13,6 +13,11 @@ const MapaTuristico: React.FC = () => {
   const { regions: touristRegions, loading: regionsLoading } = useTouristRegions();
   const [selectedRegion, setSelectedRegion] = useState<TouristRegion2025 | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<TouristRegion2025 | null>(null);
+
+  // Scroll para o topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   console.log(`🔄 [MapaTuristico] Render - selectedRegion: ${selectedRegion?.slug || 'null'}`);
 
