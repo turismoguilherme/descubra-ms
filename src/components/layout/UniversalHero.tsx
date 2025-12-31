@@ -94,7 +94,7 @@ const UniversalHero = () => {
 
   return (
     <div 
-      className="relative min-h-[75vh] bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 flex items-center justify-center overflow-hidden hero-section"
+      className="relative min-h-screen bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 flex items-center justify-center overflow-hidden hero-section"
       style={{ 
         position: 'relative',
         zIndex: 1
@@ -104,19 +104,26 @@ const UniversalHero = () => {
       {embedUrl ? (
         <>
           {embedUrl.includes('youtube.com/embed') ? (
-            <div className="absolute inset-0 w-full h-full overflow-hidden">
+            <div className="absolute inset-0 w-full h-full overflow-hidden z-0">
               {/* Loading overlay - gradiente enquanto carrega */}
               {videoLoading && (
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 z-10 transition-opacity duration-500" style={{ opacity: videoReady ? 0 : 1 }}></div>
               )}
               <iframe
                 src={embedUrl}
-                className="absolute top-1/2 left-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full"
+                className="absolute inset-0 w-full h-full"
                 style={{
-                  transform: 'translate(-50%, -50%) scale(1.2)',
+                  width: '100vw',
+                  height: '100vh',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                  objectFit: 'cover',
+                  transform: 'scale(1.5)',
+                  transformOrigin: 'center center',
                   pointerEvents: 'none',
                   border: 'none',
-                  opacity: 1
+                  opacity: 1,
+                  zIndex: 1
                 }}
                 allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
                 allowFullScreen={false}
@@ -129,18 +136,25 @@ const UniversalHero = () => {
               />
             </div>
           ) : embedUrl.includes('vimeo.com') ? (
-            <div className="absolute inset-0 w-full h-full overflow-hidden">
+            <div className="absolute inset-0 w-full h-full overflow-hidden z-0">
               {videoLoading && (
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-teal-600 to-green-600 z-10 transition-opacity duration-500" style={{ opacity: videoReady ? 0 : 1 }}></div>
               )}
               <iframe
                 src={embedUrl}
-                className="absolute top-1/2 left-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full"
+                className="absolute inset-0 w-full h-full"
                 style={{
-                  transform: 'translate(-50%, -50%) scale(1.2)',
+                  width: '100vw',
+                  height: '100vh',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                  objectFit: 'cover',
+                  transform: 'scale(1.5)',
+                  transformOrigin: 'center center',
                   pointerEvents: 'none',
                   border: 'none',
-                  opacity: 1
+                  opacity: 1,
+                  zIndex: 1
                 }}
                 allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
                 allowFullScreen={false}
@@ -158,9 +172,13 @@ const UniversalHero = () => {
               muted
               playsInline
               preload="auto"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 z-0"
               style={{
-                opacity: videoReady ? 1 : 0
+                width: '100vw',
+                height: '100vh',
+                objectFit: 'cover',
+                opacity: videoReady ? 1 : 0,
+                zIndex: 1
               }}
               onLoadedData={() => {
                 setVideoLoading(false);
@@ -177,17 +195,18 @@ const UniversalHero = () => {
         </>
       ) : (
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-25 transition-opacity duration-1000"
+          className="absolute inset-0 bg-cover bg-center opacity-25 transition-opacity duration-1000 z-0"
           style={{
             backgroundImage: 'url("https://source.unsplash.com/photo-1482938289607-e9573fc25ebb")',
             backgroundPosition: 'center',
-            backgroundSize: 'cover'
+            backgroundSize: 'cover',
+            zIndex: 1
           }}
         ></div>
       )}
       
-      {/* Overlay bem mínimo para vídeo mais visível - apenas para legibilidade do texto */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/15"></div>
+      {/* Overlay para melhor legibilidade do texto - similar ao Descubra Mato Grosso */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/10 to-black/30 z-[2]"></div>
       
       {/* Content Container com animação */}
       <div 
@@ -247,8 +266,8 @@ const UniversalHero = () => {
         </div>
       </div>
       
-      {/* Bottom Gradient - Transição suave para próxima seção */}
-      <div className="absolute bottom-0 left-0 w-full h-72 bg-gradient-to-t from-white from-10% via-white/80 via-50% to-transparent"></div>
+      {/* Bottom Gradient Transition - Gradiente suave e gradual */}
+      <div className="absolute bottom-0 left-0 w-full h-56 bg-gradient-to-t from-white/70 from-0% via-white/50 via-25% via-white/30 via-45% to-transparent to-70% z-[3]"></div>
     </div>
   );
 };
