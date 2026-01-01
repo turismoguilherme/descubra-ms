@@ -103,7 +103,7 @@ const CATLocationManager = () => {
         .order('name');
 
       if (error) throw error;
-      setCATs(data || []);
+      setCATs((data || []) as CAT[]);
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar CATs',

@@ -18,8 +18,8 @@ export default function AISuggestions() {
 
   const fetchSuggestions = async () => {
     try {
-      const data = await aiAdminService.getActions('suggest');
-      setSuggestions(data || []);
+      const data = await aiAdminService.getActions('pending' as any);
+      setSuggestions((data || []) as AIAdminAction[]);
     } catch (error: any) {
       toast({
         title: 'Erro',

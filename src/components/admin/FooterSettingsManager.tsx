@@ -84,7 +84,7 @@ export default function FooterSettingsManager() {
         console.error('❌ [FooterSettingsManager] Erro ao carregar settings MS:', msError);
       } else if (msData?.setting_value) {
         console.log('✅ [FooterSettingsManager] Settings MS carregados:', msData.setting_value);
-        const loadedSettings = msData.setting_value as FooterSettings;
+        const loadedSettings = msData.setting_value as unknown as FooterSettings;
         // Garantir que partner_logos existe
         if (!loadedSettings.partner_logos) {
           loadedSettings.partner_logos = [];
@@ -107,7 +107,7 @@ export default function FooterSettingsManager() {
         console.error('❌ [FooterSettingsManager] Erro ao carregar settings ViaJAR:', viajarError);
       } else if (viajarData?.setting_value) {
         console.log('✅ [FooterSettingsManager] Settings ViaJAR carregados:', viajarData.setting_value);
-        const loadedSettings = viajarData.setting_value as FooterSettings;
+        const loadedSettings = viajarData.setting_value as unknown as FooterSettings;
         // Garantir que partner_logos existe
         if (!loadedSettings.partner_logos) {
           loadedSettings.partner_logos = [];
@@ -163,11 +163,11 @@ export default function FooterSettingsManager() {
         .upsert({
           platform,
           setting_key: 'footer',
-          setting_value: settingsToSave,
+          setting_value: settingsToSave as any,
           description: `Configurações do footer para ${platform === 'ms' ? 'Descubra MS' : 'ViaJAR'}`,
           updated_at: new Date().toISOString(),
           updated_by: authUser.id,
-        }, {
+        } as any, {
           onConflict: 'platform,setting_key'
         })
         .select();
@@ -268,6 +268,9 @@ export default function FooterSettingsManager() {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
+  const BUCKET_NAME = 'site-assets';
+  const currentPlatform = activeTab;
+
   // Função para upload de logo
   const uploadLogoFile = async (): Promise<string | null> => {
     if (!logoFile) return null;
@@ -275,7 +278,7 @@ export default function FooterSettingsManager() {
     try {
       setUploadingLogo(true);
       const fileExt = logoFile.name.split('.').pop();
-      const fileName = `footer-logos/${platform}/${generateId()}.${fileExt}`;
+      const fileName = `footer-logos/${currentPlatform}/${generateId()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
