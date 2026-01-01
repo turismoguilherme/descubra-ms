@@ -26,6 +26,9 @@ import { getRegionBySlug } from "@/data/touristRegions2025";
 import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { supabase } from "@/integrations/supabase/client";
 import { TouristRegion2025 } from "@/data/touristRegions2025";
+import RegionAttractions from "@/components/region/RegionAttractions";
+import RegionCitiesExpanded from "@/components/region/RegionCitiesExpanded";
+import RegionMap from "@/components/region/RegionMap";
 
 interface RegionDetails {
   id: string;
@@ -35,6 +38,7 @@ interface RegionDetails {
   video_type?: 'youtube' | 'upload' | null;
   map_latitude?: number | null;
   map_longitude?: number | null;
+  map_image_url?: string | null;
   tourism_tags?: string[] | null;
   image_gallery?: string[] | null;
   official_website?: string | null;
@@ -56,6 +60,7 @@ const RegiaoDetalhes = () => {
   const [regiao, setRegiao] = useState<TouristRegion2025 | null>(null);
   const [regionDbId, setRegionDbId] = useState<string | null>(null);
   const [details, setDetails] = useState<RegionDetails | null>(null);
+  const [regionCities, setRegionCities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -101,6 +106,18 @@ const RegiaoDetalhes = () => {
           if (detailsData) {
             setDetails(detailsData as RegionDetails);
           }
+
+          // Buscar cidades da região com detalhes
+          const { data: citiesData } = await supabase
+            .from('region_cities')
+            .select('*')
+            .eq('tourist_region_id', dbRegion.id)
+            .eq('is_active', true)
+            .order('order_index', { ascending: true });
+
+          if (citiesData) {
+            setRegionCities(citiesData);
+          }
         } else {
           // Fallback para dados do arquivo estático
           const staticRegion = touristRegions.find(r => r.slug === slug) || getRegionBySlug(slug);
@@ -133,6 +150,17 @@ const RegiaoDetalhes = () => {
   const allImages = details?.image_gallery && details.image_gallery.length > 0
     ? details.image_gallery
     : (regiao?.image ? [regiao.image] : []);
+
+  // Slideshow automático do hero (troca a cada 5 segundos)
+  useEffect(() => {
+    if (allImages.length <= 1) return; // Não precisa de slideshow se tiver apenas 1 imagem
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, 5000); // 5 segundos
+
+    return () => clearInterval(interval);
+  }, [allImages.length]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -287,37 +315,24 @@ const RegiaoDetalhes = () => {
                 Voltar para Regiões Turísticas
               </Link>
               
-              {displayHighlights.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {displayHighlights.slice(0, 5).map((highlight, index) => (
-                    <Badge key={index} className="bg-ms-secondary-yellow text-black">
-                      {highlight}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-2">
                 {regiao.name}
               </h1>
-              <p className="text-white/90 flex items-center text-lg">
-                <MapPin className="w-5 h-5 mr-2" />
-                {regiao.cities.join(', ')} - MS
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Conteúdo Principal */}
-        <div className="bg-gray-50">
+        {/* Conteúdo Principal - Reorganizado */}
+        <div className="bg-white">
+          {/* 1. Sobre a Região + Vídeo */}
           <div className="ms-container py-12">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Coluna Principal */}
+              {/* Coluna Principal - Sobre e Vídeo */}
               <div className="lg:col-span-2 space-y-8">
                 {/* Descrição/Promocional da Região */}
                 {promotionalText && (
-                  <div className="bg-white rounded-2xl p-8 shadow-sm">
-                    <h2 className="text-2xl font-bold text-ms-primary-blue mb-4">
+                  <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                    <h2 className="text-3xl font-bold text-ms-primary-blue mb-6">
                       Sobre a Região {regiao.name}
                     </h2>
                     <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-line">
@@ -328,7 +343,7 @@ const RegiaoDetalhes = () => {
 
                 {/* Vídeo Promocional */}
                 {details?.video_url && (
-                  <div className="bg-white rounded-2xl p-8 shadow-sm">
+                  <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
                     <h2 className="text-2xl font-bold text-ms-primary-blue mb-6 flex items-center">
                       <Play className="w-6 h-6 mr-2" />
                       Vídeo Promocional
@@ -353,41 +368,9 @@ const RegiaoDetalhes = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Galeria de Fotos */}
-                {details?.image_gallery && details.image_gallery.length > 0 && (
-                  <div className="bg-white rounded-2xl p-8 shadow-sm">
-                    <h2 className="text-2xl font-bold text-ms-primary-blue mb-6">
-                      Galeria de Fotos
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {details.image_gallery.map((image, index) => (
-                        <div
-                          key={index}
-                          onClick={() => openLightbox(index)}
-                          className="relative group cursor-pointer overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all bg-gray-100"
-                        >
-                          <img
-                            src={image}
-                            alt={`${regiao.name} - Foto ${index + 1}`}
-                            className="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="bg-white/95 rounded-full p-3 shadow-lg">
-                                <ChevronRight className="w-5 h-5 text-ms-primary-blue" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Sidebar */}
+              {/* Sidebar - Informações Gerais */}
               <div className="space-y-6">
                 {/* Links Oficiais */}
                 {(details?.official_website || details?.social_links?.instagram || details?.social_links?.facebook || details?.social_links?.youtube) && (
@@ -477,66 +460,6 @@ const RegiaoDetalhes = () => {
                   </div>
                 )}
 
-                {/* Melhor época */}
-                {details?.best_time_to_visit && (
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-ms-primary-blue mb-3 flex items-center">
-                      <Calendar className="w-5 h-5 mr-2" />
-                      Melhor Época
-                    </h3>
-                    <p className="text-gray-600 whitespace-pre-line">
-                      {details.best_time_to_visit}
-                    </p>
-                  </div>
-                )}
-
-                {/* Como chegar */}
-                {details?.how_to_get_there && (
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-ms-primary-blue mb-3 flex items-center">
-                      <Car className="w-5 h-5 mr-2" />
-                      Como Chegar
-                    </h3>
-                    <p className="text-gray-600 whitespace-pre-line">
-                      {details.how_to_get_there}
-                    </p>
-                  </div>
-                )}
-
-                {/* Mapa */}
-                {details?.map_latitude && details?.map_longitude && (
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-ms-primary-blue mb-4 flex items-center">
-                      <MapPin className="w-5 h-5 mr-2" />
-                      Localização
-                    </h3>
-                    <div className="aspect-square rounded-xl overflow-hidden mb-4">
-                      <iframe
-                        src={`https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d50000!2d${details.map_longitude}!3d${details.map_latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1spt-BR!2sbr!4v1`}
-                        className="w-full h-full"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title={`Mapa de ${regiao.name}`}
-                      />
-                    </div>
-                    <Button
-                      className="w-full bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-                      asChild
-                    >
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${details.map_latitude},${details.map_longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Abrir no Google Maps
-                      </a>
-                    </Button>
-                  </div>
-                )}
-
                 {/* Botão para voltar */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <Link to="/descubrams/destinos">
@@ -552,6 +475,36 @@ const RegiaoDetalhes = () => {
               </div>
             </div>
           </div>
+
+          {/* 2. Mapa da Região */}
+          {details?.map_image_url && regiao && (
+            <div className="bg-gray-50 py-12">
+              <RegionMap 
+                region={regiao} 
+                mapImageUrl={details.map_image_url}
+              />
+            </div>
+          )}
+
+          {/* 3. Principais Atrativos da Região */}
+          {displayHighlights.length > 0 && regiao && (
+            <div className="bg-white py-12">
+              <RegionAttractions 
+                region={regiao} 
+                highlights={displayHighlights}
+              />
+            </div>
+          )}
+
+          {/* 4. Cidades da Região (Expandidas com galerias individuais) */}
+          {regiao && (
+            <div className="bg-gray-50">
+              <RegionCitiesExpanded 
+                region={regiao}
+                cities={regionCities}
+              />
+            </div>
+          )}
         </div>
 
         {/* Lightbox Modal */}

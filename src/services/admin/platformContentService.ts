@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { contentTranslationService } from '@/services/translation/ContentTranslationService';
+import type { LanguageCode } from '@/utils/translationHelpers';
+import { withAutoRefresh } from '@/utils/supabaseInterceptor';
 
 export interface PlatformContent {
   id: string;
@@ -181,60 +184,140 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
 
 export const platformContentService = {
   async getContent(keys?: string[]): Promise<PlatformContent[]> {
-    let query = supabase
-      .from('institutional_content')
-      .select('*')
-      .order('content_key');
+    const { data, error } = await withAutoRefresh(async () => {
+      let query = supabase
+        .from('institutional_content')
+        .select('*')
+        .order('content_key');
 
-    if (keys && keys.length > 0) {
-      query = query.in('content_key', keys);
-    }
+      if (keys && keys.length > 0) {
+        query = query.in('content_key', keys);
+      }
 
-    const { data, error } = await query;
+      return await query;
+    });
+    
     if (error) throw error;
     return (data || []) as PlatformContent[];
   },
 
-  async getContentByPrefix(prefix: string): Promise<PlatformContent[]> {
-    console.log(`🔍 [platformContentService] Buscando conteúdo com prefixo: ${prefix}`);
-    const { data, error } = await supabase
-      .from('institutional_content')
-      .select('*')
-      .ilike('content_key', `${prefix}%`)
-      .eq('is_active', true)
-      .order('content_key');
+  async getContentByPrefix(prefix: string, languageCode?: LanguageCode): Promise<PlatformContent[]> {
+    console.log(`🔍 [platformContentService] Buscando conteúdo com prefixo: ${prefix}`, languageCode ? `(idioma: ${languageCode})` : '');
+    
+    const { data, error } = await withAutoRefresh(async () => {
+      return await supabase
+        .from('institutional_content')
+        .select('*')
+        .ilike('content_key', `${prefix}%`)
+        .eq('is_active', true)
+        .order('content_key');
+    });
 
     if (error) {
       console.error(`❌ [platformContentService] Erro ao buscar conteúdo com prefixo ${prefix}:`, error);
       throw error;
     }
     
-    console.log(`✅ [platformContentService] Encontrados ${data?.length || 0} itens com prefixo ${prefix}:`, 
-      data?.map(item => ({ key: item.content_key, hasValue: !!item.content_value, isActive: item.is_active })));
+    const contents = (data || []) as PlatformContent[];
     
-    return (data || []) as PlatformContent[];
+    // Se não for português e tiver idioma especificado, buscar traduções
+    if (languageCode && languageCode !== 'pt-BR' && contents.length > 0) {
+      const contentKeys = contents.map(c => c.content_key);
+      const translations = await contentTranslationService.getTranslations(
+        contentKeys,
+        languageCode
+      );
+      
+      // Aplicar traduções aos conteúdos
+      const translatedContents = contents.map(content => {
+        const translation = translations.get(content.content_key);
+        if (translation && translation.content?.content_value) {
+          return {
+            ...content,
+            content_value: translation.content.content_value,
+          };
+        }
+        return content;
+      });
+      
+      console.log(`✅ [platformContentService] Encontrados ${translatedContents.length} itens (${translations.size} traduzidos)`);
+      return translatedContents;
+    }
+    
+    console.log(`✅ [platformContentService] Encontrados ${contents.length} itens com prefixo ${prefix}`);
+    return contents;
   },
 
   async updateContent(id: string, value: string): Promise<void> {
-    const { error } = await supabase
-      .from('institutional_content')
-      .update({ 
-        content_value: value,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
+    // Garantir que value seja sempre string (permitir valores vazios)
+    const contentValue = value !== null && value !== undefined ? value : '';
+    console.log('📝 [platformContentService] updateContent chamado:', {
+      id,
+      value: contentValue.substring(0, 100),
+      valueLength: contentValue.length,
+      isNull: value === null,
+      isUndefined: value === undefined
+    });
+    
+    const { data, error } = await withAutoRefresh(async () => {
+      return await supabase
+        .from('institutional_content')
+        .update({ 
+          content_value: contentValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select();
+    });
 
-    if (error) throw error;
+    console.log('📝 [platformContentService] updateContent resultado:', {
+      id,
+      error: error?.message || null,
+      updatedRows: data?.length || 0,
+      updatedValue: data?.[0]?.content_value?.substring(0, 100) || null,
+      fullData: data?.[0]
+    });
+
+    if (error) {
+      console.error('❌ [platformContentService] Erro no updateContent:', error);
+      throw error;
+    }
   },
 
   async createContent(content: Omit<PlatformContent, 'id' | 'created_at' | 'updated_at'>): Promise<PlatformContent> {
-    const { data, error } = await supabase
-      .from('institutional_content')
-      .insert([content])
-      .select()
-      .single();
+    // Garantir que content_value seja sempre string (permitir valores vazios)
+    const contentToInsert = {
+      ...content,
+      content_value: content.content_value !== null && content.content_value !== undefined ? content.content_value : ''
+    };
+    console.log('➕ [platformContentService] createContent chamado:', {
+      contentKey: contentToInsert.content_key,
+      contentValue: contentToInsert.content_value?.substring(0, 100) || '',
+      contentValueLength: contentToInsert.content_value?.length || 0,
+      contentType: contentToInsert.content_type,
+      fullContent: contentToInsert
+    });
+    
+    const { data, error } = await withAutoRefresh(async () => {
+      return await supabase
+        .from('institutional_content')
+        .insert([contentToInsert])
+        .select()
+        .single();
+    });
 
-    if (error) throw error;
+    console.log('➕ [platformContentService] createContent resultado:', {
+      error: error?.message || null,
+      createdId: data?.id || null,
+      createdValue: data?.content_value?.substring(0, 100) || null,
+      createdValueLength: data?.content_value?.length || 0,
+      fullData: data
+    });
+
+    if (error) {
+      console.error('❌ [platformContentService] Erro no createContent:', error);
+      throw error;
+    }
     return data as PlatformContent;
   },
 
@@ -261,11 +344,13 @@ export const platformContentService = {
     console.log('✅ [platformContentService] Usuário autorizado:', { userId: user.id, roles: userRoles.map(r => r.role) });
     
     // Primeiro, verificar se o conteúdo já existe
-    const { data: existing, error: selectError } = await supabase
-      .from('institutional_content')
-      .select('id, content_key, content_value')
-      .eq('content_key', key)
-      .maybeSingle();
+    const { data: existing, error: selectError } = await withAutoRefresh(async () => {
+      return await supabase
+        .from('institutional_content')
+        .select('id, content_key, content_value')
+        .eq('content_key', key)
+        .maybeSingle();
+    });
 
     console.log('🔍 [platformContentService] Verificação existente:', { existing, selectError });
 
@@ -278,14 +363,16 @@ export const platformContentService = {
     if (existing && existing.id) {
       // Atualizar existente
       console.log('📝 [platformContentService] Atualizando conteúdo existente:', existing.id);
-      const { data: updated, error: updateError } = await supabase
-        .from('institutional_content')
-        .update({ 
-          content_value: value,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existing.id)
-        .select();
+      const { data: updated, error: updateError } = await withAutoRefresh(async () => {
+        return await supabase
+          .from('institutional_content')
+          .update({ 
+            content_value: value,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select();
+      });
 
       if (updateError) {
         console.error('❌ [platformContentService] Erro ao atualizar:', updateError);
@@ -301,16 +388,18 @@ export const platformContentService = {
     } else {
       // Criar novo
       console.log('➕ [platformContentService] Criando novo conteúdo');
-      const { data: inserted, error: insertError } = await supabase
-        .from('institutional_content')
-        .insert([{
-          content_key: key,
-          content_value: value,
-          content_type: type,
-          description: description || null,
-          is_active: true,
-        }])
-        .select();
+      const { data: inserted, error: insertError } = await withAutoRefresh(async () => {
+        return await supabase
+          .from('institutional_content')
+          .insert([{
+            content_key: key,
+            content_value: value,
+            content_type: type,
+            description: description || null,
+            is_active: true,
+          }])
+          .select();
+      });
 
       if (insertError) {
         console.error('❌ [platformContentService] Erro ao inserir:', insertError);

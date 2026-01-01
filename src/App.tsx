@@ -94,6 +94,7 @@ import PromoverEventoMS from "@/pages/ms/PromoverEventoMS";
 import CadastrarEventoMS from "@/pages/ms/CadastrarEventoMS";
 import PrivacidadeMS from "@/pages/ms/PrivacidadeMS";
 import TermosUsoMS from "@/pages/ms/TermosUsoMS";
+import CookiesMS from "@/pages/ms/CookiesMS";
 import PartnerReservationPage from "@/pages/PartnerReservationPage";
 
 // ViaJAR Legal Pages
@@ -291,6 +292,7 @@ function App() {
                             {/* Descubra MS - Políticas */}
                             <Route path="/descubrams/privacidade" element={<PrivacidadeMS />} />
                             <Route path="/descubrams/termos" element={<TermosUsoMS />} />
+                            <Route path="/descubrams/cookies" element={<CookiesMS />} />
                             
                             <Route path="/descubrams/*" element={<MSIndex />} />
                             

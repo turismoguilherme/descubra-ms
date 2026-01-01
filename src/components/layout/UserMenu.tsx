@@ -129,7 +129,8 @@ const UserMenu = () => {
           </Link>
         </DropdownMenuItem>
 
-        {isManager && (
+        {/* Dashboard e Admin Técnico apenas para ViaJAR, não para Descubra MS */}
+        {!isDescubraMS && isManager && (
           <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Link to={getPathWithTenant(getDashboardRoute())} className="flex items-center">
               <BarChart3 className="mr-2 h-4 w-4" />
@@ -138,7 +139,7 @@ const UserMenu = () => {
           </DropdownMenuItem>
         )}
 
-        {isAdmin && (
+        {!isDescubraMS && isAdmin && (
           <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Link to={getPathWithTenant("/technical-admin")} className="flex items-center">
               <Shield className="mr-2 h-4 w-4 text-red-500" />

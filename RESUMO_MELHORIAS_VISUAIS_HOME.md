@@ -110,3 +110,5 @@ Se quiser continuar melhorando:
 - Acessibilidade mantida (animações respeitam prefers-reduced-motion)
 
 
+
+

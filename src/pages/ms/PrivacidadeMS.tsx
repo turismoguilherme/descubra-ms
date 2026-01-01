@@ -13,6 +13,9 @@ const PrivacidadeMS = () => {
   const [lastUpdated, setLastUpdated] = useState<string>('');
 
   useEffect(() => {
+    // Scroll para o topo quando o componente montar
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    
     const loadPolicy = async () => {
       try {
         const policy = await policyService.getPublishedPolicy('privacy_policy', 'descubra_ms');
@@ -28,6 +31,14 @@ const PrivacidadeMS = () => {
     };
     loadPolicy();
   }, []);
+
+  // Garantir scroll para topo após o conteúdo carregar
+  useEffect(() => {
+    if (!loading && contentRef.current) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      contentRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }
+  }, [loading]);
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');

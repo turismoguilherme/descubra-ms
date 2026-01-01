@@ -367,11 +367,11 @@ const UniversalFooter = () => {
               </li>
               <li>
                 <Link 
-                  to="/descubrams/sobre" 
+                  to="/descubrams/cookies" 
                   className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
                 >
                   <ArrowRight className="h-3 w-3" />
-                  Fale Conosco
+                  Cookies
                 </Link>
               </li>
             </ul>

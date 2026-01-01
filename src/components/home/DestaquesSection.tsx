@@ -4,18 +4,20 @@ import { InteractionTracker } from "@/services/tracking/InteractionTrackerServic
 import { MapPin, ArrowRight, Compass } from "lucide-react";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { touristRegions2025 } from "@/data/touristRegions2025";
 
 // Usar regiões turísticas em vez de destinos individuais
 
 const DestaquesSection = () => {
   const { t } = useTranslation('pages');
+  const { language } = useLanguage();
   const [content, setContent] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const contents = await platformContentService.getContentByPrefix('ms_destinations_');
+        const contents = await platformContentService.getContentByPrefix('ms_destinations_', language);
         const contentMap: Record<string, string> = {};
         contents.forEach(item => {
           contentMap[item.content_key] = item.content_value || '';
@@ -26,7 +28,7 @@ const DestaquesSection = () => {
       }
     };
     loadContent();
-  }, []);
+  }, [language]);
 
   // Pegar as 6 principais regiões turísticas
   const regioesDestaque = touristRegions2025.slice(0, 6);

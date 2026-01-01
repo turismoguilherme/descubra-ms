@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, Map, Brain, Shield, Globe, Building2, TrendingUp, Calendar, FileText, MapPin, Sparkles, CheckCircle2 } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import CookieConsentBanner from '@/components/cookies/CookieConsentBanner';
 import { platformContentService } from '@/services/admin/platformContentService';
 // CommercialSection removido temporariamente
 
@@ -519,6 +520,7 @@ const ViaJARSaaS = () => {
 
 
       <ViaJARFooter />
+      <CookieConsentBanner platform="viajar" />
     </div>
   );
 };

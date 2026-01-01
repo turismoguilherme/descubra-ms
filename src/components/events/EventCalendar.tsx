@@ -228,13 +228,26 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         (event.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (event.location || '').toLowerCase().includes(searchTerm.toLowerCase());
       
-      // Filtro por região turística
+      // Filtro por região turística - usar tourist_region.slug se disponível, senão fallback para mapeamento por cidade
       let matchesRegion = selectedRegion === 'all';
-      if (!matchesRegion && selectedRegion in regionCities) {
-        const cities = regionCities[selectedRegion];
-        matchesRegion = cities.some(city => 
-          (event.location || '').toLowerCase().includes(city.toLowerCase())
-        );
+      if (!matchesRegion) {
+        // Prioridade 1: usar tourist_region.slug se disponível
+        if (event.tourist_region?.slug) {
+          matchesRegion = event.tourist_region.slug === selectedRegion;
+        } 
+        // Prioridade 2: usar tourist_region_id se disponível (buscar slug correspondente)
+        else if (event.tourist_region_id) {
+          // Se temos tourist_region_id mas não temos o objeto completo, usar fallback
+          // Mas como já buscamos com join, devemos ter o objeto
+          matchesRegion = false; // Se não temos slug, não podemos fazer match direto
+        }
+        // Fallback: mapeamento por cidade (para eventos antigos sem tourist_region_id)
+        if (!matchesRegion && selectedRegion in regionCities) {
+          const cities = regionCities[selectedRegion];
+          matchesRegion = cities.some(city => 
+            (event.location || '').toLowerCase().includes(city.toLowerCase())
+          );
+        }
       }
       
       return matchesSearch && matchesRegion;
@@ -574,13 +587,18 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                           )}
                         </div>
 
-      {/* Modal de Detalhes - MODERNO */}
+      {/* Modal de Detalhes - MELHORADO */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-2xl [&>button]:hidden">
+        <DialogContent className="max-w-4xl max-h-[95vh] p-0 overflow-hidden rounded-3xl shadow-2xl [&>button]:hidden border-0">
           {selectedEvent && (() => {
-            // Função para determinar a região turística (igual ao card)
-            const getTouristRegion = (location: string) => {
-              const locationLower = location.toLowerCase();
+            // Usar tourist_region do evento se disponível, senão calcular pela localização
+            const getTouristRegionSlug = () => {
+              if (selectedEvent.tourist_region?.slug) {
+                return selectedEvent.tourist_region.slug;
+              }
+              
+              // Fallback: calcular pela localização
+              const locationLower = (selectedEvent.location || '').toLowerCase();
               const regionMappings = {
                 'pantanal': ['corumbá', 'ladário', 'aquidauana', 'miranda', 'anastácio'],
                 'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
@@ -601,7 +619,24 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
               return 'descubra-ms';
             };
 
-            const touristRegion = getTouristRegion(selectedEvent.location);
+            const touristRegion = getTouristRegionSlug();
+            
+            // Definir mapeamentos de regiões
+            const regionNames = {
+              'pantanal': 'Pantanal',
+              'bonito-serra-bodoquena': 'Bonito-Serra da Bodoquena',
+              'vale-aguas': 'Vale das Águas',
+              'vale-apore': 'Vale do Aporé',
+              'rota-norte': 'Rota Norte',
+              'caminho-ipes': 'Caminho dos Ipês',
+              'caminhos-fronteira': 'Caminhos da Fronteira',
+              'costa-leste': 'Costa Leste',
+              'grande-dourados': 'Grande Dourados',
+              'descubra-ms': 'Descubra MS'
+            };
+            
+            const touristRegionName = selectedEvent.tourist_region?.name || regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms'];
+            
             const regionColors = {
               'pantanal': 'from-blue-600 to-cyan-600',
               'bonito-serra-bodoquena': 'from-green-600 to-emerald-600',
@@ -628,19 +663,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
               'descubra-ms': '🇧🇷'
             };
 
-            const regionNames = {
-              'pantanal': 'Pantanal',
-              'bonito-serra-bodoquena': 'Bonito-Serra da Bodoquena',
-              'vale-aguas': 'Vale das Águas',
-              'vale-apore': 'Vale do Aporé',
-              'rota-norte': 'Rota Norte',
-              'caminho-ipes': 'Caminho dos Ipês',
-              'caminhos-fronteira': 'Caminhos da Fronteira',
-              'costa-leste': 'Costa Leste',
-              'grande-dourados': 'Grande Dourados',
-              'descubra-ms': 'Descubra MS'
-            };
-
             const regionDescriptions = {
               'pantanal': 'A maior planície alagável do mundo, santuário de vida selvagem com onças-pintadas, ariranhas e mais de 650 espécies de aves.',
               'bonito-serra-bodoquena': 'Paraíso das águas cristalinas, cachoeiras e grutas. Experiência única de mergulho em rios e contato com a natureza.',
@@ -655,63 +677,63 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             };
 
             return (
-              <div className="relative max-h-[90vh] overflow-y-auto">
-                {/* Header com imagem/vídeo */}
-                <div className={`relative h-72 bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']} flex-shrink-0`}>
+              <div className="relative max-h-[95vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                {/* Header com imagem/vídeo - melhorado visualmente */}
+                <div className={`relative h-72 md:h-96 bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']} flex-shrink-0 overflow-hidden shadow-lg`}>
                   {selectedEvent.video_url && getYouTubeEmbedUrl(selectedEvent.video_url) ? (
                     <iframe
                       src={getYouTubeEmbedUrl(selectedEvent.video_url)!}
-                      className="w-full h-full"
+                      className="w-full h-full object-cover"
                       allowFullScreen
                       title="Vídeo do evento"
                     />
                   ) : selectedEvent.image_url ? (
                     <img
                       src={selectedEvent.image_url}
-                      alt={selectedEvent.name}
-                      className="w-full h-full object-cover"
+                      alt={getTranslatedName(selectedEvent)}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Calendar className="w-24 h-24 text-white/30" />
+                      <Calendar className="w-16 h-16 md:w-24 md:h-24 text-white/30" />
                     </div>
                   )}
 
                   {/* Overlay gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                  {/* Badges no topo */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {/* Badges no topo - melhorados */}
+                  <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 z-10">
                     {/* Badge destaque */}
                     {selectedEvent.is_sponsored && (
-                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-3 py-1">
-                        <Star className="w-3 h-3 mr-1" />
-                        Em Destaque
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-4 py-1.5 shadow-lg animate-pulse">
+                        <Star className="w-4 h-4 mr-1.5 fill-white" />
+                        <span className="font-semibold">Em Destaque</span>
                       </Badge>
                     )}
 
                     {/* Badge da região turística */}
-                    <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-3 py-1">
-                      <span className="mr-2">{regionEmojis[touristRegion as keyof typeof regionEmojis] || regionEmojis['descubra-ms']}</span>
-                      <span className="font-medium">{regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}</span>
+                    <Badge className="bg-white/90 backdrop-blur-md text-gray-800 border-0 px-4 py-1.5 shadow-lg font-semibold">
+                      <span className="mr-2 text-lg">{regionEmojis[touristRegion as keyof typeof regionEmojis] || regionEmojis['descubra-ms']}</span>
+                      <span>{touristRegionName}</span>
                     </Badge>
                   </div>
 
-                  {/* Título e região no overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                  {/* Título e região no overlay - melhorado */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-2xl leading-tight">
                       {getTranslatedName(selectedEvent)}
                     </h2>
-                    <p className="text-white/90 text-sm drop-shadow">
+                    <p className="text-white/95 text-sm md:text-base drop-shadow-lg line-clamp-2 font-medium">
                       {regionDescriptions[touristRegion as keyof typeof regionDescriptions] || regionDescriptions['descubra-ms']}
                     </p>
                   </div>
                 </div>
 
-                {/* Conteúdo */}
-                <div className="p-6 space-y-6">
+                {/* Conteúdo - melhorado */}
+                <div className="p-6 md:p-8 space-y-6 md:space-y-8 bg-gradient-to-b from-white to-gray-50">
                   {/* Informações principais */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Data e horário */}
                     <div className="space-y-3">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -743,8 +765,9 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                       </h3>
                       <div className="bg-gray-50 px-4 py-3 rounded-lg">
                         <p className="text-gray-700 font-medium">{getTranslatedLocation(selectedEvent)}</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {regionNames[touristRegion as keyof typeof regionNames] || regionNames['descubra-ms']}
+                        <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {touristRegionName}
                         </p>
                       </div>
                     </div>
@@ -780,11 +803,15 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                     </div>
                   )}
 
-                  {/* Botões de Ação */}
-                  <div className="flex flex-wrap gap-3 pt-4 border-t">
+                  {/* Botões de Ação - melhorados */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                     {selectedEvent.site_oficial && (
-                      <Button asChild size="lg" className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full">
-                        <a href={selectedEvent.site_oficial} target="_blank" rel="noopener noreferrer">
+                      <Button 
+                        asChild 
+                        size="lg" 
+                        className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full transition-all duration-300 hover:scale-105 flex-1 sm:flex-initial"
+                      >
+                        <a href={selectedEvent.site_oficial} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center">
                           <Globe className="w-4 h-4 mr-2" />
                           Visitar Site Oficial
                           <ExternalLink className="w-4 h-4 ml-2" />
@@ -792,8 +819,13 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                       </Button>
                     )}
                     {selectedEvent.organizador_telefone && (
-                      <Button variant="outline" size="lg" asChild className="rounded-full border-2">
-                        <a href={`https://wa.me/55${selectedEvent.organizador_telefone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        asChild 
+                        className="rounded-full border-2 transition-all duration-300 hover:scale-105 flex-1 sm:flex-initial"
+                      >
+                        <a href={`https://wa.me/55${selectedEvent.organizador_telefone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center">
                           <Phone className="w-4 h-4 mr-2" />
                           WhatsApp
                         </a>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Target, Eye, Award, Users, MapPin, Compass, Heart, TreePine, Star, ArrowRight } from 'lucide-react';
@@ -6,6 +6,11 @@ import UniversalLayout from '@/components/layout/UniversalLayout';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 
 const SobreMS = () => {
+  // Scroll para o topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <UniversalLayout>
       <main className="flex-grow bg-gradient-to-b from-blue-50 via-white to-green-50">

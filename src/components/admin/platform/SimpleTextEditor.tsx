@@ -108,6 +108,7 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_hero_universal_button_2', label: 'Botão 2', type: 'text', placeholder: 'Passaporte Digital', section: 'Hero Universal' },
     { key: 'ms_hero_universal_button_3', label: 'Botão 3', type: 'text', placeholder: 'Converse com o Guatá', section: 'Hero Universal' },
     { key: 'ms_hero_video_url', label: 'Vídeo de Fundo (URL)', type: 'text', placeholder: 'URL do YouTube, Vimeo ou vídeo MP4', section: 'Hero Universal' },
+    { key: 'ms_hero_video_placeholder_image_url', label: 'Imagem de Placeholder do Vídeo (URL)', type: 'text', placeholder: 'URL da imagem exibida enquanto o vídeo carrega', section: 'Hero Universal' },
     { key: 'ms_guata_roteiro_image_url', label: 'Imagem do Guatá - Banner Roteiro (URL)', type: 'text', placeholder: 'URL da imagem do Guatá para o banner "Montamos seu roteiro"', section: 'Hero Universal' },
     
     // Descrição Turística
@@ -171,12 +172,16 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   const loadContent = async () => {
     setLoading(true);
     try {
+      console.log('📥 [SimpleTextEditor] Carregando conteúdo com prefixo:', prefix);
       const data = await platformContentService.getContentByPrefix(prefix);
+      console.log('📦 [SimpleTextEditor] Dados recebidos do banco:', data.length, 'itens');
+      
       const contentMap: Record<string, string> = {};
       const idMap: Record<string, string> = {};
 
       // Filtrar apenas campos que pertencem à plataforma atual
       const platformFieldKeys = new Set(fields.map(f => f.key));
+      console.log('🔑 [SimpleTextEditor] Campos esperados:', Array.from(platformFieldKeys));
 
       // Carregar valores do banco - APENAS para campos desta plataforma
       data.forEach(item => {
@@ -184,22 +189,34 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         if (platformFieldKeys.has(item.content_key)) {
           contentMap[item.content_key] = item.content_value || '';
           idMap[item.content_key] = item.id;
+          console.log('✅ [SimpleTextEditor] Campo carregado:', {
+            key: item.content_key,
+            value: (item.content_value || '').substring(0, 50),
+            id: item.id
+          });
         }
       });
 
-      // Para campos que não existem no banco, usar placeholder como valor inicial
-      // Isso garante que o usuário veja o texto atual (mesmo que seja o padrão)
+      // Para campos que não existem no banco, usar string vazia (não placeholder)
+      // O placeholder é apenas uma dica visual, não o valor real
       fields.forEach(field => {
-        if (!contentMap[field.key] && field.placeholder) {
-          contentMap[field.key] = field.placeholder;
+        if (!contentMap[field.key]) {
+          contentMap[field.key] = '';
+          console.log('⚠️ [SimpleTextEditor] Campo não encontrado no banco, usando vazio:', field.key);
         }
+      });
+
+      console.log('📊 [SimpleTextEditor] Estado final:', {
+        contentsKeys: Object.keys(contentMap),
+        idsKeys: Object.keys(idMap),
+        totalFields: fields.length
       });
 
       setContents(contentMap);
       setOriginalContents({ ...contentMap }); // Salvar cópia dos valores originais
       setContentIds(idMap);
     } catch (error: any) {
-      console.error('Erro ao carregar conteúdo:', error);
+      console.error('❌ [SimpleTextEditor] Erro ao carregar conteúdo:', error);
       toast({
         title: 'Erro ao carregar',
         description: 'Não foi possível carregar o conteúdo.',
@@ -211,13 +228,23 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   };
 
   const updateField = (key: string, value: string) => {
-    setContents(prev => ({ ...prev, [key]: value }));
+    console.log('✏️ [SimpleTextEditor] updateField chamado:', { key, value: value.substring(0, 100), valueLength: value.length });
+    setContents(prev => {
+      const newContents = { ...prev, [key]: value };
+      console.log('📝 [SimpleTextEditor] Estado contents atualizado:', { 
+        key, 
+        newValue: newContents[key]?.substring(0, 100), 
+        newValueLength: newContents[key]?.length || 0 
+      });
+      return newContents;
+    });
     setSaved(prev => ({ ...prev, [key]: false }));
   };
 
   const hasChanges = (key: string): boolean => {
-    const currentValue = contents[key] || '';
-    const originalValue = originalContents[key] || '';
+    const currentValue = contents[key] !== undefined ? contents[key] : '';
+    const originalValue = originalContents[key] !== undefined ? originalContents[key] : '';
+    // Comparar valores diretamente (sem trim para preservar valores exatos)
     return currentValue !== originalValue;
   };
 
@@ -267,15 +294,47 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
 
   const uploadImage = async (key: string, file: File): Promise<string | null> => {
     try {
+      // Verificar e renovar token se necessário antes do upload
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.expires_at) {
+        const expiresAt = session.expires_at * 1000;
+        const timeUntilExpiry = expiresAt - Date.now();
+        if (timeUntilExpiry < 5 * 60 * 1000 && session.refresh_token) {
+          console.log('🔄 [SimpleTextEditor] Token próximo de expirar, renovando antes do upload...');
+          await supabase.auth.refreshSession();
+        }
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `platform-content/${key}/${uuidv4()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      let uploadError;
+      let retries = 1;
+      
+      // Tentar upload com retry em caso de erro 401
+      while (retries >= 0) {
+        const result = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        uploadError = result.error;
+        
+        // Se não há erro ou não é erro de JWT, sair do loop
+        if (!uploadError || !uploadError.message?.includes('exp') || retries === 0) {
+          break;
+        }
+        
+        // Se é erro de JWT, tentar renovar e retry
+        if (uploadError.message?.includes('exp') && retries > 0) {
+          console.log('🔄 [SimpleTextEditor] Token expirado no upload, renovando...');
+          await supabase.auth.refreshSession();
+          await new Promise(resolve => setTimeout(resolve, 300));
+          retries--;
+        }
+      }
 
       if (uploadError) {
         if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
@@ -372,25 +431,49 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   };
 
   const saveField = async (key: string) => {
-    const value = contents[key] || '';
+    // Permitir valores vazios - não fazer trim se o usuário quer salvar string vazia
+    const value = contents[key] !== undefined ? contents[key] : '';
     const id = contentIds[key];
+
+    console.log('💾 [SimpleTextEditor] saveField iniciado:', {
+      key,
+      value: value.substring(0, 100),
+      valueLength: value.length,
+      hasId: !!id,
+      id,
+      fieldType: fields.find(f => f.key === key)?.type
+    });
 
     setSaving(prev => ({ ...prev, [key]: true }));
 
     try {
       if (id) {
+        console.log('📝 [SimpleTextEditor] Atualizando conteúdo existente:', { key, id, value: value.substring(0, 100) });
         // Atualizar existente
         await platformContentService.updateContent(id, value);
+        console.log('✅ [SimpleTextEditor] updateContent concluído com sucesso:', { key, id });
       } else {
+        console.log('➕ [SimpleTextEditor] Criando novo conteúdo:', { 
+          key, 
+          value: value.substring(0, 100), 
+          fieldType: fields.find(f => f.key === key)?.type 
+        });
         // Criar novo
         const field = fields.find(f => f.key === key);
-        await platformContentService.createContent({
+        const newContent = await platformContentService.createContent({
           content_key: key,
           content_value: value,
           content_type: field?.type || 'text',
           description: field?.label || null,
           is_active: true,
         });
+        console.log('✅ [SimpleTextEditor] createContent concluído:', { 
+          key, 
+          newId: newContent.id, 
+          newContentValue: newContent.content_value?.substring(0, 100) 
+        });
+        // Atualizar IDs
+        setContentIds(prev => ({ ...prev, [key]: newContent.id }));
         // Recarregar para obter o ID
         await loadContent();
       }
@@ -399,6 +482,8 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       
       // Atualizar valor original após salvar
       setOriginalContents(prev => ({ ...prev, [key]: value }));
+      
+      console.log('✅ [SimpleTextEditor] saveField concluído com sucesso:', { key, value: value.substring(0, 100) });
       
       toast({
         title: 'Salvo!',
@@ -410,6 +495,12 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         setSaved(prev => ({ ...prev, [key]: false }));
       }, 2000);
     } catch (error: any) {
+      console.error('❌ [SimpleTextEditor] Erro ao salvar:', {
+        key,
+        error: error.message,
+        errorDetails: error,
+        stack: error.stack
+      });
       toast({
         title: 'Erro ao salvar',
         description: error.message || 'Não foi possível salvar.',
@@ -446,15 +537,22 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {sectionFields.map(field => {
-              // Usar valor do banco, ou placeholder se não existir
+              // Usar valor do banco, ou string vazia se não existir
+              // O placeholder é apenas uma dica visual no input
               const value = contents[field.key] !== undefined 
                 ? contents[field.key] 
-                : (field.placeholder || '');
+                : '';
               const isSaving = saving[field.key];
               const isSaved = saved[field.key];
 
               const hasChanged = hasChanges(field.key);
               const isEmpty = !value || value.trim() === '';
+              
+              // #region agent log
+              if (field.key === 'ms_hero_video_placeholder_image_url') {
+                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SimpleTextEditor.tsx:475',message:'Render campo placeholder',data:{key:field.key,value:value.substring(0,100),valueLength:value.length,hasChanged,isEmpty,contentsState:contents[field.key]?.substring(0,100),originalValue:originalContents[field.key]?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+              }
+              // #endregion
 
               return (
                 <div key={field.key} className="space-y-2">
@@ -494,14 +592,19 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                       </Button>
                     </div>
                   </div>
-                  {/* Campo especial para imagem do Guatá com upload */}
-                  {field.key === 'ms_guata_roteiro_image_url' ? (
+                  {/* Campo especial para imagens com upload */}
+                  {(field.key === 'ms_guata_roteiro_image_url' || field.key === 'ms_hero_video_placeholder_image_url') ? (
                     <div className="space-y-3">
                       <div className="flex gap-2">
                         <Input
                           id={field.key}
                           value={value}
-                          onChange={(e) => updateField(field.key, e.target.value)}
+                          onChange={(e) => {
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SimpleTextEditor.tsx:527',message:'Input onChange disparado',data:{key:field.key,newValue:e.target.value.substring(0,100),newValueLength:e.target.value.length,currentValue:value.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                            // #endregion
+                            updateField(field.key, e.target.value);
+                          }}
                           placeholder={field.placeholder}
                           className={cn(
                             "flex-1",

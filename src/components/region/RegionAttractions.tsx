@@ -1,18 +1,5 @@
 import React from 'react';
-import { 
-  Waves, 
-  Mountain, 
-  Camera, 
-  Fish, 
-  Binoculars, 
-  TreePine,
-  Compass,
-  Utensils,
-  Building,
-  Music,
-  ShoppingBag,
-  Landmark
-} from 'lucide-react';
+import { Star } from 'lucide-react';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { motion } from 'framer-motion';
 
@@ -20,35 +7,6 @@ interface RegionAttractionsProps {
   region: TouristRegion2025;
   highlights: string[];
 }
-
-const attractionIcons: Record<string, React.ElementType> = {
-  'flutuação': Waves,
-  'mergulho': Waves,
-  'cachoeira': Mountain,
-  'safari': Camera,
-  'pesca': Fish,
-  'observação': Binoculars,
-  'fauna': Binoculars,
-  'aves': Binoculars,
-  'ecoturismo': TreePine,
-  'aventura': Compass,
-  'gastronomia': Utensils,
-  'museu': Building,
-  'cultura': Music,
-  'compras': ShoppingBag,
-  'histórico': Landmark,
-  'default': Compass
-};
-
-const getIconForAttraction = (attraction: string): React.ElementType => {
-  const lowerAttraction = attraction.toLowerCase();
-  for (const [key, Icon] of Object.entries(attractionIcons)) {
-    if (lowerAttraction.includes(key)) {
-      return Icon;
-    }
-  }
-  return attractionIcons.default;
-};
 
 const RegionAttractions: React.FC<RegionAttractionsProps> = ({ region, highlights }) => {
   if (!highlights || highlights.length === 0) return null;
@@ -71,39 +29,21 @@ const RegionAttractions: React.FC<RegionAttractionsProps> = ({ region, highlight
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {highlights.map((highlight, index) => {
-            const Icon = getIconForAttraction(highlight);
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
-              >
-                <div 
-                  className="w-14 h-14 rounded-xl mb-4 flex items-center justify-center transition-transform group-hover:scale-110"
-                  style={{ 
-                    backgroundColor: `${region.color}15`,
-                    boxShadow: `0 4px 14px ${region.color}20`
-                  }}
-                >
-                  <Icon 
-                    className="w-7 h-7"
-                    style={{ color: region.color }}
-                  />
+        <div className="bg-white rounded-2xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold text-ms-primary-blue mb-6 flex items-center">
+            <Star className="w-6 h-6 mr-2 text-ms-secondary-yellow" />
+            Principais Atrações
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {highlights.map((highlight, index) => (
+              <div key={index} className="flex items-start gap-3 bg-ms-primary-blue/5 p-4 rounded-xl">
+                <div className="bg-ms-primary-blue text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                  {index + 1}
                 </div>
-                <h3 className="font-semibold text-gray-900 text-lg mb-2">
-                  {highlight}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Uma das experiências mais procuradas da região
-                </p>
-              </motion.div>
-            );
-          })}
+                <span className="text-gray-700 font-medium">{highlight}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

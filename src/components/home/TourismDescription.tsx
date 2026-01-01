@@ -2,16 +2,18 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { platformContentService } from '@/services/admin/platformContentService';
 
 const TourismDescription = () => {
   const { t } = useTranslation('pages');
+  const { language } = useLanguage();
   const [content, setContent] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const contents = await platformContentService.getContentByPrefix('ms_tourism_');
+        const contents = await platformContentService.getContentByPrefix('ms_tourism_', language);
         const contentMap: Record<string, string> = {};
         contents.forEach(item => {
           contentMap[item.content_key] = item.content_value || '';
@@ -22,7 +24,7 @@ const TourismDescription = () => {
       }
     };
     loadContent();
-  }, []);
+  }, [language]);
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;
 
