@@ -132,8 +132,7 @@ const RegionManagement: React.FC<RegionManagementProps> = ({ userRegion }) => {
           .from('tourist_regions')
           .insert({
             ...formData,
-            created_by: user.user.id
-          });
+          } as any);
 
         if (error) throw error;
 

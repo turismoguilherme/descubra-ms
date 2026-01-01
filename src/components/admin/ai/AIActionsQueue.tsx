@@ -20,7 +20,7 @@ export default function AIActionsQueue() {
   const fetchActions = async () => {
     try {
       const data = await aiAdminService.getActions();
-      setActions(data || []);
+      setActions((data || []) as AIAdminAction[]);
     } catch (error: any) {
       toast({
         title: 'Erro',

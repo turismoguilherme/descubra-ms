@@ -76,13 +76,13 @@ const PartnerLeadsManagement = () => {
                 {partners.map((partner) => (
                   <TableRow key={partner.id}>
                     <TableCell className="font-medium">{partner.name}</TableCell>
-                    <TableCell>{partner.cnpj || 'N/A'}</TableCell>
-                    <TableCell>{partner.contact_person || 'N/A'}</TableCell>
+                    <TableCell>{(partner as any).cnpj || 'N/A'}</TableCell>
+                    <TableCell>{(partner as any).contact_person || 'N/A'}</TableCell>
                     <TableCell>{partner.contact_email || 'N/A'}</TableCell>
-                    <TableCell>{partner.contact_whatsapp || 'N/A'}</TableCell>
-                    <TableCell>{partner.segment || 'N/A'}</TableCell>
-                    <TableCell>{partner.partnership_interest || 'N/A'}</TableCell>
-                    <TableCell>{partner.city || 'N/A'}</TableCell>
+                    <TableCell>{(partner as any).contact_whatsapp || 'N/A'}</TableCell>
+                    <TableCell>{(partner as any).segment || 'N/A'}</TableCell>
+                    <TableCell>{(partner as any).partnership_interest || 'N/A'}</TableCell>
+                    <TableCell>{(partner as any).city || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
                         <Clock size={14} className="mr-1" />

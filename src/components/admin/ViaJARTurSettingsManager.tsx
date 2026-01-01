@@ -67,7 +67,7 @@ export default function ViaJARTurSettingsManager() {
         data.forEach((item) => {
           const key = item.setting_key.replace('viajar_', '') as keyof PlanSettings;
           if (key in newSettings) {
-            newSettings[key] = item.setting_value || '';
+            newSettings[key] = String(item.setting_value || '');
           }
         });
         setSettings(newSettings);

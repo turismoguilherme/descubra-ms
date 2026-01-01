@@ -230,16 +230,17 @@ export default function AutonomousAIAgent() {
           setAgentActive(dbConfig.active || false);
           setAutonomyLevel([dbConfig.autonomy_level || 50]);
           if (dbConfig.tasks && Array.isArray(dbConfig.tasks)) {
-            setTasks(dbConfig.tasks);
+            setTasks(dbConfig.tasks as unknown as AITask[]);
           }
           
           // Carregar permissões
-          if (dbConfig.permissions && typeof dbConfig.permissions === 'object') {
+          if (dbConfig.permissions && typeof dbConfig.permissions === 'object' && !Array.isArray(dbConfig.permissions)) {
+            const perms = dbConfig.permissions as any;
             setPermissions({
-              modifyDatabase: dbConfig.permissions.modifyDatabase ?? false,
-              sendNotifications: dbConfig.permissions.sendNotifications ?? true,
-              generateReports: dbConfig.permissions.generateReports ?? true,
-              accessFinancialData: dbConfig.permissions.accessFinancialData ?? false,
+              modifyDatabase: perms.modifyDatabase ?? false,
+              sendNotifications: perms.sendNotifications ?? true,
+              generateReports: perms.generateReports ?? true,
+              accessFinancialData: perms.accessFinancialData ?? false,
             });
           } else {
             const initialAutonomy = dbConfig.autonomy_level || 50;
@@ -351,7 +352,7 @@ export default function AutonomousAIAgent() {
           .maybeSingle(),
       ]);
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Resultados das queries recebidos',data:{metricsError:metricsResult.error?.message,metricsStatusCode:metricsResult.error?.status,financialError:financialResult.error?.message,financialStatusCode:financialResult.error?.status,hasMetricsData:!!metricsResult.data,hasFinancialData:!!financialResult.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Resultados das queries recebidos',data:{metricsError:metricsResult.error?.message,financialError:financialResult.error?.message,hasMetricsData:!!metricsResult.data,hasFinancialData:!!financialResult.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
 
       if (metricsResult.error) {
@@ -622,7 +623,7 @@ export default function AutonomousAIAgent() {
         // #endregion
         const { error: updateError } = await supabase
           .from('ai_agent_config')
-          .update(configData)
+          .update(configData as any)
           .eq('id', existingConfig.id);
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da atualização',data:{hasError:!!updateError,errorMessage:updateError?.message,errorCode:updateError?.code,errorDetails:updateError?.details,errorHint:updateError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
@@ -637,7 +638,7 @@ export default function AutonomousAIAgent() {
         // #endregion
         const { error: insertError } = await supabase
           .from('ai_agent_config')
-          .insert([configData]);
+          .insert([configData] as any);
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da inserção',data:{hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError?.details,errorHint:insertError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
         // #endregion
@@ -694,12 +695,12 @@ export default function AutonomousAIAgent() {
         if (existingConfig) {
           await supabase
             .from('ai_agent_config')
-            .update(configData)
+            .update(configData as any)
             .eq('id', existingConfig.id);
         } else {
           await supabase
             .from('ai_agent_config')
-            .insert([configData]);
+            .insert([configData] as any);
         }
 
         // Também salvar no localStorage como backup
