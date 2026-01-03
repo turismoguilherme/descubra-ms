@@ -101,7 +101,7 @@ class KodaResponseCacheService {
         .gt('expires_at', new Date().toISOString())
         .order('used_count', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return { found: false };
@@ -160,7 +160,7 @@ class KodaResponseCacheService {
       const { data, error } = await queryBuilder
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return { found: false };
@@ -201,7 +201,7 @@ class KodaResponseCacheService {
         .eq('is_suggestion', isSuggestion)
         .gt('expires_at', new Date().toISOString())
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         await supabase
@@ -269,7 +269,7 @@ class KodaResponseCacheService {
         queryBuilder = queryBuilder.eq('session_id', sessionId);
       }
 
-      const { data: existing } = await queryBuilder.limit(1).single();
+      const { data: existing } = await queryBuilder.limit(1).maybeSingle();
 
       if (existing) {
         await supabase

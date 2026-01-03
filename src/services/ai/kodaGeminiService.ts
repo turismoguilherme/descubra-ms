@@ -139,15 +139,22 @@ class KodaGeminiService {
       }
       
       const webSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
-      webSearchResults = webSearchResponse.results || [];
+      const allResults = webSearchResponse.results || [];
       usedWebSearch = webSearchResponse.usedRealSearch || false;
+      
+      // FILTRAR: Apenas resultados sobre Canadá (não Brasil, não outros países)
+      webSearchResults = this.filterCanadaResults(allResults, question);
       
       if (isDev) {
         console.log(`🌐 [Koda] Web search concluída:`);
-        console.log(`   - Resultados: ${webSearchResults.length}`);
+        console.log(`   - Resultados totais: ${allResults.length}`);
+        console.log(`   - Resultados filtrados (Canadá): ${webSearchResults.length}`);
         console.log(`   - Usou busca real: ${usedWebSearch}`);
         if (webSearchResults.length > 0) {
           console.log(`   - Primeiro resultado:`, webSearchResults[0]?.title || 'N/A');
+        } else if (allResults.length > 0) {
+          console.warn(`   ⚠️ Todos os resultados foram filtrados (não eram sobre Canadá)`);
+          console.log(`   - Primeiro resultado original:`, allResults[0]?.title || 'N/A');
         }
       }
     } catch (error: any) {
@@ -362,14 +369,21 @@ CRITICAL RULES:
 
     // Adicionar resultados da busca web
     if (webSearchResults.length > 0) {
-      prompt += `\n\n🌐 WEB SEARCH RESULTS (USE ONLY THIS REAL INFORMATION - NEVER MENTION SOURCES OR URLS):\n`;
+      prompt += `\n\n🌐 WEB SEARCH RESULTS ABOUT CANADA (USE ONLY THIS REAL INFORMATION - NEVER MENTION SOURCES OR URLS):\n`;
       webSearchResults.forEach((result, index) => {
         const snippet = result.snippet || result.description || '';
         prompt += `\n${index + 1}. ${result.title}\n   ${snippet}\n`;
       });
-      prompt += `\n\n⚠️ CRITICAL: Use the web search results above to provide specific, accurate information. Extract names, locations, details from the results. NEVER mention that you "found" or "searched" - respond directly as if you already knew.`;
+      prompt += `\n\n⚠️ CRITICAL INSTRUCTIONS ABOUT WEB SEARCH RESULTS:
+- ALL results above are about CANADA ONLY (they have been filtered)
+- Use ONLY these results to answer - they contain real, current information about Canada
+- Extract specific names, locations, dates, details from the results
+- NEVER mention that you "found" or "searched" - respond directly as if you already knew
+- NEVER mention URLs, sources, or "the website X says"
+- If a result mentions something NOT about Canada (e.g., Brazil, Mato Grosso do Sul), IGNORE that result completely
+- Your answer MUST be about Canada only`;
     } else {
-      prompt += `\n\n⚠️ NOTE: No web search results available. Use your general knowledge about Canada, but be honest if you don't know something specific.`;
+      prompt += `\n\n⚠️ NOTE: No web search results available about Canada. Use your general knowledge about Canada, but be honest if you don't know something specific.`;
     }
 
     prompt += `\n\nUSER'S QUESTION: ${question}`;
@@ -382,6 +396,50 @@ CRITICAL RULES:
 - Be enthusiastic about Canada! 🍁`;
 
     return prompt;
+  }
+
+  /**
+   * Filtra resultados da busca web para manter apenas sobre Canadá
+   */
+  private filterCanadaResults(results: any[], question: string): any[] {
+    const canadaKeywords = [
+      'canada', 'canadian', 'canadá', 'canadiense',
+      'toronto', 'vancouver', 'montreal', 'ottawa', 'calgary', 'edmonton', 'winnipeg', 'quebec',
+      'banff', 'niagara', 'alberta', 'british columbia', 'ontario', 'quebec', 'manitoba',
+      'rocky mountains', 'northern lights', 'aurora', 'maple', 'poutine',
+      'cn tower', 'stanley park', 'whistler', 'yellowknife', 'whitehorse'
+    ];
+    
+    const excludeKeywords = [
+      'mato grosso', 'brazil', 'brasil', 'brasileiro', 'miranda', 'dourados',
+      'pantanal', 'campo grande', 'bonito', 'corumbá'
+    ];
+    
+    return results.filter(result => {
+      const title = (result.title || '').toLowerCase();
+      const snippet = (result.snippet || result.description || '').toLowerCase();
+      const text = `${title} ${snippet}`;
+      
+      // Excluir se contém palavras de exclusão
+      const hasExcludeKeyword = excludeKeywords.some(keyword => text.includes(keyword));
+      if (hasExcludeKeyword) {
+        return false;
+      }
+      
+      // Incluir se contém palavras sobre Canadá
+      const hasCanadaKeyword = canadaKeywords.some(keyword => text.includes(keyword));
+      if (hasCanadaKeyword) {
+        return true;
+      }
+      
+      // Se a pergunta menciona Canadá explicitamente, ser mais rigoroso
+      if (question.toLowerCase().includes('canad') || question.toLowerCase().includes('canada')) {
+        return false; // Se pergunta é sobre Canadá mas resultado não menciona, excluir
+      }
+      
+      // Se não há palavras de exclusão nem de inclusão, manter (pode ser genérico)
+      return true;
+    });
   }
 
   /**
