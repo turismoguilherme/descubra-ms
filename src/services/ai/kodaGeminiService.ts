@@ -403,15 +403,13 @@ CRITICAL RULES:
   /**
    * Detecta categoria da pergunta
    */
-  private detectQuestionCategory(question: string): string {
+  private detectQuestionCategory(question: string): 'hotels' | 'events' | 'restaurants' | 'attractions' | 'general' {
     const lowerQuestion = question.toLowerCase();
     
-    if (lowerQuestion.includes('hotel') || lowerQuestion.includes('stay') || lowerQuestion.includes('accommodation')) return 'accommodation';
-    if (lowerQuestion.includes('restaurant') || lowerQuestion.includes('food') || lowerQuestion.includes('eat') || lowerQuestion.includes('cuisine')) return 'dining';
+    if (lowerQuestion.includes('hotel') || lowerQuestion.includes('stay') || lowerQuestion.includes('accommodation')) return 'hotels';
+    if (lowerQuestion.includes('restaurant') || lowerQuestion.includes('food') || lowerQuestion.includes('eat') || lowerQuestion.includes('cuisine')) return 'restaurants';
     if (lowerQuestion.includes('event') || lowerQuestion.includes('festival')) return 'events';
-    if (lowerQuestion.includes('tour') || lowerQuestion.includes('visit') || lowerQuestion.includes('see') || lowerQuestion.includes('attraction')) return 'tourism';
-    if (lowerQuestion.includes('weather') || lowerQuestion.includes('climate') || lowerQuestion.includes('temperature')) return 'weather';
-    if (lowerQuestion.includes('ski') || lowerQuestion.includes('snowboard') || lowerQuestion.includes('winter')) return 'winter_sports';
+    if (lowerQuestion.includes('tour') || lowerQuestion.includes('visit') || lowerQuestion.includes('see') || lowerQuestion.includes('attraction')) return 'attractions';
     
     return 'general';
   }
