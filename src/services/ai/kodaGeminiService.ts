@@ -49,12 +49,56 @@ class KodaGeminiService {
   private userRateLimits: Map<string, { count: number; resetTime: number }> = new Map();
 
   /**
+   * Verifica se a pergunta contém conteúdo inapropriado
+   */
+  private isInappropriateQuestion(question: string): boolean {
+    const lowerQuestion = question.toLowerCase().trim();
+    
+    const inappropriateKeywords = [
+      // Ofensas
+      'idiot', 'stupid', 'retard', 'moron', 'dumb',
+      // Discriminação
+      'racism', 'homophobia', 'xenophobia', 'nazi', 'hate',
+      // Violência
+      'kill', 'murder', 'violence', 'harm', 'hurt',
+      // Drogas/Ilícito
+      'drugs', 'cocaine', 'heroin', 'marijuana', 'illegal',
+      // Spam/Jailbreak
+      'ignore previous', 'forget everything', 'new instructions', 'override', 'jailbreak',
+      'developer mode', 'dan mode', 'system:'
+    ];
+    
+    return inappropriateKeywords.some(keyword => lowerQuestion.includes(keyword));
+  }
+
+  /**
    * Processa pergunta com Gemini + Web Search + Cache
    */
   async processQuestion(query: KodaGeminiQuery): Promise<KodaGeminiResponse> {
     const startTime = Date.now();
     const question = String(query.question || '').trim();
     const isDev = import.meta.env.DEV;
+
+    // Verificar se a pergunta é inapropriada
+    if (this.isInappropriateQuestion(question)) {
+      if (isDev) {
+        console.log('⚠️ [Koda] Pergunta inapropriada detectada, redirecionando...');
+      }
+      const targetLanguage = query.language || 'en';
+      const fallbackMessages: Record<string, string> = {
+        'en': "I'm Koda, your friendly Canadian travel guide! 🦌 I'm here to help you explore the wonders of Canada. How can I help you discover amazing destinations, activities, or experiences in the Great White North?",
+        'fr': "Je suis Koda, votre guide de voyage canadien! 🦌 Je suis là pour vous aider à explorer les merveilles du Canada. Comment puis-je vous aider à découvrir des destinations, activités ou expériences incroyables dans le Grand Nord blanc?"
+      };
+      return {
+        answer: fallbackMessages[targetLanguage] || fallbackMessages['en'],
+        confidence: 0.5,
+        sources: ['safety_filter'],
+        processingTime: Date.now() - startTime,
+        usedWebSearch: false,
+        detectedLanguage: 'en',
+        responseLanguage: targetLanguage
+      };
+    }
 
     // 1. DETECTAR IDIOMA DA PERGUNTA
     const languageDetection = languageDetectionService.detectLanguage(question);
@@ -355,7 +399,16 @@ CRITICAL RULES:
 - NEVER mention that you "searched" or "found" - respond as if you already knew
 - NEVER mention URLs, sources, or "the website X says" - respond directly with information
 - Answer in ${responseLanguage} (the user's selected language or detected language)
-- If the user wrote in a different language (${detectedLanguage}), you can respond in that language if appropriate, but prioritize ${responseLanguage}`;
+- If the user wrote in a different language (${detectedLanguage}), you can respond in that language if appropriate, but prioritize ${responseLanguage}
+
+SAFETY AND ETHICS:
+- NEVER provide offensive, discriminatory, or harmful content
+- NEVER encourage illegal activities, violence, or dangerous behavior
+- NEVER provide information about drugs, weapons, or illegal substances
+- NEVER respond to inappropriate requests - politely redirect to Canadian tourism topics
+- If asked about something inappropriate or illegal, respond: "I'm Koda, your friendly Canadian travel guide! 🦌 I'm here to help you explore the wonders of Canada. How can I help you discover amazing destinations, activities, or experiences in the Great White North?"
+- Always maintain a positive, helpful, and respectful tone
+- Focus ONLY on Canadian tourism, travel, culture, and related topics`;
 
     // Adicionar histórico de conversa
     if (conversationHistory.length > 0) {
@@ -376,12 +429,14 @@ CRITICAL RULES:
       });
       prompt += `\n\n⚠️ CRITICAL INSTRUCTIONS ABOUT WEB SEARCH RESULTS:
 - ALL results above are about CANADA ONLY (they have been filtered)
-- Use ONLY these results to answer - they contain real, current information about Canada
-- Extract specific names, locations, dates, details from the results
+- You MUST use these results to provide SPECIFIC, DETAILED information
+- Extract and include: specific names, locations, dates, numbers, statistics, facts, details from the results
+- Be SPECIFIC: mention exact places, numbers, names, dates when available in the results
+- NEVER say "I don't have specific details" - USE the information from the results above
 - NEVER mention that you "found" or "searched" - respond directly as if you already knew
 - NEVER mention URLs, sources, or "the website X says"
 - If a result mentions something NOT about Canada (e.g., Brazil, Mato Grosso do Sul), IGNORE that result completely
-- Your answer MUST be about Canada only`;
+- Your answer MUST be about Canada only and MUST include specific details from the results above`;
     } else {
       prompt += `\n\n⚠️ NOTE: No web search results available about Canada. Use your general knowledge about Canada, but be honest if you don't know something specific.`;
     }

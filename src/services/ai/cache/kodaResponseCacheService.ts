@@ -130,10 +130,22 @@ class KodaResponseCacheService {
   }
 
   /**
+   * Verifica se é um UUID válido
+   */
+  private isValidUUID(str?: string): boolean {
+    if (!str) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  }
+
+  /**
    * Busca no cache individual
    */
   async getFromIndividualCache(query: KodaCacheQuery): Promise<KodaCacheResult> {
-    if (!query.userId && !query.sessionId) {
+    // Se userId não é um UUID válido (ex: 'guest'), usar apenas sessionId
+    const validUserId = query.userId && this.isValidUUID(query.userId) ? query.userId : undefined;
+    
+    if (!validUserId && !query.sessionId) {
       return { found: false };
     }
 
@@ -151,8 +163,8 @@ class KodaResponseCacheService {
         .eq('is_suggestion', isSuggestion)
         .gt('expires_at', new Date().toISOString());
 
-      if (query.userId) {
-        queryBuilder = queryBuilder.eq('user_id', query.userId);
+      if (validUserId) {
+        queryBuilder = queryBuilder.eq('user_id', validUserId);
       } else if (query.sessionId) {
         queryBuilder = queryBuilder.eq('session_id', query.sessionId);
       }
@@ -241,7 +253,10 @@ class KodaResponseCacheService {
     userId?: string, 
     sessionId?: string
   ): Promise<void> {
-    if (!userId && !sessionId) {
+    // Se userId não é um UUID válido (ex: 'guest'), usar apenas sessionId
+    const validUserId = userId && this.isValidUUID(userId) ? userId : undefined;
+    
+    if (!validUserId && !sessionId) {
       return;
     }
 
@@ -263,13 +278,13 @@ class KodaResponseCacheService {
         .eq('is_suggestion', isSuggestion)
         .gt('expires_at', new Date().toISOString());
 
-      if (userId) {
-        queryBuilder = queryBuilder.eq('user_id', userId);
+      if (validUserId) {
+        queryBuilder = queryBuilder.eq('user_id', validUserId);
       } else if (sessionId) {
         queryBuilder = queryBuilder.eq('session_id', sessionId);
       }
 
-      const { data: existing } = await queryBuilder.limit(1).maybeSingle();
+      const { data: existing, error: queryError } = await queryBuilder.limit(1).maybeSingle();
 
       if (existing) {
         await supabase
@@ -281,7 +296,7 @@ class KodaResponseCacheService {
           })
           .eq('id', existing.id);
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('koda_response_cache')
           .insert({
             question_hash: questionHash,
@@ -289,14 +304,14 @@ class KodaResponseCacheService {
             answer: answer,
             language: language,
             cache_type: 'individual',
-            user_id: userId || null,
+            user_id: validUserId || null, // Usar apenas UUID válido ou null
             session_id: sessionId || null,
             is_suggestion: isSuggestion,
             expires_at: expiresAt.toISOString(),
             used_count: 1
           });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn('⚠️ Erro ao salvar cache individual do Koda:', error);
     }
   }
