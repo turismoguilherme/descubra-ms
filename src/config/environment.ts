@@ -46,6 +46,14 @@ export const ENV = {
     DESCRIPTION: 'Seu guia de turismo inteligente',
     DEFAULT_GREETING: 'Olá! Eu sou o Guatá, seu guia turístico virtual. Como posso ajudar você a descobrir o Mato Grosso do Sul hoje?'
   },
+
+  // Configurações do Koda (Canada)
+  KODA: {
+    AVATAR_URL: '/koda-mascote.jpg',
+    NAME: 'Koda',
+    DESCRIPTION: 'Your friendly Canadian travel guide',
+    DEFAULT_GREETING: "Hey there! I'm Koda, your moose buddy and guide to the wonders of Canada! How can I help you explore the Great White North today?"
+  },
   
   // Configurações de cache
   CACHE_DURATION: 60 * 60 * 1000, // 1 hora em milissegundos

@@ -77,6 +77,7 @@ import Partners from "@/pages/Partners";
 import Guata from "@/pages/Guata";
 import GuataTest from "@/pages/GuataTest";
 import ChatGuata from "@/pages/ChatGuata";
+import Koda from "@/pages/Koda";
 import EventosMS from "@/pages/ms/EventosMS";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import PassportDigital from "@/pages/PassportDigital";
@@ -162,6 +163,9 @@ function App() {
                             
                             {/* Chatbot Guatá Standalone - Totem */}
                             <Route path="/chatguata" element={<ChatGuata />} />
+                            
+                            {/* Koda - Canadian Travel Guide */}
+                            <Route path="/koda" element={<Koda />} />
                             
                             {/* ViaJAR Auth Routes (públicas) */}
                             <Route path="/viajar/login" element={<Suspense fallback={<LoadingFallback />}><ViaJARLogin /></Suspense>} />
