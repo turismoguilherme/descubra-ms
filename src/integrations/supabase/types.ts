@@ -1220,11 +1220,12 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
-          destination_id: string
+          destination_id: string | null
           highlights: string[] | null
           how_to_get_there: string | null
           id: string
           image_gallery: string[] | null
+          map_image_url: string | null
           map_latitude: number | null
           map_longitude: number | null
           official_website: string | null
@@ -1243,11 +1244,12 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
-          destination_id: string
+          destination_id?: string | null
           highlights?: string[] | null
           how_to_get_there?: string | null
           id?: string
           image_gallery?: string[] | null
+          map_image_url?: string | null
           map_latitude?: number | null
           map_longitude?: number | null
           official_website?: string | null
@@ -1266,11 +1268,12 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
-          destination_id?: string
+          destination_id?: string | null
           highlights?: string[] | null
           how_to_get_there?: string | null
           id?: string
           image_gallery?: string[] | null
+          map_image_url?: string | null
           map_latitude?: number | null
           map_longitude?: number | null
           official_website?: string | null
@@ -4527,6 +4530,83 @@ export type Database = {
             columns: ["log_id"]
             isOneToOne: false
             referencedRelation: "rag_query_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      region_cities: {
+        Row: {
+          best_time_to_visit: string | null
+          city_name: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string | null
+          highlights: string[] | null
+          how_to_get_there: string | null
+          id: string
+          image_gallery: string[] | null
+          is_active: boolean | null
+          map_image_url: string | null
+          official_website: string | null
+          order_index: number | null
+          social_links: Json | null
+          tourist_region_id: string
+          updated_at: string | null
+          updated_by: string | null
+          video_type: string | null
+          video_url: string | null
+        }
+        Insert: {
+          best_time_to_visit?: string | null
+          city_name: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          highlights?: string[] | null
+          how_to_get_there?: string | null
+          id?: string
+          image_gallery?: string[] | null
+          is_active?: boolean | null
+          map_image_url?: string | null
+          official_website?: string | null
+          order_index?: number | null
+          social_links?: Json | null
+          tourist_region_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+          video_type?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          best_time_to_visit?: string | null
+          city_name?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          highlights?: string[] | null
+          how_to_get_there?: string | null
+          id?: string
+          image_gallery?: string[] | null
+          is_active?: boolean | null
+          map_image_url?: string | null
+          official_website?: string | null
+          order_index?: number | null
+          social_links?: Json | null
+          tourist_region_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          video_type?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "region_cities_tourist_region_id_fkey"
+            columns: ["tourist_region_id"]
+            isOneToOne: false
+            referencedRelation: "tourist_regions"
             referencedColumns: ["id"]
           },
         ]
