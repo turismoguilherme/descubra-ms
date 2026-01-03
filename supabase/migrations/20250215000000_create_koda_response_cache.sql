@@ -84,11 +84,24 @@ CREATE POLICY "Users can read own individual cache"
         (auth.uid() = user_id OR session_id IS NOT NULL)
     );
 
--- Policy: Service role can insert/update/delete (for backend operations)
-CREATE POLICY "Service role can manage cache"
+-- Policy: Allow inserts for both shared and individual cache
+CREATE POLICY "Allow cache inserts"
     ON koda_response_cache
-    FOR ALL
-    USING (auth.role() = 'service_role');
+    FOR INSERT
+    WITH CHECK (true);
+
+-- Policy: Allow updates (system can update via service role or anon)
+CREATE POLICY "Allow cache updates"
+    ON koda_response_cache
+    FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
+-- Policy: Allow deletes (for cleanup of expired entries)
+CREATE POLICY "Allow cache deletes"
+    ON koda_response_cache
+    FOR DELETE
+    USING (true);
 
 -- Add comment
 COMMENT ON TABLE koda_response_cache IS 'Cache persistente para respostas do Koda (chatbot canadense) para reduzir chamadas à API Gemini';
