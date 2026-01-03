@@ -35,7 +35,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger to auto-update timestamp
+-- Create trigger to auto-update timestamp (drop if exists first)
+DROP TRIGGER IF EXISTS trigger_update_koda_cache_timestamp ON koda_response_cache;
 CREATE TRIGGER trigger_update_koda_cache_timestamp
     BEFORE UPDATE ON koda_response_cache
     FOR EACH ROW
@@ -68,6 +69,13 @@ $$ LANGUAGE plpgsql;
 
 -- Enable RLS
 ALTER TABLE koda_response_cache ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can read shared cache" ON koda_response_cache;
+DROP POLICY IF EXISTS "Users can read own individual cache" ON koda_response_cache;
+DROP POLICY IF EXISTS "Allow cache inserts" ON koda_response_cache;
+DROP POLICY IF EXISTS "Allow cache updates" ON koda_response_cache;
+DROP POLICY IF EXISTS "Allow cache deletes" ON koda_response_cache;
 
 -- Policy: Anyone can read shared cache entries
 CREATE POLICY "Anyone can read shared cache"
