@@ -1,0 +1,29 @@
+{
+  "header": {
+    "title": "Discover Canada",
+    "subtitle": "Your AI-powered guide to exploring the Great White North",
+    "badges": {
+      "maple": "🍁 Maple Country",
+      "mountains": "🏔️ Rocky Mountains",
+      "wonders": "🌲 Natural Wonders"
+    }
+  },
+  "chat": {
+    "welcome": "Hey there! I'm Koda, your moose buddy and guide to the wonders of Canada! How can I help you explore the Great White North today?",
+    "error": "I'm having a little trouble right now. Could you try asking that again? 🦌",
+    "loading": "Thinking...",
+    "placeholder": "Ask me anything about Canada...",
+    "clear": "Clear conversation"
+  },
+  "footer": {
+    "disclaimer": "Independent project by ViajARTur, not affiliated with the Government of Canada",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "copyright": "© 2025 Koda. All rights reserved."
+  },
+  "language": {
+    "en": "English",
+    "fr": "Français"
+  }
+}
+

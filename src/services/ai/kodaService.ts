@@ -11,6 +11,7 @@ export interface KodaQuery {
   conversationHistory?: string[];
   userPreferences?: any;
   isFirstUserMessage?: boolean;
+  language?: 'en' | 'fr';
 }
 
 export interface KodaResponse {

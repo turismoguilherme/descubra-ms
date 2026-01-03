@@ -3,6 +3,9 @@ import { Send, Mic, MicOff, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useKodaLanguage } from "@/hooks/useKodaLanguage";
+import enTranslations from "@/locales/koda/en.json";
+import frTranslations from "@/locales/koda/fr.json";
 
 interface KodaChatInputProps {
   inputMessage: string;
@@ -27,6 +30,9 @@ const KodaChatInput = ({
   onClearConversation = () => {},
   messages
 }: KodaChatInputProps) => {
+  const { language } = useKodaLanguage();
+  const t = language === 'fr' ? frTranslations : enTranslations;
+
   return (
     <div className="border-t p-4 border-white/20">
       <div className="flex items-center space-x-2">
@@ -53,7 +59,7 @@ const KodaChatInput = ({
         >
           <input
             type="text"
-            placeholder="Ask Koda about Canada..."
+            placeholder={t.chat.placeholder}
             className={cn(
               "w-full bg-white/10 text-white placeholder:text-gray-400 rounded-full px-4 py-2 pr-10",
               "focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white/20",
@@ -93,9 +99,11 @@ const KodaChatInput = ({
           {isLoading ? (
             <span className="flex items-center gap-2">
               <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              Processing your question...
+              {t.chat.loading}
             </span>
-          ) : "Chat with Koda about destinations, events or attractions in Canada"}
+          ) : language === 'fr' 
+            ? "Discutez avec Koda sur les destinations, événements ou attractions au Canada"
+            : "Chat with Koda about destinations, events or attractions in Canada"}
         </p>
         {messages.length > 0 && (
           <motion.div
@@ -110,7 +118,7 @@ const KodaChatInput = ({
               className="flex items-center space-x-2 text-gray-300 hover:bg-red-500/20 hover:text-red-300 transition-all duration-300"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Clear Chat</span>
+              <span>{t.chat.clear}</span>
             </Button>
           </motion.div>
         )}

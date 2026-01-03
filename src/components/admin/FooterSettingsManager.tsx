@@ -19,9 +19,9 @@ export interface PartnerLogo {
 }
 
 interface FooterSettings {
-  email: string;
-  phone: string;
-  address: string;
+  email?: string;
+  phone?: string;
+  address?: string;
   social_media: {
     facebook?: string;
     instagram?: string;
@@ -35,6 +35,8 @@ interface FooterSettings {
     sunday?: string;
   };
   partner_logos?: PartnerLogo[];
+  viajar_link?: string;
+  disclaimer?: string;
 }
 
 const DEFAULT_SETTINGS: FooterSettings = {
@@ -50,9 +52,10 @@ export default function FooterSettingsManager() {
   const { user } = useAuth();
   const [msSettings, setMsSettings] = useState<FooterSettings>(DEFAULT_SETTINGS);
   const [viajarSettings, setViajarSettings] = useState<FooterSettings>(DEFAULT_SETTINGS);
+  const [kodaSettings, setKodaSettings] = useState<FooterSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ms' | 'viajar'>('ms');
+  const [activeTab, setActiveTab] = useState<'ms' | 'viajar' | 'koda'>('ms');
   const [lastSaved, setLastSaved] = useState<{ platform: string; timestamp: Date | null }>({ platform: '', timestamp: null });
   
   // Estados para gerenciamento de logos de parceiros
@@ -117,6 +120,25 @@ export default function FooterSettingsManager() {
         console.log('ℹ️ [FooterSettingsManager] Nenhum setting ViaJAR encontrado no banco, usando padrão');
         setViajarSettings({ ...DEFAULT_SETTINGS, partner_logos: [] });
       }
+
+      // Carregar settings do Koda
+      const { data: kodaData, error: kodaError } = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('platform', 'koda')
+        .eq('setting_key', 'footer')
+        .maybeSingle();
+
+      if (kodaError) {
+        console.error('❌ [FooterSettingsManager] Erro ao carregar settings Koda:', kodaError);
+      } else if (kodaData?.setting_value) {
+        console.log('✅ [FooterSettingsManager] Settings Koda carregados:', kodaData.setting_value);
+        const loadedSettings = kodaData.setting_value as unknown as FooterSettings;
+        setKodaSettings(loadedSettings);
+      } else {
+        console.log('ℹ️ [FooterSettingsManager] Nenhum setting Koda encontrado no banco, usando padrão');
+        setKodaSettings({ ...DEFAULT_SETTINGS });
+      }
     } catch (error: any) {
       console.error('Erro ao carregar settings:', error);
     } finally {
@@ -124,7 +146,7 @@ export default function FooterSettingsManager() {
     }
   };
 
-  const saveSettings = async (platform: 'ms' | 'viajar', settings: FooterSettings) => {
+  const saveSettings = async (platform: 'ms' | 'viajar' | 'koda', settings: FooterSettings) => {
     setSaving(true);
     try {
       // Verificar se usuário está autenticado
@@ -659,6 +681,154 @@ export default function FooterSettingsManager() {
     );
   };
 
+  const renderKodaSettingsForm = (settings: FooterSettings, setSettings: React.Dispatch<React.SetStateAction<FooterSettings>>) => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Link ViajARTur</CardTitle>
+          <CardDescription>URL do site ViajARTur para exibir no rodapé</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label htmlFor="viajar_link">
+              <Globe className="inline h-4 w-4 mr-2" />
+              URL ViajARTur
+            </Label>
+            <Input
+              id="viajar_link"
+              value={settings.viajar_link || ''}
+              onChange={(e) => setSettings({ ...settings, viajar_link: e.target.value })}
+              placeholder="https://viajartur.com"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Redes Sociais</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="koda_facebook">
+              <Facebook className="inline h-4 w-4 mr-2" />
+              Facebook
+            </Label>
+            <Input
+              id="koda_facebook"
+              value={settings.social_media.facebook || ''}
+              onChange={(e) => setSettings({
+                ...settings,
+                social_media: { ...settings.social_media, facebook: e.target.value }
+              })}
+              placeholder="https://facebook.com/..."
+            />
+          </div>
+          <div>
+            <Label htmlFor="koda_instagram">
+              <Instagram className="inline h-4 w-4 mr-2" />
+              Instagram
+            </Label>
+            <Input
+              id="koda_instagram"
+              value={settings.social_media.instagram || ''}
+              onChange={(e) => setSettings({
+                ...settings,
+                social_media: { ...settings.social_media, instagram: e.target.value }
+              })}
+              placeholder="https://instagram.com/..."
+            />
+          </div>
+          <div>
+            <Label htmlFor="koda_twitter">
+              <Twitter className="inline h-4 w-4 mr-2" />
+              Twitter
+            </Label>
+            <Input
+              id="koda_twitter"
+              value={settings.social_media.twitter || ''}
+              onChange={(e) => setSettings({
+                ...settings,
+                social_media: { ...settings.social_media, twitter: e.target.value }
+              })}
+              placeholder="https://twitter.com/..."
+            />
+          </div>
+          <div>
+            <Label htmlFor="koda_linkedin">
+              <Linkedin className="inline h-4 w-4 mr-2" />
+              LinkedIn
+            </Label>
+            <Input
+              id="koda_linkedin"
+              value={settings.social_media.linkedin || ''}
+              onChange={(e) => setSettings({
+                ...settings,
+                social_media: { ...settings.social_media, linkedin: e.target.value }
+              })}
+              placeholder="https://linkedin.com/company/..."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Texto de Aviso</CardTitle>
+          <CardDescription>Aviso de independência do projeto</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label htmlFor="disclaimer">Disclaimer (EN)</Label>
+            <Input
+              id="disclaimer"
+              value={settings.disclaimer || ''}
+              onChange={(e) => setSettings({ ...settings, disclaimer: e.target.value })}
+              placeholder="Independent project by ViajARTur, not affiliated with the Government of Canada"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Copyright</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label htmlFor="koda_copyright">Texto de Copyright</Label>
+            <Input
+              id="koda_copyright"
+              value={settings.copyright || ''}
+              onChange={(e) => setSettings({ ...settings, copyright: e.target.value })}
+              placeholder="© 2025 Koda. All rights reserved."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button
+          onClick={() => saveSettings('koda', settings)}
+          disabled={saving}
+          className="w-full sm:w-auto"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Configurações
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+
   const renderSettingsForm = (settings: FooterSettings, setSettings: React.Dispatch<React.SetStateAction<FooterSettings>>, platform: 'ms' | 'viajar') => (
     <div className="space-y-6">
       <Card>
@@ -901,16 +1071,20 @@ export default function FooterSettingsManager() {
         <p className="text-muted-foreground">Gerencie as informações de contato e redes sociais do footer</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'ms' | 'viajar')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'ms' | 'viajar' | 'koda')}>
         <TabsList>
           <TabsTrigger value="ms">Descubra MS</TabsTrigger>
           <TabsTrigger value="viajar">ViaJAR</TabsTrigger>
+          <TabsTrigger value="koda">Koda</TabsTrigger>
         </TabsList>
         <TabsContent value="ms">
           {renderSettingsForm(msSettings, setMsSettings, 'ms')}
         </TabsContent>
         <TabsContent value="viajar">
           {renderSettingsForm(viajarSettings, setViajarSettings, 'viajar')}
+        </TabsContent>
+        <TabsContent value="koda">
+          {renderKodaSettingsForm(kodaSettings, setKodaSettings)}
         </TabsContent>
       </Tabs>
     </div>

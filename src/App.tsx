@@ -78,6 +78,8 @@ import Guata from "@/pages/Guata";
 import GuataTest from "@/pages/GuataTest";
 import ChatGuata from "@/pages/ChatGuata";
 import Koda from "@/pages/Koda";
+import KodaPrivacy from "@/pages/koda/Privacy";
+import KodaTerms from "@/pages/koda/Terms";
 import EventosMS from "@/pages/ms/EventosMS";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import PassportDigital from "@/pages/PassportDigital";
@@ -166,6 +168,8 @@ function App() {
                             
                             {/* Koda - Canadian Travel Guide */}
                             <Route path="/koda" element={<Koda />} />
+                            <Route path="/koda/privacy" element={<KodaPrivacy />} />
+                            <Route path="/koda/terms" element={<KodaTerms />} />
                             
                             {/* ViaJAR Auth Routes (públicas) */}
                             <Route path="/viajar/login" element={<Suspense fallback={<LoadingFallback />}><ViaJARLogin /></Suspense>} />

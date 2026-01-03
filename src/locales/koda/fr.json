@@ -1,0 +1,29 @@
+{
+  "header": {
+    "title": "Découvrez le Canada",
+    "subtitle": "Votre guide alimenté par l'IA pour explorer le Grand Nord blanc",
+    "badges": {
+      "maple": "🍁 Pays de l'érable",
+      "mountains": "🏔️ Rocheuses",
+      "wonders": "🌲 Merveilles naturelles"
+    }
+  },
+  "chat": {
+    "welcome": "Salut! Je suis Koda, votre compagnon orignal et guide des merveilles du Canada! Comment puis-je vous aider à explorer le Grand Nord blanc aujourd'hui?",
+    "error": "J'ai un petit problème en ce moment. Pourriez-vous reformuler votre question? 🦌",
+    "loading": "Réflexion en cours...",
+    "placeholder": "Posez-moi n'importe quelle question sur le Canada...",
+    "clear": "Effacer la conversation"
+  },
+  "footer": {
+    "disclaimer": "Projet indépendant de ViajARTur, non affilié au gouvernement du Canada",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "copyright": "© 2025 Koda. Tous droits réservés."
+  },
+  "language": {
+    "en": "English",
+    "fr": "Français"
+  }
+}
+

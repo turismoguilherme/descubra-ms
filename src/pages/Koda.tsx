@@ -1,45 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { KodaHeader, KodaChat, KodaSuggestionQuestions } from "@/components/koda";
+import KodaFooter from "@/components/koda/KodaFooter";
 import { useKodaInput } from "@/hooks/useKodaInput";
 import { kodaService } from "@/services/ai/kodaService";
-import UniversalLayout from "@/components/layout/UniversalLayout";
-import { ENV } from "@/config/environment";
+import { useKodaLanguage } from "@/hooks/useKodaLanguage";
+import enTranslations from "@/locales/koda/en.json";
+import frTranslations from "@/locales/koda/fr.json";
 
 const Koda = () => {
-  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { language } = useKodaLanguage();
+  const t = language === 'fr' ? frTranslations : enTranslations;
 
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [forceLoad, setForceLoad] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(true);
   const [connectionChecking, setConnectionChecking] = useState(false);
 
-  // Force load after 2 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setForceLoad(true);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Welcome message
   useEffect(() => {
-    if (messages.length === 0 && (forceLoad || !authLoading)) {
+    if (messages.length === 0) {
       const welcomeMessage = {
         id: 1,
-        text: ENV.KODA.DEFAULT_GREETING,
+        text: t.chat.welcome,
         isUser: false,
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
     }
-  }, [messages.length, forceLoad, authLoading]);
+  }, [messages.length, t.chat.welcome]);
 
   const sendMessage = async (message?: string) => {
     const messageToSend = message || inputMessage;
@@ -60,11 +51,12 @@ const Koda = () => {
       const isFirstUserMessage = conversationHistory.length === 0;
       const response = await kodaService.processQuestion({
         question: messageToSend,
-        userId: user?.id || 'guest',
+        userId: 'guest',
         sessionId: `koda-session-${Date.now()}`,
         userLocation: 'Canada',
         conversationHistory: conversationHistory,
-        isFirstUserMessage: isFirstUserMessage
+        isFirstUserMessage: isFirstUserMessage,
+        language: language
       });
       
       const newBotMessage = {
@@ -89,7 +81,7 @@ const Koda = () => {
       
       const fallbackMessage = {
         id: Date.now() + 1,
-        text: "I'm having a little trouble right now. Could you try asking that again? 🦌",
+        text: t.chat.error,
         isUser: false,
         timestamp: new Date()
       };
@@ -129,83 +121,48 @@ const Koda = () => {
     sendMessage(question);
   };
 
-  // Loading state
-  if (authLoading && !forceLoad) {
-    return (
-      <UniversalLayout>
-        <div className="min-h-screen bg-gradient-to-br from-red-700 via-red-600 to-blue-900 flex items-center justify-center">
-          <div className="text-white text-center">
-            <div className="w-16 h-16 mx-auto mb-4 animate-pulse bg-white/20 rounded-full"></div>
-            <p className="text-lg">Checking authentication...</p>
-            <button 
-              onClick={() => setForceLoad(true)}
-              className="mt-4 text-sm text-white/70 hover:text-white underline"
-            >
-              Skip verification
-            </button>
-          </div>
-        </div>
-      </UniversalLayout>
-    );
-  }
-
-  // Main interface
+  // Main interface - Full screen like ChatGuata
   return (
-    <UniversalLayout>
-      <div 
-        className="min-h-screen bg-gradient-to-br from-red-700 via-red-600 to-blue-900"
-        data-testid="koda-container"
-      >
-        {/* Guest mode indicator */}
-        {forceLoad && !user && (
-          <div className="bg-yellow-500/90 text-white text-center py-2 px-4">
-            <p className="text-sm">
-              🎭 Guest Mode - 
-              <button 
-                onClick={() => navigate("/viajar/login")}
-                className="underline hover:no-underline ml-1"
-              >
-                Log in for the full experience
-              </button>
-            </p>
-          </div>
-        )}
-        
-        <main className="flex-grow py-8">
-          <div className="max-w-4xl mx-auto px-4">
-            <KodaHeader 
-              onClearConversation={handleClearConversation}
-              messages={messages}
-            />
+    <div 
+      className="min-h-screen w-screen bg-gradient-to-br from-red-700 via-blue-600 to-red-700 flex flex-col"
+      data-testid="koda-container"
+    >
+      <main className="flex-1 flex flex-col p-4 md:p-8 min-h-0">
+        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
+          <KodaHeader 
+            onClearConversation={handleClearConversation}
+            messages={messages}
+          />
+          
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-4">
+            <div className="lg:col-span-2 flex flex-col min-h-0">
+              <KodaChat
+                messages={messages}
+                inputMessage={inputMessage}
+                setInputMessage={setInputMessage}
+                sendMessage={sendMessage}
+                onClearConversation={handleClearConversation}
+                isRecordingAudio={isRecordingAudio}
+                toggleMicrophone={toggleMicrophone}
+                isLoading={isLoading}
+                isConnected={isConnected}
+                connectionChecking={connectionChecking}
+                handleKeyDown={handleKeyDown}
+                sendFeedback={sendFeedback}
+              />
+            </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-              <div className="lg:col-span-2">
-                <KodaChat
-                  messages={messages}
-                  inputMessage={inputMessage}
-                  setInputMessage={setInputMessage}
-                  sendMessage={sendMessage}
-                  onClearConversation={handleClearConversation}
-                  isRecordingAudio={isRecordingAudio}
-                  toggleMicrophone={toggleMicrophone}
-                  isLoading={isLoading}
-                  isConnected={isConnected}
-                  connectionChecking={connectionChecking}
-                  handleKeyDown={handleKeyDown}
-                  sendFeedback={sendFeedback}
-                />
-              </div>
-              
-              <div>
-                <KodaSuggestionQuestions 
-                  onSuggestionClick={handleSuggestionClick}
-                />
-              </div>
+            <div className="flex flex-col min-h-0">
+              <KodaSuggestionQuestions 
+                onSuggestionClick={handleSuggestionClick}
+              />
             </div>
           </div>
-        </main>
-      </div>
-    </UniversalLayout>
+        </div>
+      </main>
+      
+      <KodaFooter />
+    </div>
   );
 };
 
