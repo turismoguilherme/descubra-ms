@@ -3,7 +3,7 @@
  * Detecta o idioma da mensagem do usuário e fornece traduções
  */
 
-export type SupportedLanguage = 'pt' | 'en' | 'es' | 'fr' | 'it' | 'de';
+export type SupportedLanguage = 'pt' | 'en' | 'es' | 'fr' | 'it' | 'de' | 'hi';
 
 export interface LanguageDetectionResult {
   language: SupportedLanguage;
@@ -19,7 +19,8 @@ class LanguageDetectionService {
     es: ['el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'ser', 'se', 'no', 'haber', 'por', 'con', 'su', 'para', 'como', 'está', 'son', 'con', 'esta', 'por', 'qué', 'dónde', 'cómo', 'cuándo', 'quién', 'cuál'],
     fr: ['le', 'de', 'et', 'à', 'un', 'il', 'être', 'et', 'en', 'avoir', 'que', 'pour', 'dans', 'ce', 'son', 'une', 'sur', 'avec', 'ne', 'se', 'pas', 'tout', 'plus', 'par', 'grand', 'où', 'comment', 'quand', 'qui', 'quel'],
     it: ['il', 'di', 'che', 'e', 'la', 'a', 'per', 'è', 'sono', 'un', 'una', 'in', 'con', 'non', 'le', 'si', 'lo', 'da', 'come', 'dove', 'quando', 'chi', 'quale'],
-    de: ['der', 'die', 'und', 'in', 'den', 'von', 'zu', 'das', 'mit', 'sich', 'des', 'auf', 'für', 'ist', 'im', 'dem', 'nicht', 'ein', 'eine', 'als', 'auch', 'es', 'an', 'wer', 'wie', 'wo', 'wann', 'was', 'welche']
+    de: ['der', 'die', 'und', 'in', 'den', 'von', 'zu', 'das', 'mit', 'sich', 'des', 'auf', 'für', 'ist', 'im', 'dem', 'nicht', 'ein', 'eine', 'als', 'auch', 'es', 'an', 'wer', 'wie', 'wo', 'wann', 'was', 'welche'],
+    hi: ['में', 'है', 'और', 'के', 'की', 'को', 'से', 'पर', 'यह', 'वह', 'क्या', 'कहाँ', 'कैसे', 'कब', 'कौन', 'कौन सा', 'हो', 'था', 'हैं', 'था', 'कर', 'दे', 'ले', 'जा', 'आ', 'रह', 'गया', 'दिया', 'लिया']
   };
 
   // Saudações comuns em cada idioma
@@ -29,7 +30,8 @@ class LanguageDetectionService {
     es: ['hola', 'buenos días', 'buenas tardes', 'buenas noches', '¿cómo estás?', '¿qué tal?'],
     fr: ['bonjour', 'salut', 'bonsoir', 'bonne nuit', 'comment allez-vous', 'ça va'],
     it: ['ciao', 'buongiorno', 'buonasera', 'come stai', 'come va'],
-    de: ['hallo', 'guten tag', 'guten morgen', 'guten abend', 'wie geht es', 'wie geht\'s']
+    de: ['hallo', 'guten tag', 'guten morgen', 'guten abend', 'wie geht es', 'wie geht\'s'],
+    hi: ['नमस्ते', 'नमस्कार', 'हैलो', 'कैसे हो', 'क्या हाल है', 'सुप्रभात', 'शुभ संध्या']
   };
 
   /**
@@ -50,7 +52,8 @@ class LanguageDetectionService {
       es: 0,
       fr: 0,
       it: 0,
-      de: 0
+      de: 0,
+      hi: 0
     };
 
     // Verificar saudações primeiro (mais confiável)
@@ -112,7 +115,8 @@ class LanguageDetectionService {
       es: 'Espanhol',
       fr: 'Francês',
       it: 'Italiano',
-      de: 'Alemão'
+      de: 'Alemão',
+      hi: 'Hindi'
     };
     return names[language];
   }
