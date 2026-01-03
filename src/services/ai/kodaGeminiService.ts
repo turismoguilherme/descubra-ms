@@ -122,6 +122,10 @@ class KodaGeminiService {
     let webSearchResults: any[] = [];
     let usedWebSearch = false;
     
+    if (isDev) {
+      console.log(`🌐 [Koda] Iniciando busca web para: "${question}"`);
+    }
+    
     try {
       const webSearchQuery: RealWebSearchQuery = {
         question: `${question} Canada tourism`,
@@ -130,21 +134,49 @@ class KodaGeminiService {
         maxResults: 5
       };
       
+      if (isDev) {
+        console.log(`🌐 [Koda] Query de busca:`, webSearchQuery);
+      }
+      
       const webSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
       webSearchResults = webSearchResponse.results || [];
       usedWebSearch = webSearchResponse.usedRealSearch || false;
       
       if (isDev) {
-        console.log(`🌐 [Koda] Web search: ${webSearchResults.length} resultados encontrados`);
+        console.log(`🌐 [Koda] Web search concluída:`);
+        console.log(`   - Resultados: ${webSearchResults.length}`);
+        console.log(`   - Usou busca real: ${usedWebSearch}`);
+        if (webSearchResults.length > 0) {
+          console.log(`   - Primeiro resultado:`, webSearchResults[0]?.title || 'N/A');
+        }
       }
-    } catch (error) {
-      console.warn('⚠️ [Koda] Erro na busca web:', error);
+    } catch (error: any) {
+      console.error('❌ [Koda] Erro na busca web:', {
+        message: error?.message,
+        stack: error?.stack,
+        error: error
+      });
+      // Continuar mesmo se busca web falhar
     }
 
     // 5. CONSTRUIR PROMPT PARA GEMINI
+    if (isDev) {
+      console.log(`📝 [Koda] Construindo prompt...`);
+      console.log(`   - Web results: ${webSearchResults.length}`);
+      console.log(`   - Conversation history: ${(query.conversationHistory || []).length} mensagens`);
+    }
+    
     const prompt = this.buildPrompt(question, webSearchResults, query.conversationHistory || [], targetLanguage, detectedLanguage);
+    
+    if (isDev) {
+      console.log(`📝 [Koda] Prompt construído (${prompt.length} caracteres)`);
+    }
 
     // 6. CHAMAR GEMINI VIA EDGE FUNCTION
+    if (isDev) {
+      console.log(`🤖 [Koda] Chamando Gemini via edge function...`);
+    }
+    
     try {
       const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
         body: {
@@ -155,36 +187,105 @@ class KodaGeminiService {
         }
       });
 
-      if (error || !data?.success || !data?.text) {
-        throw new Error(error?.message || 'Gemini API error');
+      if (isDev) {
+        console.log(`🤖 [Koda] Resposta da edge function recebida:`);
+        console.log(`   - Error:`, error);
+        console.log(`   - Data:`, {
+          success: data?.success,
+          hasText: !!data?.text,
+          textLength: data?.text?.length || 0,
+          error: data?.error,
+          model: data?.model
+        });
+      }
+
+      // Verificar erros detalhadamente
+      if (error) {
+        console.error('❌ [Koda] Erro na edge function:', {
+          message: error.message,
+          status: error.status,
+          context: error.context,
+          error: error
+        });
+        throw new Error(`Edge function error: ${error.message || 'Unknown error'}`);
+      }
+
+      // Verificar se há erro na resposta (mesmo com status 200)
+      if (data?.error) {
+        console.error('❌ [Koda] Erro na resposta do Gemini:', data.error);
+        throw new Error(`Gemini API error: ${data.error}`);
+      }
+
+      // Verificar se success é false
+      if (data?.success === false) {
+        console.error('❌ [Koda] Gemini retornou success=false:', data);
+        throw new Error(`Gemini API returned success=false: ${data.error || data.message || 'Unknown error'}`);
+      }
+
+      // Verificar se há texto na resposta
+      if (!data?.text) {
+        console.error('❌ [Koda] Resposta do Gemini sem texto:', data);
+        throw new Error('Gemini API returned empty response');
       }
 
       const answer = data.text.trim();
+      
+      if (isDev) {
+        console.log(`✅ [Koda] Resposta do Gemini recebida (${answer.length} caracteres)`);
+        console.log(`   - Preview: ${answer.substring(0, 100)}...`);
+      }
 
       // 7. SALVAR NO CACHE
-      await kodaResponseCacheService.saveToSharedCache(question, answer, targetLanguage);
-      if (query.userId || query.sessionId) {
-        await kodaResponseCacheService.saveToIndividualCache(
-          question, 
-          answer, 
-          targetLanguage,
-          query.userId, 
-          query.sessionId
-        );
+      if (isDev) {
+        console.log(`💾 [Koda] Salvando no cache...`);
+      }
+      
+      try {
+        await kodaResponseCacheService.saveToSharedCache(question, answer, targetLanguage);
+        if (query.userId || query.sessionId) {
+          await kodaResponseCacheService.saveToIndividualCache(
+            question, 
+            answer, 
+            targetLanguage,
+            query.userId, 
+            query.sessionId
+          );
+        }
+        if (isDev) {
+          console.log(`✅ [Koda] Cache salvo com sucesso`);
+        }
+      } catch (cacheError) {
+        console.warn('⚠️ [Koda] Erro ao salvar no cache (não crítico):', cacheError);
+        // Continuar mesmo se cache falhar
+      }
+
+      const processingTime = Date.now() - startTime;
+      if (isDev) {
+        console.log(`✅ [Koda] Processamento concluído em ${processingTime}ms`);
       }
 
       return {
         answer,
         confidence: usedWebSearch ? 0.95 : 0.85,
         sources: usedWebSearch ? ['web_search', 'gemini'] : ['gemini'],
-        processingTime: Date.now() - startTime,
+        processingTime,
         usedWebSearch,
         detectedLanguage: detectedLanguage,
         responseLanguage: targetLanguage
       };
 
-    } catch (error) {
-      console.error('❌ [Koda] Erro ao chamar Gemini:', error);
+    } catch (error: any) {
+      console.error('❌ [Koda] Erro ao chamar Gemini:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name,
+        error: error
+      });
+      
+      if (isDev) {
+        console.log(`🔄 [Koda] Usando resposta de fallback`);
+      }
+      
       return this.generateFallbackResponse(question, targetLanguage, detectedLanguage);
     }
   }
