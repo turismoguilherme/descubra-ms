@@ -5,8 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { supabase } from '@/integrations/supabase/client';
-import { Sparkles, Award, Star, Eye, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sparkles, Award, Star } from "lucide-react";
 
 interface PantanalAnimal {
   id: string;
@@ -25,7 +24,6 @@ const AvataresSection = () => {
   const { language } = useLanguage();
   const [content, setContent] = useState<Record<string, string>>({});
   const [avatars, setAvatars] = useState<PantanalAnimal[]>([]);
-  const [showAvatarsModal, setShowAvatarsModal] = useState(false);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -119,91 +117,9 @@ const AvataresSection = () => {
             </div>
           </div>
 
-          {/* Ver avatares */}
-          <div className="text-center mb-12">
-            <Button
-              onClick={() => setShowAvatarsModal(true)}
-              className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white px-8 py-4 text-lg gap-3"
-            >
-              <Eye className="h-5 w-5" />
-              Ver Avatares Disponíveis
-            </Button>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center">
-            <Link to="/descubrams/register">
-              <Button className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white font-medium px-8 py-6 text-lg">
-                {getContent('ms_avatars_cta', 'Cadastre-se e Escolha seu Avatar')}
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
 
-      {/* Modal de Avatares */}
-      <Dialog open={showAvatarsModal} onOpenChange={setShowAvatarsModal}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center">
-              🦌 Avatares do Pantanal Disponíveis
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="mt-6">
-            {avatars.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {avatars.map((avatar) => (
-                  <div key={avatar.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-                    <div className="text-center mb-4">
-                      <div className="w-32 h-32 mx-auto mb-4 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
-                        <img
-                          src={avatar.image_url}
-                          alt={avatar.name}
-                          className="w-24 h-24 object-cover rounded-full"
-                          onError={(e) => {
-                            e.currentTarget.src = '/images/avatar-placeholder.png';
-                          }}
-                        />
-                      </div>
-
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">{avatar.name}</h3>
-                      <p className="text-sm text-gray-600 italic mb-3">{avatar.scientific_name}</p>
-
-                      <div className="mb-4">
-                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                          avatar.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
-                          avatar.rarity === 'epic' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
-                          avatar.rarity === 'rare' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
-                          'bg-gray-100 text-gray-800 border border-gray-300'
-                        }`}>
-                          {avatar.rarity === 'legendary' ? '⭐⭐⭐⭐⭐ Lendário' :
-                           avatar.rarity === 'epic' ? '⭐⭐⭐⭐ Épico' :
-                           avatar.rarity === 'rare' ? '⭐⭐⭐ Raro' : '⭐ Comum'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <p><strong>Habitat:</strong> {avatar.habitat || 'Pantanal'}</p>
-                      <p><strong>Alimentação:</strong> {avatar.diet || 'Diversificada'}</p>
-                      {avatar.personality_traits && (
-                        <p><strong>Personalidade:</strong> {avatar.personality_traits}</p>
-                      )}
-                    </div>
-
-                    <p className="text-sm text-gray-600 mt-3 line-clamp-3">{avatar.description}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Carregando avatares...</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </section>
   );
 };
