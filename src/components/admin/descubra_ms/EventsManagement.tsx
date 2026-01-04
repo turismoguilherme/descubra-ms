@@ -75,6 +75,9 @@ export default function EventsManagement() {
   const [activeTab, setActiveTab] = useState('pending');
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const loadEvents = async () => {
@@ -465,7 +468,35 @@ export default function EventsManagement() {
   const handleSaveEdit = async () => {
     if (!editingEvent) return;
 
+    setSaving(true);
     try {
+      let imageUrl = editingEvent.image_url;
+      let logoUrl = editingEvent.logo_evento;
+
+      // Upload main image if a new file is selected
+      if (imageFile) {
+        const { data, error } = await supabase.storage
+          .from('event-images')
+          .upload(`public/${Date.now()}-${imageFile.name}`, imageFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+        if (error) throw error;
+        imageUrl = `${supabase.storage.from('event-images').getPublicUrl(data.path).data.publicUrl}`;
+      }
+
+      // Upload logo image if a new file is selected
+      if (logoFile) {
+        const { data, error } = await supabase.storage
+          .from('event-logos')
+          .upload(`public/${Date.now()}-${logoFile.name}`, logoFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+        if (error) throw error;
+        logoUrl = `${supabase.storage.from('event-logos').getPublicUrl(data.path).data.publicUrl}`;
+      }
+
       // Campos básicos que sempre existem
       const updateData: any = {
         titulo: editingEvent.name,
@@ -474,20 +505,14 @@ export default function EventsManagement() {
         data_fim: editingEvent.end_date,
         local: editingEvent.location,
         organizador: editingEvent.organizador_nome || editingEvent.organizador,
-        contato_telefone: editingEvent.organizador_telefone || editingEvent.contato_telefone,
-        contato_email: editingEvent.organizador_email || editingEvent.contato_email,
-        imagem_principal: editingEvent.image_url,
+        imagem_principal: imageUrl,
         video_promocional: editingEvent.video_url,
         updated_at: new Date().toISOString(),
       };
 
-      // Campos que podem não existir - adicionar apenas se existirem
-      if (editingEvent.cidade || editingEvent.location) {
-        updateData.cidade = editingEvent.cidade || editingEvent.location.split(',')[0]?.trim();
-      }
-
-      // Tentar categoria primeiro, mas continuar se não existir
+      // Verificar e adicionar campos opcionais apenas se existirem na tabela
       try {
+        // Testar categoria primeiro
         const testQuery = await supabase
           .from('events')
           .select('categoria')
@@ -500,17 +525,59 @@ export default function EventsManagement() {
         // Campo categoria pode não existir, continuar sem ele
       }
 
+      try {
+        // Testar cidade
+        const testCidadeQuery = await supabase
+          .from('events')
+          .select('cidade')
+          .limit(1);
+
+        if (!testCidadeQuery.error && editingEvent.location) {
+          updateData.cidade = editingEvent.location.split(',')[0]?.trim();
+        }
+      } catch (e) {
+        // Campo cidade pode não existir, continuar sem ele
+      }
+
       // Adicionar outros campos opcionais se existirem
       const optionalFields = [
+        'contato_telefone',
+        'contato_email',
         'site_oficial',
-        'logo_evento',
         'publico_alvo',
         'tipo_entrada'
       ];
 
       for (const field of optionalFields) {
         if (editingEvent[field as keyof typeof editingEvent]) {
-          updateData[field] = editingEvent[field as keyof typeof editingEvent];
+          try {
+            const testFieldQuery = await supabase
+              .from('events')
+              .select(field)
+              .limit(1);
+
+            if (!testFieldQuery.error) {
+              updateData[field] = editingEvent[field as keyof typeof editingEvent];
+            }
+          } catch (e) {
+            // Campo pode não existir, continuar sem ele
+          }
+        }
+      }
+
+      // Adicionar logo_evento se foi feito upload e o campo existir
+      if (logoUrl) {
+        try {
+          const testLogoQuery = await supabase
+            .from('events')
+            .select('logo_evento')
+            .limit(1);
+
+          if (!testLogoQuery.error) {
+            updateData.logo_evento = logoUrl;
+          }
+        } catch (e) {
+          // Campo logo_evento pode não existir, continuar sem ele
         }
       }
 
@@ -541,6 +608,8 @@ export default function EventsManagement() {
         description: error.message || 'Não foi possível salvar as alterações.',
         variant: 'destructive',
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1041,19 +1110,12 @@ export default function EventsManagement() {
                 </div>
 
                 <div>
-                  <Label htmlFor="edit-video">Upload de Vídeo</Label>
+                  <Label htmlFor="edit-video-url">URL do Vídeo (YouTube)</Label>
                   <Input
-                    id="edit-video"
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // Aqui seria implementado o upload para storage
-                        // Por enquanto, apenas simula
-                        setEditingEvent({...editingEvent, video_url: `uploaded_${file.name}`});
-                      }
-                    }}
+                    id="edit-video-url"
+                    value={editingEvent.video_url || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, video_url: e.target.value})}
+                    placeholder="https://youtube.com/watch?v=..."
                   />
                 </div>
               </div>
@@ -1064,20 +1126,32 @@ export default function EventsManagement() {
                   <Label htmlFor="edit-image">Imagem Principal</Label>
                   <Input
                     id="edit-image"
-                    value={editingEvent.image_url || ''}
-                    onChange={(e) => setEditingEvent({...editingEvent, image_url: e.target.value})}
-                    placeholder="URL da imagem"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                   />
+                  {editingEvent.image_url && (
+                    <p className="text-sm text-gray-500 mt-1">Imagem atual: {editingEvent.image_url}</p>
+                  )}
+                  {imageFile && (
+                    <p className="text-sm text-green-600 mt-1">Novo arquivo: {imageFile.name}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="edit-logo">Logo do Evento</Label>
                   <Input
                     id="edit-logo"
-                    value={editingEvent.logo_evento || ''}
-                    onChange={(e) => setEditingEvent({...editingEvent, logo_evento: e.target.value})}
-                    placeholder="URL do logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
                   />
+                  {editingEvent.logo_evento && (
+                    <p className="text-sm text-gray-500 mt-1">Logo atual: {editingEvent.logo_evento}</p>
+                  )}
+                  {logoFile && (
+                    <p className="text-sm text-green-600 mt-1">Novo arquivo: {logoFile.name}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1087,8 +1161,8 @@ export default function EventsManagement() {
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit}>
-              Salvar Alterações
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </DialogFooter>
         </DialogContent>

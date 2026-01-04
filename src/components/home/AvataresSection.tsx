@@ -46,7 +46,7 @@ const AvataresSection = () => {
           .select('*')
           .eq('is_active', true)
           .order('display_order', { ascending: true })
-          .limit(6); // Mostrar apenas os 6 primeiros
+          .limit(3); // Mostrar apenas os 3 primeiros, como nos eventos
 
         if (error) throw error;
         setAvatars(data || []);
@@ -90,31 +90,76 @@ const AvataresSection = () => {
             </p>
           </div>
 
-          {/* Content - Versão sucinta */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-8">
-            <p className="text-gray-700 leading-relaxed text-center text-lg mb-6">
-              <strong>Sistema de Gamificação:</strong> Escolha seu avatar entre animais do Pantanal, desbloqueie novos através do Passaporte Digital
-              (complete roteiros e visite destinos para ganhar recompensas). Cada avatar representa características únicas da fauna brasileira.
-            </p>
+          {/* Grid de Avatares - Seguindo layout dos eventos (3 avatares em destaque) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {avatars.map((avatar, index) => (
+              <div
+                key={avatar.id}
+                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 h-full border border-gray-100 hover:border-ms-primary-blue/30"
+              >
+                {/* Badge de Raridade */}
+                <div className="absolute top-4 right-4 z-10">
+                  <span className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${
+                    avatar.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
+                    avatar.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
+                    avatar.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {avatar.rarity === 'legendary' ? '⭐⭐⭐⭐⭐ Lendário' :
+                     avatar.rarity === 'epic' ? '⭐⭐⭐⭐ Épico' :
+                     avatar.rarity === 'rare' ? '⭐⭐⭐⭐ Raro' : '⭐ Comum'}
+                  </span>
+                </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="flex items-center gap-2 justify-center">
-                <span className="text-gray-500 text-lg">⭐</span>
-                <span className="text-sm text-gray-700">Comum</span>
+                {/* Imagem - Maior como nos eventos */}
+                <div className="h-72 overflow-hidden relative">
+                  <img
+                    src={avatar.image_url}
+                    alt={avatar.name}
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/avatar-placeholder.png';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+
+                {/* Conteúdo - Mais espaçado como nos eventos */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-ms-primary-blue mb-3 hover:text-ms-primary-blue/80 transition-colors duration-300 line-clamp-2">
+                    {avatar.name}
+                  </h3>
+
+                  <p className="text-sm text-gray-600 italic mb-4">{avatar.scientific_name}</p>
+
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                    {avatar.description}
+                  </p>
+
+                  {/* Link para ver mais */}
+                  <Link
+                    to="/descubrams/profile#top"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="flex items-center gap-2 text-ms-primary-blue font-semibold text-sm hover:gap-3 transition-all duration-300 pt-4 border-t border-gray-100 hover:text-ms-primary-blue/80"
+                  >
+                    <span>Ver detalhes</span>
+                    <Star className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
-              <div className="flex items-center gap-2 justify-center">
-                <span className="text-blue-500 text-lg">⭐⭐⭐</span>
-                <span className="text-sm text-gray-700">Raro</span>
-              </div>
-              <div className="flex items-center gap-2 justify-center">
-                <span className="text-purple-500 text-lg">⭐⭐⭐⭐</span>
-                <span className="text-sm text-gray-700">Épico</span>
-              </div>
-              <div className="flex items-center gap-2 justify-center">
-                <span className="text-yellow-500 text-lg">⭐⭐⭐⭐⭐</span>
-                <span className="text-sm text-gray-700">Lendário</span>
-              </div>
-            </div>
+            ))}
+          </div>
+
+          {/* Botão Ver Todos os Avatares */}
+          <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+            <Link
+              to="/descubrams/profile"
+              className="group inline-flex items-center gap-3 bg-gradient-to-r from-ms-primary-blue to-blue-600 text-white px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1"
+            >
+              <Award className="h-5 w-5" />
+              Ver Meus Avatares
+              <Sparkles className="h-4 w-4 group-hover:translate-x-2 transition-transform duration-300" />
+            </Link>
           </div>
 
         </div>
