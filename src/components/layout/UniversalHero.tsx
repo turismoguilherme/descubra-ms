@@ -146,8 +146,8 @@ const UniversalHero = () => {
       const videoId = youtubeMatch[1];
       // Parâmetros otimizados para background video - sem controles, sem informações, sem fullscreen
       // Usando youtube-nocookie.com para evitar cookies e informações extras
-      // Adicionando parâmetros extras para esconder tudo no mobile
-      return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&loop=1&mute=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&playsinline=1&enablejsapi=0&origin=${window.location.origin}&widget_referrer=${window.location.origin}&color=white&theme=dark&autohide=1&wmode=opaque&mute=1&start=0&end=0`;
+      // Parâmetros adicionais para esconder informações do YouTube no mobile
+      return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&loop=1&mute=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&playsinline=1&enablejsapi=0&origin=${window.location.origin}&widget_referrer=${window.location.origin}&color=white&theme=dark&autohide=1&wmode=opaque&mute=1&start=0&end=0&playsinline=1&nocookie=1`;
     }
     // Vimeo
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);

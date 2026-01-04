@@ -674,12 +674,11 @@ async function executeAutoApproveEvents(supabase: any) {
   try {
     console.log('🔍 [AutoApproveEvents] Iniciando verificação de eventos pendentes...');
 
-    // Buscar eventos pendentes gratuitos
+    // Buscar eventos pendentes (gratuitos e pagos)
     const { data: pendingEvents, error } = await supabase
       .from('events')
       .select('id, name, title, description, start_date, is_free, price, approval_status')
       .eq('approval_status', 'pending')
-      .or('is_free.eq.true,price.eq.0')
       .limit(50);
 
     if (error) throw error;
@@ -698,11 +697,10 @@ async function executeAutoApproveEvents(supabase: any) {
       const hasRequiredFields = event.name || event.title;
 
       // Verificações básicas primeiro
-      if (!isFree || !hasValidDate || !hasRequiredFields) {
+      if (!hasValidDate || !hasRequiredFields) {
         rejectedEvents.push({
           event,
-          reason: !isFree ? 'Evento não é gratuito' :
-                 !hasValidDate ? 'Data muito próxima ou inválida' :
+          reason: !hasValidDate ? 'Data muito próxima ou inválida' :
                  !hasRequiredFields ? 'Campos obrigatórios faltando' : 'Outro motivo',
         });
         continue;
@@ -729,7 +727,7 @@ async function executeAutoApproveEvents(supabase: any) {
             event_id: event.id,
             approval_reason: `Aprovado automaticamente - Score: ${moderation.score}/100`,
             rules_applied: {
-              isFree: true,
+              isFree: isFree,
               hasValidDate: true,
               hasRequiredFields: true,
               moderationScore: moderation.score,

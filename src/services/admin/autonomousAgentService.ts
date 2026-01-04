@@ -511,14 +511,13 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
    */
   async autoApproveFreeEvents(): Promise<TaskResult> {
     try {
-      console.log('✅ [AutonomousAgent] Verificando eventos gratuitos para aprovação automática...');
-      
-      // Buscar eventos pendentes que são gratuitos
+      console.log('✅ [AutonomousAgent] Verificando eventos para aprovação automática...');
+
+      // Buscar eventos pendentes (gratuitos E pagos)
       const { data: pendingEvents, error } = await supabase
         .from('events')
         .select('id, name, title, start_date, end_date, price, is_free, approval_status, source')
         .eq('approval_status', 'pending')
-        .or('is_free.eq.true,price.eq.0')
         .limit(50);
 
       if (error) throw error;
@@ -536,13 +535,14 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
         const eventName = (event.name || event.title || '').toLowerCase();
         const startDate = event.start_date ? new Date(event.start_date) : null;
         const isFree = event.is_free === true || event.price === 0 || event.price === null;
-        
+
         // Verificar critérios de aprovação
         const hasBlockedWords = blockedWords.some(word => eventName.includes(word));
         const hasValidDate = startDate && startDate >= minDate;
         const hasRequiredFields = event.name || event.title;
 
-        if (isFree && hasValidDate && hasRequiredFields && !hasBlockedWords) {
+        // Aceitar eventos gratuitos E pagos (removido critério isFree)
+        if (hasValidDate && hasRequiredFields && !hasBlockedWords) {
           // Aprovar evento
           const { error: updateError } = await supabase
             .from('events')
@@ -559,9 +559,9 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
             // Salvar registro da aprovação
             await supabase.from('ai_auto_approvals').insert({
               event_id: event.id,
-              approval_reason: 'Evento gratuito com data válida e campos obrigatórios preenchidos',
+              approval_reason: `Evento ${isFree ? 'gratuito' : 'pago'} com data válida e campos obrigatórios preenchidos`,
               rules_applied: {
-                isFree: true,
+                isFree: isFree,
                 hasValidDate: true,
                 hasRequiredFields: true,
                 hasBlockedWords: false,
@@ -572,8 +572,7 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
         } else {
           rejectedEvents.push({
             event,
-            reason: !isFree ? 'Evento não é gratuito' :
-                   !hasValidDate ? 'Data muito próxima ou inválida' :
+            reason: !hasValidDate ? 'Data muito próxima ou inválida' :
                    !hasRequiredFields ? 'Campos obrigatórios faltando' :
                    hasBlockedWords ? 'Contém palavras bloqueadas' : 'Outro motivo',
           });

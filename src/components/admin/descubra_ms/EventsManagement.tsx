@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -68,6 +69,8 @@ export default function EventsManagement() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [approvingEventId, setApprovingEventId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('pending');
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const loadEvents = async () => {
@@ -426,7 +429,7 @@ export default function EventsManagement() {
     try {
       const { error } = await supabase
         .from('events')
-        .update({ 
+        .update({
           is_sponsored: !isSponsored,
           sponsor_payment_status: !isSponsored ? 'paid' : 'cancelled'
         })
@@ -436,8 +439,8 @@ export default function EventsManagement() {
 
       toast({
         title: isSponsored ? 'Destaque removido' : 'Destaque ativado!',
-        description: isSponsored 
-          ? 'O evento não aparece mais em destaque.' 
+        description: isSponsored
+          ? 'O evento não aparece mais em destaque.'
           : 'O evento agora aparece em destaque.',
       });
       loadEvents();
@@ -445,6 +448,58 @@ export default function EventsManagement() {
       toast({
         title: 'Erro',
         description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingEvent) return;
+
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({
+          titulo: editingEvent.name,
+          descricao: editingEvent.description,
+          data_inicio: editingEvent.start_date,
+          data_fim: editingEvent.end_date,
+          local: editingEvent.location,
+          cidade: editingEvent.cidade || editingEvent.location.split(',')[0]?.trim(),
+          categoria: editingEvent.category,
+          tipo_entrada: editingEvent.tipo_entrada || (editingEvent.is_free ? 'gratuito' : 'pago'),
+          organizador: editingEvent.organizador_nome || editingEvent.organizador,
+          site_oficial: editingEvent.site_oficial,
+          contato_telefone: editingEvent.organizador_telefone || editingEvent.contato_telefone,
+          contato_email: editingEvent.organizador_email || editingEvent.contato_email,
+          imagem_principal: editingEvent.image_url,
+          video_promocional: editingEvent.video_url,
+          logo_evento: editingEvent.logo_evento,
+          publico_alvo: editingEvent.publico_alvo,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingEvent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Evento atualizado!',
+        description: 'As alterações foram salvas com sucesso.',
+      });
+
+      setEditDialogOpen(false);
+      setEditingEvent(null);
+      loadEvents();
+    } catch (error: any) {
+      console.error('Erro ao editar evento:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message || 'Não foi possível salvar as alterações.',
         variant: 'destructive',
       });
     }
@@ -642,13 +697,34 @@ export default function EventsManagement() {
                 )}
 
                 {event.is_visible && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditEvent(event)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={event.is_sponsored ? "secondary" : "outline"}
+                      onClick={() => toggleSponsorship(event.id, event.is_sponsored)}
+                    >
+                      <Star className="w-4 h-4 mr-1" />
+                      {event.is_sponsored ? 'Remover Destaque' : 'Dar Destaque'}
+                    </Button>
+                  </>
+                )}
+
+                {!event.is_visible && (
                   <Button
                     size="sm"
-                    variant={event.is_sponsored ? "secondary" : "outline"}
-                    onClick={() => toggleSponsorship(event.id, event.is_sponsored)}
+                    variant="outline"
+                    onClick={() => handleEditEvent(event)}
                   >
-                    <Star className="w-4 h-4 mr-1" />
-                    {event.is_sponsored ? 'Remover Destaque' : 'Dar Destaque'}
+                    <Edit className="w-4 h-4 mr-1" />
+                    Editar
                   </Button>
                 )}
               </div>
@@ -785,6 +861,192 @@ export default function EventsManagement() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Modal de edição */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Evento</DialogTitle>
+          </DialogHeader>
+
+          {editingEvent && (
+            <div className="space-y-6 py-4">
+              {/* Nome */}
+              <div>
+                <Label htmlFor="edit-name">Nome do Evento *</Label>
+                <Input
+                  id="edit-name"
+                  value={editingEvent.name}
+                  onChange={(e) => setEditingEvent({...editingEvent, name: e.target.value})}
+                  placeholder="Nome do evento"
+                />
+              </div>
+
+              {/* Descrição */}
+              <div>
+                <Label htmlFor="edit-description">Descrição</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingEvent.description || ''}
+                  onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})}
+                  placeholder="Descrição detalhada do evento"
+                  rows={4}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Data de início */}
+                <div>
+                  <Label htmlFor="edit-start-date">Data de Início</Label>
+                  <Input
+                    id="edit-start-date"
+                    type="datetime-local"
+                    value={editingEvent.start_date ? new Date(editingEvent.start_date).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, start_date: e.target.value})}
+                  />
+                </div>
+
+                {/* Data de fim */}
+                <div>
+                  <Label htmlFor="edit-end-date">Data de Fim</Label>
+                  <Input
+                    id="edit-end-date"
+                    type="datetime-local"
+                    value={editingEvent.end_date ? new Date(editingEvent.end_date).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, end_date: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Local */}
+                <div>
+                  <Label htmlFor="edit-location">Local</Label>
+                  <Input
+                    id="edit-location"
+                    value={editingEvent.location}
+                    onChange={(e) => setEditingEvent({...editingEvent, location: e.target.value})}
+                    placeholder="Local do evento"
+                  />
+                </div>
+
+                {/* Categoria */}
+                <div>
+                  <Label htmlFor="edit-category">Categoria</Label>
+                  <Input
+                    id="edit-category"
+                    value={editingEvent.category || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, category: e.target.value})}
+                    placeholder="Ex: cultural, esportivo, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Organizadores */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-organizer">Organizador</Label>
+                  <Input
+                    id="edit-organizer"
+                    value={editingEvent.organizador_nome || editingEvent.organizador || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, organizador_nome: e.target.value})}
+                    placeholder="Nome do organizador"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-company">Empresa</Label>
+                  <Input
+                    id="edit-company"
+                    value={(editingEvent as any).organizador_empresa || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, organizador_empresa: e.target.value})}
+                    placeholder="Empresa organizadora"
+                  />
+                </div>
+              </div>
+
+              {/* Contatos */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-email">Email</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editingEvent.organizador_email || editingEvent.contato_email || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, organizador_email: e.target.value})}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-phone">Telefone</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editingEvent.organizador_telefone || editingEvent.contato_telefone || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, organizador_telefone: e.target.value})}
+                    placeholder="(67) 99999-9999"
+                  />
+                </div>
+              </div>
+
+              {/* URLs */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-website">Site Oficial</Label>
+                  <Input
+                    id="edit-website"
+                    value={editingEvent.site_oficial || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, site_oficial: e.target.value})}
+                    placeholder="https://site.com"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-video">Vídeo (YouTube)</Label>
+                  <Input
+                    id="edit-video"
+                    value={editingEvent.video_url || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, video_url: e.target.value})}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+              </div>
+
+              {/* Imagens */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-image">Imagem Principal</Label>
+                  <Input
+                    id="edit-image"
+                    value={editingEvent.image_url || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, image_url: e.target.value})}
+                    placeholder="URL da imagem"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-logo">Logo do Evento</Label>
+                  <Input
+                    id="edit-logo"
+                    value={editingEvent.logo_evento || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, logo_evento: e.target.value})}
+                    placeholder="URL do logo"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de detalhes - Prévia do que aparece para os usuários */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>

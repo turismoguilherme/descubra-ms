@@ -263,7 +263,7 @@ export class AlumiaService {
       return data.events;
     } catch (error) {
       console.error('❌ Erro ao buscar eventos ALUMIA:', error);
-      return this.getMockEvents();
+      return []; // Retornar array vazio em vez de eventos mockados
     }
   }
 
@@ -465,30 +465,7 @@ export class AlumiaService {
     ];
   }
 
-  private getMockEvents(): AlumiaEvent[] {
-    return [
-      {
-        id: 'alumia-event-1',
-        name: 'Festival de Inverno Bonito 2024',
-        description: 'Festival cultural com música, gastronomia e arte',
-        startDate: '2024-07-15',
-        endDate: '2024-07-20',
-        location: 'Praça da Liberdade, Bonito',
-        category: 'cultura',
-        price: 50,
-        capacity: 1000,
-        registered: 750,
-        status: 'upcoming',
-        organizer: 'Prefeitura de Bonito',
-        contact: {
-          phone: '(67) 3255-1414',
-          email: 'festival@bonito.ms.gov.br'
-        },
-        images: ['https://alumia.com/images/festival-inverno-1.jpg'],
-        tags: ['música', 'gastronomia', 'arte', 'cultura']
-      }
-    ];
-  }
+  // Método getMockEvents removido - eventos mockados foram removidos
 
   private getMockBookings(): AlumiaBooking[] {
     return [
