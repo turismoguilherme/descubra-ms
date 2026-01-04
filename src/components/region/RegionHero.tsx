@@ -102,7 +102,7 @@ const RegionHero: React.FC<RegionHeroProps> = ({ region, highlights }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-4 font-playfair"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-4"
             style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
           >
             {region.name}

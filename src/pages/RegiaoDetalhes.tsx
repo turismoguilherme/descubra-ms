@@ -56,7 +56,7 @@ interface RegionDetails {
 
 const RegiaoDetalhes = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { regions: touristRegions = [] } = useTouristRegions();
+  const { regions: touristRegions = [], loading: regionsLoading } = useTouristRegions();
   const [regiao, setRegiao] = useState<TouristRegion2025 | null>(null);
   const [regionDbId, setRegionDbId] = useState<string | null>(null);
   const [details, setDetails] = useState<RegionDetails | null>(null);
@@ -66,80 +66,132 @@ const RegiaoDetalhes = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
   
+  // Buscar região do hook (já sincronizado com Realtime)
   useEffect(() => {
-    const fetchRegion = async () => {
-      if (!slug) return;
-      
-      setLoading(true);
-      try {
-        // Primeiro tenta buscar do banco pelo slug
-        const { data: dbRegion, error } = await supabase
-          .from('tourist_regions')
-          .select('id, slug, name, description, color, color_hover, cities, highlights, image_url')
-          .eq('slug', slug)
-          .eq('is_active', true)
-          .single();
-
-        if (dbRegion && !error) {
-          // Converter dados do banco para formato TouristRegion2025
-          const regionData: TouristRegion2025 = {
-            id: dbRegion.id,
-            name: dbRegion.name,
-            slug: dbRegion.slug,
-            color: dbRegion.color,
-            colorHover: dbRegion.color_hover || dbRegion.color,
-            description: dbRegion.description,
-            cities: Array.isArray(dbRegion.cities) ? dbRegion.cities : [],
-            highlights: Array.isArray(dbRegion.highlights) ? dbRegion.highlights : [],
-            image: dbRegion.image_url || '',
-          };
-          setRegiao(regionData);
-          setRegionDbId(dbRegion.id);
-          
-          // Buscar detalhes da região
-          const { data: detailsData } = await supabase
-            .from('destination_details')
-            .select('*')
-            .eq('tourist_region_id', dbRegion.id)
-            .single();
-          
-          if (detailsData) {
-            setDetails(detailsData as RegionDetails);
-          }
-
-          // Buscar cidades da região com detalhes
-          const { data: citiesData } = await supabase
-            .from('region_cities')
-            .select('*')
-            .eq('tourist_region_id', dbRegion.id)
+    if (!slug || regionsLoading) return;
+    
+    // Primeiro tenta buscar do hook (dados já sincronizados)
+    const regionFromHook = touristRegions.find(r => r.slug === slug);
+    
+    if (regionFromHook) {
+      setRegiao(regionFromHook);
+      setRegionDbId(regionFromHook.id);
+      setLoading(false);
+    } else {
+      // Fallback: buscar direto do banco se não estiver no hook
+      const fetchRegion = async () => {
+        setLoading(true);
+        try {
+          const { data: dbRegion, error } = await supabase
+            .from('tourist_regions')
+            .select('id, slug, name, description, color, color_hover, cities, highlights, image_url')
+            .eq('slug', slug)
             .eq('is_active', true)
-            .order('order_index', { ascending: true });
+            .single();
 
-          if (citiesData) {
-            setRegionCities(citiesData);
+          if (dbRegion && !error) {
+            const regionData: TouristRegion2025 = {
+              id: dbRegion.id,
+              name: dbRegion.name,
+              slug: dbRegion.slug,
+              color: dbRegion.color,
+              colorHover: dbRegion.color_hover || dbRegion.color,
+              description: dbRegion.description,
+              cities: Array.isArray(dbRegion.cities) ? dbRegion.cities : [],
+              highlights: Array.isArray(dbRegion.highlights) ? dbRegion.highlights : [],
+              image: dbRegion.image_url || '',
+            };
+            setRegiao(regionData);
+            setRegionDbId(dbRegion.id);
+          } else {
+            // Fallback para dados estáticos
+            const staticRegion = getRegionBySlug(slug);
+            if (staticRegion) {
+              setRegiao(staticRegion);
+            }
           }
-        } else {
-          // Fallback para dados do arquivo estático
-          const staticRegion = touristRegions.find(r => r.slug === slug) || getRegionBySlug(slug);
+        } catch (error) {
+          console.error('Erro ao buscar região:', error);
+          const staticRegion = getRegionBySlug(slug);
           if (staticRegion) {
             setRegiao(staticRegion);
-            // Para dados estáticos, não temos ID do banco, então não buscamos detalhes
           }
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchRegion();
+    }
+  }, [slug, touristRegions, regionsLoading]);
+
+  // Buscar detalhes e cidades quando região for encontrada
+  useEffect(() => {
+    if (!regionDbId) return;
+
+    const fetchDetails = async () => {
+      try {
+        // Buscar detalhes da região
+        const { data: detailsData } = await supabase
+          .from('destination_details')
+          .select('*')
+          .eq('tourist_region_id', regionDbId)
+          .single();
+        
+        if (detailsData) {
+          setDetails(detailsData as RegionDetails);
+        }
+
+        // Buscar cidades da região com detalhes
+        const { data: citiesData } = await supabase
+          .from('region_cities')
+          .select('*')
+          .eq('tourist_region_id', regionDbId)
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
+
+        if (citiesData) {
+          setRegionCities(citiesData);
         }
       } catch (error) {
-        console.error('Erro ao buscar região:', error);
-        // Fallback para dados estáticos
-        const staticRegion = touristRegions.find(r => r.slug === slug) || getRegionBySlug(slug);
-        if (staticRegion) {
-          setRegiao(staticRegion);
-        }
-      } finally {
-        setLoading(false);
+        console.error('Erro ao buscar detalhes:', error);
       }
     };
 
-    fetchRegion();
-  }, [slug, touristRegions]);
+    fetchDetails();
+
+    // Escutar mudanças nos detalhes via Realtime
+    const channel = supabase
+      .channel(`region_details_${regionDbId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'destination_details',
+          filter: `tourist_region_id=eq.${regionDbId}`,
+        },
+        () => {
+          fetchDetails();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'region_cities',
+          filter: `tourist_region_id=eq.${regionDbId}`,
+        },
+        () => {
+          fetchDetails();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [regionDbId]);
 
   const getYouTubeEmbedUrl = (url: string) => {
     const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
@@ -332,7 +384,7 @@ const RegiaoDetalhes = () => {
                 {/* Descrição/Promocional da Região */}
                 {promotionalText && (
                   <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                    <h2 className="text-3xl font-bold text-ms-primary-blue mb-6">
+                    <h2 className="text-3xl font-bold text-ms-primary-blue mb-6 text-center">
                       Sobre a Região {regiao.name}
                     </h2>
                     <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-line">

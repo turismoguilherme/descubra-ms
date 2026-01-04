@@ -122,6 +122,28 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
         { key: 'viajar_footer_copyright', label: 'Copyright', type: 'text' },
       ]
     },
+    {
+      id: 'cases',
+      name: 'Cases de Sucesso',
+      fields: [
+        { key: 'viajar_cases_descubra_ms_title', label: 'Descubra MS - Título', type: 'text', placeholder: 'Descubra MS' },
+        { key: 'viajar_cases_descubra_ms_subtitle', label: 'Descubra MS - Subtítulo', type: 'text', placeholder: 'Plataforma desenvolvida' },
+        { key: 'viajar_cases_descubra_ms_technologies', label: 'Descubra MS - Tecnologias (JSON)', type: 'json', description: 'Array de strings: ["Guatá IA", "Passaporte Digital", "Analytics", "Gestão de Eventos"]' },
+        { key: 'viajar_cases_descubra_ms_image', label: 'Descubra MS - Imagem (URL)', type: 'image', placeholder: 'URL da imagem' },
+        { key: 'viajar_cases_koda_title', label: 'Koda - Título', type: 'text', placeholder: 'Koda' },
+        { key: 'viajar_cases_koda_subtitle', label: 'Koda - Subtítulo', type: 'text', placeholder: 'Chatbot desenvolvido' },
+        { key: 'viajar_cases_koda_technologies', label: 'Koda - Tecnologias (JSON)', type: 'json', description: 'Array de strings: ["IA Conversacional", "Multi-idioma", "Web Search"]' },
+        { key: 'viajar_cases_koda_image', label: 'Koda - Imagem (URL)', type: 'image', placeholder: 'URL da imagem' },
+      ]
+    },
+    {
+      id: 'sobre',
+      name: 'Página Sobre',
+      fields: [
+        { key: 'viajar_sobre_missao', label: 'Nossa Missão', type: 'textarea', placeholder: 'Democratizar tecnologia de ponta para o setor turístico.' },
+        { key: 'viajar_sobre_visao', label: 'Nossa Visão', type: 'textarea', placeholder: 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.' },
+      ]
+    },
   ],
   descubra_ms: [
     {

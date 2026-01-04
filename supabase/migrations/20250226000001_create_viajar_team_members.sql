@@ -43,14 +43,28 @@ CREATE POLICY "Admins can manage team members"
   FOR ALL
   USING (
     EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE auth.users.id = auth.uid()
-      AND (
-        auth.users.raw_user_meta_data->>'role' = 'master_admin'
-        OR auth.users.raw_user_meta_data->>'role' = 'tech'
-        OR auth.users.raw_user_meta_data->>'role' = 'master admin'
-        OR auth.users.raw_user_meta_data->>'role' = 'tech admin'
-      )
+      SELECT 1 FROM user_roles
+      WHERE user_roles.user_id = auth.uid()
+      AND user_roles.role IN ('admin', 'tech', 'master_admin')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_roles.user_id = auth.uid()
+      AND user_roles.role IN ('admin', 'tech', 'master_admin')
+    )
+  );
+
+-- Política: Admins podem ver todos os membros (incluindo inativos)
+CREATE POLICY "Admins can view all team members"
+  ON viajar_team_members
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_roles.user_id = auth.uid()
+      AND user_roles.role IN ('admin', 'tech', 'master_admin')
     )
   );
 

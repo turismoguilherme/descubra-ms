@@ -146,7 +146,8 @@ const UniversalHero = () => {
       const videoId = youtubeMatch[1];
       // Parâmetros otimizados para background video - sem controles, sem informações, sem fullscreen
       // Usando youtube-nocookie.com para evitar cookies e informações extras
-      return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&loop=1&mute=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&playsinline=1&enablejsapi=0&origin=${window.location.origin}&widget_referrer=${window.location.origin}&color=white&theme=dark&autohide=1&wmode=opaque`;
+      // Adicionando parâmetros extras para esconder tudo no mobile
+      return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&loop=1&mute=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&playsinline=1&enablejsapi=0&origin=${window.location.origin}&widget_referrer=${window.location.origin}&color=white&theme=dark&autohide=1&wmode=opaque&mute=1&start=0&end=0`;
     }
     // Vimeo
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
@@ -208,7 +209,7 @@ const UniversalHero = () => {
   return (
     <>
     <style>{`
-      /* Esconder elementos do YouTube completamente */
+      /* Esconder elementos do YouTube completamente - Desktop e Mobile */
       .hero-section iframe[src*="youtube"] {
         pointer-events: none !important;
       }
@@ -223,6 +224,35 @@ const UniversalHero = () => {
       /* Garantir que iframe fique abaixo dos overlays */
       .hero-section iframe[src*="youtube"] {
         z-index: 1 !important;
+      }
+      
+      /* Mobile: Esconder completamente informações do YouTube */
+      @media (max-width: 768px) {
+        .hero-section iframe[src*="youtube"] {
+          /* Forçar esconder todos os elementos do YouTube */
+          overflow: hidden !important;
+        }
+        
+        /* Esconder qualquer elemento filho do iframe do YouTube */
+        .hero-section iframe[src*="youtube"] * {
+          display: none !important;
+          visibility: hidden !important;
+        }
+        
+        /* Esconder controles, títulos, logos do YouTube */
+        .hero-section iframe[src*="youtube"]::before,
+        .hero-section iframe[src*="youtube"]::after {
+          display: none !important;
+        }
+      }
+      
+      /* Esconder elementos do YouTube que aparecem sobre o vídeo */
+      .hero-section iframe[src*="youtube"] + *,
+      .hero-section [class*="ytp"],
+      .hero-section [id*="ytp"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
       }
     `}</style>
     <div 
@@ -306,7 +336,8 @@ const UniversalHero = () => {
                   minHeight: '100vh',
                   minWidth: isMobile ? '100vw' : '177.77vh', // Mobile: largura completa
                   transform: 'translate(-50%, -50%)',
-                  zIndex: 0
+                  zIndex: 0,
+                  overflow: 'hidden' // Esconder qualquer overflow no mobile
                 }}
               >
                 <iframe
@@ -323,12 +354,15 @@ const UniversalHero = () => {
                     transition: 'opacity 0.5s ease-in-out',
                     pointerEvents: 'none',
                     zIndex: 1,
-                    display: videoReady ? 'block' : 'none'
+                    display: videoReady ? 'block' : 'none',
+                    overflow: 'hidden', // Esconder overflow
+                    clipPath: 'inset(0 0 0 0)' // Garantir que nada apareça fora
                   }}
                   allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture"
                   allowFullScreen={false}
                   frameBorder="0"
                   title="Background video"
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
                   ref={(el) => {
                     // #region agent log
                     if (el) {
@@ -477,8 +511,15 @@ const UniversalHero = () => {
         </>
       )}
       
-      {/* Overlay para melhor legibilidade do texto */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/40 z-[2]"></div>
+      {/* Overlay para melhor legibilidade do texto - mais forte no mobile para esconder YouTube */}
+        <div 
+          className="absolute inset-0 z-[2]"
+          style={{
+            background: isMobile 
+              ? 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.5) 100%)'
+              : 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.4) 100%)'
+          }}
+        ></div>
       
       {/* Borda decorativa ondulada - transição minimalista */}
       <div className="absolute bottom-0 left-0 w-full z-[20] pointer-events-none" style={{ transform: 'translateY(1px)' }}>

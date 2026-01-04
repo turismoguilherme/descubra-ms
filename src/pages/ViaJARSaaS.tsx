@@ -80,6 +80,11 @@ const ViaJARSaaS = () => {
   const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
+  // Scroll para o topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   // Carregar conteúdos do banco
   useEffect(() => {
     const loadContent = async () => {

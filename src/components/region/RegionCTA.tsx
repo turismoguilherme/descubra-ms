@@ -35,7 +35,7 @@ const RegionCTA: React.FC<RegionCTAProps> = ({ region }) => {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 font-playfair">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-ms-primary-blue mb-6">
             Pronto para explorar {region.name}?
           </h2>
           <p className="text-gray-600 text-lg md:text-xl mb-10 leading-relaxed">

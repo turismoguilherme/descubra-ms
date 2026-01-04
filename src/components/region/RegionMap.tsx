@@ -24,7 +24,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ region, mapImageUrl }) => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-playfair">
+          <h2 className="text-3xl md:text-4xl font-bold text-ms-primary-blue mb-4">
             Localização
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
@@ -60,7 +60,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ region, mapImageUrl }) => {
                     <MapPin className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 text-lg">{region.name}</h3>
+                    <h3 className="font-bold text-ms-primary-blue text-lg">{region.name}</h3>
                     <p className="text-gray-600 text-sm mt-1">
                       {region.cities.slice(0, 3).join(', ')}
                       {region.cities.length > 3 && ` e mais ${region.cities.length - 3} cidades`}

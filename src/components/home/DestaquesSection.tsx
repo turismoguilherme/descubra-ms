@@ -5,18 +5,20 @@ import { MapPin, ArrowRight, Compass } from "lucide-react";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
-import { touristRegions2025 } from "@/data/touristRegions2025";
+import { useTouristRegions } from "@/hooks/useTouristRegions";
 
-// Usar regiões turísticas em vez de destinos individuais
+// Usar regiões turísticas do banco de dados com sincronização automática
 
 const DestaquesSection = () => {
   const { t } = useTranslation('pages');
   const { language } = useLanguage();
+  const { regions: touristRegions, loading: regionsLoading } = useTouristRegions();
   const [content, setContent] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadContent = async () => {
       try {
+        // Adicionar timestamp para forçar atualização e evitar cache
         const contents = await platformContentService.getContentByPrefix('ms_destinations_', language);
         const contentMap: Record<string, string> = {};
         contents.forEach(item => {
@@ -28,10 +30,19 @@ const DestaquesSection = () => {
       }
     };
     loadContent();
+    
+    // Recarregar quando a página ganha foco (para detectar atualizações)
+    const handleFocus = () => {
+      loadContent();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [language]);
 
-  // Pegar as 6 principais regiões turísticas
-  const regioesDestaque = touristRegions2025.slice(0, 6);
+  // Pegar as 6 principais regiões turísticas do banco (ou fallback para estático se vazio)
+  const regioesDestaque = touristRegions.length > 0 
+    ? touristRegions.slice(0, 6)
+    : [];
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;
 
@@ -62,7 +73,16 @@ const DestaquesSection = () => {
         </div>
 
         {/* Grid de Cards - Regiões Turísticas com design melhorado */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {regionsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-ms-primary-blue/20 border-t-ms-primary-blue"></div>
+          </div>
+        ) : regioesDestaque.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            Nenhuma região turística disponível no momento.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {regioesDestaque.map((regiao, index) => (
               <Link
                 key={regiao.slug}
@@ -118,7 +138,8 @@ const DestaquesSection = () => {
                 </div>
               </Link>
             ))}
-        </div>
+          </div>
+        )}
 
         {/* Botão Ver Mapa Turístico */}
         <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">

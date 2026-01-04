@@ -1,16 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { MapPin, ArrowRight, CheckCircle2, Bot, Sparkles, Award } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { platformContentService } from '@/services/admin/platformContentService';
 
 const CasosSucesso = () => {
-  // Scroll para o topo quando a página carregar
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
-  const cases = [
+  const [cases, setCases] = useState([
     {
       id: 'descubra-ms',
       title: 'Descubra MS',
@@ -23,7 +20,8 @@ const CasosSucesso = () => {
       ],
       gradient: 'from-emerald-500 to-teal-600',
       icon: MapPin,
-      link: '/ms'
+      link: '/ms',
+      image_url: null as string | null
     },
     {
       id: 'koda',
@@ -36,9 +34,74 @@ const CasosSucesso = () => {
       ],
       gradient: 'from-blue-500 to-cyan-600',
       icon: Bot,
-      link: '/koda'
+      link: '/koda',
+      image_url: null as string | null
     }
-  ];
+  ]);
+
+  // Scroll para o topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    loadCasesContent();
+  }, []);
+
+  const loadCasesContent = async () => {
+    try {
+      const contents = await platformContentService.getContentByPrefix('viajar_cases_');
+      const contentMap: Record<string, string> = {};
+      contents.forEach(item => {
+        contentMap[item.content_key] = item.content_value || '';
+      });
+
+      // Parse technologies JSON
+      const parseTechnologies = (key: string, fallback: string[]): string[] => {
+        try {
+          const json = contentMap[key];
+          if (json) {
+            const parsed = JSON.parse(json);
+            return Array.isArray(parsed) ? parsed : fallback;
+          }
+        } catch (e) {
+          console.error('Erro ao parsear tecnologias:', e);
+        }
+        return fallback;
+      };
+
+      setCases([
+        {
+          id: 'descubra-ms',
+          title: contentMap['viajar_cases_descubra_ms_title'] || 'Descubra MS',
+          subtitle: contentMap['viajar_cases_descubra_ms_subtitle'] || 'Plataforma desenvolvida',
+          technologies: parseTechnologies('viajar_cases_descubra_ms_technologies', [
+            'Guatá IA',
+            'Passaporte Digital',
+            'Analytics',
+            'Gestão de Eventos'
+          ]),
+          gradient: 'from-emerald-500 to-teal-600',
+          icon: MapPin,
+          link: '/ms',
+          image_url: contentMap['viajar_cases_descubra_ms_image'] || null
+        },
+        {
+          id: 'koda',
+          title: contentMap['viajar_cases_koda_title'] || 'Koda',
+          subtitle: contentMap['viajar_cases_koda_subtitle'] || 'Chatbot desenvolvido',
+          technologies: parseTechnologies('viajar_cases_koda_technologies', [
+            'IA Conversacional',
+            'Multi-idioma',
+            'Web Search'
+          ]),
+          gradient: 'from-blue-500 to-cyan-600',
+          icon: Bot,
+          link: '/koda',
+          image_url: contentMap['viajar_cases_koda_image'] || null
+        }
+      ]);
+    } catch (error) {
+      console.error('Erro ao carregar conteúdo dos cases:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,6 +152,22 @@ const CasosSucesso = () => {
                   <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
                     {/* Gradiente de fundo */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${caseItem.gradient}`} />
+                    
+                    {/* Imagem de fundo (se disponível) */}
+                    {caseItem.image_url && (
+                      <>
+                        <img
+                          src={caseItem.image_url}
+                          alt={caseItem.title}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+                      </>
+                    )}
                     
                     {/* Conteúdo */}
                     <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">

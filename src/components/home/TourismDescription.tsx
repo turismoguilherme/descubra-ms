@@ -24,6 +24,13 @@ const TourismDescription = () => {
       }
     };
     loadContent();
+    
+    // Recarregar quando a página ganha foco (para detectar atualizações)
+    const handleFocus = () => {
+      loadContent();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [language]);
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;

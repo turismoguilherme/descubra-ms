@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface TextField {
   key: string;
   label: string;
-  type: 'text' | 'textarea';
+  type: 'text' | 'textarea' | 'image' | 'json';
   placeholder?: string;
   section: string;
 }
@@ -93,6 +93,20 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'viajar_cta_description', label: 'Descrição', type: 'textarea', placeholder: 'Junte-se a empresas...', section: 'Call to Action' },
     { key: 'viajar_cta_button_primary', label: 'Botão Principal', type: 'text', placeholder: 'Solicitar Demonstração', section: 'Call to Action' },
     { key: 'viajar_cta_button_secondary', label: 'Botão Secundário', type: 'text', placeholder: 'Ver Planos', section: 'Call to Action' },
+    
+    // Cases de Sucesso
+    { key: 'viajar_cases_descubra_ms_title', label: 'Descubra MS - Título', type: 'text', placeholder: 'Descubra MS', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_descubra_ms_subtitle', label: 'Descubra MS - Subtítulo', type: 'text', placeholder: 'Plataforma desenvolvida', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_descubra_ms_technologies', label: 'Descubra MS - Tecnologias (JSON)', type: 'json', placeholder: '["Guatá IA", "Passaporte Digital", "Analytics", "Gestão de Eventos"]', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_descubra_ms_image', label: 'Descubra MS - Imagem', type: 'image', placeholder: 'URL da imagem ou faça upload', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_koda_title', label: 'Koda - Título', type: 'text', placeholder: 'Koda', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_koda_subtitle', label: 'Koda - Subtítulo', type: 'text', placeholder: 'Chatbot desenvolvido', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_koda_technologies', label: 'Koda - Tecnologias (JSON)', type: 'json', placeholder: '["IA Conversacional", "Multi-idioma", "Web Search"]', section: 'Cases de Sucesso' },
+    { key: 'viajar_cases_koda_image', label: 'Koda - Imagem', type: 'image', placeholder: 'URL da imagem ou faça upload', section: 'Cases de Sucesso' },
+    
+    // Página Sobre
+    { key: 'viajar_sobre_missao', label: 'Nossa Missão', type: 'textarea', placeholder: 'Democratizar tecnologia de ponta para o setor turístico.', section: 'Página Sobre' },
+    { key: 'viajar_sobre_visao', label: 'Nossa Visão', type: 'textarea', placeholder: 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.', section: 'Página Sobre' },
   ],
   descubra_ms: [
     // Hero Principal
@@ -264,10 +278,17 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   };
 
   const handleImageSelect = (key: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('📎 [SimpleTextEditor] handleImageSelect chamado para:', key);
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.warn('⚠️ [SimpleTextEditor] Nenhum arquivo selecionado');
+      return;
+    }
+
+    console.log('📄 [SimpleTextEditor] Arquivo selecionado:', { name: file.name, size: file.size, type: file.type });
 
     if (!file.type.startsWith('image/')) {
+      console.error('❌ [SimpleTextEditor] Arquivo não é uma imagem:', file.type);
       toast({
         title: 'Arquivo inválido',
         description: 'Por favor, selecione uma imagem.',
@@ -277,6 +298,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     }
 
     if (file.size > 5 * 1024 * 1024) {
+      console.error('❌ [SimpleTextEditor] Arquivo muito grande:', file.size);
       toast({
         title: 'Arquivo muito grande',
         description: 'A imagem deve ter no máximo 5MB.',
@@ -285,17 +307,40 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       return;
     }
 
+    console.log('🖼️ [SimpleTextEditor] Criando preview da imagem...');
     const reader = new FileReader();
     reader.onload = (e) => {
-      setImagePreviews(prev => ({ ...prev, [key]: e.target?.result as string }));
+      const preview = e.target?.result as string;
+      console.log('✅ [SimpleTextEditor] Preview criado, tamanho:', preview?.length);
+      setImagePreviews(prev => ({ ...prev, [key]: preview }));
+    };
+    reader.onerror = (error) => {
+      console.error('❌ [SimpleTextEditor] Erro ao ler arquivo:', error);
+      toast({
+        title: 'Erro ao ler arquivo',
+        description: 'Não foi possível ler o arquivo selecionado.',
+        variant: 'destructive',
+      });
     };
     reader.readAsDataURL(file);
   };
 
   const uploadImage = async (key: string, file: File): Promise<string | null> => {
+    console.log('📤 [SimpleTextEditor] Iniciando upload:', { key, fileName: file.name, fileSize: file.size, fileType: file.type });
+    
     try {
       // Verificar e renovar token se necessário antes do upload
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('❌ [SimpleTextEditor] Nenhuma sessão encontrada');
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Você precisa estar logado para fazer upload de imagens.',
+          variant: 'destructive',
+        });
+        return null;
+      }
+      
       if (session?.expires_at) {
         const expiresAt = session.expires_at * 1000;
         const timeUntilExpiry = expiresAt - Date.now();
@@ -307,12 +352,14 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
 
       const fileExt = file.name.split('.').pop();
       const fileName = `platform-content/${key}/${uuidv4()}.${fileExt}`;
+      console.log('📁 [SimpleTextEditor] Nome do arquivo gerado:', fileName);
 
       let uploadError;
       let retries = 1;
       
       // Tentar upload com retry em caso de erro 401
       while (retries >= 0) {
+        console.log(`🔄 [SimpleTextEditor] Tentativa de upload (${retries + 1}/2)...`);
         const result = await supabase.storage
           .from(BUCKET_NAME)
           .upload(fileName, file, {
@@ -321,6 +368,16 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           });
         
         uploadError = result.error;
+        
+        if (uploadError) {
+          console.error('❌ [SimpleTextEditor] Erro no upload:', {
+            message: uploadError.message,
+            statusCode: uploadError.statusCode,
+            name: uploadError.name
+          });
+        } else {
+          console.log('✅ [SimpleTextEditor] Upload bem-sucedido!');
+        }
         
         // Se não há erro ou não é erro de JWT, sair do loop
         if (!uploadError || !uploadError.message?.includes('exp') || retries === 0) {
@@ -338,13 +395,15 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
 
       if (uploadError) {
         if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+          console.error('❌ [SimpleTextEditor] Bucket não encontrado:', BUCKET_NAME);
           toast({
             title: 'Aviso',
-            description: 'Bucket de imagens não encontrado. Você pode usar uma URL manualmente.',
+            description: `Bucket "${BUCKET_NAME}" não encontrado. Você pode usar uma URL manualmente.`,
             variant: 'default',
           });
           return null;
         }
+        console.error('❌ [SimpleTextEditor] Erro no upload após retries:', uploadError);
         throw uploadError;
       }
 
@@ -352,12 +411,19 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         .from(BUCKET_NAME)
         .getPublicUrl(fileName);
 
-      return publicUrlData?.publicUrl || null;
+      const publicUrl = publicUrlData?.publicUrl || null;
+      console.log('🔗 [SimpleTextEditor] URL pública gerada:', publicUrl);
+      
+      return publicUrl;
     } catch (error: any) {
-      console.error('Erro no upload:', error);
+      console.error('❌ [SimpleTextEditor] Erro capturado no upload:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       toast({
         title: 'Erro no upload',
-        description: error.message || 'Não foi possível fazer upload da imagem.',
+        description: error.message || 'Não foi possível fazer upload da imagem. Verifique o console para mais detalhes.',
         variant: 'destructive',
       });
       return null;
@@ -372,7 +438,9 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     setUploading(prev => ({ ...prev, [key]: true }));
 
     try {
+      console.log('🚀 [SimpleTextEditor] Iniciando upload para:', key);
       const uploadedUrl = await uploadImage(key, file);
+      console.log('📥 [SimpleTextEditor] URL recebida:', uploadedUrl);
       if (uploadedUrl) {
         updateField(key, uploadedUrl);
         setImagePreviews(prev => ({ ...prev, [key]: uploadedUrl }));
@@ -409,19 +477,29 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
             setSaved(prev => ({ ...prev, [key]: false }));
           }, 2000);
         } catch (saveError: any) {
-          console.error('Erro ao salvar automaticamente:', saveError);
+          console.error('❌ [SimpleTextEditor] Erro ao salvar no banco:', {
+            message: saveError.message,
+            stack: saveError.stack,
+            key,
+            uploadedUrl
+          });
           toast({
-            title: 'Upload concluído',
-            description: 'Imagem enviada. Por favor, clique em "Salvar" para aplicar.',
-            variant: 'default',
+            title: 'Upload concluído, mas erro ao salvar',
+            description: `Imagem enviada, mas erro ao salvar: ${saveError.message}. Clique em "Salvar" manualmente.`,
+            variant: 'destructive',
           });
         }
       }
-    } catch (error) {
-      console.error('Erro ao fazer upload:', error);
+    } catch (error: any) {
+      console.error('❌ [SimpleTextEditor] Erro capturado:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        key
+      });
       toast({
         title: 'Erro no upload',
-        description: 'Não foi possível fazer upload da imagem.',
+        description: error.message || 'Não foi possível fazer upload da imagem. Verifique o console.',
         variant: 'destructive',
       });
     } finally {
@@ -593,7 +671,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                     </div>
                   </div>
                   {/* Campo especial para imagens com upload */}
-                  {(field.key === 'ms_guata_roteiro_image_url' || field.key === 'ms_hero_video_placeholder_image_url') ? (
+                  {field.type === 'image' ? (
                     <div className="space-y-3">
                       <div className="flex gap-2">
                         <Input
@@ -685,6 +763,28 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                         </div>
                       )}
                     </div>
+                  ) : field.type === 'json' ? (
+                    <Textarea
+                      id={field.key}
+                      value={value}
+                      onChange={(e) => {
+                        try {
+                          // Validar JSON ao digitar
+                          const parsed = JSON.parse(e.target.value);
+                          updateField(field.key, JSON.stringify(parsed, null, 2));
+                        } catch {
+                          // Se não for JSON válido ainda, apenas atualizar o texto
+                          updateField(field.key, e.target.value);
+                        }
+                      }}
+                      placeholder={field.placeholder || '[] ou {}'}
+                      rows={6}
+                      className={cn(
+                        "font-mono text-sm",
+                        hasChanged && "border-amber-300 bg-amber-50/50",
+                        isSaved && "border-green-300 bg-green-50/50"
+                      )}
+                    />
                   ) : field.type === 'textarea' ? (
                     <Textarea
                       id={field.key}

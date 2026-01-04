@@ -283,17 +283,17 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
       
       {/* Header com gradiente azul-roxo - Igual aos outros dashboards */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white py-8">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold">
+              <h1 className="text-xl md:text-3xl font-bold">
                 Dashboard <span className="text-blue-200">Administrativo</span>
               </h1>
-              <p className="text-blue-100 mt-2">
+              <p className="text-blue-100 mt-1 md:mt-2 text-sm md:text-base">
                 {userProfile?.full_name || 'Administrador'} - {userRole === 'master_admin' ? 'Master Admin' : userRole}
               </p>
               </div>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-2 md:gap-4 items-center w-full md:w-auto">
             {/* Platform Badge */}
             {currentPlatform !== 'system' && (
               <div className={cn(
@@ -330,11 +330,11 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
         </div>
       </div>
 
-      <div className="flex relative" style={{ minHeight: 'calc(100vh - 64px - 128px)' }}>
-        {/* Sidebar Esquerda - Igual aos outros dashboards (branca) */}
-        <div className="w-64 bg-white shadow-lg flex-shrink-0 relative" style={{ maxHeight: 'calc(100vh - 64px - 128px)', overflowY: 'auto' }}>
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-6">Administração</h2>
+      <div className="flex flex-col md:flex-row relative" style={{ minHeight: 'calc(100vh - 64px - 128px)' }}>
+        {/* Sidebar Esquerda - Igual aos outros dashboards (branca) - Responsiva */}
+        <div className="w-full md:w-64 bg-white shadow-lg flex-shrink-0 relative md:max-h-[calc(100vh-64px-128px)] overflow-y-auto">
+          <div className="p-4 md:p-6">
+            <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4 md:mb-6">Administração</h2>
             <nav className="space-y-2">
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
@@ -399,8 +399,8 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
           </div>
         </div>
 
-        {/* Conteúdo Principal - Igual aos outros dashboards */}
-        <div className="flex-1 p-8 overflow-y-auto bg-gray-50 space-y-6" style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}>
+        {/* Conteúdo Principal - Igual aos outros dashboards - Responsivo */}
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50 space-y-4 md:space-y-6" style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}>
           {children}
         </div>
       </div>

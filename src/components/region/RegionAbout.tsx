@@ -23,7 +23,7 @@ const RegionAbout: React.FC<RegionAboutProps> = ({ region, promotionalText, tour
             transition={{ duration: 0.6 }}
             className="lg:col-span-2"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-playfair">
+            <h2 className="text-3xl md:text-4xl font-bold text-ms-primary-blue mb-6">
               Sobre a Região
             </h2>
             <div className="prose prose-lg max-w-none">

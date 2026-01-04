@@ -12,6 +12,11 @@ const ViaJARFooter: React.FC = () => {
     console.log('📄 [ViaJARFooter] Settings do ViaJAR carregados:', settings);
   }, [settings]);
 
+  // Função para fazer scroll para o topo ao clicar em links
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="bg-viajar-slate text-white">
       {/* Main Footer Content */}
@@ -115,22 +120,22 @@ const ViaJARFooter: React.FC = () => {
             <h3 className="text-xs font-bold mb-2 text-white">Links Principais</h3>
             <ul className="space-y-1">
               <li>
-                <Link to="/solucoes" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/solucoes" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Soluções
                 </Link>
               </li>
               <li>
-                <Link to="/casos-sucesso" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/casos-sucesso" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Cases
                 </Link>
               </li>
               <li>
-                <Link to="/precos" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/precos" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Preços
                 </Link>
               </li>
               <li>
-                <Link to="/contato" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/contato" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Contato
                 </Link>
               </li>
@@ -142,13 +147,13 @@ const ViaJARFooter: React.FC = () => {
             <h3 className="text-xs font-bold mb-2 text-white">Acesso</h3>
             <ul className="space-y-1 mb-4">
               <li>
-                <Link to="/test-login" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
+                <Link to="/test-login" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
                   <FlaskConical className="h-3 w-3" />
                   Login de Testes
                 </Link>
               </li>
               <li>
-                <Link to="/viajar/admin" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
+                <Link to="/viajar/admin" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
                   <Shield className="h-3 w-3" />
                   Admin
                 </Link>
@@ -158,12 +163,12 @@ const ViaJARFooter: React.FC = () => {
             <h3 className="text-xs font-bold mb-2 text-white mt-4">Mais</h3>
             <ul className="space-y-1">
               <li>
-                <Link to="/sobre" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/sobre" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Sobre
                 </Link>
               </li>
               <li>
-                <Link to="/dados-turismo" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/dados-turismo" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Dados
                 </Link>
               </li>
@@ -175,17 +180,17 @@ const ViaJARFooter: React.FC = () => {
             <h3 className="text-xs font-bold mb-2 text-white">Legal</h3>
             <ul className="space-y-1">
               <li>
-                <Link to="/viajar/privacidade" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/viajar/privacidade" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Privacidade
                 </Link>
               </li>
               <li>
-                <Link to="/viajar/termos" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/viajar/termos" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Termos
                 </Link>
               </li>
               <li>
-                <Link to="/viajar/cookies" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                <Link to="/viajar/cookies" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Cookies
                 </Link>
               </li>

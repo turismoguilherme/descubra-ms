@@ -96,6 +96,9 @@ export default function TeamMembersManager() {
 
     try {
       setUploading(true);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:98',message:'Iniciando upload de foto',data:{hasPhotoFile:!!photoFile,fileName:photoFile?.name,fileSize:photoFile?.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       const fileExt = photoFile.name.split('.').pop();
       const fileName = `team-members/${uuidv4()}.${fileExt}`;
 
@@ -103,14 +106,25 @@ export default function TeamMembersManager() {
         .from(BUCKET_NAME)
         .upload(fileName, photoFile, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:107',message:'Erro no upload',data:{error:uploadError.message,code:uploadError.statusCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        throw uploadError;
+      }
 
       const { data } = supabase.storage
         .from(BUCKET_NAME)
         .getPublicUrl(fileName);
 
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:115',message:'Upload concluído com sucesso',data:{publicUrl:data.publicUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return data.publicUrl;
     } catch (error: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:119',message:'Erro capturado no upload',data:{error:error?.message,errorType:error?.constructor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       toast({
         title: 'Erro no upload',
         description: error.message || 'Erro ao fazer upload da foto',
@@ -125,13 +139,31 @@ export default function TeamMembersManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:126',message:'handleSubmit iniciado',data:{isEditing:!!editingMember,formData:formData,hasPhotoFile:!!photoFile},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
     try {
       const photoUrl = await uploadPhoto();
       
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:132',message:'PhotoUrl obtido',data:{photoUrl:photoUrl,hasPhotoUrl:!!photoUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      
       const memberData = {
-        ...formData,
-        photo_url: photoUrl || formData.photo_url,
+        name: formData.name.trim(),
+        position: formData.position.trim(),
+        bio: formData.bio?.trim() || null,
+        photo_url: photoUrl || formData.photo_url || null,
+        instagram_url: formData.instagram_url?.trim() || null,
+        linkedin_url: formData.linkedin_url?.trim() || null,
+        display_order: formData.display_order || 0,
+        is_active: formData.is_active ?? true,
       };
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:138',message:'Dados do membro preparados',data:{memberData:memberData,isEditing:!!editingMember},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
 
       if (editingMember) {
         const { error } = await supabase
@@ -139,17 +171,36 @@ export default function TeamMembersManager() {
           .update(memberData)
           .eq('id', editingMember.id);
 
-        if (error) throw error;
+        if (error) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:145',message:'Erro ao atualizar membro',data:{error:error.message,code:error.code,details:error.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
+          throw error;
+        }
         toast({
           title: 'Sucesso',
           description: 'Membro atualizado com sucesso',
         });
       } else {
-        const { error } = await supabase
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:152',message:'Tentando inserir novo membro',data:{memberData:memberData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        const { error, data } = await supabase
           .from('viajar_team_members')
-          .insert([memberData]);
+          .insert([memberData])
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:158',message:'Erro ao inserir membro',data:{error:error.message,code:error.code,details:error.details,hint:error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
+          throw error;
+        }
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:163',message:'Membro inserido com sucesso',data:{insertedData:data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        
         toast({
           title: 'Sucesso',
           description: 'Membro adicionado com sucesso',
@@ -160,6 +211,9 @@ export default function TeamMembersManager() {
       resetForm();
       loadMembers();
     } catch (error: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:175',message:'Erro capturado no handleSubmit',data:{error:error?.message,errorType:error?.constructor?.name,stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao salvar membro',

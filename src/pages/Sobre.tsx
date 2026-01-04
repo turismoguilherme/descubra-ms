@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Target, Eye, Award, Users, ArrowRight, Brain, BarChart3, Building2, Instagram, Linkedin } from 'lucide-react';
+import { ArrowRight, Building2, Instagram, Linkedin, Users } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { supabase } from '@/integrations/supabase/client';
+import { platformContentService } from '@/services/admin/platformContentService';
 
 interface TeamMember {
   id: string;
@@ -19,6 +20,8 @@ interface TeamMember {
 const Sobre = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeam, setLoadingTeam] = useState(true);
+  const [missao, setMissao] = useState<string>('');
+  const [visao, setVisao] = useState<string>('');
 
   // Scroll para o topo quando a página carregar
   useEffect(() => {
@@ -27,7 +30,22 @@ const Sobre = () => {
 
   useEffect(() => {
     loadTeamMembers();
+    loadContent();
   }, []);
+
+  const loadContent = async () => {
+    try {
+      const contents = await platformContentService.getContentByPrefix('viajar_sobre_');
+      const contentMap: Record<string, string> = {};
+      contents.forEach(item => {
+        contentMap[item.content_key] = item.content_value || '';
+      });
+      setMissao(contentMap['viajar_sobre_missao'] || 'Democratizar tecnologia de ponta para o setor turístico.');
+      setVisao(contentMap['viajar_sobre_visao'] || 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.');
+    } catch (error) {
+      console.error('Erro ao carregar conteúdo:', error);
+    }
+  };
 
   const loadTeamMembers = async () => {
     try {
@@ -46,28 +64,6 @@ const Sobre = () => {
     }
   };
 
-  const values = [
-    {
-      icon: Brain,
-      title: "Inovação",
-      description: "IA e tecnologia de ponta para o turismo."
-    },
-    {
-      icon: Users,
-      title: "Colaboração",
-      description: "Soluções que realmente funcionam."
-    },
-    {
-      icon: BarChart3,
-      title: "Resultados",
-      description: "Métricas que impactam o setor."
-    },
-    {
-      icon: Award,
-      title: "Excelência",
-      description: "Qualidade e confiabilidade."
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,25 +101,19 @@ const Sobre = () => {
 
       {/* Mission & Vision */}
       <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-card rounded-2xl p-8 border border-border hover:border-viajar-cyan/30 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mb-6">
-                <Target className="h-7 w-7 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Nossa Missão</h2>
-              <p className="text-muted-foreground">
-                Democratizar tecnologia de ponta para o setor turístico.
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground mb-6">Nossa Missão</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
+                {missao}
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl p-8 border border-border hover:border-viajar-cyan/30 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-viajar-blue to-viajar-cyan flex items-center justify-center mb-6">
-                <Eye className="h-7 w-7 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Nossa Visão</h2>
-              <p className="text-muted-foreground">
-                Ser a plataforma líder em gestão inteligente de turismo no Brasil.
+            <div>
+              <h2 className="text-3xl font-bold text-foreground mb-6">Nossa Visão</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
+                {visao}
               </p>
             </div>
           </div>
@@ -143,7 +133,7 @@ const Sobre = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className={`grid gap-8 ${teamMembers.length === 1 ? 'grid-cols-1 justify-center max-w-md mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
               {teamMembers.map((member) => (
                 <div
                   key={member.id}
@@ -201,32 +191,6 @@ const Sobre = () => {
           </div>
         </section>
       )}
-
-      {/* Values */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Nossos Valores
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Os princípios que guiam nossa atuação
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((value, i) => (
-              <div key={i} className="bg-card rounded-2xl p-6 border border-border hover:border-viajar-cyan/30 transition-all duration-300 hover:shadow-lg">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mb-4">
-                  <value.icon className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{value.title}</h3>
-                <p className="text-xs text-muted-foreground">{value.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="py-20 bg-viajar-slate">
