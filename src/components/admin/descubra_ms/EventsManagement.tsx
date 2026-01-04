@@ -497,13 +497,11 @@ export default function EventsManagement() {
         logoUrl = `${supabase.storage.from('event-logos').getPublicUrl(data.path).data.publicUrl}`;
       }
 
-      // Campos básicos que sempre existem
+      // Campos básicos que sempre existem (campos essenciais)
       const updateData: any = {
         titulo: editingEvent.name,
         descricao: editingEvent.description,
         data_inicio: editingEvent.start_date,
-        data_fim: editingEvent.end_date,
-        local: editingEvent.location,
         organizador: editingEvent.organizador_nome || editingEvent.organizador,
         imagem_principal: imageUrl,
         video_promocional: editingEvent.video_url,
@@ -541,6 +539,8 @@ export default function EventsManagement() {
 
       // Adicionar outros campos opcionais se existirem
       const optionalFields = [
+        'data_fim',
+        'local',
         'contato_telefone',
         'contato_email',
         'site_oficial',
