@@ -468,7 +468,70 @@ export default function EventsManagement() {
   const handleSaveEdit = async () => {
     if (!editingEvent) return;
 
-    setSaving(true);
+      console.log('🔧 Iniciando edição de evento:', editingEvent.id);
+      console.log('🔍 Investigando estrutura da tabela events...');
+
+      // Investigar quais colunas existem na tabela
+      try {
+        console.log('🔍 Testando colunas básicas...');
+
+        // Tentar campos em português primeiro
+        const testPortugueseFields = await supabase
+          .from('events')
+          .select('titulo, descricao, data_inicio, local, organizador')
+          .limit(1);
+
+        console.log('✅ Campos em português funcionam:', !testPortugueseFields.error);
+
+        if (testPortugueseFields.error) {
+          console.log('❌ Campos em português falharam:', testPortugueseFields.error);
+
+          // Tentar campos em inglês
+          const testEnglishFields = await supabase
+            .from('events')
+            .select('name, description, start_date, location, organizer')
+            .limit(1);
+
+          console.log('✅ Campos em inglês funcionam:', !testEnglishFields.error);
+
+          if (testEnglishFields.error) {
+            console.log('❌ Campos em inglês também falharam:', testEnglishFields.error);
+
+            // Última tentativa: pegar todas as colunas disponíveis
+            const testAllFields = await supabase
+              .from('events')
+              .select('*')
+              .limit(1);
+
+            if (!testAllFields.error && testAllFields.data && testAllFields.data.length > 0) {
+              console.log('🔍 Campos disponíveis na tabela:', Object.keys(testAllFields.data[0]));
+            }
+          }
+        }
+      } catch (investigationError) {
+        console.log('❌ Erro na investigação:', investigationError);
+      }
+
+      // #region agent log
+      // Escrever log diretamente no arquivo
+      try {
+        const fs = require('fs');
+        const logEntry = JSON.stringify({
+          location: 'EventsManagement.tsx:474',
+          message: 'Investigando estrutura da tabela events',
+          data: { eventId: editingEvent.id, startTime: Date.now() },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'investigate_schema',
+          hypothesisId: 'schema_mismatch'
+        }) + '\n';
+        fs.appendFileSync('debug_session.log', logEntry);
+      } catch (logError) {
+        console.log('Erro ao escrever log:', logError);
+      }
+      // #endregion
+
+      setSaving(true);
     try {
       let imageUrl = editingEvent.image_url;
       let logoUrl = editingEvent.logo_evento;
@@ -498,43 +561,91 @@ export default function EventsManagement() {
       }
 
       // Campos básicos que sempre existem (campos essenciais)
-      const updateData: any = {
-        titulo: editingEvent.name,
-        descricao: editingEvent.description,
-        data_inicio: editingEvent.start_date,
-        organizador: editingEvent.organizador_nome || editingEvent.organizador,
-        imagem_principal: imageUrl,
-        video_promocional: editingEvent.video_url,
-        updated_at: new Date().toISOString(),
-      };
+      let updateData: any = {};
+
+      // Testar se devemos usar nomes em português ou inglês
+      const testPortuguese = await supabase
+        .from('events')
+        .select('titulo')
+        .limit(1);
+
+      if (!testPortuguese.error) {
+        console.log('🇧🇷 Usando nomes de campos em português');
+        updateData = {
+          titulo: editingEvent.name,
+          descricao: editingEvent.description,
+          data_inicio: editingEvent.start_date,
+          organizador: editingEvent.organizador_nome || editingEvent.organizador,
+          imagem_principal: imageUrl,
+          video_promocional: editingEvent.video_url,
+          updated_at: new Date().toISOString(),
+        };
+      } else {
+        console.log('🇺🇸 Usando nomes de campos em inglês');
+        updateData = {
+          name: editingEvent.name,
+          description: editingEvent.description,
+          start_date: editingEvent.start_date,
+          organizer: editingEvent.organizador_nome || editingEvent.organizador,
+          image_url: imageUrl,
+          video_url: editingEvent.video_url,
+          updated_at: new Date().toISOString(),
+        };
+      }
+
+      console.log('📝 Dados básicos do updateData:', updateData);
+
+      // #region agent log
+      try {
+        const fs = require('fs');
+        const logEntry = JSON.stringify({
+          location: 'EventsManagement.tsx:520',
+          message: 'Dados básicos do updateData definidos',
+          data: { updateDataKeys: Object.keys(updateData), fieldNaming: testPortuguese.error ? 'english' : 'portuguese' },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'investigate_schema',
+          hypothesisId: 'schema_mismatch'
+        }) + '\n';
+        fs.appendFileSync('debug_session.log', logEntry);
+      } catch (logError) {
+        console.log('Erro ao escrever log:', logError);
+      }
+      // #endregion
 
       // Verificar e adicionar campos opcionais apenas se existirem na tabela
+      console.log('🔍 Verificando campo categoria...');
       try {
-        // Testar categoria primeiro
         const testQuery = await supabase
           .from('events')
           .select('categoria')
           .limit(1);
 
-        if (!testQuery.error) {
+        if (testQuery.error) {
+          console.log('❌ Campo categoria não existe:', testQuery.error);
+        } else {
           updateData.categoria = editingEvent.category;
+          console.log('✅ Campo categoria adicionado:', editingEvent.category);
         }
       } catch (e) {
-        // Campo categoria pode não existir, continuar sem ele
+        console.log('⚠️ Erro ao verificar categoria:', e);
       }
 
+      console.log('🔍 Verificando campo cidade...');
       try {
-        // Testar cidade
         const testCidadeQuery = await supabase
           .from('events')
           .select('cidade')
           .limit(1);
 
-        if (!testCidadeQuery.error && editingEvent.location) {
+        if (testCidadeQuery.error) {
+          console.log('❌ Campo cidade não existe:', testCidadeQuery.error);
+        } else if (editingEvent.location) {
           updateData.cidade = editingEvent.location.split(',')[0]?.trim();
+          console.log('✅ Campo cidade adicionado:', updateData.cidade);
         }
       } catch (e) {
-        // Campo cidade pode não existir, continuar sem ele
+        console.log('⚠️ Erro ao verificar cidade:', e);
       }
 
       // Adicionar outros campos opcionais se existirem
@@ -550,35 +661,49 @@ export default function EventsManagement() {
 
       for (const field of optionalFields) {
         if (editingEvent[field as keyof typeof editingEvent]) {
+          console.log(`🔍 Verificando campo opcional: ${field}`);
           try {
             const testFieldQuery = await supabase
               .from('events')
               .select(field)
               .limit(1);
 
-            if (!testFieldQuery.error) {
+            if (testFieldQuery.error) {
+              console.log(`❌ Campo ${field} não existe no schema:`, testFieldQuery.error);
+            } else {
               updateData[field] = editingEvent[field as keyof typeof editingEvent];
+              console.log(`✅ Campo ${field} adicionado ao updateData:`, editingEvent[field as keyof typeof editingEvent]);
             }
           } catch (e) {
-            // Campo pode não existir, continuar sem ele
+            console.log(`⚠️ Erro ao verificar campo ${field}:`, e);
           }
+        } else {
+          console.log(`⏭️ Campo ${field} está vazio, pulando`);
         }
       }
 
+      console.log('📋 updateData final antes do PATCH:', updateData);
+
       // Adicionar logo_evento se foi feito upload e o campo existir
       if (logoUrl) {
+        console.log('🔍 Verificando campo logo_evento...');
         try {
           const testLogoQuery = await supabase
             .from('events')
             .select('logo_evento')
             .limit(1);
 
-          if (!testLogoQuery.error) {
+          if (testLogoQuery.error) {
+            console.log('❌ Campo logo_evento não existe:', testLogoQuery.error);
+          } else {
             updateData.logo_evento = logoUrl;
+            console.log('✅ Campo logo_evento adicionado:', logoUrl);
           }
         } catch (e) {
-          // Campo logo_evento pode não existir, continuar sem ele
+          console.log('⚠️ Erro ao verificar logo_evento:', e);
         }
+      } else {
+        console.log('⏭️ Nenhum logo foi feito upload');
       }
 
       // Se tipo_entrada não foi definido, definir baseado em is_free
@@ -586,12 +711,76 @@ export default function EventsManagement() {
         updateData.tipo_entrada = editingEvent.is_free ? 'gratuito' : 'pago';
       }
 
+      console.log('🚀 Executando PATCH na tabela events...');
+      console.log('📋 Dados finais sendo enviados:', updateData);
+
+      // #region agent log
+      try {
+        const fs = require('fs');
+        const logEntry = JSON.stringify({
+          location: 'EventsManagement.tsx:620',
+          message: 'Executando PATCH na tabela events',
+          data: { updateDataKeys: Object.keys(updateData), eventId: editingEvent.id, dataSize: JSON.stringify(updateData).length },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'patch_execution',
+          hypothesisId: 'schema_mismatch'
+        }) + '\n';
+        fs.appendFileSync('debug_session.log', logEntry);
+      } catch (logError) {
+        console.log('Erro ao escrever log:', logError);
+      }
+      // #endregion
+
       const { error } = await supabase
         .from('events')
         .update(updateData)
         .eq('id', editingEvent.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro no PATCH:', error);
+        console.error('❌ Dados que tentaram ser atualizados:', updateData);
+
+        // #region agent log
+        try {
+          const fs = require('fs');
+          const logEntry = JSON.stringify({
+            location: 'EventsManagement.tsx:632',
+            message: 'Erro no PATCH detectado',
+            data: { error: error, updateDataKeys: Object.keys(updateData), eventId: editingEvent.id },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'patch_error',
+            hypothesisId: 'schema_mismatch'
+          }) + '\n';
+          fs.appendFileSync('debug_session.log', logEntry);
+        } catch (logError) {
+          console.log('Erro ao escrever log:', logError);
+        }
+        // #endregion
+
+        throw error;
+      }
+
+      console.log('✅ PATCH executado com sucesso!');
+
+      // #region agent log
+      try {
+        const fs = require('fs');
+        const logEntry = JSON.stringify({
+          location: 'EventsManagement.tsx:650',
+          message: 'PATCH executado com sucesso',
+          data: { eventId: editingEvent.id },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'patch_success',
+          hypothesisId: 'schema_mismatch'
+        }) + '\n';
+        fs.appendFileSync('debug_session.log', logEntry);
+      } catch (logError) {
+        console.log('Erro ao escrever log:', logError);
+      }
+      // #endregion
 
       toast({
         title: 'Evento atualizado!',
