@@ -145,7 +145,7 @@ const ViaJARFooter: React.FC = () => {
           {/* Coluna 3 - Acesso + Links Secundários */}
           <div className="text-center lg:text-left">
             <h3 className="text-xs font-bold mb-2 text-white">Acesso</h3>
-            <ul className="space-y-1 mb-4">
+            <ul className="space-y-1 mb-3">
               <li>
                 <Link to="/test-login" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
                   <FlaskConical className="h-3 w-3" />
@@ -160,7 +160,7 @@ const ViaJARFooter: React.FC = () => {
               </li>
             </ul>
             
-            <h3 className="text-xs font-bold mb-2 text-white mt-4">Mais</h3>
+            <h3 className="text-xs font-bold mb-2 text-white mt-3">Mais</h3>
             <ul className="space-y-1">
               <li>
                 <Link to="/sobre" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">

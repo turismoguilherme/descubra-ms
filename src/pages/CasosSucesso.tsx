@@ -20,7 +20,7 @@ const CasosSucesso = () => {
       ],
       gradient: 'from-emerald-500 to-teal-600',
       icon: MapPin,
-      link: '/ms',
+      link: '/descubrams',
       image_url: null as string | null
     },
     {
@@ -80,7 +80,7 @@ const CasosSucesso = () => {
           ]),
           gradient: 'from-emerald-500 to-teal-600',
           icon: MapPin,
-          link: '/ms',
+          link: '/descubrams',
           image_url: contentMap['viajar_cases_descubra_ms_image'] || null
         },
         {

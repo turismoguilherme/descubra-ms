@@ -10,11 +10,12 @@ const ViaJARNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // Menu simplificado - apenas 4 itens principais (marketing-first)
+  // Menu simplificado - apenas 5 itens principais (marketing-first)
   const [navigationItems, setNavigationItems] = useState([
     { name: "Soluções", path: "/solucoes", hasDropdown: true },
     { name: "Cases", path: "/casos-sucesso" },
     { name: "Preços", path: "/precos" },
+    { name: "Sobre", path: "/sobre" },
     { name: "Contato", path: "/contato" },
   ]);
 
