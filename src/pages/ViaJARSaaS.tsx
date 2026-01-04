@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, Map, Brain, Shield, Globe, Building2, TrendingUp, Calendar, FileText, MapPin, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import CookieConsentBanner from '@/components/cookies/CookieConsentBanner';
 import { platformContentService } from '@/services/admin/platformContentService';
+import WhatViajARTurDoesSection from '@/components/home/WhatViajARTurDoesSection';
+import SuccessCasesSection from '@/components/home/SuccessCasesSection';
 // CommercialSection removido temporariamente
 
-// Tipos para features
-interface Feature {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  gradient: string;
-}
 
 const VideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -84,46 +79,6 @@ const ViaJARSaaS = () => {
   // Estados para conteúdos editáveis
   const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  
-  // Features padrão (fallback)
-  const defaultFeatures: Feature[] = [
-    {
-      icon: Brain,
-      title: "Guilherme IA",
-      description: "Assistente inteligente especializado em turismo com insights estratégicos personalizados.",
-      gradient: "from-purple-500 to-violet-600"
-    },
-    {
-      icon: TrendingUp,
-      title: "Revenue Optimizer",
-      description: "Precificação dinâmica com IA que maximiza receita baseado em demanda e sazonalidade.",
-      gradient: "from-emerald-500 to-teal-600"
-    },
-    {
-      icon: BarChart3,
-      title: "Market Intelligence",
-      description: "Análise de mercado: origem dos turistas, perfil de clientes e benchmarking competitivo.",
-      gradient: "from-blue-500 to-cyan-600"
-    },
-    {
-      icon: Map,
-      title: "Inventário Turístico",
-      description: "Gestão de atrativos com padronização SeTur, validação inteligente e analytics.",
-      gradient: "from-orange-500 to-amber-600"
-    },
-    {
-      icon: Calendar,
-      title: "Gestão de Eventos",
-      description: "Planejamento e análise de eventos turísticos com IA preditiva de público.",
-      gradient: "from-pink-500 to-rose-600"
-    },
-    {
-      icon: Building2,
-      title: "Gestão de CATs",
-      description: "Controle de Centros de Atendimento com GPS, ponto eletrônico e métricas.",
-      gradient: "from-indigo-500 to-blue-600"
-    },
-  ];
 
   // Carregar conteúdos do banco
   useEffect(() => {
@@ -152,76 +107,6 @@ const ViaJARSaaS = () => {
     return content[key] || fallback;
   };
 
-  // Carregar features dos campos individuais
-  const getFeatures = (): Feature[] => {
-    const iconMap: Record<number, React.ComponentType<{ className?: string }>> = {
-      1: Brain,
-      2: TrendingUp,
-      3: BarChart3,
-      4: Map,
-      5: Calendar,
-      6: Building2
-    };
-
-    const gradientMap: Record<number, string> = {
-      1: 'from-purple-500 to-violet-600',
-      2: 'from-emerald-500 to-teal-600',
-      3: 'from-blue-500 to-cyan-600',
-      4: 'from-orange-500 to-amber-600',
-      5: 'from-pink-500 to-rose-600',
-      6: 'from-indigo-500 to-blue-600'
-    };
-
-    const features: Feature[] = [];
-    for (let i = 1; i <= 6; i++) {
-      const title = getContent(`viajar_feature_${i}_title`);
-      const description = getContent(`viajar_feature_${i}_description`);
-      
-      if (title || description) {
-        features.push({
-          icon: iconMap[i] || defaultFeatures[i - 1]?.icon || Brain,
-          title: title || defaultFeatures[i - 1]?.title || '',
-          description: description || defaultFeatures[i - 1]?.description || '',
-          gradient: gradientMap[i] || defaultFeatures[i - 1]?.gradient || 'from-gray-500 to-gray-600'
-        });
-      } else if (defaultFeatures[i - 1]) {
-        features.push(defaultFeatures[i - 1]);
-      }
-    }
-    
-    return features.length > 0 ? features : defaultFeatures;
-  };
-
-  const features = getFeatures();
-
-  // Carregar listas de itens dos campos individuais
-  const getReportItems = (): string[] => {
-    const items: string[] = [];
-    for (let i = 1; i <= 4; i++) {
-      const item = getContent(`viajar_reports_item_${i}`);
-      if (item) items.push(item);
-    }
-    return items.length > 0 ? items : [
-      'Dados agregados e anonimizados (LGPD)',
-      'Perfil demográfico dos visitantes',
-      'Origem e propósito de viagem',
-      'Interações na plataforma Descubra MS'
-    ];
-  };
-
-  const getDescubraMSItems = (): string[] => {
-    const items: string[] = [];
-    for (let i = 1; i <= 4; i++) {
-      const item = getContent(`viajar_descubra_ms_item_${i}`);
-      if (item) items.push(item);
-    }
-    return items.length > 0 ? items : [
-      'Guatá - Assistente IA regional',
-      'Passaporte Digital interativo',
-      'Mapas e rotas inteligentes',
-      'Analytics em tempo real'
-    ];
-  };
 
   // Stats removidos - podem ser reativados via admin futuramente
   // const stats = [
@@ -302,175 +187,11 @@ const ViaJARSaaS = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {getContent('viajar_features_title', 'Soluções Inteligentes')}
-            </h2>
-            {getContent('viajar_features_subtitle') && (
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                {getContent('viajar_features_subtitle', 'Tecnologia de ponta para transformar a gestão do turismo')}
-            </p>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
-              <div 
-                key={i} 
-                className="group relative bg-card rounded-2xl p-8 border border-border hover:border-viajar-cyan/50 transition-all duration-300 hover:shadow-xl hover:shadow-viajar-cyan/5"
-              >
-                {/* Icon */}
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className="h-7 w-7 text-white" />
-                </div>
-                
-                <h3 className="text-xl font-semibold text-foreground mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-                
-                <Link 
-                  to="/solucoes" 
-                  className="inline-flex items-center gap-1 mt-6 text-sm font-medium text-viajar-cyan hover:text-viajar-cyan/80 transition-colors"
-                >
-                  Saiba mais
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* O que a ViajARTur faz - Cards visuais grandes */}
+      <WhatViajARTurDoesSection />
 
-      {/* Relatórios de Dados de Turismo Banner */}
-      <section className="py-16 bg-gradient-to-r from-viajar-cyan/10 via-viajar-blue/10 to-viajar-cyan/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-viajar-cyan/20 p-8 md:p-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              {/* Content */}
-              <div>
-                {getContent('viajar_reports_badge') && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-4">
-                  <FileText className="h-4 w-4" />
-                    {getContent('viajar_reports_badge', 'Novidade')}
-                </div>
-                )}
-                
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  {getContent('viajar_reports_title', 'Relatórios de Dados de Turismo')}
-                </h2>
-                
-                {getContent('viajar_reports_description') && (
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                    {getContent('viajar_reports_description', 'Acesse dados agregados e anonimizados de turismo de Mato Grosso do Sul. Relatórios completos com análises demográficas, origem dos visitantes, propósitos de viagem e interações na plataforma.')}
-                </p>
-                )}
-                
-                <ul className="space-y-2 mb-6">
-                  {getReportItems().map((item, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-viajar-cyan flex-shrink-0" />
-                      <span className="text-sm text-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link to="/dados-turismo">
-                    <Button className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-white gap-2 w-full sm:w-auto">
-                      {getContent('viajar_reports_button_primary', 'Saiba Mais')}
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/contato">
-                    <Button variant="outline" className="w-full sm:w-auto">
-                      {getContent('viajar_reports_button_secondary', 'Solicitar Relatório')}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              
-              {/* Visual */}
-              <div className="relative">
-                <div className="aspect-square rounded-xl bg-gradient-to-br from-viajar-cyan/20 to-viajar-blue/20 border border-viajar-cyan/30 flex items-center justify-center p-8">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mx-auto mb-4">
-                      <BarChart3 className="h-8 w-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Dados Reais</h3>
-                    <p className="text-sm text-muted-foreground">Alumia + Descubra MS</p>
-                  </div>
-                </div>
-                
-                {/* Floating Elements */}
-                <div className="absolute -top-2 -right-2 w-16 h-16 rounded-lg bg-viajar-cyan/10 blur-xl" />
-                <div className="absolute -bottom-2 -left-2 w-20 h-20 rounded-lg bg-viajar-blue/10 blur-xl" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Descubra MS Section */}
-      <section className="py-24 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Content */}
-            <div>
-              {getContent('viajar_descubra_ms_badge') && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-6">
-                <Globe className="h-4 w-4" />
-                  {getContent('viajar_descubra_ms_badge', 'Case de Sucesso')}
-              </div>
-              )}
-              
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                {getContent('viajar_descubra_ms_title', 'Descubra Mato Grosso do Sul')}
-              </h2>
-              
-              {getContent('viajar_descubra_ms_description') && (
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                  {getContent('viajar_descubra_ms_description', 'Nossa primeira implementação completa demonstra como a tecnologia ViajARTur revoluciona o turismo regional com Guatá IA, Passaporte Digital e Analytics Avançado.')}
-              </p>
-              )}
-              
-              <ul className="space-y-4 mb-8">
-                {getDescubraMSItems().map((item, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-viajar-cyan flex-shrink-0" />
-                    <span className="text-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Link to="/ms">
-                <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
-                  {getContent('viajar_descubra_ms_button', 'Conhecer Descubra MS')}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            
-            {/* Visual */}
-            <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-viajar-cyan/20 to-viajar-blue/20 border border-viajar-cyan/30 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mx-auto mb-4">
-                    <MapPin className="h-10 w-10 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Descubra MS</h3>
-                  <p className="text-muted-foreground">Plataforma de Turismo</p>
-                </div>
-              </div>
-              
-              {/* Floating Elements */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 rounded-xl bg-viajar-cyan/10 blur-2xl" />
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 rounded-xl bg-viajar-blue/10 blur-2xl" />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Cases de Sucesso - Koda + Descubra MS */}
+      <SuccessCasesSection />
 
       {/* Video Section */}
       <section className="py-24 bg-background">

@@ -19,6 +19,11 @@ const Koda = () => {
   const [isConnected, setIsConnected] = useState(true);
   const [connectionChecking, setConnectionChecking] = useState(false);
 
+  // Scroll para o topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   // Welcome message
   useEffect(() => {
     if (messages.length === 0) {

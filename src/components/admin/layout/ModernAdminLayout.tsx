@@ -28,6 +28,7 @@ import {
   Stamp,
   CreditCard,
   Database,
+  Package,
   Edit3,
   Activity,
   Zap,
@@ -95,7 +96,9 @@ const navigationItems: NavItem[] = [
     platform: 'viajar',
         children: [
           { id: 'viajar-content', label: 'Conteúdo e Menu', icon: FileText, path: '/viajar/admin/viajar/content', permission: 'viajar', platform: 'viajar' },
+          { id: 'viajar-products', label: 'Produtos/Soluções', icon: Package, path: '/viajar/admin/viajar/products', permission: 'viajar', platform: 'viajar' },
           { id: 'viajar-plans', label: 'Configuração de Planos', icon: CreditCard, path: '/viajar/admin/viajar/plan-settings', permission: 'viajar', platform: 'viajar' },
+          { id: 'viajar-team', label: 'Membros da Equipe', icon: Users, path: '/viajar/admin/viajar/team-members', permission: 'viajar', platform: 'viajar' },
           // Clientes e Assinaturas movidos para Financeiro
         ],
   },

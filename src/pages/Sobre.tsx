@@ -1,31 +1,71 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Target, Eye, Award, Users, ArrowRight, MapPin, Brain, BarChart3, Building2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Target, Eye, Award, Users, ArrowRight, Brain, BarChart3, Building2, Instagram, Linkedin } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { supabase } from '@/integrations/supabase/client';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  position: string;
+  bio: string | null;
+  photo_url: string | null;
+  instagram_url: string | null;
+  linkedin_url: string | null;
+}
 
 const Sobre = () => {
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loadingTeam, setLoadingTeam] = useState(true);
+
+  // Scroll para o topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  useEffect(() => {
+    loadTeamMembers();
+  }, []);
+
+  const loadTeamMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('viajar_team_members')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setTeamMembers(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar membros da equipe:', error);
+    } finally {
+      setLoadingTeam(false);
+    }
+  };
+
   const values = [
     {
       icon: Brain,
       title: "Inovação",
-      description: "Utilizamos inteligência artificial e tecnologia de ponta para revolucionar a gestão do turismo."
+      description: "IA e tecnologia de ponta para o turismo."
     },
     {
       icon: Users,
       title: "Colaboração",
-      description: "Trabalhamos lado a lado com empresários e gestores públicos para criar soluções que realmente funcionam."
+      description: "Soluções que realmente funcionam."
     },
     {
       icon: BarChart3,
       title: "Resultados",
-      description: "Focamos em métricas e resultados mensuráveis que impactam positivamente o setor turístico."
+      description: "Métricas que impactam o setor."
     },
     {
       icon: Award,
       title: "Excelência",
-      description: "Buscamos a excelência em cada funcionalidade, garantindo qualidade e confiabilidade."
+      description: "Qualidade e confiabilidade."
     }
   ];
 
@@ -54,10 +94,10 @@ const Sobre = () => {
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Sobre a ViajARTur
+              Sobre
             </h1>
-            <p className="text-xl text-white/70">
-              Transformando o turismo brasileiro com tecnologia, inovação e inteligência artificial
+            <p className="text-lg text-white/70">
+              Tecnologia e inovação para o turismo
             </p>
           </div>
         </div>
@@ -72,11 +112,8 @@ const Sobre = () => {
                 <Target className="h-7 w-7 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-4">Nossa Missão</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Democratizar o acesso à tecnologia de ponta para o setor turístico, 
-                permitindo que governos e empresas de qualquer tamanho possam oferecer 
-                experiências excepcionais aos turistas e tomar decisões estratégicas 
-                baseadas em dados e inteligência artificial.
+              <p className="text-muted-foreground">
+                Democratizar tecnologia de ponta para o setor turístico.
               </p>
             </div>
 
@@ -85,104 +122,85 @@ const Sobre = () => {
                 <Eye className="h-7 w-7 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-4">Nossa Visão</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Ser a plataforma líder em gestão inteligente de turismo no Brasil, 
-                conectando destinos, turistas e gestores através de tecnologia inovadora 
-                e inteligência artificial, contribuindo para o desenvolvimento 
-                sustentável do setor.
+              <p className="text-muted-foreground">
+                Ser a plataforma líder em gestão inteligente de turismo no Brasil.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* O que fazemos */}
-      <section className="py-20 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              O que Oferecemos
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Soluções completas para o setor público e privado do turismo
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-viajar-cyan/10 flex items-center justify-center flex-shrink-0">
-                    <Brain className="h-5 w-5 text-viajar-cyan" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Guilherme IA</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Assistente virtual inteligente que fornece insights estratégicos e recomendações personalizadas.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-viajar-blue/10 flex items-center justify-center flex-shrink-0">
-                    <BarChart3 className="h-5 w-5 text-viajar-blue" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Analytics Avançado</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Dashboards completos com métricas em tempo real para tomada de decisão.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-5 w-5 text-emerald-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Gestão de CATs</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Controle completo de Centros de Atendimento ao Turista com GPS e ponto eletrônico.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="h-5 w-5 text-purple-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">Revenue Optimizer</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Precificação dinâmica baseada em IA para maximizar receita.
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* Team Section */}
+      {teamMembers.length > 0 && (
+        <section className="py-20 bg-muted/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Nossa Equipe
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Os profissionais que fazem a ViajARTur acontecer
+              </p>
             </div>
 
-            <div className="relative">
-              <div className="aspect-square rounded-2xl bg-gradient-to-br from-viajar-cyan/20 to-viajar-blue/20 border border-viajar-cyan/30 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mx-auto mb-6">
-                    <Building2 className="h-12 w-12 text-white" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {teamMembers.map((member) => (
+                <div
+                  key={member.id}
+                  className="bg-card rounded-2xl p-6 border border-border hover:border-viajar-cyan/30 transition-all duration-300 hover:shadow-lg text-center"
+                >
+                  <div className="flex justify-center mb-4">
+                    {member.photo_url ? (
+                      <img
+                        src={member.photo_url}
+                        alt={member.name}
+                        className="w-24 h-24 rounded-full object-cover border-4 border-viajar-cyan/20"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center">
+                        <Users className="h-12 w-12 text-white" />
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-3xl font-bold text-foreground mb-2">
-                    <span className="text-viajar-slate">Viaj</span>
-                    <span className="text-viajar-cyan">AR</span>
-                    <span className="text-viajar-slate">Tur</span>
-                  </h3>
-                  <p className="text-muted-foreground">Turismo Inteligente</p>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{member.name}</h3>
+                  <p className="text-viajar-cyan font-medium mb-3">{member.position}</p>
+                  {member.bio && (
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                      {member.bio}
+                    </p>
+                  )}
+                  {(member.instagram_url || member.linkedin_url) && (
+                    <div className="flex justify-center gap-4 mt-4">
+                      {member.instagram_url && (
+                        <a
+                          href={member.instagram_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-pink-500 hover:text-pink-600 transition-colors"
+                          aria-label="Instagram"
+                        >
+                          <Instagram className="h-5 w-5" />
+                        </a>
+                      )}
+                      {member.linkedin_url && (
+                        <a
+                          href={member.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 transition-colors"
+                          aria-label="LinkedIn"
+                        >
+                          <Linkedin className="h-5 w-5" />
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-              
-              {/* Floating Elements */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 rounded-xl bg-viajar-cyan/10 blur-2xl" />
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 rounded-xl bg-viajar-blue/10 blur-2xl" />
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Values */}
       <section className="py-20">
@@ -203,63 +221,9 @@ const Sobre = () => {
                   <value.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">{value.title}</h3>
-                <p className="text-sm text-muted-foreground">{value.description}</p>
+                <p className="text-xs text-muted-foreground">{value.description}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Case Descubra MS */}
-      <section className="py-20 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-card rounded-2xl p-8 md:p-12 border border-border">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-viajar-cyan/10 text-viajar-cyan text-sm font-medium mb-6">
-                  <Award className="h-4 w-4" />
-                  Nosso Primeiro Case
-                </div>
-                
-                <h2 className="text-3xl font-bold text-foreground mb-6">
-                  Descubra Mato Grosso do Sul
-                </h2>
-                
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Nossa primeira implementação completa demonstra o potencial da plataforma ViajARTur. 
-                  O portal Descubra MS oferece uma experiência completa para turistas explorarem 
-                  o estado com tecnologia de ponta.
-                </p>
-                
-                <ul className="space-y-3 mb-8">
-                  {['Guatá - Assistente IA regional', 'Passaporte Digital com gamificação', 'Mapas interativos e rotas', 'Eventos e destinos em tempo real'].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-viajar-cyan flex-shrink-0" />
-                      <span className="text-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Link to="/ms">
-                  <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
-                    Conhecer Descubra MS
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="relative">
-                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-viajar-cyan/20 to-viajar-blue/20 border border-viajar-cyan/30 flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center mx-auto mb-4">
-                      <MapPin className="h-10 w-10 text-white" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-foreground mb-2">Descubra MS</h3>
-                    <p className="text-muted-foreground">Plataforma de Turismo</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

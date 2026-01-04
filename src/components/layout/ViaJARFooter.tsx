@@ -15,30 +15,63 @@ const ViaJARFooter: React.FC = () => {
   return (
     <footer className="bg-viajar-slate text-white">
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           
-          {/* Brand & Description */}
-          <div className="lg:col-span-1">
-            <div className="text-2xl font-bold mb-4">
+          {/* Coluna 1 - Logo, Descrição, Contato e Redes Sociais */}
+          <div className="text-center lg:text-left">
+            <div className="text-xl font-bold mb-2">
               <span className="text-white">Viaj</span>
               <span className="text-viajar-cyan">AR</span>
               <span className="text-white">Tur</span>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              Ecossistema inteligente de turismo. Transformamos dados em decisões estratégicas 
-              com analytics avançado e IA para o setor público e privado.
+            <p className="text-gray-400 text-xs mb-3">
+              Ecossistema inteligente de turismo.
             </p>
-            <div className="flex gap-3">
+            
+            {/* Contato */}
+            <div className="space-y-1 mb-3">
+              {settings.email && (
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-gray-400 text-xs">
+                  <Mail className="h-3 w-3 flex-shrink-0" />
+                  <a 
+                    href={`mailto:${settings.email}`} 
+                    className="hover:text-viajar-cyan transition-colors"
+                  >
+                    {settings.email}
+                  </a>
+                </div>
+              )}
+              {settings.phone && (
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-gray-400 text-xs">
+                  <Phone className="h-3 w-3 flex-shrink-0" />
+                  <a 
+                    href={`tel:${settings.phone.replace(/\D/g, '')}`} 
+                    className="hover:text-viajar-cyan transition-colors"
+                  >
+                    {settings.phone}
+                  </a>
+                </div>
+              )}
+              {settings.address && (
+                <div className="flex items-start justify-center lg:justify-start gap-1.5 text-gray-400 text-xs">
+                  <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  <span className="break-words">{settings.address}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Redes Sociais */}
+            <div className="flex space-x-3 justify-center lg:justify-start mt-2">
               {settings.social_media.facebook && (
                 <a 
                   href={settings.social_media.facebook} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  className="text-gray-400 hover:text-viajar-cyan transition-colors"
                   aria-label="Facebook"
                 >
-                  <Facebook className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                  <Facebook className="h-4 w-4" />
                 </a>
               )}
               {settings.social_media.instagram && (
@@ -46,10 +79,10 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.instagram} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  className="text-gray-400 hover:text-viajar-cyan transition-colors"
                   aria-label="Instagram"
                 >
-                  <Instagram className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                  <Instagram className="h-4 w-4" />
                 </a>
               )}
               {settings.social_media.linkedin && (
@@ -57,10 +90,10 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.linkedin} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  className="text-gray-400 hover:text-viajar-cyan transition-colors"
                   aria-label="LinkedIn"
                 >
-                  <Linkedin className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                  <Linkedin className="h-4 w-4" />
                 </a>
               )}
               {settings.social_media.twitter && (
@@ -68,179 +101,134 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.twitter} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-viajar-cyan/20 flex items-center justify-center transition-colors"
+                  className="text-gray-400 hover:text-viajar-cyan transition-colors"
                   aria-label="Twitter"
                 >
-                  <Twitter className="h-4 w-4 text-gray-300 hover:text-viajar-cyan" />
+                  <Twitter className="h-4 w-4" />
                 </a>
               )}
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300 mb-4">
-              Navegação
-            </h3>
-            <ul className="space-y-3">
+          {/* Coluna 2 - Links Principais */}
+          <div className="text-center lg:text-left">
+            <h3 className="text-xs font-bold mb-2 text-white">Links Principais</h3>
+            <ul className="space-y-1">
               <li>
-                <Link to="/" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
-                  Início
-                </Link>
-              </li>
-              <li>
-                <Link to="/solucoes" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
+                <Link to="/solucoes" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Soluções
                 </Link>
               </li>
               <li>
-                <Link to="/casos-sucesso" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
-                  Cases de Sucesso
+                <Link to="/casos-sucesso" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  Cases
                 </Link>
               </li>
               <li>
-                <Link to="/precos" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
+                <Link to="/precos" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Preços
                 </Link>
               </li>
               <li>
-                <Link to="/sobre" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
-                  Sobre Nós
-                </Link>
-              </li>
-              <li>
-                <Link to="/contato" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
+                <Link to="/contato" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
                   Contato
-                </Link>
-              </li>
-              <li>
-                <Link to="/dados-turismo" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm">
-                  Dados de Turismo
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Access Links */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300 mb-4">
-              Acesso
-            </h3>
-            <ul className="space-y-3">
+          {/* Coluna 3 - Acesso + Links Secundários */}
+          <div className="text-center lg:text-left">
+            <h3 className="text-xs font-bold mb-2 text-white">Acesso</h3>
+            <ul className="space-y-1 mb-4">
               <li>
-                <Link to="/test-login" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm flex items-center gap-2">
-                  <FlaskConical className="h-4 w-4" />
+                <Link to="/test-login" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
+                  <FlaskConical className="h-3 w-3" />
                   Login de Testes
                 </Link>
               </li>
               <li>
-                <Link to="/viajar/admin" className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  Área Administrativa
+                <Link to="/viajar/admin" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
+                  <Shield className="h-3 w-3" />
+                  Admin
+                </Link>
+              </li>
+            </ul>
+            
+            <h3 className="text-xs font-bold mb-2 text-white mt-4">Mais</h3>
+            <ul className="space-y-1">
+              <li>
+                <Link to="/sobre" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  Sobre
+                </Link>
+              </li>
+              <li>
+                <Link to="/dados-turismo" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  Dados
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300 mb-4">
-              Contato
-            </h3>
-            <ul className="space-y-3">
-              {settings.email && (
-                <li className="flex items-start gap-3">
-                  <Mail className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
-                  <a 
-                    href={`mailto:${settings.email}`} 
-                    className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm"
-                  >
-                    {settings.email}
-                  </a>
-                </li>
-              )}
-              {settings.phone && (
-                <li className="flex items-start gap-3">
-                  <Phone className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
-                  <a 
-                    href={`tel:${settings.phone.replace(/\D/g, '')}`} 
-                    className="text-gray-400 hover:text-viajar-cyan transition-colors text-sm"
-                  >
-                    {settings.phone}
-                  </a>
-                </li>
-              )}
-              {settings.address && (
-                <li className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 text-viajar-cyan mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-400 text-sm">
-                    {settings.address}
-                  </span>
-                </li>
-              )}
+          {/* Coluna 4 - Legal */}
+          <div className="text-center lg:text-left">
+            <h3 className="text-xs font-bold mb-2 text-white">Legal</h3>
+            <ul className="space-y-1">
+              <li>
+                <Link to="/viajar/privacidade" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  Privacidade
+                </Link>
+              </li>
+              <li>
+                <Link to="/viajar/termos" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  Termos
+                </Link>
+              </li>
+              <li>
+                <Link to="/viajar/cookies" className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-2 justify-center lg:justify-start">
+                  Cookies
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            {/* Copyright */}
-            <p className="text-gray-400 text-sm">
-              {settings.copyright || `© ${currentYear} ViajARTur. Todos os direitos reservados.`}
-            </p>
-
-            {/* Legal Links */}
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
-              <Link 
-                to="/viajar/privacidade" 
-                className="text-gray-400 hover:text-viajar-cyan transition-colors"
-              >
-                Privacidade
-              </Link>
-              <Link 
-                to="/viajar/termos" 
-                className="text-gray-400 hover:text-viajar-cyan transition-colors"
-              >
-                Termos de Uso
-              </Link>
-              <Link 
-                to="/viajar/cookies" 
-                className="text-gray-400 hover:text-viajar-cyan transition-colors"
-              >
-                Cookies
-              </Link>
-            </div>
+      {/* Logos de Parceiros */}
+      {settings.partner_logos && settings.partner_logos.length > 0 && (
+        <div className="border-t border-white/10 pt-3 mt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {settings.partner_logos
+              .sort((a, b) => a.order - b.order)
+              .map((logo) => (
+                <div key={logo.id} className="flex items-center justify-center">
+                  <img
+                    src={logo.logo_url}
+                    alt={logo.alt_text || logo.name}
+                    className="h-8 w-auto object-contain max-w-[120px] opacity-90 hover:opacity-100 transition-opacity"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `data:image/svg+xml,${encodeURIComponent(`<svg width="150" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="150" height="60" fill="#e5e7eb"/><text x="50%" y="50%" font-family="Arial" font-size="12" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">Logo não disponível</text></svg>`)}`;
+                    }}
+                  />
+                </div>
+              ))}
           </div>
         </div>
+      )}
 
-        {/* Logos de Parceiros */}
-        {settings.partner_logos && settings.partner_logos.length > 0 && (
-          <div className="border-t border-gray-700 pt-6 mt-8">
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              {settings.partner_logos
-                .sort((a, b) => a.order - b.order)
-                .map((logo) => (
-                  <div key={logo.id} className="flex items-center justify-center">
-                    <img
-                      src={logo.logo_url}
-                      alt={logo.alt_text || logo.name}
-                      className="h-12 w-auto object-contain max-w-[150px] opacity-90 hover:opacity-100 transition-opacity"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `data:image/svg+xml,${encodeURIComponent(`<svg width="150" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="150" height="60" fill="#e5e7eb"/><text x="50%" y="50%" font-family="Arial" font-size="12" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">Logo não disponível</text></svg>`)}`;
-                      }}
-                    />
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
+      {/* Copyright */}
+      <div className="border-t border-white/10 pt-2 mt-2">
+        <div className="text-center">
+          <p className="text-gray-400 text-xs">
+            {settings.copyright || `© ${currentYear} ViajARTur. Todos os direitos reservados.`}
+          </p>
+        </div>
       </div>
     </footer>
   );
 };
 
 export default ViaJARFooter;
+
+
