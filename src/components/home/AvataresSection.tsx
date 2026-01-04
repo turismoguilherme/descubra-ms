@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { supabase } from '@/integrations/supabase/client';
-import { Sparkles, Award, Star } from "lucide-react";
+import { Sparkles, Award, Star, Eye, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface PantanalAnimal {
   id: string;
@@ -14,6 +15,9 @@ interface PantanalAnimal {
   description: string;
   image_url: string;
   rarity: string;
+  habitat?: string;
+  diet?: string;
+  personality_traits?: string;
 }
 
 const AvataresSection = () => {
@@ -21,6 +25,7 @@ const AvataresSection = () => {
   const { language } = useLanguage();
   const [content, setContent] = useState<Record<string, string>>({});
   const [avatars, setAvatars] = useState<PantanalAnimal[]>([]);
+  const [showAvatarsModal, setShowAvatarsModal] = useState(false);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -87,105 +92,42 @@ const AvataresSection = () => {
             </p>
           </div>
 
-          {/* Content */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            {/* Como funciona */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-ms-primary-blue/10 rounded-lg">
-                  <Award className="h-6 w-6 text-ms-primary-blue" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {getContent('ms_avatars_how_title', 'Como Funciona')}
-                </h3>
-              </div>
-              <p className="text-gray-600 leading-relaxed">
-                {getContent('ms_avatars_how_description', 'Escolha seu avatar entre os animais do Pantanal, desbloqueie novos avatares através de conquistas, complete roteiros para ganhar recompensas e aprenda sobre a biodiversidade enquanto explora Mato Grosso do Sul.')}
-              </p>
-            </div>
+          {/* Content - Versão sucinta */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-8">
+            <p className="text-gray-700 leading-relaxed text-center text-lg mb-6">
+              <strong>Sistema de Gamificação:</strong> Escolha seu avatar entre animais do Pantanal, desbloqueie novos através do Passaporte Digital
+              (complete roteiros e visite destinos para ganhar recompensas). Cada avatar representa características únicas da fauna brasileira.
+            </p>
 
-            {/* Sistema de Gamificação */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-ms-pantanal-green/10 rounded-lg">
-                  <Star className="h-6 w-6 text-ms-pantanal-green" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {getContent('ms_avatars_gamification_title', 'Sistema de Raridade')}
-                </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="flex items-center gap-2 justify-center">
+                <span className="text-gray-500 text-lg">⭐</span>
+                <span className="text-sm text-gray-700">Comum</span>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500">⭐</span>
-                  <span className="text-gray-700">{getContent('ms_avatars_rarity_common', 'Comum - Fácil de obter')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-500">⭐⭐⭐</span>
-                  <span className="text-gray-700">{getContent('ms_avatars_rarity_rare', 'Raro - Requer esforço moderado')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-500">⭐⭐⭐⭐</span>
-                  <span className="text-gray-700">{getContent('ms_avatars_rarity_epic', 'Épico - Desafio significativo')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                  <span className="text-gray-700">{getContent('ms_avatars_rarity_legendary', 'Lendário - Conquista especial')}</span>
-                </div>
+              <div className="flex items-center gap-2 justify-center">
+                <span className="text-blue-500 text-lg">⭐⭐⭐</span>
+                <span className="text-sm text-gray-700">Raro</span>
+              </div>
+              <div className="flex items-center gap-2 justify-center">
+                <span className="text-purple-500 text-lg">⭐⭐⭐⭐</span>
+                <span className="text-sm text-gray-700">Épico</span>
+              </div>
+              <div className="flex items-center gap-2 justify-center">
+                <span className="text-yellow-500 text-lg">⭐⭐⭐⭐⭐</span>
+                <span className="text-sm text-gray-700">Lendário</span>
               </div>
             </div>
           </div>
 
-          {/* Animais disponíveis */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-12">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              {getContent('ms_avatars_animals_title', 'Animais do Pantanal Disponíveis')}
-            </h3>
-            <p className="text-gray-600 leading-relaxed mb-6">
-              {getContent('ms_avatars_animals_description', 'Explore a biodiversidade do Pantanal através de avatares únicos. Cada animal representa características especiais e oferece uma experiência de gamificação única.')}
-            </p>
-
-            {/* Grid de avatares reais */}
-            {avatars.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {avatars.map((avatar) => (
-                  <div key={avatar.id} className="bg-gray-50 rounded-lg p-4 text-center">
-                    <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
-                      <img
-                        src={avatar.image_url}
-                        alt={avatar.name}
-                        className="w-12 h-12 object-cover rounded-full"
-                        onError={(e) => {
-                          e.currentTarget.src = '/images/avatar-placeholder.png';
-                        }}
-                      />
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-sm">{avatar.name}</h4>
-                    <p className="text-xs text-gray-600 italic">{avatar.scientific_name}</p>
-                    <div className="mt-2">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        avatar.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
-                        avatar.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
-                        avatar.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {avatar.rarity === 'legendary' ? '⭐⭐⭐⭐⭐' :
-                         avatar.rarity === 'epic' ? '⭐⭐⭐⭐' :
-                         avatar.rarity === 'rare' ? '⭐⭐⭐' : '⭐'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 list-disc list-inside text-gray-700">
-                <li>{getContent('ms_avatars_animal_1', 'Onça-pintada - Lendário ⭐⭐⭐⭐⭐')}</li>
-                <li>{getContent('ms_avatars_animal_2', 'Arara-azul - Épico ⭐⭐⭐⭐')}</li>
-                <li>{getContent('ms_avatars_animal_3', 'Capivara - Comum ⭐')}</li>
-                <li>{getContent('ms_avatars_animal_4', 'Tuiuiú - Raro ⭐⭐⭐')}</li>
-                <li>{getContent('ms_avatars_animal_5', 'Ariranha - Raro ⭐⭐⭐')}</li>
-                <li>{getContent('ms_avatars_animal_6', 'Tamanduá-bandeira - Raro ⭐⭐⭐')}</li>
-              </ul>
-            )}
+          {/* Ver avatares */}
+          <div className="text-center mb-12">
+            <Button
+              onClick={() => setShowAvatarsModal(true)}
+              className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white px-8 py-4 text-lg gap-3"
+            >
+              <Eye className="h-5 w-5" />
+              Ver Avatares Disponíveis
+            </Button>
           </div>
 
           {/* CTA */}
@@ -198,6 +140,70 @@ const AvataresSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Avatares */}
+      <Dialog open={showAvatarsModal} onOpenChange={setShowAvatarsModal}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              🦌 Avatares do Pantanal Disponíveis
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-6">
+            {avatars.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {avatars.map((avatar) => (
+                  <div key={avatar.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div className="text-center mb-4">
+                      <div className="w-32 h-32 mx-auto mb-4 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
+                        <img
+                          src={avatar.image_url}
+                          alt={avatar.name}
+                          className="w-24 h-24 object-cover rounded-full"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/avatar-placeholder.png';
+                          }}
+                        />
+                      </div>
+
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">{avatar.name}</h3>
+                      <p className="text-sm text-gray-600 italic mb-3">{avatar.scientific_name}</p>
+
+                      <div className="mb-4">
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                          avatar.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                          avatar.rarity === 'epic' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+                          avatar.rarity === 'rare' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                          'bg-gray-100 text-gray-800 border border-gray-300'
+                        }`}>
+                          {avatar.rarity === 'legendary' ? '⭐⭐⭐⭐⭐ Lendário' :
+                           avatar.rarity === 'epic' ? '⭐⭐⭐⭐ Épico' :
+                           avatar.rarity === 'rare' ? '⭐⭐⭐ Raro' : '⭐ Comum'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-sm text-gray-700">
+                      <p><strong>Habitat:</strong> {avatar.habitat || 'Pantanal'}</p>
+                      <p><strong>Alimentação:</strong> {avatar.diet || 'Diversificada'}</p>
+                      {avatar.personality_traits && (
+                        <p><strong>Personalidade:</strong> {avatar.personality_traits}</p>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-gray-600 mt-3 line-clamp-3">{avatar.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Carregando avatares...</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

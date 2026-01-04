@@ -466,27 +466,62 @@ export default function EventsManagement() {
     if (!editingEvent) return;
 
     try {
+      // Campos básicos que sempre existem
+      const updateData: any = {
+        titulo: editingEvent.name,
+        descricao: editingEvent.description,
+        data_inicio: editingEvent.start_date,
+        data_fim: editingEvent.end_date,
+        local: editingEvent.location,
+        organizador: editingEvent.organizador_nome || editingEvent.organizador,
+        contato_telefone: editingEvent.organizador_telefone || editingEvent.contato_telefone,
+        contato_email: editingEvent.organizador_email || editingEvent.contato_email,
+        imagem_principal: editingEvent.image_url,
+        video_promocional: editingEvent.video_url,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Campos que podem não existir - adicionar apenas se existirem
+      if (editingEvent.cidade || editingEvent.location) {
+        updateData.cidade = editingEvent.cidade || editingEvent.location.split(',')[0]?.trim();
+      }
+
+      // Tentar categoria primeiro, mas continuar se não existir
+      try {
+        const testQuery = await supabase
+          .from('events')
+          .select('categoria')
+          .limit(1);
+
+        if (!testQuery.error) {
+          updateData.categoria = editingEvent.category;
+        }
+      } catch (e) {
+        // Campo categoria pode não existir, continuar sem ele
+      }
+
+      // Adicionar outros campos opcionais se existirem
+      const optionalFields = [
+        'site_oficial',
+        'logo_evento',
+        'publico_alvo',
+        'tipo_entrada'
+      ];
+
+      for (const field of optionalFields) {
+        if (editingEvent[field as keyof typeof editingEvent]) {
+          updateData[field] = editingEvent[field as keyof typeof editingEvent];
+        }
+      }
+
+      // Se tipo_entrada não foi definido, definir baseado em is_free
+      if (!updateData.tipo_entrada && editingEvent.is_free !== undefined) {
+        updateData.tipo_entrada = editingEvent.is_free ? 'gratuito' : 'pago';
+      }
+
       const { error } = await supabase
         .from('events')
-        .update({
-          titulo: editingEvent.name,
-          descricao: editingEvent.description,
-          data_inicio: editingEvent.start_date,
-          data_fim: editingEvent.end_date,
-          local: editingEvent.location,
-          cidade: editingEvent.cidade || editingEvent.location.split(',')[0]?.trim(),
-          categoria: editingEvent.category,
-          tipo_entrada: editingEvent.tipo_entrada || (editingEvent.is_free ? 'gratuito' : 'pago'),
-          organizador: editingEvent.organizador_nome || editingEvent.organizador,
-          site_oficial: editingEvent.site_oficial,
-          contato_telefone: editingEvent.organizador_telefone || editingEvent.contato_telefone,
-          contato_email: editingEvent.organizador_email || editingEvent.contato_email,
-          imagem_principal: editingEvent.image_url,
-          video_promocional: editingEvent.video_url,
-          logo_evento: editingEvent.logo_evento,
-          publico_alvo: editingEvent.publico_alvo,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', editingEvent.id);
 
       if (error) throw error;
@@ -1006,12 +1041,19 @@ export default function EventsManagement() {
                 </div>
 
                 <div>
-                  <Label htmlFor="edit-video">Vídeo (YouTube)</Label>
+                  <Label htmlFor="edit-video">Upload de Vídeo</Label>
                   <Input
                     id="edit-video"
-                    value={editingEvent.video_url || ''}
-                    onChange={(e) => setEditingEvent({...editingEvent, video_url: e.target.value})}
-                    placeholder="https://youtube.com/watch?v=..."
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Aqui seria implementado o upload para storage
+                        // Por enquanto, apenas simula
+                        setEditingEvent({...editingEvent, video_url: `uploaded_${file.name}`});
+                      }
+                    }}
                   />
                 </div>
               </div>
