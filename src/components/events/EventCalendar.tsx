@@ -306,12 +306,23 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         console.log('matchesRegion:', matchesRegion);
         console.log('!matchesRegion:', !matchesRegion);
         console.log('selectedRegion:', selectedRegion);
-        console.log('selectedRegion in regionCities:', selectedRegion in regionCities);
-        console.log('regionCities keys:', Object.keys(regionCities));
-        console.log('regionCities[caminho-ipes]:', regionCities['caminho-ipes']);
 
-        const conditionResult = !matchesRegion && selectedRegion in regionCities;
-        console.log('CONDIÇÃO FINAL (!matchesRegion && selectedRegion in regionCities):', conditionResult);
+        // Testar cada parte separadamente para evitar erros
+        try {
+          const hasRegionInCities = selectedRegion in regionCities;
+          console.log('selectedRegion in regionCities:', hasRegionInCities);
+
+          const regionCitiesKeys = Object.keys(regionCities);
+          console.log('regionCities keys:', regionCitiesKeys);
+
+          const caminhoIpesCities = regionCities['caminho-ipes'];
+          console.log('regionCities[caminho-ipes]:', caminhoIpesCities);
+
+          const conditionResult = !matchesRegion && hasRegionInCities;
+          console.log('CONDIÇÃO FINAL:', conditionResult);
+        } catch (error) {
+          console.error('ERRO nos logs de debug:', error);
+        }
 
         if (!matchesRegion && selectedRegion in regionCities) {
           console.log('✅ [FALLBACK] CONDIÇÃO ATENDIDA - EXECUTANDO FALLBACK');
