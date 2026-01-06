@@ -301,19 +301,26 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       return null;
     }
 
-    // Padrões mais abrangentes para URLs do YouTube
+    // Padrões abrangentes para URLs do YouTube (incluindo Shorts)
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
       /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
     ];
 
     for (const pattern of patterns) {
-      console.log('🔍 Testando padrão:', pattern);
+      console.log('🔍 Testando padrão:', pattern.source);
       const match = url.match(pattern);
       if (match && match[1]) {
-        const embedUrl = `https://www.youtube.com/embed/${match[1]}`;
-        console.log('✅ Match encontrado! ID do vídeo:', match[1]);
+        const videoId = match[1];
+        const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        console.log('✅ Match encontrado! ID do vídeo:', videoId);
         console.log('✅ URL de embed:', embedUrl);
+
+        // Verificar se é um Short (formato diferente)
+        if (url.includes('/shorts/')) {
+          console.log('📱 Vídeo identificado como YouTube Short');
+        }
+
         return embedUrl;
       }
     }
@@ -747,16 +754,21 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
                       if (embedUrl) {
                         console.log('✅ Vídeo será exibido:', embedUrl);
+                        console.log('🎬 Renderizando iframe do YouTube');
+
                         return (
                           <iframe
                             src={embedUrl}
                             className="w-full h-full object-cover"
                             allowFullScreen
                             title="Vídeo do evento"
+                            onLoad={() => console.log('🎥 Vídeo do YouTube carregado com sucesso')}
+                            onError={(e) => console.error('❌ Erro ao carregar vídeo do YouTube:', e)}
                           />
                         );
                       } else {
                         console.log('❌ URL de vídeo inválida, não conseguiu gerar embed URL');
+                        console.log('📝 Verificando fallback (logo_evento ou image_url)');
                       }
                     }
 
