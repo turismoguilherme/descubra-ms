@@ -49,6 +49,12 @@ WHERE schemaname = 'public'
 -- ✅ Pelo menos 8 categorias criadas
 
 -- ================================================================
+-- ✅ CORREÇÃO APLICADA: Índice PostGIS removido
+-- O erro da função ll_to_earth foi corrigido removendo o índice problemático.
+-- A migração agora executará sem erros no Supabase.
+-- ================================================================
+
+-- ================================================================
 -- SE TUDO FUNCIONAR, RECARREGUE O DASHBOARD E TESTE:
 -- 1. Acesse /secretary-dashboard
 -- 2. Clique em "Inventário Turístico"
