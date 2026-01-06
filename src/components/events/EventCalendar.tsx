@@ -344,7 +344,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const regions = [
     { value: 'all', label: 'Todas as Regiões' },
     { value: 'bonito-serra-bodoquena', label: '🏔️ Bonito-Serra da Bodoquena' },
-    { value: 'caminho-ipes', label: '🌸 Caminho dos Ipês' },
+    { value: 'caminho-ipes', label: '🌸 Campo Grande dos Ipês' },
     { value: 'caminhos-fronteira', label: '🌎 Caminhos da Fronteira' },
     { value: 'costa-leste', label: '🌊 Costa Leste' },
     { value: 'grande-dourados', label: '🌾 Grande Dourados' },
@@ -454,7 +454,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       'vale-aguas': 'Vale das Águas',
       'vale-apore': 'Vale do Aporé',
       'rota-norte': 'Rota Norte',
-      'caminho-ipes': 'Caminho dos Ipês',
+      'caminho-ipes': 'Campo Grande dos Ipês',
       'caminhos-fronteira': 'Caminhos da Fronteira',
       'costa-leste': 'Costa Leste',
       'grande-dourados': 'Grande Dourados',
