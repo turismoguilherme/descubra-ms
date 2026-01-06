@@ -1019,10 +1019,18 @@ const AttractionForm: React.FC<{
       }
 
       // 2. Preencher dados com IA
+      console.log('🤖 TURISMOINVENTORY: Chamando autoFillFromNameAndAddress com:', {
+        name: formData.name,
+        address: formData.address
+      });
+
       const autoFilled = await inventoryAIService.autoFillFromNameAndAddress(
         formData.name,
         formData.address
       );
+
+      console.log('🤖 TURISMOINVENTORY: Dados retornados pela IA:', autoFilled);
+      console.log('🤖 TURISMOINVENTORY: Coordenadas retornadas:', autoFilled.coordinates);
 
       // 3. Atualizar formulário com dados preenchidos
       setFormData(prev => ({
@@ -1033,12 +1041,16 @@ const AttractionForm: React.FC<{
         priceRange: (autoFilled.price_range as any) || prev.priceRange,
         openingHours: autoFilled.opening_hours || prev.openingHours,
         features: autoFilled.amenities || prev.features,
+        coordinates: autoFilled.coordinates || prev.coordinates, // Adicionar coordenadas!
       }));
+
+      console.log('🤖 TURISMOINVENTORY: Formulário atualizado. Novas coordenadas:', autoFilled.coordinates);
 
       // Marcar campos como preenchidos automaticamente
       const newAutoFilled = new Set<string>(['description', 'category']);
       if (autoFilled.opening_hours) newAutoFilled.add('openingHours');
       if (autoFilled.price_range) newAutoFilled.add('priceRange');
+      if (autoFilled.coordinates) newAutoFilled.add('coordinates'); // Marcar coordenadas como auto-preenchidas
       setAutoFilledFields(newAutoFilled);
 
       toast({
