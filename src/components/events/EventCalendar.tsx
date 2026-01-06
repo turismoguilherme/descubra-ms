@@ -260,6 +260,19 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     }
   };
 
+  // Cidades por região para filtro
+  const regionCities: Record<string, string[]> = {
+    'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+    'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+    'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+    'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+    'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina'],
+    'pantanal': ['corumbá', 'aquidauana', 'miranda', 'ladário', 'anastácio', 'pantanal'],
+    'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+    'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+    'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+  };
+
   const filteredEvents = (allEvents || []).filter(event => {
     if (!event || !event.name) return false; // Validar evento antes de processar
     
@@ -302,27 +315,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           console.log('⚠️ [Prioridade 2] tourist_region_id presente mas sem slug');
         }
         // Fallback: mapeamento por cidade (para eventos antigos sem tourist_region_id)
-        console.log('🔍 [DEBUG FALLBACK] - ANTES DA CONDIÇÃO');
-        console.log('matchesRegion:', matchesRegion);
-        console.log('!matchesRegion:', !matchesRegion);
-        console.log('selectedRegion:', selectedRegion);
-
-        // Testar cada parte separadamente para evitar erros
-        try {
-          const hasRegionInCities = selectedRegion in regionCities;
-          console.log('selectedRegion in regionCities:', hasRegionInCities);
-
-          const regionCitiesKeys = Object.keys(regionCities);
-          console.log('regionCities keys:', regionCitiesKeys);
-
-          const caminhoIpesCities = regionCities['caminho-ipes'];
-          console.log('regionCities[caminho-ipes]:', caminhoIpesCities);
-
-          const conditionResult = !matchesRegion && hasRegionInCities;
-          console.log('CONDIÇÃO FINAL:', conditionResult);
-        } catch (error) {
-          console.error('ERRO nos logs de debug:', error);
-        }
 
         if (!matchesRegion && selectedRegion in regionCities) {
           console.log('✅ [FALLBACK] CONDIÇÃO ATENDIDA - EXECUTANDO FALLBACK');
@@ -354,8 +346,16 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           matchesRegion
         });
       }
-      
-      return matchesSearch && matchesRegion;
+
+      const finalResult = matchesSearch && matchesRegion;
+      console.log('🔍 [FILTRO FINAL]', {
+        eventName: event.name,
+        matchesSearch,
+        matchesRegion,
+        finalResult
+      });
+
+      return finalResult;
     } catch (error) {
       return false; // Excluir eventos com erro
     }
@@ -438,18 +438,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     { value: 'vale-apore', label: '🏞️ Vale do Aporé' },
   ];
 
-  // Cidades por região para filtro
-  const regionCities: Record<string, string[]> = {
-    'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
-    'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
-    'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
-    'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
-    'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina'],
-    'pantanal': ['corumbá', 'aquidauana', 'miranda', 'ladário', 'anastácio', 'pantanal'],
-    'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
-    'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
-    'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
-  };
 
   if (loading) {
     return (
