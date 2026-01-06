@@ -137,7 +137,7 @@ export class InventoryAnalyticsService {
         return this.getBasicImprovements(inventory);
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
 Analise o seguinte atrativo turístico e sugira melhorias específicas:

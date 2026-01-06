@@ -43,7 +43,7 @@ export class InventoryAIService {
         return this.getBasicAutoFill(name, address);
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
 Você é um assistente especializado em turismo brasileiro. Com base no nome e endereço fornecidos, preencha os dados do atrativo turístico.
@@ -120,7 +120,7 @@ Seja específico e baseado em conhecimento real sobre turismo no Brasil, especia
         };
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
 Classifique o seguinte atrativo turístico em uma das categorias:
@@ -183,7 +183,7 @@ Responda em JSON:
         return `Conheça ${name}, um atrativo ${category} localizado em ${location}. Uma experiência única espera por você!`;
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
 Crie uma descrição atrativa e envolvente para o seguinte atrativo turístico:
@@ -223,7 +223,7 @@ Apenas retorne a descrição, sem formatação adicional.
         return [category, name.toLowerCase().split(' ')[0]];
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
 Sugira 5-8 tags relevantes para o seguinte atrativo turístico:
@@ -274,7 +274,7 @@ Retorne apenas um array JSON de strings:
         };
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
 Analise os seguintes dados de um atrativo turístico e identifique problemas e sugestões de melhoria:
