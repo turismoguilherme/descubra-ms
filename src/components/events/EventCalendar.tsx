@@ -74,6 +74,16 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [showPersonalization, setShowPersonalization] = useState(true);
+
+  // Debug: interceptar mudanças de região
+  const handleRegionChange = (value: string) => {
+    console.log('🔄 [REGIÃO MUDOU]', {
+      from: selectedRegion,
+      to: value,
+      timestamp: new Date().toISOString()
+    });
+    setSelectedRegion(value);
+  };
   const { language } = useLanguage();
   
   // Personalização baseada no perfil
@@ -81,9 +91,19 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   
   // Aplicar sugestões de personalização automaticamente
   useEffect(() => {
+    console.log('🤖 [AUTO FILTRO]', {
+      hasEventFilters: !!eventFilters,
+      isPersonalized,
+      searchTerm,
+      selectedRegion,
+      selectedCategory,
+      suggestedCity: eventFilters?.suggestedCity
+    });
+
     if (eventFilters && isPersonalized && !searchTerm && selectedRegion === 'all' && selectedCategory === 'all') {
       // Aplicar automaticamente apenas se nenhum filtro manual estiver ativo
       if (eventFilters.suggestedCity && eventFilters.suggestedCity !== 'Campo Grande') {
+        console.log('🚀 [APLICANDO AUTO FILTRO]', { suggestedCity: eventFilters.suggestedCity });
         // Aplicar cidade sugerida automaticamente (exceto default)
         setSelectedRegion(eventFilters.suggestedCity);
       }
@@ -605,7 +625,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             className="pl-10"
           />
         </div>
-        <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+        <Select value={selectedRegion} onValueChange={handleRegionChange}>
           <SelectTrigger>
             <MapPin className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Região Turística" />
