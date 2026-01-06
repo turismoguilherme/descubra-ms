@@ -7,6 +7,7 @@ class RewardsService {
    */
   async unlockRewards(userId: string, routeId: string): Promise<UserReward[]> {
     try {
+      // Primeiro, desbloquear recompensas tradicionais via RPC
       const { data, error } = await supabase.rpc('unlock_rewards', {
         p_user_id: userId,
         p_route_id: routeId,
@@ -14,7 +15,9 @@ class RewardsService {
 
       if (error) throw error;
 
-      // Buscar recompensas desbloqueadas com detalhes
+      let unlockedRewards: UserReward[] = [];
+
+      // Buscar recompensas tradicionais desbloqueadas
       if (data && data.length > 0) {
         const rewardIds = data.map((r: any) => r.reward_id);
         const { data: rewards } = await supabase
@@ -24,12 +27,68 @@ class RewardsService {
           .eq('route_id', routeId)
           .in('id', data.map((r: any) => r.reward_id));
 
-        return (rewards || []) as UserReward[];
+        unlockedRewards = (rewards || []) as UserReward[];
       }
 
-      return [];
+      // Segundo, verificar e desbloquear recompensas de avatar
+      const avatarRewards = await this.unlockAvatarRewards(userId, routeId);
+
+      // Combinar recompensas tradicionais e de avatar
+      return [...unlockedRewards, ...avatarRewards];
     } catch (error: any) {
       console.error('Erro ao desbloquear recompensas:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Desbloquear recompensas de avatar para uma rota
+   */
+  private async unlockAvatarRewards(userId: string, routeId: string): Promise<UserReward[]> {
+    try {
+      // Usar função RPC do banco para desbloquear avatares
+      const { data: unlockedAvatars, error } = await supabase.rpc('unlock_route_avatars', {
+        p_user_id: userId,
+        p_route_id: routeId,
+      });
+
+      if (error) throw error;
+
+      const avatarRewards: UserReward[] = [];
+
+      if (unlockedAvatars && unlockedAvatars.length > 0) {
+        // Para cada avatar desbloqueado, buscar a recompensa correspondente
+        for (const avatar of unlockedAvatars) {
+          const { data: reward } = await supabase
+            .from('passport_rewards')
+            .select('id')
+            .eq('route_id', routeId)
+            .eq('avatar_id', avatar.avatar_id)
+            .eq('reward_type', 'avatar')
+            .single();
+
+          if (reward) {
+            avatarRewards.push({
+              id: `avatar-${avatar.avatar_id}`,
+              user_id: userId,
+              reward_id: reward.id,
+              route_id: routeId,
+              is_used: false,
+              created_at: new Date().toISOString(),
+              passport_rewards: {
+                id: reward.id,
+                reward_type: 'avatar',
+                reward_description: `Avatar desbloqueado: ${avatar.avatar_name} (${avatar.rarity})`,
+                avatar_id: avatar.avatar_id,
+              }
+            } as UserReward);
+          }
+        }
+      }
+
+      return avatarRewards;
+    } catch (error: any) {
+      console.error('Erro ao desbloquear recompensas de avatar:', error);
       throw error;
     }
   }
@@ -76,6 +135,102 @@ class RewardsService {
       return (data || []) as PassportReward[];
     } catch (error: any) {
       console.error('Erro ao buscar recompensas da rota:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Desbloquear avatar para o usuário
+   */
+  async unlockAvatar(userId: string, avatarId: string, routeId?: string): Promise<boolean> {
+    try {
+      // Verificar se usuário já possui este avatar
+      const { data: existingAvatar, error: checkError } = await supabase
+        .from('user_avatars')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('avatar_id', avatarId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = not found
+        throw checkError;
+      }
+
+      if (existingAvatar) {
+        console.log('Avatar já desbloqueado para o usuário');
+        return false; // Já possui
+      }
+
+      // Desbloquear avatar
+      const { error: insertError } = await supabase
+        .from('user_avatars')
+        .insert({
+          user_id: userId,
+          avatar_id: avatarId,
+          route_id: routeId,
+        });
+
+      if (insertError) throw insertError;
+
+      console.log('Avatar desbloqueado com sucesso');
+      return true; // Desbloqueado com sucesso
+    } catch (error: any) {
+      console.error('Erro ao desbloquear avatar:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verificar se usuário possui determinado avatar
+   */
+  async userHasAvatar(userId: string, avatarId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('user_avatars')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('avatar_id', avatarId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        throw error;
+      }
+
+      return !!data;
+    } catch (error: any) {
+      console.error('Erro ao verificar avatar do usuário:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obter avatares desbloqueados do usuário
+   */
+  async getUserAvatars(userId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('user_avatars')
+        .select(`
+          *,
+          pantanal_avatars (
+            id,
+            name,
+            scientific_name,
+            description,
+            image_url,
+            rarity,
+            personality_traits,
+            habitat,
+            diet
+          )
+        `)
+        .eq('user_id', userId)
+        .order('unlocked_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []);
+    } catch (error: any) {
+      console.error('Erro ao buscar avatares do usuário:', error);
       throw error;
     }
   }

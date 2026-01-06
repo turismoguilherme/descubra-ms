@@ -67,7 +67,6 @@ const regionColors: Record<string, string> = {
   'vale-aguas': 'from-purple-600 to-indigo-600',
   'vale-apore': 'from-orange-600 to-red-600',
   'rota-norte': 'from-yellow-600 to-amber-600',
-  'caminho-ipes': 'from-pink-600 to-rose-600',
   'caminhos-fronteira': 'from-teal-600 to-cyan-600',
   'costa-leste': 'from-indigo-600 to-purple-600',
   'grande-dourados': 'from-lime-600 to-green-600',
@@ -80,7 +79,7 @@ const regionEmojis: Record<string, string> = {
   'vale-aguas': '💧',
   'vale-apore': '🏞️',
   'rota-norte': '🧭',
-  'caminho-ipes': '🌸',
+  'caminho-ipes': '',
   'caminhos-fronteira': '🌎',
   'costa-leste': '🌊',
   'grande-dourados': '🌾',
@@ -93,7 +92,6 @@ const regionNames: Record<string, string> = {
   'vale-aguas': 'Vale das Águas',
   'vale-apore': 'Vale do Aporé',
   'rota-norte': 'Rota Norte',
-  'caminho-ipes': 'Caminho dos Ipês',
   'caminhos-fronteira': 'Caminhos da Fronteira',
   'costa-leste': 'Costa Leste',
   'grande-dourados': 'Grande Dourados',
@@ -106,7 +104,6 @@ const regionMappings: Record<string, string[]> = {
   'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
   'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
   'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
-  'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
   'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
   'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
   'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina']
@@ -194,53 +191,18 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
     // Caso 1: Vídeo YouTube disponível
     if (embedUrl) {
       return (
-        <div className="relative w-full h-full">
-          <iframe
-            src={embedUrl}
-            className="w-full h-full"
-            allowFullScreen
-            title="Vídeo do evento"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
-          {/* Logo como badge sobreposto ao vídeo */}
-          {event.logo_evento && (
-            <div className="absolute bottom-4 right-4 w-20 h-20 rounded-xl overflow-hidden shadow-2xl border-2 border-white/50 bg-white">
-              <img
-                src={event.logo_evento}
-                alt="Logo do evento"
-                className="w-full h-full object-contain p-1"
-              />
-            </div>
-          )}
-        </div>
+        <iframe
+          src={embedUrl}
+          className="w-full h-full"
+          allowFullScreen
+          title="Vídeo do evento"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
       );
     }
 
-    // Caso 2: Logo do evento disponível (sem vídeo)
-    if (event.logo_evento) {
-      return (
-        <div className={`relative w-full h-full bg-gradient-to-br ${gradientColor}`}>
-          {/* Imagem de fundo com blur (se disponível) */}
-          {event.image_url && (
-            <img
-              src={event.image_url}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-30 blur-sm"
-            />
-          )}
-          {/* Logo centralizado */}
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-2xl max-w-[280px] max-h-[200px]">
-              <img
-                src={event.logo_evento}
-                alt={getTranslatedName(event)}
-                className="w-full h-full object-contain"
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
+    // Caso 2: Logo do evento disponível (sem vídeo) - removida pois agora aparece na seção de conteúdo
+    // A logo será exibida após data/horário na seção de conteúdo
 
     // Caso 3: Apenas imagem
     if (event.image_url) {
@@ -344,6 +306,19 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               </div>
             </div>
 
+            {/* Logo do Evento */}
+            {event.logo_evento && (
+              <div className="py-8">
+                <div className="flex justify-center">
+                  <img
+                    src={event.logo_evento}
+                    alt={`Logo do evento ${getTranslatedName(event)}`}
+                    className="max-w-[600px] max-h-[360px] w-auto h-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Descrição */}
             {getTranslatedDescription(event) && (
               <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
@@ -375,16 +350,16 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             )}
 
             {/* Botões de Ação */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 justify-center">
               {event.site_oficial && (
-                <Button 
-                  asChild 
-                  size="lg" 
-                  className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-xl flex-1 sm:flex-initial"
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-xl flex-1 sm:flex-initial max-w-[200px]"
                 >
-                  <a 
-                    href={event.site_oficial} 
-                    target="_blank" 
+                  <a
+                    href={event.site_oficial}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2"
                   >
@@ -394,17 +369,17 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                   </a>
                 </Button>
               )}
-              
+
               {event.organizador_telefone && (
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  asChild 
-                  className="rounded-xl border-2 border-green-500 text-green-600 hover:bg-green-50 flex-1 sm:flex-initial"
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  className="rounded-xl border-2 border-green-500 text-green-600 hover:bg-green-50 flex-1 sm:flex-initial max-w-[200px]"
                 >
-                  <a 
-                    href={`https://wa.me/55${event.organizador_telefone.replace(/\D/g, '')}`} 
-                    target="_blank" 
+                  <a
+                    href={`https://wa.me/55${event.organizador_telefone.replace(/\D/g, '')}`}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2"
                   >
@@ -414,11 +389,11 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 </Button>
               )}
 
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 onClick={handleShare}
-                className="rounded-xl border-2 flex-1 sm:flex-initial"
+                className="rounded-xl border-2 flex-1 sm:flex-initial max-w-[200px]"
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 Compartilhar

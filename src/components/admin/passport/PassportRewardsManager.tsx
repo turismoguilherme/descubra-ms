@@ -14,19 +14,22 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const PassportRewardsManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
   const [rewards, setRewards] = useState<any[]>([]);
+  const [avatars, setAvatars] = useState<any[]>([]);
   const [emittedByRewardId, setEmittedByRewardId] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     route_id: '',
     partner_name: '',
-    reward_type: 'desconto' as 'desconto' | 'brinde' | 'experiencia' | 'outros',
+    reward_type: 'desconto' as 'desconto' | 'brinde' | 'experiencia' | 'avatar' | 'outros',
     reward_description: '',
     reward_code_prefix: '',
     discount_percentage: 0,
     partner_address: '',
     partner_phone: '',
     partner_email: '',
+    avatar_id: '', // Novo campo para avatar
+    max_avatars_per_route: 3, // Novo campo para limite de avatares por rota
     max_vouchers: null as number | null,
     max_per_user: 1,
     is_fallback: false,
@@ -58,10 +61,11 @@ const PassportRewardsManager: React.FC = () => {
     console.log('🔵 [PassportRewardsManager] ========== loadData INICIADO ==========');
     try {
       setLoading(true);
-      console.log('🔵 [PassportRewardsManager] Buscando rotas e recompensas...');
-      const [routesRes, rewardsRes] = await Promise.all([
+      console.log('🔵 [PassportRewardsManager] Buscando rotas, recompensas e avatares...');
+      const [routesRes, rewardsRes, avatarsRes] = await Promise.all([
         supabase.from('routes').select('*').eq('is_active', true),
         passportAdminService.getRewards(),
+        supabase.from('pantanal_avatars').select('*').eq('is_active', true).order('name'),
       ]);
 
       if (routesRes.error) {
@@ -71,9 +75,11 @@ const PassportRewardsManager: React.FC = () => {
       
       console.log('✅ [PassportRewardsManager] Rotas carregadas:', routesRes.data?.length || 0);
       console.log('✅ [PassportRewardsManager] Recompensas carregadas:', rewardsRes?.length || 0);
-      
+      console.log('✅ [PassportRewardsManager] Avatares carregados:', avatarsRes.data?.length || 0);
+
       setRoutes(routesRes.data || []);
       setRewards(rewardsRes);
+      setAvatars(avatarsRes.data || []);
 
       // Carregar quantidade de vouchers emitidos por recompensa (para exibir estoque)
       const rewardIds = (rewardsRes || []).map((r: any) => r.id).filter(Boolean);
@@ -126,6 +132,28 @@ const PassportRewardsManager: React.FC = () => {
     console.log('🔵 [PassportRewardsManager] ========== handleSave INICIADO ==========');
     console.log('🔵 [PassportRewardsManager] Form data:', JSON.stringify(formData, null, 2));
     
+    // Validações específicas para avatar
+    if (formData.reward_type === 'avatar') {
+      if (!formData.avatar_id) {
+        console.log('❌ [PassportRewardsManager] Avatar não selecionado');
+        toast({
+          title: 'Avatar obrigatório',
+          description: 'Selecione um avatar do Pantanal',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!formData.max_avatars_per_route || formData.max_avatars_per_route < 1) {
+        console.log('❌ [PassportRewardsManager] Máximo de avatares inválido');
+        toast({
+          title: 'Limite inválido',
+          description: 'Defina um limite válido de avatares por rota',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     // Validações
     if (!formData.route_id) {
       console.log('❌ [PassportRewardsManager] Rota não selecionada');
@@ -298,6 +326,7 @@ const PassportRewardsManager: React.FC = () => {
                       <SelectItem value="desconto">Desconto</SelectItem>
                       <SelectItem value="brinde">Brinde</SelectItem>
                       <SelectItem value="experiencia">Experiência</SelectItem>
+                      <SelectItem value="avatar">Avatar do Pantanal</SelectItem>
                       <SelectItem value="outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
@@ -321,6 +350,62 @@ const PassportRewardsManager: React.FC = () => {
                         setFormData({ ...formData, discount_percentage: parseInt(e.target.value) || 0 })
                       }
                     />
+                  </div>
+                )}
+                {formData.reward_type === 'avatar' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Selecionar Avatar do Pantanal</Label>
+                      <Select
+                        value={formData.avatar_id}
+                        onValueChange={(value) => setFormData({ ...formData, avatar_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Escolha um avatar..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {avatars.map((avatar: any) => (
+                            <SelectItem key={avatar.id} value={avatar.id}>
+                              <div className="flex items-center gap-2">
+                                {avatar.image_url && (
+                                  <img
+                                    src={avatar.image_url}
+                                    alt={avatar.name}
+                                    className="w-6 h-6 object-cover rounded"
+                                  />
+                                )}
+                                <span>{avatar.name}</span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  avatar.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
+                                  avatar.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
+                                  avatar.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {avatar.rarity === 'legendary' ? 'Lendário' :
+                                   avatar.rarity === 'epic' ? 'Épico' :
+                                   avatar.rarity === 'rare' ? 'Raro' : 'Comum'}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Máximo de Avatares por Rota</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={formData.max_avatars_per_route}
+                        onChange={(e) =>
+                          setFormData({ ...formData, max_avatars_per_route: parseInt(e.target.value) || 1 })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Número máximo de avatares que podem ser desbloqueados ao completar esta rota
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

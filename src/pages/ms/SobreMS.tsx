@@ -38,37 +38,30 @@ const SobreMS = () => {
             </div>
           </div>
 
-        {/* Missão e Visão */}
+        {/* Nossa Essência - Texto Corrido */}
         <div className="ms-container py-12">
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
             <h2 className="text-3xl font-bold text-ms-primary-blue mb-8 text-center">
               Nossa Essência
             </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="group bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-3 rounded-full">
-                    <Target className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-ms-primary-blue">Nossa Missão</h3>
+            <div className="max-w-4xl mx-auto">
+              <div className="flex justify-center mb-6">
+                <div className="bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green p-4 rounded-full">
+                  <Target className="w-8 h-8 text-white" />
                 </div>
-                <p className="text-gray-700 leading-relaxed">
-                  Conectar turistas a experiências autênticas no Mato Grosso do Sul, 
-                  promovendo o turismo sustentável e valorizando a cultura local, 
-                  a biodiversidade única do Pantanal e as belezas naturais do Cerrado.
-                </p>
               </div>
-              <div className="group bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-gradient-to-r from-ms-pantanal-green to-ms-discovery-teal p-3 rounded-full">
-                    <Eye className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-ms-pantanal-green">Nossa Visão</h3>
-                </div>
-                <p className="text-gray-700 leading-relaxed">
-                  Ser a principal plataforma de turismo do Centro-Oeste brasileiro, 
-                  reconhecida pela inovação tecnológica e pelo compromisso com o 
-                  desenvolvimento sustentável das comunidades locais.
+              <div className="text-center">
+                <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                  O <strong className="text-ms-primary-blue">Descubra MS</strong> nasceu com a missão de conectar turistas a experiências autênticas no Mato Grosso do Sul,
+                  promovendo o turismo sustentável e valorizando a cultura local, a biodiversidade única do Pantanal e as belezas naturais do Cerrado.
+                </p>
+                <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                  Nossa visão é ser a principal plataforma de turismo do Centro-Oeste brasileiro, reconhecida pela inovação tecnológica
+                  e pelo compromisso com o desenvolvimento sustentável das comunidades locais.
+                </p>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  Acreditamos que cada viagem deve ser uma experiência transformadora, capaz de gerar impacto positivo tanto para o visitante
+                  quanto para as comunidades que os recebem, preservando nossa rica herança natural e cultural para as futuras gerações.
                 </p>
               </div>
             </div>

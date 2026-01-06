@@ -79,13 +79,16 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   // Personalização baseada no perfil
   const { eventFilters, personalizationMessage, isPersonalized } = usePersonalization();
   
-  // Aplicar sugestões de personalização
+  // Aplicar sugestões de personalização automaticamente
   useEffect(() => {
-    if (eventFilters && isPersonalized && !searchTerm && selectedRegion === 'all') {
-      // Sugerir cidade, mas não aplicar automaticamente
-      // O usuário pode ver a sugestão e aplicar se quiser
+    if (eventFilters && isPersonalized && !searchTerm && selectedRegion === 'all' && selectedCategory === 'all') {
+      // Aplicar automaticamente apenas se nenhum filtro manual estiver ativo
+      if (eventFilters.suggestedCity && eventFilters.suggestedCity !== 'Campo Grande') {
+        // Aplicar cidade sugerida automaticamente (exceto default)
+        setSelectedRegion(eventFilters.suggestedCity);
+      }
     }
-  }, [eventFilters, isPersonalized, searchTerm, selectedRegion]);
+  }, [eventFilters, isPersonalized, searchTerm, selectedRegion, selectedCategory]);
 
   useEffect(() => {
     if (autoLoad) {
