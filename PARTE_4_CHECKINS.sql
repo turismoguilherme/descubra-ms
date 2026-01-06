@@ -59,23 +59,29 @@ ALTER TABLE attendant_location_assignments ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Gestores municipais podem gerenciar locais da sua cidade" ON attendant_allowed_locations
   FOR ALL USING (
-    auth.jwt() ->> 'user_role' IN ('gestor_municipal', 'admin', 'tech') AND
-    city_id = (auth.jwt() ->> 'city_id')::UUID
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role IN ('gestor_municipal', 'admin', 'tech')
+    )
   );
 
 CREATE POLICY "Gestores IGR podem ver locais da sua região" ON attendant_allowed_locations
   FOR SELECT USING (
-    auth.jwt() ->> 'user_role' = 'gestor_igr' AND
-    city_id IN (
-      SELECT c.id FROM cities c
-      WHERE c.region_id = (auth.jwt() ->> 'region_id')::UUID
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'gestor_igr'
     )
   );
 
 CREATE POLICY "Diretores estaduais podem ver todos os locais do cliente" ON attendant_allowed_locations
   FOR SELECT USING (
-    auth.jwt() ->> 'user_role' = 'diretor_estadual' AND
-    client_slug = auth.jwt() ->> 'client_slug'
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'diretor_estadual'
+    )
   );
 
 CREATE POLICY "Atendentes podem ver seus locais autorizados" ON attendant_allowed_locations
@@ -92,29 +98,29 @@ CREATE POLICY "Atendentes podem gerenciar seus próprios check-ins" ON attendant
 
 CREATE POLICY "Gestores municipais podem ver check-ins dos atendentes da sua cidade" ON attendant_checkins
   FOR SELECT USING (
-    auth.jwt() ->> 'user_role' IN ('gestor_municipal', 'admin', 'tech') AND
-    attendant_id IN (
-      SELECT id FROM user_profiles
-      WHERE city_id = (auth.jwt() ->> 'city_id')::UUID
-      AND user_role = 'atendente'
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role IN ('gestor_municipal', 'admin', 'tech')
     )
   );
 
 CREATE POLICY "Gestores IGR podem ver check-ins da sua região" ON attendant_checkins
   FOR SELECT USING (
-    auth.jwt() ->> 'user_role' = 'gestor_igr' AND
-    attendant_id IN (
-      SELECT up.id FROM user_profiles up
-      JOIN cities c ON up.city_id = c.id
-      WHERE c.region_id = (auth.jwt() ->> 'region_id')::UUID
-      AND up.user_role = 'atendente'
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'gestor_igr'
     )
   );
 
 CREATE POLICY "Diretores estaduais podem ver todos os check-ins do cliente" ON attendant_checkins
   FOR SELECT USING (
-    auth.jwt() ->> 'user_role' = 'diretor_estadual' AND
-    client_slug = auth.jwt() ->> 'client_slug'
+    EXISTS (
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'diretor_estadual'
+    )
   );
 
 CREATE POLICY "Gestores municipais podem gerenciar assignments da sua cidade" ON attendant_location_assignments
