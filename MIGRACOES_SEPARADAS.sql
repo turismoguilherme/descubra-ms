@@ -264,6 +264,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_viajar_products_updated_at ON viajar_products;
 CREATE TRIGGER set_viajar_products_updated_at
   BEFORE UPDATE ON viajar_products
   FOR EACH ROW
