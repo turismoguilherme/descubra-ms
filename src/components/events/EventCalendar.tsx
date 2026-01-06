@@ -278,16 +278,24 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         if (!matchesRegion && selectedRegion in regionCities) {
           const cities = regionCities[selectedRegion];
           console.log('🔄 [Fallback] Verificando cidades:', cities);
+          console.log('🔄 [Fallback] selectedRegion:', selectedRegion);
+          console.log('🔄 [Fallback] event.location:', event.location);
 
           matchesRegion = cities.some(city => {
             const locationLower = (event.location || '').toLowerCase();
             const cityLower = city.toLowerCase();
             const match = locationLower.includes(cityLower);
-            console.log(`   ${city} (${cityLower}) in "${locationLower}" = ${match}`);
+            console.log(`   🔍 Testando: "${locationLower}".includes("${cityLower}") = ${match}`);
             return match;
           });
 
           console.log('✅ [Fallback] Match por cidade:', matchesRegion);
+        } else {
+          console.log('❌ [Fallback] Não executado - condição:', {
+            matchesRegion,
+            hasSelectedRegionInCities: selectedRegion in regionCities,
+            selectedRegion
+          });
         }
 
         console.log('🎯 [Resultado Final]', {
