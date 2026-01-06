@@ -251,6 +251,13 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       
       // Filtro por região turística - usar tourist_region.slug se disponível, senão fallback para mapeamento por cidade
       let matchesRegion = selectedRegion === 'all';
+      console.log('🎯 [INÍCIO FILTRO]', {
+        eventName: event.name,
+        selectedRegion,
+        matchesRegion: selectedRegion === 'all',
+        willCheckRegion: selectedRegion !== 'all'
+      });
+
       if (!matchesRegion) {
         // Debug log
         console.log('🔍 [Filtro Região]', {
