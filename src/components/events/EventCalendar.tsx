@@ -48,6 +48,7 @@ interface EventItem {
   end_time?: string;
   location: string;
   image_url?: string;
+  logo_evento?: string;
   is_sponsored: boolean;
   site_oficial?: string;
   video_url?: string;
@@ -184,6 +185,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             end_time: event.end_time,
             location: event.location || '',
             image_url: event.image_url,
+            logo_evento: event.logo_evento,
             is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status), // Fix: tratar caso onde sponsor_payment_status não existe
             site_oficial: event.site_oficial,
             video_url: event.video_url,
@@ -277,8 +279,21 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
   const getYouTubeEmbedUrl = (url: string) => {
     if (!url) return null;
-    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null;
+
+    // Padrões mais abrangentes para URLs do YouTube
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+
+    return null;
   };
 
   const categories = [
@@ -680,20 +695,40 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
               <div className="relative max-h-[95vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                 {/* Header com imagem/vídeo - melhorado visualmente */}
                 <div className={`relative h-72 md:h-96 bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']} flex-shrink-0 overflow-hidden shadow-lg`}>
-                  {selectedEvent.video_url && getYouTubeEmbedUrl(selectedEvent.video_url) ? (
-                    <iframe
-                      src={getYouTubeEmbedUrl(selectedEvent.video_url)!}
-                      className="w-full h-full object-cover"
-                      allowFullScreen
-                      title="Vídeo do evento"
-                    />
-                  ) : selectedEvent.image_url ? (
-                    <img
-                      src={selectedEvent.image_url}
-                      alt={getTranslatedName(selectedEvent)}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                    />
-                  ) : (
+                  {(() => {
+                    console.log('🔍 Evento selecionado:', {
+                      id: selectedEvent.id,
+                      name: selectedEvent.name,
+                      video_url: selectedEvent.video_url,
+                      logo_evento: selectedEvent.logo_evento,
+                      image_url: selectedEvent.image_url,
+                      hasVideo: !!selectedEvent.video_url,
+                      embedUrl: selectedEvent.video_url ? getYouTubeEmbedUrl(selectedEvent.video_url) : null
+                    });
+
+                    const embedUrl = selectedEvent.video_url ? getYouTubeEmbedUrl(selectedEvent.video_url) : null;
+
+                    if (selectedEvent.video_url && embedUrl) {
+                      console.log('🎥 Exibindo vídeo:', embedUrl);
+                      return (
+                        <iframe
+                          src={embedUrl}
+                          className="w-full h-full object-cover"
+                          allowFullScreen
+                          title="Vídeo do evento"
+                        />
+                      );
+                    } else if (selectedEvent.logo_evento || selectedEvent.image_url) {
+                      const imageSrc = selectedEvent.logo_evento || selectedEvent.image_url;
+                      console.log('🖼️ Exibindo imagem:', imageSrc);
+                      return (
+                        <img
+                          src={imageSrc}
+                          alt={getTranslatedName(selectedEvent)}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      );
+                    } else {
                     <div className="w-full h-full flex items-center justify-center">
                       <Calendar className="w-16 h-16 md:w-24 md:h-24 text-white/30" />
                     </div>
