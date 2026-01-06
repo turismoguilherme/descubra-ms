@@ -729,10 +729,12 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                         />
                       );
                     } else {
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Calendar className="w-16 h-16 md:w-24 md:h-24 text-white/30" />
-                    </div>
-                  )}
+                      return (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Calendar className="w-16 h-16 md:w-24 md:h-24 text-white/30" />
+                        </div>
+                      );
+                    }
 
                   {/* Overlay gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
