@@ -219,7 +219,7 @@ export class StrategicAIService {
       }
 
       const prompt = this.buildAnalysisPrompt(data);
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
       const result = await model.generateContent(prompt);
       const response = result.response.text();
 
@@ -243,7 +243,7 @@ export class StrategicAIService {
       }
 
       const prompt = this.buildIntegratedQuestionPrompt(question, integratedData);
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
       const result = await model.generateContent(prompt);
       const response = result.response.text();
 
