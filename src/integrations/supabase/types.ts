@@ -2599,6 +2599,54 @@ export type Database = {
         }
         Relationships: []
       }
+      koda_response_cache: {
+        Row: {
+          answer: string
+          cache_type: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_suggestion: boolean | null
+          language: string
+          question: string
+          question_hash: string
+          session_id: string | null
+          updated_at: string | null
+          used_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          answer: string
+          cache_type?: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_suggestion?: boolean | null
+          language?: string
+          question: string
+          question_hash: string
+          session_id?: string | null
+          updated_at?: string | null
+          used_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          answer?: string
+          cache_type?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_suggestion?: boolean | null
+          language?: string
+          question?: string
+          question_hash?: string
+          session_id?: string | null
+          updated_at?: string | null
+          used_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       lead_activities: {
         Row: {
           created_at: string | null
@@ -5755,6 +5803,48 @@ export type Database = {
         }
         Relationships: []
       }
+      viajar_team_members: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          instagram_url: string | null
+          is_active: boolean | null
+          linkedin_url: string | null
+          name: string
+          photo_url: string | null
+          position: string
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          instagram_url?: string | null
+          is_active?: boolean | null
+          linkedin_url?: string | null
+          name: string
+          photo_url?: string | null
+          position: string
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          instagram_url?: string | null
+          is_active?: boolean | null
+          linkedin_url?: string | null
+          name?: string
+          photo_url?: string | null
+          position?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       workflow_definitions: {
         Row: {
           created_at: string | null
@@ -5856,6 +5946,7 @@ export type Database = {
         Returns: boolean
       }
       clean_expired_guata_cache: { Args: never; Returns: number }
+      clean_expired_koda_cache: { Args: never; Returns: number }
       cleanup_old_ai_logs: { Args: never; Returns: undefined }
       create_attendant_user: {
         Args: {
@@ -5996,6 +6087,10 @@ export type Database = {
         Returns: undefined
       }
       increment_guata_kb_usage: { Args: { kb_id: string }; Returns: undefined }
+      increment_koda_cache_usage: {
+        Args: { cache_id: string }
+        Returns: undefined
+      }
       is_admin_user: { Args: { check_user_id: string }; Returns: boolean }
       is_manager: { Args: { check_user_id: string }; Returns: boolean }
       is_partner_of_notification: {
