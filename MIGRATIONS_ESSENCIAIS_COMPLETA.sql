@@ -410,10 +410,9 @@ CREATE POLICY "Admins can view all products"
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM auth.users u
-      JOIN user_profiles up ON u.id = up.id
-      WHERE u.id = auth.uid()
-      AND up.role IN ('admin', 'master_admin', 'tech')
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'master_admin', 'tech')
     )
   );
 
@@ -422,10 +421,9 @@ CREATE POLICY "Admins can insert products"
   FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM auth.users u
-      JOIN user_profiles up ON u.id = up.id
-      WHERE u.id = auth.uid()
-      AND up.role IN ('admin', 'master_admin', 'tech')
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'master_admin', 'tech')
     )
   );
 
@@ -434,10 +432,9 @@ CREATE POLICY "Admins can update products"
   FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM auth.users u
-      JOIN user_profiles up ON u.id = up.id
-      WHERE u.id = auth.uid()
-      AND up.role IN ('admin', 'master_admin', 'tech')
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'master_admin', 'tech')
     )
   );
 
@@ -446,10 +443,9 @@ CREATE POLICY "Admins can delete products"
   FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM auth.users u
-      JOIN user_profiles up ON u.id = up.id
-      WHERE u.id = auth.uid()
-      AND up.role IN ('admin', 'master_admin', 'tech')
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'master_admin', 'tech')
     )
   );
 
