@@ -207,18 +207,14 @@ export class InventoryService {
         console.log('🔧 INVENTORYSERVICE: Código SeTur gerado:', seturCode);
       }
 
-      console.log('🔧 INVENTORYSERVICE: Calculando scores...');
-      // Calcular scores de completude e conformidade
-      const completenessScore = await seturValidationService.calculateCompletenessScore(attraction as TourismAttraction);
-      const complianceScore = await seturValidationService.calculateComplianceScore(attraction as TourismAttraction);
-      console.log('🔧 INVENTORYSERVICE: Scores calculados - Completude:', completenessScore, 'Compliance:', complianceScore);
+      // REMOVIDO: Cálculo de scores (colunas não existem na tabela)
+      console.log('🔧 INVENTORYSERVICE: Pulando cálculo de scores (colunas não existem)');
 
       console.log('🔧 INVENTORYSERVICE: Preparando dados para inserção...');
       const insertData = {
         ...attraction,
         setur_code: seturCode,
-        data_completeness_score: completenessScore,
-        setur_compliance_score: complianceScore,
+        // REMOVIDO: data_completeness_score e setur_compliance_score (colunas não existem na tabela)
         status: attraction.status || 'draft',
         is_active: attraction.is_active !== undefined ? attraction.is_active : true,
         is_featured: attraction.is_featured || false,

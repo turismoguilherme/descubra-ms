@@ -154,6 +154,7 @@ CREATE INDEX IF NOT EXISTS idx_dynamic_menus_active ON dynamic_menus(is_active);
 
 ALTER TABLE dynamic_menus ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can manage dynamic_menus" ON dynamic_menus;
 CREATE POLICY "Admins can manage dynamic_menus"
     ON dynamic_menus FOR ALL
     USING (
@@ -200,11 +201,13 @@ CREATE INDEX IF NOT EXISTS idx_viajar_products_is_active ON viajar_products(is_a
 
 ALTER TABLE viajar_products ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view active products" ON viajar_products;
 CREATE POLICY "Anyone can view active products"
   ON viajar_products
   FOR SELECT
   USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can view all products" ON viajar_products;
 CREATE POLICY "Admins can view all products"
   ON viajar_products
   FOR SELECT
@@ -216,6 +219,7 @@ CREATE POLICY "Admins can view all products"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can insert products" ON viajar_products;
 CREATE POLICY "Admins can insert products"
   ON viajar_products
   FOR INSERT
@@ -227,6 +231,7 @@ CREATE POLICY "Admins can insert products"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can update products" ON viajar_products;
 CREATE POLICY "Admins can update products"
   ON viajar_products
   FOR UPDATE
@@ -238,6 +243,7 @@ CREATE POLICY "Admins can update products"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can delete products" ON viajar_products;
 CREATE POLICY "Admins can delete products"
   ON viajar_products
   FOR DELETE
@@ -338,12 +344,14 @@ ALTER TABLE attendant_checkins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendant_location_assignments ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para attendant_allowed_locations
+DROP POLICY IF EXISTS "Gestores municipais podem gerenciar locais da sua cidade" ON attendant_allowed_locations;
 CREATE POLICY "Gestores municipais podem gerenciar locais da sua cidade" ON attendant_allowed_locations
   FOR ALL USING (
     auth.jwt() ->> 'user_role' IN ('gestor_municipal', 'admin', 'tech') AND
     city_id = (auth.jwt() ->> 'city_id')::UUID
   );
 
+DROP POLICY IF EXISTS "Gestores IGR podem ver locais da sua região" ON attendant_allowed_locations;
 CREATE POLICY "Gestores IGR podem ver locais da sua região" ON attendant_allowed_locations
   FOR SELECT USING (
     auth.jwt() ->> 'user_role' = 'gestor_igr' AND
@@ -353,12 +361,14 @@ CREATE POLICY "Gestores IGR podem ver locais da sua região" ON attendant_allowe
     )
   );
 
+DROP POLICY IF EXISTS "Diretores estaduais podem ver todos os locais do cliente" ON attendant_allowed_locations;
 CREATE POLICY "Diretores estaduais podem ver todos os locais do cliente" ON attendant_allowed_locations
   FOR SELECT USING (
     auth.jwt() ->> 'user_role' = 'diretor_estadual' AND
     client_slug = auth.jwt() ->> 'client_slug'
   );
 
+DROP POLICY IF EXISTS "Atendentes podem ver seus locais autorizados" ON attendant_allowed_locations;
 CREATE POLICY "Atendentes podem ver seus locais autorizados" ON attendant_allowed_locations
   FOR SELECT USING (
     auth.jwt() ->> 'user_role' = 'atendente' AND
@@ -369,9 +379,11 @@ CREATE POLICY "Atendentes podem ver seus locais autorizados" ON attendant_allowe
   );
 
 -- Políticas para attendant_checkins
+DROP POLICY IF EXISTS "Atendentes podem gerenciar seus próprios check-ins" ON attendant_checkins;
 CREATE POLICY "Atendentes podem gerenciar seus próprios check-ins" ON attendant_checkins
   FOR ALL USING (attendant_id = auth.uid());
 
+DROP POLICY IF EXISTS "Gestores municipais podem ver check-ins dos atendentes da sua cidade" ON attendant_checkins;
 CREATE POLICY "Gestores municipais podem ver check-ins dos atendentes da sua cidade" ON attendant_checkins
   FOR SELECT USING (
     auth.jwt() ->> 'user_role' IN ('gestor_municipal', 'admin', 'tech') AND
@@ -382,6 +394,7 @@ CREATE POLICY "Gestores municipais podem ver check-ins dos atendentes da sua cid
     )
   );
 
+DROP POLICY IF EXISTS "Gestores IGR podem ver check-ins da sua região" ON attendant_checkins;
 CREATE POLICY "Gestores IGR podem ver check-ins da sua região" ON attendant_checkins
   FOR SELECT USING (
     auth.jwt() ->> 'user_role' = 'gestor_igr' AND
@@ -393,6 +406,7 @@ CREATE POLICY "Gestores IGR podem ver check-ins da sua região" ON attendant_che
     )
   );
 
+DROP POLICY IF EXISTS "Diretores estaduais podem ver todos os check-ins do cliente" ON attendant_checkins;
 CREATE POLICY "Diretores estaduais podem ver todos os check-ins do cliente" ON attendant_checkins
   FOR SELECT USING (
     auth.jwt() ->> 'user_role' = 'diretor_estadual' AND
@@ -400,6 +414,7 @@ CREATE POLICY "Diretores estaduais podem ver todos os check-ins do cliente" ON a
   );
 
 -- Políticas para attendant_location_assignments
+DROP POLICY IF EXISTS "Gestores municipais podem gerenciar assignments da sua cidade" ON attendant_location_assignments;
 CREATE POLICY "Gestores municipais podem gerenciar assignments da sua cidade" ON attendant_location_assignments
   FOR ALL USING (
     auth.jwt() ->> 'user_role' IN ('gestor_municipal', 'admin', 'tech') AND
@@ -409,6 +424,7 @@ CREATE POLICY "Gestores municipais podem gerenciar assignments da sua cidade" ON
     )
   );
 
+DROP POLICY IF EXISTS "Atendentes podem ver seus próprios assignments" ON attendant_location_assignments;
 CREATE POLICY "Atendentes podem ver seus próprios assignments" ON attendant_location_assignments
   FOR SELECT USING (attendant_id = auth.uid());
 
