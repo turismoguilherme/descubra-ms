@@ -1,63 +1,53 @@
 -- ================================================================
--- INSTRUÇÕES: EXECUTE ESTE SCRIPT NO SUPABASE SQL EDITOR
+-- INSTRUÇÕES: EXECUTE AS MIGRACOES NO SUPABASE SQL EDITOR
 -- ================================================================
 
--- ✅ PASSO 1: Execute o arquivo MIGRATIONS_ESSENCIAIS_COMPLETA.sql
--- (Versão corrigida - índice PostGIS removido para compatibilidade com Supabase)
--- Este arquivo contém todas as migrations necessárias para:
--- - tourism_inventory (inventário turístico)
--- - dynamic_menus (menus dinâmicos)
--- - viajar_products (produtos ViaJAR)
--- - attendant_checkins (sistema de check-ins)
+-- ❌ PROBLEMA IDENTIFICADO:
+-- O script completo estava causando erros. Separei em arquivos menores
+-- para facilitar a execução e debug.
 
--- ✅ PASSO 2: Após executar, verifique se funcionou:
+-- ===============================
+-- ✅ SOLUÇÃO: EXECUTE OS ARQUIVOS SEPARADAMENTE
+-- ===============================
 
-SELECT
-  table_name,
-  '✅ Existe' as status
-FROM information_schema.tables
-WHERE table_schema = 'public'
-  AND table_name IN (
-    'tourism_inventory',
-    'dynamic_menus',
-    'viajar_products',
-    'attendant_checkins',
-    'inventory_categories'
-  )
-ORDER BY table_name;
+-- 1. Execute: MIGRACOES_SEPARADAS.sql
+--    - Contém todas as migrations divididas em 4 partes
+--    - Execute uma parte por vez no SQL Editor
+--    - Cada parte é independente e pode ser executada separadamente
 
--- ✅ PASSO 3: Teste específico do inventário turístico:
+-- 2. Execute: VERIFICACAO_MIGRACOES.sql
+--    - Script de verificação separado
+--    - Execute APENAS após todas as migrations
+--    - Mostra se tudo foi criado corretamente
 
--- Verificar se categorias foram criadas
-SELECT name, description FROM inventory_categories ORDER BY sort_order;
-
--- Verificar se há políticas RLS ativas
-SELECT
-  tablename,
-  CASE
-    WHEN rowsecurity THEN '✅ RLS Ativo'
-    ELSE '❌ RLS Desabilitado'
-  END as rls_status
-FROM pg_tables
-WHERE schemaname = 'public'
-  AND tablename = 'tourism_inventory';
-
--- ✅ PASSO 4: Resultado esperado
--- Você deve ver:
--- ✅ 5 tabelas existentes
--- ✅ RLS ativo na tabela tourism_inventory
+-- ===============================
+-- RESULTADO ESPERADO APÓS EXECUÇÃO:
+-- ===============================
+-- ✅ tourism_inventory (inventário turístico)
+-- ✅ inventory_categories (categorias)
+-- ✅ dynamic_menus (menus dinâmicos)
+-- ✅ viajar_products (produtos ViaJAR)
+-- ✅ attendant_checkins (check-ins)
+-- ✅ attendant_allowed_locations (locais permitidos)
+-- ✅ attendant_location_assignments (associações)
+--
 -- ✅ Pelo menos 8 categorias criadas
+-- ✅ RLS ativo em todas as tabelas
+-- ✅ Políticas de segurança configuradas
 
--- ================================================================
--- ✅ CORREÇÃO APLICADA: Índice PostGIS removido
--- O erro da função ll_to_earth foi corrigido removendo o índice problemático.
--- A migração agora executará sem erros no Supabase.
--- ================================================================
-
--- ================================================================
+-- ===============================
 -- SE TUDO FUNCIONAR, RECARREGUE O DASHBOARD E TESTE:
+-- ===============================
 -- 1. Acesse /secretary-dashboard
 -- 2. Clique em "Inventário Turístico"
 -- 3. Clique em "Novo Atrativo"
 -- 4. Teste o botão "Preencher Automaticamente"
--- ================================================================
+-- 5. A IA Gemini deve funcionar agora!
+
+-- ===============================
+-- NOTAS IMPORTANTES:
+-- ===============================
+-- - Execute as partes na ordem: Parte 1, 2, 3, 4
+-- - Se uma parte falhar, execute apenas aquela novamente
+-- - As tabelas são criadas com "IF NOT EXISTS" (seguro)
+-- - O índice PostGIS foi removido para compatibilidade
