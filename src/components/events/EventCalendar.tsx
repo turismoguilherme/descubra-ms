@@ -310,7 +310,11 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         console.log('regionCities keys:', Object.keys(regionCities));
         console.log('regionCities[caminho-ipes]:', regionCities['caminho-ipes']);
 
+        const conditionResult = !matchesRegion && selectedRegion in regionCities;
+        console.log('CONDIÇÃO FINAL (!matchesRegion && selectedRegion in regionCities):', conditionResult);
+
         if (!matchesRegion && selectedRegion in regionCities) {
+          console.log('✅ [FALLBACK] CONDIÇÃO ATENDIDA - EXECUTANDO FALLBACK');
           const cities = regionCities[selectedRegion];
           console.log('🔄 [Fallback] Verificando cidades:', cities);
           console.log('🔄 [Fallback] selectedRegion:', selectedRegion);
