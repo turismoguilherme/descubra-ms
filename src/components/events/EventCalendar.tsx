@@ -172,10 +172,12 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       }
 
       const data = await response.json();
+      console.log('📊 Eventos brutos recebidos da API:', data?.length || 0);
+      console.log('📋 Primeiro evento bruto:', data?.[0]);
 
-      const events: EventItem[] = (data || []).map((event: any) => {
+      const events: EventItem[] = (data || []).map((event: any, index: number) => {
         try {
-          return {
+          const mappedEvent = {
             id: event.id,
             name: event.name || '',
             description: event.description || '',
@@ -195,6 +197,20 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             tourist_region_id: event.tourist_region_id,
             tourist_region: event.tourist_region || null,
           };
+
+          // Log detalhado para eventos com vídeo ou logo
+          if (event.video_url || event.logo_evento || event.image_url) {
+            console.log(`🎬 Evento ${index + 1} com mídia:`, {
+              id: event.id,
+              name: event.name,
+              video_url: event.video_url,
+              logo_evento: event.logo_evento,
+              image_url: event.image_url,
+              is_visible: event.is_visible
+            });
+          }
+
+          return mappedEvent;
         } catch (error) {
           console.error('Erro ao mapear evento:', error, event);
           return null;
@@ -278,7 +294,12 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   };
 
   const getYouTubeEmbedUrl = (url: string) => {
-    if (!url) return null;
+    console.log('🎥 Processando URL do YouTube:', url);
+
+    if (!url) {
+      console.log('❌ URL vazia ou undefined');
+      return null;
+    }
 
     // Padrões mais abrangentes para URLs do YouTube
     const patterns = [
@@ -287,12 +308,17 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     ];
 
     for (const pattern of patterns) {
+      console.log('🔍 Testando padrão:', pattern);
       const match = url.match(pattern);
       if (match && match[1]) {
-        return `https://www.youtube.com/embed/${match[1]}`;
+        const embedUrl = `https://www.youtube.com/embed/${match[1]}`;
+        console.log('✅ Match encontrado! ID do vídeo:', match[1]);
+        console.log('✅ URL de embed:', embedUrl);
+        return embedUrl;
       }
     }
 
+    console.log('❌ Nenhum padrão de YouTube encontrado na URL');
     return null;
   };
 
@@ -340,6 +366,14 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   }
 
   const EventCard = ({ event, showBadge = false }: { event: EventItem; showBadge?: boolean }) => {
+    console.log('🎫 Renderizando EventCard:', {
+      id: event.id,
+      name: event.name,
+      video_url: event.video_url,
+      logo_evento: event.logo_evento,
+      image_url: event.image_url,
+      is_visible: event.is_visible
+    });
     
     // Função para determinar a região turística (do banco ou baseada na localização)
     const getTouristRegion = () => {
@@ -696,39 +730,57 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
                 {/* Header com imagem/vídeo - melhorado visualmente */}
                 <div className={`relative h-72 md:h-96 bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']} flex-shrink-0 overflow-hidden shadow-lg`}>
                   {(() => {
-                    console.log('🔍 Evento selecionado:', {
+                    console.log('🔍 Evento selecionado para modal:', {
                       id: selectedEvent.id,
                       name: selectedEvent.name,
                       video_url: selectedEvent.video_url,
                       logo_evento: selectedEvent.logo_evento,
                       image_url: selectedEvent.image_url,
-                      hasVideo: !!selectedEvent.video_url,
-                      embedUrl: selectedEvent.video_url ? getYouTubeEmbedUrl(selectedEvent.video_url) : null
+                      is_visible: selectedEvent.is_visible
                     });
 
-                    const embedUrl = selectedEvent.video_url ? getYouTubeEmbedUrl(selectedEvent.video_url) : null;
+                    // Verificar se há vídeo
+                    if (selectedEvent.video_url) {
+                      console.log('🎬 Evento tem video_url:', selectedEvent.video_url);
+                      const embedUrl = getYouTubeEmbedUrl(selectedEvent.video_url);
+                      console.log('🔗 URL de embed gerada:', embedUrl);
 
-                    if (selectedEvent.video_url && embedUrl) {
-                      console.log('🎥 Exibindo vídeo:', embedUrl);
-                      return (
-                        <iframe
-                          src={embedUrl}
-                          className="w-full h-full object-cover"
-                          allowFullScreen
-                          title="Vídeo do evento"
-                        />
-                      );
-                    } else if (selectedEvent.logo_evento || selectedEvent.image_url) {
-                      const imageSrc = selectedEvent.logo_evento || selectedEvent.image_url;
-                      console.log('🖼️ Exibindo imagem:', imageSrc);
+                      if (embedUrl) {
+                        console.log('✅ Vídeo será exibido:', embedUrl);
+                        return (
+                          <iframe
+                            src={embedUrl}
+                            className="w-full h-full object-cover"
+                            allowFullScreen
+                            title="Vídeo do evento"
+                          />
+                        );
+                      } else {
+                        console.log('❌ URL de vídeo inválida, não conseguiu gerar embed URL');
+                      }
+                    }
+
+                    // Verificar logo ou imagem
+                    if (selectedEvent.logo_evento) {
+                      console.log('🖼️ Exibindo logo_evento:', selectedEvent.logo_evento);
                       return (
                         <img
-                          src={imageSrc}
+                          src={selectedEvent.logo_evento}
+                          alt={getTranslatedName(selectedEvent)}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      );
+                    } else if (selectedEvent.image_url) {
+                      console.log('🖼️ Exibindo image_url:', selectedEvent.image_url);
+                      return (
+                        <img
+                          src={selectedEvent.image_url}
                           alt={getTranslatedName(selectedEvent)}
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                         />
                       );
                     } else {
+                      console.log('📅 Nenhum mídia encontrado, exibindo ícone padrão');
                       return (
                         <div className="w-full h-full flex items-center justify-center">
                           <Calendar className="w-16 h-16 md:w-24 md:h-24 text-white/30" />
