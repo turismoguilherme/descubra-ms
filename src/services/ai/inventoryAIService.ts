@@ -38,12 +38,24 @@ export class InventoryAIService {
     name: string,
     address: string
   ): Promise<Partial<TourismAttraction>> {
-    try {
-      console.log('🤖 INVENTORYAI: Iniciando preenchimento automático para:', { name, address });
+    console.log('🤖 INVENTORYAI: Iniciando preenchimento automático para:', { name, address });
 
+    // POR ENQUANTO: Forçar uso direto do fallback básico para garantir coordenadas
+    console.log('🤖 INVENTORYAI: Usando fallback básico (IA temporariamente desabilitada)');
+    return this.getBasicAutoFill(name, address);
+
+    /* COMENTADO TEMPORARIAMENTE PARA DEBUG
+    try {
       // Tentar usar o guataGeminiService (Edge Function) primeiro
       try {
         console.log('🤖 INVENTORYAI: Tentando usar guataGeminiService...');
+        console.log('🤖 INVENTORYAI: guataGeminiService disponível:', !!guataGeminiService);
+        console.log('🤖 INVENTORYAI: guataGeminiService.generateContent:', typeof guataGeminiService?.generateContent);
+
+        if (!guataGeminiService || !guataGeminiService.generateContent) {
+          throw new Error('guataGeminiService não está disponível ou não tem generateContent');
+        }
+
         const guataResult = await guataGeminiService.generateContent(this.buildAutoFillPrompt(name, address), 'gemini-2.0-flash-exp', 0.7, 1500);
         console.log('🤖 INVENTORYAI: GuataGeminiService funcionou:', guataResult);
 
@@ -52,6 +64,7 @@ export class InventoryAIService {
         }
       } catch (guataError) {
         console.warn('🤖 INVENTORYAI: GuataGeminiService falhou, tentando método direto:', guataError);
+        console.warn('🤖 INVENTORYAI: Detalhes do erro:', guataError.message, guataError.stack);
       }
 
       // Fallback para método direto
@@ -72,6 +85,7 @@ export class InventoryAIService {
       console.error('❌ INVENTORYAI: Erro ao preencher automaticamente com IA:', error);
       return this.getBasicAutoFill(name, address);
     }
+    */
   }
 
   /**

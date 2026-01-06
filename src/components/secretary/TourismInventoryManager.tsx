@@ -133,6 +133,9 @@ const TourismInventoryManager: React.FC = () => {
   const validateAttraction = (attraction: Partial<TourismAttraction>): ValidationErrors => {
     const errors: ValidationErrors = {};
 
+    console.log('🔍 INVENTÁRIO: Validando atração:', attraction);
+    console.log('🔍 INVENTÁRIO: Coordenadas recebidas:', attraction.coordinates);
+
     // Validação do nome
     if (!attraction.name || attraction.name.trim().length < 3) {
       errors.name = 'Nome deve ter pelo menos 3 caracteres';
@@ -149,14 +152,17 @@ const TourismInventoryManager: React.FC = () => {
     }
 
     // Validação das coordenadas
-    if (!attraction.coordinates || 
-        !attraction.coordinates.lat || 
+    if (!attraction.coordinates ||
+        !attraction.coordinates.lat ||
         !attraction.coordinates.lng ||
-        attraction.coordinates.lat < -90 || 
+        attraction.coordinates.lat < -90 ||
         attraction.coordinates.lat > 90 ||
-        attraction.coordinates.lng < -180 || 
+        attraction.coordinates.lng < -180 ||
         attraction.coordinates.lng > 180) {
+      console.log('❌ INVENTÁRIO: Coordenadas inválidas detectadas:', attraction.coordinates);
       errors.coordinates = 'Coordenadas inválidas';
+    } else {
+      console.log('✅ INVENTÁRIO: Coordenadas válidas:', attraction.coordinates);
     }
 
     // Validação do contato
