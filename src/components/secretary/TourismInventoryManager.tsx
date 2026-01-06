@@ -184,16 +184,23 @@ const TourismInventoryManager: React.FC = () => {
   };
 
   const handleSaveAttraction = async (attractionData: Partial<TourismAttraction>) => {
+    console.log('🗂️ INVENTÁRIO: handleSaveAttraction chamado com dados:', attractionData);
+    console.log('👤 INVENTÁRIO: Usuário atual:', user);
     setLoading(true);
-    
+
     try {
+      console.log('🔍 INVENTÁRIO: Iniciando validação dos dados...');
       // Validar dados
       const errors = validateAttraction(attractionData);
+      console.log('✅ INVENTÁRIO: Validação concluída, erros encontrados:', errors);
+
       if (Object.keys(errors).length > 0) {
+        console.log('❌ INVENTÁRIO: Dados inválidos, abortando salvamento');
         setValidationErrors(errors);
         return;
       }
 
+      console.log('🔄 INVENTÁRIO: Convertendo dados para formato do serviço...');
       // Converter para formato do serviço
       const serviceData: any = {
         name: attractionData.name || '',
@@ -222,29 +229,44 @@ const TourismInventoryManager: React.FC = () => {
         responsible_phone: (attractionData as any).responsible_phone,
       };
 
+      console.log('📦 INVENTÁRIO: Dados convertidos para serviço:', serviceData);
+
       let savedAttraction: InventoryAttraction;
-      
+
       if (editingAttraction) {
+        console.log('✏️ INVENTÁRIO: Atualizando atração existente, ID:', editingAttraction.id);
         // Atualizar atração existente
         savedAttraction = await inventoryService.updateAttraction(editingAttraction.id, serviceData);
+        console.log('✅ INVENTÁRIO: Atração atualizada com sucesso:', savedAttraction);
         addNotification('success', 'Atração atualizada com sucesso!');
       } else {
+        console.log('➕ INVENTÁRIO: Criando nova atração...');
         // Criar nova atração
         savedAttraction = await inventoryService.createAttraction(serviceData);
+        console.log('✅ INVENTÁRIO: Nova atração criada com sucesso:', savedAttraction);
         addNotification('success', 'Nova atração criada com sucesso!');
       }
 
+      console.log('🔄 INVENTÁRIO: Recarregando lista de atrações...');
       // Recarregar lista
       await loadAttractions();
 
+      console.log('🧹 INVENTÁRIO: Limpando estado do formulário...');
       setShowForm(false);
       setEditingAttraction(null);
       setValidationErrors({});
-      
+
     } catch (error) {
-      console.error('Erro ao salvar atração:', error);
+      console.error('❌ INVENTÁRIO: Erro ao salvar atração:', error);
+      console.error('❌ INVENTÁRIO: Detalhes do erro:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined,
+        user: user,
+        attractionData: attractionData
+      });
       addNotification('error', 'Erro ao salvar atração. Tente novamente.');
     } finally {
+      console.log('🏁 INVENTÁRIO: Finalizando operação de salvamento');
       setLoading(false);
     }
   };
@@ -413,6 +435,13 @@ const TourismInventoryManager: React.FC = () => {
   }, []);
 
   const loadAttractions = async () => {
+    console.log('📋 INVENTÁRIO: loadAttractions iniciado');
+    console.log('📋 INVENTÁRIO: Filtros aplicados:', {
+      searchTerm,
+      selectedCategory,
+      is_active: true
+    });
+
     setLoading(true);
     try {
       const data = await inventoryService.getAttractions({
@@ -420,6 +449,8 @@ const TourismInventoryManager: React.FC = () => {
         search: searchTerm || undefined,
         category_id: selectedCategory !== 'all' ? selectedCategory : undefined,
       });
+
+      console.log('📋 INVENTÁRIO: Dados recebidos do serviço:', data?.length || 0, 'atrações');
 
       // Converter para formato do componente
       const convertedAttractions: TourismAttraction[] = data.map((item) => ({
@@ -462,14 +493,20 @@ const TourismInventoryManager: React.FC = () => {
         setur_compliance_score: (item as any).setur_compliance_score,
       } as any));
 
+      console.log('📋 INVENTÁRIO: Atrações convertidas com sucesso:', convertedAttractions.length);
       setAttractions(convertedAttractions);
     } catch (error) {
-      console.error('Erro ao carregar atrações:', error);
+      console.error('❌ INVENTÁRIO: Erro ao carregar atrações:', error);
+      console.error('❌ INVENTÁRIO: Detalhes do erro:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       addNotification('error', 'Erro ao carregar atrações. Usando dados locais.');
       // Fallback para dados mockados em caso de erro
       const mockAttractions: TourismAttraction[] = [];
       setAttractions(mockAttractions);
     } finally {
+      console.log('🏁 INVENTÁRIO: loadAttractions finalizado');
       setLoading(false);
     }
   };

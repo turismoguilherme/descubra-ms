@@ -89,24 +89,33 @@ export class InventoryService {
    * Buscar todas as atrações com filtros opcionais
    */
   async getAttractions(filters?: InventoryFilters): Promise<TourismAttraction[]> {
+    console.log('🔧 INVENTORYSERVICE: getAttractions chamado com filtros:', filters);
+
     try {
       let query = supabase
         .from('tourism_inventory')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('🔧 INVENTORYSERVICE: Query inicial criada');
+
       if (filters) {
+        console.log('🔧 INVENTORYSERVICE: Aplicando filtros...');
         if (filters.category_id) {
           query = query.eq('category_id', filters.category_id);
+          console.log('🔧 INVENTORYSERVICE: Filtro category_id aplicado:', filters.category_id);
         }
         if (filters.city) {
           query = query.eq('city', filters.city);
+          console.log('🔧 INVENTORYSERVICE: Filtro city aplicado:', filters.city);
         }
         if (filters.state) {
           query = query.eq('state', filters.state);
+          console.log('🔧 INVENTORYSERVICE: Filtro state aplicado:', filters.state);
         }
         if (filters.status) {
           query = query.eq('status', filters.status);
+          console.log('🔧 INVENTORYSERVICE: Filtro status aplicado:', filters.status);
         }
         if (filters.is_active !== undefined) {
           query = query.eq('is_active', filters.is_active);
@@ -119,12 +128,19 @@ export class InventoryService {
         }
       }
 
+      console.log('🔧 INVENTORYSERVICE: Executando query no Supabase...');
       const { data, error } = await query;
 
-      if (error) throw error;
+      console.log('🔧 INVENTORYSERVICE: Resposta da query - Data count:', data?.length || 0, 'Error:', error);
+
+      if (error) {
+        console.error('🔧 INVENTORYSERVICE: Erro na query do Supabase:', error);
+        throw error;
+      }
 
       // Se houver filtro de raio, filtrar localmente (Supabase não tem função de distância nativa sem extensão)
       if (filters?.latitude && filters?.longitude && filters?.radius_km && data) {
+        console.log('🔧 INVENTORYSERVICE: Aplicando filtro de raio...');
         const filtered = data.filter((item) => {
           if (!item.latitude || !item.longitude) return false;
           const distance = this.calculateDistance(
@@ -135,12 +151,20 @@ export class InventoryService {
           );
           return distance <= filters.radius_km!;
         });
+        console.log('🔧 INVENTORYSERVICE: Filtro de raio aplicado, itens restantes:', filtered.length);
         return filtered as TourismAttraction[];
       }
 
+      console.log('✅ INVENTORYSERVICE: getAttractions concluído com sucesso, retornando', data?.length || 0, 'itens');
       return (data || []) as TourismAttraction[];
     } catch (error) {
-      console.error('Erro ao buscar atrações:', error);
+      console.error('❌ INVENTORYSERVICE: Erro ao buscar atrações:', error);
+      console.error('❌ INVENTORYSERVICE: Detalhes do erro:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        code: (error as any)?.code,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint
+      });
       return [];
     }
   }
@@ -172,35 +196,59 @@ export class InventoryService {
    * Criar nova atração
    */
   async createAttraction(attraction: Omit<TourismAttraction, 'id' | 'created_at' | 'updated_at'>): Promise<TourismAttraction> {
+    console.log('🔧 INVENTORYSERVICE: createAttraction chamado com dados:', attraction);
+
     try {
+      console.log('🔧 INVENTORYSERVICE: Gerando código SeTur...');
       // Gerar código SeTur se não existir
       let seturCode = attraction.setur_code;
       if (!seturCode) {
         seturCode = await seturValidationService.generateSeTurCode(attraction as TourismAttraction);
+        console.log('🔧 INVENTORYSERVICE: Código SeTur gerado:', seturCode);
       }
 
+      console.log('🔧 INVENTORYSERVICE: Calculando scores...');
       // Calcular scores de completude e conformidade
       const completenessScore = await seturValidationService.calculateCompletenessScore(attraction as TourismAttraction);
       const complianceScore = await seturValidationService.calculateComplianceScore(attraction as TourismAttraction);
+      console.log('🔧 INVENTORYSERVICE: Scores calculados - Completude:', completenessScore, 'Compliance:', complianceScore);
 
+      console.log('🔧 INVENTORYSERVICE: Preparando dados para inserção...');
+      const insertData = {
+        ...attraction,
+        setur_code: seturCode,
+        data_completeness_score: completenessScore,
+        setur_compliance_score: complianceScore,
+        status: attraction.status || 'draft',
+        is_active: attraction.is_active !== undefined ? attraction.is_active : true,
+        is_featured: attraction.is_featured || false,
+      };
+      console.log('🔧 INVENTORYSERVICE: Dados preparados para inserção:', insertData);
+
+      console.log('🔧 INVENTORYSERVICE: Executando insert no Supabase...');
       const { data, error } = await supabase
         .from('tourism_inventory')
-        .insert({
-          ...attraction,
-          setur_code: seturCode,
-          data_completeness_score: completenessScore,
-          setur_compliance_score: complianceScore,
-          status: attraction.status || 'draft',
-          is_active: attraction.is_active !== undefined ? attraction.is_active : true,
-          is_featured: attraction.is_featured || false,
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('🔧 INVENTORYSERVICE: Resposta do Supabase - Data:', data, 'Error:', error);
+
+      if (error) {
+        console.error('🔧 INVENTORYSERVICE: Erro no insert do Supabase:', error);
+        throw error;
+      }
+
+      console.log('✅ INVENTORYSERVICE: Atração criada com sucesso:', data);
       return data as TourismAttraction;
     } catch (error) {
-      console.error('Erro ao criar atração:', error);
+      console.error('❌ INVENTORYSERVICE: Erro ao criar atração:', error);
+      console.error('❌ INVENTORYSERVICE: Detalhes do erro:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        code: (error as any)?.code,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint
+      });
       throw error;
     }
   }
