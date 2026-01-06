@@ -302,13 +302,13 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           console.log('⚠️ [Prioridade 2] tourist_region_id presente mas sem slug');
         }
         // Fallback: mapeamento por cidade (para eventos antigos sem tourist_region_id)
-        console.log('🔍 [DEBUG FALLBACK]', {
-          matchesRegion,
-          selectedRegion,
-          hasRegionInCities: selectedRegion in regionCities,
-          regionCitiesKeys: Object.keys(regionCities),
-          regionCities: regionCities
-        });
+        console.log('🔍 [DEBUG FALLBACK] - ANTES DA CONDIÇÃO');
+        console.log('matchesRegion:', matchesRegion);
+        console.log('!matchesRegion:', !matchesRegion);
+        console.log('selectedRegion:', selectedRegion);
+        console.log('selectedRegion in regionCities:', selectedRegion in regionCities);
+        console.log('regionCities keys:', Object.keys(regionCities));
+        console.log('regionCities[caminho-ipes]:', regionCities['caminho-ipes']);
 
         if (!matchesRegion && selectedRegion in regionCities) {
           const cities = regionCities[selectedRegion];
