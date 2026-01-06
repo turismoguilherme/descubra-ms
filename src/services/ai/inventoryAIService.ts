@@ -5,6 +5,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { TourismAttraction } from '../public/inventoryService';
+import { guataGeminiService } from './guataGeminiService';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -38,14 +39,46 @@ export class InventoryAIService {
     address: string
   ): Promise<Partial<TourismAttraction>> {
     try {
+      console.log('🤖 INVENTORYAI: Iniciando preenchimento automático para:', { name, address });
+
+      // Tentar usar o guataGeminiService (Edge Function) primeiro
+      try {
+        console.log('🤖 INVENTORYAI: Tentando usar guataGeminiService...');
+        const guataResult = await guataGeminiService.generateContent(this.buildAutoFillPrompt(name, address), 'gemini-2.0-flash-exp', 0.7, 1500);
+        console.log('🤖 INVENTORYAI: GuataGeminiService funcionou:', guataResult);
+
+        if (guataResult && guataResult.text) {
+          return this.parseAIResponse(guataResult.text);
+        }
+      } catch (guataError) {
+        console.warn('🤖 INVENTORYAI: GuataGeminiService falhou, tentando método direto:', guataError);
+      }
+
+      // Fallback para método direto
       if (!this.genAI) {
-        console.warn('Gemini API não configurada, retornando dados básicos');
+        console.warn('🤖 INVENTORYAI: Gemini API não configurada, retornando dados básicos');
         return this.getBasicAutoFill(name, address);
       }
 
+      console.log('🤖 INVENTORYAI: Usando método direto com gemini-pro');
       const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-      const prompt = `
+      const prompt = this.buildAutoFillPrompt(name, address);
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+
+      return this.parseAIResponse(response);
+    } catch (error) {
+      console.error('❌ INVENTORYAI: Erro ao preencher automaticamente com IA:', error);
+      return this.getBasicAutoFill(name, address);
+    }
+  }
+
+  /**
+   * Fallback básico sem IA
+   */
+  private buildAutoFillPrompt(name: string, address: string): string {
+    return `
 Você é um assistente especializado em turismo brasileiro. Com base no nome e endereço fornecidos, preencha os dados do atrativo turístico.
 
 Nome: ${name}
@@ -59,19 +92,29 @@ Forneça uma resposta em JSON com os seguintes campos:
   "price_range": "free|low|medium|high",
   "opening_hours": "Horário de funcionamento em formato legível",
   "features": ["feature1", "feature2"],
-  "short_description": "Descrição curta (máximo 200 caracteres)"
+  "short_description": "Descrição curta (máximo 200 caracteres)",
+  "coordinates": {
+    "lat": -20.4697,
+    "lng": -54.6201
+  }
 }
+
+IMPORTANTE: Para as coordenadas, use valores aproximados reais baseados no endereço fornecido. Campo Grande-MS tem coordenadas aproximadas de lat: -20.4697, lng: -54.6201. Ajuste esses valores com base na localização específica mencionada no endereço.
 
 Seja específico e baseado em conhecimento real sobre turismo no Brasil, especialmente Mato Grosso do Sul.
 `;
+  }
 
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+  private parseAIResponse(response: string): Partial<TourismAttraction> {
+    console.log('🤖 INVENTORYAI: Parsing AI response:', response);
 
-      // Tentar extrair JSON da resposta
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+    // Tentar extrair JSON da resposta
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
         const parsed = JSON.parse(jsonMatch[0]);
+        console.log('🤖 INVENTORYAI: JSON parsed successfully:', parsed);
+
         return {
           description: parsed.description || '',
           category: parsed.category || 'natural',
@@ -80,20 +123,19 @@ Seja específico e baseado em conhecimento real sobre turismo no Brasil, especia
           opening_hours: parsed.opening_hours || '',
           amenities: parsed.features || [],
           short_description: parsed.short_description || '',
+          coordinates: parsed.coordinates || { lat: -20.4697, lng: -54.6201 }, // Coordenadas padrão de Campo Grande-MS
         } as any;
+      } catch (parseError) {
+        console.warn('🤖 INVENTORYAI: Erro ao fazer parse do JSON:', parseError);
       }
-
-      return this.getBasicAutoFill(name, address);
-    } catch (error) {
-      console.error('Erro ao preencher automaticamente com IA:', error);
-      return this.getBasicAutoFill(name, address);
     }
+
+    console.log('🤖 INVENTORYAI: Usando fallback básico');
+    return this.getBasicAutoFillFromResponse(response);
   }
 
-  /**
-   * Fallback básico sem IA
-   */
   private getBasicAutoFill(name: string, address: string): Partial<TourismAttraction> {
+    console.log('🤖 INVENTORYAI: Usando basic auto-fill');
     return {
       description: `Atrativo turístico localizado em ${address}. ${name} oferece uma experiência única para visitantes.`,
       short_description: `Conheça ${name}, um atrativo turístico em ${address.split(',')[0] || address}.`,
@@ -101,6 +143,20 @@ Seja específico e baseado em conhecimento real sobre turismo no Brasil, especia
       price_range: 'free',
       opening_hours: '08:00 - 17:00',
       amenities: [],
+      coordinates: { lat: -20.4697, lng: -54.6201 }, // Coordenadas padrão de Campo Grande-MS
+    } as any;
+  }
+
+  private getBasicAutoFillFromResponse(response: string): Partial<TourismAttraction> {
+    // Tentar extrair informações básicas da resposta de texto
+    return {
+      description: response.substring(0, 500),
+      category: 'natural',
+      tags: ['turismo'],
+      price_range: 'free',
+      opening_hours: '08:00 - 18:00',
+      amenities: [],
+      coordinates: { lat: -20.4697, lng: -54.6201 },
     } as any;
   }
 
