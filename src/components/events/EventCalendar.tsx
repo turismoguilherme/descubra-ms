@@ -252,23 +252,49 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       // Filtro por região turística - usar tourist_region.slug se disponível, senão fallback para mapeamento por cidade
       let matchesRegion = selectedRegion === 'all';
       if (!matchesRegion) {
+        // Debug log
+        console.log('🔍 [Filtro Região]', {
+          eventId: event.id,
+          eventName: event.name,
+          eventLocation: event.location,
+          selectedRegion,
+          touristRegionSlug: event.tourist_region?.slug,
+          touristRegionId: event.tourist_region_id
+        });
+
         // Prioridade 1: usar tourist_region.slug se disponível
         if (event.tourist_region?.slug) {
           matchesRegion = event.tourist_region.slug === selectedRegion;
-        } 
+          console.log('✅ [Prioridade 1] Match por slug:', matchesRegion);
+        }
         // Prioridade 2: usar tourist_region_id se disponível (buscar slug correspondente)
         else if (event.tourist_region_id) {
           // Se temos tourist_region_id mas não temos o objeto completo, usar fallback
           // Mas como já buscamos com join, devemos ter o objeto
           matchesRegion = false; // Se não temos slug, não podemos fazer match direto
+          console.log('⚠️ [Prioridade 2] tourist_region_id presente mas sem slug');
         }
         // Fallback: mapeamento por cidade (para eventos antigos sem tourist_region_id)
         if (!matchesRegion && selectedRegion in regionCities) {
           const cities = regionCities[selectedRegion];
-          matchesRegion = cities.some(city => 
-            (event.location || '').toLowerCase().includes(city.toLowerCase())
-          );
+          console.log('🔄 [Fallback] Verificando cidades:', cities);
+
+          matchesRegion = cities.some(city => {
+            const locationLower = (event.location || '').toLowerCase();
+            const cityLower = city.toLowerCase();
+            const match = locationLower.includes(cityLower);
+            console.log(`   ${city} (${cityLower}) in "${locationLower}" = ${match}`);
+            return match;
+          });
+
+          console.log('✅ [Fallback] Match por cidade:', matchesRegion);
         }
+
+        console.log('🎯 [Resultado Final]', {
+          eventName: event.name,
+          selectedRegion,
+          matchesRegion
+        });
       }
       
       return matchesSearch && matchesRegion;
