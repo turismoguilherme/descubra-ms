@@ -3,6 +3,7 @@
 -- ================================================================
 
 -- ✅ PASSO 1: Execute o arquivo MIGRATIONS_ESSENCIAIS_COMPLETA.sql
+-- (Versão corrigida - índice PostGIS removido para compatibilidade com Supabase)
 -- Este arquivo contém todas as migrations necessárias para:
 -- - tourism_inventory (inventário turístico)
 -- - dynamic_menus (menus dinâmicos)

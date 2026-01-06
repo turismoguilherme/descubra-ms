@@ -223,7 +223,7 @@ CREATE INDEX IF NOT EXISTS idx_tourism_inventory_city_state ON tourism_inventory
 CREATE INDEX IF NOT EXISTS idx_tourism_inventory_status ON tourism_inventory(status);
 CREATE INDEX IF NOT EXISTS idx_tourism_inventory_active ON tourism_inventory(is_active);
 CREATE INDEX IF NOT EXISTS idx_tourism_inventory_featured ON tourism_inventory(is_featured);
-CREATE INDEX IF NOT EXISTS idx_tourism_inventory_location ON tourism_inventory USING GIST (ll_to_earth(latitude, longitude));
+-- CREATE INDEX IF NOT EXISTS idx_tourism_inventory_location ON tourism_inventory USING GIST (ll_to_earth(latitude, longitude)); -- Removido: PostGIS não disponível no Supabase
 CREATE INDEX IF NOT EXISTS idx_inventory_reviews_inventory ON inventory_reviews(inventory_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_reviews_user ON inventory_reviews(user_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_reviews_approved ON inventory_reviews(is_approved);
