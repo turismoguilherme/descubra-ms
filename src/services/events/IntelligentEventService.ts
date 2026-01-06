@@ -517,7 +517,7 @@ export class IntelligentEventService {
       }
 
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const prompt = `
 Classifique o seguinte evento turístico em uma das categorias:
@@ -654,7 +654,7 @@ Responda em JSON:
       }
 
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const prompt = `
 Sugira 5-8 tags relevantes para o seguinte evento turístico:

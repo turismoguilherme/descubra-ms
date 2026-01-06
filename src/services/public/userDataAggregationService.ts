@@ -179,7 +179,7 @@ export class UserDataAggregationService {
         return this.getFallbackAIInsights(userData);
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const prompt = `
 Você é um consultor especializado em turismo e marketing de destinos. Analise os seguintes dados de perfil dos turistas e moradores e forneça insights acionáveis:

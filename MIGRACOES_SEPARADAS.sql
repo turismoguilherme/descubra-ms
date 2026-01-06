@@ -7,7 +7,7 @@
 -- ===============================
 CREATE TABLE IF NOT EXISTS inventory_categories (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
     icon VARCHAR(50),
     color VARCHAR(7), -- hex color
@@ -84,9 +84,11 @@ ALTER TABLE inventory_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tourism_inventory ENABLE ROW LEVEL SECURITY;
 
 -- Políticas
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON inventory_categories;
 CREATE POLICY "Categories are viewable by everyone" ON inventory_categories
     FOR SELECT USING (is_active = true);
 
+DROP POLICY IF EXISTS "Categories are manageable by admins" ON inventory_categories;
 CREATE POLICY "Categories are manageable by admins" ON inventory_categories
     FOR ALL USING (
         EXISTS (
@@ -96,9 +98,11 @@ CREATE POLICY "Categories are manageable by admins" ON inventory_categories
         )
     );
 
+DROP POLICY IF EXISTS "Inventory is viewable by everyone" ON tourism_inventory;
 CREATE POLICY "Inventory is viewable by everyone" ON tourism_inventory
     FOR SELECT USING (is_active = true AND status = 'approved');
 
+DROP POLICY IF EXISTS "Inventory is manageable by admins" ON tourism_inventory;
 CREATE POLICY "Inventory is manageable by admins" ON tourism_inventory
     FOR ALL USING (
         EXISTS (
@@ -108,6 +112,7 @@ CREATE POLICY "Inventory is manageable by admins" ON tourism_inventory
         )
     );
 
+DROP POLICY IF EXISTS "Users can manage their own inventory" ON tourism_inventory;
 CREATE POLICY "Users can manage their own inventory" ON tourism_inventory
     FOR ALL USING (created_by = auth.uid());
 

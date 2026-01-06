@@ -13,7 +13,7 @@
 -- Create inventory categories table
 CREATE TABLE IF NOT EXISTS inventory_categories (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
     icon VARCHAR(50),
     color VARCHAR(7), -- hex color
@@ -328,9 +328,11 @@ ALTER TABLE attendant_location_assignments ENABLE ROW LEVEL SECURITY;
 -- RLS POLICIES
 -- ============================================
 -- Tourism Inventory Categories policies
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON inventory_categories;
 CREATE POLICY "Categories are viewable by everyone" ON inventory_categories
     FOR SELECT USING (is_active = true);
 
+DROP POLICY IF EXISTS "Categories are manageable by admins" ON inventory_categories;
 CREATE POLICY "Categories are manageable by admins" ON inventory_categories
     FOR ALL USING (
         EXISTS (
@@ -341,9 +343,11 @@ CREATE POLICY "Categories are manageable by admins" ON inventory_categories
     );
 
 -- Tourism Inventory policies
+DROP POLICY IF EXISTS "Inventory is viewable by everyone" ON tourism_inventory;
 CREATE POLICY "Inventory is viewable by everyone" ON tourism_inventory
     FOR SELECT USING (is_active = true AND status = 'approved');
 
+DROP POLICY IF EXISTS "Inventory is manageable by admins" ON tourism_inventory;
 CREATE POLICY "Inventory is manageable by admins" ON tourism_inventory
     FOR ALL USING (
         EXISTS (
@@ -353,19 +357,24 @@ CREATE POLICY "Inventory is manageable by admins" ON tourism_inventory
         )
     );
 
+DROP POLICY IF EXISTS "Users can manage their own inventory" ON tourism_inventory;
 CREATE POLICY "Users can manage their own inventory" ON tourism_inventory
     FOR ALL USING (created_by = auth.uid());
 
 -- Inventory Reviews policies
+DROP POLICY IF EXISTS "Reviews are viewable by everyone" ON inventory_reviews;
 CREATE POLICY "Reviews are viewable by everyone" ON inventory_reviews
     FOR SELECT USING (is_approved = true);
 
+DROP POLICY IF EXISTS "Users can create their own reviews" ON inventory_reviews;
 CREATE POLICY "Users can create their own reviews" ON inventory_reviews
     FOR INSERT WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can update their own reviews" ON inventory_reviews;
 CREATE POLICY "Users can update their own reviews" ON inventory_reviews
     FOR UPDATE USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins can manage all reviews" ON inventory_reviews;
 CREATE POLICY "Admins can manage all reviews" ON inventory_reviews
     FOR ALL USING (
         EXISTS (
@@ -376,6 +385,7 @@ CREATE POLICY "Admins can manage all reviews" ON inventory_reviews
     );
 
 -- Inventory Analytics policies
+DROP POLICY IF EXISTS "Analytics are viewable by admins" ON inventory_analytics;
 CREATE POLICY "Analytics are viewable by admins" ON inventory_analytics
     FOR SELECT USING (
         EXISTS (
@@ -385,10 +395,12 @@ CREATE POLICY "Analytics are viewable by admins" ON inventory_analytics
         )
     );
 
+DROP POLICY IF EXISTS "Analytics can be inserted by anyone" ON inventory_analytics;
 CREATE POLICY "Analytics can be inserted by anyone" ON inventory_analytics
     FOR INSERT WITH CHECK (true);
 
 -- Dynamic Menus policies
+DROP POLICY IF EXISTS "Admins can manage dynamic_menus" ON dynamic_menus;
 CREATE POLICY "Admins can manage dynamic_menus"
     ON dynamic_menus FOR ALL
     USING (
@@ -400,11 +412,13 @@ CREATE POLICY "Admins can manage dynamic_menus"
     );
 
 -- Viajar Products policies
+DROP POLICY IF EXISTS "Anyone can view active products" ON viajar_products;
 CREATE POLICY "Anyone can view active products"
   ON viajar_products
   FOR SELECT
   USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can view all products" ON viajar_products;
 CREATE POLICY "Admins can view all products"
   ON viajar_products
   FOR SELECT
@@ -416,6 +430,7 @@ CREATE POLICY "Admins can view all products"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can insert products" ON viajar_products;
 CREATE POLICY "Admins can insert products"
   ON viajar_products
   FOR INSERT
@@ -427,6 +442,7 @@ CREATE POLICY "Admins can insert products"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can update products" ON viajar_products;
 CREATE POLICY "Admins can update products"
   ON viajar_products
   FOR UPDATE
@@ -438,6 +454,7 @@ CREATE POLICY "Admins can update products"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can delete products" ON viajar_products;
 CREATE POLICY "Admins can delete products"
   ON viajar_products
   FOR DELETE
