@@ -46,6 +46,7 @@ const BankAccountsManager = lazy(() => import('@/components/admin/financial/Bank
 const DatabaseManager = lazy(() => import('@/components/admin/database/DatabaseManager'));
 const VisualContentEditor = lazy(() => import('@/components/admin/editor/VisualContentEditor'));
 const SystemHealthMonitor = lazy(() => import('@/components/admin/system/SystemHealthMonitor'));
+const TranslationManager = lazy(() => import('@/components/admin/TranslationManager'));
 const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIAgent'));
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
@@ -319,6 +320,13 @@ export default function ViaJARAdminPanel() {
             <Route path="system/health" element={
               <Suspense fallback={<LoadingFallback />}>
                 <SystemHealthMonitor />
+              </Suspense>
+            } />
+
+            {/* Translation Management */}
+            <Route path="system/translations" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <TranslationManager />
               </Suspense>
             } />
 
