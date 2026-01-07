@@ -529,6 +529,159 @@ export type Database = {
         }
         Relationships: []
       }
+      attendant_allowed_locations: {
+        Row: {
+          address: string | null
+          allowed_radius: number
+          city_id: string | null
+          client_slug: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          updated_at: string | null
+          working_hours: Json
+        }
+        Insert: {
+          address?: string | null
+          allowed_radius?: number
+          city_id?: string | null
+          client_slug: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          updated_at?: string | null
+          working_hours?: Json
+        }
+        Update: {
+          address?: string | null
+          allowed_radius?: number
+          city_id?: string | null
+          client_slug?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          updated_at?: string | null
+          working_hours?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendant_allowed_locations_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendant_checkins: {
+        Row: {
+          accuracy: number | null
+          attendant_id: string
+          checkin_time: string | null
+          checkout_latitude: number | null
+          checkout_longitude: number | null
+          checkout_time: string | null
+          client_slug: string
+          created_at: string | null
+          id: string
+          is_valid: boolean
+          latitude: number
+          location_id: string | null
+          longitude: number
+          rejection_reason: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          attendant_id: string
+          checkin_time?: string | null
+          checkout_latitude?: number | null
+          checkout_longitude?: number | null
+          checkout_time?: string | null
+          client_slug: string
+          created_at?: string | null
+          id?: string
+          is_valid?: boolean
+          latitude: number
+          location_id?: string | null
+          longitude: number
+          rejection_reason?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          attendant_id?: string
+          checkin_time?: string | null
+          checkout_latitude?: number | null
+          checkout_longitude?: number | null
+          checkout_time?: string | null
+          client_slug?: string
+          created_at?: string | null
+          id?: string
+          is_valid?: boolean
+          latitude?: number
+          location_id?: string | null
+          longitude?: number
+          rejection_reason?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendant_checkins_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "attendant_allowed_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendant_location_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          attendant_id: string
+          id: string
+          is_active: boolean | null
+          location_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          attendant_id: string
+          id?: string
+          is_active?: boolean | null
+          location_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          attendant_id?: string
+          id?: string
+          is_active?: boolean | null
+          location_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendant_location_assignments_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "attendant_allowed_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendant_timesheet: {
         Row: {
           cat_location: string
@@ -1442,6 +1595,62 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      dynamic_menus: {
+        Row: {
+          created_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          menu_type: string
+          order_index: number | null
+          parent_id: string | null
+          path: string | null
+          platform: string
+          requires_auth: boolean | null
+          roles: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          menu_type: string
+          order_index?: number | null
+          parent_id?: string | null
+          path?: string | null
+          platform: string
+          requires_auth?: boolean | null
+          roles?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          menu_type?: string
+          order_index?: number | null
+          parent_id?: string | null
+          path?: string | null
+          platform?: string
+          requires_auth?: boolean | null
+          roles?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_menus_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_menus"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employee_salaries: {
         Row: {
@@ -2550,6 +2759,147 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      inventory_analytics: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          inventory_id: string | null
+          ip_address: unknown
+          metadata: Json | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          inventory_id?: string | null
+          ip_address?: unknown
+          metadata?: Json | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          inventory_id?: string | null
+          ip_address?: unknown
+          metadata?: Json | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_analytics_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "tourism_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          parent_id: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          parent_id?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          parent_id?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          inventory_id: string | null
+          is_approved: boolean | null
+          is_verified: boolean | null
+          rating: number | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          inventory_id?: string | null
+          is_approved?: boolean | null
+          is_verified?: boolean | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          inventory_id?: string | null
+          is_approved?: boolean | null
+          is_verified?: boolean | null
+          rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_reviews_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "tourism_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       knowledge_base_entries: {
         Row: {
@@ -5324,6 +5674,186 @@ export type Database = {
         }
         Relationships: []
       }
+      tourism_inventory: {
+        Row: {
+          accessibility_features: Json | null
+          address: string | null
+          amenities: Json | null
+          capacity: number | null
+          capacity_details: Json | null
+          category_id: string | null
+          certifications: Json | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          created_by: string | null
+          data_completeness_score: number | null
+          description: string | null
+          email: string | null
+          id: string
+          images: Json | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          languages_spoken: string[] | null
+          last_verified_date: string | null
+          latitude: number | null
+          legal_name: string | null
+          license_expiry_date: string | null
+          license_number: string | null
+          longitude: number | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string
+          opening_hours: Json | null
+          payment_methods: Json | null
+          phone: string | null
+          postal_code: string | null
+          price_range: string | null
+          registration_number: string | null
+          responsible_cpf: string | null
+          responsible_email: string | null
+          responsible_name: string | null
+          responsible_phone: string | null
+          setur_category_code: string | null
+          setur_code: string | null
+          setur_compliance_score: number | null
+          short_description: string | null
+          state: string | null
+          status: string | null
+          subcategory_id: string | null
+          tags: string[] | null
+          updated_at: string | null
+          updated_by: string | null
+          validation_notes: string | null
+          verification_status: string | null
+          videos: Json | null
+          website: string | null
+        }
+        Insert: {
+          accessibility_features?: Json | null
+          address?: string | null
+          amenities?: Json | null
+          capacity?: number | null
+          capacity_details?: Json | null
+          category_id?: string | null
+          certifications?: Json | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_completeness_score?: number | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          languages_spoken?: string[] | null
+          last_verified_date?: string | null
+          latitude?: number | null
+          legal_name?: string | null
+          license_expiry_date?: string | null
+          license_number?: string | null
+          longitude?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name: string
+          opening_hours?: Json | null
+          payment_methods?: Json | null
+          phone?: string | null
+          postal_code?: string | null
+          price_range?: string | null
+          registration_number?: string | null
+          responsible_cpf?: string | null
+          responsible_email?: string | null
+          responsible_name?: string | null
+          responsible_phone?: string | null
+          setur_category_code?: string | null
+          setur_code?: string | null
+          setur_compliance_score?: number | null
+          short_description?: string | null
+          state?: string | null
+          status?: string | null
+          subcategory_id?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          validation_notes?: string | null
+          verification_status?: string | null
+          videos?: Json | null
+          website?: string | null
+        }
+        Update: {
+          accessibility_features?: Json | null
+          address?: string | null
+          amenities?: Json | null
+          capacity?: number | null
+          capacity_details?: Json | null
+          category_id?: string | null
+          certifications?: Json | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_completeness_score?: number | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          languages_spoken?: string[] | null
+          last_verified_date?: string | null
+          latitude?: number | null
+          legal_name?: string | null
+          license_expiry_date?: string | null
+          license_number?: string | null
+          longitude?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string
+          opening_hours?: Json | null
+          payment_methods?: Json | null
+          phone?: string | null
+          postal_code?: string | null
+          price_range?: string | null
+          registration_number?: string | null
+          responsible_cpf?: string | null
+          responsible_email?: string | null
+          responsible_name?: string | null
+          responsible_phone?: string | null
+          setur_category_code?: string | null
+          setur_code?: string | null
+          setur_compliance_score?: number | null
+          short_description?: string | null
+          state?: string | null
+          status?: string | null
+          subcategory_id?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          validation_notes?: string | null
+          verification_status?: string | null
+          videos?: Json | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tourism_inventory_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tourism_inventory_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tourist_regions: {
         Row: {
           cities: Json
@@ -5558,6 +6088,8 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           city: string | null
+          city_id: string | null
+          client_slug: string | null
           country: string | null
           created_at: string | null
           custom_neighborhood: string | null
@@ -5571,6 +6103,7 @@ export type Database = {
           other_motive: string | null
           phone: string | null
           region: string | null
+          region_id: string | null
           residence_city: string | null
           selected_avatar: string | null
           sexuality_identity: string | null
@@ -5581,6 +6114,7 @@ export type Database = {
           travel_organization: string | null
           updated_at: string | null
           user_id: string
+          user_role: string | null
           user_type: string | null
           wants_to_collaborate: boolean | null
         }
@@ -5591,6 +6125,8 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           city?: string | null
+          city_id?: string | null
+          client_slug?: string | null
           country?: string | null
           created_at?: string | null
           custom_neighborhood?: string | null
@@ -5604,6 +6140,7 @@ export type Database = {
           other_motive?: string | null
           phone?: string | null
           region?: string | null
+          region_id?: string | null
           residence_city?: string | null
           selected_avatar?: string | null
           sexuality_identity?: string | null
@@ -5614,6 +6151,7 @@ export type Database = {
           travel_organization?: string | null
           updated_at?: string | null
           user_id: string
+          user_role?: string | null
           user_type?: string | null
           wants_to_collaborate?: boolean | null
         }
@@ -5624,6 +6162,8 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           city?: string | null
+          city_id?: string | null
+          client_slug?: string | null
           country?: string | null
           created_at?: string | null
           custom_neighborhood?: string | null
@@ -5637,6 +6177,7 @@ export type Database = {
           other_motive?: string | null
           phone?: string | null
           region?: string | null
+          region_id?: string | null
           residence_city?: string | null
           selected_avatar?: string | null
           sexuality_identity?: string | null
@@ -5647,10 +6188,26 @@ export type Database = {
           travel_organization?: string | null
           updated_at?: string | null
           user_id?: string
+          user_role?: string | null
           user_type?: string | null
           wants_to_collaborate?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_rewards: {
         Row: {
@@ -5800,6 +6357,57 @@ export type Database = {
           role?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      viajar_products: {
+        Row: {
+          created_at: string | null
+          cta_link: string | null
+          cta_text: string | null
+          display_order: number | null
+          full_description: string | null
+          gradient_colors: string | null
+          icon_name: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          short_description: string | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          display_order?: number | null
+          full_description?: string | null
+          gradient_colors?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          short_description?: string | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          display_order?: number | null
+          full_description?: string | null
+          gradient_colors?: string | null
+          icon_name?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          short_description?: string | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }

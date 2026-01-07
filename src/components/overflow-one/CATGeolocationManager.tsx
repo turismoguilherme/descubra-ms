@@ -218,27 +218,36 @@ const CATGeolocationManager: React.FC = () => {
   };
 
   const saveCAT = async (lat: number, lng: number) => {
+    console.log('🔵 CATGeolocationManager: Salvando CAT:', {
+      name: newCAT.name,
+      address: newCAT.address,
+      city: cityName,
+      region: stateName,
+      latitude: lat,
+      longitude: lng,
+    });
 
     setLoading(true);
     try {
+      // Enviar apenas campos que existem na tabela cat_locations
       await catLocationService.createCATLocation({
         name: newCAT.name,
         address: newCAT.address,
         city: cityName || '',
-        state: stateName || 'MS',
+        region: stateName || 'MS', // usar region ao invés de state
         latitude: lat,
         longitude: lng,
-        radius: parseInt(newCAT.radius),
         is_active: true,
       });
 
+      console.log('✅ CATGeolocationManager: CAT salvo com sucesso!');
       await loadCATLocations();
       setNewCAT({ name: '', address: '', latitude: '', longitude: '', radius: '200' });
       setIsAdding(false);
       setAddressSuggestions([]);
       setShowAddressSuggestions(false);
     } catch (error) {
-      console.error('Erro ao criar CAT:', error);
+      console.error('❌ CATGeolocationManager: Erro ao criar CAT:', error);
       alert('Erro ao criar CAT. Tente novamente.');
     } finally {
       setLoading(false);
