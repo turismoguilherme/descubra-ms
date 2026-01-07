@@ -23,15 +23,13 @@ export const DOMAIN_CONFIGS: Record<string, DomainConfig> = {
   },
   'localhost': {
     domain: 'localhost',
-    isMS: false, // Em desenvolvimento, usar Viajartur por padrão
+    isMS: false, // Em desenvolvimento, mostrar tudo por padrão
     expectedRoutes: ['/', '/descubrams'],
     redirectRoute: '/'
   }
 };
 
 export const useDomainValidation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
   const [currentDomain, setCurrentDomain] = useState<string>('');
   const [isValid, setIsValid] = useState<boolean>(true);
 
@@ -41,28 +39,11 @@ export const useDomainValidation = () => {
       const domain = hostname === 'localhost' ? 'localhost' : hostname;
       setCurrentDomain(domain);
 
-      const config = DOMAIN_CONFIGS[domain] || DOMAIN_CONFIGS['viajartur.com'];
-
-      // Verificar se a rota atual está correta para o domínio
-      const isRouteValid = config.expectedRoutes.some(route =>
-        location.pathname.startsWith(route) ||
-        location.pathname === '/' ||
-        location.pathname === ''
-      );
-
-      setIsValid(isRouteValid);
-
-      // Se a rota não for válida, redirecionar
-      if (!isRouteValid) {
-        const redirectPath = location.pathname === '/' || location.pathname === ''
-          ? config.redirectRoute
-          : `${config.redirectRoute}${location.pathname}`;
-
-        console.log(`🔄 [DomainValidation] Redirecionando ${location.pathname} -> ${redirectPath} (domínio: ${domain})`);
-        navigate(redirectPath, { replace: true });
-      }
+      // Em produção, o redirecionamento é feito pelo vercel.json
+      // Aqui apenas detectamos o domínio para renderização condicional
+      setIsValid(true);
     }
-  }, [location.pathname, navigate]);
+  }, []);
 
   const config = DOMAIN_CONFIGS[currentDomain] || DOMAIN_CONFIGS['viajartur.com'];
 
