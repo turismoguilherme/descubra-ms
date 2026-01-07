@@ -29,6 +29,12 @@ export const API_CONFIG = {
     isConfigured: () => Boolean(API_CONFIG.GEMINI.API_KEY)
   },
 
+  // Google Translate API (para tradução de conteúdo)
+  GOOGLE_TRANSLATE: {
+    API_KEY: import.meta.env.VITE_GOOGLE_TRANSLATE_API_KEY || '',
+    isConfigured: () => Boolean(API_CONFIG.GOOGLE_TRANSLATE.API_KEY)
+  },
+
   // Supabase
   SUPABASE: {
     URL: import.meta.env.VITE_SUPABASE_URL || '',
@@ -44,14 +50,16 @@ export const getAPIStatus = () => {
     weather: API_CONFIG.WEATHER.isConfigured(),
     government: API_CONFIG.GOVERNMENT.isConfigured(),
     gemini: API_CONFIG.GEMINI.isConfigured(),
+    googleTranslate: API_CONFIG.GOOGLE_TRANSLATE.isConfigured(),
     supabase: API_CONFIG.SUPABASE.isConfigured(),
-    
+
     // Calcular score geral
     overallScore: Object.values({
       google: API_CONFIG.GOOGLE.isConfigured(),
       weather: API_CONFIG.WEATHER.isConfigured(),
       government: API_CONFIG.GOVERNMENT.isConfigured(),
       gemini: API_CONFIG.GEMINI.isConfigured(),
+      googleTranslate: API_CONFIG.GOOGLE_TRANSLATE.isConfigured(),
       supabase: API_CONFIG.SUPABASE.isConfigured()
     }).filter(Boolean).length
   };
@@ -93,6 +101,18 @@ export const API_SETUP_INSTRUCTIONS = {
       '3. Adicione a variável: VITE_GEMINI_API_KEY'
     ],
     priority: 'Crítica - Obrigatória para funcionamento'
+  },
+
+  googleTranslate: {
+    name: 'Google Translate API',
+    description: 'Para tradução automática de conteúdo editável',
+    instructions: [
+      '1. Acesse: https://console.cloud.google.com/',
+      '2. Ative a "Cloud Translation API"',
+      '3. Gere uma chave de API',
+      '4. Adicione a variável: VITE_GOOGLE_TRANSLATE_API_KEY'
+    ],
+    priority: 'Alta - Essencial para tradução de conteúdo dinâmico'
   }
 };
 

@@ -304,6 +304,20 @@ export const platformContentService = {
       console.error('❌ [platformContentService] Erro no updateContent:', error);
       throw error;
     }
+
+    // Gerar traduções automaticamente em background (apenas se houver conteúdo)
+    if (contentValue && contentValue.trim() && data?.[0]?.content_key) {
+      // Usar setTimeout para não bloquear a resposta da API
+      setTimeout(async () => {
+        try {
+          const { autoTranslationGenerator } = await import('@/services/translation/AutoTranslationGenerator');
+          await autoTranslationGenerator.generateTranslationsForContent(data[0].content_key);
+          console.log(`🌐 [platformContentService] Traduções geradas automaticamente para: ${data[0].content_key}`);
+        } catch (translationError) {
+          console.warn(`⚠️ [platformContentService] Falha ao gerar traduções para: ${data[0].content_key}`, translationError);
+        }
+      }, 1000);
+    }
   },
 
   async createContent(content: Omit<PlatformContent, 'id' | 'created_at' | 'updated_at'>): Promise<PlatformContent> {

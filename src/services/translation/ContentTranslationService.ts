@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { geminiTranslationService } from './GeminiTranslationService';
+import { translationManager } from './TranslationManager';
 import type { LanguageCode } from '@/utils/translationHelpers';
 
 export interface ContentTranslation {
@@ -72,11 +72,11 @@ class ContentTranslationService {
   ): Promise<ContentTranslation | null> {
     try {
       // Traduzir o conteúdo
-      const result = await geminiTranslationService.translateText(
+      const result = await translationManager.translateText(
         content.content_value,
-        { 
-          targetLanguage, 
-          context: `Conteúdo editável: ${content.content_key}` 
+        {
+          targetLanguage,
+          context: `Conteúdo editável: ${content.content_key}`
         }
       );
 
