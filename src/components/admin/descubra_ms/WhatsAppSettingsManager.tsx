@@ -44,9 +44,9 @@ export default function WhatsAppSettingsManager() {
         if (item.setting_key === 'ms_whatsapp_enabled') {
           newSettings.whatsapp_enabled = item.setting_value === true || item.setting_value === 'true';
         } else if (item.setting_key === 'ms_whatsapp_phone') {
-          newSettings.whatsapp_phone = item.setting_value || '';
+          newSettings.whatsapp_phone = String(item.setting_value || '');
         } else if (item.setting_key === 'ms_whatsapp_message') {
-          newSettings.whatsapp_message = item.setting_value || '';
+          newSettings.whatsapp_message = String(item.setting_value || '');
         }
       });
 
