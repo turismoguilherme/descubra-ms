@@ -18,6 +18,17 @@
       "source": "/auth/confirm",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/",
+      "destination": "/descubrams",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "descubrams.com"
+        }
+      ]
     }
   ],
   "headers": [
