@@ -158,11 +158,23 @@ const PassportRouteManager: React.FC = () => {
 
       console.log('🔵 [PassportRouteManager] Tentando inserir rota...');
 
+      // Converter dificuldade para o formato aceito pelo banco (inglês)
+      const difficultyMap = {
+        'facil': 'easy',
+        'medio': 'medium',
+        'dificil': 'hard'
+      };
+
+      const dbDifficulty = difficultyMap[newRouteForm.difficulty as keyof typeof difficultyMap] || 'medium';
+
+      console.log('🔵 [PassportRouteManager] Dificuldade original:', newRouteForm.difficulty);
+      console.log('🔵 [PassportRouteManager] Dificuldade convertida para banco:', dbDifficulty);
+
       const { data, error } = await supabase.from('routes').insert({
         name: newRouteForm.name,
         description: newRouteForm.description || null,
         region: newRouteForm.region || null,
-        difficulty: newRouteForm.difficulty,
+        difficulty: dbDifficulty,
         is_active: true,
       }).select();
 
