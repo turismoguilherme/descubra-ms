@@ -1,4 +1,34 @@
-# 🔧 Guia Completo: Configuração Google Translate API
+# 🔧 Guia Completo: Configuração de Tradução
+
+## 🚀 SOLUÇÃO MAIS FÁCIL: LibreTranslate (GRATUITA)
+
+Se você está tendo problemas com o Google Cloud, use o **LibreTranslate** - é gratuito e não requer configuração!
+
+### ✅ Como usar LibreTranslate (Recomendado):
+
+1. **Não precisa configurar nada!** Já está funcionando
+2. **Teste executando:**
+   ```bash
+   node test-google-translate.js
+   ```
+3. **Resultado esperado:**
+   ```
+   ✅ LibreTranslate funcionando!
+   ```
+4. **Configure no Vercel (opcional):**
+   ```
+   VITE_LIBRE_TRANSLATE_URL=https://libretranslate.de
+   ```
+
+### 🎯 Vantagens do LibreTranslate:
+- ✅ **100% Gratuito** - Sem limites
+- ✅ **Sem cadastro** - Funciona imediatamente
+- ✅ **Sem chaves API** - Não precisa configurar nada
+- ✅ **Qualidade boa** - Suficiente para turismo
+
+---
+
+# 🔧 Configuração Google Translate API (Opcional)
 
 ## ❌ Problemas Comuns e Soluções
 

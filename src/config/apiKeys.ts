@@ -35,6 +35,12 @@ export const API_CONFIG = {
     isConfigured: () => Boolean(API_CONFIG.GOOGLE_TRANSLATE.API_KEY)
   },
 
+  // LibreTranslate API (alternativa gratuita)
+  LIBRE_TRANSLATE: {
+    BASE_URL: import.meta.env.VITE_LIBRE_TRANSLATE_URL || 'https://libretranslate.de',
+    isConfigured: () => true // API pública gratuita
+  },
+
   // Supabase
   SUPABASE: {
     URL: import.meta.env.VITE_SUPABASE_URL || '',
@@ -51,6 +57,7 @@ export const getAPIStatus = () => {
     government: API_CONFIG.GOVERNMENT.isConfigured(),
     gemini: API_CONFIG.GEMINI.isConfigured(),
     googleTranslate: API_CONFIG.GOOGLE_TRANSLATE.isConfigured(),
+    libreTranslate: API_CONFIG.LIBRE_TRANSLATE.isConfigured(),
     supabase: API_CONFIG.SUPABASE.isConfigured(),
 
     // Calcular score geral
@@ -60,6 +67,7 @@ export const getAPIStatus = () => {
       government: API_CONFIG.GOVERNMENT.isConfigured(),
       gemini: API_CONFIG.GEMINI.isConfigured(),
       googleTranslate: API_CONFIG.GOOGLE_TRANSLATE.isConfigured(),
+      libreTranslate: API_CONFIG.LIBRE_TRANSLATE.isConfigured(),
       supabase: API_CONFIG.SUPABASE.isConfigured()
     }).filter(Boolean).length
   };

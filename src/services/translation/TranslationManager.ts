@@ -5,6 +5,7 @@
 
 import { googleTranslateService } from './GoogleTranslateService';
 import { geminiTranslationService } from './GeminiTranslationService';
+import { libreTranslateService } from './LibreTranslateService';
 import type { LanguageCode } from '@/utils/translationHelpers';
 import type { TranslationResult, TranslationOptions } from './GoogleTranslateService';
 
@@ -20,8 +21,14 @@ export interface TranslationProvider {
 class TranslationManager {
   private providers: TranslationProvider[] = [
     {
+      name: 'LibreTranslate',
+      priority: 1, // Prioridade mais alta = gratuito e sem configuração
+      service: libreTranslateService,
+      isConfigured: () => true // Sempre disponível (API gratuita)
+    },
+    {
       name: 'Google Translate',
-      priority: 1, // Prioridade mais alta = usado primeiro
+      priority: 2,
       service: googleTranslateService,
       isConfigured: () => {
         const { API_CONFIG } = require('@/config/apiKeys');
@@ -30,7 +37,7 @@ class TranslationManager {
     },
     {
       name: 'Gemini AI',
-      priority: 2,
+      priority: 3,
       service: geminiTranslationService,
       isConfigured: () => {
         const { API_CONFIG } = require('@/config/apiKeys');
