@@ -64,11 +64,17 @@ const UniversalHero = () => {
       const loadContent = async () => {
         try {
           // Buscar conteúdo com tradução baseada no idioma atual
+          console.log(`🌐 [UniversalHero] Buscando conteúdo para idioma: ${language}`);
           const contents = await platformContentService.getContentByPrefix('ms_hero_', language);
+          console.log(`📄 [UniversalHero] Recebidos ${contents.length} itens de conteúdo`);
+
           const contentMap: Record<string, string> = {};
           contents.forEach(item => {
             contentMap[item.content_key] = item.content_value || '';
+            console.log(`📝 [UniversalHero] ${item.content_key}: "${item.content_value?.substring(0, 50) || '(vazio)'}"`);
           });
+
+          console.log(`✅ [UniversalHero] ContentMap final:`, Object.keys(contentMap));
           setMsContent(contentMap);
           
           // Carregar URL da imagem placeholder PRIMEIRO
