@@ -124,6 +124,10 @@ function App() {
   // Validar domínio e redirecionar se necessário
   const { shouldShowMSContent, shouldShowViajarContent } = useDomainValidation();
 
+  // Fallback: se não conseguir detectar o domínio, mostrar Viajartur por padrão
+  const showMS = shouldShowMSContent;
+  const showViajar = shouldShowViajarContent || (!shouldShowMSContent && !shouldShowViajarContent);
+
   return (
     <QueryClientProvider client={queryClient}>
       <SecurityHeaders />
@@ -151,7 +155,7 @@ function App() {
                         <div className="min-h-screen bg-background font-sans antialiased">
                           <Routes>
                             {/* ViaJAR SaaS Routes - apenas se não for domínio MS */}
-                            {!shouldShowMSContent && (
+                            {showViajar && (
                               <>
                                 <Route path="/" element={<ViaJARSaaS />} />
                                 <Route path="/viajar" element={<ViaJARSaaS />} />
@@ -270,7 +274,7 @@ function App() {
                             )}
 
                             {/* Descubra Mato Grosso do Sul Routes - apenas se for domínio MS */}
-                            {shouldShowMSContent && (
+                            {showMS && (
                               <>
                                 <Route path="/descubrams" element={<MSIndex />} />
                                 <Route path="/descubrams/mapa-turistico" element={<MapaTuristico />} />
