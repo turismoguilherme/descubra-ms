@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { translationManager } from '@/services/translation/TranslationManager';
 import { autoTranslationGenerator } from '@/services/translation/AutoTranslationGenerator';
-import { Loader2, Globe, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, Globe, CheckCircle, XCircle, AlertTriangle, Bug } from 'lucide-react';
 
 interface ContentItem {
   id: string;
@@ -192,7 +193,7 @@ const TranslationManager: React.FC = () => {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={loadData} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Atualizar Dados
@@ -205,6 +206,23 @@ const TranslationManager: React.FC = () => {
             >
               {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Gerar Traduções Faltantes ({stats?.missing || 0})
+            </Button>
+
+            <Button
+              onClick={() => {
+                console.log('🐛 DEBUG: Estado atual do componente');
+                console.log('Contents:', contents);
+                console.log('Stats:', stats);
+                console.log('APIs:', translationManager.getProvidersStatus());
+                setMessage({
+                  type: 'info',
+                  text: 'Debug enviado para console. Abra F12 → Console para ver os dados.'
+                });
+              }}
+              variant="outline"
+            >
+              <Bug className="h-4 w-4 mr-2" />
+              Debug Console
             </Button>
           </div>
 
