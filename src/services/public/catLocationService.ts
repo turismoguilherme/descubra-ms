@@ -118,40 +118,34 @@ export class CATLocationService {
 
   /**
    * Criar nova localização de CAT
+   * NOTA: Campos disponíveis na tabela cat_locations:
+   * id, name, address, city, region, latitude, longitude, is_active,
+   * contact_phone, contact_email, working_hours, platform, created_at, updated_at
    */
   async createCATLocation(cat: Omit<CATLocation, 'id' | 'created_at' | 'updated_at'>): Promise<CATLocation> {
     try {
-      // Converter latitude/longitude para coordinates se necessário
+      // Construir objeto apenas com campos existentes na tabela
       const insertData: any = {
         name: cat.name,
         address: cat.address || '',
         city: cat.city || '',
-        state: cat.state,
-        region: cat.region,
+        region: cat.region || cat.state || 'MS', // usar state como fallback para region
         is_active: cat.is_active !== undefined ? cat.is_active : true,
-        contact_phone: cat.phone || cat.contact_phone,
-        contact_email: cat.email || cat.contact_email,
-        working_hours: cat.opening_hours || cat.working_hours,
-        services: cat.services || [],
+        contact_phone: cat.phone || cat.contact_phone || null,
+        contact_email: cat.email || cat.contact_email || null,
+        working_hours: cat.opening_hours || cat.working_hours || null,
       };
 
-      // Se tiver latitude/longitude, usar formato coordinates JSONB
+      // Adicionar latitude/longitude se fornecidos
       if (cat.latitude !== undefined && cat.longitude !== undefined) {
         insertData.latitude = cat.latitude;
         insertData.longitude = cat.longitude;
-        insertData.coordinates = { lat: cat.latitude, lng: cat.longitude };
       } else if (cat.coordinates) {
-        insertData.coordinates = cat.coordinates;
         insertData.latitude = cat.coordinates.lat;
         insertData.longitude = cat.coordinates.lng;
       }
 
-      // Converter radius (metros) para radius_km (quilômetros) se fornecido
-      if (cat.radius !== undefined) {
-        insertData.radius_km = cat.radius / 1000; // Converter metros para km
-      } else if (cat.radius_km !== undefined) {
-        insertData.radius_km = cat.radius_km;
-      }
+      console.log('🔵 CAT Service: Inserindo CAT com dados:', insertData);
 
       const { data, error } = await supabase
         .from('cat_locations')
@@ -159,7 +153,12 @@ export class CATLocationService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('🔴 CAT Service: Erro ao inserir:', error);
+        throw error;
+      }
+      
+      console.log('✅ CAT Service: CAT criado com sucesso:', data);
       
       // Normalizar resposta
       const result = data as any;
@@ -168,9 +167,6 @@ export class CATLocationService {
         phone: result.contact_phone,
         email: result.contact_email,
         opening_hours: result.working_hours,
-        latitude: result.latitude || result.coordinates?.lat,
-        longitude: result.longitude || result.coordinates?.lng,
-        radius: result.radius_km ? result.radius_km * 1000 : undefined,
       } as CATLocation;
     } catch (error) {
       console.error('Erro ao criar localização de CAT:', error);
