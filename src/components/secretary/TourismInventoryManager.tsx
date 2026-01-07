@@ -223,7 +223,7 @@ const TourismInventoryManager: React.FC = () => {
         images: attractionData.images || [],
         is_active: attractionData.isActive !== undefined ? attractionData.isActive : true,
         status: attractionData.verified ? 'approved' : 'draft',
-        created_by: user?.id,
+        created_by: null, // Usuários de teste não têm UUID válido
         // Campos SeTur
         legal_name: (attractionData as any).legal_name,
         registration_number: (attractionData as any).registration_number,

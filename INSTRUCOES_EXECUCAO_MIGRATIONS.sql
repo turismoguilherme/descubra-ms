@@ -11,9 +11,10 @@
 -- ===============================
 
 -- 1. Execute: MIGRACOES_SEPARADAS.sql
---    - Contém todas as migrations divididas em 4 partes
+--    - Contém todas as migrations divididas em 5 partes
 --    - Execute uma parte por vez no SQL Editor
 --    - Cada parte é independente e pode ser executada separadamente
+--    - PARTE 5 (SeTur): Adiciona campos obrigatórios do SeTur (CRÍTICA PARA FUNCIONAMENTO)
 
 -- 2. Execute: VERIFICACAO_MIGRACOES.sql
 --    - Script de verificação separado
@@ -47,7 +48,14 @@
 -- ===============================
 -- NOTAS IMPORTANTES:
 -- ===============================
--- - Execute as partes na ordem: Parte 1, 2, 3, 4
+-- - Execute as partes na ordem: Parte 1, 2, 3, 4, 5 (SeTur), 6 (User Profiles)
 -- - Se uma parte falhar, execute apenas aquela novamente
 -- - As tabelas são criadas com "IF NOT EXISTS" (seguro)
 -- - O índice PostGIS foi removido para compatibilidade
+--
+-- ===============================
+-- ✅ CRÍTICO: EXECUTE A PARTE 5 (SeTur) PARA CORRIGIR O ERRO
+-- ===============================
+--
+-- O erro "Could not find the 'data_completeness_score' column" acontece porque
+-- a Parte 5 (campos SeTur) não foi executada. Execute-a URGENTEMENTE!
