@@ -121,12 +121,12 @@ const RedirectOldMSRoute = () => {
 };
 
 function App() {
-  // Validar domínio e redirecionar se necessário
-  const { shouldShowMSContent, shouldShowViajarContent } = useDomainValidation();
+  // Validar domínio e determinar qual conteúdo mostrar
+  const { shouldShowMSContent, shouldShowViajarContent, currentDomain } = useDomainValidation();
 
-  // Fallback: se não conseguir detectar o domínio, mostrar Viajartur por padrão
-  const showMS = shouldShowMSContent;
-  const showViajar = shouldShowViajarContent || (!shouldShowMSContent && !shouldShowViajarContent);
+  // Lógica simplificada: mostrar conteúdo baseado no domínio detectado
+  const showMS = currentDomain === 'descubrams.com';
+  const showViajar = currentDomain === 'viajartur.com' || currentDomain === 'localhost' || (!showMS && !currentDomain);
 
   return (
     <QueryClientProvider client={queryClient}>

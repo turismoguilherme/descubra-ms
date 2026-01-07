@@ -45,10 +45,20 @@ export const useDomainValidation = () => {
     }
   }, []);
 
-  const config = DOMAIN_CONFIGS[currentDomain] || DOMAIN_CONFIGS['viajartur.com'];
+  // Detectar domínio de forma síncrona para evitar problemas de inicialização
+  const getCurrentDomain = () => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      return hostname === 'localhost' ? 'localhost' : hostname;
+    }
+    return 'localhost'; // fallback para SSR
+  };
+
+  const domain = currentDomain || getCurrentDomain();
+  const config = DOMAIN_CONFIGS[domain] || DOMAIN_CONFIGS['viajartur.com'];
 
   return {
-    currentDomain,
+    currentDomain: domain,
     isMS: config.isMS,
     isValid,
     config,
