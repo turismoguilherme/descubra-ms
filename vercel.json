@@ -18,6 +18,28 @@
       "source": "/auth/confirm",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/((?!descubrams).*)$",
+      "destination": "/descubrams/$1",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "descubrams.com"
+        }
+      ]
+    },
+    {
+      "source": "/descubrams(.*)$",
+      "destination": "/$1",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "viajartur.com"
+        }
+      ]
     }
   ],
   "headers": [

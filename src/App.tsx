@@ -30,6 +30,7 @@ import "@/services/events/EventSystemTester";
 // Importar utilitário centralizado de log seguro
 import { safeLog } from "@/utils/safeLog";
 import { initSupabaseInterceptor } from "@/utils/supabaseInterceptor";
+import { useDomainValidation } from "@/hooks/useDomainValidation";
 
 // Inicializar interceptor do Supabase para renovação automática de tokens
 initSupabaseInterceptor();
@@ -120,7 +121,9 @@ const RedirectOldMSRoute = () => {
 };
 
 function App() {
-  
+  // Validar domínio e redirecionar se necessário
+  const { shouldShowMSContent, shouldShowViajarContent } = useDomainValidation();
+
   return (
     <QueryClientProvider client={queryClient}>
       <SecurityHeaders />
@@ -147,6 +150,182 @@ function App() {
                         <VLibrasWidget />
                         <div className="min-h-screen bg-background font-sans antialiased">
                           <Routes>
+                            {/* ViaJAR SaaS Routes - apenas se não for domínio MS */}
+                            {!shouldShowMSContent && (
+                              <>
+                                <Route path="/" element={<ViaJARSaaS />} />
+                                <Route path="/viajar" element={<ViaJARSaaS />} />
+                                <Route path="/solucoes" element={<Solucoes />} />
+                                <Route path="/casos-sucesso" element={<CasosSucesso />} />
+                                <Route path="/precos" element={<Precos />} />
+                                <Route path="/sobre" element={<Sobre />} />
+                                <Route path="/contato" element={<Contato />} />
+                                {(() => {
+                                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:130',message:'Verificando DadosTurismo antes de usar na rota',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',dadosTurismoType:typeof DadosTurismo,dadosTurismoIsFunction:typeof DadosTurismo==='function',dadosTurismoIsObject:typeof DadosTurismo==='object',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'B',timestamp:Date.now()})}).catch(()=>{});
+                                  return null;
+                                })()}
+                                <Route path="/dados-turismo" element={typeof DadosTurismo !== 'undefined' ? <DadosTurismo /> : <div>Erro: DadosTurismo não carregado</div>} />
+
+                                {/* Chatbot Guatá Standalone - Totem */}
+                                <Route path="/chatguata" element={<ChatGuata />} />
+
+                                {/* Koda - Canadian Travel Guide */}
+                                <Route path="/koda" element={<Koda />} />
+                                <Route path="/koda/privacy" element={<KodaPrivacy />} />
+                                <Route path="/koda/terms" element={<KodaTerms />} />
+
+                                {/* ViaJAR Auth Routes (públicas) */}
+                                <Route path="/viajar/login" element={<Suspense fallback={<LoadingFallback />}><ViaJARLogin /></Suspense>} />
+                                <Route path="/viajar/register" element={<Suspense fallback={<LoadingFallback />}><ViaJARRegister /></Suspense>} />
+                                <Route path="/viajar/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
+
+                                {/* ViaJAR Onboarding & Pricing (públicas) */}
+                                <Route path="/viajar/onboarding" element={<Suspense fallback={<LoadingFallback />}><ViaJAROnboarding /></Suspense>} />
+                                <Route path="/viajar/onboarding/success" element={<Suspense fallback={<LoadingFallback />}><PaymentSuccess /></Suspense>} />
+                                <Route path="/viajar/smart-onboarding" element={<Suspense fallback={<LoadingFallback />}><SmartOnboarding /></Suspense>} />
+                                <Route path="/viajar/pricing" element={<Suspense fallback={<LoadingFallback />}><ViaJARPricing /></Suspense>} />
+                                <Route path="/viajar/diagnostico" element={<Suspense fallback={<LoadingFallback />}><DiagnosticPage /></Suspense>} />
+
+                                {/* ViaJAR Legal Pages (públicas) */}
+                                <Route path="/viajar/privacidade" element={<ViaJARPrivacidade />} />
+                                <Route path="/viajar/termos" element={<ViaJARTermosUso />} />
+                                <Route path="/viajar/cookies" element={<ViaJARCookies />} />
+
+                                <Route path="/test-login" element={<Suspense fallback={<LoadingFallback />}><TestLogin /></Suspense>} />
+
+                                {/* Dashboard Routes Específicos */}
+                                <Route path="/secretary-dashboard" element={
+                                  <ProtectedRoute allowedRoles={['gestor_municipal', 'admin']}>
+                                    <Suspense fallback={<LoadingFallback />}><SecretaryDashboard /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/attendant-dashboard" element={
+                                  <ProtectedRoute allowedRoles={['atendente', 'cat_attendant', 'admin']}>
+                                    <Suspense fallback={<LoadingFallback />}><AttendantDashboardRestored /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/private-dashboard" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin']}>
+                                    <ErrorBoundary>
+                                      <Suspense fallback={<LoadingFallback />}><PrivateDashboard /></Suspense>
+                                    </ErrorBoundary>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/unified" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                    <Suspense fallback={<LoadingFallback />}><UnifiedDashboard /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+
+                                {/* ViaJAR Dashboard Routes (protegidas) */}
+                                <Route path="/viajar/dashboard" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                    <Suspense fallback={<LoadingFallback />}><ViaJARUnifiedDashboard /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/viajar/master-dashboard" element={
+                                  <ProtectedRoute allowedRoles={['admin', 'master_admin', 'tech']}>
+                                    <Suspense fallback={<LoadingFallback />}><ViaJARMasterDashboard /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/viajar/admin/*" element={
+                                  <Suspense fallback={<LoadingFallback />}><ViaJARAdminPanel /></Suspense>
+                                } />
+                                <Route path="/viajar/inventario" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                    <Suspense fallback={<LoadingFallback />}><ViaJARInventory /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/viajar/relatorios" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                    <Suspense fallback={<LoadingFallback />}><ViaJARReports /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/viajar/leads" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                    <Suspense fallback={<LoadingFallback />}><ViaJARLeads /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/viajar/setor-publico" element={
+                                  <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
+                                    <Suspense fallback={<LoadingFallback />}><ViaJARPublicSector /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+
+                                {/* CAT Routes (protegidas) */}
+                                <Route path="/viajar/cat-dashboard" element={
+                                  <ProtectedRoute allowedRoles={['cat_attendant', 'admin', 'gestor_municipal']}>
+                                    <Suspense fallback={<LoadingFallback />}><CATDashboard /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+                                <Route path="/viajar/attendant-checkin" element={
+                                  <ProtectedRoute allowedRoles={['cat_attendant', 'atendente', 'admin', 'gestor_municipal']}>
+                                    <Suspense fallback={<LoadingFallback />}><AttendantCheckIn /></Suspense>
+                                  </ProtectedRoute>
+                                } />
+
+                                {/* Fallback */}
+                                <Route path="*" element={<ViaJARSaaS />} />
+                              </>
+                            )}
+
+                            {/* Descubra Mato Grosso do Sul Routes - apenas se for domínio MS */}
+                            {shouldShowMSContent && (
+                              <>
+                                <Route path="/descubrams" element={<MSIndex />} />
+                                <Route path="/descubrams/mapa-turistico" element={<MapaTuristico />} />
+                                <Route path="/descubrams/destinos" element={<Destinos />} />
+                                <Route path="/descubrams/regioes/:slug" element={<RegiaoDetalhes />} />
+                                <Route path="/descubrams/eventos" element={<EventosMS />} />
+                                <Route path="/descubrams/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
+                                <Route path="/descubrams/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
+                                <Route path="/descubrams/parceiros" element={<Partners />} />
+                                <Route path="/descubrams/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
+                                <Route path="/descubrams/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
+                                <Route path="/descubrams/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
+                                <Route path="/descubrams/partner/login" element={<PartnerLoginPage />} />
+                                <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
+                                <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
+                                <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
+                                <Route path="/descubrams/sobre" element={<SobreMS />} />
+                                <Route path="/descubrams/guata" element={<Guata />} />
+                                <Route path="/descubrams/chatguata" element={<ChatGuata />} />
+                                <Route path="/descubrams/guata-test" element={<GuataTest />} />
+                                <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
+                                <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
+                                <Route path="/descubrams/profile" element={<ProfilePageFixed />} />
+                                <Route path="/descubrams/roteiros-personalizados" element={<Suspense fallback={<LoadingFallback />}><IARoutesPage /></Suspense>} />
+                                <Route path="/descubrams/roteiros-ia/success" element={<Suspense fallback={<LoadingFallback />}><IARoutePaymentSuccess /></Suspense>} />
+
+                                {/* Descubra MS Auth Routes */}
+                                <Route path="/descubrams/login" element={<AuthPage />} />
+                                <Route path="/descubrams/register" element={<Register />} />
+                                <Route path="/descubrams/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
+
+                                {/* Descubra MS - Políticas */}
+                                <Route path="/descubrams/privacidade" element={<PrivacidadeMS />} />
+                                <Route path="/descubrams/termos" element={<TermosUsoMS />} />
+                                <Route path="/descubrams/cookies" element={<CookiesMS />} />
+
+                                {/* Redirecionamentos de /descubramatogrossodosul para /descubrams (compatibilidade) */}
+                                <Route path="/descubramatogrossodosul" element={<Navigate to="/descubrams" replace />} />
+                                <Route
+                                  path="/descubramatogrossodosul/:path*"
+                                  element={<RedirectOldMSRoute />}
+                                />
+
+                                {/* Redirecionamentos legados de /ms para /descubrams */}
+                                <Route path="/ms/login" element={<AuthPage />} />
+                                <Route path="/ms/register" element={<Register />} />
+                                {/* Callback OAuth - processar antes de redirecionar */}
+                                <Route path="/ms" element={<Suspense fallback={<LoadingFallback />}><OAuthCallback /></Suspense>} />
+                                <Route path="/ms/*" element={<Navigate to="/descubrams" replace />} />
+
+                                {/* Fallback para MS */}
+                                <Route path="/descubrams/*" element={<MSIndex />} />
+                                <Route path="*" element={<MSIndex />} />
+                              </>
+                            )}
                             {/* ViaJAR SaaS Routes */}
                             <Route path="/" element={<ViaJARSaaS />} />
                             <Route path="/viajar" element={<ViaJARSaaS />} />
