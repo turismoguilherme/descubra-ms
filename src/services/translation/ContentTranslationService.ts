@@ -149,6 +149,10 @@ class ContentTranslationService {
     languageCode: LanguageCode,
     platform?: string
   ): Promise<Map<string, ContentTranslation>> {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ContentTranslationService.ts:147',message:'getTranslations chamado',data:{languageCode,count:contentKeys.length,keys:contentKeys.slice(0,3)},sessionId:'debug-session',runId:'run1',hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     const translationMap = new Map<string, ContentTranslation>();
 
     try {
