@@ -246,10 +246,6 @@ export const platformContentService = {
     if (languageCode && languageCode !== 'pt-BR' && contents.length > 0) {
       const contentKeys = contents.map(c => c.content_key);
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'platformContentService.ts:247',message:'Buscando traduções para idioma',data:{languageCode,count:contentKeys.length,keys:contentKeys.slice(0,3)},sessionId:'debug-session',runId:'run1',hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
       const translations = await contentTranslationService.getTranslations(
         contentKeys,
         languageCode
@@ -312,10 +308,6 @@ export const platformContentService = {
 
     // Gerar traduções automaticamente em background (apenas se houver conteúdo)
     if (contentValue && contentValue.trim() && data?.[0]?.content_key) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'platformContentService.ts:312',message:'Iniciando geração automática de traduções',data:{contentKey:data[0].content_key,contentValue:contentValue.substring(0,50)},sessionId:'debug-session',runId:'run1',hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
       // Usar setTimeout para não bloquear a resposta da API
       setTimeout(async () => {
         try {

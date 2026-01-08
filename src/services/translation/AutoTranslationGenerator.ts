@@ -178,10 +178,6 @@ export class AutoTranslationGenerator {
       error?: string;
     }>;
   }> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutoTranslationGenerator.ts:29',message:'generateTranslationsForContent chamado',data:{contentKey,languages},sessionId:'debug-session',runId:'run1',hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     console.log(`🔄 [AutoTranslation] Gerando traduções para: ${contentKey}`);
 
     const results = [];
