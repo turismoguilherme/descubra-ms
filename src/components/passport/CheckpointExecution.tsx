@@ -3,17 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  MapPin, 
-  Camera, 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  MapPin,
+  Camera,
   Trophy,
   Navigation,
   CheckCircle2,
   Clock,
-  Target
+  Target,
+  Key,
+  Building
 } from 'lucide-react';
 import { RouteCheckpoint } from '@/types/passport';
 import PhotoUploadSection from './PhotoUploadSection';
+import PartnerCodeInput from './PartnerCodeInput';
 
 interface CheckpointExecutionProps {
   checkpoint: RouteCheckpoint;
@@ -34,6 +38,7 @@ const CheckpointExecution: React.FC<CheckpointExecutionProps> = ({
   const [isNearby, setIsNearby] = useState(false);
   const [uploadedPhoto, setUploadedPhoto] = useState<File | null>(null);
   const [canCheckIn, setCanCheckIn] = useState(false);
+  const [showPartnerCodeModal, setShowPartnerCodeModal] = useState(false);
 
   useEffect(() => {
     if (userLocation) {
@@ -49,12 +54,18 @@ const CheckpointExecution: React.FC<CheckpointExecutionProps> = ({
   }, [userLocation, checkpoint]);
 
   useEffect(() => {
-    if (checkpoint.requires_photo) {
+    // Lógica de check-in baseada no tipo de validação
+    if (checkpoint.partner_code) {
+      // Se tem código de parceiro, só pode validar via código
+      setCanCheckIn(isNearby);
+    } else if (checkpoint.requires_photo) {
+      // Se requer foto, precisa de foto + proximidade
       setCanCheckIn(isNearby && uploadedPhoto !== null);
     } else {
+      // Check-in normal só precisa de proximidade
       setCanCheckIn(isNearby);
     }
-  }, [isNearby, uploadedPhoto, checkpoint.requires_photo]);
+  }, [isNearby, uploadedPhoto, checkpoint]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
     const R = 6371000; // Raio da Terra em metros
@@ -83,6 +94,21 @@ const CheckpointExecution: React.FC<CheckpointExecutionProps> = ({
 
   const handlePhotoUpload = (file: File) => {
     setUploadedPhoto(file);
+  };
+
+  const handlePartnerCodeValidated = (points: number) => {
+    setShowPartnerCodeModal(false);
+    onComplete(checkpoint.id, points);
+  };
+
+  const handleCheckIn = () => {
+    if (checkpoint.partner_code) {
+      // Se tem código de parceiro, mostrar modal
+      setShowPartnerCodeModal(true);
+    } else {
+      // Check-in normal
+      onComplete(checkpoint.id, checkpoint.points_reward || 10, uploadedPhoto || undefined);
+    }
   };
 
   return (
@@ -156,8 +182,29 @@ const CheckpointExecution: React.FC<CheckpointExecutionProps> = ({
           </div>
         )}
 
+        {/* Validação por parceiro */}
+        {checkpoint.partner_code && (
+          <div>
+            <h4 className="font-semibold mb-4 flex items-center">
+              <Building className="w-5 h-5 mr-2 text-blue-400" />
+              Validação no Parceiro
+            </h4>
+            <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Key className="w-5 h-5 text-blue-400" />
+                <div>
+                  <div className="font-semibold text-blue-100">Parceiro: {checkpoint.partner_name || 'Estabelecimento Parceiro'}</div>
+                  <div className="text-sm text-blue-200">
+                    Para validar este checkpoint, peça o código ao estabelecimento parceiro.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Upload de foto */}
-        {checkpoint.requires_photo && (
+        {checkpoint.requires_photo && !checkpoint.partner_code && (
           <div>
             <h4 className="font-semibold mb-4 flex items-center">
               <Camera className="w-5 h-5 mr-2 text-yellow-400" />
@@ -177,20 +224,31 @@ const CheckpointExecution: React.FC<CheckpointExecutionProps> = ({
             onClick={handleCheckIn}
             disabled={!canCheckIn}
             className={`w-full py-3 text-lg ${
-              canCheckIn 
-                ? 'bg-green-600 hover:bg-green-700' 
+              canCheckIn
+                ? checkpoint.partner_code
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-green-600 hover:bg-green-700'
                 : 'bg-gray-600 cursor-not-allowed'
             }`}
           >
             {canCheckIn ? (
-              <>
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-                Fazer Check-in
-              </>
+              checkpoint.partner_code ? (
+                <>
+                  <Key className="w-5 h-5 mr-2" />
+                  Solicitar Código do Parceiro
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                  Fazer Check-in
+                </>
+              )
             ) : (
               <>
                 <Clock className="w-5 h-5 mr-2" />
-                {!isNearby ? 'Aproxime-se do local' : 'Tire uma foto para continuar'}
+                {!isNearby ? 'Aproxime-se do local' :
+                 checkpoint.partner_code ? 'Pronto para validação' :
+                 'Tire uma foto para continuar'}
               </>
             )}
           </Button>
@@ -200,11 +258,27 @@ const CheckpointExecution: React.FC<CheckpointExecutionProps> = ({
         <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
           <h5 className="font-semibold text-blue-100 mb-2">💡 Dica cultural</h5>
           <p className="text-sm text-blue-200">
-            Este local tem uma história rica na formação cultural de Mato Grosso do Sul. 
-            Observe os detalhes arquitetônicos e a influência das diferentes culturas que moldaram nossa região.
+            {checkpoint.partner_code
+              ? "Peça o código ao estabelecimento parceiro para validar sua visita."
+              : "Este local tem uma história rica na formação cultural de Mato Grosso do Sul. Observe os detalhes arquitetônicos."}
           </p>
         </div>
       </CardContent>
+
+      {/* Modal de Código do Parceiro */}
+      <Dialog open={showPartnerCodeModal} onOpenChange={setShowPartnerCodeModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Validar com Parceiro</DialogTitle>
+          </DialogHeader>
+          <PartnerCodeInput
+            checkpointId={checkpoint.id}
+            routeId={checkpoint.route_id || ''}
+            onCodeValidated={handlePartnerCodeValidated}
+            onClose={() => setShowPartnerCodeModal(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

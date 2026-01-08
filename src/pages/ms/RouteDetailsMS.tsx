@@ -25,6 +25,7 @@ import VideoPlayer from '@/components/routes/VideoPlayer';
 import RouteMap from '@/components/routes/RouteMap';
 import CheckpointPreview from '@/components/routes/CheckpointPreview';
 import { useToast } from '@/hooks/use-toast';
+import { passportService } from '@/services/passport/passportService';
 
 const RouteDetailsMS = () => {
   const { routeId } = useParams<{ routeId: string }>();
@@ -41,45 +42,33 @@ const RouteDetailsMS = () => {
       const foundRoute = routes.find(r => r.id === routeId);
       if (foundRoute) {
         setRoute(foundRoute);
-        // TODO: Carregar checkpoints reais
-        loadMockCheckpoints();
+        loadRealCheckpoints();
         // TODO: Carregar progresso real do usuário
       }
     }
   }, [routeId, routes]);
 
-  const loadMockCheckpoints = () => {
-    // Mock checkpoints for demonstration
-    setCheckpoints([
-      {
-        id: '1',
-        route_id: routeId!,
-        name: 'Centro Histórico',
-        description: 'Explore a rica história da região',
-        latitude: -20.4486,
-        longitude: -54.6295,
-        order_index: 1,
-        points_reward: 10,
-        requires_photo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
-      },
-      {
-        id: '2',
-        route_id: routeId!,
-        name: 'Mercado Local',
-        description: 'Conheça os sabores locais',
-        latitude: -20.4496,
-        longitude: -54.6305,
-        order_index: 2,
-        points_reward: 15,
-        requires_photo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
+  const loadRealCheckpoints = async () => {
+    try {
+      console.log('🔵 [RouteDetailsMS] Carregando checkpoints reais para rota:', routeId);
+      const checkpointsData = await passportService.getRouteCheckpoints(routeId!);
+      console.log('✅ [RouteDetailsMS] Checkpoints carregados:', checkpointsData?.length || 0);
+
+      if (checkpointsData && checkpointsData.length > 0) {
+        setCheckpoints(checkpointsData);
+      } else {
+        console.log('⚠️ [RouteDetailsMS] Nenhum checkpoint encontrado para esta rota');
+        setCheckpoints([]);
       }
-    ]);
+    } catch (error) {
+      console.error('❌ [RouteDetailsMS] Erro ao carregar checkpoints:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os checkpoints da rota.',
+        variant: 'destructive',
+      });
+      setCheckpoints([]);
+    }
   };
 
   const handleStartRoute = () => {

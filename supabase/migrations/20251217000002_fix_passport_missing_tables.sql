@@ -74,7 +74,7 @@ CREATE TRIGGER update_stamp_themes_updated_at
 ALTER TABLE route_checkpoints 
 ADD COLUMN IF NOT EXISTS partner_code VARCHAR(20);
 
-COMMENT ON COLUMN route_checkpoints.partner_code IS 'Código curto informado pelo parceiro para validação de check-in';
+COMMENT ON COLUMN route_checkpoints.partner_code IS 'Código informado pelo parceiro para validação de check-in (pode ser reutilizado em diferentes checkpoints)';
 
 -- ============================================
 -- 3. GARANTIR OUTRAS COLUNAS NECESSÁRIAS

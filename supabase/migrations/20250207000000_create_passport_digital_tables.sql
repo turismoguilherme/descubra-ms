@@ -17,7 +17,7 @@ COMMENT ON COLUMN route_checkpoints.stamp_fragment_number IS 'Número do fragmen
 COMMENT ON COLUMN route_checkpoints.geofence_radius IS 'Raio de validação geográfica em metros';
 COMMENT ON COLUMN route_checkpoints.requires_photo IS 'Se foto é obrigatória para check-in';
 COMMENT ON COLUMN route_checkpoints.validation_mode IS 'Modo de validação: geofence, code, mixed';
-COMMENT ON COLUMN route_checkpoints.partner_code IS 'Código curto informado pelo parceiro para validação de check-in';
+COMMENT ON COLUMN route_checkpoints.partner_code IS 'Código informado pelo parceiro para validação de check-in (pode ser reutilizado em diferentes checkpoints)';
 
 -- Expandir routes
 ALTER TABLE routes 

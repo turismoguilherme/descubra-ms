@@ -8,7 +8,8 @@ import PassportCheckpointManager from '@/components/admin/passport/PassportCheck
 import PassportRewardsManager from '@/components/admin/passport/PassportRewardsManager';
 import PendingPartnerRewards from '@/components/admin/passport/PendingPartnerRewards';
 import PassportAnalytics from '@/components/admin/passport/PassportAnalytics';
-import { Route, Settings, Gift, MapPin, BarChart3, Clock } from 'lucide-react';
+import PartnerCodesManager from '@/components/admin/passport/PartnerCodesManager';
+import { Route, Settings, Gift, MapPin, BarChart3, Key } from 'lucide-react';
 
 const PassportAdmin: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -37,7 +38,7 @@ const PassportAdmin: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="routes" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
             Rotas
@@ -49,6 +50,10 @@ const PassportAdmin: React.FC = () => {
           <TabsTrigger value="checkpoints" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             Checkpoints
+          </TabsTrigger>
+          <TabsTrigger value="codes" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            Códigos
           </TabsTrigger>
           <TabsTrigger value="rewards" className="flex items-center gap-2">
             <Gift className="h-4 w-4" />
@@ -70,6 +75,10 @@ const PassportAdmin: React.FC = () => {
 
         <TabsContent value="checkpoints" className="space-y-4">
           <PassportCheckpointManager />
+        </TabsContent>
+
+        <TabsContent value="codes" className="space-y-4">
+          <PartnerCodesManager />
         </TabsContent>
 
         <TabsContent value="rewards" className="space-y-4">

@@ -23,6 +23,7 @@ import CheckpointExecution from '@/components/passport/CheckpointExecution';
 import RouteProgressTracker from '@/components/passport/RouteProgressTracker';
 import PassportStampModal from '@/components/passport/PassportStampModal';
 import { useToast } from '@/hooks/use-toast';
+import { passportService } from '@/services/passport/passportService';
 
 const PassaporteRouteMS = () => {
   console.log("📱 PASSAPORTE: Componente PassaporteRouteMS sendo renderizado");
@@ -51,58 +52,33 @@ const PassaporteRouteMS = () => {
       const foundRoute = routes.find(r => r.id === routeId);
       if (foundRoute) {
         setRoute(foundRoute);
-        loadMockCheckpoints();
+        loadRealCheckpoints();
         getUserLocation();
       }
     }
   }, [routeId, routes]);
 
-  const loadMockCheckpoints = () => {
-    // Mock checkpoints for demonstration
-    setCheckpoints([
-      {
-        id: '1',
-        route_id: routeId!,
-        name: 'Centro Histórico',
-        description: 'Explore a rica história da região e tire uma foto no marco histórico',
-        latitude: -20.4486,
-        longitude: -54.6295,
-        order_index: 1,
-        points_reward: 15,
-        requires_photo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
-      },
-      {
-        id: '2',
-        route_id: routeId!,
-        name: 'Mercado Local',
-        description: 'Conheça os sabores locais e a cultura gastronômica da região',
-        latitude: -20.4496,
-        longitude: -54.6305,
-        order_index: 2,
-        points_reward: 20,
-        requires_photo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
-      },
-      {
-        id: '3',
-        route_id: routeId!,
-        name: 'Mirante Natural',
-        description: 'Contemple a vista panorâmica e capture a beleza da natureza',
-        latitude: -20.4506,
-        longitude: -54.6315,
-        order_index: 3,
-        points_reward: 25,
-        requires_photo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
+  const loadRealCheckpoints = async () => {
+    try {
+      console.log('🔵 [PassaporteRouteMS] Carregando checkpoints reais para rota:', routeId);
+      const checkpointsData = await passportService.getRouteCheckpoints(routeId!);
+      console.log('✅ [PassaporteRouteMS] Checkpoints carregados:', checkpointsData?.length || 0);
+
+      if (checkpointsData && checkpointsData.length > 0) {
+        setCheckpoints(checkpointsData);
+      } else {
+        console.log('⚠️ [PassaporteRouteMS] Nenhum checkpoint encontrado para esta rota');
+        setCheckpoints([]);
       }
-    ]);
+    } catch (error) {
+      console.error('❌ [PassaporteRouteMS] Erro ao carregar checkpoints:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os checkpoints da rota.',
+        variant: 'destructive',
+      });
+      setCheckpoints([]);
+    }
   };
 
   const getUserLocation = () => {
