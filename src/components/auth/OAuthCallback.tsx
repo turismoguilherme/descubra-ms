@@ -42,19 +42,35 @@ export const OAuthCallback = () => {
           console.log('✅ [OAuthCallback] Login OAuth bem-sucedido!');
           console.log('✅ [OAuthCallback] Usuário:', session.user.email);
           
+          // Determinar o domínio atual para manter consistência
+          const currentHostname = window.location.hostname;
+          const isDescubramsDomain = currentHostname === 'descubrams.com';
+
           // Limpar hash da URL
           const currentPath = window.location.pathname;
-          const redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/') 
-            ? '/descubrams' 
-            : '/descubrams';
-          
+          let redirectPath: string;
+
+          if (isDescubramsDomain) {
+            // No domínio descobrams.com, sempre manter na rota /descubrams
+            redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/')
+              ? '/descubrams'
+              : '/descubrams';
+          } else {
+            // Em outros domínios (localhost, viajartur.com), manter rota atual
+            redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/')
+              ? '/descubrams'
+              : currentPath;
+          }
+
+          console.log('🔄 [OAuthCallback] Domínio atual:', currentHostname);
+          console.log('🔄 [OAuthCallback] É domínio descobrams.com:', isDescubramsDomain);
           console.log('🔄 [OAuthCallback] Redirecionando para:', redirectPath);
-          
+
           // Limpar hash antes de redirecionar
           window.history.replaceState(null, '', redirectPath);
-          
+
           setStatus('success');
-          
+
           // Aguardar um pouco para garantir que o estado seja atualizado
           setTimeout(() => {
             window.location.href = redirectPath;

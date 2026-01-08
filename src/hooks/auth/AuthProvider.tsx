@@ -199,11 +199,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
             console.log('🔄 [AuthProvider] Login OAuth bem-sucedido, redirecionando...');
+
+            // Determinar o domínio atual para manter consistência
+            const currentHostname = window.location.hostname;
+            const isDescubramsDomain = currentHostname === 'descubrams.com';
+
             // Limpar hash da URL
             const currentPath = window.location.pathname;
-            const redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/') 
-              ? '/descubrams' 
-              : currentPath;
+            let redirectPath: string;
+
+            if (isDescubramsDomain) {
+              // No domínio descobrams.com, sempre manter na rota /descubrams
+              redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/')
+                ? '/descubrams'
+                : '/descubrams';
+            } else {
+              // Em outros domínios, manter rota atual ou converter /ms para /descubrams
+              redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/')
+                ? '/descubrams'
+                : currentPath;
+            }
+
+            console.log('🔄 [AuthProvider] Domínio atual:', currentHostname);
+            console.log('🔄 [AuthProvider] É domínio descobrams.com:', isDescubramsDomain);
+            console.log('🔄 [AuthProvider] Redirecionando para:', redirectPath);
+
             window.history.replaceState(null, '', redirectPath);
             // Forçar reload para garantir que o estado seja atualizado
             setTimeout(() => {
