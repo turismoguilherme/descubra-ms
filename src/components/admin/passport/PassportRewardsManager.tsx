@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, HelpCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -17,7 +17,9 @@ const PassportRewardsManager: React.FC = () => {
   const [avatars, setAvatars] = useState<any[]>([]);
   const [emittedByRewardId, setEmittedByRewardId] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     route_id: '',
     partner_name: '',
@@ -45,6 +47,13 @@ const PassportRewardsManager: React.FC = () => {
   useEffect(() => {
     console.log('🔵 [PassportRewardsManager] showForm mudou para:', showForm);
   }, [showForm]);
+
+  // Validação em tempo real
+  useEffect(() => {
+    if (showForm) {
+      validateForm();
+    }
+  }, [formData, showForm]);
 
   // Log de renderização apenas quando estados importantes mudam
   useEffect(() => {
@@ -128,77 +137,75 @@ const PassportRewardsManager: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
-    console.log('🔵 [PassportRewardsManager] ========== handleSave INICIADO ==========');
-    console.log('🔵 [PassportRewardsManager] Form data:', JSON.stringify(formData, null, 2));
-    
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.route_id) {
+      errors.route_id = 'Selecione uma rota';
+    }
+
+    if (!formData.partner_name.trim()) {
+      errors.partner_name = 'Nome do parceiro é obrigatório';
+    }
+
+    if (!formData.reward_description.trim()) {
+      errors.reward_description = 'Descrição da recompensa é obrigatória';
+    }
+
     // Validações específicas para avatar
     if (formData.reward_type === 'avatar') {
       if (!formData.avatar_id) {
-        console.log('❌ [PassportRewardsManager] Avatar não selecionado');
-        toast({
-          title: 'Avatar obrigatório',
-          description: 'Selecione um avatar do Pantanal',
-          variant: 'destructive',
-        });
-        return;
+        errors.avatar_id = 'Selecione um avatar do Pantanal';
       }
       if (!formData.max_avatars_per_route || formData.max_avatars_per_route < 1) {
-        console.log('❌ [PassportRewardsManager] Máximo de avatares inválido');
-        toast({
-          title: 'Limite inválido',
-          description: 'Defina um limite válido de avatares por rota',
-          variant: 'destructive',
-        });
-        return;
+        errors.max_avatars_per_route = 'Defina um limite válido (mínimo 1)';
       }
     }
 
-    // Validações
-    if (!formData.route_id) {
-      console.log('❌ [PassportRewardsManager] Rota não selecionada');
-      toast({
-        title: 'Rota obrigatória',
-        description: 'Selecione uma rota',
-        variant: 'destructive',
-      });
-      return;
+    // Validações específicas para desconto
+    if (formData.reward_type === 'desconto') {
+      if (formData.discount_percentage < 0 || formData.discount_percentage > 100) {
+        errors.discount_percentage = 'Percentual deve ser entre 0 e 100';
+      }
     }
-    
-    if (!formData.partner_name.trim()) {
-      console.log('❌ [PassportRewardsManager] Nome do parceiro vazio');
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSave = async () => {
+    console.log('🔵 [PassportRewardsManager] ========== handleSave INICIADO ==========');
+    console.log('🔵 [PassportRewardsManager] Form data:', JSON.stringify(formData, null, 2));
+
+    // Executar validações
+    if (!validateForm()) {
+      console.log('❌ [PassportRewardsManager] Validações falharam');
       toast({
-        title: 'Nome obrigatório',
-        description: 'O nome do parceiro é obrigatório',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!formData.reward_description.trim()) {
-      console.log('❌ [PassportRewardsManager] Descrição vazia');
-      toast({
-        title: 'Descrição obrigatória',
-        description: 'A descrição da recompensa é obrigatória',
+        title: 'Campos obrigatórios',
+        description: 'Preencha todos os campos obrigatórios antes de salvar',
         variant: 'destructive',
       });
       return;
     }
     
     console.log('✅ [PassportRewardsManager] Validações passadas, criando recompensa...');
-    
+
+    setSaving(true);
+    setFormErrors({}); // Limpar erros anteriores
+
     try {
       const rewardData = {
         ...formData,
         is_active: true,
       };
       console.log('🔵 [PassportRewardsManager] Dados para criação:', JSON.stringify(rewardData, null, 2));
-      
+
       await passportAdminService.createReward(rewardData);
-      
+
       console.log('✅ [PassportRewardsManager] Recompensa criada com sucesso');
       toast({
-        title: 'Recompensa criada',
+        title: 'Recompensa criada com sucesso! ✅',
+        description: 'A recompensa foi adicionada ao sistema.',
       });
       setShowForm(false);
       setFormData({
@@ -211,13 +218,16 @@ const PassportRewardsManager: React.FC = () => {
         partner_address: '',
         partner_phone: '',
         partner_email: '',
+        avatar_id: '',
+        max_avatars_per_route: 3,
         max_vouchers: null,
         max_per_user: 1,
         is_fallback: false,
         expires_at: '',
       });
+      setFormErrors({}); // Limpar erros
       console.log('🔵 [PassportRewardsManager] Formulário resetado, recarregando dados...');
-      loadData();
+      await loadData();
     } catch (error: any) {
       console.error('❌ [PassportRewardsManager] Erro completo ao salvar recompensa:', {
         message: error.message,
@@ -227,10 +237,12 @@ const PassportRewardsManager: React.FC = () => {
         stack: error.stack,
       });
       toast({
-        title: 'Erro ao salvar',
+        title: 'Erro ao criar recompensa',
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -296,12 +308,12 @@ const PassportRewardsManager: React.FC = () => {
               <h3 className="font-semibold">Nova Recompensa</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Rota</Label>
+                  <Label className={formErrors.route_id ? 'text-red-500' : ''}>Rota *</Label>
                   <Select
                     value={formData.route_id}
                     onValueChange={(v) => setFormData({ ...formData, route_id: v })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.route_id ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Selecione uma rota" />
                     </SelectTrigger>
                     <SelectContent>
@@ -312,6 +324,9 @@ const PassportRewardsManager: React.FC = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.route_id && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.route_id}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Tipo</Label>
@@ -332,15 +347,19 @@ const PassportRewardsManager: React.FC = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Nome do Parceiro</Label>
+                  <Label className={formErrors.partner_name ? 'text-red-500' : ''}>Nome do Parceiro *</Label>
                   <Input
                     value={formData.partner_name}
                     onChange={(e) => setFormData({ ...formData, partner_name: e.target.value })}
+                    className={formErrors.partner_name ? 'border-red-500' : ''}
                   />
+                  {formErrors.partner_name && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.partner_name}</p>
+                  )}
                 </div>
                 {formData.reward_type === 'desconto' && (
                   <div>
-                    <Label>Percentual de Desconto</Label>
+                    <Label className={formErrors.discount_percentage ? 'text-red-500' : ''}>Percentual de Desconto *</Label>
                     <Input
                       type="number"
                       min="0"
@@ -349,18 +368,22 @@ const PassportRewardsManager: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, discount_percentage: parseInt(e.target.value) || 0 })
                       }
+                      className={formErrors.discount_percentage ? 'border-red-500' : ''}
                     />
+                    {formErrors.discount_percentage && (
+                      <p className="text-red-500 text-xs mt-1">{formErrors.discount_percentage}</p>
+                    )}
                   </div>
                 )}
                 {formData.reward_type === 'avatar' && (
                   <div className="space-y-4">
                     <div>
-                      <Label>Selecionar Avatar do Pantanal</Label>
+                      <Label className={formErrors.avatar_id ? 'text-red-500' : ''}>Selecionar Avatar do Pantanal *</Label>
                       <Select
                         value={formData.avatar_id}
                         onValueChange={(value) => setFormData({ ...formData, avatar_id: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={formErrors.avatar_id ? 'border-red-500' : ''}>
                           <SelectValue placeholder="Escolha um avatar..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -390,9 +413,12 @@ const PassportRewardsManager: React.FC = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {formErrors.avatar_id && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.avatar_id}</p>
+                      )}
                     </div>
                     <div>
-                      <Label>Máximo de Avatares por Rota</Label>
+                      <Label className={formErrors.max_avatars_per_route ? 'text-red-500' : ''}>Máximo de Avatares por Rota *</Label>
                       <Input
                         type="number"
                         min="1"
@@ -401,20 +427,30 @@ const PassportRewardsManager: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, max_avatars_per_route: parseInt(e.target.value) || 1 })
                         }
+                        className={formErrors.max_avatars_per_route ? 'border-red-500' : ''}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         Número máximo de avatares que podem ser desbloqueados ao completar esta rota
                       </p>
+                      {formErrors.max_avatars_per_route && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.max_avatars_per_route}</p>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
               <div>
-                <Label>{formData.reward_type === 'outros' ? 'Qual é a recompensa?' : 'Descrição'}</Label>
+                <Label className={formErrors.reward_description ? 'text-red-500' : ''}>
+                  {formData.reward_type === 'outros' ? 'Qual é a recompensa?' : 'Descrição'} *
+                </Label>
                 <Textarea
                   value={formData.reward_description}
                   onChange={(e) => setFormData({ ...formData, reward_description: e.target.value })}
+                  className={formErrors.reward_description ? 'border-red-500' : ''}
                 />
+                {formErrors.reward_description && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.reward_description}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -506,7 +542,7 @@ const PassportRewardsManager: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
+                <Button
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
@@ -514,8 +550,10 @@ const PassportRewardsManager: React.FC = () => {
                     console.log('🔵 [PassportRewardsManager] Botão "Salvar" clicado');
                     handleSave();
                   }}
+                  disabled={saving}
                 >
-                  Salvar
+                  {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {saving ? 'Salvando...' : 'Salvar'}
                 </Button>
                 <Button 
                   type="button"

@@ -18,6 +18,7 @@ const PassportStampConfig: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState<string>('');
   const [creatingTheme, setCreatingTheme] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newThemeForm, setNewThemeForm] = useState({
     theme_key: '',
     theme_name: '',
@@ -50,7 +51,30 @@ const PassportStampConfig: React.FC = () => {
 
   useEffect(() => {
     console.log('🔵 [PassportStampConfig] selectedRoute mudou para:', selectedRoute);
-  }, [selectedRoute]);
+
+    if (selectedRoute && configs.length > 0) {
+      // Carregar dados da configuração existente quando uma rota é selecionada
+      const existingConfig = configs.find(c => c.route_id === selectedRoute);
+      if (existingConfig) {
+        console.log('🔵 [PassportStampConfig] Carregando configuração existente:', existingConfig);
+        setFormData({
+          stamp_theme: existingConfig.stamp_theme || 'onca',
+          stamp_fragments: existingConfig.stamp_fragments || 5,
+          video_url: existingConfig.video_url || '',
+          description: existingConfig.description || '',
+        });
+      } else {
+        // Resetar para valores padrão se não houver configuração
+        console.log('🔵 [PassportStampConfig] Nenhuma configuração encontrada, usando valores padrão');
+        setFormData({
+          stamp_theme: 'onca',
+          stamp_fragments: 5,
+          video_url: '',
+          description: '',
+        });
+      }
+    }
+  }, [selectedRoute, configs]);
 
   useEffect(() => {
     console.log('🔵 [PassportStampConfig] creatingTheme mudou para:', creatingTheme);
@@ -201,7 +225,7 @@ const PassportStampConfig: React.FC = () => {
     console.log('🔵 [PassportStampConfig] ========== handleSave INICIADO ==========');
     console.log('🔵 [PassportStampConfig] selectedRoute:', selectedRoute);
     console.log('🔵 [PassportStampConfig] Form data:', JSON.stringify(formData, null, 2));
-    
+
     if (!selectedRoute) {
       console.log('❌ [PassportStampConfig] Rota não selecionada');
       toast({
@@ -211,10 +235,12 @@ const PassportStampConfig: React.FC = () => {
       return;
     }
 
+    setSaving(true);
+
     try {
       const existing = configs.find(c => c.route_id === selectedRoute);
       console.log('🔵 [PassportStampConfig] Configuração existente?', !!existing);
-      
+
       if (existing) {
         console.log('🔵 [PassportStampConfig] Atualizando configuração existente...');
         await passportAdminService.updateConfiguration(selectedRoute, formData);
@@ -227,12 +253,13 @@ const PassportStampConfig: React.FC = () => {
           is_active: true,
         });
       }
-      
+
       console.log('✅ [PassportStampConfig] Configuração salva com sucesso');
       toast({
-        title: 'Configuração salva',
+        title: 'Configuração salva com sucesso! ✅',
+        description: existing ? 'As alterações foram aplicadas.' : 'Nova configuração criada.',
       });
-      loadData();
+      await loadData();
     } catch (error: any) {
       console.error('❌ [PassportStampConfig] Erro completo ao salvar configuração:', {
         message: error.message,
@@ -242,10 +269,12 @@ const PassportStampConfig: React.FC = () => {
         stack: error.stack,
       });
       toast({
-        title: 'Erro ao salvar',
+        title: 'Erro ao salvar configuração',
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -341,7 +370,7 @@ const PassportStampConfig: React.FC = () => {
               />
             </div>
 
-            <Button 
+            <Button
               type="button"
               onClick={(e) => {
                 e.preventDefault();
@@ -349,8 +378,10 @@ const PassportStampConfig: React.FC = () => {
                 console.log('🔵 [PassportStampConfig] Botão "Salvar Configuração" clicado');
                 handleSave();
               }}
+              disabled={saving}
             >
-              Salvar Configuração
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {saving ? 'Salvando...' : 'Salvar Configuração'}
             </Button>
           </>
         )}

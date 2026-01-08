@@ -18,13 +18,15 @@ export interface PassportReward {
   id: string;
   route_id: string;
   partner_name: string;
-  reward_type: 'desconto' | 'brinde' | 'experiencia' | 'outros';
-  reward_description?: string | null;
+  reward_type: 'desconto' | 'brinde' | 'experiencia' | 'avatar' | 'outros';
+  reward_description: string;
   reward_code_prefix?: string | null;
   discount_percentage?: number | null;
   partner_address?: string | null;
   partner_phone?: string | null;
   partner_email?: string | null;
+  avatar_id?: string | null;
+  max_avatars_per_route?: number | null;
   is_active: boolean;
   max_vouchers?: number | null;
   max_per_user?: number | null;
