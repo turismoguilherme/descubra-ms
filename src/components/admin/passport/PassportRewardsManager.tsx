@@ -194,9 +194,27 @@ const PassportRewardsManager: React.FC = () => {
     setFormErrors({}); // Limpar erros anteriores
 
     try {
+      // Filtrar apenas campos que existem na tabela passport_rewards
       const rewardData = {
-        ...formData,
+        route_id: formData.route_id,
+        partner_name: formData.partner_name,
+        reward_type: formData.reward_type,
+        reward_description: formData.reward_description,
+        reward_code_prefix: formData.reward_code_prefix,
+        discount_percentage: formData.discount_percentage,
+        partner_address: formData.partner_address,
+        partner_phone: formData.partner_phone,
+        partner_email: formData.partner_email,
+        max_vouchers: formData.max_vouchers,
+        max_per_user: formData.max_per_user,
+        is_fallback: formData.is_fallback,
+        expires_at: formData.expires_at,
         is_active: true,
+        // Adicionar campos de avatar apenas se suportados
+        ...(formData.reward_type === 'avatar' && {
+          avatar_id: formData.avatar_id,
+          max_avatars_per_route: formData.max_avatars_per_route,
+        }),
       };
       console.log('🔵 [PassportRewardsManager] Dados para criação:', JSON.stringify(rewardData, null, 2));
 
