@@ -11,13 +11,13 @@
 BEGIN;
 
 -- Desativar rotas com nomes que indicam mock/teste (case insensitive)
+-- Nota: Removendo filtro de state_id pois é UUID e pode variar
 UPDATE routes
 SET 
   is_active = false,
   updated_at = NOW()
 WHERE 
   is_active = true
-  AND state_id = 'ms'
   AND (
     LOWER(name) LIKE '%test%' OR
     LOWER(name) LIKE '%mock%' OR
@@ -38,7 +38,6 @@ SET
   updated_at = NOW()
 WHERE 
   is_active = true
-  AND state_id = 'ms'
   AND id NOT IN (
     SELECT DISTINCT route_id 
     FROM route_checkpoints 
@@ -54,7 +53,6 @@ BEGIN
   FROM routes
   WHERE 
     is_active = false
-    AND state_id = 'ms'
     AND updated_at >= NOW() - INTERVAL '1 minute';
   
   RAISE NOTICE 'Total de rotas mocadas desativadas: %', rotas_desativadas;
@@ -63,8 +61,8 @@ END $$;
 COMMIT;
 
 -- Verificação: Listar rotas ativas restantes para validação
--- SELECT id, name, difficulty, is_active, created_at
+-- SELECT id, name, difficulty, is_active, created_at, state_id
 -- FROM routes
--- WHERE state_id = 'ms' AND is_active = true
+-- WHERE is_active = true
 -- ORDER BY name;
 
