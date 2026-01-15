@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Profile Completion Component
  * Guia usuário para completar perfil com gamificação

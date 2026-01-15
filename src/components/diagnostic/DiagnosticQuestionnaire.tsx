@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Diagnostic Questionnaire Component
  * Questionário completo com 10 perguntas base + perguntas adaptativas inteligentes

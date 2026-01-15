@@ -126,7 +126,7 @@ serve(async (req) => {
 
     // Encontrar o preço que corresponde ao intervalo desejado
     const interval = billingPeriod === 'annual' ? 'year' : 'month';
-    const price = prices.data.find(p => 
+    const price = prices.data.find((p: { recurring?: { interval: string }; active: boolean }) => 
       p.recurring?.interval === interval && p.active
     );
 

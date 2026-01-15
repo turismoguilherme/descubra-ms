@@ -1708,6 +1708,39 @@ export type Database = {
           },
         ]
       }
+      event_cleanup_logs: {
+        Row: {
+          created_at: string
+          deleted_event_ids: string[] | null
+          execution_date: string
+          expired_events_deleted: number
+          id: string
+          rejected_events_deleted: number
+          result: Json | null
+          total_deleted: number
+        }
+        Insert: {
+          created_at?: string
+          deleted_event_ids?: string[] | null
+          execution_date?: string
+          expired_events_deleted?: number
+          id?: string
+          rejected_events_deleted?: number
+          result?: Json | null
+          total_deleted?: number
+        }
+        Update: {
+          created_at?: string
+          deleted_event_ids?: string[] | null
+          execution_date?: string
+          expired_events_deleted?: number
+          id?: string
+          rejected_events_deleted?: number
+          result?: Json | null
+          total_deleted?: number
+        }
+        Relationships: []
+      }
       event_details: {
         Row: {
           auto_hide: boolean | null
@@ -4082,12 +4115,14 @@ export type Database = {
       }
       passport_rewards: {
         Row: {
+          avatar_id: string | null
           created_at: string | null
           discount_percentage: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
           is_fallback: boolean | null
+          max_avatars_per_route: number | null
           max_per_user: number | null
           max_vouchers: number | null
           partner_address: string | null
@@ -4101,12 +4136,14 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_id?: string | null
           created_at?: string | null
           discount_percentage?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           is_fallback?: boolean | null
+          max_avatars_per_route?: number | null
           max_per_user?: number | null
           max_vouchers?: number | null
           partner_address?: string | null
@@ -4120,12 +4157,14 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_id?: string | null
           created_at?: string | null
           discount_percentage?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           is_fallback?: boolean | null
+          max_avatars_per_route?: number | null
           max_per_user?: number | null
           max_vouchers?: number | null
           partner_address?: string | null
@@ -4139,6 +4178,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "passport_rewards_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "pantanal_avatars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "passport_rewards_route_id_fkey"
             columns: ["route_id"]
@@ -6539,6 +6585,7 @@ export type Database = {
         Args: { colaborador_uuid: string; required_permission: string }
         Returns: boolean
       }
+      check_events_to_cleanup: { Args: never; Returns: Json }
       check_geofence: {
         Args: {
           checkpoint_lat: number
@@ -6555,7 +6602,22 @@ export type Database = {
       }
       clean_expired_guata_cache: { Args: never; Returns: number }
       clean_expired_koda_cache: { Args: never; Returns: number }
+      cleanup_all_events_with_logging: { Args: never; Returns: Json }
+      cleanup_expired_events: {
+        Args: never
+        Returns: {
+          deleted_count: number
+          deleted_ids: string[]
+        }[]
+      }
       cleanup_old_ai_logs: { Args: never; Returns: undefined }
+      cleanup_rejected_events: {
+        Args: never
+        Returns: {
+          deleted_count: number
+          deleted_ids: string[]
+        }[]
+      }
       create_attendant_user: {
         Args: {
           send_invite?: boolean
@@ -6748,6 +6810,16 @@ export type Database = {
           event_user_id?: string
         }
         Returns: boolean
+      }
+      log_event_cleanup: {
+        Args: {
+          p_deleted_ids: string[]
+          p_expired_count: number
+          p_rejected_count: number
+          p_result: Json
+          p_total_count: number
+        }
+        Returns: string
       }
       log_security_event: {
         Args: {

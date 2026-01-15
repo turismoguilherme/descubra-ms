@@ -96,21 +96,24 @@ serve(async (req) => {
           userContext
         );
 
-        if (!response.success) {
+        if (!response.success || !response.text || response.confidence === undefined) {
           console.error(`❌ [Cris Email Agent] Erro ao gerar resposta para email ${email.id}:`, response.error);
-          skippedEmails.push({ email_id: email.id, reason: response.error });
+          skippedEmails.push({ email_id: email.id, reason: response.error || 'Resposta incompleta' });
           continue;
         }
+
+        const confidence = response.confidence;
+        const responseText = response.text;
 
         // Salvar resposta gerada
         const { data: savedResponse, error: saveError } = await supabase
           .from('ai_email_responses')
           .insert({
             original_email_id: email.id,
-            response_text: response.text,
-            confidence_score: response.confidence,
-            was_sent: response.confidence >= 0.8, // Enviar automaticamente se confiança >= 80%
-            sent_at: response.confidence >= 0.8 ? new Date().toISOString() : null,
+            response_text: responseText,
+            confidence_score: confidence,
+            was_sent: confidence >= 0.8, // Enviar automaticamente se confiança >= 80%
+            sent_at: confidence >= 0.8 ? new Date().toISOString() : null,
           })
           .select()
           .single();
@@ -122,8 +125,8 @@ serve(async (req) => {
         }
 
         // Se confiança >= 80%, enviar resposta automaticamente
-        if (response.confidence >= 0.8 && savedResponse) {
-          console.log(`✅ [Cris Email Agent] Enviando resposta automaticamente (confiança: ${(response.confidence * 100).toFixed(0)}%)`);
+        if (confidence >= 0.8 && savedResponse) {
+          console.log(`✅ [Cris Email Agent] Enviando resposta automaticamente (confiança: ${(confidence * 100).toFixed(0)}%)`);
 
           // Enviar email via Edge Function
           const emailResponse = await supabase.functions.invoke('send-notification-email', {
@@ -132,7 +135,7 @@ serve(async (req) => {
               to: email.from_address,
               data: {
                 userName: userContext.user_name || 'Prezado(a)',
-                message: response.text,
+                message: responseText,
                 subject: `Re: ${email.subject_or_topic}`,
               },
             },
@@ -158,13 +161,13 @@ serve(async (req) => {
             // Atualizar contexto do usuário
             await updateUserContext(supabase, email.from_address, {
               last_email: email.subject_or_topic,
-              last_response: response.text.substring(0, 100),
+              last_response: responseText.substring(0, 100),
             });
 
             console.log(`✅ [Cris Email Agent] Resposta enviada com sucesso para ${email.from_address}`);
           }
         } else {
-          console.log(`⚠️ [Cris Email Agent] Resposta gerada mas precisa revisão humana (confiança: ${(response.confidence * 100).toFixed(0)}%)`);
+          console.log(`⚠️ [Cris Email Agent] Resposta gerada mas precisa revisão humana (confiança: ${(confidence * 100).toFixed(0)}%)`);
           
           // Marcar email como processado mas aguardando revisão
           await supabase
@@ -179,8 +182,8 @@ serve(async (req) => {
         processedEmails.push({
           email_id: email.id,
           from: email.from_address,
-          confidence: response.confidence,
-          sent: response.confidence >= 0.8,
+          confidence: confidence,
+          sent: confidence >= 0.8,
         });
 
       } catch (error: any) {
