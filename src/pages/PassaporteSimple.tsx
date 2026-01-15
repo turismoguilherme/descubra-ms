@@ -139,10 +139,10 @@ const PassaporteSimple = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white via-blue-50/30 to-green-50/30 flex items-center justify-center">
         <div className="text-center animate-in fade-in duration-700">
-          <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-6 rounded-full shadow-lg mx-auto mb-4 animate-pulse">
+          <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-6 rounded-full shadow-lg mx-auto mb-4 animate-pulse hover:shadow-xl transition-shadow">
             <Trophy className="w-12 h-12 text-white" />
           </div>
-          <p className="text-gray-600 text-lg">Carregando seu passaporte...</p>
+          <p className="text-gray-600 text-lg font-medium">Carregando seu passaporte...</p>
           <Loader2 className="w-6 h-6 mx-auto mt-4 animate-spin text-ms-primary-blue" />
         </div>
       </div>
@@ -152,17 +152,17 @@ const PassaporteSimple = () => {
   // Error State - Padrão Descubra MS
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white via-blue-50/30 to-green-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-white via-blue-50/30 to-green-50/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-white rounded-2xl shadow-xl border-0 animate-in fade-in zoom-in-95 duration-500">
           <CardContent className="p-8 text-center">
-            <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
               <span className="text-4xl">⚠️</span>
             </div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">Erro ao carregar dados</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <Button
               onClick={() => window.location.reload()}
-              className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal hover:opacity-90 text-white"
+              className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal hover:opacity-90 text-white shadow-lg hover:shadow-xl transition-all"
             >
               Tentar novamente
             </Button>
@@ -208,14 +208,14 @@ const PassaporteSimple = () => {
             <Button
               variant="ghost"
               onClick={() => navigate("/ms")}
-              className="text-gray-600 hover:text-ms-primary-blue hover:bg-ms-primary-blue/10 mb-6"
+              className="text-gray-600 hover:text-ms-primary-blue hover:bg-ms-primary-blue/10 mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
             
             <div className="flex justify-center mb-6">
-              <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-5 rounded-full shadow-lg">
+              <div className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal p-5 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <Trophy size={40} className="text-white" />
               </div>
             </div>
@@ -231,46 +231,46 @@ const PassaporteSimple = () => {
           {/* Stats Cards - Padrão Descubra MS */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
             {/* Roteiros Concluídos */}
-            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '100ms' }}>
+            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105" style={{ animationDelay: '100ms' }}>
               <CardContent className="p-6 text-center">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-discovery-teal/10 to-ms-discovery-teal/20 flex items-center justify-center">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-discovery-teal/10 to-ms-discovery-teal/20 flex items-center justify-center shadow-sm">
                   <Trophy className="w-7 h-7 text-ms-discovery-teal" />
                 </div>
-                <h3 className="text-3xl font-bold text-ms-discovery-teal">{completedRoutes.length}</h3>
-                <p className="text-sm text-gray-600 mt-1">Roteiros Concluídos</p>
+                <h3 className="text-3xl font-bold text-ms-discovery-teal mb-1">{completedRoutes.length}</h3>
+                <p className="text-sm text-gray-600">Roteiros Concluídos</p>
               </CardContent>
             </Card>
             
             {/* Pontos Totais */}
-            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '200ms' }}>
+            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105" style={{ animationDelay: '200ms' }}>
               <CardContent className="p-6 text-center">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-secondary-yellow/20 to-ms-secondary-yellow/30 flex items-center justify-center">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-secondary-yellow/20 to-ms-secondary-yellow/30 flex items-center justify-center shadow-sm">
                   <Star className="w-7 h-7 text-ms-secondary-yellow fill-current" />
                 </div>
-                <h3 className="text-3xl font-bold text-ms-secondary-yellow">{totalPoints}</h3>
-                <p className="text-sm text-gray-600 mt-1">Pontos Totais</p>
+                <h3 className="text-3xl font-bold text-ms-secondary-yellow mb-1">{totalPoints}</h3>
+                <p className="text-sm text-gray-600">Pontos Totais</p>
               </CardContent>
             </Card>
             
             {/* Taxa de Conclusão */}
-            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '300ms' }}>
+            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105" style={{ animationDelay: '300ms' }}>
               <CardContent className="p-6 text-center">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-pantanal-green/10 to-ms-pantanal-green/20 flex items-center justify-center">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-pantanal-green/10 to-ms-pantanal-green/20 flex items-center justify-center shadow-sm">
                   <CheckCircle className="w-7 h-7 text-ms-pantanal-green" />
                 </div>
-                <h3 className="text-3xl font-bold text-ms-pantanal-green">{completionRate}%</h3>
-                <p className="text-sm text-gray-600 mt-1">Taxa de Conclusão</p>
+                <h3 className="text-3xl font-bold text-ms-pantanal-green mb-1">{completionRate}%</h3>
+                <p className="text-sm text-gray-600">Taxa de Conclusão</p>
               </CardContent>
             </Card>
             
             {/* Roteiros Disponíveis */}
-            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '400ms' }}>
+            <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105" style={{ animationDelay: '400ms' }}>
               <CardContent className="p-6 text-center">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-primary-blue/10 to-ms-primary-blue/20 flex items-center justify-center">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br from-ms-primary-blue/10 to-ms-primary-blue/20 flex items-center justify-center shadow-sm">
                   <MapPin className="w-7 h-7 text-ms-primary-blue" />
                 </div>
-                <h3 className="text-3xl font-bold text-ms-primary-blue">{totalRoutes}</h3>
-                <p className="text-sm text-gray-600 mt-1">Roteiros Disponíveis</p>
+                <h3 className="text-3xl font-bold text-ms-primary-blue mb-1">{totalRoutes}</h3>
+                <p className="text-sm text-gray-600">Roteiros Disponíveis</p>
               </CardContent>
             </Card>
           </div>
@@ -278,7 +278,7 @@ const PassaporteSimple = () => {
           {/* Routes Grid - Padrão Descubra MS */}
           {routes.length === 0 ? (
             <div className="text-center py-16 animate-in fade-in duration-700">
-              <div className="bg-gradient-to-br from-gray-100 to-gray-50 w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-50 w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center shadow-sm">
                 <span className="text-5xl">🗺️</span>
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Nenhum roteiro disponível</h3>
@@ -294,48 +294,49 @@ const PassaporteSimple = () => {
                   key={route.id} 
                   className={`cursor-pointer transition-all duration-500 transform hover:-translate-y-2 rounded-2xl shadow-lg hover:shadow-2xl border-2 group animate-in fade-in slide-in-from-bottom-4 ${
                     route.completed 
-                      ? "bg-gradient-to-br from-white to-green-50 border-ms-pantanal-green/40 hover:border-ms-pantanal-green" 
+                      ? "bg-gradient-to-br from-white to-green-50 border-ms-pantanal-green/40 hover:border-ms-pantanal-green/60" 
                       : "bg-white border-gray-100 hover:border-ms-primary-blue/40"
                   }`}
                   onClick={() => setSelectedRoute(route)}
                   style={{ animationDelay: `${(index + 5) * 100}ms` }}
                 >
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg font-bold text-gray-800 group-hover:text-ms-primary-blue transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-lg font-bold text-gray-800 group-hover:text-ms-primary-blue transition-colors flex-1">
                         {route.name}
                       </CardTitle>
                       {route.completed && (
-                        <div className="bg-ms-pantanal-green/10 p-2 rounded-full">
+                        <div className="bg-ms-pantanal-green/10 p-2 rounded-full flex-shrink-0">
                           <CheckCircle className="w-5 h-5 text-ms-pantanal-green" />
                         </div>
                       )}
                     </div>
                     <div className="flex items-center text-gray-600 text-sm mt-2">
-                      <MapPin className="w-4 h-4 mr-2 text-ms-discovery-teal" />
-                      {route.location}
+                      <MapPin className="w-4 h-4 mr-2 text-ms-discovery-teal flex-shrink-0" />
+                      <span className="truncate">{route.location}</span>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Badge className={getDifficultyColor(route.difficulty)}>
+                        <Badge className={`${getDifficultyColor(route.difficulty)} font-medium`}>
                           {route.difficulty}
                         </Badge>
                         <div className="flex items-center text-gray-500 text-sm">
                           <Clock className="w-4 h-4 mr-1 text-gray-400" />
-                          {route.duration}min
+                          <span>{route.duration}min</span>
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                         <div className="flex items-center text-ms-secondary-yellow">
                           <Star className="w-4 h-4 mr-1 fill-current" />
                           <span className="font-semibold">{route.points} pts</span>
                         </div>
                         {route.completed && route.completedAt && (
-                          <span className="text-ms-pantanal-green text-sm font-medium">
-                            ✓ {route.completedAt.toLocaleDateString('pt-BR')}
+                          <span className="text-ms-pantanal-green text-sm font-medium flex items-center gap-1">
+                            <CheckCircle className="w-4 h-4" />
+                            {route.completedAt.toLocaleDateString('pt-BR')}
                           </span>
                         )}
                       </div>
@@ -348,18 +349,25 @@ const PassaporteSimple = () => {
 
           {/* Route Details Modal - Padrão Descubra MS */}
           {selectedRoute && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-              <Card className="w-full max-w-md bg-white rounded-3xl shadow-2xl border-0 animate-in zoom-in-95 duration-300">
-                <CardHeader className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white rounded-t-3xl">
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5" />
-                      {selectedRoute.name}
+            <div 
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setSelectedRoute(null);
+                }
+              }}
+            >
+              <Card className="w-full max-w-md bg-white rounded-3xl shadow-2xl border-0 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+                <CardHeader className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal text-white rounded-t-3xl p-6">
+                  <CardTitle className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2 flex-1 min-w-0">
+                      <MapPin className="w-5 h-5 flex-shrink-0" />
+                      <span className="truncate">{selectedRoute.name}</span>
                     </span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:bg-white/20 rounded-full h-8 w-8 p-0"
+                      className="text-white hover:bg-white/20 rounded-full h-8 w-8 p-0 flex-shrink-0 transition-colors"
                       onClick={() => setSelectedRoute(null)}
                     >
                       <X className="w-5 h-5" />
@@ -369,47 +377,58 @@ const PassaporteSimple = () => {
                 <CardContent className="p-6">
                   <div className="space-y-5">
                     <div className="flex items-center text-gray-600">
-                      <div className="w-10 h-10 rounded-lg bg-ms-discovery-teal/10 flex items-center justify-center mr-3">
-                        <MapPin className="w-5 h-5 text-ms-discovery-teal" />
+                      <div className="w-12 h-12 rounded-xl bg-ms-discovery-teal/10 flex items-center justify-center mr-4 flex-shrink-0">
+                        <MapPin className="w-6 h-6 text-ms-discovery-teal" />
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Localização</p>
-                        <p className="font-medium">{selectedRoute.location}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Localização</p>
+                        <p className="font-semibold text-gray-800">{selectedRoute.location}</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <Badge className={`${getDifficultyColor(selectedRoute.difficulty)} px-4 py-1`}>
+                    <div className="flex items-center justify-between gap-4">
+                      <Badge className={`${getDifficultyColor(selectedRoute.difficulty)} px-4 py-1.5 text-sm font-medium`}>
                         {selectedRoute.difficulty}
                       </Badge>
-                      <div className="flex items-center text-gray-600">
+                      <div className="flex items-center text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
                         <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                        <span className="font-medium">{selectedRoute.duration} minutos</span>
+                        <span className="font-medium text-sm">{selectedRoute.duration} minutos</span>
                       </div>
                     </div>
                     
-                    <div className="flex items-center bg-ms-secondary-yellow/10 rounded-xl p-4">
-                      <Star className="w-6 h-6 text-ms-secondary-yellow fill-current mr-3" />
+                    <div className="flex items-center bg-gradient-to-r from-ms-secondary-yellow/10 to-ms-secondary-yellow/5 rounded-xl p-4 border border-ms-secondary-yellow/20">
+                      <div className="bg-ms-secondary-yellow/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                        <Star className="w-6 h-6 text-ms-secondary-yellow fill-current" />
+                      </div>
                       <div>
-                        <p className="text-xs text-gray-500">Pontuação</p>
-                        <span className="font-bold text-lg text-ms-secondary-yellow">{selectedRoute.points} pontos</span>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Pontuação</p>
+                        <span className="font-bold text-xl text-ms-secondary-yellow">{selectedRoute.points} pontos</span>
                       </div>
                     </div>
                     
                     {selectedRoute.completed ? (
-                      <div className="text-center p-6 bg-gradient-to-br from-ms-pantanal-green/5 to-ms-pantanal-green/10 rounded-2xl border border-ms-pantanal-green/20">
-                        <div className="bg-ms-pantanal-green/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <div className="text-center p-6 bg-gradient-to-br from-ms-pantanal-green/5 to-ms-pantanal-green/10 rounded-2xl border-2 border-ms-pantanal-green/20">
+                        <div className="bg-gradient-to-br from-ms-pantanal-green/20 to-ms-pantanal-green/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                           <CheckCircle className="w-8 h-8 text-ms-pantanal-green" />
                         </div>
-                        <p className="text-ms-pantanal-green font-bold text-lg">Roteiro Concluído!</p>
+                        <p className="text-ms-pantanal-green font-bold text-lg mb-1">Roteiro Concluído!</p>
                         {selectedRoute.completedAt && (
-                          <p className="text-ms-pantanal-green/80 text-sm mt-1">
-                            Concluído em {selectedRoute.completedAt.toLocaleDateString('pt-BR')}
+                          <p className="text-ms-pantanal-green/80 text-sm">
+                            Concluído em {selectedRoute.completedAt.toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
                           </p>
                         )}
                       </div>
                     ) : (
-                      <Button className="w-full bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal hover:opacity-90 text-white h-12 text-lg font-semibold rounded-xl shadow-lg">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal hover:opacity-90 text-white h-12 text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
+                        onClick={() => {
+                          navigate(`/descubrams/passaporte/${selectedRoute.id}`);
+                        }}
+                      >
                         Iniciar Roteiro
                       </Button>
                     )}
