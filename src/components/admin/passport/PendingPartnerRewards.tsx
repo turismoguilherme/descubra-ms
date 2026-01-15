@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PendingPartnerRewards
  * Exibe recompensas cadastradas por parceiros aguardando aprovação

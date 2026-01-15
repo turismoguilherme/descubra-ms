@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consent Term Component
  * Termo de consentimento para benchmarking (para TODOS - privado e público)

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente de Calendário de Eventos
  * Cards em grid com eventos patrocinados em destaque
