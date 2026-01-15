@@ -75,6 +75,7 @@ interface EmailTemplate {
 const EmailDashboard: React.FC = () => {
   // Estados principais
   const [emails, setEmails] = useState<EmailMessage[]>([]);
+  const [errorLogs, setErrorLogs] = useState<EmailMessage[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
@@ -116,6 +117,10 @@ const EmailDashboard: React.FC = () => {
 
       if (error) throw error;
       setEmails(data || []);
+      
+      // Carregar logs de erros separadamente
+      const failedEmails = (data || []).filter(email => email.status === 'failed');
+      setErrorLogs(failedEmails);
     } catch (error) {
       console.error('Erro ao carregar emails:', error);
       toast.error('Erro ao carregar emails');
@@ -174,9 +179,12 @@ const EmailDashboard: React.FC = () => {
 
   const replyToEmail = async (originalEmail: EmailMessage, replyData: { subject: string; body: string }) => {
     try {
+      // Para respostas, configurar reply_to como o endereço original (para manter thread)
+      // Isso garante que quando o destinatário responder, volte para o email original
       const result = await sendNotificationEmail({
         type: 'partner_notification',
         to: originalEmail.from_address,
+        reply_to: originalEmail.to_address || undefined, // Reply-to para manter a thread
         data: {
           title: replyData.subject,
           message: replyData.body,
@@ -273,6 +281,15 @@ const EmailDashboard: React.FC = () => {
             <TabsTrigger value="emails">
               <Mail className="h-4 w-4 mr-2" />
               Emails
+            </TabsTrigger>
+            <TabsTrigger value="errors">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              Erros
+              {errorLogs.length > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {errorLogs.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="templates">
               <FileText className="h-4 w-4 mr-2" />
@@ -697,6 +714,106 @@ const EmailDashboard: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        {/* Tab: Erros */}
+        <TabsContent value="errors" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Logs de Erros</h3>
+              <p className="text-gray-600">Emails que falharam ao enviar ou receber</p>
+            </div>
+            <Button
+              onClick={loadEmails}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
+          </div>
+
+          {loading ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                <p className="text-gray-600">Carregando logs de erros...</p>
+              </CardContent>
+            </Card>
+          ) : errorLogs.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <p className="text-gray-600 mb-2">Nenhum erro encontrado!</p>
+                <p className="text-sm text-gray-500">Todos os emails estão funcionando corretamente.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {errorLogs.map((email) => (
+                <Card key={email.id} className="border-red-200 bg-red-50">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <CardTitle className="text-lg">Erro: {email.subject_or_topic || 'Sem assunto'}</CardTitle>
+                          <Badge variant="destructive">Falhou</Badge>
+                        </div>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p>
+                            <strong>De:</strong> {email.from_address}
+                          </p>
+                          <p>
+                            <strong>Para:</strong> {email.to_address}
+                          </p>
+                          <p>
+                            <strong>Direção:</strong> {email.direction === 'in' ? 'Recebido' : 'Enviado'}
+                          </p>
+                          <p>
+                            <strong>Data/Hora:</strong> {format(new Date(email.timestamp), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Mensagem de Erro:</Label>
+                      <div className="bg-white border border-red-200 rounded-md p-3 text-sm">
+                        {email.body && email.body.length > 500 ? (
+                          <>
+                            {email.body.substring(0, 500)}
+                            <span className="text-gray-500">... (truncado)</span>
+                          </>
+                        ) : (
+                          email.body || 'Nenhuma mensagem de erro disponível'
+                        )}
+                      </div>
+                      {email.direction === 'out' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Tentar reenviar o email
+                            sendEmail({
+                              to: email.to_address,
+                              subject: email.subject_or_topic || '',
+                              body: email.body
+                            });
+                          }}
+                          className="mt-2"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Tentar Reenviar
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Tab: Templates */}

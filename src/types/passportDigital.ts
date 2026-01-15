@@ -8,6 +8,7 @@ export interface PassportConfiguration {
   video_url?: string | null;
   description?: string | null;
   map_config: Record<string, any>;
+  require_sequential?: boolean | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

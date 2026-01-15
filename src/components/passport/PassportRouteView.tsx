@@ -5,15 +5,17 @@ import RouteHeroSection from './RouteHeroSection';
 import AnimalStampGrid from './AnimalStampGrid';
 import RewardsOverview from './RewardsOverview';
 import PassportMap from './PassportMap';
+import CheckpointList from './CheckpointList';
 import { MapPin, TrendingUp, WifiOff, KeyRound } from 'lucide-react';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
 
 interface PassportRouteViewProps {
   route: RouteExtended;
   progress?: StampProgress;
+  onProgressUpdate?: () => void;
 }
 
-const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress }) => {
+const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, onProgressUpdate }) => {
   // Determine animal theme from configuration or default
   const theme = route.configuration?.stamp_theme || 'onca';
   
@@ -113,6 +115,17 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress }
             routeId={route.id} 
             completionPercentage={progress?.completion_percentage || 0}
           />
+
+          {/* Checkpoints List */}
+          {route.checkpoints && route.checkpoints.length > 0 && (
+            <CheckpointList
+              checkpoints={route.checkpoints}
+              routeId={route.id}
+              progress={progress}
+              requireSequential={route.configuration?.require_sequential || false}
+              onCheckinSuccess={onProgressUpdate}
+            />
+          )}
         </div>
 
         {/* Right Column - Map & Info (1/3) */}

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2, HelpCircle } from 'lucide-react';
@@ -32,6 +33,7 @@ const PassportStampConfig: React.FC = () => {
     stamp_fragments: 5,
     video_url: '',
     description: '',
+    require_sequential: false,
   });
   const { toast } = useToast();
 
@@ -62,6 +64,7 @@ const PassportStampConfig: React.FC = () => {
           stamp_fragments: existingConfig.stamp_fragments || 5,
           video_url: existingConfig.video_url || '',
           description: existingConfig.description || '',
+          require_sequential: existingConfig.require_sequential || false,
         });
       } else {
         // Resetar para valores padrão se não houver configuração
@@ -71,6 +74,7 @@ const PassportStampConfig: React.FC = () => {
           stamp_fragments: 5,
           video_url: '',
           description: '',
+          require_sequential: false,
         });
       }
     }
@@ -368,6 +372,27 @@ const PassportStampConfig: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Descrição do roteiro..."
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="require_sequential"
+                checked={formData.require_sequential}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, require_sequential: checked === true })
+                }
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor="require_sequential"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Requer ordem sequencial
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Se marcado, checkpoints devem ser visitados em ordem (1, 2, 3...). Se desmarcado, permite ordem livre.
+                </p>
+              </div>
             </div>
 
             <Button

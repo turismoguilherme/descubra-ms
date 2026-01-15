@@ -195,20 +195,23 @@ const PassportRewardsManager: React.FC = () => {
 
     try {
       // Filtrar apenas campos que existem na tabela passport_rewards
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PassportRewardsManager.tsx:197',message:'Building rewardData',data:{formData:JSON.stringify(formData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       const rewardData = {
         route_id: formData.route_id,
         partner_name: formData.partner_name,
         reward_type: formData.reward_type,
         reward_description: formData.reward_description,
-        reward_code_prefix: formData.reward_code_prefix,
+        reward_code_prefix: formData.reward_code_prefix || null,
         discount_percentage: formData.discount_percentage,
-        partner_address: formData.partner_address,
-        partner_phone: formData.partner_phone,
-        partner_email: formData.partner_email,
-        max_vouchers: formData.max_vouchers,
-        max_per_user: formData.max_per_user,
-        is_fallback: formData.is_fallback,
-        expires_at: formData.expires_at,
+        partner_address: formData.partner_address || null,
+        partner_phone: formData.partner_phone || null,
+        partner_email: formData.partner_email || null,
+        max_vouchers: formData.max_vouchers || null,
+        max_per_user: formData.max_per_user || null,
+        is_fallback: formData.is_fallback || false,
+        expires_at: formData.expires_at || null,
         is_active: true,
         // Adicionar campos de avatar apenas se suportados
         ...(formData.reward_type === 'avatar' && {
@@ -217,6 +220,9 @@ const PassportRewardsManager: React.FC = () => {
         }),
       };
       console.log('🔵 [PassportRewardsManager] Dados para criação:', JSON.stringify(rewardData, null, 2));
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PassportRewardsManager.tsx:219',message:'rewardData built',data:{rewardData:JSON.stringify(rewardData),hasEmptyStrings:Object.values(rewardData).some(v=>v==='')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
 
       await passportAdminService.createReward(rewardData);
 

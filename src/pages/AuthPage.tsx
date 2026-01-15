@@ -10,6 +10,7 @@ import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
+import { getLoginRedirectPath, isDescubraMSContext } from '@/utils/authRedirect';
 
 const AuthPage = () => {
   console.log('🔐 [AuthPage] ========== COMPONENTE RENDERIZADO ==========');
@@ -24,8 +25,9 @@ const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
   
-  // Obter URL de redirect dos parâmetros da query, ou padrão para Descubra MS
-  const redirectUrl = searchParams.get('redirect') || '/descubrams';
+  // Obter URL de redirect dos parâmetros da query, ou usar função utilitária
+  const redirectUrlParam = searchParams.get('redirect');
+  const redirectUrl = redirectUrlParam || getLoginRedirectPath();
   
   console.log('🔐 [AuthPage] Estado inicial:', {
     isAuthenticated,
@@ -49,19 +51,15 @@ const AuthPage = () => {
     try {
       setLoading(true);
       
-      // Detectar tenant do path atual
-      const currentPath = window.location.pathname;
-      const pathSegments = currentPath.split('/').filter(Boolean);
-      const currentTenant = pathSegments[0]; // 'ms', 'descubrams', 'descubramatogrossodosul', etc.
-      const isTenantPath = currentTenant && (currentTenant.length === 2 || currentTenant === 'descubrams' || currentTenant === 'descubramatogrossodosul');
+      // Se está no contexto Descubra MS, usar /ms para callback OAuth
+      // O componente OAuthCallback processará o token e redirecionará corretamente
+      const isDescubraMS = isDescubraMSContext();
+      const callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
       
-      console.log("🏛️ [AuthPage] SOCIAL LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath);
+      console.log("🏛️ [AuthPage] SOCIAL LOGIN: É Descubra MS:", isDescubraMS);
+      console.log("🔄 [AuthPage] SOCIAL LOGIN: Callback path:", callbackPath);
       
-      // Redirecionar para /ms que processa o callback OAuth
-      // O componente OAuthCallback processará o token e redirecionará para /descubrams
-      const redirectPath = '/ms';
-      
-      console.log("🔄 [AuthPage] SOCIAL LOGIN: Redirecionando para:", redirectPath);
+      const redirectPath = `${window.location.origin}${callbackPath}`;
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -151,10 +149,11 @@ const AuthPage = () => {
         // Aguardar um pouco para garantir que a sessão foi estabelecida
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Redirecionar para a URL especificada no parâmetro redirect, ou padrão para Descubra MS
-        const redirectPath = redirectUrl || '/descubrams';
+        // Usar função utilitária para garantir redirecionamento correto
+        const redirectPath = redirectUrl || getLoginRedirectPath();
         console.log('✅ [AuthPage] Redirecionando para:', redirectPath);
-        window.location.href = redirectPath;
+        console.log('✅ [AuthPage] É contexto Descubra MS:', isDescubraMSContext());
+        navigate(redirectPath, { replace: true });
       } else {
         console.error('❌ [AuthPage] Login retornou sem usuário');
         throw new Error('Login retornou sem dados do usuário');

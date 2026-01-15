@@ -15,6 +15,7 @@ interface SendEmailParams {
   type: NotificationType;
   to: string;
   data: Record<string, any>;
+  reply_to?: string; // Opcional: endereço para respostas
 }
 
 /**

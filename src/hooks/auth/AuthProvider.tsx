@@ -200,28 +200,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
             console.log('🔄 [AuthProvider] Login OAuth bem-sucedido, redirecionando...');
 
-            // Determinar o domínio atual para manter consistência
-            const currentHostname = window.location.hostname;
-            const isDescubramsDomain = currentHostname === 'descubrams.com';
+            // Usar função utilitária para garantir redirecionamento correto
+            const { getOAuthCallbackRedirectPath, isDescubraMSContext } = await import('@/utils/authRedirect');
+            const redirectPath = getOAuthCallbackRedirectPath();
+            const isDescubraMS = isDescubraMSContext();
 
-            // Limpar hash da URL
-            const currentPath = window.location.pathname;
-            let redirectPath: string;
-
-            if (isDescubramsDomain) {
-              // No domínio descobrams.com, sempre manter na rota /descubrams
-              redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/')
-                ? '/descubrams'
-                : '/descubrams';
-            } else {
-              // Em outros domínios, manter rota atual ou converter /ms para /descubrams
-              redirectPath = currentPath === '/ms' || currentPath.startsWith('/ms/')
-                ? '/descubrams'
-                : currentPath;
-            }
-
-            console.log('🔄 [AuthProvider] Domínio atual:', currentHostname);
-            console.log('🔄 [AuthProvider] É domínio descobrams.com:', isDescubramsDomain);
+            console.log('🔄 [AuthProvider] Domínio atual:', window.location.hostname);
+            console.log('🔄 [AuthProvider] É contexto Descubra MS:', isDescubraMS);
             console.log('🔄 [AuthProvider] Redirecionando para:', redirectPath);
 
             window.history.replaceState(null, '', redirectPath);
@@ -492,9 +477,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: 'google' | 'facebook') => {
     try {
-      // Redirecionar para /ms que processa o callback OAuth
-      // O componente OAuthCallback processará o token e redirecionará para /descubrams
-      const redirectPath = `${window.location.origin}/ms`;
+      // Importar função utilitária para detectar plataforma
+      const { isDescubraMSContext } = await import('@/utils/authRedirect');
+      const isDescubraMS = isDescubraMSContext();
+      
+      // Se está no contexto Descubra MS, usar /ms para callback OAuth
+      // Caso contrário, usar /auth/callback
+      const callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
+      const redirectPath = `${window.location.origin}${callbackPath}`;
+      
+      console.log("🔄 SOCIAL LOGIN: É Descubra MS:", isDescubraMS);
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
       
       const { data, error } = await supabase.auth.signInWithOAuth({

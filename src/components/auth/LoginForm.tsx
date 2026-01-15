@@ -15,6 +15,7 @@ import SocialLoginButtons from "./SocialLoginButtons";
 import { InputValidator, sanitizeInput } from "@/components/security/InputValidator";
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { supabase } from '@/integrations/supabase/client';
+import { getLoginRedirectPath } from '@/utils/authRedirect';
 
 
 
@@ -99,17 +100,8 @@ const LoginForm = () => {
           return;
         }
         
-        // Detectar tenant do path atual para manter contexto
-        const currentPath = window.location.pathname;
-        const pathSegments = currentPath.split('/').filter(Boolean);
-        const currentTenant = pathSegments[0]; // 'ms', 'descubrams', 'descubramatogrossodosul', etc.
-        const isDescubraMS = currentTenant === 'descubrams' || currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
-        const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
-        
-        console.log("🏛️ LOGIN: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
-        
-        // Redirecionar mantendo contexto do tenant (para Descubra MS, usar sempre 'descubrams')
-        const redirectPath = isDescubraMS ? '/descubrams' : (isTenantPath ? `/${currentTenant}` : '/');
+        // Usar função utilitária para detectar plataforma corretamente
+        const redirectPath = getLoginRedirectPath();
         console.log("🔄 LOGIN: Redirecionando para:", redirectPath);
         
         toast({

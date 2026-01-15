@@ -23,6 +23,7 @@ interface EmailRequest {
   type: NotificationType;
   to: string;
   data: Record<string, any>;
+  reply_to?: string; // Opcional: endereço para respostas
 }
 
 // Templates de email
@@ -689,18 +690,29 @@ serve(async (req) => {
       
       // Função para tentar enviar com um domínio específico
       const trySendEmail = async (fromEmail: string, isRetry: boolean = false) => {
+        // Determinar reply_to: usar do request, variável de ambiente, ou null
+        const replyToEmail = requestData.reply_to || Deno.env.get('RESEND_REPLY_TO_EMAIL') || null;
+        
+        // Construir payload do Resend API
+        const emailPayload: any = {
+          from: fromEmail,
+          to: [to],
+          subject: emailContent.subject,
+          html: emailContent.html,
+        };
+        
+        // Adicionar reply_to apenas se especificado
+        if (replyToEmail) {
+          emailPayload.reply_to = replyToEmail;
+        }
+
       const resendResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendApiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            from: fromEmail,
-          to: [to],
-          subject: emailContent.subject,
-          html: emailContent.html,
-        }),
+        body: JSON.stringify(emailPayload),
       });
 
       if (!resendResponse.ok) {

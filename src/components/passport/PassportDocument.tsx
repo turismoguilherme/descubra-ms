@@ -103,7 +103,16 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
         </CardHeader>
         <CardContent className="pt-6">
           {activeRoute ? (
-            <PassportRouteView route={activeRoute} progress={progress || undefined} />
+            <PassportRouteView 
+              route={activeRoute} 
+              progress={progress || undefined}
+              onProgressUpdate={() => {
+                // Recarregar rota e progresso após check-in
+                if (routeId) {
+                  loadRoute(routeId);
+                }
+              }}
+            />
           ) : routeId ? (
             <div className="text-center py-8">
               <div className="text-yellow-600 mb-2 text-4xl">⚠️</div>

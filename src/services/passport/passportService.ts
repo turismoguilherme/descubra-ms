@@ -313,6 +313,60 @@ class PassportService {
   }
 
   /**
+   * Obter checkpoints de uma rota
+   */
+  async getRouteCheckpoints(routeId: string): Promise<RouteCheckpointExtended[]> {
+    console.log('🔍 [passportService.getRouteCheckpoints] ========== INÍCIO ==========');
+    console.log('🔍 [passportService.getRouteCheckpoints] Route ID:', routeId);
+    
+    try {
+      console.log('🔍 [passportService.getRouteCheckpoints] Buscando checkpoints...');
+      const checkpoints = await this.fetchSupabase(
+        `route_checkpoints?route_id=eq.${routeId}&order=order_sequence.asc`
+      );
+
+      console.log('🔍 [passportService.getRouteCheckpoints] Checkpoints encontrados:', {
+        count: checkpoints?.length || 0,
+        checkpoints: checkpoints?.map((cp: any) => ({ 
+          id: cp.id, 
+          name: cp.name, 
+          order: cp.order_sequence 
+        }))
+      });
+
+      const result = (checkpoints || []).map((cp: any) => ({
+        id: cp.id,
+        route_id: cp.route_id,
+        destination_id: cp.destination_id || null,
+        order_sequence: cp.order_sequence,
+        name: cp.name,
+        description: cp.description || null,
+        latitude: cp.latitude || null,
+        longitude: cp.longitude || null,
+        is_mandatory: cp.is_mandatory !== undefined ? cp.is_mandatory : true,
+        created_at: cp.created_at || null,
+        stamp_fragment_number: cp.stamp_fragment_number || null,
+        geofence_radius: cp.geofence_radius || null,
+        requires_photo: cp.requires_photo || null,
+        validation_mode: cp.validation_mode || null,
+        partner_code: cp.partner_code || null,
+      })) as RouteCheckpointExtended[];
+
+      console.log('✅ [passportService.getRouteCheckpoints] Checkpoints formatados:', result.length);
+      console.log('✅ [passportService.getRouteCheckpoints] ========== FIM ==========');
+
+      return result;
+    } catch (error: any) {
+      console.warn('⚠️ [passportService.getRouteCheckpoints] Erro ao buscar checkpoints:', {
+        error,
+        message: error?.message,
+        code: error?.code,
+      });
+      return [];
+    }
+  }
+
+  /**
    * Obter progresso do roteiro
    */
   async getRouteProgress(userId: string, routeId: string): Promise<StampProgress | null> {
@@ -428,6 +482,73 @@ class PassportService {
 
       const routeId = checkpoint.routes.id;
 
+      // Validar ordem sequencial se a rota requer
+      try {
+        const configResult = await supabase
+          .from('passport_configurations')
+          .select('require_sequential')
+          .eq('route_id', routeId)
+          .eq('is_active', true)
+          .single();
+
+        const config = configResult.data as { require_sequential?: boolean } | null;
+
+        if (config?.require_sequential) {
+          // Buscar todos os checkpoints da rota ordenados
+          const { data: allCheckpoints } = await supabase
+            .from('route_checkpoints')
+            .select('id, order_sequence')
+            .eq('route_id', routeId)
+            .order('order_sequence', { ascending: true });
+
+          if (allCheckpoints && allCheckpoints.length > 0) {
+            const currentCheckpointOrder = checkpoint.order_sequence;
+            const currentCheckpointIndex = allCheckpoints.findIndex(cp => cp.id === checkpointId);
+
+            // Verificar se há checkpoints anteriores que não foram completados
+            if (currentCheckpointIndex > 0) {
+              const previousCheckpoints = allCheckpoints.slice(0, currentCheckpointIndex);
+              const previousCheckpointIds = previousCheckpoints.map(cp => cp.id);
+
+              // Verificar quais foram completados
+              const { data: completedStamps } = await supabase
+                .from('passport_stamps')
+                .select('checkpoint_id')
+                .eq('user_id', userId)
+                .in('checkpoint_id', previousCheckpointIds);
+
+              const completedCheckpointIds = new Set(completedStamps?.map(s => s.checkpoint_id) || []);
+              const missingCheckpoints = previousCheckpoints.filter(cp => !completedCheckpointIds.has(cp.id));
+
+              if (missingCheckpoints.length > 0) {
+                const nextRequiredCheckpoint = missingCheckpoints[0];
+                const nextRequiredOrder = allCheckpoints.find(cp => cp.id === nextRequiredCheckpoint.id)?.order_sequence || 0;
+
+                // Buscar nome do próximo checkpoint necessário
+                const { data: nextCheckpoint } = await supabase
+                  .from('route_checkpoints')
+                  .select('name')
+                  .eq('id', nextRequiredCheckpoint.id)
+                  .single();
+
+                return {
+                  success: false,
+                  checkpoint_id: checkpointId,
+                  route_id: routeId,
+                  stamp_earned: false,
+                  points_earned: 0,
+                  route_completed: false,
+                  error: `Complete o checkpoint ${nextRequiredOrder} (${nextCheckpoint?.name || 'anterior'}) antes deste.`,
+                };
+              }
+            }
+          }
+        }
+      } catch (error: any) {
+        console.warn('Erro ao validar ordem sequencial:', error);
+        // Continuar se houver erro (não bloquear check-in)
+      }
+
       // Validar de acordo com o modo de validação do checkpoint
       const validationMode: string = checkpoint.validation_mode || 'geofence';
 
@@ -502,7 +623,8 @@ class PassportService {
           }
 
           // Verificar resultado da validação
-          if (!validationResult?.success) {
+          const result = validationResult as any;
+          if (!result?.success) {
             return {
               success: false,
               checkpoint_id: checkpointId,
@@ -510,8 +632,7 @@ class PassportService {
               stamp_earned: false,
               points_earned: 0,
               route_completed: false,
-              error: validationResult?.error || 'Código do parceiro inválido. Confirme o código no balcão.',
-              blocked: validationResult?.blocked || false,
+              error: result?.error || 'Código do parceiro inválido. Confirme o código no balcão.',
             };
           }
 
