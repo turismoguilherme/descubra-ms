@@ -51,11 +51,24 @@ const AuthPage = () => {
     try {
       setLoading(true);
       
-      // Se está no contexto Descubra MS, usar /ms para callback OAuth
-      // O componente OAuthCallback processará o token e redirecionará corretamente
+      // Detectar contexto baseado no domínio primeiro
+      const hostname = window.location.hostname.toLowerCase();
       const isDescubraMS = isDescubraMSContext();
-      const callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
       
+      // Se está em descubrams.com, usar /ms para callback OAuth
+      // Se está em viajartur.com, usar /auth/callback
+      // O componente OAuthCallback processará o token e redirecionará corretamente
+      let callbackPath: string;
+      if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+        callbackPath = '/ms';
+      } else if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+        callbackPath = '/auth/callback';
+      } else {
+        // Fallback: usar contexto detectado
+        callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
+      }
+      
+      console.log("🏛️ [AuthPage] SOCIAL LOGIN: Hostname:", hostname);
       console.log("🏛️ [AuthPage] SOCIAL LOGIN: É Descubra MS:", isDescubraMS);
       console.log("🔄 [AuthPage] SOCIAL LOGIN: Callback path:", callbackPath);
       
@@ -64,7 +77,7 @@ const AuthPage = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}${redirectPath}`,
+          redirectTo: redirectPath,
         },
       });
 

@@ -1,21 +1,28 @@
 /**
  * Utilitário para detectar e redirecionar corretamente após login
  * Garante que usuários do Descubra MS permaneçam no Descubra MS
+ * e usuários do ViaJAR permaneçam no ViaJAR
  */
 
 /**
  * Detecta se o usuário está no contexto do Descubra MS
+ * Verifica primeiro o domínio (descubrams.com) para evitar confusão
  */
 export function isDescubraMSContext(): boolean {
   const hostname = window.location.hostname.toLowerCase();
   const pathname = window.location.pathname.toLowerCase();
   
-  // Se está no domínio descubrams.com, sempre é Descubra MS
+  // Prioridade 1: Detectar explicitamente viajartur.com para evitar falsos positivos
+  if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+    return false;
+  }
+  
+  // Prioridade 2: Se está no domínio descubrams.com, sempre é Descubra MS
   if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
     return true;
   }
   
-  // Se o path indica Descubra MS
+  // Prioridade 3: Se o path indica Descubra MS (e não está em viajartur.com)
   if (
     pathname.startsWith('/descubrams') ||
     pathname.startsWith('/descubramatogrossodosul') ||
@@ -29,20 +36,70 @@ export function isDescubraMSContext(): boolean {
 }
 
 /**
+ * Detecta se o usuário está no contexto do ViaJAR
+ */
+export function isViaJARContext(): boolean {
+  const hostname = window.location.hostname.toLowerCase();
+  const pathname = window.location.pathname.toLowerCase();
+  
+  // Se está no domínio viajartur.com, sempre é ViaJAR
+  if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+    return true;
+  }
+  
+  // Se o path indica ViaJAR (e não está em descubrams.com)
+  if (
+    pathname.startsWith('/viajar') ||
+    pathname.startsWith('/viajartur')
+  ) {
+    // Garantir que não está em descubrams.com
+    if (hostname !== 'descubrams.com' && !hostname.includes('descubrams')) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Obtém o path de redirecionamento correto após login
- * Sempre retorna '/descubrams' se estiver no contexto Descubra MS
+ * Prioriza detecção por domínio para evitar confusão
  */
 export function getLoginRedirectPath(): string {
+  const hostname = window.location.hostname.toLowerCase();
   const isDescubraMS = isDescubraMSContext();
+  const isViaJAR = isViaJARContext();
   
+  // Prioridade 1: Descubra MS - descobrams.com → /descubrams
+  if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+    return '/descubrams';
+  }
+  
+  // Prioridade 2: ViaJAR - viajartur.com → / ou /viajar/dashboard
+  if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+    const currentPath = window.location.pathname;
+    // Se está em uma rota de auth, redirecionar para home
+    if (currentPath.includes('/login') || currentPath.includes('/auth')) {
+      return '/';
+    }
+    return currentPath || '/';
+  }
+  
+  // Prioridade 3: Detectar por contexto (pathname)
   if (isDescubraMS) {
     return '/descubrams';
   }
   
-  // Para outros contextos (ViaJAR, etc), manter path atual ou redirecionar para home
-  const currentPath = window.location.pathname;
+  if (isViaJAR) {
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/login') || currentPath.includes('/auth')) {
+      return '/';
+    }
+    return currentPath || '/';
+  }
   
-  // Se está em uma rota de auth, redirecionar para home
+  // Fallback: Para outros contextos, manter path atual ou home
+  const currentPath = window.location.pathname;
   if (currentPath.includes('/login') || currentPath.includes('/auth')) {
     return '/';
   }
@@ -52,28 +109,55 @@ export function getLoginRedirectPath(): string {
 
 /**
  * Obtém o path de redirecionamento para OAuth callback
- * Garante que descubrams.com sempre use /descubrams
+ * Prioriza detecção por domínio para evitar confusão
  */
 export function getOAuthCallbackRedirectPath(): string {
   const hostname = window.location.hostname.toLowerCase();
+  const isDescubraMS = isDescubraMSContext();
+  const isViaJAR = isViaJARContext();
   const currentPath = window.location.pathname;
   
-  // Se está no domínio descubrams.com, sempre redirecionar para /descubrams
+  // Prioridade 1: Descubra MS - descobrams.com → /descubrams
   if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
     return '/descubrams';
   }
   
-  // Se o path atual indica Descubra MS, redirecionar para /descubrams
+  // Prioridade 2: ViaJAR - viajartur.com → manter path ou /
+  if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+    // Não redirecionar para /descubrams se estiver em viajartur.com
+    if (currentPath === '/ms' || currentPath.startsWith('/ms/')) {
+      return '/';
+    }
+    return currentPath || '/';
+  }
+  
+  // Prioridade 3: Detectar por contexto (pathname)
+  if (isDescubraMS) {
+    return '/descubrams';
+  }
+  
+  if (isViaJAR) {
+    // Não redirecionar para /descubrams se estiver em ViaJAR
+    if (currentPath === '/ms' || currentPath.startsWith('/ms/')) {
+      return '/';
+    }
+    return currentPath || '/';
+  }
+  
+  // Fallback: Se o path atual indica Descubra MS mas não está no domínio correto
   if (
-    currentPath.startsWith('/ms') ||
     currentPath.startsWith('/descubrams') ||
     currentPath.startsWith('/descubramatogrossodosul')
   ) {
     return '/descubrams';
   }
   
-  // Para outros contextos, manter path atual (mas não deixar em /ms)
+  // Evitar redirecionar para /descubrams se não for contexto Descubra MS
   if (currentPath === '/ms' || currentPath.startsWith('/ms/')) {
+    // Se não é Descubra MS, redirecionar para home
+    if (!isDescubraMS) {
+      return '/';
+    }
     return '/descubrams';
   }
   

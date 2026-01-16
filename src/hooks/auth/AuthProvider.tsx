@@ -479,13 +479,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Importar função utilitária para detectar plataforma
       const { isDescubraMSContext } = await import('@/utils/authRedirect');
+      const hostname = window.location.hostname.toLowerCase();
       const isDescubraMS = isDescubraMSContext();
       
-      // Se está no contexto Descubra MS, usar /ms para callback OAuth
-      // Caso contrário, usar /auth/callback
-      const callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
+      // Detectar contexto baseado no domínio primeiro
+      let callbackPath: string;
+      if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+        callbackPath = '/ms';
+      } else if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+        callbackPath = '/auth/callback';
+      } else {
+        // Fallback: usar contexto detectado
+        callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
+      }
+      
       const redirectPath = `${window.location.origin}${callbackPath}`;
       
+      console.log("🔄 SOCIAL LOGIN: Hostname:", hostname);
       console.log("🔄 SOCIAL LOGIN: É Descubra MS:", isDescubraMS);
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
       

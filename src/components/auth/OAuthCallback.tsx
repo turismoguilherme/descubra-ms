@@ -33,8 +33,10 @@ export const OAuthCallback = () => {
         if (error) {
           console.error('❌ [OAuthCallback] Erro ao obter sessão:', error);
           setStatus('error');
+          // Usar função utilitária para redirecionar corretamente
+          const loginPath = isDescubraMSContext() ? '/descubrams/login' : '/login';
           setTimeout(() => {
-            navigate('/descubrams/login', { replace: true });
+            navigate(loginPath, { replace: true });
           }, 2000);
           return;
         }
@@ -60,15 +62,19 @@ export const OAuthCallback = () => {
         } else {
           console.warn('⚠️ [OAuthCallback] Nenhuma sessão encontrada após callback');
           setStatus('error');
+          // Usar função utilitária para redirecionar corretamente
+          const loginPath = isDescubraMSContext() ? '/descubrams/login' : '/login';
           setTimeout(() => {
-            navigate('/descubrams/login', { replace: true });
+            navigate(loginPath, { replace: true });
           }, 2000);
         }
       } catch (error: any) {
         console.error('❌ [OAuthCallback] Erro inesperado:', error);
         setStatus('error');
+        // Usar função utilitária para redirecionar corretamente
+        const loginPath = isDescubraMSContext() ? '/descubrams/login' : '/login';
         setTimeout(() => {
-          navigate('/descubrams/login', { replace: true });
+          navigate(loginPath, { replace: true });
         }, 2000);
       }
     };
