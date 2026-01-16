@@ -197,34 +197,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await fetchUserProfile(session.user.id);
           
           // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
+          // IMPORTANTE: Verificar se estamos no domínio correto antes de redirecionar
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
             // #region agent log
             fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT',message:'OAuth redirect detectado no AuthProvider',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,hash:window.location.hash},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
             // #endregion
             
             console.log('🔄 [AuthProvider] Login OAuth bem-sucedido, redirecionando...');
+            console.log('🔄 [AuthProvider] Domínio atual ANTES do redirect:', window.location.hostname);
 
-            // Usar função utilitária para garantir redirecionamento correto
+            // IMPORTANTE: Garantir que o redirecionamento use o DOMÍNIO ATUAL, não um domínio diferente
+            const currentHostname = window.location.hostname.toLowerCase();
             const { getOAuthCallbackRedirectPath, isDescubraMSContext } = await import('@/utils/authRedirect');
-            const redirectPath = getOAuthCallbackRedirectPath();
+            
+            // Se estamos em descubrams.com mas o path indica outro domínio, forçar descobrams.com
+            let redirectPath = getOAuthCallbackRedirectPath();
+            
+            // Se estamos em descubrams.com, garantir que o redirect path seja relativo (sem domínio)
+            // Isso evita que o navegador tente ir para outro domínio
+            if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams')) && redirectPath.startsWith('/')) {
+              // Path já está correto e relativo, apenas garantir que seja /descubrams
+              if (!redirectPath.startsWith('/descubrams') && redirectPath !== '/ms') {
+                redirectPath = '/descubrams';
+              }
+              // Se o path for /ms (callback path), redirecionar para /descubrams
+              if (redirectPath === '/ms' || redirectPath.startsWith('/ms/')) {
+                redirectPath = '/descubrams';
+              }
+            }
+            
             const isDescubraMS = isDescubraMSContext();
 
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT_PATH',message:'Path de redirecionamento OAuth calculado',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT_PATH',message:'Path de redirecionamento OAuth calculado',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname,currentHostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
             // #endregion
 
             console.log('🔄 [AuthProvider] Domínio atual:', window.location.hostname);
             console.log('🔄 [AuthProvider] É contexto Descubra MS:', isDescubraMS);
-            console.log('🔄 [AuthProvider] Redirecionando para:', redirectPath);
+            console.log('🔄 [AuthProvider] Redirecionando para path:', redirectPath);
 
-            window.history.replaceState(null, '', redirectPath);
-            // Forçar reload para garantir que o estado seja atualizado
-            setTimeout(() => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:WINDOW_LOCATION_HREF',message:'Forçando window.location.href',data:{redirectPath,hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
-              // #endregion
-              window.location.href = redirectPath;
-            }, 100);
+            // Usar navigate do router ao invés de window.location.href para evitar mudança de domínio
+            // Se estamos no domínio correto, usar navigate. Caso contrário, forçar o domínio correto
+            if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
+              // Estamos no domínio correto, usar navigate
+              window.history.replaceState(null, '', redirectPath);
+              // Usar setTimeout mínimo e depois recarregar apenas se necessário
+              setTimeout(() => {
+                // Se ainda estamos no mesmo domínio, apenas atualizar o path via router
+                if (window.location.hostname.toLowerCase().includes('descubrams')) {
+                  window.location.pathname = redirectPath;
+                }
+              }, 100);
+            } else {
+              // Estamos no domínio errado, redirecionar para o domínio correto
+              console.error('❌ [AuthProvider] Domínio incorreto detectado após OAuth:', currentHostname);
+              const correctOrigin = 'https://descubrams.com';
+              window.location.href = `${correctOrigin}${redirectPath}`;
+            }
           }
         } else {
           console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");

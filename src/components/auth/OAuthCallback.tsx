@@ -49,24 +49,49 @@ export const OAuthCallback = () => {
           console.log('✅ [OAuthCallback] Login OAuth bem-sucedido!');
           console.log('✅ [OAuthCallback] Usuário:', session.user.email);
           
-          // Usar função utilitária para garantir redirecionamento correto
-          const redirectPath = getOAuthCallbackRedirectPath();
+          const currentHostname = window.location.hostname.toLowerCase();
+          
+          // IMPORTANTE: Garantir que o redirecionamento use o DOMÍNIO ATUAL
+          let redirectPath = getOAuthCallbackRedirectPath();
+          
+          // Se estamos em descubrams.com, garantir que o path seja /descubrams (não /ms)
+          if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
+            // Se o callback path for /ms (que é usado para OAuth callback), redirecionar para /descubrams
+            if (redirectPath === '/ms' || redirectPath.startsWith('/ms/')) {
+              redirectPath = '/descubrams';
+            }
+            // Garantir que sempre redireciona para /descubrams se estamos em descubrams.com
+            if (!redirectPath.startsWith('/descubrams')) {
+              redirectPath = '/descubrams';
+            }
+          }
+          
           const isDescubraMS = isDescubraMSContext();
 
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OAuthCallback.tsx:processOAuthCallback:NAVIGATE',message:'Navegando após OAuth callback',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OAuthCallback.tsx:processOAuthCallback:NAVIGATE',message:'Navegando após OAuth callback',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname,currentHostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
           // #endregion
 
           console.log('🔄 [OAuthCallback] Domínio atual:', window.location.hostname);
           console.log('🔄 [OAuthCallback] É contexto Descubra MS:', isDescubraMS);
-          console.log('🔄 [OAuthCallback] Redirecionando para:', redirectPath);
+          console.log('🔄 [OAuthCallback] Redirecionando para path:', redirectPath);
 
           setStatus('success');
 
-          // Aguardar um pouco para garantir que o estado seja atualizado
-          setTimeout(() => {
-            navigate(redirectPath, { replace: true });
-          }, 500);
+          // IMPORTANTE: Se estamos no domínio errado, redirecionar para o correto
+          if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
+            // Estamos no domínio correto, usar navigate (path relativo mantém o domínio)
+            setTimeout(() => {
+              navigate(redirectPath, { replace: true });
+            }, 500);
+          } else {
+            // Estamos no domínio errado, redirecionar para o correto
+            console.error('❌ [OAuthCallback] Domínio incorreto detectado:', currentHostname);
+            const correctOrigin = 'https://descubrams.com';
+            setTimeout(() => {
+              window.location.href = `${correctOrigin}${redirectPath}`;
+            }, 500);
+          }
         } else {
           console.warn('⚠️ [OAuthCallback] Nenhuma sessão encontrada após callback');
           setStatus('error');
