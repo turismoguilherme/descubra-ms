@@ -533,11 +533,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         callbackPath = isDescubraMS ? '/ms' : '/auth/callback';
       }
       
-      const redirectPath = `${window.location.origin}${callbackPath}`;
+      // IMPORTANTE: Garantir que o redirectTo seja ABSOLUTO e correto
+      // Se estamos em descubrams.com, FORÇAR https://descubrams.com/ms
+      // Se estamos em viajartur.com, FORÇAR https://viajartur.com/auth/callback
+      let redirectPath: string;
+      if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+        // FORÇAR absoluto para descobrams.com
+        redirectPath = 'https://descubrams.com/ms';
+      } else if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+        // FORÇAR absoluto para viajartur.com
+        redirectPath = 'https://www.viajartur.com/auth/callback';
+      } else {
+        // Fallback: usar origin atual
+        redirectPath = `${window.location.origin}${callbackPath}`;
+      }
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:signInWithProvider:PRE_OAUTH',message:'Antes de chamar signInWithOAuth',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,callbackPath,redirectPath,provider,isDescubraMS},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
+      console.log('🔍 [AuthProvider] PRE_OAUTH:', {
+        hostname,
+        callbackPath,
+        redirectPath,
+        provider,
+        isDescubraMS
+      });
       
       console.log("🔄 SOCIAL LOGIN: Hostname:", hostname);
       console.log("🔄 SOCIAL LOGIN: É Descubra MS:", isDescubraMS);
@@ -550,9 +567,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:signInWithProvider:POST_OAUTH',message:'Após chamar signInWithOAuth',data:{hasData:!!data,hasError:!!error,errorMessage:error?.message,redirectPath,url:data?.url},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
+      console.log('🔍 [AuthProvider] POST_OAUTH:', {
+        hasData: !!data,
+        hasError: !!error,
+        errorMessage: error?.message,
+        oauthUrl: data?.url,
+        redirectPath
+      });
 
       logger.dev("🔍 AuthProvider (signInWithOAuth): Dados de login recebidos");
 
