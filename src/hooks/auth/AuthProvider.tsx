@@ -535,6 +535,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       const redirectPath = `${window.location.origin}${callbackPath}`;
       
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:signInWithProvider:PRE_OAUTH',message:'Antes de chamar signInWithOAuth',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,callbackPath,redirectPath,provider,isDescubraMS},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
+      // #endregion
+      
       console.log("🔄 SOCIAL LOGIN: Hostname:", hostname);
       console.log("🔄 SOCIAL LOGIN: É Descubra MS:", isDescubraMS);
       console.log("🔄 SOCIAL LOGIN: Redirecionando para:", redirectPath);
@@ -545,6 +549,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           redirectTo: redirectPath,
         },
       });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:signInWithProvider:POST_OAUTH',message:'Após chamar signInWithOAuth',data:{hasData:!!data,hasError:!!error,errorMessage:error?.message,redirectPath,url:data?.url},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
+      // #endregion
 
       logger.dev("🔍 AuthProvider (signInWithOAuth): Dados de login recebidos");
 

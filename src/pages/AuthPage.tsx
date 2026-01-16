@@ -85,12 +85,20 @@ const AuthPage = () => {
       
       const redirectPath = `${window.location.origin}${callbackPath}`;
       
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthPage.tsx:handleSocialLogin:PRE_OAUTH',message:'Antes de chamar signInWithOAuth',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,callbackPath,redirectPath,provider},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
+      // #endregion
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: redirectPath,
         },
       });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthPage.tsx:handleSocialLogin:POST_OAUTH',message:'Após chamar signInWithOAuth',data:{hasData:!!data,hasError:!!error,errorMessage:error?.message,redirectPath},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
+      // #endregion
 
       if (error) {
         throw error;
