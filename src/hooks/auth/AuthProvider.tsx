@@ -198,12 +198,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT',message:'OAuth redirect detectado no AuthProvider',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,hash:window.location.hash},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
+            // #endregion
+            
             console.log('🔄 [AuthProvider] Login OAuth bem-sucedido, redirecionando...');
 
             // Usar função utilitária para garantir redirecionamento correto
             const { getOAuthCallbackRedirectPath, isDescubraMSContext } = await import('@/utils/authRedirect');
             const redirectPath = getOAuthCallbackRedirectPath();
             const isDescubraMS = isDescubraMSContext();
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT_PATH',message:'Path de redirecionamento OAuth calculado',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
+            // #endregion
 
             console.log('🔄 [AuthProvider] Domínio atual:', window.location.hostname);
             console.log('🔄 [AuthProvider] É contexto Descubra MS:', isDescubraMS);
@@ -212,6 +220,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             window.history.replaceState(null, '', redirectPath);
             // Forçar reload para garantir que o estado seja atualizado
             setTimeout(() => {
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:WINDOW_LOCATION_HREF',message:'Forçando window.location.href',data:{redirectPath,hostname:window.location.hostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
+              // #endregion
               window.location.href = redirectPath;
             }, 100);
           }

@@ -11,14 +11,25 @@
 export function isDescubraMSContext(): boolean {
   const hostname = window.location.hostname.toLowerCase();
   const pathname = window.location.pathname.toLowerCase();
+  const origin = window.location.origin;
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:isDescubraMSContext:ENTRY',message:'Detectando contexto Descubra MS',data:{hostname,pathname,origin,href:window.location.href},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
   
   // Prioridade 1: Detectar explicitamente viajartur.com para evitar falsos positivos
   if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:isDescubraMSContext:VIAJAR_DETECTED',message:'ViaJAR detectado, retornando false',data:{hostname,pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return false;
   }
   
   // Prioridade 2: Se está no domínio descubrams.com, sempre é Descubra MS
   if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:isDescubraMSContext:DESCUBRAMS_DETECTED',message:'Descubra MS detectado por hostname, retornando true',data:{hostname,pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return true;
   }
   
@@ -29,9 +40,15 @@ export function isDescubraMSContext(): boolean {
     pathname.startsWith('/ms') ||
     pathname.startsWith('/partner')
   ) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:isDescubraMSContext:PATHNAME_DETECTED',message:'Descubra MS detectado por pathname, retornando true',data:{hostname,pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     return true;
   }
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:isDescubraMSContext:RETURN_FALSE',message:'Nenhum indicador Descubra MS encontrado, retornando false',data:{hostname,pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
   return false;
 }
 
@@ -67,44 +84,57 @@ export function isViaJARContext(): boolean {
  */
 export function getLoginRedirectPath(): string {
   const hostname = window.location.hostname.toLowerCase();
+  const pathname = window.location.pathname;
+  const origin = window.location.origin;
   const isDescubraMS = isDescubraMSContext();
   const isViaJAR = isViaJARContext();
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:getLoginRedirectPath:ENTRY',message:'Calculando path de redirecionamento',data:{hostname,pathname,origin,isDescubraMS,isViaJAR},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
+  // #endregion
+  
   // Prioridade 1: Descubra MS - descobrams.com → /descubrams
   if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:getLoginRedirectPath:RETURN_DESCUBRAMS',message:'Retornando /descubrams (hostname match)',data:{hostname,pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return '/descubrams';
   }
   
   // Prioridade 2: ViaJAR - viajartur.com → / ou /viajar/dashboard
   if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
     const currentPath = window.location.pathname;
-    // Se está em uma rota de auth, redirecionar para home
-    if (currentPath.includes('/login') || currentPath.includes('/auth')) {
-      return '/';
-    }
-    return currentPath || '/';
+    const redirectPath = (currentPath.includes('/login') || currentPath.includes('/auth')) ? '/' : (currentPath || '/');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:getLoginRedirectPath:RETURN_VIAJAR',message:'Retornando path ViaJAR',data:{hostname,pathname,currentPath,redirectPath},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    return redirectPath;
   }
   
   // Prioridade 3: Detectar por contexto (pathname)
   if (isDescubraMS) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:getLoginRedirectPath:RETURN_DESCUBRAMS_CONTEXT',message:'Retornando /descubrams (contexto detectado)',data:{hostname,pathname,isDescubraMS},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     return '/descubrams';
   }
   
   if (isViaJAR) {
     const currentPath = window.location.pathname;
-    if (currentPath.includes('/login') || currentPath.includes('/auth')) {
-      return '/';
-    }
-    return currentPath || '/';
+    const redirectPath = (currentPath.includes('/login') || currentPath.includes('/auth')) ? '/' : (currentPath || '/');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:getLoginRedirectPath:RETURN_VIAJAR_CONTEXT',message:'Retornando path ViaJAR (contexto detectado)',data:{hostname,pathname,isViaJAR,redirectPath},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    return redirectPath;
   }
   
   // Fallback: Para outros contextos, manter path atual ou home
   const currentPath = window.location.pathname;
-  if (currentPath.includes('/login') || currentPath.includes('/auth')) {
-    return '/';
-  }
-  
-  return currentPath || '/';
+  const redirectPath = (currentPath.includes('/login') || currentPath.includes('/auth')) ? '/' : (currentPath || '/');
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authRedirect.ts:getLoginRedirectPath:RETURN_FALLBACK',message:'Retornando path fallback',data:{hostname,pathname,currentPath,redirectPath},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
+  return redirectPath;
 }
 
 /**
