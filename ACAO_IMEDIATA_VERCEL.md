@@ -128,3 +128,4 @@ Execute estas verificações:
 
 **⚡ Execute as ações na ordem (1 → 5) e verifique após cada passo!**
 
+

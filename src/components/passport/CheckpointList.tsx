@@ -33,9 +33,18 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
 
   // Verificar se um checkpoint foi completado
   const isCheckpointCompleted = (checkpointId: string): boolean => {
-    if (!progress?.fragments) return false;
+    if (!progress?.fragments) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointList.tsx:36',message:'Verificando checkpoint - sem fragments',data:{checkpointId,hasProgress:!!progress},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      // #endregion
+      return false;
+    }
     const fragment = progress.fragments.find(f => f.checkpoint_id === checkpointId);
-    return fragment?.collected || false;
+    const isCompleted = fragment?.collected || false;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointList.tsx:38',message:'Verificando checkpoint completado',data:{checkpointId,isCompleted,hasFragment:!!fragment,fragmentsCount:progress.fragments.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
+    return isCompleted;
   };
 
   // Obter informações do fragmento coletado
@@ -149,9 +158,9 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
                           </Badge>
                         )}
                         {isBlocked && !isCompleted && (
-                          <Badge variant="secondary" className="bg-gray-200 text-gray-600 rounded-full px-3 py-1 text-xs">
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-full px-3 py-1 text-xs">
                             <Lock className="h-3 w-3 mr-1" />
-                            Bloqueado
+                            Complete os anteriores primeiro
                           </Badge>
                         )}
                       </div>
@@ -211,6 +220,14 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
+                        </div>
+                      )}
+                      
+                      {isBlocked && !isCompleted && requireSequential && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-xs text-yellow-800 font-medium">
+                            ⚠️ Este checkpoint está bloqueado porque você precisa completar os checkpoints anteriores em ordem sequencial.
+                          </p>
                         </div>
                       )}
                     </div>

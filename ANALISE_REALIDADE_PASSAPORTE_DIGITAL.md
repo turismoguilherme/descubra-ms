@@ -285,3 +285,4 @@ Este documento analisa **o que realmente funciona** no sistema de Passaporte Dig
 
 **⚠️ IMPORTANTE:** Este documento mostra a realidade técnica. Antes de remover mocks, confirme que não quebrará nenhuma funcionalidade existente.
 
+

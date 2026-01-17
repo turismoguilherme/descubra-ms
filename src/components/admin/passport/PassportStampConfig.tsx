@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, HelpCircle } from 'lucide-react';
+import { Plus, Loader2, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -20,6 +20,7 @@ const PassportStampConfig: React.FC = () => {
   const [selectedRoute, setSelectedRoute] = useState<string>('');
   const [creatingTheme, setCreatingTheme] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [newThemeForm, setNewThemeForm] = useState({
     theme_key: '',
     theme_name: '',
@@ -230,9 +231,17 @@ const PassportStampConfig: React.FC = () => {
       }
 
       console.log('✅ [PassportStampConfig] Configuração salva com sucesso');
+      
+      // Mostrar estado "Salvo!" no botão por 2 segundos
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+      }, 2000);
+      
       toast({
         title: 'Configuração salva com sucesso! ✅',
         description: existing ? 'As alterações foram aplicadas.' : 'Nova configuração criada.',
+        duration: 5000, // 5 segundos de duração
       });
       await loadData();
     } catch (error: any) {
@@ -243,13 +252,28 @@ const PassportStampConfig: React.FC = () => {
         hint: error.hint,
         stack: error.stack,
       });
-      toast({
-        title: 'Erro ao salvar configuração',
-        description: error.message,
-        variant: 'destructive',
-      });
+      
+      // Verificar se é erro de migration não executada
+      if (error.name === 'MigrationRequiredError' || (error.code === 'PGRST204' && error.message?.includes('require_sequential'))) {
+        toast({
+          title: 'Migração do banco de dados necessária',
+          description: error.message || 'A coluna "require_sequential" não existe. Execute a migration no Supabase Dashboard.',
+          variant: 'destructive',
+          duration: 10000, // Mostrar por mais tempo
+        });
+      } else {
+        toast({
+          title: 'Erro ao salvar configuração',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setSaving(false);
+      // Resetar estado "Salvo!" em caso de erro
+      if (saved) {
+        setSaved(false);
+      }
     }
   };
 
@@ -375,9 +399,11 @@ const PassportStampConfig: React.FC = () => {
                 handleSave();
               }}
               disabled={saving}
+              className={saved ? 'bg-green-600 hover:bg-green-700' : ''}
             >
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {saving ? 'Salvando...' : 'Salvar Configuração'}
+              {saved && <CheckCircle2 className="h-4 w-4 mr-2" />}
+              {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar Configuração'}
             </Button>
           </>
         )}

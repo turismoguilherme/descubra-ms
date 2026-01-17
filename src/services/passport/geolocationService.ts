@@ -104,13 +104,24 @@ class GeolocationService {
         };
       }
 
-      // Calcular distância
+      // Calcular distância usando fórmula de Haversine (precisa para distâncias curtas)
       const distance = this.calculateDistance(
         checkpoint.latitude,
         checkpoint.longitude,
         userLat,
         userLon
       );
+
+      console.log('🔵 [geolocationService.validateProximity] Cálculo de distância:', {
+        checkpointId: checkpoint.id,
+        checkpointName: checkpoint.name,
+        checkpointLat: checkpoint.latitude,
+        checkpointLon: checkpoint.longitude,
+        userLat,
+        userLon,
+        calculatedDistance: Math.round(distance),
+        requiredRadius: checkpoint.geofence_radius || 100,
+      });
 
       const requiredRadius = checkpoint.geofence_radius || 100;
       const withinRadius = distance <= requiredRadius;

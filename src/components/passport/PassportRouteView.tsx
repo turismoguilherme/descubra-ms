@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import RouteHeroSection from './RouteHeroSection';
@@ -7,8 +7,11 @@ import AnimalStampGrid from './AnimalStampGrid';
 import RewardsOverview from './RewardsOverview';
 import PassportMap from './PassportMap';
 import CheckpointList from './CheckpointList';
+import RouteCompletionModal from './RouteCompletionModal';
 import { MapPin, TrendingUp, WifiOff, KeyRound, Puzzle, Target, Gift, CheckCircle2 } from 'lucide-react';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
+import { passportService } from '@/services/passport/passportService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PassportRouteViewProps {
   route: RouteExtended;
@@ -17,8 +20,43 @@ interface PassportRouteViewProps {
 }
 
 const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, onProgressUpdate }) => {
+  const { user } = useAuth();
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [rewardsUnlocked, setRewardsUnlocked] = useState<any[]>([]);
+  const [totalPoints, setTotalPoints] = useState(0);
+  
   // Determine animal theme from configuration or default
   const theme = (route.configuration?.stamp_theme || 'onca') as 'onca' | 'tuiuiu' | 'jacare' | 'arara' | 'capivara';
+  
+  // Verificar se rota foi completada
+  useEffect(() => {
+    if (progress?.completion_percentage === 100 && !showCompletionModal) {
+      // Buscar recompensas desbloqueadas
+      if (user?.id && route.id) {
+        passportService.getRouteProgress(user.id, route.id).then((updatedProgress) => {
+          if (updatedProgress?.completion_percentage === 100) {
+            // Calcular pontos totais (aproximado)
+            const points = (route.checkpoints?.length || 0) * 10;
+            setTotalPoints(points);
+            
+            // Buscar recompensas desbloqueadas
+            // TODO: Buscar recompensas reais do banco
+            setRewardsUnlocked([]);
+            setShowCompletionModal(true);
+          }
+        }).catch(console.error);
+      }
+    }
+  }, [progress?.completion_percentage, showCompletionModal, user?.id, route.id, route.checkpoints?.length]);
+
+  const handleProgressUpdate = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PassportRouteView.tsx:handleProgressUpdate',message:'Atualizando progresso após check-in',data:{routeId:route.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    if (onProgressUpdate) {
+      onProgressUpdate();
+    }
+  };
   
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -141,7 +179,7 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
               routeId={route.id}
               progress={progress}
               requireSequential={route.configuration?.require_sequential || false}
-              onCheckinSuccess={onProgressUpdate}
+              onCheckinSuccess={handleProgressUpdate}
             />
           )}
         </div>
@@ -219,6 +257,17 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
           </Card>
         </div>
       </div>
+
+      {/* Modal de Conclusão */}
+      <RouteCompletionModal
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        routeName={route.name}
+        totalPoints={totalPoints}
+        rewardsUnlocked={rewardsUnlocked}
+        theme={theme}
+        onContinue={handleProgressUpdate}
+      />
     </div>
   );
 };

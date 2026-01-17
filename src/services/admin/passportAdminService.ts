@@ -74,6 +74,21 @@ class PassportAdminService {
 
       if (error) {
         console.error('❌ [PassportAdminService] Erro ao criar configuração:', error);
+        
+        // Verificar se é erro de coluna não encontrada (migração não executada)
+        if (error.code === 'PGRST204' && error.message?.includes('require_sequential')) {
+          const migrationError = new Error(
+            'A migração do banco de dados não foi executada. A coluna "require_sequential" não existe na tabela "passport_configurations".\n\n' +
+            'Para corrigir:\n' +
+            '1. Acesse o Supabase Dashboard\n' +
+            '2. Vá em SQL Editor\n' +
+            '3. Execute a migração: supabase/migrations/20251226000001_add_require_sequential_to_passport_config.sql\n' +
+            '4. Recarregue a página e tente novamente'
+          );
+          migrationError.name = 'MigrationRequiredError';
+          throw migrationError;
+        }
+        
         throw error;
       }
       console.log('✅ [PassportAdminService] Configuração criada:', data?.id);
@@ -105,6 +120,21 @@ class PassportAdminService {
 
       if (error) {
         console.error('❌ [PassportAdminService] Erro ao atualizar configuração:', error);
+        
+        // Verificar se é erro de coluna não encontrada (migração não executada)
+        if (error.code === 'PGRST204' && error.message?.includes('require_sequential')) {
+          const migrationError = new Error(
+            'A migração do banco de dados não foi executada. A coluna "require_sequential" não existe na tabela "passport_configurations".\n\n' +
+            'Para corrigir:\n' +
+            '1. Acesse o Supabase Dashboard\n' +
+            '2. Vá em SQL Editor\n' +
+            '3. Execute a migração: supabase/migrations/20251226000001_add_require_sequential_to_passport_config.sql\n' +
+            '4. Recarregue a página e tente novamente'
+          );
+          migrationError.name = 'MigrationRequiredError';
+          throw migrationError;
+        }
+        
         throw error;
       }
       console.log('✅ [PassportAdminService] Configuração atualizada:', data?.id);

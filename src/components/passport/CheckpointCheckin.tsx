@@ -24,7 +24,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
 }) => {
   const { checkIn } = usePassport();
   const { toast } = useToast();
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lon: number; accuracy?: number } | null>(null);
   const [validating, setValidating] = useState(false);
   const [validation, setValidation] = useState<GeofenceValidation | null>(null);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -32,22 +32,57 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [partnerCode, setPartnerCode] = useState('');
 
+  // Log do estado do botão sempre que mudar
+  useEffect(() => {
+    const isDisabled = !location || (validation && !validation.valid) || checkingIn;
+    console.log('🔵 [CheckpointCheckin] Estado do botão atualizado', {
+      hasLocation: !!location,
+      validationValid: validation?.valid,
+      checkingIn,
+      isDisabled,
+      location,
+      validation,
+    });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:useEffect',message:'Estado do botão atualizado',data:{hasLocation:!!location,validationValid:validation?.valid,checkingIn,isDisabled},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch((e)=>{console.error('❌ [CheckpointCheckin] Erro ao enviar log:',e);});
+    // #endregion
+  }, [location, validation, checkingIn]);
+
   /**
    * Obter localização atual
    */
   const getCurrentLocation = async () => {
     try {
+      console.log('🔵 [CheckpointCheckin] getCurrentLocation chamado');
       setValidating(true);
       const loc = await geolocationService.getCurrentLocation();
-      setLocation({ lat: loc.latitude, lon: loc.longitude });
+      console.log('🔵 [CheckpointCheckin] Localização obtida', {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        accuracy: loc.accuracy,
+        accuracyInMeters: Math.round(loc.accuracy || 0),
+      });
+      setLocation({ 
+        lat: loc.latitude, 
+        lon: loc.longitude,
+        accuracy: loc.accuracy,
+      });
 
       // Validar proximidade
       if (checkpoint.latitude && checkpoint.longitude) {
+        console.log('🔵 [CheckpointCheckin] Validando proximidade', {
+          checkpointId: checkpoint.id,
+          checkpointLat: checkpoint.latitude,
+          checkpointLon: checkpoint.longitude,
+          userLat: loc.latitude,
+          userLon: loc.longitude,
+        });
         const validation = await geolocationService.validateProximity(
           checkpoint.id,
           loc.latitude,
           loc.longitude
         );
+        console.log('🔵 [CheckpointCheckin] Validação de proximidade', validation);
         setValidation(validation);
       } else {
         // Se checkpoint não tem coordenadas, permitir check-in
@@ -90,7 +125,21 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
    * Fazer check-in
    */
   const handleCheckin = async () => {
+    console.log('🔵 [CheckpointCheckin] handleCheckin chamado', {
+      hasLocation: !!location,
+      hasValidation: !!validation,
+      validationValid: validation?.valid,
+      validationMode: checkpoint.validation_mode,
+      hasPartnerCode: !!partnerCode,
+    });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:92',message:'handleCheckin chamado',data:{hasLocation:!!location,hasValidation:!!validation,validationValid:validation?.valid,validationMode:checkpoint.validation_mode,hasPartnerCode:!!partnerCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch((e)=>{console.error('❌ [CheckpointCheckin] Erro ao enviar log:',e);});
+    // #endregion
+    
     if (!location) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:94',message:'Check-in bloqueado - sem localização',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+      // #endregion
       toast({
         title: 'Localização necessária',
         description: 'Por favor, obtenha sua localização primeiro.',
@@ -100,6 +149,9 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
     }
 
     if (validation && !validation.valid && (checkpoint.validation_mode === 'geofence' || checkpoint.validation_mode === 'mixed')) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:102',message:'Check-in bloqueado - fora do alcance',data:{distance:validation.distance,validationMode:checkpoint.validation_mode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+      // #endregion
       toast({
         title: 'Fora do alcance',
         description: `Você está a ${validation.distance}m do checkpoint. Aproxime-se mais.`,
@@ -110,6 +162,9 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
 
     // Se este checkpoint exige código (code ou mixed), garantir que o usuário digitou algo
     if ((checkpoint.validation_mode === 'code' || checkpoint.validation_mode === 'mixed') && !partnerCode.trim()) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:112',message:'Check-in bloqueado - código necessário',data:{validationMode:checkpoint.validation_mode,partnerCodeLength:partnerCode.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+      // #endregion
       toast({
         title: 'Código do parceiro necessário',
         description: 'Peça o código no balcão/recepção do parceiro e digite para concluir o check-in.',
@@ -126,9 +181,35 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       photoUrl = photoPreview || undefined;
     }
 
+    console.log('🔵 [CheckpointCheckin] Antes do try block', {
+      hasPhoto: !!photo,
+      photoUrl,
+      partnerCode,
+      checkpointId: checkpoint.id,
+      locationLat: location?.lat,
+      locationLon: location?.lon,
+    });
+
     try {
+      console.log('🔵 [CheckpointCheckin] Dentro do try, antes de setCheckingIn');
       setCheckingIn(true);
+      console.log('🔵 [CheckpointCheckin] setCheckingIn(true) executado');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:131',message:'Iniciando check-in',data:{checkpointId:checkpoint.id,hasLocation:!!location,hasPhoto:!!photo,hasPartnerCode:!!partnerCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+      console.log('🔵 [CheckpointCheckin] Antes de chamar checkIn', {
+        checkpointId: checkpoint.id,
+        lat: location.lat,
+        lon: location.lon,
+        photoUrl,
+        partnerCode,
+      });
       const result = await checkIn(checkpoint.id, location.lat, location.lon, photoUrl, partnerCode);
+      console.log('🔵 [CheckpointCheckin] checkIn retornou', result);
+      console.log('🔵 [CheckpointCheckin] Resultado completo:', JSON.stringify(result, null, 2));
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:133',message:'Resultado do check-in',data:{success:result.success,routeCompleted:result.route_completed,error:result.error,fullResult:result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
 
       if (result.success) {
         toast({
@@ -165,13 +246,38 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           }
         }
 
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:168',message:'Chamando onCheckinSuccess callback',data:{hasCallback:!!onCheckinSuccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         onCheckinSuccess?.();
       } else {
-        toast({
-          title: 'Erro no check-in',
-          description: result.error || 'Não foi possível fazer o check-in.',
-          variant: 'destructive',
-        });
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:178',message:'Check-in falhou',data:{error:result.error,hasCallback:!!onCheckinSuccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
+        // Se o erro for "check-in já realizado", mostrar mensagem informativa e atualizar progresso
+        if (result.error?.includes('já realizado') || result.error?.includes('Check-in já realizado')) {
+          console.log('🔵 [CheckpointCheckin] Check-in já realizado, atualizando progresso');
+          toast({
+            title: 'Check-in já realizado',
+            description: 'Você já fez check-in neste checkpoint anteriormente. Atualizando progresso...',
+            variant: 'default',
+          });
+          // Sempre atualizar progresso quando check-in já existe
+          if (onCheckinSuccess) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:256',message:'Atualizando progresso - check-in já existe',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            onCheckinSuccess();
+          }
+        } else {
+          // Outros erros: mostrar mensagem de erro
+          toast({
+            title: 'Erro no check-in',
+            description: result.error || 'Não foi possível fazer o check-in.',
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error: any) {
       toast({
@@ -225,20 +331,37 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
                     ) : (
                       <AlertCircle className="h-5 w-5 text-red-600" />
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 space-y-1">
                       <div className="font-medium">
                         {validation.valid
                           ? 'Você está no local correto!'
                           : 'Você está muito longe'}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Distância: {validation.distance}m (raio permitido: {validation.required_radius}m)
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>
+                          Distância: <strong>{validation.distance}m</strong> (raio permitido: {validation.required_radius}m)
+                        </div>
+                        {location?.accuracy !== undefined && (
+                          <div className={`text-xs ${location.accuracy > 50 ? 'text-orange-600' : 'text-gray-600'}`}>
+                            Precisão do GPS: {Math.round(location.accuracy)}m
+                            {location.accuracy > 50 && (
+                              <span className="ml-1">⚠️ Baixa precisão</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <Badge variant="outline">Localização obtida</Badge>
+                <div className="space-y-1">
+                  <Badge variant="outline">Localização obtida</Badge>
+                  {location?.accuracy !== undefined && (
+                    <div className="text-xs text-muted-foreground">
+                      Precisão do GPS: {Math.round(location.accuracy)}m
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ) : (
@@ -319,24 +442,53 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
         )}
 
         {/* Botão de Check-in */}
-        <Button
-          onClick={handleCheckin}
-          disabled={!location || (validation && !validation.valid) || checkingIn}
-          className="w-full"
-          size="lg"
-        >
-          {checkingIn ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processando...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Fazer Check-in
-            </>
-          )}
-        </Button>
+        {(() => {
+          const isDisabled = !location || (validation && !validation.valid) || checkingIn;
+          const disabledReason = !location 
+            ? 'Obtenha a localização primeiro' 
+            : (validation && !validation.valid) 
+            ? 'Você está fora do alcance' 
+            : checkingIn 
+            ? 'Processando...' 
+            : '';
+          
+          return (
+            <div className="space-y-2">
+              {isDisabled && disabledReason && (
+                <p className="text-xs text-muted-foreground text-center">{disabledReason}</p>
+              )}
+              <Button
+                onClick={() => {
+                  console.log('🔵 [CheckpointCheckin] Botão clicado', {
+                    hasLocation: !!location,
+                    validationValid: validation?.valid,
+                    checkingIn,
+                    disabled: isDisabled,
+                  });
+                  // #region agent log
+                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:389',message:'Botão Fazer check-in clicado',data:{hasLocation:!!location,validationValid:validation?.valid,checkingIn,disabled:isDisabled},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch((e)=>{console.error('❌ [CheckpointCheckin] Erro ao enviar log:',e);});
+                  // #endregion
+                  handleCheckin();
+                }}
+                disabled={isDisabled}
+                className="w-full"
+                size="lg"
+              >
+                {checkingIn ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Fazer Check-in
+                  </>
+                )}
+              </Button>
+            </div>
+          );
+        })()}
 
         {!checkpoint.requires_photo && (
           <p className="text-xs text-muted-foreground text-center">

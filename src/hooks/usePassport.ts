@@ -115,9 +115,18 @@ export const usePassport = () => {
           // Carregar progresso
           try {
             console.log('🔍 [usePassport.loadRoute] Carregando progresso...');
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:117',message:'Carregando progresso da rota',data:{routeId,userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+            // #endregion
             const routeProgress = await passportService.getRouteProgress(user.id, routeId);
             console.log('🔍 [usePassport.loadRoute] Progresso:', routeProgress);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:119',message:'Progresso carregado do banco',data:{completionPercentage:routeProgress?.completion_percentage,collectedFragments:routeProgress?.collected_fragments,totalFragments:routeProgress?.total_fragments},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+            // #endregion
             setProgress(routeProgress);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:120',message:'Progresso atualizado no estado após loadRoute',data:{completionPercentage:routeProgress?.completion_percentage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+            // #endregion
           } catch (progressError) {
             console.warn('⚠️ [usePassport.loadRoute] Erro ao carregar progresso (pode ser normal se tabelas não existem):', progressError);
             // Não bloquear se progresso falhar
@@ -206,6 +215,9 @@ export const usePassport = () => {
         }
 
         // Se online, fazer check-in direto
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:209',message:'Chamando passportService.checkIn',data:{checkpointId,hasPhoto:!!photoUrl,hasPartnerCode:!!partnerCodeInput},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         const result = await passportService.checkIn(
           user.id,
           checkpointId,
@@ -215,9 +227,19 @@ export const usePassport = () => {
           partnerCodeInput
         );
 
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:217',message:'Resultado do checkIn',data:{success:result.success,routeId:result.route_id,error:result.error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
+
         // Se sucesso, atualizar progresso
         if (result.success && result.route_id) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:220',message:'Atualizando progresso após check-in',data:{routeId:result.route_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+          // #endregion
           const routeProgress = await passportService.getRouteProgress(user.id, result.route_id);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePassport.ts:222',message:'Progresso atualizado no estado',data:{completionPercentage:routeProgress?.completion_percentage,collectedFragments:routeProgress?.collected_fragments},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+          // #endregion
           setProgress(routeProgress);
         }
 
