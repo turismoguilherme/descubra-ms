@@ -46,24 +46,57 @@ export const OAuthCallback = () => {
           fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OAuthCallback.tsx:processOAuthCallback:OAUTH_SUCCESS',message:'OAuth login bem-sucedido, calculando redirect',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,hash:window.location.hash,userId:session.user.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
           // #endregion
           
-          console.log('✅ [OAuthCallback] Login OAuth bem-sucedido!');
+          console.log('✅ [OAuthCallback] ========== LOGIN OAUTH BEM-SUCEDIDO ==========');
           console.log('✅ [OAuthCallback] Usuário:', session.user.email);
+          console.log('✅ [OAuthCallback] User ID:', session.user.id);
           
           const currentHostname = window.location.hostname.toLowerCase();
+          const isLocal = currentHostname === 'localhost' || currentHostname === '127.0.0.1' || currentHostname.startsWith('192.168.') || currentHostname.startsWith('10.0.') || currentHostname.includes('local');
+          
+          console.log('🔄 [OAuthCallback] 📍 INFORMAÇÕES DO DOMÍNIO:');
+          console.log('🔄 [OAuthCallback]   - Origin atual:', window.location.origin);
+          console.log('🔄 [OAuthCallback]   - Hostname completo:', window.location.hostname);
+          console.log('🔄 [OAuthCallback]   - Hostname normalizado:', currentHostname);
+          console.log('🔄 [OAuthCallback]   - É localhost:', isLocal);
+          console.log('🔄 [OAuthCallback]   - Pathname:', window.location.pathname);
           
           // IMPORTANTE: Garantir que o redirecionamento use o DOMÍNIO ATUAL
+          // LOCALHOST: sempre manter no localhost (getOAuthCallbackRedirectPath já trata isso)
+          // Não forçar redirecionamento para outro domínio - respeitar o domínio onde o usuário está
           let redirectPath = getOAuthCallbackRedirectPath();
+          console.log('🔄 [OAuthCallback] 🎯 Path inicial calculado:', redirectPath);
           
+          // LOCALHOST: O getOAuthCallbackRedirectPath já trata localhost corretamente
+          // Apenas garantir que não haja ajustes que forcem redirecionamento para produção
+          if (isLocal) {
+            console.log('🔄 [OAuthCallback] 🏠 LOCALHOST detectado - mantendo no localhost');
+            // O path já foi calculado corretamente pela função, não fazer ajustes adicionais
+            // que possam forçar redirecionamento para domínios de produção
+          }
           // Se estamos em descubrams.com, garantir que o path seja /descubrams (não /ms)
-          if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
+          else if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
+            console.log('🔄 [OAuthCallback] ✅ Detectado Descubra MS');
             // Se o callback path for /ms (que é usado para OAuth callback), redirecionar para /descubrams
             if (redirectPath === '/ms' || redirectPath.startsWith('/ms/')) {
+              console.log('🔄 [OAuthCallback]   ↳ Convertendo /ms para /descubrams');
               redirectPath = '/descubrams';
             }
             // Garantir que sempre redireciona para /descubrams se estamos em descubrams.com
             if (!redirectPath.startsWith('/descubrams')) {
+              console.log('🔄 [OAuthCallback]   ↳ Forçando path para /descubrams');
               redirectPath = '/descubrams';
             }
+          }
+          // Se estamos em viajartur.com, garantir que não redireciona para /descubrams
+          else if (currentHostname === 'viajartur.com' || currentHostname.includes('viajartur') || currentHostname === 'viajar.com') {
+            console.log('🔄 [OAuthCallback] ✅ Detectado ViaJAR');
+            // Não redirecionar para /descubrams se estiver em viajartur.com
+            if (redirectPath === '/descubrams' || redirectPath.startsWith('/descubrams/')) {
+              console.log('🔄 [OAuthCallback]   ↳ Prevenindo redirecionamento para /descubrams, usando /');
+              redirectPath = '/';
+            }
+          } else {
+            console.log('🔄 [OAuthCallback] ⚠️ Domínio não reconhecido:', currentHostname);
           }
           
           const isDescubraMS = isDescubraMSContext();
@@ -72,26 +105,20 @@ export const OAuthCallback = () => {
           fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OAuthCallback.tsx:processOAuthCallback:NAVIGATE',message:'Navegando após OAuth callback',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname,currentHostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
           // #endregion
 
-          console.log('🔄 [OAuthCallback] Domínio atual:', window.location.hostname);
-          console.log('🔄 [OAuthCallback] É contexto Descubra MS:', isDescubraMS);
-          console.log('🔄 [OAuthCallback] Redirecionando para path:', redirectPath);
+          console.log('🔄 [OAuthCallback] 📋 RESUMO DO REDIRECIONAMENTO:');
+          console.log('🔄 [OAuthCallback]   - É contexto Descubra MS:', isDescubraMS);
+          console.log('🔄 [OAuthCallback]   - Path final calculado:', redirectPath);
+          console.log('🔄 [OAuthCallback]   - Domínio será mantido:', currentHostname);
 
           setStatus('success');
 
-          // IMPORTANTE: Se estamos no domínio errado, redirecionar para o correto
-          if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
-            // Estamos no domínio correto, usar navigate (path relativo mantém o domínio)
-            setTimeout(() => {
-              navigate(redirectPath, { replace: true });
-            }, 500);
-          } else {
-            // Estamos no domínio errado, redirecionar para o correto
-            console.error('❌ [OAuthCallback] Domínio incorreto detectado:', currentHostname);
-            const correctOrigin = 'https://descubrams.com';
-            setTimeout(() => {
-              window.location.href = `${correctOrigin}${redirectPath}`;
-            }, 500);
-          }
+          // IMPORTANTE: Usar navigate (path relativo) para manter o domínio atual
+          // Não forçar mudança de domínio - o usuário deve permanecer onde está
+          console.log('🔄 [OAuthCallback] 🚀 Executando redirecionamento em 500ms...');
+          setTimeout(() => {
+            console.log('🔄 [OAuthCallback] ✅ Redirecionando para:', redirectPath);
+            navigate(redirectPath, { replace: true });
+          }, 500);
         } else {
           console.warn('⚠️ [OAuthCallback] Nenhuma sessão encontrada após callback');
           setStatus('error');

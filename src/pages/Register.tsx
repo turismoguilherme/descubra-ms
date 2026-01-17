@@ -7,6 +7,7 @@ import RegisterForm, { RegisterFormValues } from "@/components/auth/RegisterForm
 import SecureProfileForm from "@/components/auth/SecureProfileForm";
 import EmailConfirmationMessage from "@/components/auth/EmailConfirmationMessage";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { getLoginRedirectPath } from "@/utils/authRedirect";
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -25,8 +26,21 @@ const Register = () => {
       });
       
       if (profileComplete) {
-        console.log("👤 REGISTER: Perfil completo, redirecionando para home");
-        navigate('/descubrams');
+        console.log("👤 REGISTER: ========== PERFIL COMPLETO - REDIRECIONANDO ==========");
+        console.log("👤 REGISTER: Origin atual:", window.location.origin);
+        console.log("👤 REGISTER: Hostname:", window.location.hostname);
+        console.log("👤 REGISTER: Pathname:", window.location.pathname);
+        
+        // IMPORTANTE: Usar redirecionamento dinâmico baseado no domínio atual
+        // Não hardcodar /descubrams - respeitar o domínio onde o usuário está
+        const redirectPath = getLoginRedirectPath();
+        
+        console.log("👤 REGISTER: 📋 RESUMO DO REDIRECIONAMENTO:");
+        console.log("👤 REGISTER:   - Path calculado:", redirectPath);
+        console.log("👤 REGISTER:   - Domínio será mantido:", window.location.hostname);
+        console.log("👤 REGISTER: 🚀 Executando redirecionamento...");
+        
+        navigate(redirectPath);
       } else {
         console.log("👤 REGISTER: Perfil incompleto, indo para etapa 2");
         setStep(2);
