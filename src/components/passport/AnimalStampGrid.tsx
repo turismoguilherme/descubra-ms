@@ -46,57 +46,72 @@ const culturalPhrases: Record<string, string[]> = {
   ],
 };
 
+const themeIcons: Record<string, string> = {
+  onca: '🐆',
+  tuiuiu: '🦩',
+  jacare: '🐊',
+  arara: '🦜',
+  capivara: '🦫',
+};
+
 const AnimalStampGrid: React.FC<AnimalStampGridProps> = ({ progress }) => {
   const getCulturalPhrase = (theme: string, fragmentNumber: number): string => {
     const phrases = culturalPhrases[theme] || [];
     return phrases[fragmentNumber - 1] || 'Explore o Pantanal';
   };
 
+  const themeIcon = themeIcons[progress.theme] || '🐆';
+
   return (
-    <Card>
-      <CardHeader>
+    <Card className="bg-white rounded-2xl shadow-lg border-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <CardHeader className="bg-gradient-to-r from-ms-primary-blue/5 to-ms-discovery-teal/5 p-6 border-b border-gray-100">
         <div className="space-y-4">
-          <CardTitle className="flex items-center justify-between">
-            <span>Progresso dos Carimbos</span>
-            <span className="text-2xl">
-              {progress.theme === 'onca' && '🐆'}
-              {progress.theme === 'tuiuiu' && '🦩'}
-              {progress.theme === 'jacare' && '🐊'}
-              {progress.theme === 'arara' && '🦜'}
-              {progress.theme === 'capivara' && '🦫'}
-            </span>
+          <CardTitle className="flex items-center justify-between text-ms-primary-blue">
+            <span className="text-lg font-semibold">Progresso dos Carimbos</span>
+            <div className="bg-ms-primary-blue/10 p-3 rounded-full">
+              <span className="text-3xl">{themeIcon}</span>
+            </div>
           </CardTitle>
           
-          {/* Progress Bar */}
-          <div className="space-y-2">
+          {/* Progress Bar - Redesign */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Fragmentos Coletados</span>
-              <span className="font-semibold">
+              <span className="text-gray-600 font-medium">Fragmentos Coletados</span>
+              <span className="font-bold text-ms-primary-blue text-lg">
                 {progress.collected_fragments}/{progress.total_fragments}
               </span>
             </div>
-            <Progress value={progress.completion_percentage} className="h-3" />
-            <p className="text-center text-sm font-medium text-muted-foreground">
-              {progress.completion_percentage}% Completo
+            <div className="relative">
+              <Progress 
+                value={progress.completion_percentage} 
+                className="h-4 bg-gray-200 rounded-full overflow-hidden"
+              />
+              <div 
+                className="absolute inset-0 h-4 rounded-full bg-gradient-to-r from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green transition-all duration-500"
+                style={{ width: `${progress.completion_percentage}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-sm font-semibold text-gray-600">
+              <span className="text-ms-primary-blue">{progress.completion_percentage}%</span> Completo
             </p>
           </div>
 
-          {/* Completion Message */}
+          {/* Completion Message - Redesign */}
           {progress.completion_percentage === 100 && (
-            <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 text-center">
-              <div className="text-4xl mb-2">🎉</div>
-              <h4 className="font-bold text-green-700 text-lg">
+            <div className="p-6 bg-gradient-to-r from-ms-pantanal-green/10 to-green-50 rounded-xl border-2 border-ms-pantanal-green/30 text-center animate-in fade-in scale-in duration-500">
+              <div className="text-5xl mb-3">🎉</div>
+              <h4 className="font-bold text-ms-pantanal-green text-xl">
                 Carimbo Completo!
               </h4>
-              <p className="text-sm text-green-600 mt-1">
-                Você coletou todos os fragmentos deste roteiro
+              <p className="text-sm text-gray-600 mt-2">
+                Você coletou todos os fragmentos deste roteiro!
               </p>
             </div>
           )}
         </div>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="p-6">
         {/* Stamps Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {progress.fragments.map((fragment) => (
