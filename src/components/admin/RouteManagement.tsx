@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Eye, Edit, Trash2, Users, MapPin, Award, Download, Star } from "lucide-react";
+import { useRouteManagement } from "@/hooks/useRouteManagement";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RouteManagementProps {
   userRegion?: string;
@@ -10,55 +12,37 @@ interface RouteManagementProps {
 
 const RouteManagement = ({ userRegion }: RouteManagementProps) => {
   const [activeTab, setActiveTab] = useState("routes");
+  const { routes, loading, getRouteStatistics } = useRouteManagement(userRegion);
+  const [routeStats, setRouteStats] = useState<Record<string, { participants: number; completions: number }>>({});
 
-  // Dados simulados para demonstração
-  const mockRoutes = [
-    {
-      id: '1',
-      name: 'Rota Histórica do Centro',
-      description: 'Passeio pelos principais pontos históricos da cidade',
-      points: 8,
-      duration: '4 horas',
-      difficulty: 'Fácil',
-      participants: 156,
-      completions: 89,
-      rating: 4.7
-    },
-    {
-      id: '2',
-      name: 'Trilha Ecológica do Pantanal',
-      description: 'Caminhada pela natureza preservada do Pantanal',
-      points: 12,
-      duration: '6 horas',
-      difficulty: 'Médio',
-      participants: 78,
-      completions: 45,
-      rating: 4.9
-    },
-    {
-      id: '3',
-      name: 'Circuito Gastronômico',
-      description: 'Degustação da culinária típica regional',
-      points: 6,
-      duration: '3 horas',
-      difficulty: 'Fácil',
-      participants: 234,
-      completions: 198,
-      rating: 4.8
+  // Carregar estatísticas das rotas
+  useEffect(() => {
+    const loadStats = async () => {
+      const stats: Record<string, { participants: number; completions: number }> = {};
+      for (const route of routes) {
+        try {
+          const stat = await getRouteStatistics(route.id);
+          stats[route.id] = {
+            participants: stat.uniqueUsers,
+            completions: stat.totalCompletions
+          };
+        } catch (error) {
+          stats[route.id] = { participants: 0, completions: 0 };
+        }
+      }
+      setRouteStats(stats);
+    };
+
+    if (routes.length > 0) {
+      loadStats();
     }
-  ];
-
-  const mockRegions = [
-    { id: '1', name: 'Centro Histórico', routes: 3, active: true },
-    { id: '2', name: 'Zona Sul', routes: 2, active: true },
-    { id: '3', name: 'Zona Norte', routes: 1, active: false }
-  ];
+  }, [routes, getRouteStatistics]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestão de Roteiros</h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center">Gestão de Roteiros</h2>
           <p className="text-gray-600 mt-1">
             Gerencie roteiros turísticos e gamificação do passaporte digital
           </p>
@@ -78,126 +62,158 @@ const RouteManagement = ({ userRegion }: RouteManagementProps) => {
         </TabsList>
 
         <TabsContent value="routes" className="space-y-6">
-          <div className="grid gap-4">
-            {mockRoutes.map((route) => (
-              <Card key={route.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                          {route.difficulty}
-                        </span>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Carregando rotas...</div>
+          ) : routes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Nenhuma rota encontrada.</div>
+          ) : (
+            <div className="grid gap-4">
+              {routes.map((route) => {
+                const stats = routeStats[route.id] || { participants: 0, completions: 0 };
+                const difficultyLabels: Record<string, string> = {
+                  'facil': 'Fácil',
+                  'medio': 'Médio',
+                  'dificil': 'Difícil',
+                  'easy': 'Fácil',
+                  'medium': 'Médio',
+                  'hard': 'Difícil'
+                };
+                const difficultyLabel = difficultyLabels[route.difficulty_level] || route.difficulty_level;
+                
+                return (
+                  <Card key={route.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                              {difficultyLabel}
+                            </span>
+                          </div>
+                          <p className="text-gray-600 mb-4">{route.description || 'Sem descrição'}</p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-400" />
+                              <span>{route.region || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Award className="h-4 w-4 text-gray-400" />
+                              <span>{route.estimated_duration ? `${route.estimated_duration} min` : 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-gray-400" />
+                              <span>{stats.participants} participantes</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Star className="h-4 w-4 text-yellow-400" />
+                              <span>{stats.completions} concluídas</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-gray-600 mb-4">{route.description}</p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-400" />
-                          <span>{route.points} pontos</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Award className="h-4 w-4 text-gray-400" />
-                          <span>{route.duration}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-400" />
-                          <span>{route.participants} participantes</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-yellow-400" />
-                          <span>{route.rating}/5</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2 ml-4">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Roteiros Mais Populares</CardTitle>
+                <CardTitle className="text-lg text-center">Roteiros Mais Populares</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {mockRoutes
-                    .sort((a, b) => b.participants - a.participants)
-                    .slice(0, 3)
-                    .map((route, index) => (
-                      <div key={route.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center justify-center">
-                            {index + 1}
-                          </span>
+                {loading ? (
+                  <div className="text-center py-4 text-gray-500">Carregando...</div>
+                ) : routes.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">Nenhuma rota encontrada.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {routes
+                      .sort((a, b) => (routeStats[b.id]?.participants || 0) - (routeStats[a.id]?.participants || 0))
+                      .slice(0, 3)
+                      .map((route, index) => (
+                        <div key={route.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="w-6 h-6 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium">{route.name}</span>
+                          </div>
+                          <span className="text-sm text-gray-500">{routeStats[route.id]?.participants || 0} participantes</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-center">Taxa de Conclusão</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-4 text-gray-500">Carregando...</div>
+                ) : routes.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">Nenhuma rota encontrada.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {routes.map((route) => {
+                      const stats = routeStats[route.id] || { participants: 0, completions: 0 };
+                      const completionRate = stats.participants > 0 
+                        ? Math.round((stats.completions / stats.participants) * 100) 
+                        : 0;
+                      return (
+                        <div key={route.id} className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>{route.name}</span>
+                            <span>{completionRate}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full" 
+                              style={{ width: `${completionRate}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-center">Roteiros Ativos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-4 text-gray-500">Carregando...</div>
+                ) : routes.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">Nenhuma rota encontrada.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {routes.map((route) => {
+                      const stats = routeStats[route.id] || { participants: 0, completions: 0 };
+                      return (
+                        <div key={route.id} className="flex items-center justify-between">
                           <span className="text-sm font-medium">{route.name}</span>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm">{stats.completions} concluídas</span>
+                          </div>
                         </div>
-                        <span className="text-sm text-gray-500">{route.participants} participantes</span>
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Taxa de Conclusão</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {mockRoutes.map((route) => (
-                    <div key={route.id} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{route.name}</span>
-                        <span>{Math.round((route.completions / route.participants) * 100)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${(route.completions / route.participants) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Avaliações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {mockRoutes
-                    .sort((a, b) => b.rating - a.rating)
-                    .map((route) => (
-                      <div key={route.id} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{route.name}</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-400" />
-                          <span className="text-sm">{route.rating}</span>
-                        </div>
-                      </div>
-                    ))}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -206,73 +222,54 @@ const RouteManagement = ({ userRegion }: RouteManagementProps) => {
         <TabsContent value="completions" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Conquistas dos Usuários</CardTitle>
+              <CardTitle className="text-lg text-center">Conquistas dos Usuários</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { name: 'Primeiro Roteiro', description: 'Complete seu primeiro roteiro', earned: 234, total: 500 },
-                  { name: 'Explorador', description: 'Complete 5 roteiros diferentes', earned: 89, total: 200 },
-                  { name: 'Aventureiro', description: 'Complete 10 roteiros', earned: 45, total: 100 },
-                  { name: 'Mestre dos Roteiros', description: 'Complete todos os roteiros', earned: 12, total: 50 },
-                  { name: 'Gourmet', description: 'Complete o circuito gastronômico', earned: 156, total: 300 },
-                  { name: 'Historiador', description: 'Complete a rota histórica', earned: 198, total: 250 }
-                ].map((achievement, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Award className="h-5 w-5 text-yellow-500" />
-                      <h4 className="font-medium">{achievement.name}</h4>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">{achievement.description}</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progresso</span>
-                        <span>{achievement.earned}/{achievement.total}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-yellow-500 h-2 rounded-full" 
-                          style={{ width: `${(achievement.earned / achievement.total) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Carregando conquistas...</div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  Sistema de conquistas será implementado em breve.
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="regions" className="space-y-6">
-          <div className="grid gap-4">
-            {mockRegions.map((region) => (
-              <Card key={region.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <MapPin className="h-6 w-6 text-blue-600" />
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Carregando regiões...</div>
+          ) : routes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Nenhuma região encontrada.</div>
+          ) : (
+            <div className="grid gap-4">
+              {Array.from(new Set(routes.map(r => r.region).filter(Boolean))).map((region) => {
+                const regionRoutes = routes.filter(r => r.region === region);
+                return (
+                  <Card key={region}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <MapPin className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{region}</h3>
+                            <p className="text-sm text-gray-500">{regionRoutes.length} roteiro(s)</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                            Ativo
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{region.name}</h3>
-                        <p className="text-sm text-gray-500">{region.routes} roteiros</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        region.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {region.active ? 'Ativo' : 'Inativo'}
-                      </span>
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

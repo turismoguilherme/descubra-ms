@@ -380,7 +380,8 @@ class PassportAdminService {
 
   async updateRoute(
     routeId: string,
-    updates: { video_url?: string; passport_number_prefix?: string; wallpaper_url?: string }
+    updates: { video_url?: string; passport_number_prefix?: string; map_image_url?: string }
+    // wallpaper_url removido - agora é global (não por rota)
   ): Promise<void> {
     console.log('🔵 [PassportAdminService] ========== updateRoute ==========');
     console.log('🔵 [PassportAdminService] Route ID:', routeId);

@@ -10,6 +10,7 @@ interface RouteHeroSectionProps {
   description?: string;
   videoUrl?: string;
   imageUrl?: string;
+  mapImageUrl?: string;
   difficulty?: string;
   duration?: string;
   distance?: number;
@@ -60,6 +61,7 @@ const RouteHeroSection: React.FC<RouteHeroSectionProps> = ({
   description,
   videoUrl,
   imageUrl,
+  mapImageUrl,
   difficulty,
   duration,
   distance,
@@ -187,6 +189,25 @@ const RouteHeroSection: React.FC<RouteHeroSectionProps> = ({
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Map Image Section */}
+      {mapImageUrl && (
+        <Card className="mt-6 rounded-2xl overflow-hidden shadow-lg border-0">
+          <div className="p-4 bg-gradient-to-r from-ms-primary-blue/10 via-ms-discovery-teal/10 to-ms-pantanal-green/10">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-ms-primary-blue" />
+              Mapa do Roteiro
+            </h3>
+            <div className="rounded-lg overflow-hidden border border-gray-200">
+              <img
+                src={mapImageUrl}
+                alt={`Mapa do roteiro ${routeName}`}
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          </div>
+        </Card>
       )}
     </>
   );

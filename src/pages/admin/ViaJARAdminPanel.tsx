@@ -53,7 +53,6 @@ const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/C
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
-const ViajarProductsManager = lazy(() => import('@/components/admin/viajar/ViajarProductsManager'));
 const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
 const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 
@@ -118,11 +117,6 @@ export default function ViaJARAdminPanel() {
             <Route path="viajar/plan-settings" element={
               <Suspense fallback={<LoadingFallback />}>
                 <ViaJARTurSettingsManager />
-              </Suspense>
-            } />
-            <Route path="viajar/products" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ViajarProductsManager />
               </Suspense>
             } />
             <Route path="viajar/team-members" element={

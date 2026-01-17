@@ -28,6 +28,7 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
         description={route.description || undefined}
         videoUrl={route.video_url || route.configuration?.video_url || undefined}
         imageUrl={route.image_url || undefined}
+        mapImageUrl={route.map_image_url || undefined}
         difficulty={route.difficulty || undefined}
         duration={route.estimated_duration || undefined}
         distance={route.distance_km || undefined}

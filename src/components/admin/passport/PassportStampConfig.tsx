@@ -24,8 +24,6 @@ const PassportStampConfig: React.FC = () => {
     theme_key: '',
     theme_name: '',
     emoji: '',
-    color_primary: '#FF5733',
-    color_secondary: '#C70039',
     description: '',
   });
   const [formData, setFormData] = useState({
@@ -36,15 +34,6 @@ const PassportStampConfig: React.FC = () => {
     require_sequential: false,
   });
   const { toast } = useToast();
-
-  const normalizeHexColor = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return '';
-    const normalized = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
-    return normalized.toUpperCase();
-  };
-
-  const isValidHexColor = (value: string) => /^#[0-9A-F]{6}$/i.test(value);
 
   useEffect(() => {
     console.log('🔵 [PassportStampConfig] Componente montado, carregando dados...');
@@ -156,20 +145,6 @@ const PassportStampConfig: React.FC = () => {
       return;
     }
 
-    const colorPrimary = normalizeHexColor(newThemeForm.color_primary);
-    const colorSecondary = normalizeHexColor(newThemeForm.color_secondary);
-    console.log('🔵 [PassportStampConfig] Cores normalizadas:', { colorPrimary, colorSecondary });
-
-    if (!isValidHexColor(colorPrimary) || !isValidHexColor(colorSecondary)) {
-      console.log('❌ [PassportStampConfig] Cores inválidas:', { colorPrimary, colorSecondary });
-      toast({
-        title: 'Cores inválidas',
-        description: 'Use o formato #RRGGBB (ex: #FF5733).',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     console.log('✅ [PassportStampConfig] Validações passadas, criando tema...');
     
     try {
@@ -177,8 +152,6 @@ const PassportStampConfig: React.FC = () => {
         theme_key: newThemeForm.theme_key.toLowerCase().replace(/\s+/g, '_'),
         theme_name: newThemeForm.theme_name,
         emoji: newThemeForm.emoji || null,
-        color_primary: colorPrimary,
-        color_secondary: colorSecondary,
         description: newThemeForm.description || null,
         is_active: true,
       };
@@ -204,8 +177,6 @@ const PassportStampConfig: React.FC = () => {
         theme_key: '',
         theme_name: '',
         emoji: '',
-        color_primary: '#FF5733',
-        color_secondary: '#C70039',
         description: '',
       });
       loadData();
@@ -292,7 +263,7 @@ const PassportStampConfig: React.FC = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Configurar Carimbos</CardTitle>
+            <CardTitle className="text-center flex-1">Configurar Carimbos</CardTitle>
             <Button 
               type="button"
               variant="outline" 
@@ -416,7 +387,7 @@ const PassportStampConfig: React.FC = () => {
       {creatingTheme && (
       <Card>
         <CardHeader>
-          <CardTitle>Criar Novo Tema de Carimbo</CardTitle>
+          <CardTitle className="text-center">Criar Novo Tema de Carimbo</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -456,98 +427,6 @@ const PassportStampConfig: React.FC = () => {
               maxLength={2}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="color_primary">Cor Primária</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cor principal do tema do carimbo. Clique no seletor de cor para escolher visualmente.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  id="color_primary_picker"
-                  value={normalizeHexColor(newThemeForm.color_primary) || '#FF5733'}
-                  onChange={(e) => {
-                    const color = e.target.value.toUpperCase();
-                    console.log('🔵 [PassportStampConfig] Cor primária selecionada:', color);
-                    setNewThemeForm({ ...newThemeForm, color_primary: color });
-                  }}
-                  className="w-16 h-10 rounded border cursor-pointer"
-                  title="Clique para escolher a cor primária"
-                />
-                <Input
-                  id="color_primary"
-                  value={newThemeForm.color_primary}
-                  onChange={(e) => {
-                    const value = e.target.value.toUpperCase();
-                    setNewThemeForm({ ...newThemeForm, color_primary: value });
-                  }}
-                  placeholder="#FF5733"
-                  maxLength={7}
-                />
-                <div
-                  className="w-10 h-10 rounded border flex-shrink-0"
-                  style={{ backgroundColor: normalizeHexColor(newThemeForm.color_primary) || '#FF5733' }}
-                  title={normalizeHexColor(newThemeForm.color_primary) || '#FF5733'}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Use o seletor de cor ou digite no formato #RRGGBB</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="color_secondary">Cor Secundária</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cor secundária do tema do carimbo. Clique no seletor de cor para escolher visualmente.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  id="color_secondary_picker"
-                  value={normalizeHexColor(newThemeForm.color_secondary) || '#C70039'}
-                  onChange={(e) => {
-                    const color = e.target.value.toUpperCase();
-                    console.log('🔵 [PassportStampConfig] Cor secundária selecionada:', color);
-                    setNewThemeForm({ ...newThemeForm, color_secondary: color });
-                  }}
-                  className="w-16 h-10 rounded border cursor-pointer"
-                  title="Clique para escolher a cor secundária"
-                />
-                <Input
-                  id="color_secondary"
-                  value={newThemeForm.color_secondary}
-                  onChange={(e) => {
-                    const value = e.target.value.toUpperCase();
-                    setNewThemeForm({ ...newThemeForm, color_secondary: value });
-                  }}
-                  placeholder="#C70039"
-                  maxLength={7}
-                />
-                <div
-                  className="w-10 h-10 rounded border flex-shrink-0"
-                  style={{ backgroundColor: normalizeHexColor(newThemeForm.color_secondary) || '#C70039' }}
-                  title={normalizeHexColor(newThemeForm.color_secondary) || '#C70039'}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Use o seletor de cor ou digite no formato #RRGGBB</p>
-            </div>
-          </div>
           <div>
             <Label htmlFor="theme_description">Descrição</Label>
             <Textarea
@@ -569,8 +448,6 @@ const PassportStampConfig: React.FC = () => {
                   theme_key: '',
                   theme_name: '',
                   emoji: '',
-                  color_primary: '#FF5733',
-                  color_secondary: '#C70039',
                   description: '',
                 });
               }}

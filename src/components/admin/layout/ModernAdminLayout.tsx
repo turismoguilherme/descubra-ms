@@ -97,7 +97,6 @@ const navigationItems: NavItem[] = [
     platform: 'viajar',
         children: [
           { id: 'viajar-content', label: 'Conteúdo e Menu', icon: FileText, path: '/viajar/admin/viajar/content', permission: 'viajar', platform: 'viajar' },
-          { id: 'viajar-products', label: 'Produtos/Soluções', icon: Package, path: '/viajar/admin/viajar/products', permission: 'viajar', platform: 'viajar' },
           { id: 'viajar-plans', label: 'Configuração de Planos', icon: CreditCard, path: '/viajar/admin/viajar/plan-settings', permission: 'viajar', platform: 'viajar' },
           { id: 'viajar-team', label: 'Membros da Equipe', icon: Users, path: '/viajar/admin/viajar/team-members', permission: 'viajar', platform: 'viajar' },
           // Clientes e Assinaturas movidos para Financeiro
@@ -180,9 +179,7 @@ const navigationItems: NavItem[] = [
       { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
       { id: 'system-logs', label: 'Auditoria', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
       { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
-      { id: 'translations', label: 'Traduções', icon: Languages, path: '/viajar/admin/system/translations', permission: 'system', platform: 'system' },
       { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
-      { id: 'settings-metrics', label: 'Métricas Públicas', icon: TrendingUp, path: '/viajar/admin/settings/metrics', permission: 'settings', platform: 'system' },
     ],
   },
   {

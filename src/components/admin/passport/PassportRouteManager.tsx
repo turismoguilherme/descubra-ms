@@ -7,8 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, X, MapPin, Power, PowerOff } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const PassportRouteManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -24,9 +26,15 @@ const PassportRouteManager: React.FC = () => {
   const [formData, setFormData] = useState({
     video_url: '',
     passport_number_prefix: 'MS',
-    wallpaper_url: '',
+    map_image_url: '',
+    // wallpaper_url removido - agora é global (não por rota)
   });
+  const [mapImageFile, setMapImageFile] = useState<File | null>(null);
+  const [mapImagePreview, setMapImagePreview] = useState<string | null>(null);
+  const [uploadingMapImage, setUploadingMapImage] = useState(false);
   const { toast } = useToast();
+  
+  const BUCKET_NAME = 'tourism-images';
 
   useEffect(() => {
     loadRoutes();
@@ -42,7 +50,6 @@ const PassportRouteManager: React.FC = () => {
       const { data, error } = await supabase
         .from('routes')
         .select('*')
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -75,25 +82,170 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
+  const toggleRouteStatus = async (route: any) => {
+    try {
+      const { error } = await supabase
+        .from('routes')
+        .update({
+          is_active: !route.is_active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', route.id);
+
+      if (error) throw error;
+
+      toast({
+        title: route.is_active ? "🔴 Rota desativada" : "🟢 Rota ativada",
+        description: `A rota ${route.name} foi ${route.is_active ? 'desativada' : 'ativada'}.`,
+      });
+
+      loadRoutes();
+    } catch (error: any) {
+      console.error('Erro ao alterar status:', error);
+      toast({
+        title: "❌ Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteRoute = async (route: any) => {
+    if (!window.confirm(`Tem certeza que deseja excluir a rota "${route.name}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('routes')
+        .delete()
+        .eq('id', route.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "🗑️ Rota excluída",
+        description: `A rota ${route.name} foi excluída permanentemente.`,
+      });
+
+      loadRoutes();
+    } catch (error: any) {
+      console.error('Erro ao excluir rota:', error);
+      toast({
+        title: "❌ Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleEdit = (route: any) => {
     setEditingRoute(route);
     setFormData({
       video_url: route.video_url || '',
       passport_number_prefix: route.passport_number_prefix || 'MS',
-      wallpaper_url: route.wallpaper_url || '',
+      map_image_url: route.map_image_url || '',
+      // wallpaper_url removido - agora é global (não por rota)
     });
+    setMapImageFile(null);
+    setMapImagePreview(route.map_image_url || null);
+  };
+
+  const handleMapImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Arquivo inválido',
+        description: 'Por favor, selecione uma imagem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'A imagem deve ter no máximo 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setMapImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setMapImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadMapImage = async (routeId: string): Promise<string | null> => {
+    if (!mapImageFile) return formData.map_image_url || null;
+
+    try {
+      setUploadingMapImage(true);
+      const fileExt = mapImageFile.name.split('.').pop();
+      const fileName = `routes/${routeId}/map/${uuidv4()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, mapImageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+          console.warn('⚠️ Bucket não encontrado, continuando sem upload de imagem do mapa');
+          return formData.map_image_url || null;
+        }
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+      return publicUrlData?.publicUrl || null;
+    } catch (error: any) {
+      console.error('Erro no upload da imagem do mapa:', error);
+      toast({
+        title: 'Erro no upload',
+        description: `Erro ao fazer upload da imagem do mapa: ${error.message}`,
+        variant: 'destructive',
+      });
+      return formData.map_image_url || null;
+    } finally {
+      setUploadingMapImage(false);
+    }
   };
 
   const handleSave = async () => {
     if (!editingRoute) return;
 
     try {
-      await passportAdminService.updateRoute(editingRoute.id, formData);
+      // Upload da imagem do mapa se houver
+      let mapImageUrl = formData.map_image_url;
+      if (mapImageFile) {
+        const uploadedUrl = await uploadMapImage(editingRoute.id);
+        if (uploadedUrl) {
+          mapImageUrl = uploadedUrl;
+        }
+      }
+
+      await passportAdminService.updateRoute(editingRoute.id, {
+        ...formData,
+        map_image_url: mapImageUrl,
+      });
       toast({
         title: 'Rota atualizada',
         description: 'As configurações do passaporte foram salvas.',
       });
       setEditingRoute(null);
+      setMapImageFile(null);
+      setMapImagePreview(null);
       loadRoutes();
     } catch (error: any) {
       toast({
@@ -244,7 +396,7 @@ const PassportRouteManager: React.FC = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Rotas do Passaporte</CardTitle>
+            <CardTitle className="text-center flex-1">Rotas do Passaporte</CardTitle>
             <Button 
               onClick={() => {
                 console.log('🔵 [PassportRouteManager] Botão "Nova Rota" clicado');
@@ -269,7 +421,12 @@ const PassportRouteManager: React.FC = () => {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{route.name}</h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold text-lg">{route.name}</h3>
+                          <Badge variant={route.is_active ? "default" : "secondary"}>
+                            {route.is_active ? "Ativa" : "Inativa"}
+                          </Badge>
+                        </div>
                         {route.description && (
                           <p className="text-sm text-muted-foreground mt-1">
                             {route.description}
@@ -296,8 +453,8 @@ const PassportRouteManager: React.FC = () => {
                             {route.passport_number_prefix || 'MS'}
                           </div>
                           <div className="text-sm">
-                            <span className="font-medium">Papel de Parede:</span>{' '}
-                            {route.wallpaper_url ? (
+                            <span className="font-medium">Mapa:</span>{' '}
+                            {route.map_image_url ? (
                               <span className="text-green-600">Configurado</span>
                             ) : (
                               <span className="text-muted-foreground">Não configurado</span>
@@ -305,14 +462,36 @@ const PassportRouteManager: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(route)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Editar
-                      </Button>
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleRouteStatus(route)}
+                          title={route.is_active ? "Desativar rota" : "Ativar rota"}
+                        >
+                          {route.is_active ? (
+                            <PowerOff className="h-4 w-4" />
+                          ) : (
+                            <Power className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(route)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteRoute(route)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -325,7 +504,7 @@ const PassportRouteManager: React.FC = () => {
       {editingRoute && (
         <Card>
           <CardHeader>
-            <CardTitle>Editar Rota: {editingRoute.name}</CardTitle>
+            <CardTitle className="text-center">Editar Rota: {editingRoute.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -351,9 +530,65 @@ const PassportRouteManager: React.FC = () => {
                 maxLength={10}
               />
             </div>
+            <div>
+              <Label htmlFor="map_image">Imagem do Mapa do Roteiro</Label>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMapImageSelect}
+                    className="hidden"
+                    id="map_image"
+                  />
+                  <label
+                    htmlFor="map_image"
+                    className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-muted"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {mapImageFile ? 'Trocar Imagem' : 'Selecionar Imagem'}
+                  </label>
+                </div>
+                {mapImagePreview && (
+                  <div className="relative mt-2">
+                    <img
+                      src={mapImagePreview}
+                      alt="Preview do mapa"
+                      className="w-full max-w-md rounded-md border"
+                    />
+                    {mapImageFile && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setMapImageFile(null);
+                          setMapImagePreview(formData.map_image_url || null);
+                        }}
+                        className="absolute top-2 right-2"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Imagem do mapa do roteiro que será exibida na visualização do passaporte
+                </p>
+              </div>
+            </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave}>Salvar</Button>
-              <Button variant="outline" onClick={() => setEditingRoute(null)}>
+              <Button onClick={handleSave} disabled={uploadingMapImage}>
+                {uploadingMapImage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Salvar
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setEditingRoute(null);
+                  setMapImageFile(null);
+                  setMapImagePreview(null);
+                }}
+              >
                 Cancelar
               </Button>
             </div>
@@ -366,11 +601,8 @@ const PassportRouteManager: React.FC = () => {
         return creatingRoute && (
           <Card className="border-2 border-blue-300">
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="text-center">
                 Criar Nova Rota
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (Debug: creatingRoute = {String(creatingRoute)})
-                </span>
               </CardTitle>
             </CardHeader>
           <CardContent className="space-y-4">

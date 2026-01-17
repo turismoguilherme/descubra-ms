@@ -9,7 +9,9 @@ import PassportRewardsManager from '@/components/admin/passport/PassportRewardsM
 import PendingPartnerRewards from '@/components/admin/passport/PendingPartnerRewards';
 import PassportAnalytics from '@/components/admin/passport/PassportAnalytics';
 import PartnerCodesManager from '@/components/admin/passport/PartnerCodesManager';
-import { Route, Settings, Gift, MapPin, BarChart3, Key } from 'lucide-react';
+import PassportPhotosView from '@/components/admin/passport/PassportPhotosView';
+import PassportGlobalSettings from '@/components/admin/passport/PassportGlobalSettings';
+import { Route, Settings, Gift, MapPin, BarChart3, Key, Camera, Globe } from 'lucide-react';
 
 const PassportAdmin: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,7 +40,7 @@ const PassportAdmin: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="routes" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
             Rotas
@@ -58,6 +60,14 @@ const PassportAdmin: React.FC = () => {
           <TabsTrigger value="rewards" className="flex items-center gap-2">
             <Gift className="h-4 w-4" />
             Recompensas
+          </TabsTrigger>
+          <TabsTrigger value="photos" className="flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            Fotos
+          </TabsTrigger>
+          <TabsTrigger value="global" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Global
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -87,6 +97,14 @@ const PassportAdmin: React.FC = () => {
           
           {/* Gerenciamento manual de recompensas */}
           <PassportRewardsManager />
+        </TabsContent>
+
+        <TabsContent value="photos" className="space-y-4">
+          <PassportPhotosView />
+        </TabsContent>
+
+        <TabsContent value="global" className="space-y-4">
+          <PassportGlobalSettings />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">

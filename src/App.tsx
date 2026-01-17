@@ -69,7 +69,18 @@ const AttendantDashboardRestored = lazy(() => import("@/components/cat/Attendant
 const PrivateDashboard = lazy(() => import("@/pages/PrivateDashboard"));
 const UnifiedDashboard = lazy(() => import("@/pages/UnifiedDashboard"));
 const ViaJARMasterDashboard = lazy(() => import("@/pages/ViaJARMasterDashboard"));
-const ViaJARAdminPanel = lazy(() => import("@/pages/admin/ViaJARAdminPanel"));
+// #region agent log
+const ViaJARAdminPanel = lazy(() => {
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:72',message:'Iniciando lazy load ViaJARAdminPanel',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'G'})}).catch(()=>{});
+  return import("@/pages/admin/ViaJARAdminPanel").then(module => {
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:72',message:'ViaJARAdminPanel carregado com sucesso',data:{hasDefault:!!module.default},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'G'})}).catch(()=>{});
+    return module;
+  }).catch(err => {
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:72',message:'Erro ao carregar ViaJARAdminPanel',data:{error:err.message,stack:err.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'G'})}).catch(()=>{});
+    throw err;
+  });
+});
+// #endregion
 
 // State Pages
 import MSIndex from "@/pages/MSIndex";
