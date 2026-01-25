@@ -292,10 +292,10 @@ async function handlePaymentLinkEventCompleted(session: Stripe.Checkout.Session,
 
     console.log(`Processando pagamento para evento ${eventId}`);
 
-    // Buscar dados do evento
+    // Buscar dados do evento incluindo end_date
     const { data: eventData, error: fetchError } = await supabase
       .from('events')
-      .select('name, organizador_nome, organizador_email')
+      .select('name, organizador_nome, organizador_email, end_date')
       .eq('id', eventId)
       .single();
 
@@ -303,16 +303,25 @@ async function handlePaymentLinkEventCompleted(session: Stripe.Checkout.Session,
     const organizerEmail = eventData?.organizador_email || customerEmail;
     const organizerName = eventData?.organizador_nome || 'Organizador';
 
+    // Calcular sponsor_end_date: usar end_date do evento se existir e for no futuro, senão 30 dias
+    let sponsorEndDate: string;
+    if (eventData?.end_date && new Date(eventData.end_date) > new Date()) {
+      sponsorEndDate = new Date(eventData.end_date).toISOString().split('T')[0];
+    } else {
+      sponsorEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    }
+
     // Atualizar evento para patrocinado
     const { error: eventError } = await supabase
       .from('events')
       .update({
         is_sponsored: true,
         is_visible: true,
+        approval_status: 'approved', // Garantir que está aprovado
         sponsor_tier: 'destaque',
         sponsor_payment_status: 'paid',
         sponsor_start_date: new Date().toISOString().split('T')[0],
-        sponsor_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        sponsor_end_date: sponsorEndDate,
       })
       .eq('id', eventId);
 
@@ -392,6 +401,21 @@ async function handleEventPaymentCompleted(session: Stripe.Checkout.Session, sup
       return;
     }
 
+    // Buscar dados do evento incluindo end_date
+    const { data: eventData } = await supabase
+      .from('events')
+      .select('end_date')
+      .eq('id', eventId)
+      .single();
+
+    // Calcular sponsor_end_date: usar end_date do evento se existir e for no futuro, senão 30 dias
+    let sponsorEndDate: string;
+    if (eventData?.end_date && new Date(eventData.end_date) > new Date()) {
+      sponsorEndDate = new Date(eventData.end_date).toISOString().split('T')[0];
+    } else {
+      sponsorEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    }
+
     // Atualizar evento para patrocinado
     const { error: eventError } = await supabase
       .from('events')
@@ -401,8 +425,7 @@ async function handleEventPaymentCompleted(session: Stripe.Checkout.Session, sup
         sponsor_tier: 'destaque',
         sponsor_payment_status: 'paid',
         sponsor_start_date: new Date().toISOString().split('T')[0],
-        // Destaque válido por 30 dias
-        sponsor_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        sponsor_end_date: sponsorEndDate,
       })
       .eq('id', eventId);
 

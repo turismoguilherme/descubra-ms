@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +27,16 @@ import {
   Image as ImageIcon,
   User,
   ExternalLink,
-  Edit
+  Edit,
+  CreditCard,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  Settings,
+  CheckCircle2,
+  AlertTriangle,
+  Save,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { notifyEventApproved, notifyEventRejected } from '@/services/email/notificationEmailService';
@@ -40,6 +50,8 @@ import {
 } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import EventPaymentConfig from '@/components/admin/EventPaymentConfig';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Event {
   id: string;
@@ -65,6 +77,7 @@ interface Event {
   organizador_telefone?: string;
   organizador_empresa?: string;
   approval_status?: string; // pending, approved, rejected
+  stripe_payment_link_url?: string | null;
   created_at: string;
 }
 
@@ -76,18 +89,32 @@ export default function EventsManagement() {
   const [activeTab, setActiveTab] = useState('pending');
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [paymentConfigExpanded, setPaymentConfigExpanded] = useState(false);
+  const [defaultPaymentLink, setDefaultPaymentLink] = useState<string>('');
+  const [loadingPaymentLink, setLoadingPaymentLink] = useState(false);
+  const [savingPaymentLink, setSavingPaymentLink] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState<string>('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const loadEvents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
+      
+      // Se não mostrar arquivados, filtrar apenas visíveis
+      if (!showArchived) {
+        query = query.eq('is_visible', true);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       
@@ -114,8 +141,76 @@ export default function EventsManagement() {
     }
   };
 
+
+  const fetchDefaultPaymentLink = async () => {
+    setLoadingPaymentLink(true);
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'event_sponsorship_payment_link')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao buscar link padrão:', error);
+        return;
+      }
+
+      if (data?.setting_value) {
+        const linkValue = typeof data.setting_value === 'string' 
+          ? data.setting_value 
+          : (data.setting_value as any)?.url || data.setting_value;
+        setDefaultPaymentLink(linkValue || '');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar link padrão:', error);
+    } finally {
+      setLoadingPaymentLink(false);
+    }
+  };
+
+  const handleSavePaymentLink = async () => {
+    setSavingPaymentLink(true);
+    try {
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({
+          platform: 'ms',
+          setting_key: 'event_sponsorship_payment_link',
+          setting_value: defaultPaymentLink.trim() || null,
+          description: 'Link padrão de pagamento do Stripe para eventos em destaque',
+        }, {
+          onConflict: 'platform,setting_key'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Link salvo',
+        description: 'Link padrão de pagamento configurado com sucesso',
+      });
+    } catch (error: any) {
+      console.error('Erro ao salvar link padrão:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível salvar o link padrão',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingPaymentLink(false);
+    }
+  };
+
+  const validatePaymentLink = (link: string): boolean => {
+    if (!link.trim()) return true; // Vazio é válido (remove link)
+    const regex = /^https:\/\/(buy|checkout)\.stripe\.com\/(test_|)[a-zA-Z0-9]+$/;
+    return regex.test(link.trim());
+  };
+
   useEffect(() => {
     loadEvents();
+    fetchDefaultPaymentLink();
   }, []);
 
   const approveEvent = async (eventId: string) => {
@@ -140,12 +235,41 @@ export default function EventsManagement() {
 
       console.log('Aprovando evento:', eventId, event.name);
 
+      // Buscar dados mais recentes do banco para verificar status de pagamento
+      const { data: currentEventData, error: fetchError } = await supabase
+        .from('events')
+        .select('sponsor_payment_status, is_sponsored, sponsor_tier, is_visible, approval_status')
+        .eq('id', eventId)
+        .single();
+
+      if (fetchError) {
+        console.warn('Erro ao buscar dados atualizados do evento:', fetchError);
+      }
+
+      // Verificar se o evento foi pago para marcar como patrocinado
+      // Usar dados do banco se disponíveis, senão usar dados do estado local
+      const paymentStatus = currentEventData?.sponsor_payment_status || event.sponsor_payment_status;
+      const isPaid = paymentStatus === 'paid';
+      
       // Atualizar evento: tornar visível e marcar como aprovado
       const updateData: any = {
         is_visible: true,
         approval_status: 'approved',
         updated_at: new Date().toISOString(),
       };
+
+      // Se o evento foi pago, marcar como patrocinado
+      if (isPaid) {
+        updateData.is_sponsored = true;
+        updateData.sponsor_tier = 'destaque';
+        // Garantir que as datas de patrocínio estão definidas
+        if (!event.sponsor_start_date) {
+          updateData.sponsor_start_date = new Date().toISOString().split('T')[0];
+        }
+        if (!event.sponsor_end_date) {
+          updateData.sponsor_end_date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        }
+      }
 
       // Não adicionar approved_by ou approved_at pois podem não existir na tabela
       console.log('Dados para atualização:', updateData);
@@ -279,6 +403,39 @@ export default function EventsManagement() {
         return;
       }
 
+      // Se o evento foi pago, processar reembolso
+      if (event.sponsor_payment_status === 'paid') {
+        try {
+          const { error: refundError } = await supabase.functions.invoke('refund-event-payment', {
+            body: { 
+              event_id: eventId, 
+              reason: reason || 'Evento rejeitado pelo administrador' 
+            }
+          });
+
+          if (refundError) {
+            console.error('Erro ao processar reembolso:', refundError);
+            toast({
+              title: 'Aviso',
+              description: 'Evento rejeitado, mas reembolso falhou. Processe manualmente no Stripe.',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Reembolso processado',
+              description: 'O pagamento foi reembolsado automaticamente.',
+            });
+          }
+        } catch (refundErr: any) {
+          console.error('Erro ao chamar função de reembolso:', refundErr);
+          toast({
+            title: 'Aviso',
+            description: 'Evento rejeitado, mas reembolso falhou. Processe manualmente no Stripe.',
+            variant: 'destructive',
+          });
+        }
+      }
+
       // Marcar como rejeitado - atualizar apenas campos que existem na tabela
       const updateData: any = {
         is_visible: false,
@@ -408,6 +565,7 @@ export default function EventsManagement() {
           organizerName: event.organizador_nome,
           eventName: event.name,
           reason: reason,
+          eventId: event.id,
         })
         .then(result => {
           if (result.success) {
@@ -471,24 +629,6 @@ export default function EventsManagement() {
 
       console.log('🔧 Iniciando edição de evento:', editingEvent.id);
 
-      // #region agent log
-      // Escrever log diretamente no arquivo
-      try {
-        const fs = require('fs');
-        const logEntry = JSON.stringify({
-          location: 'EventsManagement.tsx:474',
-          message: 'Investigando estrutura da tabela events',
-          data: { eventId: editingEvent.id, startTime: Date.now() },
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'investigate_schema',
-          hypothesisId: 'schema_mismatch'
-        }) + '\n';
-        fs.appendFileSync('debug_session.log', logEntry);
-      } catch (logError) {
-        console.log('Erro ao escrever log:', logError);
-      }
-      // #endregion
 
       setSaving(true);
     try {
@@ -758,6 +898,11 @@ export default function EventsManagement() {
                     Pendente
                   </Badge>
                 )}
+                {!event.is_visible && event.approval_status === 'approved' && (
+                  <Badge variant="outline" className="bg-gray-100">
+                    Arquivado
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -875,10 +1020,180 @@ export default function EventsManagement() {
           <h2 className="text-2xl font-bold text-gray-900">Gerenciamento de Eventos</h2>
           <p className="text-gray-600">Aprovar, rejeitar e destacar eventos da plataforma</p>
         </div>
-        <Button onClick={loadEvents} variant="outline">
-          Atualizar Lista
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-archived"
+              checked={showArchived}
+              onCheckedChange={(checked) => {
+                setShowArchived(checked as boolean);
+              }}
+            />
+            <Label htmlFor="show-archived" className="cursor-pointer">
+              Mostrar arquivados
+            </Label>
+          </div>
+          <Button           onClick={loadEvents} variant="outline">
+            Atualizar Lista
+          </Button>
+        </div>
       </div>
+
+      {/* Card de Configuração de Pagamento - Colapsável */}
+      <Card className="border-blue-200">
+        <CardHeader 
+          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setPaymentConfigExpanded(!paymentConfigExpanded)}
+        >
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+              Configuração de Pagamento
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {defaultPaymentLink && !paymentConfigExpanded && (
+                <Badge variant="outline" className="font-mono text-xs max-w-xs truncate">
+                  {defaultPaymentLink.substring(0, 40)}...
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPaymentConfigExpanded(!paymentConfigExpanded);
+                }}
+              >
+                {paymentConfigExpanded ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Fechar
+                  </>
+                ) : (
+                  <>
+                    <Settings className="h-4 w-4 mr-1" />
+                    Editar
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          {!paymentConfigExpanded && defaultPaymentLink && (
+            <p className="text-sm text-gray-600 mt-2">
+              Link padrão configurado. Este link será usado para todos os eventos em destaque que não tiverem link próprio.
+            </p>
+          )}
+        </CardHeader>
+        
+        {paymentConfigExpanded && (
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Configure o link padrão de pagamento do Stripe para eventos em destaque. 
+                Este link será usado automaticamente quando um evento não tiver link próprio configurado.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-2">
+              <Label htmlFor="default-payment-link">Link Padrão de Pagamento (Stripe Payment Link)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="default-payment-link"
+                  type="url"
+                  placeholder="https://buy.stripe.com/test_..."
+                  value={defaultPaymentLink}
+                  onChange={(e) => setDefaultPaymentLink(e.target.value)}
+                  disabled={loadingPaymentLink}
+                  className={defaultPaymentLink && !validatePaymentLink(defaultPaymentLink) ? 'border-red-500' : ''}
+                />
+                {defaultPaymentLink && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(defaultPaymentLink);
+                        toast({
+                          title: 'Link copiado',
+                          description: 'Link copiado para a área de transferência',
+                        });
+                      }}
+                      title="Copiar link"
+                    >
+                      <Copy size={16} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(defaultPaymentLink, '_blank')}
+                      title="Testar link"
+                    >
+                      <ExternalLink size={16} />
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              {defaultPaymentLink && !validatePaymentLink(defaultPaymentLink) && (
+                <p className="text-sm text-red-600 flex items-center gap-2">
+                  <AlertTriangle size={16} />
+                  Link inválido. Use o formato: https://buy.stripe.com/...
+                </p>
+              )}
+              
+              {defaultPaymentLink && validatePaymentLink(defaultPaymentLink) && (
+                <p className="text-sm text-green-600 flex items-center gap-2">
+                  <CheckCircle2 size={16} />
+                  Link válido
+                </p>
+              )}
+
+              <p className="text-sm text-muted-foreground">
+                Deixe em branco para desabilitar o link padrão. Neste caso, o sistema usará checkout dinâmico.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setPaymentConfigExpanded(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSavePaymentLink} 
+                disabled={savingPaymentLink || loadingPaymentLink || (defaultPaymentLink && !validatePaymentLink(defaultPaymentLink))}
+              >
+                {savingPaymentLink ? (
+                  <>
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} className="mr-2" />
+                    Salvar Link Padrão
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                <strong>Importante:</strong>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Configure o Payment Link no Stripe Dashboard com <code>client_reference_id</code> = <code>{'{EVENT_ID}'}</code></li>
+                  <li>O sistema adiciona automaticamente o <code>client_reference_id</code> quando o organizador clica no link</li>
+                  <li>Para alterar o valor, crie um novo Payment Link no Stripe e atualize aqui</li>
+                  <li>Links de teste começam com <code>test_</code>, links de produção não têm esse prefixo</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1472,6 +1787,18 @@ export default function EventsManagement() {
                         )}
                       </div>
                     </div>
+                    
+                    {/* Configuração de Payment Link - Apenas para eventos aprovados */}
+                    {selectedEvent.is_visible && selectedEvent.approval_status === 'approved' && (
+                      <div className="mt-4">
+                        <EventPaymentConfig
+                          eventId={selectedEvent.id}
+                          currentPaymentLink={selectedEvent.stripe_payment_link_url}
+                          paymentStatus={selectedEvent.sponsor_payment_status}
+                          onUpdate={loadEvents}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Botões de Ação - Apenas para admin */}
@@ -1516,12 +1843,114 @@ export default function EventsManagement() {
                         )}
                         {approvingEventId === selectedEvent.id ? 'Rejeitando...' : 'Rejeitar'}
                       </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1 rounded-full"
+                        onClick={() => {
+                          setDeleteDialogOpen(true);
+                          setDeleteConfirmName('');
+                        }}
+                        disabled={deletingEventId === selectedEvent.id}
+                        size="lg"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir Evento
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Botão de Excluir - Para eventos já aprovados/visíveis */}
+                  {selectedEvent.is_visible && (
+                    <div className="flex flex-wrap gap-3 pt-4 border-t">
+                      <Button
+                        variant="destructive"
+                        className="flex-1 rounded-full"
+                        onClick={() => {
+                          setDeleteDialogOpen(true);
+                          setDeleteConfirmName('');
+                        }}
+                        disabled={deletingEventId === selectedEvent.id}
+                        size="lg"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir Evento
+                      </Button>
                     </div>
                   )}
                 </div>
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Confirmar Exclusão Permanente
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. O evento será excluído permanentemente do banco de dados.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Alert variant="destructive">
+              <AlertTriangle className="w-4 h-4" />
+              <AlertDescription>
+                Você está prestes a excluir permanentemente o evento <strong>{selectedEvent?.name}</strong>.
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-name">
+                Digite o nome do evento para confirmar: <strong>{selectedEvent?.name}</strong>
+              </Label>
+              <Input
+                id="confirm-name"
+                value={deleteConfirmName}
+                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                placeholder="Digite o nome do evento"
+                className={deleteConfirmName && deleteConfirmName !== selectedEvent?.name ? 'border-red-500' : ''}
+              />
+              {deleteConfirmName && deleteConfirmName !== selectedEvent?.name && (
+                <p className="text-sm text-red-600">O nome não corresponde ao evento.</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeleteConfirmName('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedEvent && deleteConfirmName === selectedEvent.name) {
+                  deleteEvent(selectedEvent.id);
+                }
+              }}
+              disabled={!selectedEvent || deleteConfirmName !== selectedEvent.name || deletingEventId === selectedEvent.id}
+            >
+              {deletingEventId === selectedEvent?.id ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Confirmar Exclusão
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

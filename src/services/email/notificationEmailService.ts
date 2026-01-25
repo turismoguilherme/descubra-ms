@@ -64,6 +64,7 @@ export async function notifyEventApproved(params: {
   eventName: string;
   eventDate: string;
   eventLocation: string;
+  eventId?: string;
 }) {
   return sendNotificationEmail({
     type: 'event_approved',
@@ -73,6 +74,7 @@ export async function notifyEventApproved(params: {
       eventName: params.eventName,
       eventDate: params.eventDate,
       eventLocation: params.eventLocation,
+      eventId: params.eventId,
     },
   });
 }
@@ -85,6 +87,7 @@ export async function notifyEventRejected(params: {
   organizerName?: string;
   eventName: string;
   reason?: string;
+  eventId?: string;
 }) {
   return sendNotificationEmail({
     type: 'event_rejected',
@@ -93,6 +96,7 @@ export async function notifyEventRejected(params: {
       organizerName: params.organizerName,
       eventName: params.eventName,
       reason: params.reason,
+      eventId: params.eventId,
     },
   });
 }

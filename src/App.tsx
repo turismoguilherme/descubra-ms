@@ -98,6 +98,9 @@ import PassportDigital from "@/pages/PassportDigital";
 import RegiaoDetalhes from "@/pages/RegiaoDetalhes";
 import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
+const EventPaymentReturn = lazy(() => import("@/pages/ms/EventPaymentReturn"));
+const EventPaymentSuccess = lazy(() => import("@/pages/ms/EventPaymentSuccess"));
+const EventStatus = lazy(() => import("@/pages/ms/EventStatus"));
 import AuthPage from "@/pages/AuthPage";
 import SobreMS from "@/pages/ms/SobreMS";
 import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
@@ -293,6 +296,9 @@ function App() {
                                 <Route path="/descubrams/regioes/:slug" element={<RegiaoDetalhes />} />
                                 <Route path="/descubrams/eventos" element={<EventosMS />} />
                                 <Route path="/descubrams/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
+                                <Route path="/eventos/payment-return" element={<Suspense fallback={<LoadingFallback />}><EventPaymentReturn /></Suspense>} />
+                                <Route path="/descubrams/eventos/payment-success" element={<Suspense fallback={<LoadingFallback />}><EventPaymentSuccess /></Suspense>} />
+                                <Route path="/descubrams/eventos/status/:eventId" element={<Suspense fallback={<LoadingFallback />}><EventStatus /></Suspense>} />
                                 <Route path="/descubrams/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
                                 <Route path="/descubrams/parceiros" element={<Partners />} />
                                 <Route path="/descubrams/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
@@ -467,6 +473,9 @@ function App() {
                             <Route path="/descubrams/regioes/:slug" element={<RegiaoDetalhes />} />
                             <Route path="/descubrams/eventos" element={<EventosMS />} />
                             <Route path="/descubrams/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
+                            <Route path="/eventos/payment-return" element={<Suspense fallback={<LoadingFallback />}><EventPaymentReturn /></Suspense>} />
+                            <Route path="/descubrams/eventos/payment-success" element={<Suspense fallback={<LoadingFallback />}><EventPaymentSuccess /></Suspense>} />
+                            <Route path="/descubrams/eventos/status/:eventId" element={<Suspense fallback={<LoadingFallback />}><EventStatus /></Suspense>} />
                             <Route path="/descubrams/promover-evento" element={<Suspense fallback={<LoadingFallback />}><PromoverEventoMS /></Suspense>} />
                             <Route path="/descubrams/parceiros" element={<Partners />} />
                             <Route path="/descubrams/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />

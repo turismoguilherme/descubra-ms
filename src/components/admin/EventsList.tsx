@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Eye, EyeOff, Calendar, MapPin } from "lucide-react";
+import { Plus, Search, Edit, Eye, EyeOff, Calendar, MapPin, Copy, CreditCard, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,6 +25,9 @@ interface Event {
   auto_hide?: boolean;
   image_url: string | null;
   created_at: string;
+  stripe_payment_link_url?: string | null;
+  sponsor_payment_status?: string | null;
+  is_sponsored?: boolean | null;
 }
 
 const EventsList = () => {
@@ -43,7 +46,7 @@ const EventsList = () => {
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select('*, stripe_payment_link_url, sponsor_payment_status, is_sponsored')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -192,6 +195,7 @@ const EventsList = () => {
                 <TableHead>Localização</TableHead>
                 <TableHead>Data do Evento</TableHead>
                 <TableHead>Expira em</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
@@ -220,6 +224,52 @@ const EventsList = () => {
                       ) : (
                         "Sem expiração"
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {event.is_sponsored ? (
+                          <Badge 
+                            variant={event.sponsor_payment_status === 'paid' ? 'default' : 'secondary'}
+                            className={event.sponsor_payment_status === 'paid' ? 'bg-green-600' : 'bg-amber-500'}
+                          >
+                            {event.sponsor_payment_status === 'paid' ? (
+                              <>
+                                <CheckCircle2 size={12} className="mr-1" />
+                                Pago
+                              </>
+                            ) : event.sponsor_payment_status === 'pending' ? (
+                              <>
+                                <Clock size={12} className="mr-1" />
+                                Pendente
+                              </>
+                            ) : (
+                              <>
+                                <XCircle size={12} className="mr-1" />
+                                {event.sponsor_payment_status || 'Gratuito'}
+                              </>
+                            )}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">Gratuito</Badge>
+                        )}
+                        {event.stripe_payment_link_url && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-xs"
+                            onClick={() => {
+                              navigator.clipboard.writeText(event.stripe_payment_link_url || '');
+                              toast({
+                                title: "Link copiado",
+                                description: "Link de pagamento copiado para a área de transferência",
+                              });
+                            }}
+                          >
+                            <Copy size={12} className="mr-1" />
+                            Copiar Link
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={status.variant}>{status.label}</Badge>

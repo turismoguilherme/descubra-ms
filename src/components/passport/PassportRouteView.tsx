@@ -11,6 +11,7 @@ import RouteCompletionModal from './RouteCompletionModal';
 import { MapPin, TrendingUp, WifiOff, KeyRound, Puzzle, Target, Gift, CheckCircle2 } from 'lucide-react';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
 import { passportService } from '@/services/passport/passportService';
+import { rewardsService } from '@/services/passport/rewardsService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface PassportRouteViewProps {
@@ -33,15 +34,21 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
     if (progress?.completion_percentage === 100 && !showCompletionModal) {
       // Buscar recompensas desbloqueadas
       if (user?.id && route.id) {
-        passportService.getRouteProgress(user.id, route.id).then((updatedProgress) => {
+        passportService.getRouteProgress(user.id, route.id).then(async (updatedProgress) => {
           if (updatedProgress?.completion_percentage === 100) {
             // Calcular pontos totais (aproximado)
             const points = (route.checkpoints?.length || 0) * 10;
             setTotalPoints(points);
             
-            // Buscar recompensas desbloqueadas
-            // TODO: Buscar recompensas reais do banco
-            setRewardsUnlocked([]);
+            // Buscar recompensas desbloqueadas (user_rewards com voucher_code)
+            try {
+              const userRewards = await rewardsService.getUserRewards(user.id, route.id);
+              setRewardsUnlocked(userRewards);
+            } catch (error) {
+              console.error('Erro ao buscar recompensas:', error);
+              setRewardsUnlocked([]);
+            }
+            
             setShowCompletionModal(true);
           }
         }).catch(console.error);

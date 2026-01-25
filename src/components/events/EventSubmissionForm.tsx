@@ -29,6 +29,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { redirectToEventCheckout } from "@/services/stripe/eventCheckoutService";
+import { supabase } from "@/integrations/supabase/client";
 import EventImageUpload from "./EventImageUpload";
 
 const eventSchema = z.object({
@@ -217,11 +218,62 @@ export const EventSubmissionForm: React.FC = () => {
         // Pequeno delay para mostrar o toast
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Redirecionar para Payment Link do Stripe
-        // Adiciona parâmetros para identificar o evento e pré-preencher email
-        const paymentUrl = `https://buy.stripe.com/test_bJe3cxaliec5gR65mH43S00?prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
-        window.location.href = paymentUrl;
-        return;
+        // Verificar se há um link de pagamento configurado no evento
+        const { data: eventData } = await supabase
+          .from('events')
+          .select('stripe_payment_link_url')
+          .eq('id', eventId)
+          .single();
+
+        // Buscar link padrão se evento não tiver link próprio
+        let paymentLink = eventData?.stripe_payment_link_url;
+        if (!paymentLink) {
+          const { data: defaultLink } = await supabase
+            .from('site_settings')
+            .select('setting_value')
+            .eq('platform', 'ms')
+            .eq('setting_key', 'event_sponsorship_payment_link')
+            .single();
+          
+          if (defaultLink?.setting_value) {
+            // setting_value é JSONB, pode ser string direta ou objeto
+            paymentLink = typeof defaultLink.setting_value === 'string' 
+              ? defaultLink.setting_value 
+              : (defaultLink.setting_value as any)?.url || defaultLink.setting_value;
+          }
+        }
+
+        // Se houver link (próprio ou padrão), usar ele (com client_reference_id)
+        if (paymentLink) {
+          // Salvar return_domain no evento antes de redirecionar
+          const returnDomain = window.location.origin;
+          await supabase
+            .from('events')
+            .update({ return_domain: returnDomain })
+            .eq('id', eventId);
+
+          const paymentUrl = `${paymentLink}${paymentLink.includes('?') ? '&' : '?'}prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
+          window.location.href = paymentUrl;
+          return;
+        }
+
+        // Caso contrário, usar checkout dinâmico
+        try {
+          await redirectToEventCheckout({
+            eventId,
+            eventName: data.titulo,
+            organizerEmail: data.organizador_email,
+            organizerName: data.organizador_nome,
+          });
+          return;
+        } catch (checkoutError: any) {
+          console.error('Erro ao criar checkout:', checkoutError);
+          toast({
+            title: "Erro no pagamento",
+            description: "Não foi possível iniciar o pagamento. Por favor, entre em contato com o suporte.",
+            variant: "destructive",
+          });
+        }
       }
 
       // Evento gratuito - mostra sucesso

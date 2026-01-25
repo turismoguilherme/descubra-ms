@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Gift, 
@@ -24,10 +25,14 @@ import {
   XCircle,
   Percent,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  CheckSquare,
+  List
 } from 'lucide-react';
 import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import VoucherValidator from './VoucherValidator';
+import VoucherList from './VoucherList';
 
 interface PartnerReward {
   id: string;
@@ -62,6 +67,13 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('rewards');
+  const [voucherStats, setVoucherStats] = useState({
+    total: 0,
+    used: 0,
+    valid: 0,
+    usageRate: 0,
+  });
   
   const [formData, setFormData] = useState({
     reward_type: 'desconto' as 'desconto' | 'brinde' | 'experiencia' | 'outros',
@@ -74,19 +86,74 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
 
   useEffect(() => {
     loadRewards();
-  }, [partnerId]);
+    loadVoucherStats();
+  }, [partnerId, partnerName]);
+
+  const loadVoucherStats = async () => {
+    try {
+      // Buscar IDs das recompensas aprovadas do parceiro
+      const { data: rewards, error: rewardsError } = await supabase
+        .from('passport_rewards' as any)
+        .select('id')
+        .eq('partner_name', partnerName)
+        .eq('is_active', true);
+
+      if (rewardsError) throw rewardsError;
+
+      if (!rewards || rewards.length === 0) {
+        setVoucherStats({ total: 0, used: 0, valid: 0, usageRate: 0 });
+        return;
+      }
+
+      const rewardIds = (rewards as any[]).map((r: any) => r.id);
+
+      // Contar vouchers
+      const { count: total, error: totalError } = await supabase
+        .from('user_rewards')
+        .select('id', { count: 'exact', head: true })
+        .in('reward_id', rewardIds);
+
+      if (totalError) throw totalError;
+
+      const { count: used, error: usedError } = await supabase
+        .from('user_rewards')
+        .select('id', { count: 'exact', head: true })
+        .in('reward_id', rewardIds)
+        .eq('is_used', true);
+
+      if (usedError) throw usedError;
+
+      const totalCount = total || 0;
+      const usedCount = used || 0;
+      const validCount = totalCount - usedCount;
+      const usageRate = totalCount > 0 ? Math.round((usedCount / totalCount) * 100) : 0;
+
+      setVoucherStats({
+        total: totalCount,
+        used: usedCount,
+        valid: validCount,
+        usageRate,
+      });
+    } catch (error: any) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const handleVoucherValidated = () => {
+    loadVoucherStats();
+  };
 
   const loadRewards = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('partner_rewards')
+        .from('partner_rewards' as any)
         .select('*')
         .eq('partner_id', partnerId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRewards(data || []);
+      setRewards((data as any) || []);
     } catch (error: any) {
       console.error('Erro ao carregar recompensas:', error);
       toast({
@@ -123,7 +190,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('partner_rewards')
+        .from('partner_rewards' as any)
         .insert({
           partner_id: partnerId,
           partner_name: partnerName,
@@ -174,7 +241,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
 
     try {
       const { error } = await supabase
-        .from('partner_rewards')
+        .from('partner_rewards' as any)
         .delete()
         .eq('id', rewardId)
         .eq('partner_id', partnerId); // Garante que só deleta as próprias
@@ -221,24 +288,101 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Gift className="w-5 h-5 text-ms-primary-blue" />
-            Minhas Recompensas do Passaporte
-          </h3>
-          <p className="text-sm text-gray-500">
-            Cadastre benefícios para viajantes do Descubra MS
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-ms-primary-blue hover:bg-ms-discovery-teal text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Recompensa
-        </Button>
+      <div>
+        <h3 className="text-lg font-semibold flex items-center gap-2 mb-1">
+          <Gift className="w-5 h-5 text-ms-primary-blue" />
+          Recompensas do Passaporte Digital
+        </h3>
+        <p className="text-sm text-gray-500">
+          Gerencie suas recompensas, valide vouchers e acompanhe estatísticas
+        </p>
       </div>
+
+      {/* Cards de Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Vouchers Emitidos</p>
+                <p className="text-2xl font-bold">{voucherStats.total}</p>
+              </div>
+              <Gift className="w-8 h-8 text-ms-primary-blue opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Vouchers Usados</p>
+                <p className="text-2xl font-bold text-green-600">{voucherStats.used}</p>
+              </div>
+              <CheckCircle2 className="w-8 h-8 text-green-600 opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Vouchers Válidos</p>
+                <p className="text-2xl font-bold text-blue-600">{voucherStats.valid}</p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-600 opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Taxa de Uso</p>
+                <p className="text-2xl font-bold text-orange-600">{voucherStats.usageRate}%</p>
+              </div>
+              <Percent className="w-8 h-8 text-orange-600 opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="rewards">
+            <Gift className="w-4 h-4 mr-2" />
+            Minhas Recompensas
+          </TabsTrigger>
+          <TabsTrigger value="validate">
+            <CheckSquare className="w-4 h-4 mr-2" />
+            Validar Vouchers
+          </TabsTrigger>
+          <TabsTrigger value="list">
+            <List className="w-4 h-4 mr-2" />
+            Vouchers Emitidos
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="rewards" className="space-y-6">
+          {/* Header da aba Recompensas */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold">Cadastrar Recompensas</h4>
+              <p className="text-sm text-gray-500">
+                Cadastre benefícios para viajantes do Descubra MS
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-ms-primary-blue hover:bg-ms-discovery-teal text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Recompensa
+            </Button>
+          </div>
 
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -452,6 +596,23 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
           ))}
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="validate">
+          <VoucherValidator
+            partnerId={partnerId}
+            partnerName={partnerName}
+            onVoucherValidated={handleVoucherValidated}
+          />
+        </TabsContent>
+
+        <TabsContent value="list">
+          <VoucherList
+            partnerId={partnerId}
+            partnerName={partnerName}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

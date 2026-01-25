@@ -7,6 +7,7 @@ type NotificationType =
   | 'event_approved'
   | 'event_rejected'
   | 'event_payment_confirmed'
+  | 'event_refunded'
   | 'partner_approved'
   | 'partner_rejected'
   | 'partner_welcome'
@@ -43,8 +44,12 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
             <p><strong>📅 Data:</strong> ${data.eventDate}</p>
             <p><strong>📍 Local:</strong> ${data.eventLocation}</p>
           </div>
-          <a href="https://descubramatogrossodosul.com.br/descubramatogrossodosul/eventos" 
+          <a href="https://descubrams.com/descubrams/eventos/status/${data.eventId || ''}" 
              style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+            Ver Status do Evento
+          </a>
+          <a href="https://descubramatogrossodosul.com.br/descubramatogrossodosul/eventos" 
+             style="display: inline-block; background: #2d8a8a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 10px; margin-left: 10px;">
             Ver no Calendário
           </a>
         </div>
@@ -67,8 +72,12 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
           <p>Infelizmente, o evento <strong>"${data.eventName}"</strong> não pôde ser aprovado no momento.</p>
           ${data.reason ? `<p><strong>Motivo:</strong> ${data.reason}</p>` : ''}
           <p>Você pode entrar em contato conosco para mais informações ou enviar um novo evento.</p>
-          <a href="https://descubramatogrossodosul.com.br/descubramatogrossodosul/cadastrar-evento" 
+          <a href="https://descubrams.com/descubrams/eventos/status/${data.eventId || ''}" 
              style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+            Ver Status do Evento
+          </a>
+          <a href="https://descubramatogrossodosul.com.br/descubramatogrossodosul/cadastrar-evento" 
+             style="display: inline-block; background: #2d8a8a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 10px; margin-left: 10px;">
             Cadastrar Novo Evento
           </a>
         </div>
@@ -96,6 +105,36 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
              style="display: inline-block; background: #f59e0b; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
             Ver Meu Evento
           </a>
+        </div>
+      </div>
+    `,
+  },
+  event_refunded: {
+    subject: '💰 Reembolso processado - Descubra MS',
+    html: (data) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #dc2626, #ef4444); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Reembolso Processado</h1>
+        </div>
+        <div style="padding: 30px; background: #fef2f2;">
+          <h2 style="color: #991b1b;">Reembolso do seu pagamento</h2>
+          <p>Olá, <strong>${data.organizerName || 'Organizador'}</strong>!</p>
+          <p>Informamos que o pagamento do evento <strong>"${data.eventName}"</strong> foi reembolsado.</p>
+          <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #dc2626;">
+            <p><strong>💰 Valor reembolsado:</strong> R$ ${data.refundAmount?.toFixed(2) || '479,57'}</p>
+            <p className="text-xs text-gray-500 mt-1">* Valor líquido (taxa de processamento não reembolsada conforme política do Stripe)</p>
+            ${data.reason ? `<p><strong>📝 Motivo:</strong> ${data.reason}</p>` : ''}
+            <p><strong>⏰ Processado em:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+          </div>
+          <p>O valor será creditado na sua conta em até 5-10 dias úteis, dependendo do método de pagamento utilizado.</p>
+          <p>Se você tiver dúvidas sobre este reembolso, entre em contato conosco.</p>
+          <a href="https://descubramatogrossodosul.com.br/contato" 
+             style="display: inline-block; background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+            Entrar em Contato
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Turismo e Cultura</p>
         </div>
       </div>
     `,

@@ -180,7 +180,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
 
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*,tourist_region:tourist_regions(id,name,slug,color,color_hover)`,
+        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&approval_status=eq.approved&select=*,tourist_region:tourist_regions(id,name,slug,color,color_hover)`,
         {
           headers: {
             'apikey': SUPABASE_KEY,
@@ -201,6 +201,11 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
       const events: EventItem[] = (data || []).map((event: any, index: number) => {
         try {
+          // Calcular is_sponsored ANTES de criar o objeto
+          const isSponsoredRaw = event.is_sponsored;
+          const paymentStatus = event.sponsor_payment_status;
+          const isSponsoredCalculated = isSponsoredRaw && (paymentStatus === 'paid' || !paymentStatus);
+          
           const mappedEvent = {
             id: event.id,
             name: event.name || '',
@@ -212,7 +217,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             location: event.location || '',
             image_url: event.image_url,
             logo_evento: event.logo_evento,
-            is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status), // Fix: tratar caso onde sponsor_payment_status não existe
+            is_sponsored: isSponsoredCalculated,
             site_oficial: event.site_oficial,
             video_url: event.video_url,
             organizador_telefone: event.organizador_telefone,
@@ -251,6 +256,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           return 0;
         }
       });
+
 
       setAllEvents(events);
     } catch (error) {
@@ -364,6 +370,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
   const sponsoredEvents = filteredEvents.filter(e => e.is_sponsored);
   const regularEvents = filteredEvents.filter(e => !e.is_sponsored);
+  
 
   const formatDate = (dateStr: string) => {
     try {

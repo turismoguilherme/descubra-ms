@@ -1847,6 +1847,8 @@ export type Database = {
           start_date: string
           start_time: string | null
           state_id: string | null
+          stripe_payment_link_url: string | null
+          return_domain: string | null
           tourist_region_id: string | null
           updated_at: string | null
           video_url: string | null
@@ -1883,6 +1885,8 @@ export type Database = {
           start_date: string
           start_time?: string | null
           state_id?: string | null
+          stripe_payment_link_url?: string | null
+          return_domain?: string | null
           tourist_region_id?: string | null
           updated_at?: string | null
           video_url?: string | null
@@ -1919,6 +1923,8 @@ export type Database = {
           start_date?: string
           start_time?: string | null
           state_id?: string | null
+          stripe_payment_link_url?: string | null
+          return_domain?: string | null
           tourist_region_id?: string | null
           updated_at?: string | null
           video_url?: string | null
