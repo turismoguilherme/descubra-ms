@@ -246,19 +246,15 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             {/* Overlay gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
             
-            {/* Badges no topo */}
-            <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
-              {event.is_sponsored && (
+            {/* Badge Em Destaque */}
+            {event.is_sponsored && (
+              <div className="absolute top-4 left-4 z-10">
                 <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-3 py-1.5 shadow-lg">
                   <Star className="w-3.5 h-3.5 mr-1.5 fill-white" />
                   <span className="font-semibold text-sm">Em Destaque</span>
                 </Badge>
-              )}
-              <Badge className="bg-white/95 text-gray-800 border-0 px-3 py-1.5 shadow-lg font-medium">
-                <span className="mr-1.5">{emoji}</span>
-                {touristRegionName}
-              </Badge>
-            </div>
+              </div>
+            )}
 
             {/* Título no overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
@@ -300,22 +296,17 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                   <span className="font-semibold">Localização</span>
                 </div>
                 <p className="text-gray-800 font-medium">{getTranslatedLocation(event)}</p>
-                <p className="text-gray-600 text-sm mt-1 flex items-center gap-1">
-                  <span>{emoji}</span> {touristRegionName}
-                </p>
               </div>
             </div>
 
-            {/* Logo do Evento */}
+            {/* Logo/Banner do Evento */}
             {event.logo_evento && (
-              <div className="py-8">
-                <div className="flex justify-center">
-                  <img
-                    src={event.logo_evento}
-                    alt={`Logo do evento ${getTranslatedName(event)}`}
-                    className="max-w-[600px] max-h-[360px] w-auto h-auto object-contain"
-                  />
-                </div>
+              <div className="py-6">
+                <img
+                  src={event.logo_evento}
+                  alt={`Logo do evento ${getTranslatedName(event)}`}
+                  className="w-full h-auto object-contain rounded-xl"
+                />
               </div>
             )}
 

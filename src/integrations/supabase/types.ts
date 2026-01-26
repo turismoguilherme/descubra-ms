@@ -1838,6 +1838,7 @@ export type Database = {
           organizador_empresa: string | null
           organizador_nome: string | null
           organizador_telefone: string | null
+          return_domain: string | null
           site_oficial: string | null
           sponsor_amount: number | null
           sponsor_end_date: string | null
@@ -1876,6 +1877,7 @@ export type Database = {
           organizador_empresa?: string | null
           organizador_nome?: string | null
           organizador_telefone?: string | null
+          return_domain?: string | null
           site_oficial?: string | null
           sponsor_amount?: number | null
           sponsor_end_date?: string | null
@@ -1914,6 +1916,7 @@ export type Database = {
           organizador_empresa?: string | null
           organizador_nome?: string | null
           organizador_telefone?: string | null
+          return_domain?: string | null
           site_oficial?: string | null
           sponsor_amount?: number | null
           sponsor_end_date?: string | null
@@ -4077,6 +4080,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           map_config: Json | null
+          require_sequential: boolean | null
           route_id: string
           stamp_fragments: number
           stamp_theme: string
@@ -4090,6 +4094,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           map_config?: Json | null
+          require_sequential?: boolean | null
           route_id: string
           stamp_fragments?: number
           stamp_theme: string
@@ -4103,6 +4108,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           map_config?: Json | null
+          require_sequential?: boolean | null
           route_id?: string
           stamp_fragments?: number
           stamp_theme?: string
@@ -5223,6 +5229,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          map_image_url: string | null
           name: string
           passport_number_prefix: string | null
           region: string | null
@@ -5242,6 +5249,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          map_image_url?: string | null
           name: string
           passport_number_prefix?: string | null
           region?: string | null
@@ -5261,6 +5269,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          map_image_url?: string | null
           name?: string
           passport_number_prefix?: string | null
           region?: string | null
