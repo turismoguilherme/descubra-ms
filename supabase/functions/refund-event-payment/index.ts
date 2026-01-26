@@ -9,13 +9,19 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 });
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
 
   try {
     const body = await req.json();
     const { event_id, reason } = body;
+    
+    console.log('Refund request received:', { event_id, reason });
 
     if (!event_id) {
       return new Response(
