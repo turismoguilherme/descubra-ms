@@ -93,6 +93,9 @@ export default function EventsManagement() {
   const [defaultPaymentLink, setDefaultPaymentLink] = useState<string>('');
   const [loadingPaymentLink, setLoadingPaymentLink] = useState(false);
   const [savingPaymentLink, setSavingPaymentLink] = useState(false);
+  const [sponsorPrice, setSponsorPrice] = useState<string>('499.90');
+  const [loadingSponsorPrice, setLoadingSponsorPrice] = useState(false);
+  const [savingSponsorPrice, setSavingSponsorPrice] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -211,6 +214,7 @@ export default function EventsManagement() {
   useEffect(() => {
     loadEvents();
     fetchDefaultPaymentLink();
+    fetchSponsorPrice();
   }, []);
 
   const approveEvent = async (eventId: string) => {
@@ -588,6 +592,94 @@ export default function EventsManagement() {
       });
     } finally {
       setApprovingEventId(null);
+    }
+  };
+
+  const deleteEvent = async (eventId: string) => {
+    setDeletingEventId(eventId);
+    
+    try {
+      // Buscar dados do evento antes de excluir
+      const event = events.find(e => e.id === eventId);
+      
+      if (!event) {
+        toast({
+          title: 'Erro',
+          description: 'Evento não encontrado',
+          variant: 'destructive',
+        });
+        setDeletingEventId(null);
+        return;
+      }
+
+      // Se o evento foi pago, processar reembolso antes de excluir
+      if (event.sponsor_payment_status === 'paid') {
+        try {
+          const { error: refundError } = await supabase.functions.invoke('refund-event-payment', {
+            body: { 
+              event_id: eventId, 
+              reason: 'Evento excluído permanentemente pelo administrador' 
+            }
+          });
+
+          if (refundError) {
+            console.error('Erro ao processar reembolso:', refundError);
+            toast({
+              title: 'Aviso',
+              description: 'Evento será excluído, mas reembolso falhou. Processe manualmente no Stripe.',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Reembolso processado',
+              description: 'O pagamento foi reembolsado antes da exclusão.',
+            });
+          }
+        } catch (refundErr: any) {
+          console.error('Erro ao chamar função de reembolso:', refundErr);
+          toast({
+            title: 'Aviso',
+            description: 'Evento será excluído, mas reembolso falhou. Processe manualmente no Stripe.',
+            variant: 'destructive',
+          });
+        }
+      }
+
+      // Excluir evento permanentemente do banco de dados
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) {
+        console.error('Erro ao excluir evento:', error);
+        throw error;
+      }
+
+      toast({
+        title: '✅ Evento excluído',
+        description: `O evento "${event.name}" foi excluído permanentemente.`,
+        duration: 5000,
+      });
+
+      // Fechar diálogos
+      setDeleteDialogOpen(false);
+      setDeleteConfirmName('');
+      setSelectedEvent(null);
+
+      // Recarregar lista de eventos
+      await loadEvents();
+      
+    } catch (error: any) {
+      console.error('Erro ao excluir evento:', error);
+      toast({
+        title: '❌ Erro ao excluir evento',
+        description: error.message || 'Não foi possível excluir o evento. Tente novamente.',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    } finally {
+      setDeletingEventId(null);
     }
   };
 
@@ -1191,6 +1283,121 @@ export default function EventsManagement() {
                 </ul>
               </AlertDescription>
             </Alert>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Card de Configuração de Preço */}
+      <Card className="border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-blue-600" />
+              Preço de Eventos em Destaque
+            </span>
+            {sponsorPrice && !paymentConfigExpanded && (
+              <Badge variant="outline" className="font-mono text-xs">
+                R$ {parseFloat(sponsorPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPaymentConfigExpanded(!paymentConfigExpanded);
+              }}
+            >
+              {paymentConfigExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-1" />
+                  Fechar
+                </>
+              ) : (
+                <>
+                  <Settings className="h-4 w-4 mr-1" />
+                  Editar
+                </>
+              )}
+            </Button>
+          </CardTitle>
+          {!paymentConfigExpanded && sponsorPrice && (
+            <p className="text-sm text-gray-600 mt-2">
+              Este preço será exibido na plataforma para eventos em destaque.
+            </p>
+          )}
+        </CardHeader>
+        
+        {paymentConfigExpanded && (
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Configure o preço exibido na plataforma para eventos em destaque. 
+                Este valor é apenas visual e não afeta o valor cobrado no Stripe.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-2">
+              <Label htmlFor="sponsor-price">Preço (em reais)</Label>
+              <div className="flex gap-2 items-center">
+                <span className="text-lg font-semibold">R$</span>
+                <Input
+                  id="sponsor-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="499.90"
+                  value={sponsorPrice}
+                  onChange={(e) => setSponsorPrice(e.target.value)}
+                  disabled={loadingSponsorPrice}
+                  className="max-w-xs"
+                />
+              </div>
+              
+              {sponsorPrice && parseFloat(sponsorPrice) > 0 && (
+                <p className="text-sm text-green-600 flex items-center gap-2">
+                  <CheckCircle2 size={16} />
+                  Preço válido: R$ {parseFloat(sponsorPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              )}
+
+              {sponsorPrice && (isNaN(parseFloat(sponsorPrice)) || parseFloat(sponsorPrice) <= 0) && (
+                <p className="text-sm text-red-600 flex items-center gap-2">
+                  <AlertTriangle size={16} />
+                  Preço inválido. Use um número maior que zero (ex: 499.90)
+                </p>
+              )}
+
+              <p className="text-sm text-muted-foreground">
+                Formato: use ponto para decimais (ex: 499.90). Este valor será exibido em todos os formulários de cadastro de eventos.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setPaymentConfigExpanded(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSaveSponsorPrice} 
+                disabled={savingSponsorPrice || loadingSponsorPrice || (sponsorPrice && (isNaN(parseFloat(sponsorPrice)) || parseFloat(sponsorPrice) <= 0))}
+              >
+                {savingSponsorPrice ? (
+                  <>
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} className="mr-2" />
+                    Salvar Preço
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         )}
       </Card>

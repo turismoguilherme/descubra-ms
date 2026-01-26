@@ -3,7 +3,7 @@
  * Permite cadastrar eventos gratuitos ou solicitar destaque (pago)
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -90,6 +90,7 @@ export const EventSubmissionForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [tipoSelecionado, setTipoSelecionado] = useState<"gratuito" | "destaque">("gratuito");
+  const [sponsorPrice, setSponsorPrice] = useState<number>(499.90); // Valor padrão
 
   const {
     register,
@@ -104,6 +105,35 @@ export const EventSubmissionForm: React.FC = () => {
       categoria: "",
     },
   });
+
+  // Buscar preço configurável de eventos em destaque
+  useEffect(() => {
+    const fetchSponsorPrice = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('platform', 'ms')
+          .eq('setting_key', 'event_sponsor_price')
+          .single();
+
+        if (!error && data?.setting_value) {
+          const priceValue = typeof data.setting_value === 'string' 
+            ? data.setting_value 
+            : String(data.setting_value);
+          const price = parseFloat(priceValue);
+          if (!isNaN(price)) {
+            setSponsorPrice(price);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar preço configurável:', error);
+        // Manter valor padrão se houver erro
+      }
+    };
+
+    fetchSponsorPrice();
+  }, []);
 
   // Função para detectar a região turística baseada na cidade
   const detectTouristRegion = async (cidade: string): Promise<string | null> => {
@@ -186,7 +216,7 @@ export const EventSubmissionForm: React.FC = () => {
         is_visible: false, // Precisa de aprovação
         is_sponsored: data.tipo === "destaque",
         sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
-        sponsor_amount: data.tipo === "destaque" ? 499.90 : null,
+        sponsor_amount: data.tipo === "destaque" ? sponsorPrice : null,
       };
 
       // Criar evento no banco
@@ -373,7 +403,7 @@ export const EventSubmissionForm: React.FC = () => {
                   <Star className="w-5 h-5 text-yellow-500" />
                   <span className="font-semibold text-gray-900">Em Destaque</span>
                   <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">
-                    R$ 499,90
+                    R$ {sponsorPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600">
@@ -595,7 +625,7 @@ export const EventSubmissionForm: React.FC = () => {
               {tipoSelecionado === "destaque" ? (
                 <>
                   <p className="text-white/80 text-sm">Investimento:</p>
-                  <p className="text-2xl font-bold">R$ 499,90 <span className="text-lg font-normal text-white/80">/ 30 dias</span></p>
+                  <p className="text-2xl font-bold">R$ {sponsorPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg font-normal text-white/80">/ 30 dias</span></p>
                 </>
               ) : (
                 <>

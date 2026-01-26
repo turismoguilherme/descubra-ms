@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -68,23 +68,7 @@ const eventPromotionSchema = z.object({
 
 type EventPromotionFormData = z.infer<typeof eventPromotionSchema>;
 
-const plano = {
-  id: "destaque",
-  nome: "Evento em Destaque",
-  preco: "R$ 499,90",
-  valor: 499.90,
-  icon: Crown,
-  cor: "from-ms-primary-blue to-ms-discovery-teal",
-  beneficios: [
-    "Badge 'Em Destaque' no seu evento",
-    "Posição privilegiada no calendário",
-    "Banner na página de eventos",
-    "Compartilhamento nas redes sociais",
-    "Notificações para usuários da plataforma",
-    "Suporte prioritário",
-    "Válido por 30 dias",
-  ]
-};
+// Plano será definido dinamicamente com preço configurável
 
 const categorias = [
   { value: "cultural", label: "Cultural" },
@@ -102,6 +86,7 @@ export const EventPromotionForm: React.FC = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [sponsorPrice, setSponsorPrice] = useState<number>(499.90); // Valor padrão
 
   const {
     register,
@@ -115,6 +100,51 @@ export const EventPromotionForm: React.FC = () => {
       categoria: "",
     },
   });
+
+  // Buscar preço configurável de eventos em destaque
+  useEffect(() => {
+    const fetchSponsorPrice = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('platform', 'ms')
+          .eq('setting_key', 'event_sponsor_price')
+          .single();
+
+        if (!error && data?.setting_value) {
+          const price = parseFloat(data.setting_value);
+          if (!isNaN(price)) {
+            setSponsorPrice(price);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar preço configurável:', error);
+        // Manter valor padrão se houver erro
+      }
+    };
+
+    fetchSponsorPrice();
+  }, []);
+
+  // Definir plano dinamicamente com preço configurável
+  const plano = {
+    id: "destaque",
+    nome: "Evento em Destaque",
+    preco: `R$ ${sponsorPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    valor: sponsorPrice,
+    icon: Crown,
+    cor: "from-ms-primary-blue to-ms-discovery-teal",
+    beneficios: [
+      "Badge 'Em Destaque' no seu evento",
+      "Posição privilegiada no calendário",
+      "Banner na página de eventos",
+      "Compartilhamento nas redes sociais",
+      "Notificações para usuários da plataforma",
+      "Suporte prioritário",
+      "Válido por 30 dias",
+    ]
+  };
 
   const onSubmit = async (data: EventPromotionFormData) => {
     setIsSubmitting(true);
@@ -200,7 +230,7 @@ export const EventPromotionForm: React.FC = () => {
             <h3 className="font-semibold text-blue-900 mb-2">O que acontece agora:</h3>
             <ol className="list-decimal list-inside text-blue-800 space-y-1 text-sm">
               <li>Redirecionamento automático para checkout Stripe</li>
-              <li>Pagamento seguro de R$ 499,90</li>
+              <li>Pagamento seguro de R$ {sponsorPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</li>
               <li>Após pagamento, seu evento será destacado por 30 dias</li>
             </ol>
           </div>
