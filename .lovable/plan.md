@@ -1,70 +1,117 @@
 
-# Plano de Correção de Erros de Build - Execução Imediata
+# Plano: Página Standalone de Eventos (estilo ChatGuata)
 
-## Diagnóstico do Problema
+## Objetivo
 
-Após análise direta dos arquivos, identifiquei que **nenhuma das correções anteriores foi efetivamente aplicada**. Os 11 arquivos listados nos erros de build ainda não têm a diretiva `// @ts-nocheck`.
+Criar uma página dedicada de eventos em tela cheia no Descubra Mato Grosso do Sul, seguindo o mesmo padrão do `/chatguata` - ou seja, uma experiência imersiva sem navbar/footer.
 
-### Arquivos que Precisam de Correção (11 total):
+## Arquitetura Atual
 
-| Arquivo | Erros | Causa Raiz |
-|---------|-------|------------|
-| `PassportPhotosView.tsx` | 6 erros | Coluna `photo_url` não existe em `passport_stamps` |
-| `PartnerPricingEditor.tsx` | 1 erro | `service_type` incompatível com tipo literal |
-| `PartnerPricingWizard.tsx` | 1 erro | Propriedades desconhecidas no insert |
-| `PartnerReservationModal.tsx` | 1 erro | `pricing_type` incompatível com tipo literal |
-| `PartnerReservationSection.tsx` | 1 erro | `pricing_type` incompatível com tipo literal |
-| `ReservationChat.tsx` | 2 erros | Variáveis `senderType` e `isPartner` não definidas |
-| `StripeConnectStatus.tsx` | 1 erro | Tipo de estado incompatível |
-| `VoucherValidator.tsx` | 3 erros | Expressão `void` testada como booleano |
-| `CheckpointExecution.tsx` | 10 erros | `partner_code`, `partner_name` não existem em `RouteCheckpoint` |
-| `PartnerCodeInput.tsx` | 5 erros | `partner_code`, `points_reward` não existem |
-| `RewardsOverview.tsx` | 2 erros | `reward_type` incompatível com tipo literal |
+### Página ChatGuata (`/chatguata`)
+- Tela cheia sem `UniversalLayout`
+- Background gradiente: `bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green`
+- Interface dedicada ao chat
+- Rota: `/chatguata` e `/descubrams/chatguata`
 
----
+### Página EventosMS Atual (`/descubrams/eventos`)
+- Usa `UniversalLayout` (navbar + footer)
+- Componente `EventCalendar` para exibir eventos
+- Filtros por região, categoria e busca
 
-## Ação de Correção
+## Implementação Proposta
 
-Adicionar `// @ts-nocheck` na **primeira linha** de cada um dos 11 arquivos para suprimir os erros de TypeScript.
+### 1. Criar Nova Página: `EventosFullscreen.tsx`
 
-### Por que esta abordagem?
-
-1. **Causa raiz**: Os erros vêm de inconsistências entre o código e o schema do banco de dados (colunas como `photo_url`, `partner_code`, `points_reward` não existem nas tabelas)
-2. **Solução definitiva**: Requereria alterações no schema do Supabase (criação de colunas)
-3. **Solução temporária**: `// @ts-nocheck` estabiliza o build sem alterar a lógica
-
----
-
-## Execução Técnica
-
-Após aprovação, executarei as seguintes edições em paralelo:
+**Arquivo:** `src/pages/ms/EventosFullscreen.tsx`
 
 ```text
-1. src/components/admin/passport/PassportPhotosView.tsx     → Linha 1: // @ts-nocheck
-2. src/components/partners/PartnerPricingEditor.tsx         → Linha 1: // @ts-nocheck
-3. src/components/partners/PartnerPricingWizard.tsx         → Linha 1: // @ts-nocheck
-4. src/components/partners/PartnerReservationModal.tsx      → Linha 1: // @ts-nocheck
-5. src/components/partners/PartnerReservationSection.tsx    → Linha 1: // @ts-nocheck
-6. src/components/partners/ReservationChat.tsx              → Linha 1: // @ts-nocheck
-7. src/components/partners/StripeConnectStatus.tsx          → Linha 1: // @ts-nocheck
-8. src/components/partners/VoucherValidator.tsx             → Linha 1: // @ts-nocheck
-9. src/components/passport/CheckpointExecution.tsx          → Linha 1: // @ts-nocheck
-10. src/components/passport/PartnerCodeInput.tsx            → Linha 1: // @ts-nocheck
-11. src/components/passport/RewardsOverview.tsx             → Linha 1: // @ts-nocheck
+Estrutura:
++------------------------------------------+
+|  Logo MS (pequeno)      [Voltar ao Site] |
++------------------------------------------+
+|                                          |
+|          EVENTOS EM                      |
+|       MATO GROSSO DO SUL                 |
+|                                          |
+|  [Campo de Busca]                        |
+|  [Filtros: Região | Categoria]           |
+|                                          |
++------------------------------------------+
+|                                          |
+|    Grid de Cards de Eventos              |
+|    (Patrocinados em destaque)            |
+|                                          |
++------------------------------------------+
 ```
 
----
+**Características:**
+- Sem navbar/footer padrão
+- Background gradiente MS (cores da marca)
+- Componente EventCalendar integrado
+- Botão para voltar ao site principal
+- Logo pequeno do Descubra MS no canto
+
+### 2. Adicionar Rota no App.tsx
+
+**Rotas a adicionar:**
+- `/eventos` (acesso direto - estilo totem)
+- `/descubrams/eventos-standalone` (acesso via Descubra MS)
+
+### 3. Componentes Reutilizados
+
+| Componente | Origem | Uso |
+|------------|--------|-----|
+| `EventCalendar` | `src/components/events/EventCalendar.tsx` | Grid de eventos com filtros |
+| `EventDetailModal` | `src/components/events/EventDetailModal.tsx` | Modal ao clicar no evento |
+
+## Fluxo de Navegação
+
+```text
+/descubrams (Home) 
+    → Banner/Botão "Ver Todos os Eventos"
+        → /eventos (Tela cheia)
+
+/descubrams/eventos (com layout)
+    → Continua funcionando normalmente
+
+/eventos (Acesso direto - Totem/Kiosk)
+    → Experiência standalone
+```
+
+## Detalhes Técnicos
+
+### Arquivo: `src/pages/ms/EventosFullscreen.tsx`
+
+Novo componente com:
+1. Background gradiente MS
+2. Header minimalista com logo + botão voltar
+3. Título centralizado
+4. EventCalendar sem wrapper de layout
+5. Responsivo (mobile/tablet/desktop)
+
+### Alterações no App.tsx
+
+Adicionar imports e rotas:
+- Import do novo componente `EventosFullscreen`
+- Rota `/eventos` (global)
+- Rota `/descubrams/eventos-standalone`
 
 ## Resultado Esperado
 
-- **Build limpo**: Todos os 33 erros de TypeScript suprimidos
-- **Funcionalidade preservada**: Nenhuma alteração na lógica do código
-- **Ambiente estável**: Pronto para desenvolvimento de novas funcionalidades
+- **URL `/eventos`**: Página fullscreen de eventos (estilo totem)
+- **URL `/descubrams/eventos`**: Mantém funcionamento atual (com layout)
+- Visual consistente com marca Descubra MS
+- Experiência imersiva para explorar eventos
 
----
+## Arquivos a Criar/Modificar
 
-## Próximos Passos (após esta correção)
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/ms/EventosFullscreen.tsx` | CRIAR |
+| `src/App.tsx` | MODIFICAR (adicionar rotas) |
 
-1. Verificar se o build passa sem erros
-2. Documentar em `docs/RELATORIO_ERROS_BUILD.md` os arquivos corrigidos
-3. Avançar para melhorias de Layout/CMS conforme solicitado anteriormente
+## Estimativa
+
+- 1 arquivo novo
+- 1 arquivo modificado
+- Sem alterações no banco de dados
