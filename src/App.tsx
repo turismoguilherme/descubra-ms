@@ -89,6 +89,7 @@ import Partners from "@/pages/Partners";
 import Guata from "@/pages/Guata";
 import GuataTest from "@/pages/GuataTest";
 import ChatGuata from "@/pages/ChatGuata";
+import Eventos from "@/pages/Eventos";
 import Koda from "@/pages/Koda";
 import KodaPrivacy from "@/pages/koda/Privacy";
 import KodaTerms from "@/pages/koda/Terms";
@@ -186,6 +187,9 @@ function App() {
 
                                 {/* Chatbot Guatá Standalone - Totem */}
                                 <Route path="/chatguata" element={<ChatGuata />} />
+
+                                {/* Eventos - Página separada no estilo chatguata */}
+                                <Route path="/eventos" element={<Eventos />} />
 
                                 {/* Koda - Canadian Travel Guide */}
                                 <Route path="/koda" element={<Koda />} />
@@ -365,6 +369,9 @@ function App() {
                             
                             {/* Chatbot Guatá Standalone - Totem */}
                             <Route path="/chatguata" element={<ChatGuata />} />
+
+                            {/* Eventos - Página separada no estilo chatguata */}
+                            <Route path="/eventos" element={<Eventos />} />
                             
                             {/* Koda - Canadian Travel Guide */}
                             <Route path="/koda" element={<Koda />} />

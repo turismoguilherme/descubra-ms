@@ -90,7 +90,11 @@ const UniversalNavbar = () => {
   const { config, isOverflowOne, isMS } = brandContext;
   const location = useLocation();
   
-  console.log("🧭 NAVBAR: Estado - user:", !!user, "isOverflowOne:", isOverflowOne, "isMS:", isMS, "pathname:", location.pathname);
+  // Verificar se veio de /eventos através do parâmetro na URL
+  const isFromEventos = location.search.includes('from=eventos');
+  const shouldShowOnlyEventos = location.pathname === '/eventos' || (location.pathname === '/descubrams/cadastrar-evento' && isFromEventos);
+  
+  console.log("🧭 NAVBAR: Estado - user:", !!user, "isOverflowOne:", isOverflowOne, "isMS:", isMS, "pathname:", location.pathname, "isFromEventos:", isFromEventos, "shouldShowOnlyEventos:", shouldShowOnlyEventos);
 
   // Memoizar a função de verificação de path ativo para melhor performance
   const isActivePath = useMemo(() => {
@@ -115,21 +119,38 @@ const UniversalNavbar = () => {
           {/* Logo */}
           <Link to={isOverflowOne ? "/" : "/descubrams"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
-              <img
-                key={config.logo.src}
-                alt={config.logo.alt}
-                src={config.logo.src}
-                className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain"
-                loading="eager"
-                onError={(e) => {
-                  console.error('❌ Erro ao carregar logo PNG:', e);
-                  console.log('Tentando fallback...');
-                  const target = e.target as HTMLImageElement;
-                  if (!target.src.includes('fallback=true')) {
-                    target.src = `/images/logo-descubra-ms.png?fallback=true`;
-                  }
-                }}
-              />
+              {(() => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:118',message:'Renderizando logo no navbar',data:{logoSrc:config.logo.src,logoAlt:config.logo.alt,isMS,isOverflowOne,pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
+                return (
+                  <img
+                    key={`${config.logo.src}-${location.pathname === '/eventos' ? Date.now() : ''}`}
+                    alt={config.logo.alt}
+                    src={location.pathname === '/eventos' && config.logo.src.includes('supabase.co') 
+                      ? `${config.logo.src}${config.logo.src.includes('?') ? '&' : '?'}t=${Date.now()}`
+                      : config.logo.src}
+                    className="h-16 w-auto transition-transform duration-300 hover:scale-105 object-contain"
+                    loading="eager"
+                    onLoad={(e) => {
+                      // #region agent log
+                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:onLoad',message:'Logo carregada com sucesso no navbar',data:{src:e.currentTarget.src,complete:e.currentTarget.complete,naturalWidth:e.currentTarget.naturalWidth,naturalHeight:e.currentTarget.naturalHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                      // #endregion
+                    }}
+                    onError={(e) => {
+                      console.error('❌ Erro ao carregar logo PNG:', e);
+                      // #region agent log
+                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:onError',message:'Erro ao carregar logo no navbar',data:{src:e.currentTarget.src,attemptedSrc:config.logo.src},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                      // #endregion
+                      console.log('Tentando fallback...');
+                      const target = e.target as HTMLImageElement;
+                      if (!target.src.includes('fallback=true')) {
+                        target.src = `/images/logo-descubra-ms.png?fallback=true`;
+                      }
+                    }}
+                  />
+                );
+              })()}
               <span 
                 className="hidden text-lg font-bold text-ms-primary-blue"
                 style={{ display: 'none' }}
@@ -140,120 +161,141 @@ const UniversalNavbar = () => {
           </Link>
 
           {/* Desktop Navigation - Simplificado */}
-          <div className="hidden md:flex items-center space-x-6">
-            {/* Dropdown Regiões Turísticas (apenas para MS) */}
-            {isMS && (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-ms-primary-blue text-gray-700 data-[state=open]:text-ms-primary-blue">
-                  Regiões Turísticas
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64 max-h-[400px] overflow-y-auto">
-                  {touristRegions2025.slice(0, 4).map(region => (
-                    <DropdownMenuItem key={region.slug} asChild>
+          {/* Se estiver em /eventos ou veio de /eventos (via parâmetro), centralizar apenas "Eventos" */}
+          {shouldShowOnlyEventos ? (
+            <div className="hidden md:flex items-center justify-center flex-1">
+              {navigationItems
+                .filter(item => item.name === 'Eventos')
+                .map(item => (
+                <Link 
+                  key={item.name} 
+                  to={item.path}
+                  onClick={() => console.log('🔗 NAVBAR: Clicou em', item.name, '->', item.path)}
+                  className="text-sm font-medium transition-colors hover:text-ms-primary-blue text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center space-x-6">
+              {/* Dropdown Regiões Turísticas (apenas para MS) */}
+              {isMS && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-ms-primary-blue text-gray-700 data-[state=open]:text-ms-primary-blue">
+                    Regiões Turísticas
+                    <ChevronDown className="h-4 w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64 max-h-[400px] overflow-y-auto">
+                    {touristRegions2025.slice(0, 4).map(region => (
+                      <DropdownMenuItem key={region.slug} asChild>
+                        <Link 
+                          to={`/descubrams/regioes/${region.slug}`}
+                          className="cursor-pointer flex items-center gap-2"
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor: region.color }}
+                          />
+                          <span>{region.name}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuItem asChild>
                       <Link 
-                        to={`/descubrams/regioes/${region.slug}`}
-                        className="cursor-pointer flex items-center gap-2"
+                        to="/descubrams/mapa-turistico"
+                        className="cursor-pointer font-semibold text-ms-primary-blue"
                       >
-                        <div 
-                          className="w-3 h-3 rounded-full flex-shrink-0" 
-                          style={{ backgroundColor: region.color }}
-                        />
-                        <span>{region.name}</span>
+                        Ver todas as regiões →
                       </Link>
                     </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuItem asChild>
-                    <Link 
-                      to="/descubrams/mapa-turistico"
-                      className="cursor-pointer font-semibold text-ms-primary-blue"
-                    >
-                      Ver todas as regiões →
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
-            {/* Links principais - Eventos, Parceiros e Guatá */}
-            {navigationItems
-              .filter(item => {
-                // Mostrar apenas Eventos e Parceiros no menu principal (para MS)
-                if (isMS) {
-                  return ['Eventos', 'Parceiros'].includes(item.name);
-                }
-                return true;
-              })
-              .map(item => (
-              <Link 
-                key={item.name} 
-                to={item.path}
-                onClick={() => console.log('🔗 NAVBAR: Clicou em', item.name, '->', item.path)}
-                className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
-                  isActivePath(item.path) 
-                    ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
-                    : "text-gray-700"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-            
-            {/* Guatá */}
-            {isMS && (
-              <Link 
-                to="/descubrams/guata"
-                onClick={() => console.log('🔗 NAVBAR: Clicou em Guatá -> /descubrams/guata')}
-                className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
-                  isActivePath('/descubrams/guata') 
-                    ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
-                    : "text-gray-700"
-                }`}
-              >
-                Guatá
-              </Link>
-            )}
-          </div>
+              {/* Links principais - Eventos, Parceiros e Guatá */}
+              {navigationItems
+                .filter(item => {
+                  // Mostrar apenas Eventos e Parceiros no menu principal (para MS)
+                  if (isMS) {
+                    return ['Eventos', 'Parceiros'].includes(item.name);
+                  }
+                  return true;
+                })
+                .map(item => (
+                <Link 
+                  key={item.name} 
+                  to={item.path}
+                  onClick={() => console.log('🔗 NAVBAR: Clicou em', item.name, '->', item.path)}
+                  className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
+                    isActivePath(item.path) 
+                      ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
+                      : "text-gray-700"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* Guatá */}
+              {isMS && (
+                <Link 
+                  to="/descubrams/guata"
+                  onClick={() => console.log('🔗 NAVBAR: Clicou em Guatá -> /descubrams/guata')}
+                  className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
+                    isActivePath('/descubrams/guata') 
+                      ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1" 
+                      : "text-gray-700"
+                  }`}
+                >
+                  Guatá
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center space-x-4">
-            <LanguageSelector />
-            {user ? (
-              <>
-              <UserMenu />
-              </>
-            ) : (
-              <>
-                {isOverflowOne ? (
-                  <>
-                    <Link to="/contato">
-                      <Button size="sm" className="bg-ms-primary-blue text-white hover:bg-ms-primary-blue/90">
-                        {config.cta.primary}
-                      </Button>
-                    </Link>
-                    <Link to="/descubrams">
-                      <Button variant="outline" size="sm">
-                        {config.cta.secondary}
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/descubrams/login">
-                      <Button variant="ghost" size="sm">
-                        {config.cta.secondary}
-                      </Button>
-                    </Link>
-                    <Link to="/descubrams/register">
-                      <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
-                        {config.cta.primary}
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
-          </div>
+          {/* Esconder botões de autenticação quando estiver em /eventos ou veio de /eventos */}
+          {!shouldShowOnlyEventos && (
+            <div className="hidden md:flex items-center space-x-4">
+              <LanguageSelector />
+              {user ? (
+                <>
+                <UserMenu />
+                </>
+              ) : (
+                <>
+                  {isOverflowOne ? (
+                    <>
+                      <Link to="/contato">
+                        <Button size="sm" className="bg-ms-primary-blue text-white hover:bg-ms-primary-blue/90">
+                          {config.cta.primary}
+                        </Button>
+                      </Link>
+                      <Link to="/descubrams">
+                        <Button variant="outline" size="sm">
+                          {config.cta.secondary}
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/descubrams/login">
+                        <Button variant="ghost" size="sm">
+                          {config.cta.secondary}
+                        </Button>
+                      </Link>
+                      <Link to="/descubrams/register">
+                        <Button size="sm" className="bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold text-slate-950">
+                          {config.cta.primary}
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -272,8 +314,8 @@ const UniversalNavbar = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-              {/* Regiões Turísticas (Mobile) */}
-              {isMS && (
+              {/* Regiões Turísticas (Mobile) - Esconder quando veio de /eventos */}
+              {isMS && !shouldShowOnlyEventos && (
                 <>
                   <div className="px-3 py-2 text-base font-semibold text-ms-primary-blue">
                     Regiões Turísticas
@@ -300,47 +342,68 @@ const UniversalNavbar = () => {
               )}
 
               {/* Links principais - Eventos, Parceiros e Guatá */}
-              {navigationItems
-                .filter(item => {
-                  if (isMS) {
-                    return ['Eventos', 'Parceiros'].includes(item.name);
-                  }
-                  return true;
-                })
-                .map(item => (
-                <Link 
-                  key={item.name} 
-                  to={item.path}
-                  onClick={() => {
-                    console.log('🔗 NAVBAR MOBILE: Clicou em', item.name, '->', item.path);
-                    setIsOpen(false);
-                  }}
-                  className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath(item.path) 
-                      ? "text-ms-primary-blue bg-blue-50" 
-                      : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
-                  }`} 
-                >
-                  {item.name}
-                </Link>
-              ))}
-              
-              {/* Guatá (Mobile) */}
-              {isMS && (
-                <Link 
-                  to="/descubrams/guata"
-                  onClick={() => {
-                    console.log('🔗 NAVBAR MOBILE: Clicou em Guatá -> /descubrams/guata');
-                    setIsOpen(false);
-                  }}
-                  className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubrams/guata') 
-                      ? "text-ms-primary-blue bg-blue-50" 
-                      : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
-                  }`}
-                >
-                  Guatá
-                </Link>
+              {/* Se veio de /eventos, mostrar apenas "Eventos" */}
+              {shouldShowOnlyEventos ? (
+                navigationItems
+                  .filter(item => item.name === 'Eventos')
+                  .map(item => (
+                    <Link 
+                      key={item.name} 
+                      to={item.path}
+                      onClick={() => {
+                        console.log('🔗 NAVBAR MOBILE: Clicou em', item.name, '->', item.path);
+                        setIsOpen(false);
+                      }}
+                      className="block px-3 py-2 text-base font-medium transition-colors text-ms-primary-blue bg-blue-50"
+                    >
+                      {item.name}
+                    </Link>
+                  ))
+              ) : (
+                <>
+                  {navigationItems
+                    .filter(item => {
+                      if (isMS) {
+                        return ['Eventos', 'Parceiros'].includes(item.name);
+                      }
+                      return true;
+                    })
+                    .map(item => (
+                    <Link 
+                      key={item.name} 
+                      to={item.path}
+                      onClick={() => {
+                        console.log('🔗 NAVBAR MOBILE: Clicou em', item.name, '->', item.path);
+                        setIsOpen(false);
+                      }}
+                      className={`block px-3 py-2 text-base font-medium transition-colors ${
+                        isActivePath(item.path) 
+                          ? "text-ms-primary-blue bg-blue-50" 
+                          : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
+                      }`} 
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                  
+                  {/* Guatá (Mobile) */}
+                  {isMS && (
+                    <Link 
+                      to="/descubrams/guata"
+                      onClick={() => {
+                        console.log('🔗 NAVBAR MOBILE: Clicou em Guatá -> /descubrams/guata');
+                        setIsOpen(false);
+                      }}
+                      className={`block px-3 py-2 text-base font-medium transition-colors ${
+                        isActivePath('/descubrams/guata') 
+                          ? "text-ms-primary-blue bg-blue-50" 
+                          : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
+                      }`}
+                    >
+                      Guatá
+                    </Link>
+                  )}
+                </>
               )}
               
               {user && authenticatedNavigationItems.map(item => (
@@ -361,49 +424,51 @@ const UniversalNavbar = () => {
                 </Link>
               ))}
 
-              {/* Mobile Auth */}
-              <div className="pt-4 pb-3 border-t border-gray-200">
-                <div className="px-3 mb-3">
-                  <LanguageSelector />
+              {/* Mobile Auth - Esconder quando estiver em /eventos ou veio de /eventos */}
+              {!shouldShowOnlyEventos && (
+                <div className="pt-4 pb-3 border-t border-gray-200">
+                  <div className="px-3 mb-3">
+                    <LanguageSelector />
+                  </div>
+                  {user ? (
+                    <>
+                    <div className="px-3">
+                      <UserMenu />
+                    </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2 px-3">
+                      {isOverflowOne ? (
+                        <>
+                          <Link to="/contato" onClick={() => setIsOpen(false)}>
+                            <Button size="sm" className="w-full bg-ms-primary-blue text-white hover:bg-ms-primary-blue/90">
+                              {config.cta.primary}
+                            </Button>
+                          </Link>
+                          <Link to="/descubrams" onClick={() => setIsOpen(false)}>
+                            <Button variant="outline" size="sm" className="w-full">
+                              {config.cta.secondary}
+                            </Button>
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link to="/descubrams/login" onClick={() => setIsOpen(false)}>
+                            <Button variant="ghost" size="sm" className="w-full justify-start">
+                              {config.cta.secondary}
+                            </Button>
+                          </Link>
+                          <Link to="/descubrams/register" onClick={() => setIsOpen(false)}>
+                            <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
+                              {config.cta.primary}
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {user ? (
-                  <>
-                  <div className="px-3">
-                    <UserMenu />
-                  </div>
-                  </>
-                ) : (
-                  <div className="space-y-2 px-3">
-                    {isOverflowOne ? (
-                      <>
-                        <Link to="/contato" onClick={() => setIsOpen(false)}>
-                          <Button size="sm" className="w-full bg-ms-primary-blue text-white hover:bg-ms-primary-blue/90">
-                            {config.cta.primary}
-                          </Button>
-                        </Link>
-                        <Link to="/descubrams" onClick={() => setIsOpen(false)}>
-                          <Button variant="outline" size="sm" className="w-full">
-                            {config.cta.secondary}
-                          </Button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link to="/descubrams/login" onClick={() => setIsOpen(false)}>
-                          <Button variant="ghost" size="sm" className="w-full justify-start">
-                            {config.cta.secondary}
-                          </Button>
-                        </Link>
-                        <Link to="/descubrams/register" onClick={() => setIsOpen(false)}>
-                          <Button size="sm" className="w-full bg-ms-secondary-yellow text-ms-primary-blue hover:bg-ms-secondary-yellow/90 font-semibold">
-                            {config.cta.primary}
-                          </Button>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}

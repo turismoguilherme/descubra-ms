@@ -6,12 +6,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import UserMenu from "./UserMenu";
 import { LanguageSelector } from "./LanguageSelector";
+import { useBrand } from "@/context/BrandContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
   const { t } = useTranslation('common');
+  
+  // Tentar obter logo do BrandContext, com fallback
+  let logoUrl = "/images/logo-descubra-ms.png?v=3";
+  let logoAlt = "Descubra Mato Grosso do Sul";
+  try {
+    const brand = useBrand();
+    if (brand && brand.isMS) {
+      logoUrl = brand.config.logo.src;
+      logoAlt = brand.config.logo.alt;
+    }
+  } catch (error) {
+    // BrandContext não disponível, usar fallback
+  }
   
   // Detectar tenant do path atual
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -76,10 +90,14 @@ const Navbar = () => {
           <Link to={getPathWithTenant("/")} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               <img 
-                alt="Descubra Mato Grosso do Sul" 
-                src="/images/logo-descubra-ms.png?v=3" 
+                alt={logoAlt} 
+                src={logoUrl} 
                 className="h-12 w-auto transition-transform duration-300 hover:scale-105 object-contain" 
-                loading="eager" 
+                loading="eager"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/images/logo-descubra-ms.png?v=3";
+                }}
               />
             </div>
           </Link>

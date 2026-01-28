@@ -52,6 +52,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import EventPaymentConfig from '@/components/admin/EventPaymentConfig';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { optimizeModalImage, optimizeThumbnail } from '@/utils/imageOptimization';
 
 interface Event {
   id: string;
@@ -1915,7 +1916,7 @@ export default function EventsManagement() {
                     />
                   ) : (selectedEvent.logo_evento || selectedEvent.image_url) ? (
                     <img
-                      src={selectedEvent.logo_evento || selectedEvent.image_url}
+                      src={optimizeModalImage(selectedEvent.logo_evento || selectedEvent.image_url)}
                       alt={selectedEvent.name}
                       className="w-full h-full object-cover"
                     />
@@ -2044,7 +2045,7 @@ export default function EventsManagement() {
                       </h3>
                       <div className="bg-gray-50 p-4 rounded-lg flex justify-center">
                         <img 
-                          src={selectedEvent.logo_evento} 
+                          src={optimizeModalImage(selectedEvent.logo_evento)} 
                           alt="Logo do evento"
                           className="max-w-xs max-h-48 object-contain"
                           onError={(e) => {

@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useLanguage } from '@/hooks/useLanguage';
+import { optimizeEventCardImage } from '@/utils/imageOptimization';
 
 interface EventCalendarProps {
   autoLoad?: boolean;
@@ -67,6 +68,7 @@ interface EventItem {
 }
 
 const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
+  const location = useLocation();
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [translations, setTranslations] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -75,6 +77,9 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [showPersonalization, setShowPersonalization] = useState(true);
+  
+  // Detectar se está em /eventos para adicionar parâmetro no link de cadastro
+  const isEventosPage = location.pathname === '/eventos';
 
   // Debug: interceptar mudanças de região
   const handleRegionChange = (value: string) => {
@@ -558,9 +563,9 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
         {/* Imagem */}
         <div className={`relative h-48 overflow-hidden bg-gradient-to-br ${regionColors[touristRegion as keyof typeof regionColors] || regionColors['descubra-ms']}`}>
-          {event.image_url ? (
+          {(event.logo_evento || event.image_url) ? (
             <img
-              src={event.image_url}
+              src={optimizeEventCardImage(event.logo_evento || event.image_url)}
               alt={event.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -634,7 +639,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       )}
 
       {/* Filtros - PRIMEIRO */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -683,7 +688,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             <p className="text-white/80 text-sm">Cadastre gratuitamente ou destaque seu evento</p>
           </div>
         </div>
-        <Link to="/descubrams/cadastrar-evento">
+        <Link to={isEventosPage ? "/descubrams/cadastrar-evento?from=eventos" : "/descubrams/cadastrar-evento"}>
           <Button className="bg-white text-ms-primary-blue hover:bg-white/90 font-semibold">
             <Calendar className="w-4 h-4 mr-2" />
             Cadastrar Evento

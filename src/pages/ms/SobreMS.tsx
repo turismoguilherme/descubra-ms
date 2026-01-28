@@ -4,8 +4,20 @@ import { Link } from 'react-router-dom';
 import { Target, Eye, Award, Users, MapPin, Compass, Heart, TreePine, Star, ArrowRight } from 'lucide-react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
+import { useBrand } from '@/context/BrandContext';
 
 const SobreMS = () => {
+  // Tentar obter logo do BrandContext, com fallback
+  let logoUrl = logoDescubra;
+  try {
+    const brand = useBrand();
+    if (brand && brand.isMS) {
+      logoUrl = brand.config.logo.src;
+    }
+  } catch (error) {
+    // BrandContext não disponível, usar fallback
+  }
+  
   // Scroll para o topo quando a página carregar
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -20,11 +32,14 @@ const SobreMS = () => {
           <div className="relative ms-container text-center">
             <div className="flex justify-center mb-6">
               <img 
-                src={logoDescubra} 
+                src={logoUrl} 
                 alt="Descubra Mato Grosso do Sul" 
                 className="h-20 w-auto drop-shadow-lg"
                 onError={(e) => {
-                  e.currentTarget.src = "/images/logo-descubra-ms.png";
+                  const target = e.target as HTMLImageElement;
+                  if (!target.src.includes('logo-descubra-ms.png')) {
+                    target.src = "/images/logo-descubra-ms.png?v=3";
+                  }
                 }}
               />
             </div>

@@ -271,10 +271,44 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
       // Recarregar logos para garantir sincronização
       await loadLogos();
 
-      // Disparar evento customizado para notificar outros componentes
-      window.dispatchEvent(new CustomEvent('logo-updated', { 
-        detail: { key: config.key, url: imageUrl.trim() } 
-      }));
+      // Adicionar cache busting timestamp à URL se for do Supabase Storage
+      const logoUrlWithCacheBust = imageUrl.trim().includes('supabase.co') 
+        ? `${imageUrl.trim()}${imageUrl.trim().includes('?') ? '&' : '?'}t=${Date.now()}`
+        : imageUrl.trim();
+
+      // Logs detalhados para rastrear eventos de atualização
+      console.log('📢 [LogoEditor] Logo atualizada com sucesso:', {
+        key: config.key,
+        label: config.label,
+        urlOriginal: imageUrl.trim(),
+        urlComCacheBust: logoUrlWithCacheBust,
+        timestamp: new Date().toISOString(),
+        isSupabaseUrl: imageUrl.trim().includes('supabase.co')
+      });
+
+      // Disparar evento customizado para notificar outros componentes com logs
+      const logoUpdateEvent = new CustomEvent('logo-updated', { 
+        detail: { 
+          key: config.key, 
+          url: logoUrlWithCacheBust,
+          originalUrl: imageUrl.trim(),
+          timestamp: Date.now(),
+          label: config.label
+        } 
+      });
+      
+      console.log('📢 [LogoEditor] Disparando evento logo-updated:', {
+        key: config.key,
+        url: logoUrlWithCacheBust,
+        timestamp: Date.now()
+      });
+      
+      window.dispatchEvent(logoUpdateEvent);
+
+      // Log adicional para verificar se o evento foi capturado
+      setTimeout(() => {
+        console.log('📢 [LogoEditor] Evento logo-updated disparado há 100ms. Verifique se foi capturado pelo BrandContext.');
+      }, 100);
 
       toast({
         title: 'Salvo!',

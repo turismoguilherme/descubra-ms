@@ -11,6 +11,7 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 import { getLoginRedirectPath, isDescubraMSContext } from '@/utils/authRedirect';
+import { useBrand } from '@/context/BrandContext';
 
 const AuthPage = () => {
   console.log('🔐 [AuthPage] ========== COMPONENTE RENDERIZADO ==========');
@@ -24,6 +25,17 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useSecureAuth();
+  
+  // Tentar obter logo do BrandContext, com fallback
+  let logoUrl = logoDescubra;
+  try {
+    const brand = useBrand();
+    if (brand && brand.isMS) {
+      logoUrl = brand.config.logo.src;
+    }
+  } catch (error) {
+    // BrandContext não disponível, usar fallback
+  }
   
   // Obter URL de redirect dos parâmetros da query
   const redirectUrlParam = searchParams.get('redirect');
@@ -270,11 +282,14 @@ const AuthPage = () => {
       {/* Header com logo */}
       <div className="flex justify-center py-6 bg-white">
         <img
-          src={logoDescubra}
+          src={logoUrl}
           alt="Descubra Mato Grosso do Sul"
           className="h-[60px] w-auto"
           onError={(e) => {
-            e.currentTarget.src = "/images/logo-descubra-ms.png";
+            const target = e.target as HTMLImageElement;
+            if (!target.src.includes('logo-descubra-ms.png')) {
+              target.src = "/images/logo-descubra-ms.png?v=3";
+            }
           }}
         />
       </div>

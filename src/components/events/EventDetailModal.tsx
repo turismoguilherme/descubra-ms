@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { optimizeModalImage } from '@/utils/imageOptimization';
 
 interface EventItem {
   id: string;
@@ -201,14 +202,55 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
       );
     }
 
-    // Caso 2: Logo do evento disponível (sem vídeo) - removida pois agora aparece na seção de conteúdo
-    // A logo será exibida após data/horário na seção de conteúdo
+    // Caso 2: Logo do evento disponível (sem vídeo) - prioridade sobre image_url
+    if (event.logo_evento) {
+      const optimizedUrl = optimizeModalImage(event.logo_evento);
+      console.log('🖼️ [EventDetailModal] Renderizando logo no hero:', {
+        eventId: event.id,
+        eventName: event.name,
+        logoOriginal: event.logo_evento,
+        logoOtimizada: optimizedUrl,
+        isSupabaseUrl: event.logo_evento.includes('supabase.co'),
+        timestamp: new Date().toISOString()
+      });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventDetailModal.tsx:206',message:'Renderizando logo no hero do modal',data:{eventId:event.id,eventName:event.name,logoOriginal:event.logo_evento,logoOtimizada:optimizedUrl,isSupabaseUrl:event.logo_evento.includes('supabase.co')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      // #endregion
+      return (
+        <img
+          src={optimizedUrl}
+          alt={getTranslatedName(event)}
+          className="w-full h-full object-cover"
+          onLoad={(e) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventDetailModal.tsx:onLoad-hero',message:'Logo carregada no hero do modal',data:{src:e.currentTarget.src,complete:e.currentTarget.complete,naturalWidth:e.currentTarget.naturalWidth,naturalHeight:e.currentTarget.naturalHeight,eventId:event.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+            // #endregion
+          }}
+          onError={(e) => {
+            console.error('❌ [EventDetailModal] Erro ao carregar logo no hero:', {
+              eventId: event.id,
+              eventName: event.name,
+              url: optimizedUrl,
+              originalUrl: event.logo_evento
+            });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventDetailModal.tsx:onError-hero',message:'Erro ao carregar logo no hero',data:{src:e.currentTarget.src,attemptedSrc:optimizedUrl,originalUrl:event.logo_evento,eventId:event.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+            // #endregion
+            const target = e.target as HTMLImageElement;
+            // Tentar sem otimização como fallback
+            if (target.src !== event.logo_evento) {
+              target.src = event.logo_evento;
+            }
+          }}
+        />
+      );
+    }
 
-    // Caso 3: Apenas imagem
+    // Caso 3: Apenas imagem (fallback)
     if (event.image_url) {
       return (
         <img
-          src={event.image_url}
+          src={optimizeModalImage(event.image_url)}
           alt={getTranslatedName(event)}
           className="w-full h-full object-cover"
         />
@@ -302,11 +344,48 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             {/* Logo/Banner do Evento */}
             {event.logo_evento && (
               <div className="py-6">
-                <img
-                  src={event.logo_evento}
-                  alt={`Logo do evento ${getTranslatedName(event)}`}
-                  className="w-full h-auto object-contain rounded-xl"
-                />
+                {(() => {
+                  const optimizedUrl = optimizeModalImage(event.logo_evento);
+                  console.log('🖼️ [EventDetailModal] Renderizando logo na seção:', {
+                    eventId: event.id,
+                    eventName: event.name,
+                    logoOriginal: event.logo_evento,
+                    logoOtimizada: optimizedUrl,
+                    isSupabaseUrl: event.logo_evento.includes('supabase.co'),
+                    timestamp: new Date().toISOString()
+                  });
+                  // #region agent log
+                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventDetailModal.tsx:312',message:'Renderizando logo na seção do modal',data:{eventId:event.id,eventName:event.name,logoOriginal:event.logo_evento,logoOtimizada:optimizedUrl,isSupabaseUrl:event.logo_evento.includes('supabase.co')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
+                  // #endregion
+                  return (
+                    <img
+                      src={optimizedUrl}
+                      alt={`Logo do evento ${getTranslatedName(event)}`}
+                      className="w-full h-auto object-contain rounded-xl"
+                      onLoad={(e) => {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventDetailModal.tsx:onLoad-section',message:'Logo carregada na seção do modal',data:{src:e.currentTarget.src,complete:e.currentTarget.complete,naturalWidth:e.currentTarget.naturalWidth,naturalHeight:e.currentTarget.naturalHeight,eventId:event.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'L'})}).catch(()=>{});
+                        // #endregion
+                      }}
+                      onError={(e) => {
+                        console.error('❌ [EventDetailModal] Erro ao carregar logo na seção:', {
+                          eventId: event.id,
+                          eventName: event.name,
+                          url: optimizedUrl,
+                          originalUrl: event.logo_evento
+                        });
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventDetailModal.tsx:onError-section',message:'Erro ao carregar logo na seção',data:{src:e.currentTarget.src,attemptedSrc:optimizedUrl,originalUrl:event.logo_evento,eventId:event.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
+                        // #endregion
+                        const target = e.target as HTMLImageElement;
+                        // Tentar sem otimização como fallback
+                        if (target.src !== event.logo_evento) {
+                          target.src = event.logo_evento;
+                        }
+                      }}
+                    />
+                  );
+                })()}
               </div>
             )}
 

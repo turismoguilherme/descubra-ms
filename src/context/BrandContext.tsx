@@ -143,8 +143,16 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
             logoMap[item.content_key] = item.content_value;
           }
         });
+        const previousLogoUrl = logosFromDB['ms_logo_url'];
         setLogosFromDB(logoMap);
-        console.log('🔄 [BrandContext] Logos carregados do banco:', logoMap);
+        console.log('🔄 [BrandContext] ========== LOGOS CARREGADOS DO BANCO ==========');
+        console.log('🔄 [BrandContext] Logo map completo:', logoMap);
+        console.log('🔄 [BrandContext] ms_logo_url:', logoMap['ms_logo_url'] || 'NÃO ENCONTRADO');
+        console.log('🔄 [BrandContext] viajar_logo_url:', logoMap['viajar_logo_url'] || 'NÃO ENCONTRADO');
+        console.log('🔄 [BrandContext] guata_avatar_url:', logoMap['guata_avatar_url'] || 'NÃO ENCONTRADO');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:146',message:'Logos carregados do banco - comparando com anterior',data:{previousLogoUrl,newLogoUrl:logoMap['ms_logo_url'],logoChanged:previousLogoUrl!==logoMap['ms_logo_url'],logoMap},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
+        // #endregion
       } catch (error) {
         console.error('Erro ao carregar logos do banco:', error);
       }
@@ -154,12 +162,24 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
     // Recarregar logos a cada 30 segundos para pegar atualizações
     const interval = setInterval(loadLogos, 30000);
     
-    // Escutar eventos de atualização de logo
+    // Escutar eventos de atualização de logo com logs detalhados
     const handleLogoUpdate = (event: CustomEvent) => {
-      console.log('📢 [BrandContext] Logo atualizado, recarregando:', event.detail);
+      console.log('📢 [BrandContext] ========== EVENTO logo-updated CAPTURADO ==========');
+      console.log('📢 [BrandContext] Detalhes do evento:', {
+        key: event.detail?.key,
+        url: event.detail?.url,
+        originalUrl: event.detail?.originalUrl,
+        timestamp: event.detail?.timestamp,
+        label: event.detail?.label,
+        eventType: event.type,
+        fullEvent: event
+      });
+      console.log('📢 [BrandContext] Recarregando logos do banco...');
       loadLogos();
+      console.log('📢 [BrandContext] Logo recarregado. O componente deve re-renderizar com a nova logo.');
     };
     window.addEventListener('logo-updated', handleLogoUpdate as EventListener);
+    console.log('📢 [BrandContext] Listener de logo-updated registrado');
     
     return () => {
       clearInterval(interval);
@@ -233,11 +253,24 @@ safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',
     
     if (detectedTenant === 'ms') {
       // Usar logo do banco se disponível, senão usar padrão
+      let logoUrl = logosFromDB['ms_logo_url'] || msConfig.logo.src;
+      
+      // Adicionar cache busting se for URL do Supabase para garantir atualização
+      if (logoUrl.includes('supabase.co') && !logoUrl.includes('?t=')) {
+        // Usar timestamp baseado na última atualização conhecida (ou timestamp atual)
+        // Isso força o navegador a buscar a versão mais recente
+        const cacheBustParam = logoUrl.includes('?') ? '&' : '?';
+        logoUrl = `${logoUrl}${cacheBustParam}t=${Date.now()}`;
+      }
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:250',message:'Calculando logo URL para MS',data:{logoFromDB:logosFromDB['ms_logo_url'],fallback:msConfig.logo.src,logoUrlFinal:logoUrl,hasLogoFromDB:!!logosFromDB['ms_logo_url']},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return {
         ...msConfig,
         logo: {
           ...msConfig.logo,
-          src: logosFromDB['ms_logo_url'] || msConfig.logo.src,
+          src: logoUrl,
         }
       };
     }

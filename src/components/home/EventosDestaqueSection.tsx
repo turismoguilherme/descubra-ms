@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Calendar, MapPin, Clock, Star, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { optimizeEventCardImage } from "@/utils/imageOptimization";
 
 interface EventItem {
   id: string;
@@ -13,6 +14,7 @@ interface EventItem {
   start_time?: string;
   location: string;
   image_url?: string;
+  logo_evento?: string;
   is_sponsored: boolean;
   sponsor_payment_status?: string;
 }
@@ -57,6 +59,7 @@ const EventosDestaqueSection = () => {
         start_time: event.start_time,
         location: event.location || '',
         image_url: event.image_url,
+        logo_evento: event.logo_evento,
         is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status),
         sponsor_payment_status: event.sponsor_payment_status,
       }));
@@ -159,7 +162,7 @@ const EventosDestaqueSection = () => {
                 {/* Imagem - Maior para melhor visualização */}
                 <div className="h-72 overflow-hidden relative">
                   <img
-                    src={event.image_url || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800"}
+                    src={optimizeEventCardImage(event.logo_evento || event.image_url) || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800"}
                     alt={event.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => {

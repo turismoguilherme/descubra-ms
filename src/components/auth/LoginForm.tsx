@@ -16,6 +16,7 @@ import { InputValidator, sanitizeInput } from "@/components/security/InputValida
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { supabase } from '@/integrations/supabase/client';
 import { getLoginRedirectPath } from '@/utils/authRedirect';
+import { useBrand } from "@/context/BrandContext";
 
 
 
@@ -31,6 +32,19 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { signIn, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Tentar obter logo do BrandContext, com fallback
+  let logoUrl = "/images/logo-descubra-ms.png?v=3";
+  let logoAlt = "Descubra Mato Grosso do Sul - Plataforma de Turismo";
+  try {
+    const brand = useBrand();
+    if (brand && brand.isMS) {
+      logoUrl = brand.config.logo.src;
+      logoAlt = brand.config.logo.alt;
+    }
+  } catch (error) {
+    // BrandContext não disponível, usar fallback
+  }
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -136,9 +150,13 @@ const LoginForm = () => {
       <div className="bg-white py-6 shadow-sm">
         <div className="flex justify-center">
           <img 
-            src="/images/logo-descubra-ms.png?v=3" 
-            alt="Descubra Mato Grosso do Sul - Plataforma de Turismo" 
+            src={logoUrl} 
+            alt={logoAlt} 
             className="h-[60px] w-auto" 
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "/images/logo-descubra-ms.png?v=3";
+            }}
           />
         </div>
       </div>
