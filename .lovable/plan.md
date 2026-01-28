@@ -1,117 +1,225 @@
 
-# Plano: Página Standalone de Eventos (estilo ChatGuata)
+# Plano: Melhorias Visuais ViajarTur
 
-## Objetivo
+## Resumo Executivo
 
-Criar uma página dedicada de eventos em tela cheia no Descubra Mato Grosso do Sul, seguindo o mesmo padrão do `/chatguata` - ou seja, uma experiência imersiva sem navbar/footer.
+Melhorar o visual da página inicial da ViajarTur e da página Sobre, tornando-as mais modernas, claras e orientadas a marketing, mantendo a identidade visual e logo da marca.
 
-## Arquitetura Atual
+---
 
-### Página ChatGuata (`/chatguata`)
-- Tela cheia sem `UniversalLayout`
-- Background gradiente: `bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green`
-- Interface dedicada ao chat
-- Rota: `/chatguata` e `/descubrams/chatguata`
+## 1. Hero Section - Página Inicial
 
-### Página EventosMS Atual (`/descubrams/eventos`)
-- Usa `UniversalLayout` (navbar + footer)
-- Componente `EventCalendar` para exibir eventos
-- Filtros por região, categoria e busca
+### Situação Atual
+- Fundo escuro (`from-viajar-slate to-slate-800`)
+- Visual que pode parecer "pesado" e pouco convidativo
 
-## Implementação Proposta
+### Mudanças Propostas
 
-### 1. Criar Nova Página: `EventosFullscreen.tsx`
+**Visual Clean + Glassmorphism:**
+- Fundo claro: `bg-gradient-to-b from-white via-slate-50 to-cyan-50/30`
+- Textos em cores escuras para contraste
+- Cards/badges com efeito glassmorphism: `bg-white/60 backdrop-blur-sm border border-white/40`
+- Gradient orbs sutis em ciano/azul como decoração
+- Manter os botões CTA com cores vibrantes (ciano) para destaque
 
-**Arquivo:** `src/pages/ms/EventosFullscreen.tsx`
+**Estrutura mantida:**
+- Badge superior (editável via admin)
+- Título ViajARTur (logo/marca preservada)
+- Subtítulo e descrição
+- Botões CTA (Acessar Plataforma + Agendar Demo)
 
+---
+
+## 2. Cases de Sucesso - Marketing Aprimorado
+
+### Situação Atual
+- Apenas título "Cases" e "O que desenvolvemos"
+- Cards simples sem métricas
+
+### Mudanças Propostas
+
+**Cards com Métricas de Impacto:**
 ```text
-Estrutura:
 +------------------------------------------+
-|  Logo MS (pequeno)      [Voltar ao Site] |
-+------------------------------------------+
+| [Badge: Case de Sucesso]                 |
 |                                          |
-|          EVENTOS EM                      |
-|       MATO GROSSO DO SUL                 |
+| Descubra Mato Grosso do Sul              |
+| Plataforma Completa de Turismo           |
 |                                          |
-|  [Campo de Busca]                        |
-|  [Filtros: Região | Categoria]           |
+| +--------+ +--------+ +--------+         |
+| | 100K+  | | 98%    | | 79     |         |
+| |usuários| |satisf. | |municip.|         |
+| +--------+ +--------+ +--------+         |
 |                                          |
-+------------------------------------------+
+| "Transformamos a gestão do turismo..."   |
+| - Nome do Cliente, Cargo                 |
 |                                          |
-|    Grid de Cards de Eventos              |
-|    (Patrocinados em destaque)            |
-|                                          |
+| [Ver Case Completo →]                    |
 +------------------------------------------+
 ```
 
-**Características:**
-- Sem navbar/footer padrão
-- Background gradiente MS (cores da marca)
-- Componente EventCalendar integrado
-- Botão para voltar ao site principal
-- Logo pequeno do Descubra MS no canto
+**Sistema de Depoimentos (preparado para futuro):**
+- Estrutura no banco para depoimentos
+- Toggle ativar/desativar no admin
+- Quando desativado: mostra descrição padrão
+- Quando ativado: mostra citação do cliente
 
-### 2. Adicionar Rota no App.tsx
+**Título da seção mais impactante:**
+- De "Cases de Sucesso" para "O que Desenvolvemos" ou "Projetos de Impacto"
+- Subtítulo destacando resultados
 
-**Rotas a adicionar:**
-- `/eventos` (acesso direto - estilo totem)
-- `/descubrams/eventos-standalone` (acesso via Descubra MS)
+---
 
-### 3. Componentes Reutilizados
+## 3. Página Sobre - Texto Narrativo
 
-| Componente | Origem | Uso |
-|------------|--------|-----|
-| `EventCalendar` | `src/components/events/EventCalendar.tsx` | Grid de eventos com filtros |
-| `EventDetailModal` | `src/components/events/EventDetailModal.tsx` | Modal ao clicar no evento |
+### Situação Atual
+- Dois blocos separados: "Nossa Missão" e "Nossa Visão"
+- Layout de grid dividido
 
-## Fluxo de Navegação
+### Mudanças Propostas
 
+**Texto Narrativo Único:**
 ```text
-/descubrams (Home) 
-    → Banner/Botão "Ver Todos os Eventos"
-        → /eventos (Tela cheia)
-
-/descubrams/eventos (com layout)
-    → Continua funcionando normalmente
-
-/eventos (Acesso direto - Totem/Kiosk)
-    → Experiência standalone
++--------------------------------------------------+
+|                                                  |
+|  "Transformar dados turísticos em decisões       |
+|   estratégicas que geram impacto real."          |
+|                                                  |
+|  ──────────────────────────────────────────────  |
+|                                                  |
+|  A ViajarTur existe para transformar dados       |
+|  turísticos em decisões estratégicas. Nosso      |
+|  propósito é estruturar o turismo como um        |
+|  sistema inteligente, integrado e orientado      |
+|  por evidências...                               |
+|                                                  |
+|  [Texto completo combinando propósito, missão    |
+|   e valores em narrativa fluida]                 |
+|                                                  |
++--------------------------------------------------+
 ```
+
+**Elementos:**
+- Frase de destaque em tamanho maior (quote style)
+- Texto narrativo corrido abaixo
+- Linha decorativa separando destaque do texto
+- Carregado do banco de dados via admin
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/ViaJARSaaS.tsx` | Hero section com fundo claro + glassmorphism |
+| `src/components/home/SuccessCasesSection.tsx` | Cards maiores, métricas, estrutura para depoimentos |
+| `src/pages/Sobre.tsx` | Substituir grid por texto narrativo único |
+
+---
+
+## O que NÃO Será Alterado
+
+- Logo e marca ViajARTur
+- Cores da identidade visual (ciano, azul, slate)
+- Navbar e Footer
+- Funcionalidades existentes
+- Estrutura de rotas
+
+---
 
 ## Detalhes Técnicos
 
-### Arquivo: `src/pages/ms/EventosFullscreen.tsx`
+### 1. ViaJARSaaS.tsx - Hero Section
 
-Novo componente com:
-1. Background gradiente MS
-2. Header minimalista com logo + botão voltar
-3. Título centralizado
-4. EventCalendar sem wrapper de layout
-5. Responsivo (mobile/tablet/desktop)
+**Classes atuais (escuras):**
+```css
+bg-gradient-to-b from-viajar-slate to-slate-800
+```
 
-### Alterações no App.tsx
+**Classes novas (claras):**
+```css
+bg-gradient-to-b from-white via-slate-50 to-cyan-50/30
+```
 
-Adicionar imports e rotas:
-- Import do novo componente `EventosFullscreen`
-- Rota `/eventos` (global)
-- Rota `/descubrams/eventos-standalone`
+**Textos:**
+- Título: `text-viajar-slate` (escuro)
+- Subtítulo: `text-slate-600`
+- Descrição: `text-muted-foreground`
+
+**Badge:**
+```css
+bg-viajar-cyan/10 backdrop-blur-sm border border-viajar-cyan/20
+```
+
+### 2. SuccessCasesSection.tsx
+
+**Adicionar métricas:**
+```typescript
+const metrics = {
+  'descubra-ms': [
+    { value: '100K+', label: 'Usuários' },
+    { value: '98%', label: 'Satisfação' },
+    { value: '79', label: 'Municípios' }
+  ],
+  'koda': [
+    { value: '10K+', label: 'Conversas' },
+    { value: '95%', label: 'Precisão' },
+    { value: '24/7', label: 'Disponível' }
+  ]
+};
+```
+
+**Estrutura de depoimento (futuro):**
+```typescript
+interface Testimonial {
+  quote: string;
+  author_name: string;
+  author_position: string;
+  is_active: boolean;
+}
+```
+
+### 3. Sobre.tsx
+
+**Substituir grid por seção única:**
+```typescript
+// DE:
+<div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+  <div>Nossa Missão...</div>
+  <div>Nossa Visão...</div>
+</div>
+
+// PARA:
+<div className="max-w-3xl mx-auto text-center">
+  <blockquote className="text-2xl font-semibold text-foreground mb-8">
+    "Frase de destaque..."
+  </blockquote>
+  <p className="text-lg text-muted-foreground leading-relaxed">
+    Texto narrativo completo...
+  </p>
+</div>
+```
+
+---
 
 ## Resultado Esperado
 
-- **URL `/eventos`**: Página fullscreen de eventos (estilo totem)
-- **URL `/descubrams/eventos`**: Mantém funcionamento atual (com layout)
-- Visual consistente com marca Descubra MS
-- Experiência imersiva para explorar eventos
+### Antes
+- Hero escuro e pesado
+- Cases simples sem impacto
+- Sobre com blocos separados
 
-## Arquivos a Criar/Modificar
+### Depois
+- Hero claro, moderno e convidativo
+- Cases com métricas e visual marketing
+- Sobre com narrativa envolvente
 
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/ms/EventosFullscreen.tsx` | CRIAR |
-| `src/App.tsx` | MODIFICAR (adicionar rotas) |
+---
 
-## Estimativa
+## Compatibilidade
 
-- 1 arquivo novo
-- 1 arquivo modificado
-- Sem alterações no banco de dados
+- Responsivo (mobile/tablet/desktop)
+- Conteúdo editável via admin mantido
+- Acessibilidade preservada
+- Performance otimizada
+
