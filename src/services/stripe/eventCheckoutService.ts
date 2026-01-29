@@ -55,11 +55,12 @@ export async function createEventCheckout(params: EventCheckoutParams): Promise<
       error: 'URL de checkout não retornada',
     };
 
-  } catch (error: any) {
-    console.error('Erro no checkout de evento:', error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('Erro no checkout de evento:', err);
     return {
       success: false,
-      error: error.message || 'Erro inesperado',
+      error: err.message || 'Erro inesperado',
     };
   }
 }

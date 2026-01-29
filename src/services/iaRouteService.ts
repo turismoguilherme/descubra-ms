@@ -420,9 +420,10 @@ IMPORTANTE:
       }
 
       return generatedRoute;
-    } catch (error: any) {
-      console.error('Erro ao gerar roteiro:', error);
-      throw new Error(error.message || 'Erro ao gerar roteiro personalizado');
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar roteiro:', err);
+      throw new Error(err.message || 'Erro ao gerar roteiro personalizado');
     }
   }
 

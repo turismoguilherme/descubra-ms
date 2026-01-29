@@ -10,9 +10,10 @@ async function retryWithTokenRefresh<T>(
 ): Promise<T> {
   try {
     return await operation();
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
     // Se for erro de JWT expirado e ainda tiver tentativas
-    if ((error.code === 'PGRST301' || error.message?.includes('JWT expired')) && retries > 0) {
+    if ((err.code === 'PGRST301' || err.message?.includes('JWT expired')) && retries > 0) {
       try {
         const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
         
@@ -140,13 +141,14 @@ export const systemHealthService = {
         latency_ms: latency,
         error_message: error?.message,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       return {
         service_name: 'Banco de Dados (Supabase)',
         service_type: 'database',
         status: 'offline',
         latency_ms: Date.now() - start,
-        error_message: error.message,
+        error_message: err.message,
       };
     }
   },
@@ -165,13 +167,14 @@ export const systemHealthService = {
         status: latency > 500 ? 'slow' : 'online',
         latency_ms: latency,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       return {
         service_name: 'Autenticação',
         service_type: 'auth',
         status: 'offline',
         latency_ms: Date.now() - start,
-        error_message: error.message,
+        error_message: err.message,
       };
     }
   },
@@ -191,13 +194,14 @@ export const systemHealthService = {
         latency_ms: latency,
         error_message: error?.message,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       return {
         service_name: 'Storage de Arquivos',
         service_type: 'storage',
         status: 'offline',
         latency_ms: Date.now() - start,
-        error_message: error.message,
+        error_message: err.message,
       };
     }
   },
@@ -247,7 +251,7 @@ export const systemHealthService = {
           response_data: { method: 'edge_function' },
           error_message: isAvailable ? undefined : error?.message,
         };
-      } catch (edgeError: any) {
+      } catch (edgeError: unknown) {
         // Se Edge Function não disponível, verificar se o cliente está configurado
         const latency = Date.now() - start;
         return {
@@ -258,13 +262,14 @@ export const systemHealthService = {
           error_message: 'Edge Function não disponível, usando cliente direto',
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       return {
         service_name: 'API Gemini (IA)',
         service_type: 'api',
         status: 'offline',
         latency_ms: Date.now() - start,
-        error_message: error.message,
+        error_message: err.message,
       };
     }
   },
@@ -307,13 +312,14 @@ export const systemHealthService = {
           note: isAvailable && error?.message?.includes('RESEND') ? 'Configuração pendente' : undefined
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       return {
         service_name: 'Serviço de Email',
         service_type: 'email',
         status: 'offline',
         latency_ms: Date.now() - start,
-        error_message: error.message,
+        error_message: err.message,
       };
     }
   },
@@ -691,9 +697,10 @@ export const systemHealthService = {
 
       console.log('✅ [systemHealthService] Configurações salvas com sucesso!', data);
       return true;
-    } catch (error: any) {
-      console.error('❌ [systemHealthService] Erro ao salvar configurações:', error);
-      console.error('❌ [systemHealthService] Stack trace:', error.stack);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [systemHealthService] Erro ao salvar configurações:', err);
+      console.error('❌ [systemHealthService] Stack trace:', err.stack);
       return false;
     }
   },

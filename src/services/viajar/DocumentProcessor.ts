@@ -121,8 +121,9 @@ export class DocumentProcessor {
       await apiUsageTrackingService.incrementUsage(userId, 'gemini', 1);
 
       return result;
-    } catch (error: any) {
-      console.error('❌ [DocumentProcessor] Erro ao processar arquivo:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [DocumentProcessor] Erro ao processar arquivo:', err);
       return {
         success: false,
         extractedMetrics: [],

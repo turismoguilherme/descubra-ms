@@ -24,11 +24,13 @@ class PassportAdminService {
       }
       console.log('✅ [PassportAdminService] Configurações encontradas:', data?.length || 0);
       return (data || []) as PassportConfiguration[];
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -50,11 +52,13 @@ class PassportAdminService {
       }
       console.log('✅ [PassportAdminService] Configuração encontrada:', !!data);
       return data as PassportConfiguration | null;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -93,11 +97,13 @@ class PassportAdminService {
       }
       console.log('✅ [PassportAdminService] Configuração criada:', data?.id);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -139,11 +145,13 @@ class PassportAdminService {
       }
       console.log('✅ [PassportAdminService] Configuração atualizada:', data?.id);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -230,14 +238,16 @@ class PassportAdminService {
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:177',message:'createReward success',data:{rewardId:data?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string; hint?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:185',message:'createReward catch error',data:{errorMessage:error?.message,errorCode:error?.code,errorDetails:error?.details,errorHint:error?.hint,fullError:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:185',message:'createReward catch error',data:{errorMessage:supabaseError?.message || err.message,errorCode:supabaseError?.code,errorDetails:supabaseError?.details,errorHint:supabaseError?.hint,fullError:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       throw error;
     }
@@ -272,11 +282,13 @@ class PassportAdminService {
         throw error;
       }
       console.log('✅ [PassportAdminService] Recompensa deletada');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -320,11 +332,13 @@ class PassportAdminService {
       }
       console.log('✅ [PassportAdminService] Checkpoint atualizado:', data?.id);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -394,11 +408,13 @@ class PassportAdminService {
 
       console.log('✅ [PassportAdminService] Estatísticas calculadas:', stats);
       return stats;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }
@@ -427,11 +443,13 @@ class PassportAdminService {
         throw error;
       }
       console.log('✅ [PassportAdminService] Rota atualizada');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const supabaseError = error as { code?: string; details?: string; message?: string };
       console.error('❌ [PassportAdminService] Erro completo:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
+        message: supabaseError.message || err.message,
+        code: supabaseError.code,
+        details: supabaseError.details,
       });
       throw error;
     }

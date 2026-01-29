@@ -32,8 +32,9 @@ export class ReservationMessageService {
       if (error) throw error;
 
       return data || [];
-    } catch (error: any) {
-      console.error('Erro ao buscar mensagens:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar mensagens:', err);
       throw error;
     }
   }
@@ -69,8 +70,9 @@ export class ReservationMessageService {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      console.error('Erro ao enviar mensagem:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar mensagem:', err);
       throw error;
     }
   }
@@ -94,8 +96,9 @@ export class ReservationMessageService {
         .eq('read', false);
 
       if (error) throw error;
-    } catch (error: any) {
-      console.error('Erro ao marcar mensagens como lidas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao marcar mensagens como lidas:', err);
       throw error;
     }
   }
@@ -117,8 +120,9 @@ export class ReservationMessageService {
       if (error) throw error;
 
       return count || 0;
-    } catch (error: any) {
-      console.error('Erro ao contar mensagens não lidas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao contar mensagens não lidas:', err);
       return 0;
     }
   }

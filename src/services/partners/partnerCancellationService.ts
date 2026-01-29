@@ -67,8 +67,9 @@ export async function cancelPartnership(params: CancelPartnershipParams) {
     }
 
     return { success: true, error: null };
-  } catch (error: any) {
-    console.error('Erro ao cancelar parceria:', error);
-    return { success: false, error: error.message || 'Erro ao cancelar parceria' };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('Erro ao cancelar parceria:', err);
+    return { success: false, error: err.message || 'Erro ao cancelar parceria' };
   }
 }

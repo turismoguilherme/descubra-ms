@@ -133,8 +133,9 @@ Seja conciso e objetivo.`;
         message: 'Análise de métricas unificada concluída com sucesso',
         data: result,
       };
-    } catch (error: any) {
-      console.error('❌ [AutonomousAgent] Erro na análise de métricas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro na análise de métricas:', err);
       return {
         success: false,
         message: 'Erro ao executar análise de métricas',
@@ -233,12 +234,13 @@ Formato: Relatório profissional e objetivo.`;
         message: 'Relatório financeiro gerado com sucesso',
         data: result,
       };
-    } catch (error: any) {
-      console.error('❌ [AutonomousAgent] Erro ao gerar relatório financeiro:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro ao gerar relatório financeiro:', err);
       return {
         success: false,
         message: 'Erro ao gerar relatório financeiro',
-        error: error.message,
+        error: err.message,
       };
     }
   },
@@ -309,14 +311,15 @@ Formato: Relatório profissional e objetivo.`;
           : 'Nenhuma anomalia detectada',
         data: result,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Garantir que anomalies está definida mesmo em caso de erro
       const safeAnomalies = anomalies || [];
-      console.error('❌ [AutonomousAgent] Erro na detecção de anomalias:', error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro na detecção de anomalias:', err);
       return {
         success: false,
         message: 'Erro ao detectar anomalias',
-        error: error.message,
+        error: err.message,
         data: {
           anomaliesFound: safeAnomalies.length,
           anomalies: safeAnomalies,
@@ -380,12 +383,13 @@ Seja criativo e baseado nas tendências atuais de turismo.`;
         message: 'Sugestões de conteúdo geradas com sucesso',
         data: result,
       };
-    } catch (error: any) {
-      console.error('❌ [AutonomousAgent] Erro ao gerar sugestões:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro ao gerar sugestões:', err);
       return {
         success: false,
         message: 'Erro ao gerar sugestões de conteúdo',
-        error: error.message,
+        error: err.message,
       };
     }
   },
@@ -445,12 +449,13 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
         message: 'Análise de SEO concluída com sucesso',
         data: result,
       };
-    } catch (error: any) {
-      console.error('❌ [AutonomousAgent] Erro na análise de SEO:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro na análise de SEO:', err);
       return {
         success: false,
         message: 'Erro ao analisar SEO',
-        error: error.message,
+        error: err.message,
       };
     }
   },
@@ -496,8 +501,9 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
         message: `Limpeza concluída: ${keysToRemove.length} itens removidos`,
         data: result,
       };
-    } catch (error: any) {
-      console.error('❌ [AutonomousAgent] Erro na limpeza:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro na limpeza:', err);
       return {
         success: false,
         message: 'Erro ao limpar cache',
@@ -594,12 +600,13 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
         message: `${approvedEvents.length} evento(s) aprovado(s) automaticamente`,
         data: result,
       };
-    } catch (error: any) {
-      console.error('❌ [AutonomousAgent] Erro na aprovação automática:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [AutonomousAgent] Erro na aprovação automática:', err);
       return {
         success: false,
         message: 'Erro ao aprovar eventos automaticamente',
-        error: error.message,
+        error: err.message,
       };
     }
   },

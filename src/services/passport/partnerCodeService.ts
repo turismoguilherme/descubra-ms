@@ -116,8 +116,9 @@ export const partnerCodeService = {
         }
       };
 
-    } catch (error: any) {
-      console.error('Erro ao validar código de parceiro:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao validar código de parceiro:', err);
       return {
         isValid: false,
         error: 'Erro interno do sistema'
@@ -166,8 +167,9 @@ export const partnerCodeService = {
         points: validation.points || 10
       };
 
-    } catch (error: any) {
-      console.error('Erro ao registrar uso do código:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao registrar uso do código:', err);
       return {
         success: false,
         points: 0,
@@ -228,8 +230,9 @@ export const partnerCodeService = {
 
       return result;
 
-    } catch (error: any) {
-      console.error('Erro ao buscar códigos de parceiro:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar códigos de parceiro:', err);
       return [];
     }
   }

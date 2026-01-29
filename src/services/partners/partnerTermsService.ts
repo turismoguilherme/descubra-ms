@@ -266,9 +266,10 @@ export async function savePartnerTermsAcceptance(
     // Por enquanto, apenas salvar no campo terms_accepted_at
 
     return { success: true };
-  } catch (error: any) {
-    console.error('Erro ao salvar aceite do termo:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('Erro ao salvar aceite do termo:', err);
+    return { success: false, error: err.message };
   }
 }
 

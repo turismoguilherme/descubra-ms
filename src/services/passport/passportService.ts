@@ -735,8 +735,9 @@ class PassportService {
             }
           }
         }
-      } catch (error: any) {
-        console.warn('Erro ao validar ordem sequencial:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.warn('Erro ao validar ordem sequencial:', err);
         // Continuar se houver erro (não bloquear check-in)
       }
 

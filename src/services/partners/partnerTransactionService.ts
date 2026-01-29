@@ -65,8 +65,9 @@ export class PartnerTransactionService {
       if (error) throw error;
 
       return data || [];
-    } catch (error: any) {
-      console.error('Erro ao buscar transações:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar transações:', err);
       throw error;
     }
   }
@@ -112,8 +113,9 @@ export class PartnerTransactionService {
       });
 
       return summary;
-    } catch (error: any) {
-      console.error('Erro ao buscar resumo financeiro:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar resumo financeiro:', err);
       throw error;
     }
   }
@@ -132,8 +134,9 @@ export class PartnerTransactionService {
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      console.error('Erro ao criar transação:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar transação:', err);
       throw error;
     }
   }

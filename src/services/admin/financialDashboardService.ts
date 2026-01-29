@@ -55,9 +55,10 @@ async function retryWithTokenRefresh<T>(
     }
     
     return await operation();
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
     // Se for erro de JWT expirado e ainda tiver tentativas
-    if ((error.code === 'PGRST301' || error.message?.includes('JWT expired')) && retries > 0) {
+    if ((err.code === 'PGRST301' || err.message?.includes('JWT expired')) && retries > 0) {
       console.log('Token expirado, tentando renovar...');
       try {
         // Verificar se há uma sessão atual
@@ -555,8 +556,9 @@ export const financialDashboardService = {
 
         return expenseData;
       });
-    } catch (error: any) {
-      console.error('Erro ao criar despesa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar despesa:', err);
       throw error;
     }
   },
@@ -586,8 +588,9 @@ export const financialDashboardService = {
       }
 
       return updatedData;
-    } catch (error: any) {
-      console.error('Erro ao atualizar despesa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar despesa:', err);
       throw error;
     }
   },
@@ -658,8 +661,9 @@ export const financialDashboardService = {
       }
 
       return updatedData;
-    } catch (error: any) {
-      console.error('Erro ao atualizar salário:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar salário:', err);
       throw error;
     }
   },
@@ -692,15 +696,17 @@ export const financialDashboardService = {
 
           return Array.isArray(data) ? data : [];
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { code?: string; message?: string };
         // Se for erro de sessão expirada, retornar array vazio silenciosamente
-        if (error.message?.includes('Sessão expirada') || error.code === 'PGRST301') {
+        if (err.message?.includes('Sessão expirada') || err.code === 'PGRST301') {
           return [];
         }
         throw error;
       }
-    } catch (error: any) {
-      console.error('Erro ao buscar receitas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar receitas:', err);
       return [];
     }
   },
@@ -763,15 +769,17 @@ export const financialDashboardService = {
 
           return Array.isArray(data) ? data : [];
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { code?: string; message?: string };
         // Se for erro de sessão expirada, retornar array vazio silenciosamente
-        if (error.message?.includes('Sessão expirada') || error.code === 'PGRST301') {
+        if (err.message?.includes('Sessão expirada') || err.code === 'PGRST301') {
           return [];
         }
         throw error;
       }
-    } catch (error: any) {
-      console.error('Erro ao buscar despesas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar despesas:', err);
       return [];
     }
   },
@@ -795,9 +803,10 @@ export const financialDashboardService = {
 
         return Array.isArray(data) ? data : [];
       });
-    } catch (error: any) {
-      console.error('Erro ao buscar funcionários:', error);
-      if (error.message?.includes('Sessão expirada')) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error('Erro ao buscar funcionários:', err);
+      if (err.message?.includes('Sessão expirada')) {
         throw error;
       }
       return [];

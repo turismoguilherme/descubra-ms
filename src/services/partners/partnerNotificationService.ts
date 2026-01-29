@@ -92,8 +92,9 @@ export class PartnerNotificationService {
       }
 
       return notification;
-    } catch (error: any) {
-      console.error('Erro ao criar notificação:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar notificação:', err);
       throw error;
     }
   }
@@ -121,8 +122,9 @@ export class PartnerNotificationService {
       if (error) throw error;
 
       return data || [];
-    } catch (error: any) {
-      console.error('Erro ao buscar notificações:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar notificações:', err);
       throw error;
     }
   }
@@ -141,8 +143,9 @@ export class PartnerNotificationService {
         .eq('id', notificationId);
 
       if (error) throw error;
-    } catch (error: any) {
-      console.error('Erro ao marcar notificação como lida:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao marcar notificação como lida:', err);
       throw error;
     }
   }
@@ -162,8 +165,9 @@ export class PartnerNotificationService {
         .eq('read', false);
 
       if (error) throw error;
-    } catch (error: any) {
-      console.error('Erro ao marcar todas como lidas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao marcar todas como lidas:', err);
       throw error;
     }
   }
@@ -182,8 +186,9 @@ export class PartnerNotificationService {
       if (error) throw error;
 
       return count || 0;
-    } catch (error: any) {
-      console.error('Erro ao contar notificações não lidas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao contar notificações não lidas:', err);
       return 0;
     }
   }
