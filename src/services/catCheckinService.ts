@@ -201,12 +201,13 @@ class CATCheckinService {
           error: data.message,
         };
       }
-    } catch (error: any) {
-      console.error('Erro no registro de check-in:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no registro de check-in:', err);
       return {
         success: false,
-        message: error.message || 'Erro ao registrar check-in',
-        error: error.message,
+        message: err.message || 'Erro ao registrar check-in',
+        error: err.message,
       };
     }
   }
@@ -237,11 +238,12 @@ class CATCheckinService {
         success: true,
         message: 'Check-out registrado com sucesso',
       };
-    } catch (error: any) {
-      console.error('Erro ao registrar check-out:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao registrar check-out:', err);
       return {
         success: false,
-        message: error.message || 'Erro ao registrar check-out',
+        message: err.message || 'Erro ao registrar check-out',
       };
     }
   }

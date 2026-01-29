@@ -371,8 +371,9 @@ class GoogleSearchService {
       }
       
       return data.items || [];
-    } catch (error: any) {
-      console.warn(`⚠️ Erro ao buscar dados de turismo:`, error?.message || error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.warn(`⚠️ Erro ao buscar dados de turismo:`, err.message);
       return [];
     }
   }
@@ -409,8 +410,9 @@ class GoogleSearchService {
       }
       
       return data.items || [];
-    } catch (error: any) {
-      console.warn(`⚠️ Erro ao buscar informações de turismo:`, error?.message || error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.warn(`⚠️ Erro ao buscar informações de turismo:`, err.message);
       return [];
     }
   }

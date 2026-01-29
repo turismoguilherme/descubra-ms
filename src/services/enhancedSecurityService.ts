@@ -258,12 +258,13 @@ class EnhancedSecurityService {
       }
 
       return Boolean(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       await this.logSecurityEvent({
         action: 'secure_role_update_error',
         user_id: targetUserId,
         success: false,
-        error_message: error.message,
+        error_message: err.message,
         metadata: { attempted_role: newRole }
       });
       return false;

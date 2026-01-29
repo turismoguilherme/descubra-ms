@@ -113,13 +113,14 @@ export class SupabaseMLIntegration {
       } else {
         // Log removido para reduzir verbosidade
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; status?: number; statusCode?: number; message?: string };
       // Apenas logar erros inesperados
-      const isRLSError = error?.code === '42501' || error?.code === 'PGRST301' || 
-                        error?.message?.includes('permission denied') ||
-                        error?.message?.includes('new row violates row-level security');
+      const isRLSError = err?.code === '42501' || err?.code === 'PGRST301' || 
+                        err?.message?.includes('permission denied') ||
+                        err?.message?.includes('new row violates row-level security');
       
-      const isUnauthorizedError = error?.status === 401 || error?.statusCode === 401;
+      const isUnauthorizedError = err?.status === 401 || err?.statusCode === 401;
       
       if (!isRLSError && !isUnauthorizedError) {
         const isDev = import.meta.env.DEV;

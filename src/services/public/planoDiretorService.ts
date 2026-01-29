@@ -574,9 +574,10 @@ export class PlanoDiretorService {
                               error.message?.includes('not found');
       
       return !isTableNotFound;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       // Se houver qualquer erro, assumir que as migrations não foram executadas
-      console.error('planoDiretorService: Erro ao verificar migrations:', error);
+      console.error('planoDiretorService: Erro ao verificar migrations:', err);
       return false;
     }
   }
@@ -719,10 +720,12 @@ export class PlanoDiretorService {
 
       console.log('planoDiretorService: Plano criado com sucesso:', plano);
       return this.mapDocumentToInterface(plano);
-    } catch (error: any) {
-      console.error('planoDiretorService: Erro ao criar plano diretor:', error);
-      if (error.message) {
-        throw new Error(error.message);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const errObj = error as { message?: string; isMigrationError?: boolean };
+      console.error('planoDiretorService: Erro ao criar plano diretor:', err);
+      if (errObj.message) {
+        throw new Error(errObj.message);
       }
       throw new Error(`Erro desconhecido ao criar plano diretor: ${JSON.stringify(error)}`);
     }
@@ -844,10 +847,12 @@ export class PlanoDiretorService {
       const resultado = planosUnicos.map(plano => this.mapDocumentToInterface(plano));
       console.log('planoDiretorService: Planos mapeados:', resultado);
       return resultado;
-    } catch (error: any) {
-      console.error('planoDiretorService: Erro ao listar planos diretores:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const errObj = error as { isMigrationError?: boolean; message?: string };
+      console.error('planoDiretorService: Erro ao listar planos diretores:', err);
       // Se for erro de migration, propagar para que o componente possa mostrar o aviso
-      if (error.isMigrationError) {
+      if (errObj.isMigrationError) {
         throw error;
       }
       return [];

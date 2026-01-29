@@ -129,9 +129,10 @@ export class PrivateReportGenerationService {
     try {
       // @ts-ignore - xlsx pode não estar instalado
       XLSX = await import('xlsx');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
       // Se o módulo não estiver instalado, retornar um erro mais amigável
-      if (error?.message?.includes('Failed to resolve') || error?.code === 'MODULE_NOT_FOUND') {
+      if (err?.message?.includes('Failed to resolve') || err?.code === 'MODULE_NOT_FOUND') {
         throw new Error('Funcionalidade Excel não disponível. Por favor, instale o módulo xlsx executando: npm install xlsx');
       }
       throw error;

@@ -306,10 +306,11 @@ export class GoogleSearchEventService {
 
       console.log(`✅ GOOGLE SEARCH: ${eventos.length} sugestões encontradas`);
       return result;
-    } catch (error: any) {
-      console.error('❌ GOOGLE SEARCH: Erro na busca:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ GOOGLE SEARCH: Erro na busca:', err);
       result.success = false;
-      result.errors.push(error.message || "Erro desconhecido");
+      result.errors.push(err.message || "Erro desconhecido");
       return result;
     }
   }
@@ -439,10 +440,11 @@ export class GoogleSearchEventService {
         console.log("ℹ️ GOOGLE SEARCH: Nenhum resultado encontrado");
       }
 
-    } catch (error: any) {
-      console.error("🚨 ERRO:", error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error("🚨 ERRO:", err);
       result.success = false;
-      result.errors.push(error.message || "Erro desconhecido");
+      result.errors.push(err.message || "Erro desconhecido");
     }
 
     return result;

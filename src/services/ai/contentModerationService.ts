@@ -191,8 +191,9 @@ Seja rigoroso mas justo. Conteúdo de turismo deve ser profissional e adequado p
         confidence: 0.8,
         reason: 'IA não identificou problemas',
       };
-    } catch (error: any) {
-      console.error('❌ [ContentModeration] Erro na análise com IA:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [ContentModeration] Erro na análise com IA:', err);
       return {
         isAppropriate: true, // Em caso de erro, ser permissivo
         confidence: 0.5,

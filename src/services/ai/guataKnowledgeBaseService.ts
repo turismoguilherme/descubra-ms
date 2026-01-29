@@ -201,16 +201,18 @@ class GuataKnowledgeBaseService {
 
       return { found: false };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
       // Em caso de erro, retornar "não encontrado" para continuar fluxo normal
       // Não logar erros esperados (tabela não existe, etc)
       const isExpectedError = 
-        error?.message?.includes('does not exist') ||
-        error?.message?.includes('relation') ||
-        error?.code === '42P01';
+        err?.message?.includes('does not exist') ||
+        err?.message?.includes('relation') ||
+        err?.code === '42P01';
       
       if (!isExpectedError && import.meta.env.DEV) {
-        console.warn('⚠️ [KB] Erro inesperado ao buscar na Knowledge Base:', error);
+        const errMsg = err?.message || (error instanceof Error ? error.message : String(error));
+        console.warn('⚠️ [KB] Erro inesperado ao buscar na Knowledge Base:', errMsg);
       }
       return { found: false };
     }
@@ -284,9 +286,10 @@ class GuataKnowledgeBaseService {
       console.log('✅ [KB] Entrada adicionada com sucesso:', data.id);
       return { success: true, entryId: data.id };
 
-    } catch (error: any) {
-      console.error('❌ [KB] Erro ao adicionar entrada:', error);
-      return { success: false, error: error.message || 'Erro desconhecido' };
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [KB] Erro ao adicionar entrada:', err);
+      return { success: false, error: err.message || 'Erro desconhecido' };
     }
   }
 

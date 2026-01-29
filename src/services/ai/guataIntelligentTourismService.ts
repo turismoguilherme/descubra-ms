@@ -168,12 +168,13 @@ class GuataIntelligentTourismService {
           };
         }
         // Não logar quando não encontra (comportamento normal)
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { code?: string; message?: string };
         // Erros esperados (tabela não existe, etc) não devem ser logados
         const isExpectedError = 
-          error?.message?.includes('does not exist') ||
-          error?.message?.includes('relation') ||
-          error?.code === '42P01';
+          err?.message?.includes('does not exist') ||
+          err?.message?.includes('relation') ||
+          err?.code === '42P01';
         
         if (!isExpectedError) {
           console.warn('⚠️ [KB] Erro inesperado ao consultar Knowledge Base:', error);
@@ -1158,9 +1159,10 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
             answer = this.generateLocalKnowledgeResponse(question);
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { message?: string };
         // Tratamento específico para API key vazada
-        if (error.message?.includes('API_KEY_LEAKED') || error.message?.includes('leaked')) {
+        if (err.message?.includes('API_KEY_LEAKED') || err.message?.includes('leaked')) {
           const isDev = import.meta.env.DEV;
           if (isDev) {
             console.warn('[Guatá] API Key vazada detectada, usando fallback com pesquisa web');

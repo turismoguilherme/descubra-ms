@@ -201,10 +201,11 @@ class KodaGeminiService {
           console.log(`   - Primeiro resultado original:`, allResults[0]?.title || 'N/A');
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [Koda] Erro na busca web:', {
-        message: error?.message,
-        stack: error?.stack,
+        message: err.message,
+        stack: err.stack,
         error: error
       });
       // Continuar mesmo se busca web falhar
@@ -325,11 +326,12 @@ class KodaGeminiService {
         responseLanguage: targetLanguage
       };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [Koda] Erro ao chamar Gemini:', {
-        message: error?.message,
-        stack: error?.stack,
-        name: error?.name,
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
         error: error
       });
       

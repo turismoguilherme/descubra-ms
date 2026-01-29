@@ -49,8 +49,9 @@ export const financialService = {
 
       if (error) throw error;
       return data;
-    } catch (error: any) {
-      throw new Error(`Erro ao sincronizar pagamentos: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      throw new Error(`Erro ao sincronizar pagamentos: ${err.message}`);
     }
   },
 

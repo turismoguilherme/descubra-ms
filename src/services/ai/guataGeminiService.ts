@@ -308,10 +308,11 @@ class GuataGeminiService {
           personality: 'Guatá',
           emotionalState: 'excited'
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { message?: string };
         // Tratamento específico para API key vazada - usar fallback silenciosamente
-        if (error.message?.includes('API_KEY_LEAKED') || error.message?.includes('leaked') || 
-            (error.message?.includes('403') && error.message?.includes('leaked'))) {
+        if (err.message?.includes('API_KEY_LEAKED') || err.message?.includes('leaked') || 
+            (err.message?.includes('403') && err.message?.includes('leaked'))) {
           // Logar apenas em desenvolvimento
           if (isDev) {
             console.warn('[Guatá] API Key vazada detectada, usando fallback com pesquisa web');
@@ -1291,18 +1292,19 @@ REGRAS ABSOLUTAS:
       
       // Se nenhum modelo funcionou, lançar erro
       throw new Error('Nenhum modelo Gemini disponível');
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { status?: number; code?: string; statusCode?: number; message?: string };
         // Log detalhado do erro final
         if (isDev) {
           console.error('[ERRO] Erro na chamada do Gemini:', {
-            status: error.status || error.code || error.statusCode,
-            message: error.message || String(error),
+            status: err.status || err.code || err.statusCode,
+            message: err.message || (error instanceof Error ? error.message : String(error)),
             error: error
           });
         }
         
         // Tratamento específico para erro de API key vazada (403)
-        if (error.status === 403 || error.message?.includes('API_KEY_LEAKED_USE_FALLBACK')) {
+        if (err.status === 403 || err.message?.includes('API_KEY_LEAKED_USE_FALLBACK')) {
           logger.error('[ERRO] API Key do Gemini reportada como vazada');
           logger.dev('Revogue e crie nova chave em https://aistudio.google.com/app/apikey');
           throw new Error('API_KEY_LEAKED_USE_FALLBACK');

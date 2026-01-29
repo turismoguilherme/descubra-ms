@@ -97,13 +97,15 @@ export class DiagnosticService {
         return null;
       }
       return data as DiagnosticResult;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
       // Erros de rede ou outros: não são críticos
-      if (error?.code === '42P01' || error?.message?.includes('does not exist')) {
+      if (err?.code === '42P01' || err?.message?.includes('does not exist')) {
         // Tabela não existe - esperado em desenvolvimento
         return null;
       }
-      console.warn('⚠️ DiagnosticService: Erro ao buscar último diagnóstico:', error?.message || error);
+      const errMessage = err?.message || (error instanceof Error ? error.message : String(error));
+      console.warn('⚠️ DiagnosticService: Erro ao buscar último diagnóstico:', errMessage);
       return null;
     }
   }

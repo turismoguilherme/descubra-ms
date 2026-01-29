@@ -311,8 +311,9 @@ class KodaResponseCacheService {
             used_count: 1
           });
       }
-    } catch (error: any) {
-      console.warn('⚠️ Erro ao salvar cache individual do Koda:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.warn('⚠️ Erro ao salvar cache individual do Koda:', err);
     }
   }
 

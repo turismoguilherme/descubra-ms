@@ -227,8 +227,10 @@ export class RegionalDataService {
           if (data.items && data.items.length > 0) {
             allResults.push(...data.items);
           }
-        } catch (error: any) {
-          console.warn(`⚠️ Erro ao buscar query "${query}":`, error?.message || error);
+        } catch (error: unknown) {
+          const err = error as { message?: string };
+          const errMsg = err?.message || (error instanceof Error ? error.message : String(error));
+          console.warn(`⚠️ Erro ao buscar query "${query}":`, errMsg);
         }
       }
 

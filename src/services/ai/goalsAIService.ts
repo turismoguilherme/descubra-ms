@@ -112,12 +112,13 @@ Seja específico e baseado em conhecimento real sobre turismo no Brasil.
       }
 
       return this.getBasicGoals(category);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       // Se o erro for de modelo não encontrado, usar fallback silenciosamente
       const isModelNotFound = 
-        error?.message?.includes('not found') || 
-        error?.message?.includes('404') ||
-        error?.message?.includes('is not supported');
+        err?.message?.includes('not found') || 
+        err?.message?.includes('404') ||
+        err?.message?.includes('is not supported');
       
       if (isModelNotFound) {
         console.log('ℹ️ Modelo Gemini não disponível, usando metas básicas');
