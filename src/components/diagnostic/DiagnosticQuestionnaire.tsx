@@ -345,11 +345,12 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
       if (onProgress) {
         onProgress(10);
       }
-    } catch (error: any) {
-      console.error('Erro ao salvar informações básicas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar informações básicas:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar informações',
+        description: err.message || 'Erro ao salvar informações',
         variant: 'destructive'
       });
     }

@@ -177,8 +177,9 @@ export default function PartnerDashboard() {
       } else {
         setReservations(reservationsData || []);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar dados:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar dados:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os dados',
@@ -261,8 +262,9 @@ export default function PartnerDashboard() {
       });
 
       loadPartnerData();
-    } catch (error: any) {
-      console.error('Erro ao atualizar reserva:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar reserva:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível atualizar a reserva',

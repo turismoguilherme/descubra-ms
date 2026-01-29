@@ -181,11 +181,12 @@ export default function TouristSurveyForm() {
         travel_motivation: [],
         observations: '',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar pesquisa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar pesquisa:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar pesquisa',
+        description: err.message || 'Erro ao salvar pesquisa',
         variant: 'destructive',
       });
     } finally {

@@ -95,10 +95,11 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           required_radius: checkpoint.geofence_radius || 100,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao obter localização',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -279,10 +280,11 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           });
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {

@@ -133,8 +133,9 @@ export default function EventsManagement() {
       }
       
       setEvents(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar eventos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar eventos:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os eventos',
@@ -194,8 +195,9 @@ export default function EventsManagement() {
         title: 'Link salvo',
         description: 'Link padrão de pagamento configurado com sucesso',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar link padrão:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar link padrão:', err);
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível salvar o link padrão',
@@ -291,8 +293,9 @@ export default function EventsManagement() {
         title: 'Preço salvo',
         description: 'Preço de eventos em destaque configurado com sucesso',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar preço:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar preço:', err);
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível salvar o preço',
@@ -472,8 +475,9 @@ export default function EventsManagement() {
         });
       }
       
-    } catch (error: any) {
-      console.error('Erro ao aprovar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao aprovar evento:', err);
       toast({
         title: '❌ Erro ao aprovar evento',
         description: error.message || 'Não foi possível aprovar o evento. Tente novamente.',
@@ -680,8 +684,9 @@ export default function EventsManagement() {
           console.warn('⚠️ Erro ao enviar email (não crítico):', err);
         });
       }
-    } catch (error: any) {
-      console.error('Erro ao rejeitar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao rejeitar evento:', err);
       toast({
         title: '❌ Erro ao rejeitar evento',
         description: error.message || 'Não foi possível rejeitar o evento. Tente novamente.',
@@ -808,11 +813,12 @@ export default function EventsManagement() {
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:after-reload',message:'After reloading events',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
       
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:catch',message:'Exception in deleteEvent',data:{errorMessage:error?.message,errorName:error?.name,errorStack:error?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:catch',message:'Exception in deleteEvent',data:{errorMessage:err.message,errorName:err.name,errorStack:err.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
-      console.error('Erro ao excluir evento:', error);
+      console.error('Erro ao excluir evento:', err);
       toast({
         title: '❌ Erro ao excluir evento',
         description: error.message || 'Não foi possível excluir o evento. Tente novamente.',
@@ -846,10 +852,11 @@ export default function EventsManagement() {
           : 'O evento agora aparece em destaque.',
       });
       loadEvents();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -1002,8 +1009,9 @@ export default function EventsManagement() {
       setEditDialogOpen(false);
       setEditingEvent(null);
       loadEvents();
-    } catch (error: any) {
-      console.error('Erro ao editar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao editar evento:', err);
       toast({
         title: 'Erro ao salvar',
         description: error.message || 'Não foi possível salvar as alterações.',

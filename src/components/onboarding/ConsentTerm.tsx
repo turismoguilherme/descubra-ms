@@ -158,11 +158,12 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
       });
 
       onComplete();
-    } catch (error: any) {
-      console.error('Erro ao salvar consentimento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar consentimento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar consentimento',
+        description: err.message || 'Erro ao salvar consentimento',
         variant: 'destructive',
       });
     } finally {

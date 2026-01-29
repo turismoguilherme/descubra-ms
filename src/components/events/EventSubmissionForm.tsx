@@ -312,11 +312,12 @@ export const EventSubmissionForm: React.FC = () => {
         title: "Evento enviado com sucesso!",
         description: "Seu evento será analisado e publicado em breve.",
       });
-    } catch (error: any) {
-      console.error('Erro ao enviar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar evento:', err);
       toast({
         title: "Erro ao enviar evento",
-        description: error.message || "Tente novamente mais tarde.",
+        description: err.message || "Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {

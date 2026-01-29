@@ -76,11 +76,12 @@ export default function PartnerPaymentStep({
       } else {
         throw new Error('URL de checkout não retornada');
       }
-    } catch (error: any) {
-      console.error('Erro ao processar pagamento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao processar pagamento:', err);
       toast({
         title: 'Erro ao processar pagamento',
-        description: error.message || 'Não foi possível iniciar o pagamento. Tente novamente.',
+        description: err.message || 'Não foi possível iniciar o pagamento. Tente novamente.',
         variant: 'destructive',
       });
     } finally {

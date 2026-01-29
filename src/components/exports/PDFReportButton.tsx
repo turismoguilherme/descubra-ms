@@ -63,11 +63,12 @@ const PDFReportButton: React.FC<PDFReportButtonProps> = ({
         title: 'Sucesso',
         description: 'Relatório PDF gerado e baixado com sucesso!',
       });
-    } catch (error: any) {
-      console.error('Error generating PDF report:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Error generating PDF report:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível gerar o relatório PDF.',
+        description: err.message || 'Não foi possível gerar o relatório PDF.',
         variant: 'destructive',
       });
     } finally {

@@ -202,11 +202,12 @@ export const EventPromotionForm: React.FC = () => {
       const paymentUrl = `https://buy.stripe.com/test_bJe3cxaliec5gR65mH43S00?prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
       window.location.href = paymentUrl;
       // Não mostra tela de sucesso, vai redirecionar
-    } catch (error: any) {
-      console.error('Erro ao enviar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar evento:', err);
       toast({
         title: "Erro ao enviar evento",
-        description: error.message || "Tente novamente mais tarde.",
+        description: err.message || "Tente novamente mais tarde.",
         variant: "destructive",
       });
       setIsSubmitting(false);
