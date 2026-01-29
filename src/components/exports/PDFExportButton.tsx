@@ -89,7 +89,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({
         title: "Relatório exportado",
         description: "O arquivo PDF foi baixado com sucesso.",
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao exportar PDF:", error);
       toast({
         title: "Erro na exportação",

@@ -121,7 +121,7 @@ const EmailDashboard: React.FC = () => {
       // Carregar logs de erros separadamente
       const failedEmails = (data || []).filter(email => email.status === 'failed');
       setErrorLogs(failedEmails);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar emails:', error);
       toast.error('Erro ao carregar emails');
     } finally {
@@ -140,7 +140,7 @@ const EmailDashboard: React.FC = () => {
 
       if (error) throw error;
       setTemplates(data || []);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar templates:', error);
       toast.error('Erro ao carregar templates de email');
     }
@@ -171,7 +171,7 @@ const EmailDashboard: React.FC = () => {
       } else {
         toast.error(`Erro ao enviar: ${result.error}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao enviar email:', error);
       toast.error('Erro ao enviar email');
     }
@@ -206,7 +206,7 @@ const EmailDashboard: React.FC = () => {
       } else {
         toast.error(`Erro ao enviar resposta: ${result.error}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao enviar resposta:', error);
       toast.error('Erro ao enviar resposta');
     }

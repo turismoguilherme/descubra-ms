@@ -19,7 +19,7 @@ export const useMultiTenant = () => {
     const auth = useAuth();
     userProfile = auth.userProfile;
     authLoading = auth.loading;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.dev("🔍 useMultiTenant: AuthProvider não disponível, continuando sem usuário");
   }
 

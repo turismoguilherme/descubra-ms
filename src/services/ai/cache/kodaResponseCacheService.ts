@@ -123,7 +123,7 @@ class KodaResponseCacheService {
         answer: data.answer,
         entry: this.mapToCacheEntry(data)
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao buscar cache compartilhado do Koda:', error);
       return { found: false };
     }
@@ -185,7 +185,7 @@ class KodaResponseCacheService {
         answer: data.answer,
         entry: this.mapToCacheEntry(data)
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao buscar cache individual do Koda:', error);
       return { found: false };
     }
@@ -238,7 +238,7 @@ class KodaResponseCacheService {
             used_count: 1
           });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao salvar cache compartilhado do Koda:', error);
     }
   }
@@ -337,7 +337,7 @@ class KodaResponseCacheService {
           })
           .eq('id', cacheId);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao incrementar uso do cache do Koda:', error);
     }
   }

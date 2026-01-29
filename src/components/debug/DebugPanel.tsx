@@ -57,7 +57,7 @@ const DebugPanel: React.FC = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       info.warnings.push('Erro ao acessar localStorage');
     }
 
@@ -73,7 +73,7 @@ const DebugPanel: React.FC = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       info.warnings.push('Erro ao acessar sessionStorage');
     }
 
@@ -86,7 +86,7 @@ const DebugPanel: React.FC = () => {
         testUserData: testUserData ? JSON.parse(testUserData) : null,
         hasAuthProvider: typeof window !== 'undefined' && 'React' in window
       };
-    } catch (error) {
+    } catch (error: unknown) {
       info.warnings.push('Erro ao coletar estado de autenticação');
     }
 
@@ -98,7 +98,7 @@ const DebugPanel: React.FC = () => {
         hash: window.location.hash,
         referrer: document.referrer
       };
-    } catch (error) {
+    } catch (error: unknown) {
       info.warnings.push('Erro ao coletar estado da rota');
     }
 
@@ -115,7 +115,7 @@ const DebugPanel: React.FC = () => {
     try {
       await navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
       alert('Informações de debug copiadas para a área de transferência!');
-    } catch (error) {
+    } catch (error: unknown) {
       console.log('Debug info:', debugInfo);
       alert('Informações de debug exibidas no console!');
     }

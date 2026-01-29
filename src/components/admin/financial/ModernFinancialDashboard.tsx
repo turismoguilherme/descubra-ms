@@ -98,7 +98,7 @@ export default function ModernFinancialDashboard() {
 
       // Gerar insights da IA
       generateAIInsights(revenueData, expensesData, profitData, billsData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar dados financeiros:', error);
       toast({
         title: 'Erro',

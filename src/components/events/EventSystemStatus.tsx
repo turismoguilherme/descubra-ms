@@ -55,7 +55,7 @@ const EventSystemStatus: React.FC = () => {
       };
       
       setSystemStatus(realStatus);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar status:", error);
     } finally {
       setIsLoading(false);
@@ -76,7 +76,7 @@ const EventSystemStatus: React.FC = () => {
       };
       
       setTestResults(mockResults);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao executar testes:", error);
     }
   };

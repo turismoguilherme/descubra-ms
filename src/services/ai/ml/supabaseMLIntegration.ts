@@ -59,7 +59,7 @@ export class SupabaseMLIntegration {
       } else {
         // Log removido para reduzir verbosidade
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao salvar interação:', error);
     }
   }
@@ -164,7 +164,7 @@ export class SupabaseMLIntegration {
       }
 
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao buscar preferências:', error);
       return null;
     }
@@ -219,7 +219,7 @@ export class SupabaseMLIntegration {
       } else {
         // Preferências salvas (log removido)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao salvar preferências:', error);
     }
   }
@@ -260,7 +260,7 @@ export class SupabaseMLIntegration {
         comment: item.comment || undefined,
         correction: item.correction || undefined
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao buscar histórico de feedback:', error);
       return [];
     }
@@ -305,7 +305,7 @@ export class SupabaseMLIntegration {
           question,
           frequency
         }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro ao buscar padrões frequentes:', error);
       return [];
     }

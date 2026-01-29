@@ -76,7 +76,7 @@ export const useGameification = () => {
       }
 
       return newAchievements;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar conquistas:', error);
       return [];
     }

@@ -243,7 +243,7 @@ class GuataKnowledgeBaseService {
             .eq('id', entryId);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ [KB] Erro ao incrementar uso (não crítico):', error);
     }
   }
@@ -307,7 +307,7 @@ class GuataKnowledgeBaseService {
       if (error) throw error;
       return (data || []) as KnowledgeBaseEntry[];
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ [KB] Erro ao buscar todas as entradas:', error);
       return [];
     }

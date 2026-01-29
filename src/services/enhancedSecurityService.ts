@@ -45,7 +45,7 @@ class EnhancedSecurityService {
       if (error) {
         console.error('Security logging failed:', error);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Security event logging exception:', error);
     }
   }
@@ -121,7 +121,7 @@ class EnhancedSecurityService {
       this.rateLimitCache.set(key, { count: 1, timestamp: now });
       return { allowed: true, remainingAttempts: config.maxAttempts - 1 };
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Rate limit check failed:', error);
       await this.logSecurityEvent({
         action: `rate_limit_error_${actionType}`,
@@ -225,7 +225,7 @@ class EnhancedSecurityService {
         authorized: !error && Boolean(data),
         auditId: auditData.metadata.validation_timestamp
       };
-    } catch (error) {
+    } catch (error: unknown) {
       await this.logSecurityEvent({
         action: `admin_validation_error_${sanitizeText(operationType)}`,
         success: false,
@@ -284,7 +284,7 @@ class EnhancedSecurityService {
       await supabase.functions.invoke('security-monitor', {
         body: { alert }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to send security alert:', error);
     }
   }
@@ -352,7 +352,7 @@ class EnhancedSecurityService {
       }
 
       return { suspicious, patterns, severity };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Suspicious activity detection failed:', error);
       return { suspicious: false, patterns: [], severity: 'low' };
     }
@@ -412,7 +412,7 @@ class EnhancedSecurityService {
       }
 
       return { threats };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Advanced threat detection failed:', error);
       return { threats: [] };
     }

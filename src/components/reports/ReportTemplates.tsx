@@ -38,7 +38,7 @@ const ReportTemplates: React.FC = () => {
       setLoading(true);
       // TODO: Implement template loading
       setTemplates([]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar templates:', error);
     } finally {
       setLoading(false);

@@ -49,7 +49,7 @@ export const useGuataConversation = (knowledgeBase: unknown, usuarioInfo: Record
       
       setMensagens(prev => [...prev, novaMensagemBot]);
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao enviar mensagem:", error);
     } finally {
       setIsLoading(false);

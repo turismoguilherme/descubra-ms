@@ -244,7 +244,7 @@ IMPORTANTE:
 
       const parsed = JSON.parse(jsonMatch[0]);
       return parsed;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao parsear resposta do Gemini:', error);
       return {
         businessCategory: undefined,
@@ -342,7 +342,7 @@ IMPORTANTE:
         } else {
           saved++;
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao salvar métrica:', error);
         errors++;
       }

@@ -165,7 +165,7 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
         await scanner.stop();
         await scanner.clear();
         setScanner(null);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao parar scanner:', error);
       }
     }
@@ -176,7 +176,7 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
     // Parar scanner
     try {
       await stopQRScanner();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao parar scanner:', error);
     }
 
@@ -209,7 +209,7 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
           if (clearResult && typeof clearResult === 'object' && 'catch' in clearResult) {
             (clearResult as Promise<void>).catch(console.error);
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao limpar scanner:', error);
         }
       }

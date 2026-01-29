@@ -74,7 +74,7 @@ export const SecurityAlertMonitor: React.FC = () => {
         });
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch security alerts:', error);
     } finally {
       setLoading(false);

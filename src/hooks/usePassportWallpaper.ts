@@ -37,7 +37,7 @@ export const usePassportWallpaper = () => {
       } else {
         setWallpaperUrl(null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar wallpaper:', error);
       setWallpaperUrl(null);
     } finally {

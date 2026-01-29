@@ -48,7 +48,7 @@ const SecurityMonitor = () => {
       // Analyze for suspicious activity
       analyzeSuspiciousActivity(events || []);
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching security data:', error);
       toast({
         title: "Erro",

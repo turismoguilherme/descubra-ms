@@ -50,7 +50,7 @@ export const checkUserRole = async (userId: string) => {
 
     console.log("✅ CHECK ROLE: Role encontrada:", data);
     return data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("❌ CHECK ROLE: Erro crítico:", error);
     return null;
   }

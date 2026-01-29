@@ -73,7 +73,7 @@ export const useSecureProfileForm = () => {
       for (let i = 0; i < retries; i++) {
         try {
           return await fn();
-        } catch (error) {
+        } catch (error: unknown) {
           console.log(`⏳ PERFIL: Tentativa ${i + 1} falhou, tentando novamente...`);
           if (i === retries - 1) throw error;
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -246,7 +246,7 @@ export const useSecureProfileForm = () => {
         const key = `rate_limit_${user?.email || 'anonymous'}_profile_creation`;
         localStorage.removeItem(key);
         console.log("🧹 PERFIL: Cache de rate limiting limpo após sucesso");
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Erro ao limpar cache de rate limiting:", error);
       }
       

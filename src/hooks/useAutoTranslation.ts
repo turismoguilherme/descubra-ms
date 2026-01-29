@@ -54,7 +54,7 @@ export const useAutoTranslation = (options: AutoTranslationOptions = {}) => {
           console.warn(`⚠️ [AutoTranslation] ${failedTranslations} traduções falharam para ${contentKey}`);
         }
 
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`❌ [AutoTranslation] Erro ao gerar traduções para ${contentKey}:`, error);
       }
     }, delay);
@@ -89,7 +89,7 @@ export const useAutoTranslation = (options: AutoTranslationOptions = {}) => {
 
     try {
       await generateTranslationsForContent(contentKey, contentValue);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(`❌ [AutoTranslation] Erro ao forçar tradução para ${contentKey}:`, error);
     }
   }, [generateTranslationsForContent]);

@@ -45,7 +45,7 @@ export class GoogleSearchEventService {
         this.requestLog = this.requestLog.filter(timestamp => timestamp > oneDayAgo);
         this.saveRequestLog();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar log de requisições:", error);
       this.requestLog = [];
     }
@@ -57,7 +57,7 @@ export class GoogleSearchEventService {
   private saveRequestLog(): void {
     try {
       localStorage.setItem('google_search_request_log', JSON.stringify(this.requestLog));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao salvar log de requisições:", error);
     }
   }
@@ -73,7 +73,7 @@ export class GoogleSearchEventService {
         this.cache = new Map(Object.entries(cacheData));
         // Cache carregado do localStorage (log removido)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar cache:", error);
     }
   }
@@ -86,7 +86,7 @@ export class GoogleSearchEventService {
       const cacheData = Object.fromEntries(this.cache);
       localStorage.setItem(this.CACHE_STORAGE_KEY, JSON.stringify(cacheData));
       console.log("📦 CACHE: Cache salvo no localStorage");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao salvar cache:", error);
     }
   }
@@ -524,7 +524,7 @@ export class GoogleSearchEventService {
       };
 
       return evento;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao processar resultado:", error);
       return null;
     }

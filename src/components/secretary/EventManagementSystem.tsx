@@ -131,7 +131,7 @@ const EventManagementSystem: React.FC = () => {
         const state = profile?.state?.toUpperCase() || null;
         setUserState(state);
         setIsMSUser(state === 'MS' || state === 'MATO GROSSO DO SUL');
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao verificar estado do usuário:', error);
       }
     };
@@ -191,7 +191,7 @@ const EventManagementSystem: React.FC = () => {
       }));
 
       setEvents(convertedEvents);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar eventos:', error);
       // Fallback para lista vazia em caso de erro
       setEvents([]);
@@ -230,7 +230,7 @@ const EventManagementSystem: React.FC = () => {
           title: 'Sucesso',
           description: 'Evento excluído com sucesso!',
         });
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao excluir evento:', error);
         toast({
           title: 'Erro',
@@ -255,7 +255,7 @@ const EventManagementSystem: React.FC = () => {
         title: 'Sucesso',
         description: 'Status do evento atualizado!',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao alterar status do evento:', error);
       toast({
         title: 'Erro',
@@ -324,7 +324,7 @@ const EventManagementSystem: React.FC = () => {
           description: 'Evento atualizado com sucesso!',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar evento:', error);
       toast({
         title: 'Erro',
@@ -476,7 +476,7 @@ const EventManagementSystem: React.FC = () => {
         }
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro no upload de imagens:', error);
       toast({
         title: 'Erro',
@@ -887,7 +887,7 @@ const EventForm: React.FC<{
           description: `Encontramos ${result.eventos.length} eventos similares na web.`,
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar sugestões:', error);
     } finally {
       setLoadingSuggestions(false);
@@ -936,7 +936,7 @@ const EventForm: React.FC<{
         title: 'Categoria classificada!',
         description: `Categoria sugerida: ${classification.category} (Confiança: ${Math.round(classification.confidence * 100)}%)`,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao classificar categoria:', error);
       toast({
         title: 'Erro',
@@ -982,7 +982,7 @@ const EventForm: React.FC<{
           description: 'Não há conflitos de data/hora no mesmo local.',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar conflitos:', error);
     } finally {
       setValidating(false);
@@ -1019,7 +1019,7 @@ const EventForm: React.FC<{
         title: 'Previsão de público gerada!',
         description: `Público esperado: ${prediction.expectedAudience} pessoas (Confiança: ${Math.round(prediction.confidence * 100)}%)`,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao prever público:', error);
     } finally {
       setValidating(false);
@@ -1052,7 +1052,7 @@ const EventForm: React.FC<{
           description: `${dates.length} data(s) sugerida(s) com base em histórico.`,
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao sugerir datas:', error);
     } finally {
       setValidating(false);
@@ -1161,7 +1161,7 @@ const EventForm: React.FC<{
                         title: 'Preenchimento concluído!',
                         description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
                       });
-                    } catch (error) {
+                    } catch (error: unknown) {
                       console.error('Erro ao preencher automaticamente:', error);
                       toast({
                         title: 'Erro',

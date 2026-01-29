@@ -84,7 +84,7 @@ class TranslationManager {
           console.log(`⚠️ [TranslationManager] ${provider.name} falhou ou retornou texto idêntico`);
           lastError = result.error || 'Tradução falhou';
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`❌ [TranslationManager] Erro com ${provider.name}:`, error);
         lastError = error instanceof Error ? error.message : 'Erro desconhecido';
       }

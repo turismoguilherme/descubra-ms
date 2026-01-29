@@ -82,7 +82,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
     try {
       await onUpdateUser(formData);
       console.log('✅ Perfil atualizado com sucesso');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao atualizar perfil:', error);
     } finally {
       setIsLoading(false);
@@ -100,7 +100,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
       // Implementar mudança de senha
       console.log('✅ Senha alterada com sucesso');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao alterar senha:', error);
     } finally {
       setIsLoading(false);
@@ -112,7 +112,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
     try {
       await onDeleteAccount();
       console.log('✅ Conta excluída com sucesso');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao excluir conta:', error);
     } finally {
       setIsLoading(false);
@@ -124,7 +124,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
     try {
       await onResetPassword();
       console.log('✅ Email de recuperação enviado');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao enviar email de recuperação:', error);
     } finally {
       setIsLoading(false);

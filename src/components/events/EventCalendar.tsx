@@ -141,14 +141,14 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             if (translation) {
               translationMap.set(event.id, translation);
             }
-          } catch (error) {
+          } catch (error: unknown) {
             console.error(`Erro ao buscar tradução para evento ${event.id}:`, error);
           }
         });
 
         await Promise.all(translationPromises);
         setTranslations(translationMap);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao carregar traduções:', error);
       }
     };
@@ -245,7 +245,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           }
 
           return mappedEvent;
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao mapear evento:', error, event);
           return null;
         }
@@ -264,7 +264,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
 
       setAllEvents(events);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar eventos:", error);
       setAllEvents([]); // Garantir que não fique undefined
     } finally {
@@ -368,7 +368,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       });
 
       return finalResult;
-    } catch (error) {
+    } catch (error: unknown) {
       return false; // Excluir eventos com erro
     }
   });
@@ -499,7 +499,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         }
 
         return 'descubra-ms'; // Fallback
-      } catch (error) {
+      } catch (error: unknown) {
         return 'descubra-ms'; // Fallback seguro
       }
     };

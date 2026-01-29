@@ -74,7 +74,7 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
       } else if (format === 'excel') {
         await generateExcelReport(reportData, type);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar relatório:', error);
       alert('Erro ao gerar relatório. Tente novamente.');
     } finally {
@@ -126,7 +126,7 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar PDF:', error);
       alert('Erro ao gerar PDF. Tente novamente.');
     }
@@ -143,7 +143,7 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar Excel:', error);
       alert('Erro ao gerar Excel. Tente novamente.');
     }

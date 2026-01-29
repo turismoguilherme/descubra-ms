@@ -31,7 +31,7 @@ export const useGuataMessages = () => {
         // Se não houver histórico, inicializa com a mensagem de boas-vindas
         setMensagens([DEFAULT_WELCOME_MESSAGE]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar histórico de mensagens:", error);
       setMensagens([DEFAULT_WELCOME_MESSAGE]);
     }
@@ -42,7 +42,7 @@ export const useGuataMessages = () => {
     if (mensagens.length > 0) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mensagens));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Erro ao salvar histórico de mensagens:", error);
       }
     }

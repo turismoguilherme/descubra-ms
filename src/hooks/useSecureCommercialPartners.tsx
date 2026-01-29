@@ -150,7 +150,7 @@ const sanitizePartnerData = (data: NewSecureCommercialPartner): NewSecureCommerc
 const validateSecurePartnerData = (data: NewSecureCommercialPartner) => {
   try {
     return commercialPartnerSchema.parse(data);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       const firstError = error.issues[0];
       throw new Error(firstError.message);

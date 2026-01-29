@@ -117,7 +117,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao processar consulta:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),

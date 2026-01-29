@@ -151,7 +151,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           type: 'busca'
         }]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar endereço:', error);
       // Fallback para resultado mockado em caso de erro
       setSearchResults([{

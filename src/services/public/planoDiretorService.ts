@@ -212,7 +212,7 @@ export class PlanoDiretorService {
         console.error('Erro ao salvar diagnóstico:', error);
         // Não lançar erro para não quebrar a funcionalidade - o diagnóstico pode ser mantido apenas em memória
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar diagnóstico:', error);
       // Não lançar erro - permitir que o diagnóstico seja editado mesmo sem persistência
       // Em produção, implementar tabela separada para diagnóstico
@@ -235,7 +235,7 @@ export class PlanoDiretorService {
       }
 
       return data.diagnostico as DiagnosticoData;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar diagnóstico:', error);
       return null;
     }
@@ -266,7 +266,7 @@ export class PlanoDiretorService {
             valor: visitantes,
             descricao: `Total de visitantes registrados no sistema`
           });
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao buscar dados de Analytics:', error);
         }
       }
@@ -280,7 +280,7 @@ export class PlanoDiretorService {
             valor: receita,
             descricao: `Receita total registrada no sistema`
           });
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao buscar dados de Analytics:', error);
         }
       }
@@ -299,7 +299,7 @@ export class PlanoDiretorService {
             valor: totalParticipantes,
             descricao: `Total de participantes esperados em eventos cadastrados`
           });
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao buscar dados de Eventos:', error);
         }
       }
@@ -316,7 +316,7 @@ export class PlanoDiretorService {
             valor: count || 0,
             descricao: `Total de pesquisas realizadas nos CATs`
           });
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao buscar dados de CATs:', error);
         }
       }
@@ -333,13 +333,13 @@ export class PlanoDiretorService {
             valor: count || 0,
             descricao: `Total de atrações turísticas cadastradas`
           });
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Erro ao buscar dados de Inventário:', error);
         }
       }
 
       return sugestoes;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao sugerir dados do indicador:', error);
       return [];
     }
@@ -358,7 +358,7 @@ export class PlanoDiretorService {
 
       if (error) throw error;
       return data.plano_diretor_id;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar plano_diretor_id do indicador:', error);
       throw error;
     }
@@ -542,7 +542,7 @@ export class PlanoDiretorService {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao exportar plano diretor:', error);
       throw error;
     }
@@ -764,7 +764,7 @@ export class PlanoDiretorService {
         colaboradores,
         documentos
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar plano diretor:', error);
       return null;
     }
@@ -883,7 +883,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapDocumentToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar plano diretor:', error);
       throw error;
     }
@@ -914,7 +914,7 @@ export class PlanoDiretorService {
         progresso: obj.progresso || 0,
         indicadores: [] // Será preenchido separadamente
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar objetivos:', error);
       return [];
     }
@@ -942,7 +942,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapObjetivoToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar objetivo:', error);
       throw error;
     }
@@ -971,7 +971,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapObjetivoToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar objetivo:', error);
       throw error;
     }
@@ -985,7 +985,7 @@ export class PlanoDiretorService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar objetivo:', error);
       throw error;
     }
@@ -1010,7 +1010,7 @@ export class PlanoDiretorService {
       }
 
       return estrategias;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar estratégias:', error);
       return [];
     }
@@ -1046,7 +1046,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapEstrategiaToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar estratégia:', error);
       throw error;
     }
@@ -1073,7 +1073,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapEstrategiaToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar estratégia:', error);
       throw error;
     }
@@ -1087,7 +1087,7 @@ export class PlanoDiretorService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar estratégia:', error);
       throw error;
     }
@@ -1108,7 +1108,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return (data || []).map(acao => this.mapAcaoToInterface(acao));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar ações:', error);
       return [];
     }
@@ -1125,7 +1125,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return (data || []).map(acao => this.mapAcaoToInterface(acao));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar ações da estratégia:', error);
       return [];
     }
@@ -1153,7 +1153,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapAcaoToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar ação:', error);
       throw error;
     }
@@ -1182,7 +1182,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapAcaoToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar ação:', error);
       throw error;
     }
@@ -1196,7 +1196,7 @@ export class PlanoDiretorService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar ação:', error);
       throw error;
     }
@@ -1224,7 +1224,7 @@ export class PlanoDiretorService {
         fonte: ind.fonte || '',
         ultimaAtualizacao: ind.ultima_atualizacao || ind.created_at
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar indicadores:', error);
       return [];
     }
@@ -1251,7 +1251,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapIndicadorToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar indicador:', error);
       throw error;
     }
@@ -1279,7 +1279,7 @@ export class PlanoDiretorService {
       if (error) throw error;
 
       return this.mapIndicadorToInterface(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar indicador:', error);
       throw error;
     }
@@ -1293,7 +1293,7 @@ export class PlanoDiretorService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar indicador:', error);
       throw error;
     }
@@ -1319,7 +1319,7 @@ export class PlanoDiretorService {
         permissoes: col.permissoes ? Object.keys(col.permissoes).filter(k => col.permissoes[k] === true) : [col.nivel_acesso],
         ativo: col.ativo
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar colaboradores:', error);
       return [];
     }
@@ -1371,7 +1371,7 @@ export class PlanoDiretorService {
         permissoes: data.permissoes ? Object.keys(data.permissoes).filter(k => data.permissoes[k] === true) : [data.nivel_acesso],
         ativo: data.ativo
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao adicionar colaborador:', error);
       throw error;
     }
@@ -1405,7 +1405,7 @@ export class PlanoDiretorService {
         permissoes: data.permissoes ? Object.keys(data.permissoes).filter(k => data.permissoes[k] === true) : [data.nivel_acesso],
         ativo: data.ativo
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar permissões do colaborador:', error);
       throw error;
     }
@@ -1419,7 +1419,7 @@ export class PlanoDiretorService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao remover colaborador:', error);
       throw error;
     }
@@ -1457,7 +1457,7 @@ export class PlanoDiretorService {
         createdAt: com.created_at,
         updatedAt: com.updated_at
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar comentários:', error);
       return [];
     }
@@ -1511,7 +1511,7 @@ export class PlanoDiretorService {
         resolvido: data.resolvido,
         createdAt: data.created_at
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar comentário:', error);
       throw error;
     }
@@ -1573,7 +1573,7 @@ export class PlanoDiretorService {
         createdAt: data.created_at,
         updatedAt: data.updated_at
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar comentário:', error);
       throw error;
     }
@@ -1587,7 +1587,7 @@ export class PlanoDiretorService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar comentário:', error);
       throw error;
     }
@@ -1615,7 +1615,7 @@ export class PlanoDiretorService {
         versao: doc.versao || '1.0',
         status: doc.status || 'rascunho'
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar documentos:', error);
       return [];
     }
@@ -1670,7 +1670,7 @@ export class PlanoDiretorService {
         versao: data.versao || '1.0',
         status: data.status || 'rascunho'
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao fazer upload de documento:', error);
       throw error;
     }
@@ -1684,7 +1684,7 @@ export class PlanoDiretorService {
         .eq('id', id);
       
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar documento:', error);
       throw error;
     }
@@ -1712,7 +1712,7 @@ export class PlanoDiretorService {
         comentarios: hist.comentarios,
         createdAt: hist.created_at
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar histórico:', error);
       return [];
     }
@@ -1771,7 +1771,7 @@ export class PlanoDiretorService {
           tendencia: acoesConcluidas >= acoesTotal * 0.8 ? 'crescendo' : 'decaindo'
         }
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar KPIs:', error);
       throw error;
     }

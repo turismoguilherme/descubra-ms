@@ -70,7 +70,7 @@ export const useIARouteAccess = () => {
 
         setHasAccess(iaRoutePaid || !!payment);
         setIsTestMode(false);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao verificar acesso:', error);
         // Em caso de erro, permitir acesso temporariamente apenas em desenvolvimento
         const isDev = import.meta.env.DEV || window.location.hostname === 'localhost';

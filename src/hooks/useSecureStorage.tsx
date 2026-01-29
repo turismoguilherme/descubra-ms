@@ -41,7 +41,7 @@ const secureDecode = (data: string): string => {
     }
     
     return originalData;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Secure decode error:', error);
     return data;
   }
@@ -56,7 +56,7 @@ export const useSecureStorage = () => {
     try {
       const decoded = secureDecode(encryptedData);
       return JSON.parse(decoded);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Decryption error:', error);
       return null;
     }
@@ -66,7 +66,7 @@ export const useSecureStorage = () => {
     try {
       const encrypted = encrypt(value);
       localStorage.setItem(`${STORAGE_PREFIX}${key}`, encrypted);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Secure storage set error:', error);
     }
   };
@@ -76,7 +76,7 @@ export const useSecureStorage = () => {
       const encryptedData = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
       if (!encryptedData) return null;
       return decrypt(encryptedData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Secure storage get error:', error);
       return null;
     }

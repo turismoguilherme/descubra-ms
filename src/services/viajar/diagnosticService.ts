@@ -46,7 +46,7 @@ export class DiagnosticService {
 
       if (error) throw error;
       return data as DiagnosticResult;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar resultado de diagnóstico:', error);
       throw error;
     }
@@ -65,7 +65,7 @@ export class DiagnosticService {
 
       if (error) throw error;
       return (data || []) as DiagnosticResult[];
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar resultados de diagnóstico:', error);
       return [];
     }
@@ -127,7 +127,7 @@ export class DiagnosticService {
 
       if (error) throw error;
       return data as DiagnosticResult;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar resultado de diagnóstico:', error);
       throw error;
     }
@@ -144,7 +144,7 @@ export class DiagnosticService {
         .eq('id', id);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao arquivar diagnóstico:', error);
       throw error;
     }

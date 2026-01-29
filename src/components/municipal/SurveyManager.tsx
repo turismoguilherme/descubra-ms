@@ -50,7 +50,7 @@ const SurveyManager = ({ cityId }: SurveyManagerProps) => {
         city_id: cityId || ''
       }));
       setSurveys(surveysWithCityId);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching surveys:', error);
       toast({
         title: "Erro",
@@ -108,7 +108,7 @@ const SurveyManager = ({ cityId }: SurveyManagerProps) => {
       });
 
       fetchSurveys();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating survey:', error);
       toast({
         title: "Erro",
@@ -130,7 +130,7 @@ const SurveyManager = ({ cityId }: SurveyManagerProps) => {
 
       if (error) throw error;
       setResponses(data || []);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching responses:', error);
       toast({
         title: "Erro",

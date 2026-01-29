@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       
       setUserProfile(profile);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ AuthProvider: Erro ao buscar perfil:", error);
     }
   };

@@ -29,7 +29,7 @@ export function StrategicAnalysis({ onAnalysisUpdate }: StrategicAnalysisProps) 
       // const result = await analysisService.analyzeData(); // Serviço removido
       const result = { insights: [], recommendations: [], metrics: {} }; // Placeholder
       setAnalysis(result);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar análise:', error);
     } finally {
       setLoading(false);

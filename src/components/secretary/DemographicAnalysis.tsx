@@ -36,7 +36,7 @@ export default function DemographicAnalysis() {
     setLoading(true);
     try {
       await Promise.all([fetchDemographicData(), fetchSurveyData()]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados demográficos:', error);
     } finally {
       setLoading(false);
@@ -119,7 +119,7 @@ export default function DemographicAnalysis() {
           .slice(0, 10), // Top 10
         total_users: profiles?.length || 0,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados demográficos:', error);
     }
   };
@@ -184,7 +184,7 @@ export default function DemographicAnalysis() {
           .sort((a, b) => b.count - a.count),
         total_surveys: surveys?.length || 0,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados de pesquisas:', error);
     }
   };

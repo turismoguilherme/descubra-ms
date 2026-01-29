@@ -60,7 +60,7 @@ export class EnhancedSecureStorage {
       combined.set(new Uint8Array(encrypted), iv.length);
 
       return btoa(String.fromCharCode(...combined));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Enhanced encryption error:', error);
       throw new Error('Encryption failed');
     }
@@ -101,7 +101,7 @@ export class EnhancedSecureStorage {
       }
 
       return parsed.data;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Enhanced decryption error:', error);
       throw new Error('Decryption failed');
     }
@@ -118,7 +118,7 @@ export class EnhancedSecureStorage {
     try {
       const encrypted = await this.encrypt(value);
       localStorage.setItem(`${STORAGE_PREFIX}${key}`, encrypted);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Secure storage set error:', error);
       throw error;
     }
@@ -129,7 +129,7 @@ export class EnhancedSecureStorage {
       const encryptedData = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
       if (!encryptedData) return null;
       return await this.decrypt(encryptedData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Secure storage get error:', error);
       // Remove corrupted data
       localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
@@ -175,7 +175,7 @@ export const useEnhancedSecureStorage = () => {
           storage.clearSecureStorage();
         }
         setIsReady(true);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Failed to initialize enhanced secure storage:', error);
         setIsReady(true); // Continue anyway
       }

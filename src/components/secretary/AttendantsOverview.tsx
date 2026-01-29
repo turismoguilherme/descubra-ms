@@ -39,7 +39,7 @@ export default function AttendantsOverview() {
   const fetchData = async () => {
     try {
       await Promise.all([fetchActiveAttendants(), fetchSurveyStats()]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados:', error);
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function AttendantsOverview() {
       }));
 
       setActiveAttendants(attendants);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar atendentes ativos:', error);
     }
   };
@@ -160,7 +160,7 @@ export default function AttendantsOverview() {
           .sort((a, b) => b.count - a.count)
           .slice(0, 5),
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar estatísticas de pesquisas:', error);
     }
   };

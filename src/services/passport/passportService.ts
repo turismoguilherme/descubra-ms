@@ -615,7 +615,7 @@ class PassportService {
         completion_percentage: Math.round((collectedFragments.length / config.stamp_fragments) * 100),
         fragments,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ [getRouteProgress] Erro:', error);
       return null;
     }

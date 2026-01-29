@@ -318,7 +318,7 @@ class RewardsService {
     try {
       await navigator.clipboard.writeText(voucherCode);
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao copiar código:', error);
       // Fallback para navegadores antigos
       const textArea = document.createElement('textarea');

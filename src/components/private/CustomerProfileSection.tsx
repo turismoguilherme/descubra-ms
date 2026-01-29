@@ -137,7 +137,7 @@ export default function CustomerProfileSection() {
 
       // Gerar insights de marketing
       generateMarketingInsights(ageCounts, originCounts, purposeCounts, preferenceCounts);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar perfil de clientes:', error);
     } finally {
       setLoading(false);

@@ -222,7 +222,7 @@ class GuataIntelligentTourismService {
           query.sessionId
         );
         // ML: Resposta personalizada aplicada (log removido)
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('⚠️ ML: Erro ao personalizar resposta, usando resposta original:', error);
       }
 
@@ -274,7 +274,7 @@ class GuataIntelligentTourismService {
         memoryUpdates: this.generateMemoryUpdates(question, webSearchResponse)
       };
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro no Guatá Intelligent Tourism:', error);
       
       return {
@@ -327,7 +327,7 @@ class GuataIntelligentTourismService {
       
       console.log('🤝 Parceiros encontrados:', partnersResponse.partnersFound.length);
       return partnersResponse;
-    } catch (error) {
+    } catch (error: unknown) {
       console.log('🤝 Erro ao verificar parceiros:', error);
       return {
         partnersFound: [],
@@ -989,7 +989,7 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       }
       
       return answer;
-    } catch (error) {
+    } catch (error: unknown) {
       // Se houver erro na detecção, retornar resposta original
       return answer;
     }

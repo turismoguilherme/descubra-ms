@@ -65,7 +65,7 @@ export class RegionalDataService {
 
       // Para outros estados, usar Google Search API
       return await this.fetchFromGoogleSearch(state, businessType);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados regionais:', error);
       return null;
     }
@@ -114,7 +114,7 @@ export class RegionalDataService {
           message: 'ALUMIA configurada mas API não está respondendo'
         };
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         isConfigured: true,
         isAvailable: false,
@@ -164,7 +164,7 @@ export class RegionalDataService {
         isConfigured: true,
         statusMessage: 'Dados oficiais da ALUMIA - Governo de MS'
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao buscar dados da ALUMIA:', error);
       return null;
     }
@@ -246,7 +246,7 @@ export class RegionalDataService {
         isConfigured: true,
         statusMessage: 'Dados baseados em Google Search API. Não são dados oficiais.'
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao buscar dados via Google Search:', error);
       
       // Retornar dados básicos como fallback

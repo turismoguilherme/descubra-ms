@@ -286,7 +286,7 @@ export default function AutonomousAIAgent() {
                 accessFinancialData: initialAutonomy > 70,
               });
             }
-          } catch (error) {
+          } catch (error: unknown) {
             console.error('Erro ao carregar configurações salvas:', error);
             // #region agent log
             fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Erro ao parsear configuração do localStorage',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -304,7 +304,7 @@ export default function AutonomousAIAgent() {
             accessFinancialData: false,
           });
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao carregar configuração:', error);
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Erro ao carregar configuração do Supabase',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -394,7 +394,7 @@ export default function AutonomousAIAgent() {
         .limit(50);
 
       if (data) setSeoImprovements(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('Erro ao carregar melhorias de SEO:', error);
     }
   };
@@ -409,7 +409,7 @@ export default function AutonomousAIAgent() {
         .limit(50);
 
       if (data) setAutoApprovals(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('Erro ao carregar aprovações:', error);
     }
   };
@@ -706,7 +706,7 @@ export default function AutonomousAIAgent() {
 
         // Também salvar no localStorage como backup
         localStorage.setItem('ai_agent_config', JSON.stringify(config));
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Erro ao salvar configuração automaticamente:', error);
         // Fallback: salvar apenas no localStorage
         const config = {
@@ -930,7 +930,7 @@ export default function AutonomousAIAgent() {
         ]);
         usersCount = usersResult.count || 0;
         eventsCount = eventsResult.count || 0;
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Erro ao buscar dados para contexto:', error);
       }
 

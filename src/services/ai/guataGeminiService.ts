@@ -139,7 +139,7 @@ class GuataGeminiService {
         if (isDev) {
           console.log(`[Guatá Gemini] ✅ Configurado`);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('[ERRO] Erro ao inicializar Gemini:', error);
         this.isConfigured = false;
       }
@@ -394,7 +394,7 @@ class GuataGeminiService {
         this.saveToIndividualCache(query, userId, sessionId, response);
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('⚠️ Erro na API em background (normal se rate limit):', error);
       // Não fazer nada - usuário já recebeu fallback
     } finally {
@@ -1090,7 +1090,7 @@ REGRAS ABSOLUTAS:
       } else {
         prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Se houver erro na detecção, usar português como padrão
       prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
     }

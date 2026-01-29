@@ -262,7 +262,7 @@ const TourismInventoryManager: React.FC = () => {
       setEditingAttraction(null);
       setValidationErrors({});
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ INVENTÁRIO: Erro ao salvar atração:', error);
       console.error('❌ INVENTÁRIO: Detalhes do erro:', {
         message: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -354,7 +354,7 @@ const TourismInventoryManager: React.FC = () => {
         }
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro no upload de imagens:', error);
       addNotification('error', 'Erro no upload de imagens. Tente novamente.');
     } finally {
@@ -407,7 +407,7 @@ const TourismInventoryManager: React.FC = () => {
       
       addNotification('success', 'Atração aprovada e ativada com sucesso!');
       
-    } catch (error) {
+    } catch (error: unknown) {
       addNotification('error', 'Erro ao aprovar atração.');
     } finally {
       setLoading(false);
@@ -428,7 +428,7 @@ const TourismInventoryManager: React.FC = () => {
       
       addNotification('warning', `Atração rejeitada: ${reason}`);
       
-    } catch (error) {
+    } catch (error: unknown) {
       addNotification('error', 'Erro ao rejeitar atração.');
     } finally {
       setLoading(false);
@@ -501,7 +501,7 @@ const TourismInventoryManager: React.FC = () => {
 
       console.log('📋 INVENTÁRIO: Atrações convertidas com sucesso:', convertedAttractions.length);
       setAttractions(convertedAttractions);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ INVENTÁRIO: Erro ao carregar atrações:', error);
       console.error('❌ INVENTÁRIO: Detalhes do erro:', {
         message: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -544,7 +544,7 @@ const TourismInventoryManager: React.FC = () => {
         await inventoryService.deleteAttraction(id);
         addNotification('success', 'Atração excluída com sucesso!');
         await loadAttractions();
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao excluir atração:', error);
         addNotification('error', 'Erro ao excluir atração. Tente novamente.');
       } finally {
@@ -564,7 +564,7 @@ const TourismInventoryManager: React.FC = () => {
         addNotification('success', `Atração ${!attraction.isActive ? 'ativada' : 'desativada'} com sucesso!`);
         await loadAttractions();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao alterar status da atração:', error);
       addNotification('error', 'Erro ao alterar status. Tente novamente.');
     } finally {
@@ -908,7 +908,7 @@ const AttractionForm: React.FC<{
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao validar endereço:', error);
     } finally {
       setValidating(false);
@@ -936,7 +936,7 @@ const AttractionForm: React.FC<{
           description: 'Número de registro validado com sucesso.',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao validar registro:', error);
     } finally {
       setValidating(false);
@@ -971,7 +971,7 @@ const AttractionForm: React.FC<{
           description: 'O atrativo parece ser único.',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar duplicatas:', error);
     } finally {
       setValidating(false);
@@ -989,7 +989,7 @@ const AttractionForm: React.FC<{
         title: `Completude: ${result.score}%`,
         description: `${result.filledFields} de ${result.totalFields} campos preenchidos.`,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao validar completude:', error);
     } finally {
       setValidating(false);
@@ -1063,7 +1063,7 @@ const AttractionForm: React.FC<{
         title: 'Preenchimento automático concluído!',
         description: 'Os dados foram preenchidos automaticamente. Revise e ajuste se necessário.',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro no preenchimento automático:', error);
       toast({
         title: 'Erro no preenchimento automático',

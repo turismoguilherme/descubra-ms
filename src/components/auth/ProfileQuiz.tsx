@@ -251,7 +251,7 @@ const ProfileQuiz = ({ onQuizComplete, onSkip }: ProfileQuizProps) => {
           completed_at: new Date().toISOString()
         };
         localStorage.setItem('quiz_result', JSON.stringify(quizData));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao salvar resultado do quiz:', error);
       }
     }

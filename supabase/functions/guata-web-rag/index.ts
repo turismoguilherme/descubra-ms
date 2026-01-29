@@ -296,7 +296,7 @@ const response = quickAgenda ? `${quickAgenda}\n\nQuer que eu detalhe horários 
       }
     )
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ RAG Error:', error)
     return new Response(
       JSON.stringify({ 
@@ -364,7 +364,7 @@ async function performEmbeddingSearch(question: string, state_code: string): Pro
     console.log(`🧮 Embedding search: ${results.length} resultados relevantes`)
     return results.slice(0, 10) // Top 10
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Erro na busca por embeddings:', error)
     return []
   }
@@ -478,7 +478,7 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
       source: 'fts' as const,
       confidence: 0.8 + (chunk.state_code === state_code ? 0.1 : 0) // boost para MS/CG
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('FTS Search error:', error)
     return []
   }
@@ -543,7 +543,7 @@ const limitedQueries = queries.slice(0, 6)
     const flat = resultsArrays.flat()
     console.log(`🌐 PSE multi-query total: ${flat.length}`)
     return flat
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('🌐 PSE Search error:', error)
     return []
   }
@@ -605,7 +605,7 @@ async function getWeatherData(state_code: string): Promise<WeatherData | null> {
       humidity: data.main.humidity,
       wind_speed: Math.round(data.wind.speed * 3.6) // m/s to km/h
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Weather API error:', error)
     return null
   }
@@ -630,7 +630,7 @@ async function getPlaceData(query: string, state_code: string): Promise<PlaceDat
       rating: place.rating,
       opening_hours: place.opening_hours?.open_now ? 'Aberto agora' : 'Horário não disponível'
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Places API error:', error)
     return []
   }
@@ -835,7 +835,7 @@ Responda como o Guatá de forma natural e humana:`
       return "Não consegui gerar uma resposta adequada. Por favor, consulte as fontes oficiais."
     }
            
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Gemini API error:', error)
     return "Desculpe, tive um problema técnico. Baseado nas fontes encontradas, recomendo consultar diretamente turismo.ms.gov.br para informações atualizadas."
   }
@@ -936,7 +936,7 @@ async function logRAGInteraction(question: string, response: string, sources: Se
         }))
       )
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Logging error:', error)
   }
 }
@@ -990,7 +990,7 @@ async function applyContinuousLearning(
       sources
     }
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Erro no aprendizado contínuo:', error)
     return {
       query_type: 'unknown',
@@ -1049,7 +1049,7 @@ async function getLearningBoost(queryType: string, currentConfidence: number): P
     
     return baseBoost
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Erro ao calcular boost:', error)
     return 0
   }
@@ -1099,7 +1099,7 @@ async function saveLearningData(data: {
       sources_count: data.sources.length,
       timestamp: data.timestamp
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Erro ao salvar dados de aprendizado:', error)
   }
 }

@@ -69,7 +69,7 @@ export const useEventManagement = (): UseEventManagementReturn => {
         setErrors(result.errors);
         console.error("❌ HOOK: Erro ao inicializar serviços:", result.errors);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = `Erro ao inicializar serviços: ${error}`;
       setErrors([errorMessage]);
       console.error("❌ HOOK:", errorMessage);
@@ -103,7 +103,7 @@ export const useEventManagement = (): UseEventManagementReturn => {
       }
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = `Erro durante limpeza: ${error}`;
       setErrors([errorMessage]);
       console.error("❌ HOOK:", errorMessage);
@@ -130,7 +130,7 @@ export const useEventManagement = (): UseEventManagementReturn => {
       }
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = `Erro durante sincronização: ${error}`;
       setErrors([errorMessage]);
       console.error("❌ HOOK:", errorMessage);
@@ -157,7 +157,7 @@ export const useEventManagement = (): UseEventManagementReturn => {
       }
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = `Erro durante processamento: ${error}`;
       setErrors([errorMessage]);
       console.error("❌ HOOK:", errorMessage);
@@ -194,7 +194,7 @@ export const useEventManagement = (): UseEventManagementReturn => {
       }
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ HOOK: Erro durante diagnósticos:", error);
       return { success: false, error: `Erro durante diagnósticos: ${error}` };
     }

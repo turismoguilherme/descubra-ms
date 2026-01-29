@@ -50,7 +50,7 @@ class CATCheckinService {
         address: loc.address || undefined,
         working_hours: loc.working_hours as { start: string; end: string } | undefined,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar localizações dos CATs:', error);
       return [];
     }
@@ -80,7 +80,7 @@ class CATCheckinService {
         address: data.address || undefined,
         working_hours: data.working_hours as { start: string; end: string } | undefined,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar localização do CAT:', error);
       return null;
     }
@@ -120,7 +120,7 @@ class CATCheckinService {
           address: loc.address || undefined,
           working_hours: loc.working_hours as { start: string; end: string } | undefined,
         }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar localizações do atendente:', error);
       return [];
     }
@@ -278,7 +278,7 @@ class CATCheckinService {
         device_info: data.device_info as Record<string, any> | undefined,
         created_at: data.created_at,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar check-in ativo:', error);
       return null;
     }
@@ -310,7 +310,7 @@ class CATCheckinService {
         device_info: checkin.device_info as Record<string, any> | undefined,
         created_at: checkin.created_at,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar check-ins:', error);
       return [];
     }
@@ -343,7 +343,7 @@ class CATCheckinService {
         device_info: checkin.device_info as Record<string, any> | undefined,
         created_at: checkin.created_at,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar check-ins de hoje:', error);
       return [];
     }
@@ -362,7 +362,7 @@ class CATCheckinService {
       if (error) throw error;
 
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar estatísticas:', error);
       return null;
     }

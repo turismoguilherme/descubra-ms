@@ -106,7 +106,7 @@ export class GoalsAlertsService {
         const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
         return severityOrder[a.severity] - severityOrder[b.severity];
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar alertas de metas:', error);
       return [];
     }

@@ -77,7 +77,7 @@ const SmartSetupWizard: React.FC<SmartSetupWizardProps> = ({
       const result = await detectBusinessType(userData);
       setDetectionResult(result);
       setProgress(20);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro na detecção:', error);
     }
   };
@@ -144,7 +144,7 @@ const SmartSetupWizard: React.FC<SmartSetupWizardProps> = ({
         setCurrentStep('configuration');
         setProgress(60);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro na configuração:', error);
       setCurrentStep('configuration');
       setProgress(60);

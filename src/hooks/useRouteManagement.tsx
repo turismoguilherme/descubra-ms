@@ -191,7 +191,7 @@ export const useRouteManagement = (userRegion?: string) => {
       }
 
       return route;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao criar roteiro:", error);
       throw error;
     }
@@ -248,7 +248,7 @@ export const useRouteManagement = (userRegion?: string) => {
       }
 
       return route;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao atualizar roteiro:", error);
       throw error;
     }
@@ -269,7 +269,7 @@ export const useRouteManagement = (userRegion?: string) => {
         .eq('id', routeId);
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao deletar roteiro:", error);
       throw error;
     }
@@ -292,7 +292,7 @@ export const useRouteManagement = (userRegion?: string) => {
         totalCompletions: stamps?.length || 0,
         uniqueUsers: uniqueUsers
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao buscar estatísticas:", error);
       return {
         totalCheckins: 0,
