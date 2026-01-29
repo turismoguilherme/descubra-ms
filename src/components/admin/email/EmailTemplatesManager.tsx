@@ -74,11 +74,12 @@ export default function EmailTemplatesManager() {
 
       if (error) throw error;
       setTemplates(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar templates:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar templates:', err);
       toast({
         title: 'Erro ao carregar templates',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -253,11 +254,12 @@ export default function EmailTemplatesManager() {
           description: `Variáveis detectadas: ${allVariables.join(', ')}`,
         });
       }
-    } catch (error: any) {
-      console.error('Erro ao salvar template:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar template:', err);
       toast({
         title: 'Erro ao salvar template',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -278,11 +280,12 @@ export default function EmailTemplatesManager() {
       });
 
       loadTemplates();
-    } catch (error: any) {
-      console.error('Erro ao alterar status:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar status:', err);
       toast({
         title: 'Erro',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -307,11 +310,12 @@ export default function EmailTemplatesManager() {
       setDeleteDialogOpen(false);
       setTemplateToDelete(null);
       loadTemplates();
-    } catch (error: any) {
-      console.error('Erro ao deletar template:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao deletar template:', err);
       toast({
         title: 'Erro ao deletar',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }

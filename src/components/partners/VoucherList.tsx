@@ -97,8 +97,9 @@ const VoucherList: React.FC<VoucherListProps> = ({ partnerId, partnerName }) => 
       }));
 
       setVouchers(formattedVouchers);
-    } catch (error: any) {
-      console.error('Erro ao carregar vouchers:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar vouchers:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os vouchers',

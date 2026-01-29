@@ -107,8 +107,9 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
       setTimeout(() => {
         setValidationResult(null);
       }, 5000);
-    } catch (error: any) {
-      console.error('Erro ao validar voucher:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao validar voucher:', err);
       setValidationResult({
         success: false,
         message: error.message || 'Erro ao validar voucher',
@@ -146,8 +147,9 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
       );
 
       setScanner(html5QrCode);
-    } catch (error: any) {
-      console.error('Erro ao iniciar scanner:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao iniciar scanner:', err);
       toast({
         title: 'Erro ao acessar câmera',
         description: 'Não foi possível acessar a câmera. Verifique as permissões.',
