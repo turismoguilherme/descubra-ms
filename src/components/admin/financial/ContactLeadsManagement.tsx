@@ -134,12 +134,16 @@ export default function ContactLeadsManagement() {
         .eq('key', 'data_sale_price')
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) {
+        const err = error as { code?: string };
+        if (err.code !== 'PGRST116') throw error;
+      }
       if (data) {
         setPrice(data.value || '300.00');
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar preço:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar preço:', err);
     }
   };
 
@@ -152,10 +156,14 @@ export default function ContactLeadsManagement() {
         .eq('lead_id', leadId)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) {
+        const err = error as { code?: string };
+        if (err.code !== 'PGRST116') throw error;
+      }
       setDataSaleRequest(data || null);
-    } catch (error: any) {
-      console.error('Erro ao buscar solicitação de dados:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar solicitação de dados:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao buscar informações da solicitação de dados',
@@ -186,11 +194,12 @@ export default function ContactLeadsManagement() {
       );
 
       setLeads(contactLeads);
-    } catch (error: any) {
-      console.error('Erro ao carregar leads:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar leads:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar leads de contato',
+        description: err.message || 'Erro ao carregar leads de contato',
         variant: 'destructive',
       });
     } finally {
@@ -307,11 +316,12 @@ export default function ContactLeadsManagement() {
       setEditDialogOpen(false);
       setEditingLead(null);
       fetchLeads();
-    } catch (error: any) {
-      console.error('Erro ao atualizar lead:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar lead:', err);
       toast({
         title: '❌ Erro ao salvar',
-        description: error.message || 'Não foi possível atualizar o lead.',
+        description: err.message || 'Não foi possível atualizar o lead.',
         variant: 'destructive',
       });
     } finally {
@@ -335,10 +345,11 @@ export default function ContactLeadsManagement() {
         title: 'Preço atualizado',
         description: `Novo preço: R$ ${parseFloat(price).toFixed(2)}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar preço',
+        description: err.message || 'Erro ao atualizar preço',
         variant: 'destructive',
       });
     } finally {
@@ -403,10 +414,11 @@ export default function ContactLeadsManagement() {
       });
 
       await fetchDataSaleRequest(selectedLead!.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao aprovar solicitação',
+        description: err.message || 'Erro ao aprovar solicitação',
         variant: 'destructive',
       });
     }
@@ -452,10 +464,11 @@ export default function ContactLeadsManagement() {
       });
 
       await fetchDataSaleRequest(selectedLead!.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro na validação',
-        description: error.message || 'Erro ao validar dados',
+        description: err.message || 'Erro ao validar dados',
         variant: 'destructive',
       });
     }
@@ -552,8 +565,9 @@ export default function ContactLeadsManagement() {
       });
 
       await fetchDataSaleRequest(selectedLead!.id);
-    } catch (error: any) {
-      console.error('Erro ao gerar relatório:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar relatório:', err);
       await supabase
         .from('data_sale_requests')
         .update({ status: 'failed' })
@@ -585,10 +599,11 @@ export default function ContactLeadsManagement() {
       });
 
       await fetchDataSaleRequest(selectedLead!.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao marcar como entregue',
+        description: err.message || 'Erro ao marcar como entregue',
         variant: 'destructive',
       });
     }
@@ -672,13 +687,14 @@ export default function ContactLeadsManagement() {
       setTimeout(() => {
         setResolvingLeadId(null);
       }, 500);
-    } catch (error: any) {
-      console.error('❌ Erro completo ao marcar lead como resolvido:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ Erro completo ao marcar lead como resolvido:', err);
       setResolvingLeadId(null);
       
       toast({
         title: '❌ Erro ao marcar como resolvido',
-        description: error.message || 'Não foi possível marcar o lead como resolvido. Verifique o console para mais detalhes.',
+        description: err.message || 'Não foi possível marcar o lead como resolvido. Verifique o console para mais detalhes.',
         variant: 'destructive',
         duration: 5000,
       });

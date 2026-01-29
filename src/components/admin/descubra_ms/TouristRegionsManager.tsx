@@ -135,11 +135,12 @@ export default function TouristRegionsManager() {
       }));
 
       setRegions(processedData);
-    } catch (error: any) {
-      console.error('Erro ao carregar regiões:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar regiões:', err);
       toast({
         title: 'Erro ao carregar',
-        description: error.message || 'Não foi possível carregar as regiões turísticas',
+        description: err.message || 'Não foi possível carregar as regiões turísticas',
         variant: 'destructive',
       });
     } finally {
@@ -254,11 +255,12 @@ export default function TouristRegionsManager() {
 
       setDialogOpen(false);
       loadRegions();
-    } catch (error: any) {
-      console.error('Erro ao salvar região:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar região:', err);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar a região',
+        description: err.message || 'Não foi possível salvar a região',
         variant: 'destructive',
       });
     } finally {
@@ -290,11 +292,12 @@ export default function TouristRegionsManager() {
       }
 
       loadRegions();
-    } catch (error: any) {
-      console.error('Erro ao excluir região:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao excluir região:', err);
       toast({
         title: 'Erro ao excluir',
-        description: error.message || 'Não foi possível excluir a região',
+        description: err.message || 'Não foi possível excluir a região',
         variant: 'destructive',
       });
     }
@@ -426,8 +429,9 @@ export default function TouristRegionsManager() {
       }
       setNewGalleryFiles([]);
       setGalleryPreviews([]);
-    } catch (error: any) {
-      console.error('Erro ao carregar detalhes:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar detalhes:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar detalhes da região',
@@ -510,8 +514,9 @@ export default function TouristRegionsManager() {
         if (publicUrlData?.publicUrl) {
           uploadedUrls.push(publicUrlData.publicUrl);
         }
-      } catch (error: any) {
-        console.error('Erro no upload:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro no upload:', err);
         toast({
           title: 'Erro no upload',
           description: `Erro ao fazer upload de ${file.name}`,
@@ -636,11 +641,12 @@ export default function TouristRegionsManager() {
       // Recarregar cidades
       await loadRegionCities(regionId);
       setEditingCity(null);
-    } catch (error: any) {
-      console.error('Erro ao salvar cidade:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar cidade:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar informações da cidade',
+        description: err.message || 'Erro ao salvar informações da cidade',
         variant: 'destructive',
       });
     } finally {
@@ -696,8 +702,9 @@ export default function TouristRegionsManager() {
         if (publicUrlData?.publicUrl) {
           uploadedUrls.push(publicUrlData.publicUrl);
         }
-      } catch (error: any) {
-        console.error('Erro no upload:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro no upload:', err);
         toast({
           title: 'Erro no upload',
           description: `Erro ao fazer upload de ${file.name}`,
@@ -780,8 +787,9 @@ export default function TouristRegionsManager() {
         .getPublicUrl(fileName);
 
       return publicUrl;
-    } catch (error: any) {
-      console.error('Erro no upload da imagem do mapa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload da imagem do mapa:', err);
       toast({
         title: 'Erro no upload',
         description: `Erro ao fazer upload da imagem do mapa`,
@@ -884,11 +892,12 @@ export default function TouristRegionsManager() {
       });
 
       setDetailsDialogOpen(false);
-    } catch (error: any) {
-      console.error('Erro ao salvar detalhes:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar detalhes:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar detalhes da região',
+        description: err.message || 'Erro ao salvar detalhes da região',
         variant: 'destructive',
       });
     } finally {

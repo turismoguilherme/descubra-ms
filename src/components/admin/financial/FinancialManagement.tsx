@@ -83,8 +83,9 @@ export default function FinancialManagement() {
         const salaryData = await financialDashboardService.getMonthlySalaries();
         setSalaries(salaryData.employees);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar dados:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar dados:', err);
       // Não mostrar toast para erros de sessão expirada (já são tratados silenciosamente)
       // O usuário verá dados vazios e pode recarregar a página se necessário
     } finally {
@@ -195,9 +196,10 @@ export default function FinancialManagement() {
       
       // Recarregar dados em background para garantir sincronização
       loadData();
-    } catch (error: any) {
-      console.error('Erro ao criar despesa:', error);
-      let errorMessage = error.message || 'Erro ao criar despesa';
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar despesa:', err);
+      let errorMessage = err.message || 'Erro ao criar despesa';
       
       // Mensagem mais amigável para sessão expirada
       if (errorMessage.includes('Sessão expirada') || errorMessage.includes('JWT expired')) {
@@ -225,10 +227,11 @@ export default function FinancialManagement() {
         description: 'Despesa atualizada com sucesso',
       });
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar despesa',
+        description: err.message || 'Erro ao atualizar despesa',
         variant: 'destructive',
       });
     }
@@ -255,10 +258,11 @@ export default function FinancialManagement() {
       setSalaryDialogOpen(false);
       resetSalaryForm();
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao registrar pagamento',
+        description: err.message || 'Erro ao registrar pagamento',
         variant: 'destructive',
       });
     }
@@ -379,11 +383,12 @@ export default function FinancialManagement() {
       setReportPreviewData(previewData);
       setReportPreviewType('dre');
       setReportPreviewOpen(true);
-    } catch (error: any) {
-      console.error('Erro ao gerar DRE:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar DRE:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao gerar DRE',
+        description: err.message || 'Erro ao gerar DRE',
         variant: 'destructive',
       });
     } finally {
@@ -454,11 +459,12 @@ export default function FinancialManagement() {
       setReportPreviewData(previewData);
       setReportPreviewType('cashflow');
       setReportPreviewOpen(true);
-    } catch (error: any) {
-      console.error('Erro ao gerar Fluxo de Caixa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar Fluxo de Caixa:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao gerar Fluxo de Caixa',
+        description: err.message || 'Erro ao gerar Fluxo de Caixa',
         variant: 'destructive',
       });
     } finally {
@@ -553,11 +559,12 @@ export default function FinancialManagement() {
       setReportPreviewData(previewData);
       setReportPreviewType('profit');
       setReportPreviewOpen(true);
-    } catch (error: any) {
-      console.error('Erro ao gerar Relatório de Lucro:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar Relatório de Lucro:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao gerar Relatório de Lucro',
+        description: err.message || 'Erro ao gerar Relatório de Lucro',
         variant: 'destructive',
       });
     } finally {
@@ -578,11 +585,12 @@ export default function FinancialManagement() {
         title: 'Sucesso',
         description: 'PDF gerado com sucesso',
       });
-    } catch (error: any) {
-      console.error('Erro ao gerar PDF:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar PDF:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao gerar PDF',
+        description: err.message || 'Erro ao gerar PDF',
         variant: 'destructive',
       });
     }

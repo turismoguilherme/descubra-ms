@@ -161,8 +161,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
         console.log('Dados de consentimento carregados:', data);
         setConsentData(data || null);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar consentimento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar consentimento:', err);
       setConsentData(null);
     } finally {
       // Garantir que o loading sempre seja resetado
@@ -297,11 +298,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
         title: 'Consentimento registrado!',
         description: 'Seus dados agregados serão usados para benchmarking. Você pode revogar a qualquer momento.',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar consentimento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar consentimento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar consentimento',
+        description: err.message || 'Erro ao salvar consentimento',
         variant: 'destructive',
       });
     } finally {
@@ -339,11 +341,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
         title: 'Sucesso',
         description: 'Perfil atualizado com sucesso',
       });
-    } catch (error: any) {
-      console.error('Erro ao atualizar perfil:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar perfil:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar perfil',
+        description: err.message || 'Erro ao atualizar perfil',
         variant: 'destructive',
       });
     } finally {
@@ -376,7 +379,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
         });
         return;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
         description: 'Erro ao verificar senha atual',
@@ -430,11 +434,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
         newPassword: '',
         confirmPassword: '',
       });
-    } catch (error: any) {
-      console.error('Erro ao alterar senha:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar senha:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao alterar senha',
+        description: err.message || 'Erro ao alterar senha',
         variant: 'destructive',
       });
     } finally {
@@ -464,11 +469,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha',
       });
-    } catch (error: any) {
-      console.error('Erro ao enviar email de recuperação:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar email de recuperação:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao enviar email de recuperação',
+        description: err.message || 'Erro ao enviar email de recuperação',
         variant: 'destructive',
       });
     } finally {
@@ -500,11 +506,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
       });
 
       setEmailData({ newEmail: '' });
-    } catch (error: any) {
-      console.error('Erro ao alterar email:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar email:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao alterar email',
+        description: err.message || 'Erro ao alterar email',
         variant: 'destructive',
       });
     } finally {
@@ -534,11 +541,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
       });
 
       onClose();
-    } catch (error: any) {
-      console.error('Erro ao excluir conta:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao excluir conta:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir conta',
+        description: err.message || 'Erro ao excluir conta',
         variant: 'destructive',
       });
     } finally {
@@ -801,11 +809,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialT
                               title: 'Sucesso',
                               description: `Plano alterado para ${plan.name} com sucesso!`,
                             });
-                          } catch (error: any) {
-                            console.error('Erro ao alterar plano:', error);
+                          } catch (error: unknown) {
+                            const err = error instanceof Error ? error : new Error(String(error));
+                            console.error('Erro ao alterar plano:', err);
                             toast({
                               title: 'Erro',
-                              description: error.message || 'Erro ao alterar plano. Tente novamente.',
+                              description: err.message || 'Erro ao alterar plano. Tente novamente.',
                               variant: 'destructive',
                             });
                           } finally {
