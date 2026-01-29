@@ -6,6 +6,7 @@
 import { googleTranslateService } from './GoogleTranslateService';
 import { geminiTranslationService } from './GeminiTranslationService';
 import { libreTranslateService } from './LibreTranslateService';
+import { API_CONFIG } from '@/config/apiKeys';
 import type { LanguageCode } from '@/utils/translationHelpers';
 import type { TranslationResult, TranslationOptions } from './GoogleTranslateService';
 
@@ -31,7 +32,6 @@ class TranslationManager {
       priority: 2,
       service: googleTranslateService,
       isConfigured: () => {
-        const { API_CONFIG } = require('@/config/apiKeys');
         return API_CONFIG.GOOGLE_TRANSLATE.isConfigured();
       }
     },
@@ -40,7 +40,6 @@ class TranslationManager {
       priority: 3,
       service: geminiTranslationService,
       isConfigured: () => {
-        const { API_CONFIG } = require('@/config/apiKeys');
         return API_CONFIG.GEMINI.isConfigured();
       }
     }

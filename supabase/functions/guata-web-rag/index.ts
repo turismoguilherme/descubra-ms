@@ -710,7 +710,10 @@ function rankResults(results: SearchResult[], question: string): SearchResult[] 
         const domainA = new URL(a.link).hostname; const domainB = new URL(b.link).hostname
         scoreA += domainScore[domainA] || 0
         scoreB += domainScore[domainB] || 0
-      } catch {}
+      } catch (error: unknown) {
+        // Ignorar erros de parsing de URL durante scoring
+        console.debug('Erro ao processar domínio para scoring:', error);
+      }
 
       // leve match com a pergunta
       const first = question.toLowerCase().split(' ')[0]

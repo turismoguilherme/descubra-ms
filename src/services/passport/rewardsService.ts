@@ -331,7 +331,8 @@ class RewardsService {
         document.execCommand('copy');
         document.body.removeChild(textArea);
         return true;
-      } catch {
+      } catch (error: unknown) {
+        console.error('Erro no fallback de cópia:', error);
         document.body.removeChild(textArea);
         return false;
       }
