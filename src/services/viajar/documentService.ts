@@ -237,7 +237,15 @@ export class DocumentService {
   /**
    * Analisar documento com IA
    */
-  async analyzeDocument(id: string, businessType?: string): Promise<any> {
+  async analyzeDocument(id: string, businessType?: string): Promise<{
+    extracted_data: unknown;
+    summary: string;
+    key_points: string[];
+    recommendations: string[];
+    confidence: number;
+    document_type: string;
+    business_type?: string;
+  }> {
     try {
       // Buscar documento
       const document = await this.getDocumentById(id);

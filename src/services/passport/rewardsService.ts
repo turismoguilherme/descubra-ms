@@ -1,6 +1,35 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { UserReward, PassportReward } from '@/types/passportDigital';
 
+interface UserAvatar {
+  id: string;
+  user_id: string;
+  avatar_id: string;
+  route_id?: string | null;
+  unlocked_at: string;
+  pantanal_avatars?: {
+    id: string;
+    name: string;
+    scientific_name?: string;
+    description?: string;
+    image_url?: string;
+    rarity: string;
+    personality_traits?: string[];
+    habitat?: string;
+    diet?: string;
+  } | null;
+}
+
+interface UnlockRewardResult {
+  reward_id: string;
+}
+
+interface UnlockedAvatar {
+  avatar_id: string;
+  avatar_name: string;
+  rarity: string;
+}
+
 class RewardsService {
   /**
    * Desbloquear recompensas ao completar roteiro
@@ -18,14 +47,15 @@ class RewardsService {
       let unlockedRewards: UserReward[] = [];
 
       // Buscar recompensas tradicionais desbloqueadas
-      if (data && data.length > 0) {
-        const rewardIds = data.map((r: any) => r.reward_id);
+      if (data && Array.isArray(data) && data.length > 0) {
+        const unlockResults = data as UnlockRewardResult[];
+        const rewardIds = unlockResults.map((r) => r.reward_id);
         const { data: rewards } = await supabase
           .from('user_rewards')
           .select('*, passport_rewards(*)')
           .eq('user_id', userId)
           .eq('route_id', routeId)
-          .in('id', data.map((r: any) => r.reward_id));
+          .in('id', rewardIds);
 
         unlockedRewards = (rewards || []) as UserReward[];
       }
@@ -35,7 +65,7 @@ class RewardsService {
 
       // Combinar recompensas tradicionais e de avatar
       return [...unlockedRewards, ...avatarRewards];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao desbloquear recompensas:', error);
       throw error;
     }
@@ -56,9 +86,10 @@ class RewardsService {
 
       const avatarRewards: UserReward[] = [];
 
-      if (unlockedAvatars && unlockedAvatars.length > 0) {
+      if (unlockedAvatars && Array.isArray(unlockedAvatars) && unlockedAvatars.length > 0) {
+        const avatars = unlockedAvatars as UnlockedAvatar[];
         // Para cada avatar desbloqueado, buscar a recompensa correspondente
-        for (const avatar of unlockedAvatars) {
+        for (const avatar of avatars) {
           const { data: reward } = await supabase
             .from('passport_rewards')
             .select('id')
@@ -87,7 +118,7 @@ class RewardsService {
       }
 
       return avatarRewards;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao desbloquear recompensas de avatar:', error);
       throw error;
     }
@@ -112,7 +143,7 @@ class RewardsService {
 
       if (error) throw error;
       return (data || []) as UserReward[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar recompensas:', error);
       throw error;
     }
@@ -133,7 +164,7 @@ class RewardsService {
 
       if (error) throw error;
       return (data || []) as PassportReward[];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar recompensas da rota:', error);
       throw error;
     }
@@ -174,7 +205,7 @@ class RewardsService {
 
       console.log('Avatar desbloqueado com sucesso');
       return true; // Desbloqueado com sucesso
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao desbloquear avatar:', error);
       throw error;
     }
@@ -197,7 +228,7 @@ class RewardsService {
       }
 
       return !!data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar avatar do usuário:', error);
       throw error;
     }
@@ -206,7 +237,7 @@ class RewardsService {
   /**
    * Obter avatares desbloqueados do usuário
    */
-  async getUserAvatars(userId: string): Promise<any[]> {
+  async getUserAvatars(userId: string): Promise<UserAvatar[]> {
     try {
       const { data, error } = await supabase
         .from('user_avatars')
@@ -228,8 +259,8 @@ class RewardsService {
         .order('unlocked_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []);
-    } catch (error: any) {
+      return (data || []) as UserAvatar[];
+    } catch (error: unknown) {
       console.error('Erro ao buscar avatares do usuário:', error);
       throw error;
     }
@@ -250,7 +281,7 @@ class RewardsService {
         .eq('user_id', userId);
 
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao marcar recompensa como usada:', error);
       throw error;
     }
@@ -270,7 +301,7 @@ class RewardsService {
 
       if (error && error.code !== 'PGRST116') throw error;
       return data as UserReward | null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao validar voucher:', error);
       return null;
     }

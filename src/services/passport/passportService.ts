@@ -7,6 +7,77 @@ import type {
   StampProgress,
   CheckinResult,
 } from '@/types/passportDigital';
+import type { JsonValue } from '@/types/common';
+
+// Interfaces locais para tipos de dados do serviço
+interface RewardSummary {
+  id: string;
+  max_vouchers: number | null;
+  expires_at: string | null;
+}
+
+interface UserRewardRow {
+  reward_id: string;
+}
+
+interface RouteCheckpoint {
+  id: string;
+  name: string;
+  order_sequence: number;
+  stamp_fragment_number: number | null;
+  geofence_radius: number | null;
+  requires_photo: boolean | null;
+  [key: string]: JsonValue | undefined;
+}
+
+interface RouteReward {
+  id: string;
+  [key: string]: JsonValue | undefined;
+}
+
+interface PassportStamp {
+  checkpoint_id: string;
+  route_id?: string | null;
+}
+
+interface CheckpointRaw {
+  id: string;
+  name: string;
+  order_sequence: number;
+  route_id: string;
+  destination_id?: string | null;
+  description?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  is_mandatory?: boolean;
+  created_at?: string | null;
+  stamp_fragment_number?: number | null;
+  geofence_radius?: number | null;
+  requires_photo?: boolean | null;
+  validation_mode?: string | null;
+  partner_code?: string | null;
+}
+
+interface CheckpointWithFragment {
+  id: string;
+  name: string;
+  stamp_fragment_number: number;
+}
+
+interface StampProgressData {
+  checkpoint_id: string;
+  stamped_at?: string;
+}
+
+interface ValidationResult {
+  success: boolean;
+  error?: string;
+}
+
+interface UnlockedReward {
+  id: string;
+  [key: string]: JsonValue | undefined;
+}
 
 class PassportService {
   // Constantes para fetch direto
@@ -14,7 +85,7 @@ class PassportService {
   private SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
 
   // Função auxiliar para fazer fetch no Supabase
-  private async fetchSupabase(endpoint: string, options?: RequestInit): Promise<any> {
+  private async fetchSupabase<T = unknown>(endpoint: string, options?: RequestInit): Promise<T> {
     const response = await fetch(`${this.SUPABASE_URL}/rest/v1/${endpoint}`, {
       headers: {
         'apikey': this.SUPABASE_KEY,
@@ -52,7 +123,7 @@ class PassportService {
 
     if (rewardsError) throw rewardsError;
 
-    const activeRewards = (rewards || []).filter((r: any) => {
+    const activeRewards = (rewards || []).filter((r: RewardSummary) => {
       if (!r.expires_at) return true;
       return new Date(r.expires_at).getTime() > Date.now();
     });
@@ -62,12 +133,12 @@ class PassportService {
     }
 
     // Se alguma recompensa não tem estoque (max_vouchers null), consideramos disponível
-    const unlimitedExists = activeRewards.some((r: any) => r.max_vouchers == null);
+    const unlimitedExists = activeRewards.some((r: RewardSummary) => r.max_vouchers == null);
     if (unlimitedExists) {
       return { hasActiveRewards: true, anyAvailable: true };
     }
 
-    const rewardIds = activeRewards.map((r: any) => r.id);
+    const rewardIds = activeRewards.map((r: RewardSummary) => r.id);
     const { data: userRewardsData, error: userRewardsError } = await supabase
       .from('user_rewards')
       .select('reward_id')
@@ -75,12 +146,12 @@ class PassportService {
 
     if (userRewardsError) throw userRewardsError;
 
-    const emittedById = (userRewardsData || []).reduce((acc: Record<string, number>, row: any) => {
+    const emittedById = (userRewardsData || []).reduce((acc: Record<string, number>, row: UserRewardRow) => {
       acc[row.reward_id] = (acc[row.reward_id] || 0) + 1;
       return acc;
     }, {});
 
-    const anyAvailable = activeRewards.some((r: any) => {
+    const anyAvailable = activeRewards.some((r: RewardSummary) => {
       const emitted = emittedById[r.id] || 0;
       const max = r.max_vouchers ?? 0;
       return emitted < max;
@@ -101,7 +172,7 @@ class PassportService {
       try {
         const passports = await this.fetchSupabase(`user_passports?user_id=eq.${userId}`);
         existing = passports?.[0] || null;
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.warn('⚠️ [createPassport] Tabela user_passports não existe, criando passaporte local');
         // Se tabela não existe, criar passaporte local temporário
         return this.createLocalPassport(userId, prefix);
@@ -135,7 +206,7 @@ class PassportService {
         console.warn('⚠️ [createPassport] Erro ao criar no banco, usando local');
         return this.createLocalPassport(userId, prefix);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ [createPassport] Erro:', error);
       // Se falhar, criar passaporte local
       return this.createLocalPassport(userId, prefix);
@@ -168,7 +239,7 @@ class PassportService {
       try {
         const passports = await this.fetchSupabase(`user_passports?user_id=eq.${userId}`);
         data = passports?.[0] || null;
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.warn('⚠️ [getPassport] Tabela user_passports não existe, criando local');
         return this.createLocalPassport(userId, 'MS');
       }
@@ -181,7 +252,7 @@ class PassportService {
       }
       
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ [getPassport] Erro:', error);
       // Se falhar, criar passaporte local
       return this.createLocalPassport(userId, 'MS');
@@ -238,9 +309,9 @@ class PassportService {
 
       console.log('🔍 [passportService.getActiveRoute] Buscando checkpoints...');
       // Buscar checkpoints
-      let checkpoints: any[] = [];
+      let checkpoints: RouteCheckpoint[] = [];
       try {
-        checkpoints = await this.fetchSupabase(`route_checkpoints?route_id=eq.${routeId}&order=order_sequence`);
+        checkpoints = await this.fetchSupabase<RouteCheckpoint[]>(`route_checkpoints?route_id=eq.${routeId}&order=order_sequence`);
       } catch (e) {
         console.warn('⚠️ [passportService.getActiveRoute] Erro ao buscar checkpoints:', e);
       }
@@ -252,9 +323,9 @@ class PassportService {
 
       console.log('🔍 [passportService.getActiveRoute] Buscando recompensas...');
       // Buscar recompensas
-      let rewards: any[] = [];
+      let rewards: RouteReward[] = [];
       try {
-        rewards = await this.fetchSupabase(`passport_rewards?route_id=eq.${routeId}&is_active=eq.true`);
+        rewards = await this.fetchSupabase<RouteReward[]>(`passport_rewards?route_id=eq.${routeId}&is_active=eq.true`);
       } catch (e) {
         console.warn('⚠️ [passportService.getActiveRoute] Tabela passport_rewards não existe ou erro:', e);
       }
@@ -268,7 +339,7 @@ class PassportService {
       // Buscar stamps de duas formas:
       // 1. Por route_id (stamps novos)
       // 2. Por checkpoint_id IN (stamps antigos que podem não ter route_id)
-      let stamps: any[] = [];
+      let stamps: PassportStamp[] = [];
       try {
         const checkpointIds = checkpoints?.map(cp => cp.id) || [];
         console.log('🔵 [passportService.getActiveRoute] Query stamps:', {
@@ -279,9 +350,9 @@ class PassportService {
         });
         
         // Primeiro, tentar buscar por route_id
-        let stampsByRoute: any[] = [];
+        let stampsByRoute: PassportStamp[] = [];
         try {
-          stampsByRoute = await this.fetchSupabase(`passport_stamps?user_id=eq.${userId}&route_id=eq.${routeId}&select=checkpoint_id,route_id`);
+          stampsByRoute = await this.fetchSupabase<PassportStamp[]>(`passport_stamps?user_id=eq.${userId}&route_id=eq.${routeId}&select=checkpoint_id,route_id`);
           console.log('🔵 [passportService.getActiveRoute] Stamps por route_id:', {
             count: stampsByRoute?.length || 0,
             stamps: stampsByRoute,
@@ -291,7 +362,7 @@ class PassportService {
         }
         
         // Segundo, buscar por checkpoint_id (para stamps antigos sem route_id)
-        let stampsByCheckpoint: any[] = [];
+        let stampsByCheckpoint: PassportStamp[] = [];
         if (checkpointIds.length > 0) {
           try {
             // Construir query com múltiplos checkpoint_ids
@@ -303,7 +374,7 @@ class PassportService {
               .eq('user_id', userId)
               .in('checkpoint_id', checkpointIds);
             
-            stampsByCheckpoint = checkpointStamps || [];
+            stampsByCheckpoint = (checkpointStamps || []) as PassportStamp[];
             console.log('🔵 [passportService.getActiveRoute] Stamps por checkpoint_id:', {
               count: stampsByCheckpoint?.length || 0,
               stamps: stampsByCheckpoint,
@@ -360,13 +431,14 @@ class PassportService {
       console.log('✅ [passportService.getActiveRoute] ========== FIM ==========');
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; code?: string; details?: string; stack?: string };
       console.error('❌ [passportService.getActiveRoute] Erro ao buscar rota ativa:', {
         error,
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        stack: error?.stack
+        message: err?.message,
+        code: err?.code,
+        details: err?.details,
+        stack: err?.stack
       });
       return null;
     }
@@ -381,20 +453,20 @@ class PassportService {
     
     try {
       console.log('🔍 [passportService.getRouteCheckpoints] Buscando checkpoints...');
-      const checkpoints = await this.fetchSupabase(
+      const checkpoints = await this.fetchSupabase<CheckpointRaw[]>(
         `route_checkpoints?route_id=eq.${routeId}&order=order_sequence.asc`
       );
 
       console.log('🔍 [passportService.getRouteCheckpoints] Checkpoints encontrados:', {
         count: checkpoints?.length || 0,
-        checkpoints: checkpoints?.map((cp: any) => ({ 
+        checkpoints: checkpoints?.map((cp: CheckpointRaw) => ({ 
           id: cp.id, 
           name: cp.name, 
           order: cp.order_sequence 
         }))
       });
 
-      const result = (checkpoints || []).map((cp: any) => ({
+      const result = (checkpoints || []).map((cp: CheckpointRaw) => ({
         id: cp.id,
         route_id: cp.route_id,
         destination_id: cp.destination_id || null,
@@ -416,11 +488,12 @@ class PassportService {
       console.log('✅ [passportService.getRouteCheckpoints] ========== FIM ==========');
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; code?: string };
       console.warn('⚠️ [passportService.getRouteCheckpoints] Erro ao buscar checkpoints:', {
         error,
-        message: error?.message,
-        code: error?.code,
+        message: err?.message,
+        code: err?.code,
       });
       return [];
     }
@@ -444,9 +517,9 @@ class PassportService {
       if (!config) return null;
 
       // Buscar checkpoints com fragmentos
-      let checkpoints: any[] = [];
+      let checkpoints: CheckpointWithFragment[] = [];
       try {
-        checkpoints = await this.fetchSupabase(`route_checkpoints?route_id=eq.${routeId}&stamp_fragment_number=not.is.null&order=stamp_fragment_number`);
+        checkpoints = await this.fetchSupabase<CheckpointWithFragment[]>(`route_checkpoints?route_id=eq.${routeId}&stamp_fragment_number=not.is.null&order=stamp_fragment_number`);
       } catch (e) {
         console.warn('⚠️ [getRouteProgress] Erro ao buscar checkpoints:', e);
         return null;
@@ -458,16 +531,16 @@ class PassportService {
       // Buscar stamps de duas formas:
       // 1. Por route_id (stamps novos)
       // 2. Por checkpoint_id IN (stamps antigos que podem não ter route_id)
-      let stamps: any[] = [];
+      let stamps: StampProgressData[] = [];
       try {
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:398',message:'Buscando passport_stamps',data:{userId,routeId,checkpointsCount:checkpoints?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
         // #endregion
         
         // Primeiro, tentar buscar por route_id
-        let stampsByRoute: any[] = [];
+        let stampsByRoute: StampProgressData[] = [];
         try {
-          stampsByRoute = await this.fetchSupabase(`passport_stamps?user_id=eq.${userId}&route_id=eq.${routeId}&select=checkpoint_id,stamped_at`);
+          stampsByRoute = await this.fetchSupabase<StampProgressData[]>(`passport_stamps?user_id=eq.${userId}&route_id=eq.${routeId}&select=checkpoint_id,stamped_at`);
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:400a',message:'Stamps por route_id',data:{stampsCount:stampsByRoute?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
           // #endregion
@@ -476,7 +549,7 @@ class PassportService {
         }
         
         // Segundo, buscar por checkpoint_id (para stamps antigos sem route_id)
-        let stampsByCheckpoint: any[] = [];
+        let stampsByCheckpoint: StampProgressData[] = [];
         const checkpointIds = checkpoints?.map(cp => cp.id) || [];
         if (checkpointIds.length > 0) {
           try {
@@ -486,7 +559,7 @@ class PassportService {
               .eq('user_id', userId)
               .in('checkpoint_id', checkpointIds);
             
-            stampsByCheckpoint = checkpointStamps || [];
+            stampsByCheckpoint = (checkpointStamps || []) as StampProgressData[];
             // #region agent log
             fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:400b',message:'Stamps por checkpoint_id',data:{stampsCount:stampsByCheckpoint?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
             // #endregion
@@ -741,7 +814,7 @@ class PassportService {
           }
 
           // Verificar resultado da validação
-          const result = validationResult as any;
+          const result = validationResult as ValidationResult | null;
           if (!result?.success) {
             return {
               success: false,
@@ -756,7 +829,7 @@ class PassportService {
 
           // Código válido! Continuar com check-in
           console.log('✅ Código do parceiro validado com sucesso');
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Erro inesperado ao validar código:', error);
           return {
             success: false,
@@ -911,13 +984,13 @@ class PassportService {
       // #endregion
 
       // Desbloquear recompensas se roteiro completo
-      let rewardsUnlocked: any[] = [];
+      let rewardsUnlocked: UnlockedReward[] = [];
       if (routeCompleted) {
         const { data: rewards } = await supabase.rpc('unlock_rewards', {
           p_user_id: userId,
           p_route_id: routeId,
         });
-        rewardsUnlocked = rewards || [];
+        rewardsUnlocked = (rewards || []) as UnlockedReward[];
       }
 
       return {
@@ -930,7 +1003,8 @@ class PassportService {
         route_completed: routeCompleted,
         rewards_unlocked: rewardsUnlocked.length > 0 ? rewardsUnlocked : undefined,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       console.error('Erro ao fazer check-in:', error);
       return {
         success: false,
@@ -939,7 +1013,7 @@ class PassportService {
         stamp_earned: false,
         points_earned: 0,
         route_completed: false,
-        error: error.message || 'Erro ao processar check-in',
+        error: err?.message || 'Erro ao processar check-in',
       };
     }
   }

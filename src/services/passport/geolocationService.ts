@@ -134,7 +134,8 @@ class GeolocationService {
         checkpoint_name: checkpoint.name,
         required_radius: requiredRadius,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       console.error('Erro ao validar proximidade:', error);
       return {
         valid: false,

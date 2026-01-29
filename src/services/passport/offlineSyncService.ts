@@ -1,7 +1,8 @@
 import { openDB, IDBPDatabase } from 'idb';
 import { supabase } from '@/integrations/supabase/client';
-import type { OfflineCheckin, OfflineSyncStatus } from '@/types/passportDigital';
+import type { OfflineCheckin, OfflineSyncStatus, RouteExtended, RouteCheckpointExtended } from '@/types/passportDigital';
 import { passportService } from './passportService';
+import type { JsonValue } from '@/types/common';
 
 const DB_NAME = 'passport-offline-db';
 const DB_VERSION = 1;
@@ -42,7 +43,7 @@ class OfflineSyncService {
     longitude: number,
     accuracy?: number,
     photoUrl?: string,
-    photoMetadata?: Record<string, any>,
+    photoMetadata?: Record<string, JsonValue>,
     partnerCodeInput?: string,
   ): Promise<string> {
     await this.initDb();
@@ -111,9 +112,10 @@ class OfflineSyncService {
           await this.markAsFailed(checkin.id, result.error || 'Erro desconhecido');
           failed++;
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { message?: string };
         console.error(`Erro ao sincronizar check-in ${checkin.id}:`, error);
-        await this.markAsFailed(checkin.id, error.message);
+        await this.markAsFailed(checkin.id, err?.message || 'Erro desconhecido');
         failed++;
       }
     }
@@ -209,7 +211,7 @@ class OfflineSyncService {
   /**
    * Cachear rota e checkpoints para uso offline
    */
-  async cacheRoute(routeId: string, routeData: any, checkpoints: any[]): Promise<void> {
+  async cacheRoute(routeId: string, routeData: RouteExtended, checkpoints: RouteCheckpointExtended[]): Promise<void> {
     await this.initDb();
     
     // Salvar no localStorage para acesso rápido
@@ -223,7 +225,7 @@ class OfflineSyncService {
   /**
    * Obter rota do cache
    */
-  async getCachedRoute(routeId: string): Promise<{ route: any; checkpoints: any[] } | null> {
+  async getCachedRoute(routeId: string): Promise<{ route: RouteExtended; checkpoints: RouteCheckpointExtended[] } | null> {
     const cached = localStorage.getItem(`passport_route_${routeId}`);
     if (!cached) return null;
 

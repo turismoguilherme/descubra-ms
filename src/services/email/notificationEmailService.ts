@@ -45,12 +45,13 @@ export async function sendNotificationEmail(params: SendEmailParams): Promise<{
       message: data?.message || 'Email enviado',
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log do erro mas não interrompe o fluxo - email é opcional
-    console.warn('Aviso: Erro no serviço de email (não crítico):', error.message);
+    const err = error as { message?: string };
+    console.warn('Aviso: Erro no serviço de email (não crítico):', err?.message);
     return {
       success: false,
-      error: error.message,
+      error: err?.message || 'Erro desconhecido',
     };
   }
 }

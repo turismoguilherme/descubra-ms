@@ -5,6 +5,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { seturValidationService } from './seturValidationService';
+import type {
+  OpeningHours,
+  AccessibilityFeatures,
+  CapacityDetails,
+  PaymentMethods,
+  Certifications,
+} from '@/types/common';
 
 export interface TourismAttraction {
   id: string;
@@ -23,7 +30,7 @@ export interface TourismAttraction {
   phone?: string;
   email?: string;
   website?: string;
-  opening_hours?: any; // JSONB
+  opening_hours?: OpeningHours; // JSONB
   price_range?: 'free' | 'low' | 'medium' | 'high';
   capacity?: number;
   amenities?: string[]; // JSONB
@@ -49,11 +56,11 @@ export interface TourismAttraction {
   responsible_cpf?: string;
   responsible_email?: string;
   responsible_phone?: string;
-  accessibility_features?: any; // JSONB
-  capacity_details?: any; // JSONB
-  payment_methods?: any; // JSONB
+  accessibility_features?: AccessibilityFeatures; // JSONB
+  capacity_details?: CapacityDetails; // JSONB
+  payment_methods?: PaymentMethods; // JSONB
   languages_spoken?: string[];
-  certifications?: any; // JSONB
+  certifications?: Certifications; // JSONB
   last_verified_date?: string;
   verification_status?: 'pending' | 'verified' | 'expired' | 'needs_update';
   data_completeness_score?: number;
@@ -161,9 +168,9 @@ export class InventoryService {
       console.error('❌ INVENTORYSERVICE: Erro ao buscar atrações:', error);
       console.error('❌ INVENTORYSERVICE: Detalhes do erro:', {
         message: error instanceof Error ? error.message : 'Erro desconhecido',
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint
+        code: (error as { code?: string })?.code,
+        details: (error as { details?: string })?.details,
+        hint: (error as { hint?: string })?.hint
       });
       return [];
     }
@@ -254,9 +261,9 @@ export class InventoryService {
       console.error('❌ INVENTORYSERVICE: Erro ao criar atração:', error);
       console.error('❌ INVENTORYSERVICE: Detalhes do erro:', {
         message: error instanceof Error ? error.message : 'Erro desconhecido',
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint
+        code: (error as { code?: string })?.code,
+        details: (error as { details?: string })?.details,
+        hint: (error as { hint?: string })?.hint
       });
       throw error;
     }
