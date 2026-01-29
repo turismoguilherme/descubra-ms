@@ -20,8 +20,10 @@ interface TeamMember {
 const Sobre = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeam, setLoadingTeam] = useState(true);
-  const [missao, setMissao] = useState<string>('');
-  const [visao, setVisao] = useState<string>('');
+  const [narrativa, setNarrativa] = useState<{ destaque: string; texto: string }>({
+    destaque: '',
+    texto: ''
+  });
 
   // Scroll para o topo quando a página carregar
   useEffect(() => {
@@ -40,8 +42,13 @@ const Sobre = () => {
       contents.forEach(item => {
         contentMap[item.content_key] = item.content_value || '';
       });
-      setMissao(contentMap['viajar_sobre_missao'] || 'Democratizar tecnologia de ponta para o setor turístico.');
-      setVisao(contentMap['viajar_sobre_visao'] || 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.');
+      
+      // Narrativa unificada
+      setNarrativa({
+        destaque: contentMap['viajar_sobre_destaque'] || 'Transformar dados turísticos em decisões estratégicas que geram impacto real.',
+        texto: contentMap['viajar_sobre_narrativa'] || 
+          'A ViajarTur existe para transformar dados turísticos em decisões estratégicas. Nosso propósito é estruturar o turismo como um sistema inteligente, integrado e orientado por evidências.\n\nNascemos da visão de que o turismo brasileiro merece ferramentas de gestão de excelência. Combinamos tecnologia de ponta, inteligência artificial e conhecimento profundo do setor para entregar soluções que realmente fazem diferença.\n\nNossa missão é democratizar o acesso à tecnologia turística, tornando-a acessível tanto para grandes destinos quanto para pequenas cidades que sonham em desenvolver seu potencial. Acreditamos que cada lugar tem uma história única para contar, e nossa plataforma ajuda a contá-la da melhor forma possível.'
+      });
     } catch (error) {
       console.error('Erro ao carregar conteúdo:', error);
     }
@@ -99,23 +106,26 @@ const Sobre = () => {
         </div>
       </section>
 
-      {/* Mission & Vision */}
+      {/* Narrativa - Texto Único */}
       <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Nossa Missão</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
-                {missao}
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Nossa Visão</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
-                {visao}
-              </p>
-            </div>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Frase de destaque */}
+          <blockquote className="text-center mb-12">
+            <p className="text-2xl md:text-3xl font-semibold text-foreground leading-relaxed italic">
+              "{narrativa.destaque}"
+            </p>
+          </blockquote>
+          
+          {/* Linha decorativa */}
+          <div className="flex justify-center mb-12">
+            <div className="w-24 h-1 bg-gradient-to-r from-viajar-cyan to-viajar-blue rounded-full" />
+          </div>
+          
+          {/* Texto narrativo */}
+          <div className="text-center">
+            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
+              {narrativa.texto}
+            </p>
           </div>
         </div>
       </section>
