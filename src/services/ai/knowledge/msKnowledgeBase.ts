@@ -144,7 +144,7 @@ export const MS_KNOWLEDGE_BASE: MSKnowledgeItem[] = [
 export function searchMSKnowledge(query: string, category?: string): MSKnowledgeItem[] {
   const searchTerm = query.toLowerCase();
   
-  let results = MS_KNOWLEDGE_BASE.filter(item => {
+  const results = MS_KNOWLEDGE_BASE.filter(item => {
     const matchesCategory = !category || item.category === category;
     const matchesSearch = 
       item.name.toLowerCase().includes(searchTerm) ||

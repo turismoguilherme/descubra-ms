@@ -216,8 +216,8 @@ const EmailDashboard: React.FC = () => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
       // Aplicar template com variáveis básicas substituídas
-      let subject = template.subject_template || '';
-      let body = template.body_template || '';
+      const subject = template.subject_template || '';
+      const body = template.body_template || '';
 
       // Substituir variáveis básicas (pode ser expandido depois)
       // Por enquanto, apenas aplicar o template como está

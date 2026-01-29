@@ -68,10 +68,10 @@ class GuataPartnersService {
     console.log('🤝 Guatá Partners: Processando pergunta...');
     console.log('📝 Query:', query.question);
 
-    let partnersFound: any[] = [];
+    const partnersFound: any[] = [];
     let partnerSuggestion: string | undefined;
     let partnerPriority = 0;
-    let nonPartnerAlternatives: any[] = [];
+    const nonPartnerAlternatives: any[] = [];
 
     // Carregar parceiros reais da tabela institutional_partners
     try {

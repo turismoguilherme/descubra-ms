@@ -136,7 +136,7 @@ export class PatternDetectionService {
    */
   private normalizeQuestion(question: string): string {
     // Remover pontuação
-    let normalized = question.replace(/[^\w\s]/g, ' ');
+    const normalized = question.replace(/[^\w\s]/g, ' ');
     
     // Remover palavras comuns
     const stopWords = [

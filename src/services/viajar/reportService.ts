@@ -293,7 +293,7 @@ export class ReportService {
    */
   private calculateNextDate(frequency: 'daily' | 'weekly' | 'monthly'): string {
     const today = new Date();
-    let nextDate = new Date();
+    const nextDate = new Date();
 
     switch (frequency) {
       case 'daily':

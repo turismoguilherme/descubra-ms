@@ -184,7 +184,7 @@ serve(async (req) => {
     // Configurar métodos de pagamento baseado na escolha
     // Nota: Para PIX e Boleto no Brasil, o Stripe usa payment_method_types específicos
     let paymentMethodTypes: string[] = [];
-    let paymentMethodOptions: any = {};
+    const paymentMethodOptions: any = {};
 
     switch (paymentMethod) {
       case 'card':

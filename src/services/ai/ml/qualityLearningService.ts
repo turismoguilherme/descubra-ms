@@ -119,7 +119,7 @@ export class QualityLearningService {
    */
   private extractPattern(question: string): string {
     // Normalizar pergunta: remover pontuação, converter para minúsculas
-    let pattern = question.toLowerCase()
+    const pattern = question.toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();

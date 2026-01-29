@@ -425,7 +425,7 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
   try {
     // Busca FTS com boost para MS/CG (sem filtro rígido)
     const searchTerms = question.toLowerCase().split(/\s+/).filter(term => term.length > 2).slice(0, 3)
-    let baseQuery = supabase
+    const baseQuery = supabase
       .from('document_chunks')
       .select('content, metadata, document_id, state_code')
     

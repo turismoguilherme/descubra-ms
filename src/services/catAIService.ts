@@ -182,7 +182,7 @@ class CATAIService {
 
   async getFrequentQuestions(category?: string): Promise<FrequentQuestion[]> {
     try {
-      let query = supabase
+      const query = supabase
         .from('knowledge_base_entries')
         .select('*')
         .eq('category', 'frequent_question')

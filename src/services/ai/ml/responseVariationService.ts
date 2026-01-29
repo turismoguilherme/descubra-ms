@@ -95,7 +95,7 @@ export class ResponseVariationService {
     const randomEnding = endings[Math.floor(Math.random() * endings.length)];
 
     // Remover início e fim originais se existirem
-    let content = baseResponse
+    const content = baseResponse
       .replace(/^🦦[^!]*!?\s*/i, '')
       .replace(/[.!?]$/, '');
 
