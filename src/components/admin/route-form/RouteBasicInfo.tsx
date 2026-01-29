@@ -18,7 +18,7 @@ interface RouteBasicInfoProps {
     video_url: string;
     is_active: boolean;
   };
-  onInputChange: (field: string, value: any) => void;
+  onInputChange: (field: string, value: unknown) => void;
   regions: string[];
 }
 

@@ -12,7 +12,7 @@ import { eventManagementService, EventManagementConfig } from '@/services/events
 export interface UseEventManagementReturn {
   // Status dos serviços
   isInitialized: boolean;
-  servicesStatus: any;
+  servicesStatus: unknown;
   
   // Controles
   initializeServices: () => Promise<void>;
@@ -22,7 +22,7 @@ export interface UseEventManagementReturn {
   processEventsWithAI: () => Promise<any>;
   
   // Configurações
-  updateServiceConfig: (service: 'cleanup' | 'googleCalendar' | 'geminiAI', config: any) => void;
+  updateServiceConfig: (service: 'cleanup' | 'googleCalendar' | 'geminiAI', config: unknown) => void;
   toggleService: (service: 'cleanup' | 'googleCalendar' | 'geminiAI', enabled: boolean) => void;
   
   // Diagnósticos
@@ -168,7 +168,7 @@ export const useEventManagement = (): UseEventManagementReturn => {
   }, []);
 
   // Atualizar configuração de serviço
-  const updateServiceConfig = useCallback((service: 'cleanup' | 'googleCalendar' | 'geminiAI', config: any) => {
+  const updateServiceConfig = useCallback((service: 'cleanup' | 'googleCalendar' | 'geminiAI', config: unknown) => {
     console.log(`🎯 HOOK: Atualizando configuração do serviço ${service}`);
     eventManagementService.updateServiceConfig(service, config);
     setServicesStatus(eventManagementService.getAllServicesStatus());

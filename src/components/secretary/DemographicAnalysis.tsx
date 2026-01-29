@@ -79,7 +79,7 @@ export default function DemographicAnalysis() {
       const purposeCounts: Record<string, number> = {};
       const preferenceCounts: Record<string, number> = {};
 
-      (profiles || []).forEach((profile: any) => {
+      (profiles || []).forEach((profile: unknown) => {
         // Tentar extrair dados de diferentes campos possíveis
         const age = profile.age_range || profile.age || null;
         const gender = profile.gender || null;
@@ -153,7 +153,7 @@ export default function DemographicAnalysis() {
       const questionTypeCounts: Record<string, number> = {};
       const motivationCounts: Record<string, number> = {};
 
-      (surveys || []).forEach((survey: any) => {
+      (surveys || []).forEach((survey: unknown) => {
         if (survey.tourist_origin) {
           originCounts[survey.tourist_origin] = (originCounts[survey.tourist_origin] || 0) + 1;
         }

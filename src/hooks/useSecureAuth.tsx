@@ -61,7 +61,7 @@ export const useSecureAuth = () => {
     try {
       await signOut();
       navigate("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro no logout:", error);
       toast({
         title: "Erro no logout",

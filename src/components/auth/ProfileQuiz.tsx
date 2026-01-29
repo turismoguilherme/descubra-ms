@@ -20,7 +20,7 @@ interface QuizQuestion {
 }
 
 interface ProfileQuizProps {
-  onQuizComplete: (result: any) => void;
+  onQuizComplete: (result: unknown) => void;
   onSkip: () => void;
 }
 

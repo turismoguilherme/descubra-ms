@@ -5,7 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 
 interface TourismHeatmapProps {
-  data?: any[];
+  data?: unknown[];
   showSource?: boolean;
   showConfidence?: boolean;
 }

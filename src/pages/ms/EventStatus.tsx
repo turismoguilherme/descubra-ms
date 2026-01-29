@@ -40,7 +40,7 @@ export default function EventStatus() {
         }
 
         setEvent(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao carregar evento:', err);
         setError(err.message || 'Erro ao carregar evento');
       } finally {

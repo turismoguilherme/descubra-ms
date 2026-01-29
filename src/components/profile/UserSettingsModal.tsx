@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,7 @@ interface UserSettingsModalProps {
     email: string;
     avatar_url?: string;
   };
-  onProfileUpdate?: (updatedProfile: any) => void;
+  onProfileUpdate?: (updatedProfile: { id: string; full_name: string; email: string; avatar_url?: string }) => void;
 }
 
 const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
@@ -93,10 +93,11 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
       if (onProfileUpdate) {
         onProfileUpdate({ ...userProfile, ...profileData });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro",
-        description: error.message || "Erro ao atualizar perfil",
+        description: err.message || "Erro ao atualizar perfil",
         variant: "destructive"
       });
     } finally {
@@ -151,10 +152,11 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
         newPassword: '',
         confirmPassword: ''
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro",
-        description: error.message || "Erro ao alterar senha",
+        description: err.message || "Erro ao alterar senha",
         variant: "destructive"
       });
     } finally {
@@ -187,10 +189,11 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
       });
 
       setResetEmail('');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro",
-        description: error.message || "Erro ao enviar email de recuperação",
+        description: err.message || "Erro ao enviar email de recuperação",
         variant: "destructive"
       });
     } finally {
@@ -212,7 +215,8 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
       });
       
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro",
         description: "Erro ao excluir conta. Entre em contato com o suporte.",

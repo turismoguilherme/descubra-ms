@@ -31,7 +31,7 @@ export const formSchema = z.object({
 interface UserDialogProps {
   isDialogOpen: boolean;
   setIsDialogOpen: (isOpen: boolean) => void;
-  editingUser: any;
+  editingUser: unknown;
   form: UseFormReturn<z.infer<typeof formSchema>>;
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   openNewUserDialog: () => void;

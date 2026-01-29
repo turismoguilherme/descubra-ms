@@ -357,7 +357,7 @@ export default function EventsManagement() {
       const isPaid = paymentStatus === 'paid';
       
       // Atualizar evento: tornar visível e marcar como aprovado
-      const updateData: any = {
+      const updateData: unknown = {
         is_visible: true,
         approval_status: 'approved',
         updated_at: new Date().toISOString(),
@@ -532,7 +532,7 @@ export default function EventsManagement() {
               description: 'O pagamento foi reembolsado automaticamente.',
             });
           }
-        } catch (refundErr: any) {
+        } catch (refundErr: unknown) {
           console.error('Erro ao chamar função de reembolso:', refundErr);
           toast({
             title: 'Aviso',
@@ -543,7 +543,7 @@ export default function EventsManagement() {
       }
 
       // Marcar como rejeitado - atualizar apenas campos que existem na tabela
-      const updateData: any = {
+      const updateData: unknown = {
         is_visible: false,
         updated_at: new Date().toISOString(),
       };
@@ -755,7 +755,7 @@ export default function EventsManagement() {
               description: 'O pagamento foi reembolsado antes da exclusão.',
             });
           }
-        } catch (refundErr: any) {
+        } catch (refundErr: unknown) {
           // #region agent log
           fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:refund-exception',message:'Refund exception caught',data:{errorMessage:refundErr?.message,errorName:refundErr?.name,errorStack:refundErr?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
           // #endregion
@@ -903,7 +903,7 @@ export default function EventsManagement() {
       }
 
       // Campos básicos que sempre existem (campos essenciais)
-      let updateData: any = {};
+      let updateData: unknown = {};
 
       // Usar nomes de campos baseados na estrutura real da tabela descoberta
       // Usar campos baseados na estrutura real da tabela descoberta via debug
@@ -970,7 +970,7 @@ export default function EventsManagement() {
             .eq('event_id', editingEvent.id)
             .single();
 
-          const detailsData: any = {
+          const detailsData: unknown = {
             event_id: editingEvent.id,
             updated_at: new Date().toISOString()
           };

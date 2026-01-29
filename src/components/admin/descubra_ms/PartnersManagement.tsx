@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,8 +68,9 @@ export default function PartnersManagement() {
 
       if (error) throw error;
       setPartners(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar parceiros:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar parceiros:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os parceiros',
@@ -111,7 +112,7 @@ export default function PartnersManagement() {
       }
 
       // Atualizar parceiro: aprovar + ativar assinatura manualmente
-      const updateData: any = {
+      const updateData: unknown = {
         status: 'approved',
         is_active: true,
         subscription_status: 'active', // Ativar assinatura sem pagamento
@@ -173,11 +174,12 @@ export default function PartnersManagement() {
       // Atualizar lista
       loadPartners();
       setSelectedPartner(null);
-    } catch (error: any) {
-      console.error('Erro ao dar baixa manual:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao dar baixa manual:', err);
       toast({
         title: 'Erro ao dar baixa manual',
-        description: error.message || 'Não foi possível liberar acesso. Tente novamente.',
+        description: err.message || 'Não foi possível liberar acesso. Tente novamente.',
         variant: 'destructive',
       });
     }
@@ -199,7 +201,7 @@ export default function PartnersManagement() {
 
       console.log(`🔄 [PartnersManagement] Atualizando parceiro ${partnerId} para status: ${status}`);
       
-      const updateData: any = {
+      const updateData: unknown = {
         status,
         is_active: status === 'approved',
         updated_at: new Date().toISOString(),
@@ -286,10 +288,11 @@ export default function PartnersManagement() {
       
       // Recarregar lista completa do banco para garantir sincronização
       await loadPartners();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -311,10 +314,11 @@ export default function PartnersManagement() {
         description: 'O parceiro foi removido permanentemente.',
       });
       loadPartners();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }

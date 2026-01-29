@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Platform Metrics Editor
  * Permite editar métricas públicas da plataforma (override manual)
  */
@@ -55,8 +55,9 @@ export default function PlatformMetricsEditor() {
       // Carregar também as métricas automáticas para comparação
       const auto = await platformMetricsService.calculateAutoMetrics();
       setAutoMetrics(auto);
-    } catch (error: any) {
-      console.error('Erro ao carregar métricas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar métricas:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar métricas',
@@ -76,11 +77,12 @@ export default function PlatformMetricsEditor() {
         title: 'Sucesso',
         description: 'Métricas salvas com sucesso!',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar métricas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar métricas:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar métricas',
+        description: err.message || 'Erro ao salvar métricas',
         variant: 'destructive',
       });
     } finally {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,11 +161,12 @@ export default function EventSubmissionForm() {
 
       // Atualizar lista
       await fetchSubmittedEvents();
-    } catch (error: any) {
-      console.error('Erro ao enviar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar evento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao enviar evento',
+        description: err.message || 'Erro ao enviar evento',
         variant: 'destructive',
       });
     } finally {

@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,10 +30,11 @@ export default function FallbackConfig() {
     try {
       const data = await fallbackService.getFallbackConfig('descubra_ms');
       setConfig(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar configuração',
+        description: err.message || 'Erro ao carregar configuração',
         variant: 'destructive',
       });
     } finally {
@@ -52,8 +53,9 @@ export default function FallbackConfig() {
         });
         fetchConfig();
       }
-    } catch (error: any) {
-      console.error('Erro ao verificar saúde do sistema:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao verificar saúde do sistema:', err);
     } finally {
       setChecking(false);
     }
@@ -71,10 +73,11 @@ export default function FallbackConfig() {
         redirect_url: config.redirect_url,
       });
       toast({ title: 'Sucesso', description: 'Configuração salva com sucesso' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar configuração',
+        description: err.message || 'Erro ao salvar configuração',
         variant: 'destructive',
       });
     } finally {

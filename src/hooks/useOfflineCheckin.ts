@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { offlineSyncService } from '@/services/passport/offlineSyncService';
 import type { OfflineSyncStatus, OfflineCheckin } from '@/types/passportDigital';
@@ -44,8 +44,9 @@ export const useOfflineCheckin = () => {
       }
 
       return result;
-    } catch (error: any) {
-      console.error('Erro ao sincronizar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao sincronizar:', err);
       throw error;
     } finally {
       setStatus(prev => ({ ...prev, syncing: false }));

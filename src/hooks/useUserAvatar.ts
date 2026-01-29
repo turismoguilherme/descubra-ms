@@ -78,7 +78,7 @@ export function useUserAvatar() {
         fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUserAvatar.ts:loadAvatar',message:'Avatar carregado com sucesso',data:{hasAvatarUrl:!!finalAvatarUrl,fromPantanal:!!avatar?.image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
         // #endregion
         setAvatarUrl(finalAvatarUrl);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erro geral ao carregar avatar:', error);
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUserAvatar.ts:loadAvatar',message:'Erro geral',data:{error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});

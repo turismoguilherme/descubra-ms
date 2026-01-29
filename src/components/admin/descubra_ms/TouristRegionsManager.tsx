@@ -528,7 +528,7 @@ export default function TouristRegionsManager() {
     return uploadedUrls;
   };
 
-  const handleEditCity = (cityName: string, cityData: any) => {
+  const handleEditCity = (cityName: string, cityData: unknown) => {
     setEditingCity(cityName);
     if (cityData) {
       setCityFormData({
@@ -591,12 +591,12 @@ export default function TouristRegionsManager() {
       }
 
       // Processar social links
-      const socialLinks: any = {};
+      const socialLinks: unknown = {};
       if (cityFormData.social_instagram) socialLinks.instagram = cityFormData.social_instagram;
       if (cityFormData.social_facebook) socialLinks.facebook = cityFormData.social_facebook;
       if (cityFormData.social_youtube) socialLinks.youtube = cityFormData.social_youtube;
 
-      const cityPayload: any = {
+      const cityPayload: unknown = {
         tourist_region_id: regionId,
         city_name: cityName,
         description: cityFormData.description?.trim() || null,

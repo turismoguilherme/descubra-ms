@@ -4,7 +4,7 @@ import KodaChatMessages from "./KodaChatMessages";
 import KodaChatInput from "./KodaChatInput";
 
 interface KodaChatProps {
-  messages: any[];
+  messages: unknown[];
   inputMessage: string;
   setInputMessage: (message: string) => void;
   sendMessage: () => void;

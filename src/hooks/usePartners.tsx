@@ -55,7 +55,7 @@ export const usePartners = (status?: string) => {
       const data = await response.json();
       console.log("📦 usePartners: Data:", data);
       
-      const mapped = (data || []).map((item: any) => ({
+      const mapped = (data || []).map((item: unknown) => ({
     id: item.id,
     name: item.name,
     description: item.description,
@@ -78,7 +78,7 @@ export const usePartners = (status?: string) => {
       setPartners(mapped);
       setError(null);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("💥 usePartners: Erro:", err);
       setError(err);
       setPartners([]);

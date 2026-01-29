@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { achievementService } from '@/services/achievementService';
@@ -20,8 +20,9 @@ export const useGameification = () => {
     try {
       const userStats = await achievementService.getUserStats(user.id);
       setStats(userStats);
-    } catch (error: any) {
-      console.error('Erro ao buscar estatísticas do usuário:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar estatísticas do usuário:', err);
       // Se as tabelas não existirem, usar valores padrão ao invés de mostrar erro
       if (error?.code === '42P01' || error?.message?.includes('does not exist') || error?.message?.includes('não existe')) {
         console.warn('Tabelas de gamificação não existem. Usando valores padrão.');

@@ -53,7 +53,7 @@ export const RegionsOverview: React.FC<RegionsOverviewProps> = ({
     return matchesType && matchesSeason;
   });
 
-  const handleRegionClick = (region: any) => {
+  const handleRegionClick = (region: unknown) => {
     if (onRegionSelect) {
       onRegionSelect(region as MSRegion);
     }

@@ -134,7 +134,7 @@ const LoginForm = () => {
         });
         navigate(redirectPath);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("❌ Erro no formulário:", err);
       toast({
         title: "Erro no login",

@@ -50,7 +50,7 @@ const EventosDestaqueSection = () => {
 
       console.log("Eventos encontrados:", data?.length || 0);
 
-      const eventsList: EventItem[] = (data || []).map((event: any) => ({
+      const eventsList: EventItem[] = (data || []).map((event: unknown) => ({
         id: event.id,
         name: event.name || '',
         description: event.description || '',

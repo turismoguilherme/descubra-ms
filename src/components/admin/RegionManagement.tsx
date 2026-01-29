@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,11 +145,12 @@ const RegionManagement: React.FC<RegionManagementProps> = ({ userRegion }) => {
       setShowForm(false);
       setEditingRegion(null);
       loadRegions();
-    } catch (error: any) {
-      console.error('Erro ao salvar região:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar região:', err);
       toast({
         title: "❌ Erro ao salvar",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     }
@@ -173,11 +174,12 @@ const RegionManagement: React.FC<RegionManagementProps> = ({ userRegion }) => {
       });
 
       loadRegions();
-    } catch (error: any) {
-      console.error('Erro ao alterar status:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar status:', err);
       toast({
         title: "❌ Erro",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     }
@@ -202,11 +204,12 @@ const RegionManagement: React.FC<RegionManagementProps> = ({ userRegion }) => {
       });
 
       loadRegions();
-    } catch (error: any) {
-      console.error('Erro ao excluir região:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao excluir região:', err);
       toast({
         title: "❌ Erro ao excluir",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     }

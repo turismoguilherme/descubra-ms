@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tourist Service Registration Component
  * Componente para registro rápido de atendimentos presenciais aos turistas
  */
@@ -110,11 +110,12 @@ const TouristServiceRegistration: React.FC<TouristServiceRegistrationProps> = ({
 
       // Recarregar lista
       await loadTodayServices();
-    } catch (error: any) {
-      console.error('Erro ao registrar atendimento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao registrar atendimento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível registrar o atendimento',
+        description: err.message || 'Não foi possível registrar o atendimento',
         variant: 'destructive',
       });
     } finally {

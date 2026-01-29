@@ -118,7 +118,7 @@ const UserDataManager = () => {
   });
 
   // Simulate temporary disabling a user account
-  const handleTemporaryDisable = (user: any) => {
+  const handleTemporaryDisable = (user: unknown) => {
     setSelectedUser(user);
     setDisableDialogOpen(true);
   };
@@ -131,7 +131,7 @@ const UserDataManager = () => {
   };
 
   // Simulate requesting account deletion
-  const handleDeleteRequest = (user: any) => {
+  const handleDeleteRequest = (user: unknown) => {
     setSelectedUser(user);
     setDeleteDialogOpen(true);
   };

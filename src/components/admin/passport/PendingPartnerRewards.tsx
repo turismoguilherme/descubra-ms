@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /**
  * PendingPartnerRewards
  * Exibe recompensas cadastradas por parceiros aguardando aprovação
@@ -88,8 +88,9 @@ export default function PendingPartnerRewards() {
 
       if (routesError) throw routesError;
       setRoutes(routesData || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar dados:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar dados:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar as recompensas pendentes',
@@ -132,11 +133,12 @@ export default function PendingPartnerRewards() {
         description: 'A recompensa agora aparecerá no Passaporte Digital',
       });
       loadData();
-    } catch (error: any) {
-      console.error('Erro ao aprovar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao aprovar:', err);
       toast({
         title: 'Erro ao aprovar',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -173,11 +175,12 @@ export default function PendingPartnerRewards() {
         description: 'O parceiro será notificado',
       });
       loadData();
-    } catch (error: any) {
-      console.error('Erro ao rejeitar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao rejeitar:', err);
       toast({
         title: 'Erro ao rejeitar',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {

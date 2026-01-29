@@ -16,7 +16,7 @@ interface KodaChatInputProps {
   isLoading: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onClearConversation?: () => void;
-  messages: any[];
+  messages: unknown[];
 }
 
 const KodaChatInput = ({

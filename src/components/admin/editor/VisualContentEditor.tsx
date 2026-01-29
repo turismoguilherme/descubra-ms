@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -220,7 +220,7 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
             setOriginalContent(defaultContent);
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Se a tabela não existe ou erro, usar localStorage como fallback
         const key = getStorageKey(platform, selectedPage, selectedSection);
         const saved = localStorage.getItem(key);
@@ -241,8 +241,9 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
           setOriginalContent(defaultContent);
         }
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar conteúdo:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar conteúdo:', err);
       toast({
         title: 'Erro ao carregar',
         description: 'Não foi possível carregar o conteúdo. Usando valores padrão.',
@@ -299,7 +300,7 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
     return defaults;
   };
 
-  const updateContent = (field: string, value: any) => {
+  const updateContent = (field: string, value: unknown) => {
     const newContent = { ...content, [field]: value };
     setContent(newContent);
     setHasChanges(JSON.stringify(newContent) !== JSON.stringify(originalContent));
@@ -352,8 +353,9 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
         title: 'Conteúdo salvo!',
         description: 'As alterações foram salvas e publicadas com sucesso.',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar:', err);
       
       // Fallback para localStorage se o banco falhar
       try {

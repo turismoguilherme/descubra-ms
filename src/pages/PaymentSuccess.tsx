@@ -61,7 +61,7 @@ export default function PaymentSuccess() {
           title: "Pagamento confirmado!",
           description: "Sua assinatura está sendo processada. Você receberá um e-mail de confirmação em breve.",
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao verificar pagamento:', err);
         setError(err.message || 'Erro ao verificar pagamento');
         toast({

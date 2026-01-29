@@ -81,7 +81,7 @@ export const useProfileForm = () => {
       showToast("Perfil criado!", "Bem-vindo ao sistema de turismo de MS!");
       navigate("/");
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao salvar perfil:", error);
       showToast("Erro", "Erro ao criar perfil. Tente novamente.", "destructive");
     } finally {

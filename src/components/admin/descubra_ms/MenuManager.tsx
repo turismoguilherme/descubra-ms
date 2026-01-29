@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,10 +34,11 @@ export default function MenuManager() {
       
       if (error) throw error;
       setMenus((data || []) as DynamicMenu[]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar menus',
+        description: err.message || 'Erro ao carregar menus',
         variant: 'destructive',
       });
     } finally {
@@ -55,10 +56,11 @@ export default function MenuManager() {
       if (error) throw error;
       fetchMenus();
       toast({ title: 'Sucesso', description: 'Menu atualizado' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar menu',
+        description: err.message || 'Erro ao atualizar menu',
         variant: 'destructive',
       });
     }
@@ -76,10 +78,11 @@ export default function MenuManager() {
       if (error) throw error;
       fetchMenus();
       toast({ title: 'Sucesso', description: 'Item excluído' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir menu',
+        description: err.message || 'Erro ao excluir menu',
         variant: 'destructive',
       });
     }
@@ -129,10 +132,11 @@ export default function MenuManager() {
           .eq('id', menu.id);
       }
       toast({ title: 'Sucesso', description: 'Ordem dos menus atualizada' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar ordem',
+        description: err.message || 'Erro ao atualizar ordem',
         variant: 'destructive',
       });
       fetchMenus(); // Reverter em caso de erro
@@ -277,10 +281,11 @@ function MenuForm({ menu, onSuccess }: { menu: DynamicMenu | null; onSuccess: ()
         toast({ title: 'Sucesso', description: 'Item criado com sucesso' });
       }
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar item',
+        description: err.message || 'Erro ao salvar item',
         variant: 'destructive',
       });
     } finally {

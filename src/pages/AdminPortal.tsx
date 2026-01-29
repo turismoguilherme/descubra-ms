@@ -226,7 +226,7 @@ const DefaultDashboard = () => {
 };
 
 // Componente de erro para capturar problemas
-const ErrorDashboard = ({ error }: { error: any }) => {
+const ErrorDashboard = ({ error }: { error: unknown }) => {
   return (
     <div className="min-h-screen bg-background">
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8">

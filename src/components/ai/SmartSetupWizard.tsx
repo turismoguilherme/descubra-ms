@@ -47,7 +47,7 @@ interface SmartSetupWizardProps {
     };
     description?: string;
   };
-  onComplete: (result: any) => void;
+  onComplete: (result: unknown) => void;
   onCancel: () => void;
   className?: string;
 }

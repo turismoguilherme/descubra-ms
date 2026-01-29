@@ -74,7 +74,7 @@ export default function EventPaymentReturn() {
         const successUrl = `${returnDomain}/descubrams/eventos/payment-success?session_id=${sessionId}`;
         window.location.href = successUrl;
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao processar retorno do pagamento:', err);
         setError(err.message || 'Erro ao processar pagamento');
         setLoading(false);

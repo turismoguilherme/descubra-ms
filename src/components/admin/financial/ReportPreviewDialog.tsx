@@ -10,7 +10,7 @@ interface ReportPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  reportData: any;
+  reportData: unknown;
   onDownload: () => void;
   type: 'dre' | 'cashflow' | 'profit';
 }
@@ -140,7 +140,7 @@ export function ReportPreviewDialog({
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.months?.map((month: any, idx: number) => (
+                      {reportData.months?.map((month: unknown, idx: number) => (
                         <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : ''}>
                           <td className="border p-2">{month.month}</td>
                           <td className="border p-2 text-right text-green-600 font-semibold">
@@ -213,7 +213,7 @@ export function ReportPreviewDialog({
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.months?.map((month: any, idx: number) => (
+                      {reportData.months?.map((month: unknown, idx: number) => (
                         <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : ''}>
                           <td className="border p-2">{month.month}</td>
                           <td className="border p-2 text-right">{formatCurrency(month.revenue)}</td>

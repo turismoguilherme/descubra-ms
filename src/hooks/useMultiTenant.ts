@@ -66,7 +66,7 @@ export const useMultiTenant = () => {
             logger.warn("⚠️ useMultiTenant: Tenant não encontrado ou inativo no DB.");
             setError(`Tenant '${detectedTenantCode}' não encontrado ou inativo.`);
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           logger.error("❌ useMultiTenant: Erro inesperado ao buscar configuração do tenant:", err);
           setError(err.message);
         } finally {

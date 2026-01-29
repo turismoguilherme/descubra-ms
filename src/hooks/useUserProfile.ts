@@ -73,7 +73,7 @@ export const useUserProfile = () => {
         } else {
           setProfile(data as UserProfileData | null);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao carregar perfil:', err);
         setError(err.message || 'Erro desconhecido');
         setProfile(null);

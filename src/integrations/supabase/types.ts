@@ -6318,6 +6318,58 @@ export type Database = {
           },
         ]
       }
+      user_avatars: {
+        Row: {
+          id: string
+          user_id: string
+          avatar_id: string
+          route_id: string | null
+          unlocked_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          avatar_id: string
+          route_id?: string | null
+          unlocked_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          avatar_id?: string
+          route_id?: string | null
+          unlocked_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_avatars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_avatars_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "pantanal_avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_avatars_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           city_id: string | null
@@ -6872,6 +6924,14 @@ export type Database = {
         Returns: {
           reward_id: string
           voucher_code: string
+        }[]
+      }
+      unlock_route_avatars: {
+        Args: { p_user_id: string; p_route_id: string }
+        Returns: {
+          avatar_id: string
+          avatar_name: string
+          rarity: string
         }[]
       }
       update_user_points: {

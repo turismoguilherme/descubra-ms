@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,8 +45,9 @@ const PassportGlobalSettings: React.FC = () => {
           setWallpaperPreview(url);
         }
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar wallpaper:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar wallpaper:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar a configuração do wallpaper.',
@@ -115,11 +116,12 @@ const PassportGlobalSettings: React.FC = () => {
         .getPublicUrl(fileName);
 
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('Erro no upload do wallpaper:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload do wallpaper:', err);
       toast({
         title: 'Erro no upload',
-        description: `Erro ao fazer upload do wallpaper: ${error.message}`,
+        description: `Erro ao fazer upload do wallpaper: ${err.message}`,
         variant: 'destructive',
       });
       return wallpaperUrl || null;
@@ -171,11 +173,12 @@ const PassportGlobalSettings: React.FC = () => {
         setWallpaperUrl(finalWallpaperUrl);
         setWallpaperPreview(finalWallpaperUrl);
       }
-    } catch (error: any) {
-      console.error('Erro ao salvar wallpaper:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar wallpaper:', err);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar a configuração.',
+        description: err.message || 'Não foi possível salvar a configuração.',
         variant: 'destructive',
       });
     } finally {
@@ -293,7 +296,8 @@ const PassportGlobalSettings: React.FC = () => {
                     title: 'Wallpaper removido',
                     description: 'O wallpaper global foi removido. Será usado o gradiente padrão.',
                   });
-                } catch (error: any) {
+                } catch (error: unknown) {
+                  const err = error instanceof Error ? error : new Error(String(error));
                   toast({
                     title: 'Erro',
                     description: 'Não foi possível remover o wallpaper.',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,10 +104,11 @@ const CATLocationManager = () => {
 
       if (error) throw error;
       setCATs((data || []) as CAT[]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao carregar CATs',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -213,10 +214,11 @@ const CATLocationManager = () => {
 
       setIsDialogOpen(false);
       loadCATs();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro",
-        description: error.message || 'Erro ao salvar CAT',
+        description: err.message || 'Erro ao salvar CAT',
         variant: 'destructive',
       });
     }
@@ -239,10 +241,11 @@ const CATLocationManager = () => {
       });
 
       loadCATs();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro",
-        description: error.message || 'Erro ao excluir CAT',
+        description: err.message || 'Erro ao excluir CAT',
         variant: 'destructive',
       });
     }

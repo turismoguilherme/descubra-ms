@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,10 +21,11 @@ export default function AIActionsQueue() {
     try {
       const data = await aiAdminService.getActions();
       setActions((data || []) as AIAdminAction[]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar ações',
+        description: err.message || 'Erro ao carregar ações',
         variant: 'destructive',
       });
     } finally {
@@ -46,10 +47,11 @@ export default function AIActionsQueue() {
         toast({ title: 'Sucesso', description: 'Ação aprovada' });
         fetchActions();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao aprovar ação',
+        description: err.message || 'Erro ao aprovar ação',
         variant: 'destructive',
       });
     }
@@ -60,10 +62,11 @@ export default function AIActionsQueue() {
       await aiAdminService.executeAction(id);
       toast({ title: 'Sucesso', description: 'Ação executada' });
       fetchActions();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao executar ação',
+        description: err.message || 'Erro ao executar ação',
         variant: 'destructive',
       });
     }
@@ -74,10 +77,11 @@ export default function AIActionsQueue() {
       await aiAdminService.rejectAction(id);
       toast({ title: 'Sucesso', description: 'Ação rejeitada' });
       fetchActions();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao rejeitar ação',
+        description: err.message || 'Erro ao rejeitar ação',
         variant: 'destructive',
       });
     }

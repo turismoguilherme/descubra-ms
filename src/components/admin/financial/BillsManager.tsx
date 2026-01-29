@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,11 +49,12 @@ export default function BillsManager() {
 
       if (error) throw error;
       setBills((data || []) as Bill[]);
-    } catch (error: any) {
-      console.error('Erro ao buscar contas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar contas:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar contas',
+        description: err.message || 'Erro ao carregar contas',
         variant: 'destructive',
       });
     } finally {
@@ -101,10 +102,11 @@ export default function BillsManager() {
         notes: '',
       });
       fetchBills();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar conta',
+        description: err.message || 'Erro ao salvar conta',
         variant: 'destructive',
       });
     }
@@ -122,10 +124,11 @@ export default function BillsManager() {
       if (error) throw error;
       toast({ title: 'Sucesso', description: 'Conta excluída com sucesso' });
       fetchBills();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir conta',
+        description: err.message || 'Erro ao excluir conta',
         variant: 'destructive',
       });
     }

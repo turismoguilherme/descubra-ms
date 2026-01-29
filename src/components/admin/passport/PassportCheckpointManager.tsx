@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,10 +95,11 @@ const PassportCheckpointManager: React.FC = () => {
       }
       console.log('✅ [PassportCheckpointManager] Rotas carregadas:', data?.length || 0);
       setRoutes(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportCheckpointManager] Erro completo ao carregar rotas:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
       });
@@ -128,8 +129,9 @@ const PassportCheckpointManager: React.FC = () => {
       }
       console.log('✅ [PassportCheckpointManager] Parceiros carregados:', data?.length || 0);
       setPartners(data || []);
-    } catch (error: any) {
-      console.error('❌ [PassportCheckpointManager] Erro ao carregar parceiros:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [PassportCheckpointManager] Erro ao carregar parceiros:', err);
     }
   };
 
@@ -156,10 +158,11 @@ const PassportCheckpointManager: React.FC = () => {
       console.log('✅ [PassportCheckpointManager] Checkpoints carregados:', data?.length || 0);
       console.log('🔵 [PassportCheckpointManager] Dados dos checkpoints:', data);
       setCheckpoints(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportCheckpointManager] Erro completo ao carregar checkpoints:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
       });
@@ -310,10 +313,11 @@ const PassportCheckpointManager: React.FC = () => {
       console.log('🔵 [PassportCheckpointManager] Recarregando checkpoints...');
       await loadCheckpoints();
       console.log('✅ [PassportCheckpointManager] Processo completo finalizado');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportCheckpointManager] Erro completo ao criar checkpoint:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -331,7 +335,7 @@ const PassportCheckpointManager: React.FC = () => {
     }
   };
 
-  const handleEditCheckpoint = (checkpoint: any) => {
+  const handleEditCheckpoint = (checkpoint: { id: string; name?: string; description?: string; [key: string]: unknown }) => {
     console.log('🔵 [PassportCheckpointManager] ========== handleEditCheckpoint ==========');
     console.log('🔵 [PassportCheckpointManager] Checkpoint selecionado:', checkpoint);
     setEditingCheckpoint(checkpoint.id);
@@ -370,10 +374,11 @@ const PassportCheckpointManager: React.FC = () => {
       });
       setEditingCheckpoint(null);
       loadCheckpoints();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportCheckpointManager] Erro completo ao atualizar checkpoint:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -412,10 +417,11 @@ const PassportCheckpointManager: React.FC = () => {
         title: 'Checkpoint excluído',
       });
       loadCheckpoints();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportCheckpointManager] Erro completo ao excluir checkpoint:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -433,8 +439,9 @@ const PassportCheckpointManager: React.FC = () => {
       const { data, error } = await supabase.rpc('generate_partner_code');
       if (error) throw error;
       return data || 'MS-0000';
-    } catch (error: any) {
-      console.error('Erro ao gerar código:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar código:', err);
       // Fallback para geração local
       const prefix = 'MS';
       const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
@@ -625,7 +632,7 @@ const PassportCheckpointManager: React.FC = () => {
                         </div>
                       <Select
                         value={newCheckpointForm.validation_mode}
-                        onValueChange={(v: any) =>
+                        onValueChange={(v: 'geofence' | 'code' | 'mixed') =>
                           setNewCheckpointForm({ ...newCheckpointForm, validation_mode: v })
                         }
                       >
@@ -971,7 +978,7 @@ const PassportCheckpointManager: React.FC = () => {
                               <Label>Tipo de Validação</Label>
                               <Select
                                 value={editCheckpointForm.validation_mode}
-                                onValueChange={(v: any) =>
+                                onValueChange={(v: 'geofence' | 'code' | 'mixed') =>
                                   setEditCheckpointForm({
                                     ...editCheckpointForm,
                                     validation_mode: v,

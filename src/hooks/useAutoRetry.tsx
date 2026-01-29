@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+﻿import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface RetryOptions {
@@ -15,8 +15,8 @@ export const useAutoRetry = (options: RetryOptions = {}) => {
 
   const executeWithRetry = useCallback(async (
     action: () => Promise<any>,
-    onSuccess?: (result: any) => void,
-    onError?: (error: any) => void
+    onSuccess?: (result: unknown) => void,
+    onError?: (error: unknown) => void
   ) => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -30,7 +30,7 @@ export const useAutoRetry = (options: RetryOptions = {}) => {
         setRetryCount(0);
         setIsRetrying(false);
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         setRetryCount(attempt + 1);
         
         if (attempt < maxRetries) {

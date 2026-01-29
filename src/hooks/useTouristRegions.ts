@@ -18,7 +18,7 @@ export interface TouristRegion {
 
 // Converter região do banco para formato esperado pelo componente
 // CRÍTICO: Usar slug como id para consistência com paths SVG
-const convertDbRegionToComponent = (dbRegion: any): TouristRegion2025 => {
+const convertDbRegionToComponent = (dbRegion: Record<string, unknown>): TouristRegion2025 => {
   return {
     id: dbRegion.slug, // Usar slug como id para consistência com paths SVG
     name: dbRegion.name,

@@ -356,7 +356,7 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
     }
   };
 
-  const handleAnswer = async (questionId: string, answer: any) => {
+  const handleAnswer = async (questionId: string, answer: unknown) => {
     const newAnswers = { ...answers, [questionId]: answer };
     setAnswers(newAnswers);
 
@@ -426,7 +426,7 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
     }
   };
 
-  const handleFollowUpAnswer = (questionId: string, answer: any) => {
+  const handleFollowUpAnswer = (questionId: string, answer: unknown) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 

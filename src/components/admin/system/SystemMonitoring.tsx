@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -149,10 +149,11 @@ export default function SystemMonitoring() {
         totalRequests: 0,
         uptime: uptimeData as number,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao verificar status',
+        description: err.message || 'Erro ao verificar status',
         variant: 'destructive',
       });
     } finally {

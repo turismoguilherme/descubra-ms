@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -86,8 +86,9 @@ const AttendantManager: React.FC = () => {
       })) || [];
 
       setAttendants(formattedAttendants);
-    } catch (error: any) {
-      console.error('Erro ao buscar atendentes:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar atendentes:', err);
       toast({
         title: "Erro",
         description: "Erro ao carregar atendentes.",
@@ -107,8 +108,9 @@ const AttendantManager: React.FC = () => {
 
       if (error) throw error;
       setCities(data || []);
-    } catch (error: any) {
-      console.error('Erro ao buscar cidades:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar cidades:', err);
     }
   };
 
@@ -154,8 +156,9 @@ const AttendantManager: React.FC = () => {
       });
       
       fetchAttendants();
-    } catch (error: any) {
-      console.error('Erro ao criar atendente:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar atendente:', err);
       toast({
         title: "Erro",
         description: "Erro ao criar atendente.",
@@ -185,8 +188,9 @@ const AttendantManager: React.FC = () => {
       });
 
       fetchAttendants();
-    } catch (error: any) {
-      console.error('Erro ao alterar status:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar status:', err);
       toast({
         title: "Erro",
         description: "Erro ao alterar status do atendente.",

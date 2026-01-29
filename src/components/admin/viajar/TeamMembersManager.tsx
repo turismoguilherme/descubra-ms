@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,10 +69,11 @@ export default function TeamMembersManager() {
 
       if (error) throw error;
       setMembers(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar membros',
+        description: err.message || 'Erro ao carregar membros',
         variant: 'destructive',
       });
     } finally {
@@ -122,7 +123,7 @@ export default function TeamMembersManager() {
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:115',message:'Upload concluído com sucesso',data:{publicUrl:data.publicUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       return data.publicUrl;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:119',message:'Erro capturado no upload',data:{error:error?.message,errorType:error?.constructor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
@@ -211,7 +212,7 @@ export default function TeamMembersManager() {
       setDialogOpen(false);
       resetForm();
       loadMembers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamMembersManager.tsx:175',message:'Erro capturado no handleSubmit',data:{error:error?.message,errorType:error?.constructor?.name,stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
       // #endregion
@@ -255,10 +256,11 @@ export default function TeamMembersManager() {
         description: 'Membro excluído com sucesso',
       });
       loadMembers();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir membro',
+        description: err.message || 'Erro ao excluir membro',
         variant: 'destructive',
       });
     }
@@ -378,10 +380,11 @@ export default function TeamMembersManager() {
                                 .eq('id', member.id);
                               if (error) throw error;
                               loadMembers();
-                            } catch (error: any) {
+                            } catch (error: unknown) {
+                              const err = error instanceof Error ? error : new Error(String(error));
                               toast({
                                 title: 'Erro',
-                                description: error.message,
+                                description: err.message,
                                 variant: 'destructive',
                               });
                             }

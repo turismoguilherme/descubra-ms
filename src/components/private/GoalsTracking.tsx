@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Goals Tracking Component
  * Gerencia metas e acompanhamento de objetivos
  */
@@ -131,19 +131,19 @@ const GoalsTracking: React.FC = () => {
       try {
         const goalsSummary = await goalsAlertsService.getGoalsSummary(user.id);
         setSummary(goalsSummary);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Se a tabela não existir (código 42P01), não mostrar erro
         if (error?.code !== '42P01') {
-          console.error('Erro ao carregar resumo:', error);
+          console.error('Erro ao carregar resumo:', err);
         }
         // Usar resumo vazio se não conseguir carregar
         setSummary(null);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Se a tabela não existir (código 42P01), não mostrar erro nem toast
       // Isso é esperado em ambiente de desenvolvimento
       if (error?.code !== '42P01') {
-        console.error('Erro ao carregar metas:', error);
+        console.error('Erro ao carregar metas:', err);
         toast({
           title: 'Erro',
           description: 'Não foi possível carregar as metas',
@@ -289,7 +289,7 @@ const GoalsTracking: React.FC = () => {
       const category = 'hotel';
 
       // Buscar dados atuais se disponíveis
-      const currentData: any = {};
+      const currentData: Record<string, number> = {};
       if (goals.length > 0) {
         const revenueGoal = goals.find(g => g.category === 'revenue');
         const occupancyGoal = goals.find(g => g.category === 'occupancy');

@@ -201,7 +201,7 @@ export default function ViaJAROnboarding() {
     setCurrentStep(3); // Vai para completar perfil
   };
 
-  const handleProfileComplete = (profileData: any) => {
+  const handleProfileComplete = (profileData: Record<string, unknown>) => {
     setOnboardingData(prev => ({ ...prev, profile: profileData }));
     // Secretárias: vai direto para Pronto (não tem diagnóstico)
     // Empresários: vai para diagnóstico

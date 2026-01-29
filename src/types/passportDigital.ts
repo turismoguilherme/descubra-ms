@@ -42,11 +42,12 @@ export interface UserReward {
   user_id: string;
   reward_id: string;
   route_id: string;
-  voucher_code: string;
+  voucher_code?: string; // Opcional para recompensas de avatar
   is_used: boolean;
   used_at?: string | null;
   created_at: string;
   reward?: PassportReward;
+  passport_rewards?: PassportReward; // Alias para compatibilidade
 }
 
 export interface OfflineCheckin {

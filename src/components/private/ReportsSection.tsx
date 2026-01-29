@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Reports Section Component
  * Seção para gerar e baixar relatório completo do negócio
  */
@@ -20,9 +20,12 @@ import { CompleteBusinessReportService } from '@/services/private/completeBusine
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+import type { QuestionnaireAnswers } from '@/types/diagnostic';
+import type { AnalysisResult } from '@/services/diagnostic/analysisService';
+
 interface ReportsSectionProps {
-  diagnosticAnswers?: any;
-  analysisResult?: any;
+  diagnosticAnswers?: QuestionnaireAnswers;
+  analysisResult?: AnalysisResult;
   businessType?: string | null;
 }
 
@@ -86,11 +89,12 @@ const ReportsSection: React.FC<ReportsSectionProps> = ({
         title: 'Sucesso',
         description: `Relatório ${format.toUpperCase()} gerado e baixado com sucesso!`,
       });
-    } catch (error: any) {
-      console.error('Erro ao gerar relatório:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar relatório:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao gerar relatório. Verifique se há dados disponíveis e tente novamente.',
+        description: err.message || 'Erro ao gerar relatório. Verifique se há dados disponíveis e tente novamente.',
         variant: 'destructive'
       });
     } finally {

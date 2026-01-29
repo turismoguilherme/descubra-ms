@@ -34,7 +34,7 @@ export class EnhancedSecureStorage {
     return this.encryptionKey;
   }
 
-  async encrypt(data: any): Promise<string> {
+  async encrypt(data: unknown): Promise<string> {
     try {
       const key = await this.getOrCreateKey();
       const iv = crypto.getRandomValues(new Uint8Array(IV_SIZE));
@@ -114,7 +114,7 @@ export class EnhancedSecureStorage {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  async setSecureItem(key: string, value: any): Promise<void> {
+  async setSecureItem(key: string, value: unknown): Promise<void> {
     try {
       const encrypted = await this.encrypt(value);
       localStorage.setItem(`${STORAGE_PREFIX}${key}`, encrypted);

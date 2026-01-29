@@ -195,7 +195,7 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
             });
             return;
           }
-        } catch (uploadError: any) {
+        } catch (uploadError: unknown) {
           setUploading(prev => ({ ...prev, [logoKey]: false }));
           setSaving(prev => ({ ...prev, [logoKey]: false }));
           throw uploadError;
@@ -249,7 +249,7 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
         if (verification.length === 0 || !verification[0].content_value) {
           throw new Error('Logo não foi salvo corretamente. Verifique as permissões do banco de dados.');
         }
-      } catch (upsertError: any) {
+      } catch (upsertError: unknown) {
         console.error('❌ Erro no upsertContent:', upsertError);
         console.error('❌ Detalhes do erro:', {
           message: upsertError.message,

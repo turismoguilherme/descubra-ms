@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -123,11 +123,12 @@ export default function PartnerTermsAcceptance({
         termsAccepted: true,
         termsVersion,
       });
-    } catch (error: any) {
-      console.error('Erro ao aceitar termo:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao aceitar termo:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível processar o aceite do termo',
+        description: err.message || 'Não foi possível processar o aceite do termo',
         variant: 'destructive',
       });
     } finally {

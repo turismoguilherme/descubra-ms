@@ -29,14 +29,14 @@ const ViaJARNavbar = () => {
         const menus = await menuService.getMenus('viajar', 'main');
         if (menus && menus.length > 0) {
           const activeMenus = menus
-            .filter((menu: any) => menu.is_active)
-            .map((menu: any) => ({
+            .filter((menu: unknown) => menu.is_active)
+            .map((menu: unknown) => ({
               name: menu.label,
               path: menu.path || '/',
             }))
-            .sort((a: any, b: any) => {
-              const menuA = menus.find((m: any) => m.label === a.name);
-              const menuB = menus.find((m: any) => m.label === b.name);
+            .sort((a: unknown, b: unknown) => {
+              const menuA = menus.find((m: unknown) => m.label === a.name);
+              const menuB = menus.find((m: unknown) => m.label === b.name);
               return (menuA?.order_index || 0) - (menuB?.order_index || 0);
             });
           

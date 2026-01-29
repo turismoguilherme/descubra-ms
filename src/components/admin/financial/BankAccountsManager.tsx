@@ -476,7 +476,7 @@ export default function BankAccountsManager() {
                           <Label className="text-gray-700">Tipo</Label>
                           <Select
                             value={accountForm.account_type}
-                            onValueChange={(v: any) => setAccountForm({ ...accountForm, account_type: v })}
+                            onValueChange={(v: unknown) => setAccountForm({ ...accountForm, account_type: v })}
                           >
                             <SelectTrigger className="bg-white border-gray-200 mt-1 w-full">
                               <SelectValue placeholder="Selecione o tipo" />
@@ -638,7 +638,7 @@ export default function BankAccountsManager() {
                       <Label className="text-gray-700">Tipo de Documento</Label>
                       <Select
                         value={supplierForm.document_type}
-                        onValueChange={(v: any) => setSupplierForm({ ...supplierForm, document_type: v })}
+                        onValueChange={(v: unknown) => setSupplierForm({ ...supplierForm, document_type: v })}
                       >
                         <SelectTrigger className="bg-white border-gray-200 mt-1">
                           <SelectValue />

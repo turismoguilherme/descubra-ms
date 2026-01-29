@@ -28,7 +28,7 @@ interface Message {
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
-  response?: any;
+  response?: unknown;
 }
 
 interface ChatInterfaceProps {
@@ -132,7 +132,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     }
   };
 
-  const renderResponseCards = (response: any) => {
+  const renderResponseCards = (response: unknown) => {
     if (!response.insights || response.insights.length === 0) return null;
 
     return (
@@ -142,7 +142,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
           Insights Estratégicos
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {response.insights.slice(0, 4).map((insight: any, index: number) => {
+          {response.insights.slice(0, 4).map((insight: unknown, index: number) => {
             const icons = [TrendingUp, Users, BarChart3, MapPin];
             const Icon = icons[index % icons.length];
             

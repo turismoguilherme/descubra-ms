@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,8 +56,9 @@ export default function PlatformContentEditor({ platform }: PlatformContentEdito
       setContents(contentMap);
       setOriginalContents(contentMap);
       setContentIds(idMap);
-    } catch (error: any) {
-      console.error('Erro ao carregar conteúdo:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar conteúdo:', err);
       toast({
         title: 'Erro ao carregar',
         description: 'Não foi possível carregar o conteúdo.',
@@ -107,10 +108,11 @@ export default function PlatformContentEditor({ platform }: PlatformContentEdito
           return next;
         });
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar.',
+        description: err.message || 'Não foi possível salvar.',
         variant: 'destructive',
       });
     } finally {
@@ -133,10 +135,11 @@ export default function PlatformContentEditor({ platform }: PlatformContentEdito
         title: 'Todas as alterações salvas!',
         description: `${changedKeys.length} campo(s) atualizado(s).`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar.',
+        description: err.message || 'Não foi possível salvar.',
         variant: 'destructive',
       });
     } finally {

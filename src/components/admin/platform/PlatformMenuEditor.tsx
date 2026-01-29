@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,8 +73,9 @@ export default function PlatformMenuEditor({ platform }: PlatformMenuEditorProps
 
       if (error) throw error;
       setMenus((data || []) as MenuItem[]);
-    } catch (error: any) {
-      console.error('Erro ao carregar menus:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar menus:', err);
       // Usar dados locais como fallback
       const localData = localStorage.getItem(`menus_${platform}`);
       if (localData) {
@@ -102,10 +103,11 @@ export default function PlatformMenuEditor({ platform }: PlatformMenuEditorProps
         title: 'Atualizado', 
         description: `Menu ${!menu.is_active ? 'ativado' : 'desativado'}.` 
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar.',
+        description: err.message || 'Erro ao atualizar.',
         variant: 'destructive',
       });
     }
@@ -124,10 +126,11 @@ export default function PlatformMenuEditor({ platform }: PlatformMenuEditorProps
       
       setMenus(prev => prev.filter(m => m.id !== id));
       toast({ title: 'Excluído', description: 'Item removido com sucesso.' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir.',
+        description: err.message || 'Erro ao excluir.',
         variant: 'destructive',
       });
     }
@@ -182,7 +185,8 @@ export default function PlatformMenuEditor({ platform }: PlatformMenuEditorProps
           .eq('id', menu.id);
       }
       toast({ title: 'Ordem atualizada' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
         description: 'Erro ao atualizar ordem.',
@@ -403,10 +407,11 @@ function MenuForm({ menu, platform, defaultMenuType, onSuccess }: MenuFormProps)
         toast({ title: 'Criado', description: 'Item criado com sucesso.' });
       }
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar.',
+        description: err.message || 'Erro ao salvar.',
         variant: 'destructive',
       });
     } finally {

@@ -24,8 +24,8 @@ import {
 } from 'lucide-react';
 
 interface DiagnosticStepProps {
-  data: any;
-  onNext: (data?: any) => void;
+  data: unknown;
+  onNext: (data?: unknown) => void;
   onPrevious: () => void;
 }
 
@@ -164,7 +164,7 @@ const DiagnosticStep: React.FC<DiagnosticStepProps> = ({ data, onNext }) => {
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
 
-  const handleAnswer = (questionId: string, answer: any) => {
+  const handleAnswer = (questionId: string, answer: unknown) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 

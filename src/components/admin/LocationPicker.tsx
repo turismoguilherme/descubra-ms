@@ -133,7 +133,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       if (response.ok) {
         const data = await response.json();
-        const results = data.map((item: any) => ({
+        const results = data.map((item: unknown) => ({
           name: item.display_name.split(',')[0] || searchQuery,
           address: item.display_name,
           latitude: parseFloat(item.lat),

@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ interface AuditLog {
   action: string;
   entity_type: string | null;
   entity_id: string | null;
-  details: any;
+  details: Record<string, unknown> | null;
   created_at: string;
   user_name?: string;
   user_email?: string;
@@ -87,10 +87,11 @@ export default function AuditLogs() {
       );
       
       setLogs(enrichedLogs);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar logs',
+        description: err.message || 'Erro ao carregar logs',
         variant: 'destructive',
       });
     } finally {

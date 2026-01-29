@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Stripe Checkout Component
  * Componente para seleção de método de pagamento e criação de checkout session
  */
@@ -228,11 +228,12 @@ export default function StripeCheckout({
       // Redirecionar para Stripe Checkout
       window.location.href = data.checkoutUrl;
 
-    } catch (error: any) {
-      console.error('Erro ao criar checkout:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar checkout:', err);
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível criar a sessão de pagamento",
+        description: err.message || "Não foi possível criar a sessão de pagamento",
         variant: "destructive",
       });
     } finally {

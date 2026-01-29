@@ -1,4 +1,4 @@
-
+﻿
 import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
@@ -53,8 +53,9 @@ export const validateAdminOperation = async (operationType: string): Promise<boo
     }
 
     return isAuthorized;
-  } catch (error: any) {
-    console.error("Admin validation exception:", error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("Admin validation exception:", err);
     await supabase.rpc('log_security_event', {
       event_action: `admin_validation_exception_${operationType}`,
       event_success: false,
@@ -109,8 +110,9 @@ export const validatePassportAdminOperation = async (
     });
 
     return isAuthorized;
-  } catch (error: any) {
-    console.error("Passport admin validation exception:", error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("Passport admin validation exception:", err);
     showToast("Erro de sistema", "Erro na validação de segurança.", "destructive");
     return false;
   }
@@ -147,13 +149,14 @@ export const secureCreateUser = async (userData: {
     });
 
     return { error: null };
-  } catch (error: any) {
-    console.error("Secure user creation error:", error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("Secure user creation error:", err);
     await supabase.rpc('log_security_event', {
       event_action: 'admin_create_user_error',
       event_user_id: (await supabase.auth.getUser()).data.user?.id,
       event_success: false,
-      event_error_message: error.message,
+      event_error_message: err.message,
       
     });
     return { error };
@@ -182,8 +185,9 @@ export const secureDeleteUser = async (userId: string) => {
     });
 
     return { error: null };
-  } catch (error: any) {
-    console.error("Secure user deletion error:", error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("Secure user deletion error:", err);
     return { error };
   }
 };

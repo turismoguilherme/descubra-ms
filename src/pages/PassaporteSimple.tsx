@@ -108,7 +108,7 @@ const PassaporteSimple = () => {
         setRoutes(transformedRoutes);
         setError(null);
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao carregar rotas:', err);
         setError('Erro ao carregar dados do passaporte');
         setRoutes([]);

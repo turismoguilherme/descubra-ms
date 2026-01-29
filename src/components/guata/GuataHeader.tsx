@@ -1,6 +1,6 @@
 interface GuataHeaderProps {
   onClearConversation: () => void;
-  mensagens: any[];
+  mensagens: unknown[];
 }
 
 const GuataHeader: React.FC<GuataHeaderProps> = ({ onClearConversation, mensagens }) => {

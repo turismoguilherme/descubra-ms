@@ -189,7 +189,7 @@ const Contato = () => {
       dataPeriodEnd: '',
       dataCity: ''
     });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao enviar formulário:', error);
       toast({
         title: "Erro ao enviar",

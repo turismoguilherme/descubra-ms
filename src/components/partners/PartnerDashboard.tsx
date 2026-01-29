@@ -201,7 +201,7 @@ export default function PartnerDashboard() {
         complete: 'completed',
       };
 
-      const updateData: any = {
+      const updateData: unknown = {
         status: statusMap[action],
         updated_at: new Date().toISOString(),
       };

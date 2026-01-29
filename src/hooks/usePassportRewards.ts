@@ -20,7 +20,7 @@ export const usePassportRewards = (routeId?: string) => {
       setLoading(true);
       const rewards = await rewardsService.getUserRewards(user.id, routeId);
       setUserRewards(rewards);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar recompensas do usuário:', err);
       setError(err.message);
     } finally {
@@ -37,7 +37,7 @@ export const usePassportRewards = (routeId?: string) => {
     try {
       const rewards = await rewardsService.getRouteRewards(routeId);
       setRouteRewards(rewards);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar recompensas da rota:', err);
     }
   }, [routeId]);
@@ -53,7 +53,7 @@ export const usePassportRewards = (routeId?: string) => {
         const unlocked = await rewardsService.unlockRewards(user.id, routeId);
         await loadUserRewards();
         return unlocked;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao desbloquear recompensas:', err);
         throw err;
       }
@@ -71,7 +71,7 @@ export const usePassportRewards = (routeId?: string) => {
       try {
         await rewardsService.markRewardAsUsed(user.id, rewardId);
         await loadUserRewards();
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao marcar recompensa como usada:', err);
         throw err;
       }

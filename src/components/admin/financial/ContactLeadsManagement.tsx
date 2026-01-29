@@ -56,7 +56,7 @@ interface Lead {
   phone: string | null;
   company: string | null;
   notes: string | null;
-  custom_fields: any;
+  custom_fields: unknown;
   created_at: string;
   status_id: string | null;
   priority_id: string | null;
@@ -188,7 +188,7 @@ export default function ContactLeadsManagement() {
       if (error) throw error;
 
       // Filtrar apenas leads do formulário de contato ViajARTur
-      const contactLeads = (data || []).filter((lead: any) => 
+      const contactLeads = (data || []).filter((lead: unknown) => 
         lead.custom_fields?.origin === 'viajartur' || 
         lead.custom_fields?.form_type === 'contact'
       );
@@ -510,7 +510,7 @@ export default function ContactLeadsManagement() {
       );
 
       // Gerar e fazer upload dos relatórios
-      const requestForService: any = {
+      const requestForService: unknown = {
         id: dataSaleRequest.id,
         requester_name: dataSaleRequest.requester_name,
         requester_email: dataSaleRequest.requester_email,

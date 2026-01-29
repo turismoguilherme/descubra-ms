@@ -41,7 +41,7 @@ export default function AdminLogin() {
           window.location.reload();
         }, 500);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMessage = err.message || 'Ocorreu um erro inesperado';
       setError(errorMessage);
       toast({

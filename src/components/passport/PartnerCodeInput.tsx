@@ -103,7 +103,7 @@ const PartnerCodeInput: React.FC<PartnerCodeInputProps> = ({
 
       onCodeValidated(checkpoint.points_reward || 10);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao validar código:', err);
       setError(err.message || 'Erro ao validar código');
     } finally {

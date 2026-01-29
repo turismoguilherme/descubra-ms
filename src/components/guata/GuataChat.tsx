@@ -5,7 +5,7 @@ import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
 interface GuataChatProps {
-  mensagens: any[];
+  mensagens: unknown[];
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
   enviarMensagem: () => void;

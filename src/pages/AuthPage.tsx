@@ -138,7 +138,7 @@ const AuthPage = () => {
       }
 
       console.log('✅ [AuthPage] SOCIAL LOGIN: Redirecionamento iniciado');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ [AuthPage] SOCIAL LOGIN: Erro no login com ${provider}:`, error);
       setLoading(false);
       toast({
@@ -234,7 +234,7 @@ const AuthPage = () => {
         console.error('❌ [AuthPage] Login retornou sem usuário');
         throw new Error('Login retornou sem dados do usuário');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ [AuthPage] Erro no login:', {
         error,
         message: error?.message,

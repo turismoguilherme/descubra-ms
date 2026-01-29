@@ -122,7 +122,7 @@ export function usePartnerLeads() {
       });
 
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Erro inesperado ao criar lead:", err);
       toast({
         title: "Erro ao enviar solicitação",

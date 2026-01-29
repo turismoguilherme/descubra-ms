@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,10 +20,11 @@ export default function AISuggestions() {
     try {
       const data = await aiAdminService.getActions('pending' as any);
       setSuggestions((data || []) as AIAdminAction[]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar sugestões',
+        description: err.message || 'Erro ao carregar sugestões',
         variant: 'destructive',
       });
     } finally {
@@ -40,10 +41,11 @@ export default function AISuggestions() {
         toast({ title: 'Sucesso', description: 'Sugestão aprovada' });
         fetchSuggestions();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao aprovar sugestão',
+        description: err.message || 'Erro ao aprovar sugestão',
         variant: 'destructive',
       });
     }
@@ -54,10 +56,11 @@ export default function AISuggestions() {
       await aiAdminService.rejectAction(id);
       toast({ title: 'Sucesso', description: 'Sugestão rejeitada' });
       fetchSuggestions();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao rejeitar sugestão',
+        description: err.message || 'Erro ao rejeitar sugestão',
         variant: 'destructive',
       });
     }

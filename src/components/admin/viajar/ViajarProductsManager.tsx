@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,10 +93,11 @@ export default function ViajarProductsManager() {
 
       if (error) throw error;
       setProducts(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar produtos',
+        description: err.message || 'Erro ao carregar produtos',
         variant: 'destructive',
       });
     } finally {
@@ -171,8 +172,9 @@ export default function ViajarProductsManager() {
         .getPublicUrl(fileName);
 
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload:', err);
       return formData.image_url || null;
     }
   };
@@ -289,10 +291,11 @@ export default function ViajarProductsManager() {
 
       setDialogOpen(false);
       loadProducts();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar produto',
+        description: err.message || 'Erro ao salvar produto',
         variant: 'destructive',
       });
     } finally {
@@ -317,10 +320,11 @@ export default function ViajarProductsManager() {
       });
 
       loadProducts();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir produto',
+        description: err.message || 'Erro ao excluir produto',
         variant: 'destructive',
       });
     }

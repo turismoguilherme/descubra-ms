@@ -704,7 +704,7 @@ const PrivateDashboard = () => {
                             );
 
                             // Atualizar perfil
-                            const updates: any = {};
+                            const updates: Record<string, unknown> = {};
                             if (autoFilled.description && !profile.description) {
                               updates.description = autoFilled.description;
                             }

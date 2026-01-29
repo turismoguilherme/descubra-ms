@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,8 +85,9 @@ export default function PartnerCancellationPolicyEditor({
           description: customData.description || '',
         });
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar políticas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar políticas:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar as políticas',
@@ -142,11 +143,12 @@ export default function PartnerCancellationPolicyEditor({
       setShowEditDialog(false);
       await loadPolicies();
       onUpdate?.();
-    } catch (error: any) {
-      console.error('Erro ao salvar política:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar política:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível salvar a política',
+        description: err.message || 'Não foi possível salvar a política',
         variant: 'destructive',
       });
     } finally {
@@ -176,8 +178,9 @@ export default function PartnerCancellationPolicyEditor({
 
       await loadPolicies();
       onUpdate?.();
-    } catch (error: any) {
-      console.error('Erro ao desativar política:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao desativar política:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível desativar a política personalizada',

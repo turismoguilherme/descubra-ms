@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -135,11 +135,12 @@ export default function DataSharingConsent() {
           ? 'Seus dados agregados serão usados para benchmarking. Você pode revogar a qualquer momento.'
           : 'Seu consentimento foi revogado. Seus dados não serão mais compartilhados.',
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar consentimento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar consentimento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar consentimento',
+        description: err.message || 'Erro ao salvar consentimento',
         variant: 'destructive',
       });
     } finally {

@@ -22,7 +22,7 @@ export const useGuataMessages = () => {
       if (saved) {
         const parsedMessages = JSON.parse(saved);
         // Converter as strings de data de volta para objetos Date
-        const messagesWithDates = parsedMessages.map((msg: any) => ({
+        const messagesWithDates = parsedMessages.map((msg: unknown) => ({
           ...msg,
           timestamp: new Date(msg.timestamp)
         }));

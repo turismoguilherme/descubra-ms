@@ -44,7 +44,7 @@ export function AdminNotifications() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        const loaded = parsed.map((n: any) => ({
+        const loaded = parsed.map((n: unknown) => ({
           ...n,
           timestamp: new Date(n.timestamp),
         }));

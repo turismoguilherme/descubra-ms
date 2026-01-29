@@ -103,8 +103,8 @@ export interface SecureCommercialPartner {
   services_offered?: string[];
   target_audience?: string[];
   price_range?: 'budget' | 'mid_range' | 'luxury' | 'ultra_luxury';
-  operating_hours?: any;
-  seasonal_info?: any;
+  operating_hours?: unknown;
+  seasonal_info?: unknown;
   subscription_plan: 'basic' | 'premium' | 'enterprise';
   subscription_status: 'pending' | 'active' | 'suspended' | 'cancelled';
   subscription_start_date?: string;
@@ -221,7 +221,7 @@ const submitSecureCommercialPartnerRequest = async (partnerData: NewSecureCommer
       event_success: true,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Enhanced error logging
     await supabase.rpc('log_security_event', {
       event_action: 'commercial_partner_submission_error',
@@ -272,7 +272,7 @@ const fetchSecureCommercialPartners = async (filters?: {
     throw new Error(error.message);
   }
 
-  return (data || []).map((item: any) => ({
+  return (data || []).map((item: unknown) => ({
     ...item,
     business_type: item.business_type as SecureCommercialPartner['business_type'],
     company_size: item.company_size as SecureCommercialPartner['company_size'],

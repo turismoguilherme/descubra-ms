@@ -16,7 +16,7 @@ export const useSecureProfileSubmission = (options: ProfileSubmissionOptions = {
   });
   const { toast } = useToast();
 
-  const submitProfile = useCallback(async (profileData: any, user: any) => {
+  const submitProfile = useCallback(async (profileData: Record<string, unknown>, user: { id: string; email?: string }) => {
     setIsSubmitting(true);
     
     try {

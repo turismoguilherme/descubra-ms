@@ -47,7 +47,7 @@ export const useRouteManagement = (userRegion?: string) => {
         data = result.data;
         error = result.error;
         console.log('✅ [useRouteManagement] Query executada com sucesso');
-      } catch (queryError: any) {
+      } catch (queryError: unknown) {
         console.error('❌ [useRouteManagement] Erro na execução da query:', queryError);
         error = queryError;
         data = null;
@@ -131,7 +131,7 @@ export const useRouteManagement = (userRegion?: string) => {
       });
       
       setRoutes(filteredRoutes);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ [useRouteManagement] Erro ao carregar roteiros:", {
         error,
         message: error?.message,

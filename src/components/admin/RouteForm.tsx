@@ -2,9 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RouteFormProps {
-  route?: any;
+  route?: unknown;
   userRegion: string;
-  onSave: (routeData: any) => Promise<void>;
+  onSave: (routeData: unknown) => Promise<void>;
   onCancel: () => void;
 }
 

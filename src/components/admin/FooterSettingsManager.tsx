@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,8 +139,9 @@ export default function FooterSettingsManager() {
         console.log('ℹ️ [FooterSettingsManager] Nenhum setting Koda encontrado no banco, usando padrão');
         setKodaSettings({ ...DEFAULT_SETTINGS });
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar settings:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar settings:', err);
     } finally {
       setLoading(false);
     }
@@ -263,11 +264,12 @@ export default function FooterSettingsManager() {
       if (verifyData) {
         console.log(`✅ Dados confirmados no banco:`, verifyData.setting_value);
       }
-    } catch (error: any) {
-      console.error('❌ [FooterSettingsManager] Erro geral ao salvar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [FooterSettingsManager] Erro geral ao salvar:', err);
       
       let errorMessage = 'Erro ao salvar configurações';
-      if (error.message) {
+      if (err.message) {
         errorMessage = error.message;
       } else if (error.details) {
         errorMessage = error.details;
@@ -326,11 +328,12 @@ export default function FooterSettingsManager() {
         .getPublicUrl(fileName);
 
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload:', err);
       toast({
         title: 'Erro no upload',
-        description: error.message || 'Não foi possível fazer upload da imagem.',
+        description: err.message || 'Não foi possível fazer upload da imagem.',
         variant: 'destructive',
       });
       return null;

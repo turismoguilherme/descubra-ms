@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Report Generator Component for Public Sector
  * Componente para geração de relatórios municipais
  * Layout padronizado conforme regras definitivas ViaJAR
@@ -164,8 +164,9 @@ const ReportGenerator: React.FC = () => {
     try {
       await publicReportService.downloadReport(reportConfig);
       // Sucesso - não precisa mostrar alerta, o download já foi iniciado
-    } catch (error: any) {
-      console.error('Erro ao gerar relatório:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar relatório:', err);
       const errorMessage = error?.message || error?.toString() || 'Erro ao gerar relatório. Verifique sua conexão e tente novamente.';
       setError(errorMessage);
     } finally {

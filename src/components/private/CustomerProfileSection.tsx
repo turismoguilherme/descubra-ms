@@ -69,7 +69,7 @@ export default function CustomerProfileSection() {
       const purposeCounts: Record<string, number> = {};
       const preferenceCounts: Record<string, number> = {};
 
-      (profiles || []).forEach((profile: any) => {
+      (profiles || []).forEach((profile: unknown) => {
         // Extrair dados demográficos
         const age = profile.age_range || null;
         const gender = profile.gender || null;

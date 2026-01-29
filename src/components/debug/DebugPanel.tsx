@@ -21,8 +21,8 @@ interface DebugInfo {
   userAgent: string;
   localStorage: Record<string, any>;
   sessionStorage: Record<string, any>;
-  authState: any;
-  routeState: any;
+  authState: unknown;
+  routeState: unknown;
   errors: Error[];
   warnings: string[];
 }
@@ -135,13 +135,13 @@ const DebugPanel: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const maskSensitiveData = (data: any): any => {
+  const maskSensitiveData = (data: unknown): unknown => {
     if (!showSensitive) {
       if (typeof data === 'string' && data.length > 10) {
         return data.substring(0, 10) + '***';
       }
       if (typeof data === 'object' && data !== null) {
-        const masked: any = {};
+        const masked: unknown = {};
         for (const [key, value] of Object.entries(data)) {
           if (key.toLowerCase().includes('password') || 
               key.toLowerCase().includes('token') || 

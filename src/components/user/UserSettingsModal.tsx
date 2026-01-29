@@ -11,8 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 interface UserSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
-  onUpdateUser: (userData: any) => void;
+  user: unknown;
+  onUpdateUser: (userData: unknown) => void;
   onDeleteAccount: () => void;
   onResetPassword: () => void;
 }

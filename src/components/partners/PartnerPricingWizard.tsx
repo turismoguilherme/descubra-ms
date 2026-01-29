@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -212,11 +212,12 @@ export default function PartnerPricingWizard({
         title: 'Fotos adicionadas',
         description: `${uploadedUrls.length} foto(s) adicionada(s) com sucesso`,
       });
-    } catch (error: any) {
-      console.error('Erro ao fazer upload:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao fazer upload:', err);
       toast({
         title: 'Erro ao fazer upload',
-        description: error.message || 'Não foi possível fazer upload das fotos',
+        description: err.message || 'Não foi possível fazer upload das fotos',
         variant: 'destructive',
       });
     } finally {
@@ -322,11 +323,12 @@ export default function PartnerPricingWizard({
       onSuccess?.();
       onOpenChange(false);
       resetForm();
-    } catch (error: any) {
-      console.error('Erro ao salvar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível salvar o produto',
+        description: err.message || 'Não foi possível salvar o produto',
         variant: 'destructive',
       });
     } finally {

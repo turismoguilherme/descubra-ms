@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Settings Section Component
  * Configurações do usuário: senha, email, planos, exclusão de conta
  */
@@ -118,11 +118,12 @@ const SettingsSection: React.FC = () => {
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-      } catch (error: any) {
-        console.error('Erro ao alterar senha:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro ao alterar senha:', err);
         toast({
           title: 'Erro',
-          description: error.message || 'Erro ao alterar senha',
+          description: err.message || 'Erro ao alterar senha',
           variant: 'destructive'
         });
       } finally {
@@ -155,11 +156,12 @@ const SettingsSection: React.FC = () => {
 
         setIsEmailDialogOpen(false);
         setNewEmail('');
-      } catch (error: any) {
-        console.error('Erro ao alterar email:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro ao alterar email:', err);
         toast({
           title: 'Erro',
-          description: error.message || 'Erro ao alterar email',
+          description: err.message || 'Erro ao alterar email',
           variant: 'destructive'
         });
       } finally {
@@ -189,11 +191,12 @@ const SettingsSection: React.FC = () => {
           title: 'Conta excluída',
           description: 'Sua conta foi excluída com sucesso'
         });
-      } catch (error: any) {
-        console.error('Erro ao excluir conta:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro ao excluir conta:', err);
         toast({
           title: 'Erro',
-          description: error.message || 'Erro ao excluir conta',
+          description: err.message || 'Erro ao excluir conta',
           variant: 'destructive'
         });
       } finally {
@@ -468,7 +471,7 @@ const SettingsSection: React.FC = () => {
         </div>
       </div>
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Erro no componente SettingsSection:', err);
     return (
       <CardBox className="border-red-200 bg-red-50">

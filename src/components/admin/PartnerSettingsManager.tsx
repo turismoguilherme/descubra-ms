@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -116,11 +116,12 @@ export default function PartnerSettingsManager() {
         title: 'Salvo com sucesso!',
         description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}%`,
       });
-    } catch (error: any) {
-      console.error('Erro ao salvar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar:', err);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar as alterações',
+        description: err.message || 'Não foi possível salvar as alterações',
         variant: 'destructive',
       });
     } finally {

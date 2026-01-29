@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,10 +113,11 @@ const PassportStampConfig: React.FC = () => {
       setRoutes(routesRes.data || []);
       setConfigs(configsRes);
       setStampThemes(themesRes.data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportStampConfig] Erro completo ao carregar dados:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -181,10 +182,11 @@ const PassportStampConfig: React.FC = () => {
         description: '',
       });
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportStampConfig] Erro completo ao criar tema:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -244,10 +246,11 @@ const PassportStampConfig: React.FC = () => {
         duration: 5000, // 5 segundos de duração
       });
       await loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportStampConfig] Erro completo ao salvar configuração:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -324,7 +327,7 @@ const PassportStampConfig: React.FC = () => {
               <Label>Tema do Carimbo</Label>
               <Select
                 value={formData.stamp_theme}
-                onValueChange={(v: any) => setFormData({ ...formData, stamp_theme: v })}
+                onValueChange={(v: string) => setFormData({ ...formData, stamp_theme: v })}
               >
                 <SelectTrigger>
                   <SelectValue />

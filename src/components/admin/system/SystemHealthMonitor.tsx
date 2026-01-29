@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -168,11 +168,12 @@ export default function SystemHealthMonitor() {
           duration: 5000,
         });
       }
-    } catch (error: any) {
-      console.error('❌ [SystemHealthMonitor] Erro ao salvar configurações:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [SystemHealthMonitor] Erro ao salvar configurações:', err);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar as configurações. Tente novamente.',
+        description: err.message || 'Não foi possível salvar as configurações. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -302,7 +303,7 @@ export default function SystemHealthMonitor() {
     setUptime(realUptime);
 
     // Gerar e salvar alertas se necessário
-    const newAlerts: any[] = [];
+    const newAlerts: unknown[] = [];
     for (const result of results) {
       if (result.status === 'offline' && alertConfig.downtime_alerts) {
         const alert = {

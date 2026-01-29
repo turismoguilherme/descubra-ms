@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,8 +51,9 @@ const DocumentManager = () => {
 
       if (error) throw error;
       setDocuments(data || []);
-    } catch (error: any) {
-      console.error('Erro ao buscar documentos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar documentos:', err);
       toast({
         title: "Erro",
         description: "Erro ao carregar documentos",
@@ -127,8 +128,9 @@ const DocumentManager = () => {
       setDescription("");
       setCategory("geral");
       fetchDocuments();
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload:', err);
       toast({
         title: "Erro",
         description: "Erro ao enviar documento",

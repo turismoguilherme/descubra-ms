@@ -73,7 +73,7 @@ export default function AttendantsOverview() {
 
       if (error) throw error;
 
-      const attendants = (data || []).map((checkin: any) => ({
+      const attendants = (data || []).map((checkin: unknown) => ({
         id: checkin.attendant_id,
         name: checkin.user_profiles?.full_name || 'Atendente',
         email: checkin.user_profiles?.email || '',
@@ -109,7 +109,7 @@ export default function AttendantsOverview() {
       if (originError) throw originError;
 
       const originCounts: Record<string, number> = {};
-      (originData || []).forEach((survey: any) => {
+      (originData || []).forEach((survey: unknown) => {
         const origin = survey.tourist_origin || 'Não informado';
         originCounts[origin] = (originCounts[origin] || 0) + 1;
       });
@@ -123,7 +123,7 @@ export default function AttendantsOverview() {
       if (questionError) throw questionError;
 
       const questionTypeCounts: Record<string, number> = {};
-      (questionData || []).forEach((survey: any) => {
+      (questionData || []).forEach((survey: unknown) => {
         const types = survey.question_type || [];
         types.forEach((type: string) => {
           questionTypeCounts[type] = (questionTypeCounts[type] || 0) + 1;
@@ -139,7 +139,7 @@ export default function AttendantsOverview() {
       if (motivationError) throw motivationError;
 
       const motivationCounts: Record<string, number> = {};
-      (motivationData || []).forEach((survey: any) => {
+      (motivationData || []).forEach((survey: unknown) => {
         const motivations = survey.travel_motivation || [];
         motivations.forEach((motivation: string) => {
           motivationCounts[motivation] = (motivationCounts[motivation] || 0) + 1;

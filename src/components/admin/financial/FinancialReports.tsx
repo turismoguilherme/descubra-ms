@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,10 +22,11 @@ export default function FinancialReports() {
     try {
       const data = await financialService.getPayments();
       setPayments(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar pagamentos',
+        description: err.message || 'Erro ao carregar pagamentos',
         variant: 'destructive',
       });
     } finally {
@@ -50,10 +51,11 @@ export default function FinancialReports() {
         title: 'Sucesso',
         description: 'Relatório exportado com sucesso',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao exportar relatório',
+        description: err.message || 'Erro ao exportar relatório',
         variant: 'destructive',
       });
     }
@@ -76,10 +78,11 @@ export default function FinancialReports() {
         title: 'Sucesso',
         description: 'Relatório exportado com sucesso',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao exportar relatório',
+        description: err.message || 'Erro ao exportar relatório',
         variant: 'destructive',
       });
     }

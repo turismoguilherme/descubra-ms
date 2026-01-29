@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -131,11 +131,12 @@ export default function DestinationManager() {
           variant: 'default',
         });
       }
-    } catch (error: any) {
-      console.error('❌ [DestinationManager] Erro ao carregar destinos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [DestinationManager] Erro ao carregar destinos:', err);
       toast({
         title: 'Erro ao carregar destinos',
-        description: error.message || 'Erro desconhecido ao carregar destinos',
+        description: err.message || 'Erro desconhecido ao carregar destinos',
         variant: 'destructive',
       });
       setDestinations([]);
@@ -202,8 +203,9 @@ export default function DestinationManager() {
         });
         setGalleryImages([]);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar detalhes:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar detalhes:', err);
     }
   };
 
@@ -324,8 +326,9 @@ export default function DestinationManager() {
         .getPublicUrl(fileName);
 
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('Erro no upload da imagem principal:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload da imagem principal:', err);
       // Preservar URL existente se upload falhar
       return formData.image_url || null;
     }
@@ -420,8 +423,9 @@ export default function DestinationManager() {
         if (publicUrlData?.publicUrl) {
           uploadedUrls.push(publicUrlData.publicUrl);
         }
-      } catch (error: any) {
-        console.error('Erro no upload:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro no upload:', err);
         toast({
           title: 'Erro no upload',
           description: `Erro ao fazer upload de ${file.name}`,
@@ -674,10 +678,11 @@ export default function DestinationManager() {
 
       setDialogOpen(false);
       loadDestinations();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar destino',
+        description: err.message || 'Erro ao salvar destino',
         variant: 'destructive',
       });
     } finally {
@@ -709,10 +714,11 @@ export default function DestinationManager() {
       });
 
       loadDestinations();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao excluir destino',
+        description: err.message || 'Erro ao excluir destino',
         variant: 'destructive',
       });
     }

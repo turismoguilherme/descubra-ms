@@ -73,7 +73,7 @@ const PassaporteLista = () => {
 
         console.log("📱 PASSAPORTE LISTA: Resultado da query:", {
           routesCount: routesData?.length || 0,
-          routes: routesData?.map((r: any) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
+          routes: routesData?.map((r: unknown) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
         });
         
         const routesError = null;
@@ -176,7 +176,7 @@ const PassaporteLista = () => {
         console.log("✅ PASSAPORTE LISTA: Rotas carregadas com sucesso:", routesWithCheckpoints.length);
         setRoutes(routesWithCheckpoints);
         setLoading(false);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("❌ PASSAPORTE LISTA: Erro geral:", error);
         toast({
           title: "Erro",

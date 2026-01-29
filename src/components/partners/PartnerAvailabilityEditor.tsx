@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,8 +75,9 @@ export default function PartnerAvailabilityEditor({ partnerId, onUpdate }: Partn
       if (data && data.length > 0) {
         setSelectedService(data[0].id);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar preços:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar preços:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os serviços',
@@ -109,8 +110,9 @@ export default function PartnerAvailabilityEditor({ partnerId, onUpdate }: Partn
         availabilityMap.set(item.date, item);
       });
       setAvailability(availabilityMap);
-    } catch (error: any) {
-      console.error('Erro ao carregar disponibilidade:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar disponibilidade:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar a disponibilidade',
@@ -160,8 +162,9 @@ export default function PartnerAvailabilityEditor({ partnerId, onUpdate }: Partn
       setEditingDate(null);
       await loadAvailability();
       onUpdate?.();
-    } catch (error: any) {
-      console.error('Erro ao salvar disponibilidade:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar disponibilidade:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível salvar a disponibilidade',
@@ -192,8 +195,9 @@ export default function PartnerAvailabilityEditor({ partnerId, onUpdate }: Partn
 
       await loadAvailability();
       onUpdate?.();
-    } catch (error: any) {
-      console.error('Erro ao remover disponibilidade:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao remover disponibilidade:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível remover a disponibilidade',

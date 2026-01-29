@@ -103,7 +103,7 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
     return sources;
   };
 
-  const generateJSONReport = (data: any, type: string) => {
+  const generateJSONReport = (data: unknown, type: string) => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -115,7 +115,7 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const generatePDFReport = async (data: any, type: string) => {
+  const generatePDFReport = async (data: unknown, type: string) => {
     try {
       const blob = await privateReportGenerationService.generatePDF(data);
       const url = URL.createObjectURL(blob);
@@ -132,7 +132,7 @@ const DiagnosticReportsTab: React.FC<DiagnosticReportsTabProps> = ({
     }
   };
 
-  const generateExcelReport = async (data: any, type: string) => {
+  const generateExcelReport = async (data: unknown, type: string) => {
     try {
       const blob = await privateReportGenerationService.generateExcel(data);
       const url = URL.createObjectURL(blob);

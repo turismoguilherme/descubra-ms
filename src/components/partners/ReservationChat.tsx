@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -118,8 +118,9 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
       );
 
       setNewMessage('');
-    } catch (error: any) {
-      console.error('Erro ao enviar mensagem:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar mensagem:', err);
     } finally {
       setSending(false);
     }

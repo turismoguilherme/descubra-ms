@@ -93,7 +93,7 @@ const DocumentUploadPublic: React.FC = () => {
     try {
       const docs = await publicDocumentService.getDocuments(user.id, { is_active: true });
       setDocuments(docs || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar documentos:', err);
       setError('Erro ao carregar documentos. Tente novamente.');
       setDocuments([]);
@@ -168,7 +168,7 @@ const DocumentUploadPublic: React.FC = () => {
         tags: []
       });
       await loadDocuments();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao fazer upload:', err);
       toast({
         title: 'Erro',
@@ -190,7 +190,7 @@ const DocumentUploadPublic: React.FC = () => {
         description: 'Documento excluído com sucesso'
       });
       await loadDocuments();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao excluir documento:', err);
       toast({
         title: 'Erro',
@@ -209,7 +209,7 @@ const DocumentUploadPublic: React.FC = () => {
         description: 'Documento processado com sucesso!'
       });
       await loadDocuments();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao processar documento:', err);
       toast({
         title: 'Erro',
@@ -225,7 +225,7 @@ const DocumentUploadPublic: React.FC = () => {
     try {
       const url = publicDocumentService.getDocumentUrl(document);
       window.open(url, '_blank');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao fazer download:', err);
       toast({
         title: 'Erro',
@@ -388,7 +388,7 @@ const DocumentUploadPublic: React.FC = () => {
               </Label>
               <Select
                 value={uploadForm.category}
-                onValueChange={(value: any) => setUploadForm({ ...uploadForm, category: value })}
+                onValueChange={(value: unknown) => setUploadForm({ ...uploadForm, category: value })}
                 disabled={isUploading}
               >
                 <SelectTrigger className="mt-1">
@@ -699,7 +699,7 @@ const DocumentUploadPublic: React.FC = () => {
                         <div>
                           <h4 className="text-sm font-medium text-slate-700 mb-2">Números</h4>
                           <div className="grid grid-cols-2 gap-2">
-                            {selectedDocument.analysis_result.extracted_metrics.numbers.map((metric: any, index: number) => (
+                            {selectedDocument.analysis_result.extracted_metrics.numbers.map((metric: unknown, index: number) => (
                               <div key={index} className="p-2 bg-blue-50 rounded-lg">
                                 <p className="text-xs text-slate-600">{metric.label}</p>
                                 <p className="text-lg font-semibold text-blue-700">
@@ -716,7 +716,7 @@ const DocumentUploadPublic: React.FC = () => {
                         <div>
                           <h4 className="text-sm font-medium text-slate-700 mb-2">Percentuais</h4>
                           <div className="grid grid-cols-2 gap-2">
-                            {selectedDocument.analysis_result.extracted_metrics.percentages.map((metric: any, index: number) => (
+                            {selectedDocument.analysis_result.extracted_metrics.percentages.map((metric: unknown, index: number) => (
                               <div key={index} className="p-2 bg-green-50 rounded-lg">
                                 <p className="text-xs text-slate-600">{metric.label}</p>
                                 <p className="text-lg font-semibold text-green-700">{metric.value}%</p>
@@ -731,7 +731,7 @@ const DocumentUploadPublic: React.FC = () => {
                         <div>
                           <h4 className="text-sm font-medium text-slate-700 mb-2">Totais</h4>
                           <div className="grid grid-cols-2 gap-2">
-                            {selectedDocument.analysis_result.extracted_metrics.totals.map((metric: any, index: number) => (
+                            {selectedDocument.analysis_result.extracted_metrics.totals.map((metric: unknown, index: number) => (
                               <div key={index} className="p-2 bg-purple-50 rounded-lg">
                                 <p className="text-xs text-slate-600">{metric.label}</p>
                                 <p className="text-lg font-semibold text-purple-700">{metric.value}</p>
@@ -755,7 +755,7 @@ const DocumentUploadPublic: React.FC = () => {
                         <div>
                           <h4 className="text-sm font-medium text-slate-700 mb-2">Diferenças Encontradas</h4>
                           <div className="space-y-2">
-                            {selectedDocument.analysis_result.comparison.differences.map((diff: any, index: number) => (
+                            {selectedDocument.analysis_result.comparison.differences.map((diff: unknown, index: number) => (
                               <div key={index} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <p className="text-sm font-medium text-slate-800">{diff.metric}</p>
                                 <div className="flex items-center gap-4 mt-1 text-xs">

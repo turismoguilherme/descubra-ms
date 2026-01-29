@@ -436,7 +436,7 @@ export default function TeamManagement() {
                 <Label>Acesso à Plataforma</Label>
                 <Select 
                   value={newMember.platform} 
-                  onValueChange={(v: any) => setNewMember({ ...newMember, platform: v })}
+                  onValueChange={(v: unknown) => setNewMember({ ...newMember, platform: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a plataforma" />

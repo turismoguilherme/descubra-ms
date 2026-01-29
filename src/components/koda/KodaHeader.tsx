@@ -6,7 +6,7 @@ import frTranslations from "@/locales/koda/fr.json";
 
 interface KodaHeaderProps {
   onClearConversation: () => void;
-  messages: any[];
+  messages: unknown[];
 }
 
 const KodaHeader = ({ onClearConversation, messages }: KodaHeaderProps) => {

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,8 +57,9 @@ const DocumentList = ({ documents, onDocumentDeleted }: DocumentListProps) => {
         title: "Sucesso",
         description: "Download iniciado",
       });
-    } catch (error: any) {
-      console.error('Erro no download:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no download:', err);
       toast({
         title: "Erro",
         description: "Erro ao fazer download do arquivo",
@@ -99,8 +100,9 @@ const DocumentList = ({ documents, onDocumentDeleted }: DocumentListProps) => {
       });
 
       onDocumentDeleted();
-    } catch (error: any) {
-      console.error('Erro ao deletar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao deletar:', err);
       toast({
         title: "Erro",
         description: "Erro ao remover documento",

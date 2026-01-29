@@ -35,7 +35,7 @@ export const usePassport = () => {
       if (!userPassport) {
         try {
           userPassport = await passportService.createPassport(user.id);
-        } catch (createError: any) {
+        } catch (createError: unknown) {
           // Se erro for de tabela não existente, apenas avisar mas não bloquear
           if (createError.message?.includes('não existe') || createError.message?.includes('does not exist')) {
             console.warn('Tabelas do passaporte não existem. Execute a migration primeiro.');
@@ -48,7 +48,7 @@ export const usePassport = () => {
       }
 
       setPassport(userPassport);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao inicializar passaporte:', err);
       // Não mostrar erro técnico para o usuário, apenas log
       if (!err.message?.includes('não existe') && !err.message?.includes('does not exist')) {
@@ -146,7 +146,7 @@ export const usePassport = () => {
           console.error('❌ [usePassport.loadRoute] Rota não encontrada ou inativa');
           setError('Rota não encontrada ou inativa. Verifique se a rota existe no sistema.');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('❌ [usePassport.loadRoute] Erro ao carregar rota:', {
           error: err,
           message: err?.message,
@@ -244,7 +244,7 @@ export const usePassport = () => {
         }
 
         return result;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao fazer check-in:', err);
         return {
           success: false,
@@ -276,7 +276,7 @@ export const usePassport = () => {
       }
 
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao sincronizar dados offline:', err);
       throw err;
     }
@@ -292,7 +292,7 @@ export const usePassport = () => {
       try {
         const route = await passportService.getActiveRoute(user.id, routeId);
         return route;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao obter detalhes da rota:', err);
         return null;
       }

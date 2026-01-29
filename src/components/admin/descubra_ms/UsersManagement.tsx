@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ export default function UsersManagement() {
 
       // Buscar roles
       const userIds = profiles?.map(p => p.user_id).filter(Boolean) || [];
-      let roles: any[] = [];
+      let roles: Array<{ user_id: string; role: string }> = [];
       if (userIds.length > 0) {
         const { data: rolesData } = await supabase
           .from('user_roles')
@@ -59,10 +59,11 @@ export default function UsersManagement() {
       });
 
       setUsers(usersData);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar usuários',
+        description: err.message || 'Erro ao carregar usuários',
         variant: 'destructive',
       });
     } finally {
@@ -184,10 +185,11 @@ export default function UsersManagement() {
                                   
                                   fetchUsers();
                                 }
-                              } catch (error: any) {
+                              } catch (error: unknown) {
+                                const err = error instanceof Error ? error : new Error(String(error));
                                 toast({
                                   title: 'Erro',
-                                  description: error.message || 'Erro ao atualizar usuário',
+                                  description: err.message || 'Erro ao atualizar usuário',
                                   variant: 'destructive',
                                 });
                               }

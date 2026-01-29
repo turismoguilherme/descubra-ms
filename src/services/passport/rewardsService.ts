@@ -87,9 +87,8 @@ class RewardsService {
       const avatarRewards: UserReward[] = [];
 
       if (unlockedAvatars && Array.isArray(unlockedAvatars) && unlockedAvatars.length > 0) {
-        const avatars = unlockedAvatars as UnlockedAvatar[];
         // Para cada avatar desbloqueado, buscar a recompensa correspondente
-        for (const avatar of avatars) {
+        for (const avatar of unlockedAvatars) {
           const { data: reward } = await supabase
             .from('passport_rewards')
             .select('id')
@@ -111,6 +110,11 @@ class RewardsService {
                 reward_type: 'avatar',
                 reward_description: `Avatar desbloqueado: ${avatar.avatar_name} (${avatar.rarity})`,
                 avatar_id: avatar.avatar_id,
+                route_id: routeId,
+                partner_name: '',
+                is_active: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
               }
             } as UserReward);
           }

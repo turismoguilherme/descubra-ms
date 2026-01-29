@@ -147,7 +147,7 @@ const SurveyManager = ({ cityId }: SurveyManagerProps) => {
     });
   };
 
-  const updateQuestion = (index: number, field: string, value: any) => {
+  const updateQuestion = (index: number, field: string, value: unknown) => {
     const newQuestions = [...surveyForm.questions];
     newQuestions[index] = { ...newQuestions[index], [field]: value };
     setSurveyForm({ ...surveyForm, questions: newQuestions });

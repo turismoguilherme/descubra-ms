@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -77,11 +77,12 @@ export default function StripeConnectStatus({ partnerId, compact = false }: Stri
       if (data?.url) {
         window.location.href = data.url;
       }
-    } catch (error: any) {
-      console.error('Erro ao conectar Stripe:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao conectar Stripe:', err);
       toast({
         title: 'Erro ao conectar',
-        description: error.message || 'Não foi possível conectar com o Stripe.',
+        description: err.message || 'Não foi possível conectar com o Stripe.',
         variant: 'destructive',
       });
     } finally {

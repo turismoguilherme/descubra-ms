@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 
 interface ProfileSetupStepProps {
-  data: any;
-  onNext: (data?: any) => void;
+  data: unknown;
+  onNext: (data?: unknown) => void;
   onPrevious: () => void;
 }
 

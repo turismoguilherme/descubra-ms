@@ -36,10 +36,10 @@ const Profile = () => {
           "ia_route_payment_link_ms",
         ]);
         const price = parseFloat(
-          data.find((d: any) => d.content_key === "ia_route_price_ms")?.content_value || "49"
+          data.find((d: unknown) => d.content_key === "ia_route_price_ms")?.content_value || "49"
         );
         const link =
-          data.find((d: any) => d.content_key === "ia_route_payment_link_ms")?.content_value || "#";
+          data.find((d: unknown) => d.content_key === "ia_route_payment_link_ms")?.content_value || "#";
         if (!Number.isNaN(price)) setIaPrice(price);
         setIaPaymentLink(link || "#");
       } catch (error) {
@@ -583,7 +583,7 @@ const Profile = () => {
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-4">
-                          {generatedPlan.dias.map((dia: any, idx: number) => (
+                          {generatedPlan.dias.map((dia: unknown, idx: number) => (
                             <Card key={idx} className="border-gray-100">
                               <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-semibold text-blue-700">
@@ -610,7 +610,7 @@ const Profile = () => {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm text-gray-700">
-                              {generatedPlan.eventos.map((ev: any, i: number) => (
+                              {generatedPlan.eventos.map((ev: unknown, i: number) => (
                                 <div key={i} className="flex justify-between">
                                   <span>{ev.nome}</span>
                                   <span className="text-gray-500">{ev.data}</span>
@@ -627,7 +627,7 @@ const Profile = () => {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm text-gray-700">
-                              {generatedPlan.parceiros.map((p: any, i: number) => (
+                              {generatedPlan.parceiros.map((p: unknown, i: number) => (
                                 <div key={i} className="flex justify-between">
                                   <span>{p.tipo}</span>
                                   <span className="text-gray-600">{p.nome}</span>

@@ -48,11 +48,11 @@ const secureDecode = (data: string): string => {
 };
 
 export const useSecureStorage = () => {
-  const encrypt = (data: any): string => {
+  const encrypt = (data: unknown): string => {
     return secureEncode(JSON.stringify(data));
   };
 
-  const decrypt = (encryptedData: string): any => {
+  const decrypt = (encryptedData: string): unknown => {
     try {
       const decoded = secureDecode(encryptedData);
       return JSON.parse(decoded);
@@ -62,7 +62,7 @@ export const useSecureStorage = () => {
     }
   };
 
-  const setSecureItem = (key: string, value: any): void => {
+  const setSecureItem = (key: string, value: unknown): void => {
     try {
       const encrypted = encrypt(value);
       localStorage.setItem(`${STORAGE_PREFIX}${key}`, encrypted);
@@ -71,7 +71,7 @@ export const useSecureStorage = () => {
     }
   };
 
-  const getSecureItem = (key: string): any => {
+  const getSecureItem = (key: string): unknown => {
     try {
       const encryptedData = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
       if (!encryptedData) return null;

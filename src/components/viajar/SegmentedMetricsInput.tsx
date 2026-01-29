@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SegmentedMetricsInput
  * Componente de entrada de métricas adaptável por segmento de negócio
  */
@@ -119,9 +119,10 @@ export function SegmentedMetricsInput({ onSave }: SegmentedMetricsInputProps) {
         setSaveStatus('idle');
         onSave?.();
       }, 2000);
-    } catch (error: any) {
-      console.error('Erro ao salvar métricas:', error);
-      setErrorMessage(error.message || 'Erro ao salvar métricas');
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar métricas:', err);
+      setErrorMessage(err.message || 'Erro ao salvar métricas');
       setSaveStatus('error');
     } finally {
       setIsSaving(false);

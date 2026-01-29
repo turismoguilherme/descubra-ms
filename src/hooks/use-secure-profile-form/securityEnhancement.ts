@@ -2,7 +2,7 @@
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { sanitizeText, sanitizeEmail, validateInput } from "@/utils/sanitization";
 
-export const enhanceProfileFormSecurity = async (formData: any, userEmail?: string) => {
+export const enhanceProfileFormSecurity = async (formData: unknown, userEmail?: string) => {
   console.log("🔒 SECURITY: Starting simplified profile form validation");
 
   // VALIDAÇÃO SIMPLIFICADA - removendo rate limiting temporariamente

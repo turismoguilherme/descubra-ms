@@ -1,4 +1,4 @@
-
+﻿
 import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
@@ -20,8 +20,9 @@ export const resendConfirmationEmailService = async (email: string) => {
     
     showToast("E-mail reenviado!", "Verifique sua caixa de entrada.", "default");
     return { data, error: null };
-  } catch (error: any) {
-    console.error("❌ Erro catch ao reenviar email:", error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("❌ Erro catch ao reenviar email:", err);
     showToast("Erro", "Ocorreu um erro inesperado.", "destructive");
     return { error };
   }

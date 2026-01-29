@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,8 +55,9 @@ export const PartnerTransactionHistory: React.FC<PartnerTransactionHistoryProps>
 
       setTransactions(transactionsData);
       setSummary(summaryData);
-    } catch (error: any) {
-      console.error('Erro ao carregar histórico:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar histórico:', err);
     } finally {
       setLoading(false);
     }
@@ -252,7 +253,7 @@ export const PartnerTransactionHistory: React.FC<PartnerTransactionHistoryProps>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">Período</label>
-              <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
+              <Select value={dateRange} onValueChange={(value: string) => setDateRange(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

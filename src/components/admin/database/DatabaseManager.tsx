@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,8 +41,8 @@ const logAuditAction = async (
   action: 'CREATE' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'VIEW',
   tableName: string,
   recordId?: string,
-  oldData?: any,
-  newData?: any
+  oldData?: unknown,
+  newData?: unknown
 ) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -78,7 +78,7 @@ const logAuditAction = async (
 
 interface TableData {
   columns: string[];
-  rows: any[];
+  rows: unknown[];
   total: number;
 }
 
@@ -124,11 +124,12 @@ export default function DatabaseManager() {
         rows: data || [],
         total: count || 0,
       });
-    } catch (error: any) {
-      console.error('Erro ao carregar tabela:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar tabela:', err);
       toast({
         title: 'Erro ao carregar dados',
-        description: error.message || 'Não foi possível carregar a tabela',
+        description: err.message || 'Não foi possível carregar a tabela',
         variant: 'destructive',
       });
       setTableData({ columns: [], rows: [], total: 0 });
@@ -144,7 +145,7 @@ export default function DatabaseManager() {
     setEditDialogOpen(true);
   };
 
-  const handleEdit = (record: any) => {
+  const handleEdit = (record: unknown) => {
     setIsCreating(false);
     setEditingRecord(record);
     setFormData({ ...record });
@@ -191,10 +192,11 @@ export default function DatabaseManager() {
 
       setEditDialogOpen(false);
       loadTableData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar o registro',
+        description: err.message || 'Não foi possível salvar o registro',
         variant: 'destructive',
       });
     }
@@ -226,10 +228,11 @@ export default function DatabaseManager() {
       
       toast({ title: 'Registro excluído com sucesso!' });
       loadTableData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao excluir',
-        description: error.message || 'Não foi possível excluir o registro',
+        description: err.message || 'Não foi possível excluir o registro',
         variant: 'destructive',
       });
     }
@@ -256,7 +259,7 @@ export default function DatabaseManager() {
     toast({ title: 'Dados exportados com sucesso!' });
   };
 
-  const formatValue = (value: any, column: string) => {
+  const formatValue = (value: unknown, column: string) => {
     if (value === null || value === undefined) return '-';
     if (typeof value === 'boolean') return value ? '✓' : '✗';
     if (typeof value === 'object') return JSON.stringify(value).slice(0, 50) + '...';
@@ -273,7 +276,7 @@ export default function DatabaseManager() {
     return String(value);
   };
 
-  const getFieldType = (column: string, value: any) => {
+  const getFieldType = (column: string, value: unknown) => {
     if (column === 'id') return 'readonly';
     if (column.includes('_at') || column.includes('date')) return 'datetime';
     if (typeof value === 'boolean') return 'boolean';

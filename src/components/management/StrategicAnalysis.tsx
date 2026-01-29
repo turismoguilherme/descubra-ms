@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 // StrategicAnalysisAI removido - funcionalidade integrada no superTourismAI
 
 interface StrategicAnalysisProps {
-  onAnalysisUpdate?: (analysis: any) => void;
+  onAnalysisUpdate?: (analysis: unknown) => void;
 }
 
 export function StrategicAnalysis({ onAnalysisUpdate }: StrategicAnalysisProps) {
@@ -125,7 +125,7 @@ export function StrategicAnalysis({ onAnalysisUpdate }: StrategicAnalysisProps) 
                      'Longo Prazo'}
                   </h3>
                   <div className="space-y-3">
-                    {recs.map((rec: any, index: number) => (
+                    {recs.map((rec: unknown, index: number) => (
                       <div key={index} className="p-4 border rounded-lg bg-white">
                         <div className="flex items-start gap-4">
                           <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold">

@@ -31,7 +31,7 @@ export interface UserProfile {
   avatar_url?: string;
   selected_avatar?: string;
   avatar_custom_name?: string;
-  achievements: any[];
+  achievements: unknown[];
   pantanal_animals: PantanalAnimal[];
   created_at: string;
   updated_at: string;
@@ -215,7 +215,7 @@ const ProfilePageFixed: React.FC = () => {
       // #endregion
       console.log('✅ Avatares carregados do banco:', avatares.length);
       return avatares.length > 0 ? avatares : pantanalAnimals; // Fallback para mockados se não houver dados
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar avatares:', error);
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Erro geral ao carregar avatares',data:{error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
@@ -367,7 +367,7 @@ const ProfilePageFixed: React.FC = () => {
     });
   };
 
-  const handleProfileUpdate = (updatedProfile: any) => {
+  const handleProfileUpdate = (updatedProfile: unknown) => {
     setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
   };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useOfflineCheckin } from '@/hooks/useOfflineCheckin';
@@ -16,10 +16,11 @@ const OfflineIndicator: React.FC = () => {
         title: 'Sincronização concluída',
         description: `${result.synced} check-ins sincronizados${result.failed > 0 ? `. ${result.failed} falharam.` : '.'}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao sincronizar',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }

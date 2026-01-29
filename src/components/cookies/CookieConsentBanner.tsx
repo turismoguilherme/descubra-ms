@@ -288,7 +288,7 @@ const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ platform = 'd
 // Declaração global para gtag (Google Analytics)
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }
 

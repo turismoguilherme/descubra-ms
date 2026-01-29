@@ -44,7 +44,7 @@ export const enhancedSignInService = async (email: string, password: string) => 
     }
 
     return { error: null };
-  } catch (unexpectedError: any) {
+  } catch (unexpectedError: unknown) {
     console.error("❌ Erro inesperado no login:", unexpectedError);
     showToast("Erro Inesperado", "Ocorreu um erro inesperado. Tente novamente.", "destructive");
     return { error: unexpectedError };

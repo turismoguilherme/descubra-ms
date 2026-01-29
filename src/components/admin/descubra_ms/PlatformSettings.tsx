@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -135,10 +135,11 @@ export default function PlatformSettings() {
         title: 'Sucesso',
         description: 'Configurações salvas com sucesso',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar configurações',
+        description: err.message || 'Erro ao salvar configurações',
         variant: 'destructive',
       });
     } finally {

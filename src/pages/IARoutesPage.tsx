@@ -230,7 +230,7 @@ export default function IARoutesPage() {
         description: 'Seu roteiro personalizado está pronto. Você pode salvá-lo ou exportá-lo.',
         duration: 4000,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar roteiro:', error);
       toast({
         title: 'Erro ao gerar roteiro',
@@ -576,7 +576,7 @@ export default function IARoutesPage() {
                     Itinerário
                   </h3>
                   <div className="grid md:grid-cols-3 gap-4">
-                    {generatedPlan.dias.map((dia: any, idx: number) => (
+                    {generatedPlan.dias.map((dia: unknown, idx: number) => (
                       <Card key={idx} className="border-2 border-ms-primary-blue/20 bg-white hover:shadow-lg transition-all hover:border-ms-primary-blue/40">
                         <CardHeader className="pb-3 bg-gradient-to-r from-ms-primary-blue/10 to-ms-discovery-teal/10">
                           <CardTitle className="text-base font-bold text-ms-primary-blue">
@@ -607,7 +607,7 @@ export default function IARoutesPage() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-gray-700 pt-3">
-                          {generatedPlan.eventos.map((ev: any, i: number) => (
+                          {generatedPlan.eventos.map((ev: unknown, i: number) => (
                             <div key={i} className="flex justify-between items-center p-2 rounded hover:bg-white/50 transition-colors">
                               <span className="font-medium">{ev.nome}</span>
                               <span className="text-gray-500 text-xs">{ev.data}</span>
@@ -624,7 +624,7 @@ export default function IARoutesPage() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-gray-700 pt-3">
-                          {generatedPlan.parceiros.map((p: any, i: number) => (
+                          {generatedPlan.parceiros.map((p: unknown, i: number) => (
                             <div key={i} className="flex justify-between items-center p-2 rounded hover:bg-white/50 transition-colors">
                               <div className="flex flex-col">
                                 <span className="font-medium text-gray-900">{p.nome}</span>

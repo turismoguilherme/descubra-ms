@@ -92,7 +92,7 @@ export const signUpService = async (email: string, password: string, fullName: s
     }
 
     return { error: null, user: data.user, session: data.session };
-  } catch (unexpectedError: any) {
+  } catch (unexpectedError: unknown) {
     console.error("❌ REGISTRO: Erro inesperado:", unexpectedError);
     showToast("Erro Inesperado", "Ocorreu um erro inesperado. Tente novamente.", "destructive");
     return { error: unexpectedError, user: null, session: null };

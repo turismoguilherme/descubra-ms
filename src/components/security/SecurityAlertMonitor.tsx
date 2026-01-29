@@ -95,7 +95,7 @@ export const SecurityAlertMonitor: React.FC = () => {
     return 'low';
   };
 
-  const generateAlertMessage = (event: any): string => {
+  const generateAlertMessage = (event: unknown): string => {
     const action = event.action;
     if (action.includes('rate_limit_exceeded')) {
       return 'Limite de tentativas excedido - acesso temporariamente bloqueado';

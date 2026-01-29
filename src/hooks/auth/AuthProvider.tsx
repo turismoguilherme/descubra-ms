@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+﻿import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/auth";
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Função para configurar usuário de teste
-    const setupTestUser = (testUser: any) => {
+    const setupTestUser = (testUser: { id: string; email: string; user_metadata?: { full_name?: string } }) => {
       logger.dev("🧪 AuthProvider: Configurando usuário de teste");
       
       // Criar usuário simulado
@@ -412,8 +412,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       return { data, error: null };
-    } catch (error: any) {
-      let errorMessage = error.message || "Ocorreu um erro inesperado.";
+    } catch (error: unknown) {
+      let errorMessage = err.message || "Ocorreu um erro inesperado.";
       
       // Tratamento específico para email já cadastrado
       if (error.message?.includes('User already registered') || error.message?.includes('already registered')) {
@@ -506,9 +506,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       return { data, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = "Erro ao fazer login";
-      if (error.message?.includes("Invalid login credentials")) {
+      if (err.message?.includes("Invalid login credentials")) {
         errorMessage = "Email ou senha inválidos";
       } else if (error.message?.includes("Email not confirmed")) {
         errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
@@ -588,10 +588,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       return { data, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro no login social",
-        description: error.message || "Ocorreu um erro inesperado.",
+        description: err.message || "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
       return { data: null, error };
@@ -606,10 +607,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro no logout",
-        description: error.message || "Ocorreu um erro inesperado.",
+        description: err.message || "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
     }
@@ -630,10 +632,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro ao reenviar email",
-        description: error.message || "Ocorreu um erro inesperado.",
+        description: err.message || "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
       return { error };
@@ -649,10 +652,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Email de recuperação enviado!",
         description: "Verifique sua caixa de entrada.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: "Erro ao redefinir senha",
-        description: error.message || "Ocorreu um erro inesperado.",
+        description: err.message || "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
       throw error;

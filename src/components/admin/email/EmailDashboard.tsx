@@ -67,7 +67,7 @@ interface EmailTemplate {
   name: string;
   subject_template: string;
   body_template: string;
-  variables_json: any;
+  variables_json: unknown;
   purpose: string;
   is_active: boolean;
 }

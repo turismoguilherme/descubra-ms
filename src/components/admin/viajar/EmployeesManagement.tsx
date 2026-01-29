@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,10 +32,11 @@ export default function EmployeesManagement() {
 
       if (error) throw error;
       setEmployees(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar funcionários',
+        description: err.message || 'Erro ao carregar funcionários',
         variant: 'destructive',
       });
     } finally {
@@ -207,10 +208,11 @@ function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
         toast({ title: 'Sucesso', description: 'Funcionário adicionado com sucesso' });
       }
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar funcionário',
+        description: err.message || 'Erro ao salvar funcionário',
         variant: 'destructive',
       });
     } finally {

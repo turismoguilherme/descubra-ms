@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,8 +59,9 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
       if (error) throw error;
 
       setPricingList(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar preços:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar preços:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os preços',
@@ -89,8 +90,9 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
       });
 
       loadPricing();
-    } catch (error: any) {
-      console.error('Erro ao excluir:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao excluir:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível excluir o preço',
@@ -121,8 +123,9 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
       if (error) throw error;
 
       loadPricing();
-    } catch (error: any) {
-      console.error('Erro ao atualizar status:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar status:', err);
     }
   };
 
@@ -177,8 +180,9 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
       });
 
       loadPricing();
-    } catch (error: any) {
-      console.error('Erro ao duplicar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao duplicar:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível duplicar o produto',

@@ -46,7 +46,7 @@ export function CitySelectionModal({ userId, onCitySelected }: CitySelectionModa
       if (error) throw error;
 
       setCities(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar cidades:', err);
       setError('Não foi possível carregar a lista de cidades. Tente novamente.');
     } finally {
@@ -76,7 +76,7 @@ export function CitySelectionModal({ userId, onCitySelected }: CitySelectionModa
       await onCitySelected(selectedCityId);
 
       // Modal será fechado pelo componente pai
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao salvar cidade:', err);
       setError('Erro ao salvar cidade. Tente novamente.');
     } finally {

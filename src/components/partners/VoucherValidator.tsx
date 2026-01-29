@@ -33,7 +33,7 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
   const [validationResult, setValidationResult] = useState<{
     success: boolean;
     message: string;
-    voucher?: any;
+    voucher?: unknown;
   } | null>(null);
   
   // QR Scanner state

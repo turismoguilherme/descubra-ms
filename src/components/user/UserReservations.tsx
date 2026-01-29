@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,15 @@ import { ReservationChat } from '@/components/partners/ReservationChat';
 import { ReservationMessageService } from '@/services/partners/reservationMessageService';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+type PartnerReservationRow = Database['public']['Tables']['partner_reservations']['Row'] & {
+  institutional_partners?: {
+    id: string;
+    name: string;
+    contact_email: string;
+  } | null;
+};
 
 interface UserReservation {
   id: string;
@@ -87,7 +96,7 @@ export default function UserReservations() {
 
       if (error) throw error;
 
-      const formattedReservations: UserReservation[] = (data || []).map((reservation: any) => ({
+      const formattedReservations: UserReservation[] = (data || []).map((reservation: PartnerReservationRow) => ({
         id: reservation.id,
         reservation_code: reservation.reservation_code,
         reservation_type: reservation.reservation_type,
@@ -121,8 +130,9 @@ export default function UserReservations() {
         );
         setUnreadMessagesCount(counts);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar reservas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar reservas:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar suas reservas',
@@ -195,8 +205,9 @@ export default function UserReservations() {
       });
       setCancellingReservation(reservation.id);
       setCancelReason('');
-    } catch (error: any) {
-      console.error('Erro ao buscar política de cancelamento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar política de cancelamento:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar a política de cancelamento',
@@ -229,11 +240,12 @@ export default function UserReservations() {
       setCancelReason('');
       setCancelPolicy(null);
       await loadReservations();
-    } catch (error: any) {
-      console.error('Erro ao cancelar reserva:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao cancelar reserva:', err);
       toast({
         title: 'Erro ao cancelar',
-        description: error.message || 'Não foi possível cancelar a reserva',
+        description: err.message || 'Não foi possível cancelar a reserva',
         variant: 'destructive',
       });
     } finally {

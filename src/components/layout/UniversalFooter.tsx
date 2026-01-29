@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
 const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const safeLog = (payload: any) => {
+const safeLog = (payload: unknown) => {
   if (!enableDebugLogs || !isDev) return;
   try {
     fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{

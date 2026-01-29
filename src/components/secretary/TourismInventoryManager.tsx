@@ -167,7 +167,7 @@ const TourismInventoryManager: React.FC = () => {
 
     // Validação do contato
     if (attraction.contact) {
-      const contactErrors: any = {};
+      const contactErrors: unknown = {};
       
       if (attraction.contact.phone && !/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(attraction.contact.phone)) {
         contactErrors.phone = 'Formato de telefone inválido';
@@ -208,7 +208,7 @@ const TourismInventoryManager: React.FC = () => {
 
       console.log('🔄 INVENTÁRIO: Convertendo dados para formato do serviço...');
       // Converter para formato do serviço
-      const serviceData: any = {
+      const serviceData: unknown = {
         name: attractionData.name || '',
         description: attractionData.description || '',
         address: attractionData.address || '',
@@ -816,10 +816,10 @@ const AttractionForm: React.FC<{
   const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
   const [validating, setValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<{
-    address?: any;
-    registration?: any;
-    duplicates?: any;
-    completeness?: any;
+    address?: unknown;
+    registration?: unknown;
+    duplicates?: unknown;
+    completeness?: unknown;
   }>({});
   const [formData, setFormData] = useState<TourismAttraction>({
     id: attraction?.id || '',

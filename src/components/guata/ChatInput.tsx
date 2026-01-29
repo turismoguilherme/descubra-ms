@@ -13,7 +13,7 @@ interface ChatInputProps {
   isLoading: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onClearConversation?: () => void; // Tornar opcional para fallback
-  mensagens: any[];
+  mensagens: unknown[];
 }
 
 const ChatInput = ({

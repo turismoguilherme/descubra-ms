@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -304,11 +304,12 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
         description: 'Sua solicitação foi recebida. Entraremos em contato em breve.',
       });
 
-    } catch (error: any) {
-      console.error('Erro ao enviar solicitação:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao enviar solicitação:', err);
       toast({
         title: 'Erro ao enviar',
-        description: error.message || 'Tente novamente mais tarde.',
+        description: err.message || 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {

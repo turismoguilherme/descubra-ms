@@ -47,9 +47,9 @@ interface FinancialData {
     byCategory: Record<string, number>;
     byMonth: Array<{ month: string; expenses: number }>;
   };
-  salaries: { total: number; employees: any[] };
+  salaries: { total: number; employees: unknown[] };
   profit: { revenue: number; expenses: number; salaries: number; taxes: number; profit: number; profitMargin: number };
-  upcomingBills: any[];
+  upcomingBills: unknown[];
 }
 
 interface AIInsight {
@@ -110,7 +110,7 @@ export default function ModernFinancialDashboard() {
     }
   };
 
-  const generateAIInsights = (revenue: any, expenses: any, profit: any, bills: any[]) => {
+  const generateAIInsights = (revenue: unknown, expenses: unknown, profit: unknown, bills: unknown[]) => {
     const insights: AIInsight[] = [];
 
     // Análise de lucro

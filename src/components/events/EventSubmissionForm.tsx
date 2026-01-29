@@ -296,7 +296,7 @@ export const EventSubmissionForm: React.FC = () => {
             organizerName: data.organizador_nome,
           });
           return;
-        } catch (checkoutError: any) {
+        } catch (checkoutError: unknown) {
           console.error('Erro ao criar checkout:', checkoutError);
           toast({
             title: "Erro no pagamento",

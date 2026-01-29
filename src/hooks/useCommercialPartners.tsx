@@ -27,8 +27,8 @@ export interface CommercialPartner {
   services_offered?: string[];
   target_audience?: string[];
   price_range?: 'budget' | 'mid_range' | 'luxury' | 'ultra_luxury';
-  operating_hours?: any;
-  seasonal_info?: any;
+  operating_hours?: unknown;
+  seasonal_info?: unknown;
   subscription_plan: 'basic' | 'premium' | 'enterprise';
   subscription_status: 'pending' | 'active' | 'suspended' | 'cancelled';
   subscription_start_date?: string;
@@ -103,7 +103,7 @@ const fetchCommercialPartners = async (filters?: {
     throw new Error(error.message);
   }
 
-  return (data || []).map((item: any) => ({
+  return (data || []).map((item: unknown) => ({
     ...item,
     business_type: item.business_type as CommercialPartner['business_type'],
     company_size: item.company_size as CommercialPartner['company_size'],

@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,9 @@ import { UserData } from "./users/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserRole } from "@/hooks/useSecureAuth";
 import { msRegions } from "@/data/msRegions";
+import type { Database } from "@/integrations/supabase/types";
+
+type UserWithDetails = Database['public']['Functions']['get_users_with_details']['Returns'][number];
 
 const TechnicalUserManager = () => {
   const { toast } = useToast();
@@ -48,7 +51,7 @@ const TechnicalUserManager = () => {
         throw error;
       }
         
-        const mappedUsers: UserData[] = data?.map((user: any) => ({
+        const mappedUsers: UserData[] = data?.map((user: UserWithDetails) => ({
           id: user.id,
           name: user.full_name || user.email || 'Sem nome',
           email: user.email,
@@ -64,11 +67,12 @@ const TechnicalUserManager = () => {
         })) || [];
         
         setUsers(mappedUsers);
-      } catch (error: any) {
-        console.error("Error fetching users:", error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error("Error fetching users:", err);
         toast({
           title: "Erro ao carregar usuários",
-          description: "Você precisa ser um gestor para ver os usuários. " + error.message,
+          description: "Você precisa ser um gestor para ver os usuários. " + err.message,
           variant: "destructive",
         });
       } finally {
@@ -194,7 +198,7 @@ const TechnicalUserManager = () => {
             console.error("Fetch users error:", fetchError);
             throw fetchError;
         }
-        const mappedUsersRefresh: UserData[] = data?.map((user: any) => ({
+        const mappedUsersRefresh: UserData[] = data?.map((user: unknown) => ({
           id: user.id,
           name: user.full_name || user.email || 'Sem nome',
           email: user.email,
@@ -211,11 +215,12 @@ const TechnicalUserManager = () => {
         
         setUsers(mappedUsersRefresh);
         
-    } catch (error: any) {
-        console.error("Submit error:", error);
+    } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error("Submit error:", err);
         toast({
             title: "❌ Erro ao processar usuário",
-            description: error.message || "Não foi possível processar a solicitação.",
+            description: err.message || "Não foi possível processar a solicitação.",
             variant: "destructive",
         });
     } finally {
@@ -239,7 +244,8 @@ const TechnicalUserManager = () => {
         setUsers(users.map(u => 
             u.id === userId ? { ...u, status: newStatus } : u
         ));
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
         toast({
             title: "❌ Erro ao alterar status",
             description: "Não foi possível alterar o status do usuário.",

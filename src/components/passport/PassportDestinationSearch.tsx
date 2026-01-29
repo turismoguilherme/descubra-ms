@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,11 +47,12 @@ const PassportDestinationSearch: React.FC<{ destinationName: string }> = ({ dest
       } else {
         throw new Error(data.error || 'Nenhum resultado encontrado');
       }
-    } catch (error: any) {
-      console.error('Erro ao buscar informações:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar informações:', err);
       toast({
         title: 'Erro na busca',
-        description: error.message || 'Não foi possível buscar informações sobre o destino.',
+        description: err.message || 'Não foi possível buscar informações sobre o destino.',
         variant: 'destructive',
       });
     } finally {

@@ -62,7 +62,7 @@ export function useBusinessSegment(): BusinessSegment {
         setCategory(categoryValue || null);
         setCityId(data.city_id || null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar segmento do negócio:', err);
       setError(err.message || 'Erro ao carregar informações do negócio');
     } finally {

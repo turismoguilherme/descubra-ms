@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,11 @@ export default function Reconciliation() {
     try {
       const data = await financialService.getPayments();
       setPayments(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar pagamentos',
+        description: err.message || 'Erro ao carregar pagamentos',
         variant: 'destructive',
       });
     } finally {
@@ -48,10 +49,11 @@ export default function Reconciliation() {
         title: 'Sucesso',
         description: 'Pagamentos sincronizados e reconciliados automaticamente',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro na reconciliação automática',
+        description: err.message || 'Erro na reconciliação automática',
         variant: 'destructive',
       });
     } finally {

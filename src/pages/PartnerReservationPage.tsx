@@ -180,7 +180,7 @@ export default function PartnerReservationPage() {
       // #endregion
       
       setPartner(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar parceiro:', error);
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:103',message:'Erro final ao carregar parceiro',data:{errorMessage:error.message,errorCode:error.code,partnerId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -302,7 +302,7 @@ export default function PartnerReservationPage() {
           setGuests(data[0].min_guests);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar preços:', error);
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:137',message:'Erro final ao carregar preços',data:{errorMessage:error.message,errorCode:error.code,partnerId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -445,7 +445,7 @@ export default function PartnerReservationPage() {
       } else {
         throw new Error('URL de checkout não retornada');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar reserva:', error);
       toast({
         title: 'Erro ao criar reserva',

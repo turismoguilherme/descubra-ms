@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,10 +67,11 @@ export function PartnerReservationSection({ partnerId, partnerName }: PartnerRes
       if (data && data.length > 0) {
         setSelectedService(data[0].id);
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar preços:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar preços:', err);
       // Não mostrar erro se tabela não existir
-      if (error.code !== 'PGRST116' && !error.message?.includes('does not exist')) {
+      if ((err as { code?: string }).code !== 'PGRST116' && !err.message?.includes('does not exist')) {
         setPricingList([]);
       }
     } finally {
@@ -165,11 +166,12 @@ export function PartnerReservationSection({ partnerId, partnerName }: PartnerRes
       } else {
         throw new Error('URL de checkout não retornada');
       }
-    } catch (error: any) {
-      console.error('Erro ao criar reserva:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar reserva:', err);
       toast({
         title: 'Erro ao criar reserva',
-        description: error.message || 'Não foi possível criar a reserva. Tente novamente.',
+        description: err.message || 'Não foi possível criar a reserva. Tente novamente.',
         variant: 'destructive',
       });
     } finally {

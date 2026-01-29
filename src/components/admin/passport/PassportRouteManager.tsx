@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,10 +66,11 @@ const PassportRouteManager: React.FC = () => {
       }
       
       setRoutes(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar rotas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar rotas:', err);
       // Só mostrar toast se não for erro de autenticação
-      if (error.code !== 'PGRST301' && !error.message?.includes('JWT')) {
+      if ((err as { code?: string }).code !== 'PGRST301' && !err.message?.includes('JWT')) {
         toast({
           title: 'Erro ao carregar rotas',
           description: error.message || 'Não foi possível carregar as rotas.',
@@ -82,7 +83,7 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
-  const toggleRouteStatus = async (route: any) => {
+  const toggleRouteStatus = async (route: { id: string; name: string; is_active: boolean }) => {
     try {
       const { error } = await supabase
         .from('routes')
@@ -100,17 +101,18 @@ const PassportRouteManager: React.FC = () => {
       });
 
       loadRoutes();
-    } catch (error: any) {
-      console.error('Erro ao alterar status:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar status:', err);
       toast({
         title: "❌ Erro",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     }
   };
 
-  const handleDeleteRoute = async (route: any) => {
+  const handleDeleteRoute = async (route: { id: string; name: string }) => {
     if (!window.confirm(`Tem certeza que deseja excluir a rota "${route.name}"? Esta ação não pode ser desfeita.`)) {
       return;
     }
@@ -129,17 +131,18 @@ const PassportRouteManager: React.FC = () => {
       });
 
       loadRoutes();
-    } catch (error: any) {
-      console.error('Erro ao excluir rota:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao excluir rota:', err);
       toast({
         title: "❌ Erro ao excluir",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     }
   };
 
-  const handleEdit = (route: any) => {
+  const handleEdit = (route: { video_url?: string; passport_number_prefix?: string; [key: string]: unknown }) => {
     setEditingRoute(route);
     setFormData({
       video_url: route.video_url || '',
@@ -209,11 +212,12 @@ const PassportRouteManager: React.FC = () => {
         .getPublicUrl(fileName);
 
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('Erro no upload da imagem do mapa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload da imagem do mapa:', err);
       toast({
         title: 'Erro no upload',
-        description: `Erro ao fazer upload da imagem do mapa: ${error.message}`,
+        description: `Erro ao fazer upload da imagem do mapa: ${err.message}`,
         variant: 'destructive',
       });
       return formData.map_image_url || null;
@@ -247,10 +251,11 @@ const PassportRouteManager: React.FC = () => {
       setMapImageFile(null);
       setMapImagePreview(null);
       loadRoutes();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao salvar',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -366,10 +371,11 @@ const PassportRouteManager: React.FC = () => {
       console.log('🔵 [PassportRouteManager] Recarregando lista de rotas...');
       await loadRoutes();
       console.log('✅ [PassportRouteManager] Processo completo finalizado');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportRouteManager] Erro completo ao criar rota:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -643,7 +649,7 @@ const PassportRouteManager: React.FC = () => {
               <Label htmlFor="new_difficulty">Dificuldade</Label>
               <Select
                 value={newRouteForm.difficulty}
-                onValueChange={(v: any) =>
+                onValueChange={(v: 'facil' | 'medio' | 'dificil') =>
                   setNewRouteForm({ ...newRouteForm, difficulty: v })
                 }
               >
@@ -673,7 +679,7 @@ const PassportRouteManager: React.FC = () => {
                     console.log('✅ [PassportRouteManager] handleCreateRoute concluído com sucesso:', result);
                     // Se chegou aqui, a função retornou sem erro
                     // O toast de sucesso já deve ter sido mostrado dentro de handleCreateRoute
-                  } catch (err: any) {
+                  } catch (err: unknown) {
                     console.error('❌ [PassportRouteManager] Erro ao chamar handleCreateRoute:', err);
                     // Se handleCreateRoute lançou erro, mostrar toast aqui também
                     if (!err?.handled) {

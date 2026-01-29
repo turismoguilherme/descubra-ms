@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -92,7 +92,7 @@ const PassportRewardsManager: React.FC = () => {
       setAvatars(avatarsRes.data || []);
 
       // Carregar quantidade de vouchers emitidos por recompensa (para exibir estoque)
-      const rewardIds = (rewardsRes || []).map((r: any) => r.id).filter(Boolean);
+      const rewardIds = (rewardsRes || []).map((r: { id: string }) => r.id).filter(Boolean);
       console.log('🔵 [PassportRewardsManager] Reward IDs encontrados:', rewardIds.length);
       
       if (rewardIds.length > 0) {
@@ -107,7 +107,7 @@ const PassportRewardsManager: React.FC = () => {
           throw userRewardsError;
         }
 
-        const counts = (userRewardsData || []).reduce((acc: Record<string, number>, row: any) => {
+        const counts = (userRewardsData || []).reduce((acc: Record<string, number>, row: { reward_id: string }) => {
           const rid = row.reward_id;
           acc[rid] = (acc[rid] || 0) + 1;
           return acc;
@@ -119,10 +119,11 @@ const PassportRewardsManager: React.FC = () => {
         console.log('🔵 [PassportRewardsManager] Nenhuma recompensa encontrada, zerando contagem');
         setEmittedByRewardId({});
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportRewardsManager] Erro completo ao carregar dados:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -253,10 +254,11 @@ const PassportRewardsManager: React.FC = () => {
       setFormErrors({}); // Limpar erros
       console.log('🔵 [PassportRewardsManager] Formulário resetado, recarregando dados...');
       await loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportRewardsManager] Erro completo ao salvar recompensa:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -288,10 +290,11 @@ const PassportRewardsManager: React.FC = () => {
         title: 'Recompensa excluída',
       });
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportRewardsManager] Erro completo ao excluir recompensa:', {
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: (err as { code?: string }).code,
         details: error.details,
         hint: error.hint,
         stack: error.stack,
@@ -357,7 +360,7 @@ const PassportRewardsManager: React.FC = () => {
                   <Label>Tipo</Label>
                   <Select
                     value={formData.reward_type}
-                    onValueChange={(v: any) => setFormData({ ...formData, reward_type: v })}
+                    onValueChange={(v: 'desconto' | 'brinde' | 'experiencia' | 'avatar' | 'outros') => setFormData({ ...formData, reward_type: v })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -412,7 +415,7 @@ const PassportRewardsManager: React.FC = () => {
                           <SelectValue placeholder="Escolha um avatar..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {avatars.map((avatar: any) => (
+                          {avatars.map((avatar: { id: string; name: string; image_url?: string; rarity?: string }) => (
                             <SelectItem key={avatar.id} value={avatar.id}>
                               <div className="flex items-center gap-2">
                                 {avatar.image_url && (

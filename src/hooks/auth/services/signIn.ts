@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+﻿import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
 export const signInService = async (email: string, password: string) => {
@@ -29,11 +29,11 @@ export const signInService = async (email: string, password: string) => {
     }
 
     return { error };
-  } catch (error: any) {
+  } catch (error: unknown) {
     await supabase.rpc('log_security_event', {
       event_action: 'login_exception',
       event_success: false,
-      event_error_message: error.message,
+      event_error_message: err.message,
       
     });
     console.error("❌ Erro catch no login:", error);

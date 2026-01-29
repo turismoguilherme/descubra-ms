@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,10 +61,11 @@ export const PartnerCancellationDialog: React.FC<PartnerCancellationDialogProps>
       } else {
         throw new Error(result.error || 'Erro ao processar cancelamento');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível processar o cancelamento',
+        description: err.message || 'Não foi possível processar o cancelamento',
         variant: 'destructive',
       });
     } finally {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,7 +52,7 @@ const WorkflowManagement = () => {
   const fetchWorkflows = async () => {
     setLoadingWorkflows(true);
     // Simplified workflow fetch - just return empty array for now since automated_tasks doesn't exist
-    const data: any[] = [];
+    const data: unknown[] = [];
     const error = null;
     
     if (error) {
@@ -71,7 +71,7 @@ const WorkflowManagement = () => {
   const fetchTasks = async () => {
     setLoadingTasks(true);
     // Simplified - return empty tasks since automated_tasks doesn't exist
-    const data: any[] = [];
+    const data: unknown[] = [];
     const error = null;
     
     if (error) {
@@ -119,11 +119,12 @@ const WorkflowManagement = () => {
         variant: "default",
       });
       fetchTasks(); // Atualiza a lista de tarefas para mostrar a nova
-    } catch (error: any) {
-      console.error('Erro ao iniciar workflow:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao iniciar workflow:', err);
       toast({
         title: "Erro ao Iniciar Workflow",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     }

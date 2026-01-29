@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,11 +48,12 @@ const RewardsOverview: React.FC<RewardsOverviewProps> = ({ routeId, completionPe
         if (userRewardsError) throw userRewardsError;
         setUserRewards(userRewardsData || []);
       }
-    } catch (error: any) {
-      console.error('Error loading rewards:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Error loading rewards:', err);
       toast({
         title: 'Erro ao carregar recompensas',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {

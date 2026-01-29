@@ -83,7 +83,7 @@ const VoucherList: React.FC<VoucherListProps> = ({ partnerId, partnerName }) => 
       if (vouchersError) throw vouchersError;
 
       // Formatar dados
-      const formattedVouchers: Voucher[] = (vouchersData || []).map((v: any) => ({
+      const formattedVouchers: Voucher[] = (vouchersData || []).map((v: unknown) => ({
         id: v.id,
         voucher_code: v.voucher_code,
         user_id: v.user_id,

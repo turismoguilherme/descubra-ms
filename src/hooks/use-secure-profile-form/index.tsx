@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -159,7 +159,7 @@ export const useSecureProfileForm = () => {
       // FASE 3: Preparar dados do perfil
       console.log("💾 PERFIL: Preparando dados para salvar no Supabase");
       
-      const profileData: any = {
+      const profileData: Record<string, unknown> = {
         user_id: user.id,
         user_type: mappedUserType,
         full_name: fullName,
@@ -257,13 +257,14 @@ export const useSecureProfileForm = () => {
 
       navigate("/");
 
-    } catch (error: any) {
-      console.error("❌ PERFIL: Erro geral no processo:", error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error("❌ PERFIL: Erro geral no processo:", err);
       
       let errorMessage = "Ocorreu um erro inesperado. Tente novamente.";
       
       // Tratamento específico de erros do Supabase
-      if (error.code) {
+      if ((err as { code?: string }).code) {
         console.log("🔍 PERFIL: Analisando código de erro:", error.code);
         switch (error.code) {
           case '23505':

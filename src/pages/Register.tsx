@@ -53,7 +53,7 @@ const Register = () => {
     await signInWithProvider(provider);
   };
 
-  const handleRegister = async (values: RegisterFormValues, accessibilityPreferences?: any) => {
+  const handleRegister = async (values: RegisterFormValues, accessibilityPreferences?: Record<string, unknown>) => {
     console.log("📝 Tentativa de registro:", values.email);
     console.log("🎯 Preferências de acessibilidade:", accessibilityPreferences);
     

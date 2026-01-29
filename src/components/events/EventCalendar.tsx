@@ -204,7 +204,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       console.log('📊 Eventos brutos recebidos da API:', data?.length || 0);
       console.log('📋 Primeiro evento bruto:', data?.[0]);
 
-      const events: EventItem[] = (data || []).map((event: any, index: number) => {
+      const events: EventItem[] = (data || []).map((event: unknown, index: number) => {
         try {
           // Calcular is_sponsored ANTES de criar o objeto
           const isSponsoredRaw = event.is_sponsored;

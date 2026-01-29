@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 
 interface WelcomeStepProps {
-  data: any;
-  onNext: (data?: any) => void;
+  data: unknown;
+  onNext: (data?: unknown) => void;
   onPrevious: () => void;
 }
 

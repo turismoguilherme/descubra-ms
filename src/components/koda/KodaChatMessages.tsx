@@ -3,7 +3,7 @@ import KodaChatMessage from "./KodaChatMessage";
 import { AnimatePresence } from "framer-motion";
 
 interface KodaChatMessagesProps {
-  messages: any[];
+  messages: unknown[];
   sendFeedback: (positive: boolean) => void;
 }
 

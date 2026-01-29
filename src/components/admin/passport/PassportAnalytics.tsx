@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { Users, Route, MapPin, Gift } from 'lucide-react';
@@ -27,7 +27,8 @@ const PassportAnalytics: React.FC = () => {
       const data = await passportAdminService.getStatistics();
       console.log('✅ [PassportAnalytics] Estatísticas carregadas:', data);
       setStats(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [PassportAnalytics] Erro completo ao carregar estatísticas:', {
         message: error?.message,
         code: error?.code,

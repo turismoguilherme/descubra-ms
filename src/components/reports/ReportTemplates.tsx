@@ -13,7 +13,7 @@ interface ReportTemplate {
   category: string;
   data_source: string;
   fields: string[];
-  filters: any[];
+  filters: unknown[];
   chart_config: {
     type: string;
   };

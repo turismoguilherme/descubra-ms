@@ -48,7 +48,7 @@ const SmartOnboarding: React.FC = () => {
     }
   };
 
-  const handleSetupComplete = (result: any) => {
+  const handleSetupComplete = (result: unknown) => {
     setSetupResult(result);
     setCurrentStep('complete');
   };

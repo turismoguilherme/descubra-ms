@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Building2, CheckCircle2, XCircle, Clock, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { Database } from '@/integrations/supabase/types';
+
+type EventRow = Database['public']['Tables']['events']['Row'];
 
 interface PendingEvent {
   id: string;
@@ -78,7 +81,7 @@ export default function EventApprovalQueue() {
 
       if (error) throw error;
 
-      const events = (data || []).map((event: any) => ({
+      const events = (data || []).map((event: EventRow) => ({
         id: event.id,
         title: event.title,
         description: event.description,
@@ -95,8 +98,9 @@ export default function EventApprovalQueue() {
       }));
 
       setPendingEvents(events);
-    } catch (error: any) {
-      console.error('Erro ao buscar eventos pendentes:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar eventos pendentes:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar eventos pendentes',
@@ -165,11 +169,12 @@ export default function EventApprovalQueue() {
       setShowApprovalDialog(false);
       setSelectedEvent(null);
       fetchPendingEvents();
-    } catch (error: any) {
-      console.error('Erro ao aprovar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao aprovar evento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao aprovar evento',
+        description: err.message || 'Erro ao aprovar evento',
         variant: 'destructive',
       });
     }
@@ -207,11 +212,12 @@ export default function EventApprovalQueue() {
       setSelectedEvent(null);
       setRejectionReason('');
       fetchPendingEvents();
-    } catch (error: any) {
-      console.error('Erro ao rejeitar evento:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao rejeitar evento:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao rejeitar evento',
+        description: err.message || 'Erro ao rejeitar evento',
         variant: 'destructive',
       });
     }

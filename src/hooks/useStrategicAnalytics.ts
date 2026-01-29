@@ -36,7 +36,7 @@ export function useStrategicAnalytics() {
       };
       setMessages((prev) => [...prev, aiMessage]);
 
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error calling strategic-analytics-ai function:', e);
       setError('Desculpe, não foi possível obter uma resposta da IA. Tente novamente mais tarde.');
     } finally {

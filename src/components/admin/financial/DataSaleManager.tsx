@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /**
  * Data Sale Manager
  * Gerencia solicitações de venda de dados de turismo
@@ -91,11 +91,12 @@ export default function DataSaleManager() {
 
       if (error) throw error;
       setRequests(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar solicitações:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar solicitações:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar solicitações',
+        description: err.message || 'Erro ao carregar solicitações',
         variant: 'destructive',
       });
     } finally {
@@ -115,8 +116,9 @@ export default function DataSaleManager() {
       if (data) {
         setPrice(data.value || '300.00');
       }
-    } catch (error: any) {
-      console.error('Erro ao carregar preço:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar preço:', err);
     }
   };
 
@@ -136,10 +138,11 @@ export default function DataSaleManager() {
         title: 'Preço atualizado',
         description: `Novo preço: R$ ${parseFloat(price).toFixed(2)}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar preço',
+        description: err.message || 'Erro ao atualizar preço',
         variant: 'destructive',
       });
     } finally {
@@ -232,10 +235,11 @@ export default function DataSaleManager() {
 
       fetchRequests();
       setDialogOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao aprovar solicitação',
+        description: err.message || 'Erro ao aprovar solicitação',
         variant: 'destructive',
       });
     }
@@ -288,10 +292,11 @@ export default function DataSaleManager() {
       if (selectedRequest?.id === request.id) {
         setSelectedRequest({ ...request, data_validation_status: isValid ? 'valid' : 'insufficient' });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro na validação',
-        description: error.message || 'Erro ao validar dados',
+        description: err.message || 'Erro ao validar dados',
         variant: 'destructive',
       });
     }
@@ -372,8 +377,9 @@ export default function DataSaleManager() {
       });
 
       fetchRequests();
-    } catch (error: any) {
-      console.error('Erro ao gerar relatório:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar relatório:', err);
       await supabase
         .from('data_sale_requests')
         .update({ status: 'failed' })

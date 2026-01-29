@@ -7,7 +7,7 @@ interface AIMessage {
   timestamp: Date;
 }
 
-export const useGuataConversation = (knowledgeBase: any, usuarioInfo: any) => {
+export const useGuataConversation = (knowledgeBase: unknown, usuarioInfo: Record<string, unknown>) => {
   const [mensagens, setMensagens] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 

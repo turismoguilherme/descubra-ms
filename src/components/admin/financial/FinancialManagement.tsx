@@ -314,7 +314,7 @@ export default function FinancialManagement() {
     return colors[status] || colors.pending;
   };
 
-  const exportToCSV = (data: any[], filename: string) => {
+  const exportToCSV = (data: unknown[], filename: string) => {
     if (data.length === 0) {
       toast({
         title: 'Aviso',
@@ -414,7 +414,7 @@ export default function FinancialManagement() {
       // Agrupar por mês
       const cashFlow: Record<string, { revenue: number; expenses: number; net: number }> = {};
       
-      allRevenues.forEach((r: any) => {
+      allRevenues.forEach((r: unknown) => {
         const month = r.paid_date ? r.paid_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
         if (!cashFlow[month]) {
           cashFlow[month] = { revenue: 0, expenses: 0, net: 0 };
@@ -422,7 +422,7 @@ export default function FinancialManagement() {
         cashFlow[month].revenue += Number(r.amount || 0);
       });
 
-      allExpenses.forEach((e: any) => {
+      allExpenses.forEach((e: unknown) => {
         const month = e.due_date ? e.due_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
         if (!cashFlow[month]) {
           cashFlow[month] = { revenue: 0, expenses: 0, net: 0 };
@@ -484,7 +484,7 @@ export default function FinancialManagement() {
       // Agrupar por mês
       const monthsMap: Record<string, { revenue: number; expenses: number; salaries: number }> = {};
       
-      allRevenues.forEach((r: any) => {
+      allRevenues.forEach((r: unknown) => {
         const month = r.paid_date ? r.paid_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
         if (!monthsMap[month]) {
           monthsMap[month] = { revenue: 0, expenses: 0, salaries: 0 };
@@ -492,7 +492,7 @@ export default function FinancialManagement() {
         monthsMap[month].revenue += Number(r.amount || 0);
       });
 
-      allExpenses.forEach((e: any) => {
+      allExpenses.forEach((e: unknown) => {
         if (e.payment_status === 'paid') {
           const month = e.paid_date ? e.paid_date.substring(0, 7) : e.due_date ? e.due_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
           if (!monthsMap[month]) {
@@ -572,7 +572,7 @@ export default function FinancialManagement() {
     }
   };
 
-  const generatePDF = (type: 'dre' | 'cashflow' | 'profit', data: any) => {
+  const generatePDF = (type: 'dre' | 'cashflow' | 'profit', data: unknown) => {
     try {
       if (type === 'dre') {
         generateDREPDF(data);

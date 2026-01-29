@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,10 +107,11 @@ export default function WhatsAppSettingsManager() {
         title: 'Sucesso',
         description: 'Configurações do WhatsApp salvas com sucesso',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar configurações do WhatsApp',
+        description: err.message || 'Erro ao salvar configurações do WhatsApp',
         variant: 'destructive',
       });
     } finally {

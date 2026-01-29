@@ -14,7 +14,7 @@ interface SecurityEvent {
   action: string;
   success: boolean;
   error_message?: string;
-  metadata?: any;
+  metadata?: unknown;
   created_at: string;
 }
 

@@ -105,7 +105,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
         return;
       }
 
-      const rewardIds = (rewards as any[]).map((r: any) => r.id);
+      const rewardIds = (rewards as any[]).map((r: unknown) => r.id);
 
       // Contar vouchers
       const { count: total, error: totalError } = await supabase
@@ -420,7 +420,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
                   <Label>Tipo de Recompensa *</Label>
                   <Select
                     value={formData.reward_type}
-                    onValueChange={(value: any) => setFormData({ ...formData, reward_type: value })}
+                    onValueChange={(value: unknown) => setFormData({ ...formData, reward_type: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o tipo" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,8 +84,9 @@ const AttendantGeoManager = () => {
       if (timesheetsError) throw timesheetsError;
       setTimesheets(timesheetsData || []);
       
-    } catch (error: any) {
-      console.error('Erro ao buscar dados:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar dados:', err);
       toast({
         title: "Erro",
         description: "Erro ao carregar dados dos atendentes e localizações.",
@@ -130,8 +131,9 @@ const AttendantGeoManager = () => {
       });
       
       fetchData();
-    } catch (error: any) {
-      console.error('Erro ao criar localização:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar localização:', err);
       toast({
         title: "Erro",
         description: "Erro ao criar localização CAT.",
@@ -156,8 +158,9 @@ const AttendantGeoManager = () => {
       });
       
       fetchData();
-    } catch (error: any) {
-      console.error('Erro ao atualizar status:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao atualizar status:', err);
       toast({
         title: "Erro",
         description: "Erro ao atualizar status da localização.",

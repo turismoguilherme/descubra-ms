@@ -1,4 +1,4 @@
-
+﻿
 import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
@@ -27,8 +27,9 @@ export const manuallyUpdateUserRole = async (userId: string, newRole: 'admin' | 
     console.log("✅ SECURE ROLE UPDATE: Role atualizada com sucesso");
     showToast("Sucesso", `Role atualizada para: ${newRole}`, "default");
     return true;
-  } catch (error: any) {
-    console.error("❌ SECURE ROLE UPDATE: Erro crítico:", error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("❌ SECURE ROLE UPDATE: Erro crítico:", err);
     showToast("Erro", "Erro crítico ao atualizar role.", "destructive");
     return false;
   }

@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,11 +137,12 @@ export default function PantanalAvatarsManager() {
       console.log('✅ [PantanalAvatarsManager] Avatares carregados:', data?.length || 0, 'itens');
       console.log('📋 [PantanalAvatarsManager] Dados:', data);
       setAvatars(data || []);
-    } catch (error: any) {
-      console.error('❌ [PantanalAvatarsManager] Erro geral ao carregar:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [PantanalAvatarsManager] Erro geral ao carregar:', err);
       toast({
         title: 'Erro ao carregar avatares',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -281,10 +282,11 @@ export default function PantanalAvatarsManager() {
 
       console.log('✅ [PantanalAvatarsManager] Upload concluído, URL:', publicUrlData?.publicUrl);
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('❌ [PantanalAvatarsManager] Erro geral no upload:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [PantanalAvatarsManager] Erro geral no upload:', err);
       // Continuar sem imagem se o erro for de bucket
-      if (error.message?.includes('not found') || error.message?.includes('Bucket')) {
+      if (err.message?.includes('not found') || error.message?.includes('Bucket')) {
         return null;
       }
       toast({
@@ -398,7 +400,7 @@ export default function PantanalAvatarsManager() {
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:305',message:'handleSave - após validação',data:{finalImageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
 
-      const avatarData: any = {
+      const avatarData: unknown = {
         name: formData.name.trim(),
         scientific_name: formData.scientific_name.trim() || null,
         description: formData.description.trim() || null,
@@ -455,7 +457,7 @@ export default function PantanalAvatarsManager() {
       } else {
         console.log('➕ [PantanalAvatarsManager] Criando novo avatar...');
         // Remover campos undefined e garantir que não enviamos 'id'
-        const cleanAvatarData: any = {};
+        const cleanAvatarData: unknown = {};
         Object.entries(avatarData).forEach(([key, value]) => {
           if (key !== 'id' && value !== undefined) {
             cleanAvatarData[key] = value;
@@ -517,12 +519,13 @@ export default function PantanalAvatarsManager() {
       setImageFile(null);
       await loadAvatars();
       console.log('✅ [PantanalAvatarsManager] Processo concluído com sucesso!');
-    } catch (error: any) {
-      console.error('❌ [PantanalAvatarsManager] Erro geral ao salvar:', error);
-      console.error('❌ [PantanalAvatarsManager] Stack trace:', error.stack);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [PantanalAvatarsManager] Erro geral ao salvar:', err);
+      console.error('❌ [PantanalAvatarsManager] Stack trace:', err.stack);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar o avatar.',
+        description: err.message || 'Não foi possível salvar o avatar.',
         variant: 'destructive',
       });
     } finally {
@@ -548,10 +551,11 @@ export default function PantanalAvatarsManager() {
       });
 
       loadAvatars();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro ao excluir',
-        description: error.message || 'Não foi possível excluir o avatar.',
+        description: err.message || 'Não foi possível excluir o avatar.',
         variant: 'destructive',
       });
     }
@@ -763,7 +767,7 @@ export default function PantanalAvatarsManager() {
         }
 
         // Preparar dados para inserção
-        const avatarData: any = {
+        const avatarData: unknown = {
           name: avatar.name,
           scientific_name: avatar.scientific_name,
           description: avatar.description,
@@ -808,11 +812,12 @@ export default function PantanalAvatarsManager() {
       });
 
       await loadAvatars();
-    } catch (error: any) {
-      console.error('❌ [PantanalAvatarsManager] Erro na importação:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [PantanalAvatarsManager] Erro na importação:', err);
       toast({
         title: 'Erro na importação',
-        description: error.message || 'Não foi possível importar os avatares.',
+        description: err.message || 'Não foi possível importar os avatares.',
         variant: 'destructive',
       });
     } finally {

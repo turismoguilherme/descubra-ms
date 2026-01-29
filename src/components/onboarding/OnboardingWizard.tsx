@@ -29,7 +29,7 @@ interface OnboardingData {
   location: string;
   experience: string;
   diagnosticAnswers: Record<string, any>;
-  diagnosticResult?: any;
+  diagnosticResult?: unknown;
 }
 
 interface OnboardingWizardProps {

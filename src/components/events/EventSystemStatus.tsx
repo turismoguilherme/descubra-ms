@@ -208,7 +208,7 @@ const EventSystemStatus: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {testResults.tests.map((test: any, index: number) => (
+              {testResults.tests.map((test: unknown, index: number) => (
                 <div key={index} className="flex items-center justify-between">
                   <span>{test.name}:</span>
                   <div className="flex items-center gap-2">

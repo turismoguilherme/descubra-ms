@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -119,11 +119,12 @@ export default function StripeConnectStep({
       } else {
         throw new Error('URL de onboarding não recebida');
       }
-    } catch (error: any) {
-      console.error('Erro ao iniciar Stripe Connect:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao iniciar Stripe Connect:', err);
       toast({
         title: 'Erro ao conectar',
-        description: error.message || 'Não foi possível iniciar a conexão com o Stripe.',
+        description: err.message || 'Não foi possível iniciar a conexão com o Stripe.',
         variant: 'destructive',
       });
     } finally {

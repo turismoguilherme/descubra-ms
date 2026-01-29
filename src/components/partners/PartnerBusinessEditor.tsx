@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -75,7 +75,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
       } else {
         setGalleryPreviews([]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:62',message:'Erro ao carregar dados',data:{errorMessage:error?.message,errorCode:error?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
@@ -313,7 +313,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
       
       // Recarregar dados do banco para garantir sincronização
       await loadPartnerData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:210',message:'Erro ao salvar dados do parceiro',data:{errorMessage:error?.message,errorCode:error?.code,errorDetails:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
       // #endregion

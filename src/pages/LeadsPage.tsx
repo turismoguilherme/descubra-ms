@@ -63,7 +63,7 @@ const ViaJARLeadsPage = () => {
           throw error;
         }
 
-        const mapped = (data || []).map((lead: any) => {
+        const mapped = (data || []).map((lead: unknown) => {
           // Mapeia status de forma simples com base em status_id; para uso interno podemos
           // refinar depois com uma tabela de status.
           let uiStatus = 'Novo';
@@ -83,7 +83,7 @@ const ViaJARLeadsPage = () => {
         });
 
         setLeads(mapped);
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           title: 'Erro ao carregar leads',
           description: error.message || 'Não foi possível carregar seus leads.',

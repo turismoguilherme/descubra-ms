@@ -13,7 +13,7 @@ interface QuizResultProps {
     level: string;
     badge: string;
     recommendations: string[];
-    results: any[];
+    results: unknown[];
   };
   onContinue: () => void;
   onRetake: () => void;

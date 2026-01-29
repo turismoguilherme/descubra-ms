@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Plano Diretor de Turismo Manager
  * Componente principal para gerenciamento completo do Plano Diretor
  */
@@ -152,8 +152,9 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
         console.log('PlanoDiretorManager: Nenhum plano encontrado');
         setPlanoAtual(null);
       }
-    } catch (error: any) {
-      console.error('PlanoDiretorManager: Erro ao carregar planos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('PlanoDiretorManager: Erro ao carregar planos:', err);
       
       // Verificar se é erro de migration
       const isMigrationError = error?.isMigrationError || 
@@ -257,8 +258,9 @@ const PlanoDiretorManager: React.FC<PlanoDiretorManagerProps> = ({
         title: 'Sucesso',
         description: 'Plano diretor criado com sucesso!',
       });
-    } catch (error: any) {
-      console.error('PlanoDiretorManager: Erro ao criar plano:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('PlanoDiretorManager: Erro ao criar plano:', err);
       const errorMessage = error?.message || 'Não foi possível criar o plano diretor. Verifique se as migrations foram executadas.';
       
       // Detectar se é erro de migration ou de usuário

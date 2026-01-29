@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente para configurar Payment Link do Stripe para eventos
  * Permite inserir, editar e validar links de pagamento
  */
@@ -110,11 +110,12 @@ export default function EventPaymentConfig({
       if (onUpdate) {
         onUpdate();
       }
-    } catch (error: any) {
-      console.error('Erro ao salvar link:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar link:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível salvar o link de pagamento',
+        description: err.message || 'Não foi possível salvar o link de pagamento',
         variant: 'destructive',
       });
     } finally {
@@ -301,10 +302,11 @@ export default function EventPaymentConfig({
                   if (onUpdate) {
                     onUpdate();
                   }
-                } catch (error: any) {
+                } catch (error: unknown) {
+                  const err = error instanceof Error ? error : new Error(String(error));
                   toast({
                     title: 'Erro',
-                    description: error.message || 'Não foi possível remover o link',
+                    description: err.message || 'Não foi possível remover o link',
                     variant: 'destructive',
                   });
                 } finally {

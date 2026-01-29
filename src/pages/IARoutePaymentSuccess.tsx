@@ -79,7 +79,7 @@ export default function IARoutePaymentSuccess() {
             }
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao verificar pagamento:', err);
         setError(err.message || 'Erro ao verificar pagamento');
         toast({

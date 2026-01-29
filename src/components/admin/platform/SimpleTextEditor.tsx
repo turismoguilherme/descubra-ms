@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -229,8 +229,9 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       setContents(contentMap);
       setOriginalContents({ ...contentMap }); // Salvar cópia dos valores originais
       setContentIds(idMap);
-    } catch (error: any) {
-      console.error('❌ [SimpleTextEditor] Erro ao carregar conteúdo:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [SimpleTextEditor] Erro ao carregar conteúdo:', err);
       toast({
         title: 'Erro ao carregar',
         description: 'Não foi possível carregar o conteúdo.',
@@ -415,11 +416,12 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       console.log('🔗 [SimpleTextEditor] URL pública gerada:', publicUrl);
       
       return publicUrl;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [SimpleTextEditor] Erro capturado no upload:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
+        message: err.message,
+        stack: err.stack,
+        name: err.name
       });
       toast({
         title: 'Erro no upload',
@@ -476,7 +478,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           setTimeout(() => {
             setSaved(prev => ({ ...prev, [key]: false }));
           }, 2000);
-        } catch (saveError: any) {
+        } catch (saveError: unknown) {
           console.error('❌ [SimpleTextEditor] Erro ao salvar no banco:', {
             message: saveError.message,
             stack: saveError.stack,
@@ -490,11 +492,12 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           });
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [SimpleTextEditor] Erro capturado:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
         key
       });
       toast({
@@ -572,12 +575,13 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       setTimeout(() => {
         setSaved(prev => ({ ...prev, [key]: false }));
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ [SimpleTextEditor] Erro ao salvar:', {
         key,
-        error: error.message,
+        error: err.message,
         errorDetails: error,
-        stack: error.stack
+        stack: err.stack
       });
       toast({
         title: 'Erro ao salvar',

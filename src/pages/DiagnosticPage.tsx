@@ -38,7 +38,7 @@ const DiagnosticPage: React.FC = () => {
     setIsAnalyzing(analyzing);
   };
 
-  const handleImplement = (recommendation: any) => {
+  const handleImplement = (recommendation: unknown) => {
     // Redirecionar para o onboarding com a recomendação selecionada
     navigate('/viajar/onboarding', { 
       state: { 

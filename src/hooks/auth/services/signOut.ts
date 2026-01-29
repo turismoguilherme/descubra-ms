@@ -1,4 +1,4 @@
-
+﻿
 import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
@@ -8,8 +8,9 @@ export const signOutService = async () => {
     if (error) throw error;
     
     showToast("Logout realizado", "Você saiu da sua conta.");
-  } catch (error: any) {
-    console.error("❌ Erro no logout:", error);
-    showToast("Erro no logout", error.message || "Erro inesperado", "destructive");
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("❌ Erro no logout:", err);
+    showToast("Erro no logout", err.message || "Erro inesperado", "destructive");
   }
 };

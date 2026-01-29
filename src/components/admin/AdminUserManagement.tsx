@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,7 +48,7 @@ const AdminUserManagement = () => {
   const [showRoleUpdateConfirmation, setShowRoleUpdateConfirmation] = useState(false);
   const [pendingOperation, setPendingOperation] = useState<{
     type: 'elevate' | 'delete' | 'role_update';
-    data: any;
+    data: { id: string; email: string; full_name?: string; role?: string } | null;
   } | null>(null);
 
   const roles = [
@@ -125,11 +125,12 @@ const AdminUserManagement = () => {
       
       setElevateEmail("");
       await fetchUsers();
-    } catch (error: any) {
-      console.error("Erro ao elevar usuário:", error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error("Erro ao elevar usuário:", err);
       toast({
         title: "Erro",
-        description: error.message || "Falha ao elevar usuário a admin",
+        description: err.message || "Falha ao elevar usuário a admin",
         variant: "destructive"
       });
     } finally {
@@ -221,11 +222,12 @@ const AdminUserManagement = () => {
       setUserToDelete(null);
       setDeleteConfirmEmail("");
       await fetchUsers();
-    } catch (error: any) {
-      console.error("Erro ao deletar usuário:", error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error("Erro ao deletar usuário:", err);
       toast({
         title: "Erro",
-        description: error.message || "Falha ao deletar usuário",
+        description: err.message || "Falha ao deletar usuário",
         variant: "destructive"
       });
     }
@@ -487,10 +489,11 @@ const AdminUserManagement = () => {
             
             setElevateEmail("");
             await fetchUsers();
-          } catch (error: any) {
+          } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
             toast({
               title: "Erro ao elevar usuário",
-              description: error.message || "Falha na operação",
+              description: err.message || "Falha na operação",
               variant: "destructive"
             });
             throw error;
@@ -530,10 +533,11 @@ const AdminUserManagement = () => {
             } else {
               throw new Error("Falha ao atualizar papel do usuário");
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
             toast({
               title: "Erro ao atualizar papel",
-              description: error.message || "Falha na operação",
+              description: err.message || "Falha na operação",
               variant: "destructive"
             });
             throw error;
@@ -563,10 +567,11 @@ const AdminUserManagement = () => {
             });
             
             await fetchUsers();
-          } catch (error: any) {
+          } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
             toast({
               title: "Erro ao deletar usuário",
-              description: error.message || "Falha na operação",
+              description: err.message || "Falha na operação",
               variant: "destructive"
             });
             throw error;

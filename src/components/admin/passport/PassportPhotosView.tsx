@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,8 +56,9 @@ const PassportPhotosView: React.FC = () => {
 
       if (error) throw error;
       setRoutes(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar rotas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar rotas:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar as rotas.',
@@ -76,8 +77,9 @@ const PassportPhotosView: React.FC = () => {
 
       if (error) throw error;
       setCheckpoints(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar checkpoints:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar checkpoints:', err);
     }
   };
 
@@ -145,8 +147,9 @@ const PassportPhotosView: React.FC = () => {
       }));
 
       setPhotos(photosWithDetails);
-    } catch (error: any) {
-      console.error('Erro ao carregar fotos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar fotos:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar as fotos dos check-ins.',

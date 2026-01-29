@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CAT Check-In Section
  * Seção padronizada de controle de ponto para atendentes dos CATs
  */
@@ -197,9 +197,10 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
           variant: 'destructive'
         });
       }
-    } catch (error: any) {
-      console.error('Erro ao fazer check-in:', error);
-      setLocationError(error.message || 'Erro ao obter localização');
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao fazer check-in:', err);
+      setLocationError(err.message || 'Erro ao obter localização');
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível fazer check-in',
@@ -282,9 +283,10 @@ const CATCheckInSection: React.FC<CATCheckInSectionProps> = ({ catName = 'CAT Ce
           variant: 'destructive'
         });
       }
-    } catch (error: any) {
-      console.error('Erro ao fazer check-out:', error);
-      setLocationError(error.message || 'Erro ao obter localização');
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao fazer check-out:', err);
+      setLocationError(err.message || 'Erro ao obter localização');
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível fazer check-out',

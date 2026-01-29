@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,10 +33,11 @@ export default function ClientsManagement() {
     try {
       const data = await viajarAdminService.getClients();
       setClients(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar clientes',
+        description: err.message || 'Erro ao carregar clientes',
         variant: 'destructive',
       });
     } finally {

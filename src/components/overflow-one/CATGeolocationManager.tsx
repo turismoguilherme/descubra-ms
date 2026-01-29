@@ -135,7 +135,7 @@ const CATGeolocationManager: React.FC = () => {
     }
   };
 
-  const selectAddress = (suggestion: any) => {
+  const selectAddress = (suggestion: unknown) => {
     const address = suggestion.display_name || suggestion.name;
     const lat = parseFloat(suggestion.lat);
     const lng = parseFloat(suggestion.lon);

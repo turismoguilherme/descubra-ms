@@ -208,7 +208,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
         const purposeCounts: Record<string, number> = {};
         const preferenceCounts: Record<string, number> = {};
 
-        profiles.forEach((profile: any) => {
+        profiles.forEach((profile: unknown) => {
           const age = profile.age_range;
           const gender = profile.gender;
           const origin = profile.origin_state || profile.state;
@@ -315,7 +315,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
         title: 'Consentimento registrado!',
         description: 'Agora você pode acessar o Competitive Benchmark.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar consentimento:', error);
       toast({
         title: 'Erro',

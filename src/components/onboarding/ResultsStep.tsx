@@ -23,8 +23,8 @@ import {
 } from 'lucide-react';
 
 interface ResultsStepProps {
-  data: any;
-  onNext: (data?: any) => void;
+  data: unknown;
+  onNext: (data?: unknown) => void;
   onPrevious: () => void;
 }
 
@@ -49,7 +49,7 @@ const ResultsStep: React.FC<ResultsStepProps> = ({ data, onNext }) => {
     analyzeDiagnostic();
   }, [data]);
 
-  const generateAnalysisResult = (data: any) => {
+  const generateAnalysisResult = (data: unknown) => {
     const answers = data.diagnosticAnswers || {};
     
     // Lógica simples de análise baseada nas respostas

@@ -4,7 +4,7 @@ import ChatMessage from "./ChatMessage";
 import { AnimatePresence } from "framer-motion";
 
 interface ChatMessagesProps {
-  messages: any[];
+  messages: unknown[];
   enviarFeedback: (positivo: boolean) => void;
 }
 

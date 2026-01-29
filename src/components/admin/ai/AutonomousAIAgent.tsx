@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -372,7 +372,7 @@ export default function AutonomousAIAgent() {
       } else if (financialResult.data) {
         setLastFinancialReport(financialResult.data);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn('Erro ao carregar análises:', error);
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Exceção ao carregar análises',data:{error:error?.message,errorString:String(error),stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -654,8 +654,9 @@ export default function AutonomousAIAgent() {
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Configuração salva com sucesso no Supabase e localStorage',data:{saved:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       return config;
-    } catch (error: any) {
-      console.error('🔴 [DEBUG] Erro em saveConfig:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('🔴 [DEBUG] Erro em saveConfig:', err);
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Erro ao salvar configuração',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
@@ -759,7 +760,7 @@ export default function AutonomousAIAgent() {
     });
 
     const startTime = Date.now();
-    let result: any = null;
+    let result: unknown = null;
     let success = false;
     let errorMessage = '';
 
@@ -839,9 +840,9 @@ export default function AutonomousAIAgent() {
         loadAutoApprovals();
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       success = false;
-      errorMessage = error.message || 'Erro desconhecido';
+      errorMessage = err.message || 'Erro desconhecido';
       
       setTasks(prev => prev.map(t => 
         t.id === task.id ? { 
@@ -966,8 +967,9 @@ RESPOSTA:`;
       } else {
         throw new Error(aiResponse.error || 'Erro ao gerar resposta');
       }
-    } catch (error: any) {
-      console.error('Erro no chat:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no chat:', err);
       setChatMessages(prev => [...prev, { 
         role: 'assistant', 
         content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.' 
@@ -1723,8 +1725,9 @@ RESPOSTA:`;
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Toast chamado com sucesso',data:{toastCalled:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
-                  } catch (error: any) {
-                    console.error('🔴 [DEBUG] Erro ao salvar configurações:', error);
+                  } catch (error: unknown) {
+                    const err = error instanceof Error ? error : new Error(String(error));
+                    console.error('🔴 [DEBUG] Erro ao salvar configurações:', err);
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Erro ao salvar configurações',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion

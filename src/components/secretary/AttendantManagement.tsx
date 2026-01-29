@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,8 +59,9 @@ export default function AttendantManagement() {
 
       if (error) throw error;
       setCatLocations(data || []);
-    } catch (error: any) {
-      console.error('Erro ao buscar CATs:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar CATs:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar lista de CATs',
@@ -97,8 +98,9 @@ export default function AttendantManagement() {
       );
 
       setAttendants(attendantsWithCATs);
-    } catch (error: any) {
-      console.error('Erro ao buscar atendentes:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao buscar atendentes:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar lista de atendentes',
@@ -177,11 +179,12 @@ export default function AttendantManagement() {
         title: 'Sucesso',
         description: 'Atendente criado com sucesso!',
       });
-    } catch (error: any) {
-      console.error('Erro ao criar atendente:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao criar atendente:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao criar atendente',
+        description: err.message || 'Erro ao criar atendente',
         variant: 'destructive',
       });
     } finally {

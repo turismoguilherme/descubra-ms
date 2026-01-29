@@ -105,7 +105,7 @@ export function useViaJARTurSettings() {
 
         setSettings(newSettings);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar configurações ViaJARTur:', err);
       setError(err.message);
     } finally {

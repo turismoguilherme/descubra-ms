@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,11 +35,12 @@ export default function ContentEditor() {
       
       if (error) throw error;
       setContents((data || []) as ContentVersion[]);
-    } catch (error: any) {
-      console.error('Erro ao carregar conteúdos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar conteúdos:', err);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar conteúdos',
+        description: err.message || 'Erro ao carregar conteúdos',
         variant: 'destructive',
       });
     } finally {
@@ -254,10 +255,11 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
       }
       setHasChanges(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar conteúdo',
+        description: err.message || 'Erro ao salvar conteúdo',
         variant: 'destructive',
       });
     } finally {
@@ -295,10 +297,11 @@ function ContentForm({ content, onSuccess }: ContentFormProps) {
       toast({ title: 'Sucesso', description: 'Conteúdo publicado com sucesso' });
       setHasChanges(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao publicar conteúdo',
+        description: err.message || 'Erro ao publicar conteúdo',
         variant: 'destructive',
       });
     } finally {

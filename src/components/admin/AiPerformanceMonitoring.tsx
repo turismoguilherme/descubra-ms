@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,11 +86,12 @@ const AiPerformanceMonitoring = () => {
       });
       console.log('Novos insights gerados:', data.optimization_insights);
       fetchInsights(); // Recarrega a lista para mostrar os novos insights
-    } catch (error: any) {
-      console.error('Erro ao gerar novos insights da IA:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao gerar novos insights da IA:', err);
       toast({
         title: "Erro ao Gerar Insights",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     } finally {

@@ -1,4 +1,4 @@
-
+﻿
 import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
@@ -38,11 +38,11 @@ export const signInWithProviderService = async (provider: 'google' | 'facebook')
 
     return { error: null };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     await supabase.rpc('log_security_event', {
       event_action: 'oauth_login_exception',
       event_success: false,
-      event_error_message: error.message,
+      event_error_message: err.message,
       
     });
     console.error(`❌ Erro catch OAuth ${provider}:`, error);

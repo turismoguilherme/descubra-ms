@@ -91,11 +91,11 @@ const EventManagementSystem: React.FC = () => {
   const [autoClassifying, setAutoClassifying] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<{
-    conflicts?: any;
-    duplicates?: any;
-    completeness?: any;
-    audiencePrediction?: any;
-    optimalDates?: any[];
+    conflicts?: unknown;
+    duplicates?: unknown;
+    completeness?: unknown;
+    audiencePrediction?: unknown;
+    optimalDates?: unknown[];
   }>({});
 
   const categories = [
@@ -149,7 +149,7 @@ const EventManagementSystem: React.FC = () => {
     try {
       // Se for usuário do MS, mostrar todos os eventos (incluindo pendentes)
       // Se não for, mostrar apenas aprovados
-      const filters: any = {
+      const filters: unknown = {
         search: searchTerm || undefined,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         status: selectedStatus !== 'all' ? selectedStatus : undefined,
@@ -271,7 +271,7 @@ const EventManagementSystem: React.FC = () => {
     setLoading(true);
     try {
       // Converter para formato do serviço
-      const serviceData: any = {
+      const serviceData: unknown = {
         title: eventData.title || '',
         name: eventData.title || '',
         description: eventData.description || '',
@@ -832,11 +832,11 @@ const EventForm: React.FC<{
   const [autoFilling, setAutoFilling] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<{
-    conflicts?: any;
-    duplicates?: any;
-    completeness?: any;
-    audiencePrediction?: any;
-    optimalDates?: any[];
+    conflicts?: unknown;
+    duplicates?: unknown;
+    completeness?: unknown;
+    audiencePrediction?: unknown;
+    optimalDates?: unknown[];
   }>({});
   
   const [formData, setFormData] = useState<TourismEvent>({
@@ -894,7 +894,7 @@ const EventForm: React.FC<{
     }
   };
 
-  const handleUseSuggestion = (suggestedEvent: any) => {
+  const handleUseSuggestion = (suggestedEvent: unknown) => {
     setFormData({
       ...formData,
       title: suggestedEvent.titulo || formData.title,
@@ -1364,7 +1364,7 @@ const EventForm: React.FC<{
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs">
                 <p className="font-semibold text-red-800 mb-2">Conflitos encontrados:</p>
                 <ul className="space-y-1 text-red-700">
-                  {validationResults.conflicts.conflicts.map((conflict: any) => (
+                  {validationResults.conflicts.conflicts.map((conflict: unknown) => (
                     <li key={conflict.eventId}>
                       • <strong>{conflict.eventName}</strong> - {conflict.conflictReason}
                     </li>

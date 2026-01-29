@@ -92,7 +92,7 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
       onChange(publicUrl);
       setPreview(publicUrl);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no upload:', err);
       setError(err.message || 'Erro ao fazer upload da imagem');
       setPreview(null);

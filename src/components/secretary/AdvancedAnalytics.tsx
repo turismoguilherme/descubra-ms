@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Analytics Avançados para Setor Público
  * Dashboard com análises profundas e preditivas
  */
@@ -62,8 +62,9 @@ const AdvancedAnalyticsComponent: React.FC = () => {
       });
 
       setData(analytics);
-    } catch (error: any) {
-      console.error('Erro ao carregar analytics:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar analytics:', err);
       toast({
         title: "Erro ao carregar Analytics",
         description: error?.message || "Não foi possível carregar os dados de analytics. Verifique sua conexão e tente novamente.",

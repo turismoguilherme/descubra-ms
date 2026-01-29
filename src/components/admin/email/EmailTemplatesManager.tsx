@@ -29,7 +29,7 @@ interface EmailTemplate {
   channel: 'email';
   subject_template: string | null;
   body_template: string;
-  variables_json: any;
+  variables_json: unknown;
   purpose: string | null;
   is_active: boolean;
   created_by: string | null;

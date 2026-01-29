@@ -51,7 +51,7 @@ export const useStateConfig = () => {
         } else {
           setError("Configuração do estado não encontrada ou inativa.");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Erro inesperado ao buscar configuração do estado:", err);
         setError(err.message);
       } finally {

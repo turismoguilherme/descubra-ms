@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,10 +55,11 @@ export default function ImprovedContentEditor({ onContentChange }: ContentEditor
     try {
       const data = await descubraMSAdminService.getContentVersions('descubra_ms');
       setContents(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao carregar conteúdos',
+        description: err.message || 'Erro ao carregar conteúdos',
         variant: 'destructive',
       });
     } finally {
@@ -470,10 +471,11 @@ function ContentEditDialog({ content, isOpen, onClose, onSuccess }: ContentEditD
       setHasChanges(false);
       onSuccess();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao salvar conteúdo',
+        description: err.message || 'Erro ao salvar conteúdo',
         variant: 'destructive',
       });
     } finally {

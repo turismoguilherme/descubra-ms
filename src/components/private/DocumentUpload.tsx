@@ -96,7 +96,7 @@ const DocumentUpload: React.FC = () => {
       try {
         const docs = await documentService.getDocuments(user.id, { is_active: true });
         setDocuments(docs || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao carregar documentos:', err);
         setError('Erro ao carregar documentos. Tente novamente.');
         setDocuments([]);
@@ -207,7 +207,7 @@ const DocumentUpload: React.FC = () => {
           setIsAnalyzing(null);
           setProcessingDocumentId(null);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao fazer upload:', err);
         const errorMessage = err?.message || 'Não foi possível fazer upload do documento';
         setError(errorMessage);
@@ -231,7 +231,7 @@ const DocumentUpload: React.FC = () => {
           description: 'Documento excluído com sucesso'
         });
         await loadDocuments();
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao excluir documento:', err);
         toast({
           title: 'Erro',
@@ -250,7 +250,7 @@ const DocumentUpload: React.FC = () => {
           description: 'Documento analisado com sucesso!'
         });
         await loadDocuments();
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao analisar documento:', err);
         toast({
           title: 'Erro',
@@ -280,7 +280,7 @@ const DocumentUpload: React.FC = () => {
           window.URL.revokeObjectURL(url);
           window.document.body.removeChild(link);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Erro ao fazer download:', err);
         toast({
           title: 'Erro',
@@ -694,7 +694,7 @@ const DocumentUpload: React.FC = () => {
                           setExtractedMetrics([]);
                           setProcessingDocumentId(null);
                           await loadDocuments();
-                        } catch (err: any) {
+                        } catch (err: unknown) {
                           console.error('Erro ao salvar métricas:', err);
                           toast({
                             title: 'Erro',
@@ -824,7 +824,7 @@ const DocumentUpload: React.FC = () => {
         </Dialog>
       </div>
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Erro no componente DocumentUpload:', err);
     return (
       <SectionWrapper variant="default" title="Upload de Documentos">

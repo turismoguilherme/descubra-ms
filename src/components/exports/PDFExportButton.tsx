@@ -7,7 +7,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 interface PDFExportButtonProps {
-  data: any[];
+  data: unknown[];
   filename: string;
   title: string;
   columns: { header: string; dataKey: string }[];

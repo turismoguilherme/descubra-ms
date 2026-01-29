@@ -17,7 +17,7 @@ interface Message {
   attachments?: {
     type: 'chart' | 'report' | 'insight';
     title: string;
-    data: any;
+    data: unknown;
   }[];
 }
 
