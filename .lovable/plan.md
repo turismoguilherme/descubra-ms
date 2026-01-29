@@ -54,7 +54,7 @@ Melhorar o visual da página inicial da ViajarTur e da página Sobre, tornando-a
 | "Transformamos a gestão do turismo..."   |
 | - Nome do Cliente, Cargo                 |
 |                                          |
-| [Ver Case Completo →]                    |
+| [Ver Case Completo]                      |
 +------------------------------------------+
 ```
 
@@ -85,7 +85,7 @@ Melhorar o visual da página inicial da ViajarTur e da página Sobre, tornando-a
 |  "Transformar dados turísticos em decisões       |
 |   estratégicas que geram impacto real."          |
 |                                                  |
-|  ──────────────────────────────────────────────  |
+|  ---------------------------------------------   |
 |                                                  |
 |  A ViajarTur existe para transformar dados       |
 |  turísticos em decisões estratégicas. Nosso      |
@@ -109,7 +109,7 @@ Melhorar o visual da página inicial da ViajarTur e da página Sobre, tornando-a
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteração |
+| Arquivo | Alteracao |
 |---------|-----------|
 | `src/pages/ViaJARSaaS.tsx` | Hero section com fundo claro + glassmorphism |
 | `src/components/home/SuccessCasesSection.tsx` | Cards maiores, métricas, estrutura para depoimentos |
@@ -117,7 +117,7 @@ Melhorar o visual da página inicial da ViajarTur e da página Sobre, tornando-a
 
 ---
 
-## O que NÃO Será Alterado
+## O que NAO Será Alterado
 
 - Logo e marca ViajARTur
 - Cores da identidade visual (ciano, azul, slate)
@@ -222,4 +222,3 @@ interface Testimonial {
 - Conteúdo editável via admin mantido
 - Acessibilidade preservada
 - Performance otimizada
-

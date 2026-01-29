@@ -4,6 +4,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Bot, MapPin, Sparkles, Globe } from 'lucide-react';
 import { platformContentService } from '@/services/admin/platformContentService';
 
+interface CaseMetric {
+  value: string;
+  label: string;
+}
+
 interface CaseStudy {
   id: string;
   title: string;
@@ -15,6 +20,7 @@ interface CaseStudy {
   button_text: string;
   gradient: string;
   icon: React.ComponentType<{ className?: string }>;
+  metrics: CaseMetric[];
 }
 
 const SuccessCasesSection = () => {
@@ -57,6 +63,11 @@ const SuccessCasesSection = () => {
       button_text: getContent('viajar_cases_descubra_ms_button', 'Ver Case'),
       gradient: 'from-emerald-500 to-teal-600',
       icon: MapPin,
+      metrics: [
+        { value: '100K+', label: 'Usuários' },
+        { value: '98%', label: 'Satisfação' },
+        { value: '79', label: 'Municípios' },
+      ],
     },
     {
       id: 'koda',
@@ -69,6 +80,11 @@ const SuccessCasesSection = () => {
       button_text: getContent('viajar_cases_koda_button', 'Ver Case'),
       gradient: 'from-blue-500 to-cyan-600',
       icon: Bot,
+      metrics: [
+        { value: '10K+', label: 'Conversas' },
+        { value: '95%', label: 'Precisão' },
+        { value: '24/7', label: 'Disponível' },
+      ],
     },
   ];
 
@@ -103,7 +119,7 @@ const SuccessCasesSection = () => {
                 to={caseStudy.link}
                 className="group block"
               >
-                <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                <div className="relative h-[560px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
                   {/* Gradiente de fundo */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${caseStudy.gradient}`} />
                   
@@ -119,7 +135,7 @@ const SuccessCasesSection = () => {
                           target.style.display = 'none';
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                     </>
                   )}
 
@@ -138,6 +154,23 @@ const SuccessCasesSection = () => {
                     <p className="text-xl text-white/90 mb-4 drop-shadow-md">
                       {caseStudy.subtitle}
                     </p>
+
+                    {/* Métricas de Impacto */}
+                    <div className="grid grid-cols-3 gap-3 mb-6">
+                      {caseStudy.metrics.map((metric, index) => (
+                        <div 
+                          key={index} 
+                          className="bg-white/15 backdrop-blur-sm rounded-lg p-3 text-center border border-white/20"
+                        >
+                          <div className="text-2xl md:text-3xl font-bold text-white drop-shadow-md">
+                            {metric.value}
+                          </div>
+                          <div className="text-xs md:text-sm text-white/80 mt-1">
+                            {metric.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
                     {/* Descrição (mais curta e focada) */}
                     {caseStudy.description && (

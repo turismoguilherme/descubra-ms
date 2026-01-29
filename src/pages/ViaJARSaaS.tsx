@@ -125,65 +125,66 @@ const ViaJARSaaS = () => {
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800">
+      {/* Hero Section - Clean + Glassmorphism */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-cyan-50/30">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--viajar-slate)) 1px, transparent 0)`,
             backgroundSize: '40px 40px'
           }} />
         </div>
         
-        {/* Gradient Orbs */}
-        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-viajar-blue/20 rounded-full blur-3xl" />
+        {/* Gradient Orbs - Mais sutis */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-viajar-blue/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-viajar-emerald/10 rounded-full blur-3xl" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
+            {/* Badge - Glassmorphism */}
             {getContent('viajar_hero_badge') && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
-              <Sparkles className="h-4 w-4 text-viajar-cyan" />
-                <span className="text-sm text-white/90 font-medium">{getContent('viajar_hero_badge', 'Plataforma #1 de Turismo Inteligente')}</span>
-            </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-viajar-cyan/10 backdrop-blur-sm border border-viajar-cyan/20 mb-8 shadow-sm">
+                <Sparkles className="h-4 w-4 text-viajar-cyan" />
+                <span className="text-sm text-viajar-slate font-medium">{getContent('viajar_hero_badge', 'Plataforma #1 de Turismo Inteligente')}</span>
+              </div>
             )}
             
-            {/* Headline */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
+            {/* Headline - Cores escuras para contraste */}
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-viajar-slate mb-6 tracking-tight">
               {getContent('viajar_hero_title') ? (
-                <span className="text-white">{getContent('viajar_hero_title', 'ViajARTur')}</span>
+                <span className="text-viajar-slate">{getContent('viajar_hero_title', 'ViajARTur')}</span>
               ) : (
                 <>
-              <span className="text-white">Viaj</span>
-              <span className="text-viajar-cyan">AR</span>
-              <span className="text-white">Tur</span>
+                  <span className="text-viajar-slate">Viaj</span>
+                  <span className="text-viajar-cyan">AR</span>
+                  <span className="text-viajar-slate">Tur</span>
                 </>
               )}
             </h1>
             
             {getContent('viajar_hero_subtitle') && (
-            <p className="text-xl md:text-2xl text-white/80 mb-4 font-light">
+              <p className="text-xl md:text-2xl text-slate-600 mb-4 font-light">
                 {getContent('viajar_hero_subtitle', 'Ecossistema inteligente de turismo')}
-            </p>
+              </p>
             )}
             
             {getContent('viajar_hero_description') && (
-            <p className="text-lg text-white/60 mb-12 max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
                 {getContent('viajar_hero_description', 'Transforme dados em decisões estratégicas. Analytics avançado e IA para o setor público e privado.')}
-            </p>
+              </p>
             )}
             
-            {/* CTAs */}
+            {/* CTAs - Mantidos vibrantes */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/viajar/login">
-                <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2 shadow-lg shadow-viajar-cyan/25">
+                <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-white font-semibold px-8 h-14 text-lg gap-2 shadow-lg shadow-viajar-cyan/25">
                   {getContent('viajar_hero_cta_primary', 'Acessar Plataforma')}
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/contato">
-                <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
+                <Button size="lg" className="bg-white/60 hover:bg-white/80 text-viajar-slate border border-slate-200 px-8 h-14 text-lg backdrop-blur-sm shadow-sm">
                   {getContent('viajar_hero_cta_secondary', 'Agendar Demo')}
                 </Button>
               </Link>
