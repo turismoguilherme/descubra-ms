@@ -78,8 +78,9 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
 
       setLogos(logoMap);
       setOriginalLogos({ ...logoMap });
-    } catch (error: any) {
-      console.error('Erro ao carregar logos:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar logos:', err);
       toast({
         title: 'Erro ao carregar',
         description: 'Não foi possível carregar os logos.',
@@ -155,11 +156,12 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
         .getPublicUrl(fileName);
 
       return publicUrlData?.publicUrl || null;
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload:', err);
       toast({
         title: 'Erro no upload',
-        description: error.message || 'Não foi possível fazer upload da imagem.',
+        description: err.message || 'Não foi possível fazer upload da imagem.',
         variant: 'destructive',
       });
       return null;
@@ -318,11 +320,12 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
       setTimeout(() => {
         setSaved(prev => ({ ...prev, [logoKey]: false }));
       }, 2000);
-    } catch (error: any) {
-      console.error('Erro ao salvar logo:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao salvar logo:', err);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar o logo. Verifique o console para mais detalhes.',
+        description: err.message || 'Não foi possível salvar o logo. Verifique o console para mais detalhes.',
         variant: 'destructive',
       });
     } finally {

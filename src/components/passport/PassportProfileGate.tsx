@@ -90,9 +90,10 @@ const PassportProfileGate: React.FC<PassportProfileGateProps> = ({
 
         // Não redirecionar automaticamente - deixar o usuário acessar o passaporte
         // Se quiser completar o perfil, pode fazer depois
-      } catch (error: any) {
+      } catch (error: unknown) {
         clearTimeout(timeoutId);
-        console.error('Erro ao verificar perfil:', error);
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Erro ao verificar perfil:', err);
         // Em caso de erro, permitir acesso para não bloquear o usuário
         if (isMounted) {
           setProfileComplete(true);

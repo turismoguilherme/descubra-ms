@@ -134,8 +134,9 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
         valid: validCount,
         usageRate,
       });
-    } catch (error: any) {
-      console.error('Erro ao carregar estatísticas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar estatísticas:', err);
     }
   };
 
@@ -154,8 +155,9 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
 
       if (error) throw error;
       setRewards((data as any) || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar recompensas:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao carregar recompensas:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar suas recompensas',
@@ -224,11 +226,12 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
       });
       setShowForm(false);
       loadRewards();
-    } catch (error: any) {
-      console.error('Erro ao cadastrar recompensa:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao cadastrar recompensa:', err);
       toast({
         title: 'Erro ao cadastrar',
-        description: error.message || 'Não foi possível cadastrar a recompensa',
+        description: err.message || 'Não foi possível cadastrar a recompensa',
         variant: 'destructive',
       });
     } finally {
@@ -253,8 +256,9 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
         description: 'Recompensa removida com sucesso',
       });
       loadRewards();
-    } catch (error: any) {
-      console.error('Erro ao excluir:', error);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao excluir:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível excluir a recompensa',

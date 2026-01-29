@@ -128,8 +128,9 @@ export const OAuthCallback = () => {
             navigate(loginPath, { replace: true });
           }, 2000);
         }
-      } catch (error: any) {
-        console.error('❌ [OAuthCallback] Erro inesperado:', error);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('❌ [OAuthCallback] Erro inesperado:', err);
         setStatus('error');
         // Usar função utilitária para redirecionar corretamente
         const loginPath = isDescubraMSContext() ? '/descubrams/login' : '/login';

@@ -102,12 +102,13 @@ export default function ForcePasswordChange({ onPasswordChanged }: ForcePassword
       setTimeout(() => {
         onPasswordChanged();
       }, 1000);
-    } catch (error: any) {
-      console.error('Erro ao alterar senha:', error);
-      setError(error.message || 'Erro ao alterar senha. Tente novamente.');
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao alterar senha:', err);
+      setError(err.message || 'Erro ao alterar senha. Tente novamente.');
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao alterar senha',
+        description: err.message || 'Erro ao alterar senha',
         variant: 'destructive',
       });
     } finally {
