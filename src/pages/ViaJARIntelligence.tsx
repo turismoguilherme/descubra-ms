@@ -32,6 +32,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck, ShieldOff, Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 // Dados mockados - serão substituídos pela ALUMIA API
 const MOCK_REVENUE_PREDICTION = {
@@ -319,7 +320,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
       console.error('Erro ao salvar consentimento:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível salvar o consentimento. Tente novamente.',
+        description: getErrorMessage(error, 'Não foi possível salvar o consentimento. Tente novamente.'),
         variant: 'destructive',
       });
     } finally {

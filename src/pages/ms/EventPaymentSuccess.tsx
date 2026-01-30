@@ -11,6 +11,7 @@ import { Check, Loader2, AlertCircle, ArrowRight, Calendar, Sparkles } from 'luc
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import UniversalLayout from '@/components/layout/UniversalLayout';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function EventPaymentSuccess() {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export default function EventPaymentSuccess() {
         }
       } catch (err: unknown) {
         console.error('Erro ao verificar pagamento:', err);
-        setError(err.message || 'Erro ao verificar pagamento');
+        setError(getErrorMessage(err, 'Erro ao verificar pagamento'));
         toast({
           title: "Erro",
           description: "Não foi possível verificar o pagamento. Entre em contato com o suporte.",

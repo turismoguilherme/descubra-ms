@@ -8,12 +8,52 @@ import { User, Trophy, BookOpen, Heart, Clock, Target, Share2, Settings, Camera,
 import UniversalLayout from "@/components/layout/UniversalLayout";
 import { platformContentService } from "@/services/admin/platformContentService";
 
+// Interface para o plano gerado
+interface GeneratedPlanResumo {
+  cidade: string;
+  duracao: string;
+  interesses: string[];
+  orcamento: string;
+  hospedagem: string;
+  perfil: string;
+  ocasiao: string;
+}
+
+interface GeneratedPlanDia {
+  titulo: string;
+  atividades: string[];
+}
+
+interface GeneratedPlanEvento {
+  nome: string;
+  cidade: string;
+  data: string;
+}
+
+interface GeneratedPlanParceiro {
+  tipo: string;
+  nome: string;
+}
+
+interface GeneratedPlanPassaporte {
+  match: boolean;
+  rota: string;
+}
+
+interface GeneratedPlan {
+  resumo: GeneratedPlanResumo;
+  dias: GeneratedPlanDia[];
+  eventos: GeneratedPlanEvento[];
+  parceiros: GeneratedPlanParceiro[];
+  passaporte: GeneratedPlanPassaporte;
+}
+
 const Profile = () => {
   // Estado do novo fluxo de Roteiros IA
   const [iaPrice, setIaPrice] = useState<number>(49);
   const [iaPaymentLink, setIaPaymentLink] = useState<string>("#");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPlan, setGeneratedPlan] = useState<any | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
   const [showSaveNote, setShowSaveNote] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -583,7 +623,7 @@ const Profile = () => {
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-4">
-                          {generatedPlan.dias.map((dia: unknown, idx: number) => (
+                          {generatedPlan.dias.map((dia, idx) => (
                             <Card key={idx} className="border-gray-100">
                               <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-semibold text-blue-700">
@@ -592,7 +632,7 @@ const Profile = () => {
                               </CardHeader>
                               <CardContent className="space-y-2">
                                 <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                                  {dia.atividades.map((a: string, i: number) => (
+                                  {dia.atividades.map((a, i) => (
                                     <li key={i}>{a}</li>
                                   ))}
                                 </ul>
@@ -610,7 +650,7 @@ const Profile = () => {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm text-gray-700">
-                              {generatedPlan.eventos.map((ev: unknown, i: number) => (
+                              {generatedPlan.eventos.map((ev, i) => (
                                 <div key={i} className="flex justify-between">
                                   <span>{ev.nome}</span>
                                   <span className="text-gray-500">{ev.data}</span>
@@ -627,7 +667,7 @@ const Profile = () => {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm text-gray-700">
-                              {generatedPlan.parceiros.map((p: unknown, i: number) => (
+                              {generatedPlan.parceiros.map((p, i) => (
                                 <div key={i} className="flex justify-between">
                                   <span>{p.tipo}</span>
                                   <span className="text-gray-600">{p.nome}</span>

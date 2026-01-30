@@ -8,6 +8,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function EventPaymentReturn() {
   const [searchParams] = useSearchParams();
@@ -76,7 +77,7 @@ export default function EventPaymentReturn() {
 
       } catch (err: unknown) {
         console.error('Erro ao processar retorno do pagamento:', err);
-        setError(err.message || 'Erro ao processar pagamento');
+        setError(getErrorMessage(err, 'Erro ao processar pagamento'));
         setLoading(false);
       }
     };

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function EventStatus() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -42,7 +43,7 @@ export default function EventStatus() {
         setEvent(data);
       } catch (err: unknown) {
         console.error('Erro ao carregar evento:', err);
-        setError(err.message || 'Erro ao carregar evento');
+        setError(getErrorMessage(err, 'Erro ao carregar evento'));
       } finally {
         setLoading(false);
       }
