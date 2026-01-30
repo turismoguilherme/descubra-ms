@@ -45,7 +45,11 @@ const GuataChat = ({
       <ChatMessages 
         messages={mensagens} 
         enviarFeedback={(positivo) => {
-          try { enviarFeedback(positivo) } catch {}
+          try { 
+            enviarFeedback(positivo);
+          } catch (error: unknown) {
+            console.error('Erro ao enviar feedback:', error);
+          }
         }} 
       />
       

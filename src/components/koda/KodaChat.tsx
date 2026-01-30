@@ -44,7 +44,11 @@ const KodaChat = ({
       <KodaChatMessages 
         messages={messages} 
         sendFeedback={(positive) => {
-          try { sendFeedback(positive) } catch {}
+          try { 
+            sendFeedback(positive);
+          } catch (error: unknown) {
+            console.error('Erro ao enviar feedback:', error);
+          }
         }} 
       />
       

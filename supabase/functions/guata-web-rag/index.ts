@@ -685,7 +685,10 @@ function rankResults(results: SearchResult[], question: string): SearchResult[] 
       if (host.includes('sympla.com.br') || host.includes('eventbrite.com.br')) return 0.4 // Sympla/Eventbrite
       if (host.includes('campograndenews.com.br') || host.includes('midiamax.com.br') || host.includes('correiodoestado.com.br')) return 0.25 // jornais locais
       return 0.1 // blogs/portais
-    } catch { return 0 }
+    } catch (error: unknown) {
+      console.debug('Erro ao calcular score do domínio:', error);
+      return 0;
+    }
   }
 
   return results
