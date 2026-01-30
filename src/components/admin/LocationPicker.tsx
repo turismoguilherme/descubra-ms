@@ -7,6 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MapPin, Search, Navigation, Target, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface NominatimResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
 interface LocationPickerProps {
   onLocationSelect: (location: {
     latitude: number;
@@ -133,7 +139,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       if (response.ok) {
         const data = await response.json();
-        const results = data.map((item: unknown) => ({
+        const results = (data as NominatimResult[]).map((item) => ({
           name: item.display_name.split(',')[0] || searchQuery,
           address: item.display_name,
           latitude: parseFloat(item.lat),

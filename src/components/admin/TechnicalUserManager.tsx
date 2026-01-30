@@ -58,12 +58,12 @@ const TechnicalUserManager = () => {
           full_name: user.full_name,
           user_type: user.user_type,
           role: user.role || 'user',
-          region: user.region || 'all',
+          region: (user as any).region_name || (user as any).region || 'all',
           status: user.status || 'active',
           created_at: user.created_at,
           last_sign_in_at: user.last_sign_in_at,
           phone: user.phone,
-          city: user.city
+          city: (user as any).city_name || (user as any).city
         })) || [];
         
         setUsers(mappedUsers);
@@ -198,19 +198,19 @@ const TechnicalUserManager = () => {
             console.error("Fetch users error:", fetchError);
             throw fetchError;
         }
-        const mappedUsersRefresh: UserData[] = data?.map((user: unknown) => ({
+        const mappedUsersRefresh: UserData[] = data?.map((user: UserWithDetails) => ({
           id: user.id,
           name: user.full_name || user.email || 'Sem nome',
           email: user.email,
           full_name: user.full_name,
           user_type: user.user_type,
           role: user.role || 'user',
-          region: user.region || 'all',
+          region: (user as any).region_name || (user as any).region || 'all',
           status: user.status || 'active',
           created_at: user.created_at,
           last_sign_in_at: user.last_sign_in_at,
           phone: user.phone,
-          city: user.city
+          city: (user as any).city_name || (user as any).city
         })) || [];
         
         setUsers(mappedUsersRefresh);

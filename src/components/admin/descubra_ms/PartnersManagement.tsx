@@ -51,6 +51,16 @@ interface Partner {
   created_at: string;
 }
 
+interface PartnerUpdateData {
+  status?: string;
+  is_active?: boolean;
+  subscription_status?: string;
+  subscription_start_date?: string;
+  updated_at?: string;
+  approved_at?: string;
+  approved_by?: string;
+}
+
 export default function PartnersManagement() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,23 +122,16 @@ export default function PartnersManagement() {
       }
 
       // Atualizar parceiro: aprovar + ativar assinatura manualmente
-      const updateData: unknown = {
+      const updateData: PartnerUpdateData = {
         status: 'approved',
         is_active: true,
         subscription_status: 'active', // Ativar assinatura sem pagamento
         subscription_start_date: new Date().toISOString(),
         // Criar uma data de fim (opcional, pode ser null para assinatura permanente)
         updated_at: new Date().toISOString(),
+        approved_at: new Date().toISOString(),
+        approved_by: user.id,
       };
-
-      // Adicionar campos de aprovação apenas se existirem (não causar erro se não existirem)
-      // O código tentará atualizar, mas se as colunas não existirem, o Supabase ignorará
-      try {
-        updateData.approved_at = new Date().toISOString();
-        updateData.approved_by = user.id;
-      } catch (e) {
-        // Ignorar se campos não existirem
-      }
 
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:107',message:'Antes de atualizar com baixa manual',data:{updateData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
@@ -201,7 +204,7 @@ export default function PartnersManagement() {
 
       console.log(`🔄 [PartnersManagement] Atualizando parceiro ${partnerId} para status: ${status}`);
       
-      const updateData: unknown = {
+      const updateData: PartnerUpdateData = {
         status,
         is_active: status === 'approved',
         updated_at: new Date().toISOString(),

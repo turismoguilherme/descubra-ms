@@ -42,7 +42,8 @@ export default function AdminLogin() {
         }, 500);
       }
     } catch (err: unknown) {
-      const errorMessage = err.message || 'Ocorreu um erro inesperado';
+      const error = err instanceof Error ? err : new Error(String(err));
+      const errorMessage = error.message || 'Ocorreu um erro inesperado';
       setError(errorMessage);
       toast({
         title: 'Erro no login',

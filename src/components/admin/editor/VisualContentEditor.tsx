@@ -370,9 +370,10 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
           variant: 'default',
         });
       } catch (localError) {
+        const localErr = localError instanceof Error ? localError : new Error(String(localError));
         toast({
           title: 'Erro ao salvar',
-          description: error.message || 'Não foi possível salvar as alterações.',
+          description: localErr.message || 'Não foi possível salvar as alterações.',
           variant: 'destructive',
         });
       }

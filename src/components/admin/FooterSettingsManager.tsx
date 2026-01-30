@@ -270,11 +270,11 @@ export default function FooterSettingsManager() {
       
       let errorMessage = 'Erro ao salvar configurações';
       if (err.message) {
-        errorMessage = error.message;
-      } else if (error.details) {
-        errorMessage = error.details;
-      } else if (error.hint) {
-        errorMessage = error.hint;
+        errorMessage = err.message;
+      } else if ((error as any)?.details) {
+        errorMessage = (error as any).details;
+      } else if ((error as any)?.hint) {
+        errorMessage = (error as any).hint;
       }
 
       toast({

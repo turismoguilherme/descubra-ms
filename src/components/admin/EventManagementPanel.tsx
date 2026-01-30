@@ -28,6 +28,12 @@ import {
 import EventSystemDebugger from '@/components/events/EventSystemDebugger';
 import EventSystemStatus from '@/components/events/EventSystemStatus';
 
+interface ServicesStatus {
+  cleanup?: { isRunning: boolean; config?: { cleanupInterval?: number } };
+  googleCalendar?: { isRunning: boolean; config?: { syncInterval?: number } };
+  geminiAI?: { isRunning: boolean };
+}
+
 const EventManagementPanel: React.FC = () => {
   const {
     isInitialized,

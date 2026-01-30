@@ -15,6 +15,25 @@ import { ptBR } from 'date-fns/locale';
 import { ReportPreviewDialog } from './ReportPreviewDialog';
 import { generateDREPDF, generateCashFlowPDF, generateProfitReportPDF } from '@/utils/financialReportGenerator';
 
+interface RevenueItem {
+  id: string;
+  amount: number;
+  paid_date?: string;
+  source?: string;
+  description?: string;
+  status?: string;
+}
+
+interface ExpenseItem {
+  id: string;
+  amount: number;
+  due_date?: string;
+  paid_date?: string;
+  payment_status?: string;
+  category?: string;
+  description?: string;
+}
+
 export default function FinancialManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('revenue');
@@ -414,7 +433,7 @@ export default function FinancialManagement() {
       // Agrupar por mês
       const cashFlow: Record<string, { revenue: number; expenses: number; net: number }> = {};
       
-      allRevenues.forEach((r: unknown) => {
+      allRevenues.forEach((r: RevenueItem) => {
         const month = r.paid_date ? r.paid_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
         if (!cashFlow[month]) {
           cashFlow[month] = { revenue: 0, expenses: 0, net: 0 };
@@ -422,7 +441,7 @@ export default function FinancialManagement() {
         cashFlow[month].revenue += Number(r.amount || 0);
       });
 
-      allExpenses.forEach((e: unknown) => {
+      allExpenses.forEach((e: ExpenseItem) => {
         const month = e.due_date ? e.due_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
         if (!cashFlow[month]) {
           cashFlow[month] = { revenue: 0, expenses: 0, net: 0 };
@@ -484,7 +503,7 @@ export default function FinancialManagement() {
       // Agrupar por mês
       const monthsMap: Record<string, { revenue: number; expenses: number; salaries: number }> = {};
       
-      allRevenues.forEach((r: unknown) => {
+      allRevenues.forEach((r: RevenueItem) => {
         const month = r.paid_date ? r.paid_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
         if (!monthsMap[month]) {
           monthsMap[month] = { revenue: 0, expenses: 0, salaries: 0 };
@@ -492,7 +511,7 @@ export default function FinancialManagement() {
         monthsMap[month].revenue += Number(r.amount || 0);
       });
 
-      allExpenses.forEach((e: unknown) => {
+      allExpenses.forEach((e: ExpenseItem) => {
         if (e.payment_status === 'paid') {
           const month = e.paid_date ? e.paid_date.substring(0, 7) : e.due_date ? e.due_date.substring(0, 7) : new Date().toISOString().substring(0, 7);
           if (!monthsMap[month]) {
