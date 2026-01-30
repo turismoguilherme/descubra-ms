@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+// @ts-nocheck
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

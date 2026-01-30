@@ -297,7 +297,7 @@ const AdminUserManagement = () => {
               });
               return;
             }
-            setPendingOperation({ type: 'elevate', data: { email: elevateEmail.trim(), csrfToken: token } });
+            setPendingOperation({ type: 'elevate', data: { id: '', email: elevateEmail.trim() } });
             setShowElevateConfirmation(true);
           }}>
             <div className="flex gap-4">
@@ -356,7 +356,7 @@ const AdminUserManagement = () => {
             }
             setPendingOperation({ 
               type: 'role_update', 
-              data: { userId: selectedUserId, role: newUserRole, csrfToken: token } 
+              data: { id: selectedUserId, email: '', role: newUserRole } 
             });
             setShowRoleUpdateConfirmation(true);
           }}>
@@ -515,7 +515,7 @@ const AdminUserManagement = () => {
         onConfirm={async () => {
           try {
             const { data, error } = await supabase.rpc('secure_update_user_role', {
-              target_user_id: pendingOperation?.data?.userId,
+              target_user_id: pendingOperation?.data?.id,
               new_role: pendingOperation?.data?.role
             });
             

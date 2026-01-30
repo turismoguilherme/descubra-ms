@@ -63,7 +63,7 @@ const WorkflowManagement = () => {
         variant: "destructive",
       });
     } else {
-      setWorkflows(data || []);
+      setWorkflows((data || []) as WorkflowDefinition[]);
     }
     setLoadingWorkflows(false);
   };
@@ -82,7 +82,7 @@ const WorkflowManagement = () => {
         variant: "destructive",
       });
     } else {
-      setTasks(data || []);
+      setTasks((data || []) as AutomatedTask[]);
     }
     setLoadingTasks(false);
   };
