@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/errorUtils";
 
 /**
  * Função para elevar um usuário a admin - uso interno apenas
@@ -22,9 +23,10 @@ export const elevateToAdmin = async (userEmail: string): Promise<boolean> => {
     console.log("✅ Usuário elevado a admin com sucesso!");
     toast.success(`Usuário ${userEmail} elevado a admin com sucesso!`);
     return true;
-  } catch (error: any) {
-    console.error("❌ Erro crítico:", error);
-    toast.error("Erro crítico ao elevar usuário");
+  } catch (error: unknown) {
+    const message = getErrorMessage(error, "Erro crítico ao elevar usuário");
+    console.error("❌ Erro crítico:", message);
+    toast.error(message);
     return false;
   }
 };

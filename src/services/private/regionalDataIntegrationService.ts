@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export interface RegionalTourismData {
   source: 'ALUMIA' | 'GOOGLE_SCHOLAR' | 'UPLOAD' | 'DIAGNOSTIC';
@@ -152,8 +153,9 @@ export class RegionalDataIntegrationService {
               quality: 'GOOD'
             };
           }
-        } catch (apiError: any) {
-          console.warn('⚠️ Erro ao buscar via Google Search API:', apiError?.message || apiError);
+        } catch (apiError: unknown) {
+          const errorMessage = getErrorMessage(apiError);
+          console.warn('⚠️ Erro ao buscar via Google Search API:', errorMessage);
         }
       }
       

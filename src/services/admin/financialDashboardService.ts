@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 /**
  * Verifica se há uma sessão válida antes de fazer operações
@@ -100,12 +101,17 @@ async function retryWithTokenRefresh<T>(
         
         // Retentar a operação
         return await operation();
-      } catch (refreshErr: any) {
+      } catch (refreshErr: unknown) {
+        const errorMessage = getErrorMessage(refreshErr);
         // Se a mensagem já é sobre sessão expirada, propagar
-        if (refreshErr.message?.includes('Sessão expirada') || refreshErr.message?.includes('expirada')) {
+        const errorObj = refreshErr && typeof refreshErr === 'object' && 'message' in refreshErr
+          ? (refreshErr as { message?: string })
+          : null;
+        
+        if (errorObj?.message?.includes('Sessão expirada') || errorObj?.message?.includes('expirada') || errorMessage.includes('Sessão expirada') || errorMessage.includes('expirada')) {
           throw refreshErr;
         }
-        console.error('Erro ao renovar token:', refreshErr);
+        console.error('Erro ao renovar token:', errorMessage);
         throw new Error('Sessão expirada. Por favor, recarregue a página e faça login novamente.');
       }
     }

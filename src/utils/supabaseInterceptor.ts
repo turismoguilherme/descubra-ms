@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
@@ -99,11 +100,16 @@ export async function withAutoRefresh<T>(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Se é erro de JWT e ainda tem tentativas
-    const isJWTError = error?.code === 'PGRST301' || 
-                      error?.message?.includes('JWT expired') ||
-                      error?.status === 401;
+    const errorObj = error && typeof error === 'object'
+      ? (error as { code?: string; message?: string; status?: number; statusCode?: number })
+      : null;
+    
+    const isJWTError = errorObj?.code === 'PGRST301' || 
+                      errorObj?.message?.includes('JWT expired') ||
+                      errorObj?.status === 401 ||
+                      errorObj?.statusCode === 401;
 
     if (isJWTError && retries > 0) {
       console.log('[SupabaseInterceptor] Erro de JWT capturado, tentando renovar...');

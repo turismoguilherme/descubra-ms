@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 // Cliente Gemini para compatibilidade com outros arquivos
 export const geminiClient = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
@@ -75,11 +76,16 @@ export async function generateContent(
     
     return { text, ok: true };
     
-  } catch (error: any) {
-    console.error('❌ Gemini: Erro na API:', error);
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error('❌ Gemini: Erro na API:', errorMessage);
     
     // Se for rate limit, tentar usar cache mesmo que expirado
-    if (error.message?.includes('rate limit')) {
+    const errorObj = error && typeof error === 'object' && 'message' in error
+      ? (error as { message?: string })
+      : null;
+    
+    if (errorObj?.message?.includes('rate limit') || errorMessage.includes('rate limit')) {
       const fullPrompt = userPrompt 
         ? `${systemPrompt}\n\n${userPrompt}`
         : systemPrompt;
@@ -95,7 +101,7 @@ export async function generateContent(
     return { 
       text: "Desculpe, estou com dificuldades técnicas no momento. Tente novamente em alguns instantes.", 
       ok: false, 
-      error: error.message 
+      error: errorMessage 
     };
   }
 }

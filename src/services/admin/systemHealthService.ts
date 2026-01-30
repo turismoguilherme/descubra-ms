@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { geminiClient } from '@/config/gemini';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 /**
  * Helper para tentar renovar o token e retentar a operação
@@ -490,12 +491,16 @@ export const systemHealthService = {
                 error: emailError
               });
               // #endregion
-            } catch (invokeError: any) {
+            } catch (invokeError: unknown) {
+              const errorMessage = getErrorMessage(invokeError);
+              const errorObj = invokeError && typeof invokeError === 'object'
+                ? (invokeError as { message?: string; stack?: string })
+                : null;
               // #region agent log - HYP-C/E: Erro na invocação
               console.error('🔍 [DEBUG-HYP-C] Erro ao invocar Edge Function:', {
                 error: invokeError,
-                message: invokeError?.message,
-                stack: invokeError?.stack
+                message: errorMessage,
+                stack: errorObj?.stack
               });
               // #endregion
               emailError = invokeError;
@@ -536,30 +541,35 @@ export const systemHealthService = {
             // #endregion
               console.log(`✅ Email de alerta enviado para ${config.email_address}`, emailResult);
             }
-          } catch (emailError: any) {
+          } catch (emailError: unknown) {
+            const errorMessage = getErrorMessage(emailError);
+            const errorObj = emailError && typeof emailError === 'object'
+              ? (emailError as { name?: string; message?: string; stack?: string; context?: unknown; constructor?: { name?: string } })
+              : null;
+            
             // #region agent log - HYP-C/E: Exceção capturada no catch
             console.log('🔍 [DEBUG-HYP-C] Exceção capturada no catch:', {
-              errorName: emailError?.name,
-              errorMessage: emailError?.message,
-              errorStack: emailError?.stack,
+              errorName: errorObj?.name,
+              errorMessage: errorMessage,
+              errorStack: errorObj?.stack,
               errorType: typeof emailError,
-              errorConstructor: emailError?.constructor?.name,
-              errorProps: Object.getOwnPropertyNames(emailError),
+              errorConstructor: errorObj?.constructor?.name,
+              errorProps: errorObj ? Object.getOwnPropertyNames(errorObj) : [],
               errorString: String(emailError)
             });
             // #endregion
             
             // Capturar mensagem de erro mais detalhada
-            let errorDetails = emailError?.message || String(emailError);
-            if (emailError?.context) {
-              errorDetails += ` | Context: ${JSON.stringify(emailError.context)}`;
+            let errorDetails = errorMessage;
+            if (errorObj?.context) {
+              errorDetails += ` | Context: ${JSON.stringify(errorObj.context)}`;
             }
             console.error(`❌ Erro ao enviar email de alerta para ${config.email_address}:`, {
               error: emailError,
               message: errorDetails,
-              stack: emailError?.stack,
-              errorName: emailError?.name,
-              fullError: JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2),
+              stack: errorObj?.stack,
+              errorName: errorObj?.name,
+              fullError: errorObj ? JSON.stringify(errorObj, Object.getOwnPropertyNames(errorObj), 2) : String(emailError),
             });
             console.warn('💡 Dica: Verifique os logs da Edge Function no Supabase Dashboard para mais detalhes sobre o erro 400');
             // Não propagar erro - não queremos que falhas de email quebrem o sistema
