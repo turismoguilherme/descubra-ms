@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Target, Eye, Award, Users, MapPin, Compass, Heart, TreePine, Star, ArrowRight } from 'lucide-react';
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 import { useBrand } from '@/context/BrandContext';
+import { platformContentService } from '@/services/admin/platformContentService';
 
 const SobreMS = () => {
+  const [content, setContent] = useState<Record<string, string>>({});
   // Tentar obter logo do BrandContext, com fallback
   let logoUrl = logoDescubra;
   try {
@@ -18,10 +20,29 @@ const SobreMS = () => {
     // BrandContext não disponível, usar fallback
   }
   
+  // Carregar conteúdo do CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('ms_about_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      }
+    };
+    loadContent();
+  }, []);
+
   // Scroll para o topo quando a página carregar
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
 
   return (
     <UniversalLayout>
@@ -34,7 +55,7 @@ const SobreMS = () => {
               <img 
                 src={logoUrl} 
                 alt="Descubra Mato Grosso do Sul" 
-                className="h-20 w-auto drop-shadow-lg"
+                className="h-28 w-auto drop-shadow-lg"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   if (!target.src.includes('logo-descubra-ms.png')) {
@@ -44,12 +65,13 @@ const SobreMS = () => {
               />
             </div>
             <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
-              Sobre o Descubra MS
+              {getContent('ms_about_title', 'Sobre o Descubra MS')}
               </h1>
-            <p className="text-white/95 text-xl max-w-3xl mx-auto leading-relaxed">
-              Sua plataforma completa para explorar as maravilhas do estado mais biodiverso do Brasil.
-              Do Pantanal ao Cerrado, conectamos você às experiências mais autênticas.
+            {getContent('ms_about_subtitle', '') && (
+              <p className="text-white/95 text-xl max-w-3xl mx-auto leading-relaxed">
+                {getContent('ms_about_subtitle', 'Sua plataforma completa para explorar as maravilhas do estado mais biodiverso do Brasil. Do Pantanal ao Cerrado, conectamos você às experiências mais autênticas.')}
               </p>
+            )}
             </div>
           </div>
 
@@ -57,7 +79,7 @@ const SobreMS = () => {
         <div className="ms-container py-12">
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
             <h2 className="text-3xl font-bold text-ms-primary-blue mb-8 text-center">
-              Nossa Essência
+              {getContent('ms_about_essence_title', 'Nossa Essência')}
             </h2>
             <div className="max-w-4xl mx-auto">
               <div className="flex justify-center mb-6">
@@ -66,18 +88,21 @@ const SobreMS = () => {
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                  O <strong className="text-ms-primary-blue">Descubra MS</strong> nasceu com a missão de conectar turistas a experiências autênticas no Mato Grosso do Sul,
-                  promovendo o turismo sustentável e valorizando a cultura local, a biodiversidade única do Pantanal e as belezas naturais do Cerrado.
-                </p>
-                <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                  Nossa visão é ser a principal plataforma de turismo do Centro-Oeste brasileiro, reconhecida pela inovação tecnológica
-                  e pelo compromisso com o desenvolvimento sustentável das comunidades locais.
-                </p>
-                <p className="text-gray-700 text-lg leading-relaxed">
-                  Acreditamos que cada viagem deve ser uma experiência transformadora, capaz de gerar impacto positivo tanto para o visitante
-                  quanto para as comunidades que os recebem, preservando nossa rica herança natural e cultural para as futuras gerações.
-                </p>
+                {getContent('ms_about_mission_text', '') && (
+                  <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                    {getContent('ms_about_mission_text', 'O Descubra MS nasceu com a missão de conectar turistas a experiências autênticas no Mato Grosso do Sul, promovendo o turismo sustentável e valorizando a cultura local, a biodiversidade única do Pantanal e as belezas naturais do Cerrado.')}
+                  </p>
+                )}
+                {getContent('ms_about_vision_text', '') && (
+                  <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                    {getContent('ms_about_vision_text', 'Nossa visão é ser a principal plataforma de turismo do Centro-Oeste brasileiro, reconhecida pela inovação tecnológica e pelo compromisso com o desenvolvimento sustentável das comunidades locais.')}
+                  </p>
+                )}
+                {(!getContent('ms_about_mission_text', '') && !getContent('ms_about_vision_text', '')) && (
+                  <p className="text-gray-700 text-lg leading-relaxed">
+                    Acreditamos que cada viagem deve ser uma experiência transformadora, capaz de gerar impacto positivo tanto para o visitante quanto para as comunidades que os recebem, preservando nossa rica herança natural e cultural para as futuras gerações.
+                  </p>
+                )}
               </div>
             </div>
           </div>
