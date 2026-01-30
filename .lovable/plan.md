@@ -1,204 +1,205 @@
 
-# Plano: Correção de Erros de Build e Melhorias no Admin
+# Plano: Melhorias no Painel Admin - CMS, Layout e YouTube Mobile
 
 ## Resumo Executivo
 
-Este plano aborda três frentes principais:
-1. **Correção de erros de build TypeScript** - Aproximadamente 80+ erros em arquivos do admin e edge functions
-2. **Melhorias de layout** - Alinhamento, responsividade mobile e tooltips de ajuda (?)
-3. **Correção do vídeo YouTube no mobile** - Esconder informações do YouTube no Descubra MS
+Este plano aborda as melhorias solicitadas para o painel administrativo:
+1. **Sistema de Tooltips de Ajuda (?)** - Criar componentes reutilizáveis para orientar administradores
+2. **Melhorias de Layout** - Corrigir alinhamento, centralização e espaçamento nos editores
+3. **Responsividade Mobile** - Melhorar sidebar com drawer mobile
+4. **YouTube no Mobile** - Adicionar overlay físico para esconder informações do YouTube no Descubra MS
 
 ---
 
-## 1. Correção dos Erros de Build TypeScript
+## 1. Sistema de Tooltips de Ajuda (?)
 
-### 1.1 Edge Functions (Supabase)
+### Problema Identificado
+Não existe um sistema de tooltips para orientar administradores ao editar campos.
 
-| Arquivo | Problema | Correção |
-|---------|----------|----------|
-| `refund-event-payment/index.ts:195` | `paymentRecord.amount` não existe (select retorna apenas `metadata, stripe_invoice_id`) | Incluir `amount` no select da query |
-| `send-notification-email/index.ts:546` | Falta `event_refunded` no mapeamento de templates | Adicionar `event_refunded: 'Event Refunded'` ao `templateNameMap` |
+### Solução
 
-### 1.2 Componentes Admin - Padrão de Correção para `unknown`
+Criar dois componentes reutilizáveis:
 
-Para todos os arquivos com erro de acesso a propriedades em tipos `unknown`, aplicar o padrão:
-
-```typescript
-// ANTES (erro):
-} catch (err: unknown) {
-  const errorMessage = err.message || 'Erro';
-
-// DEPOIS (correto):
-} catch (err: unknown) {
-  const error = err instanceof Error ? err : new Error(String(err));
-  const errorMessage = error.message || 'Erro';
+**HelpTooltip.tsx** - Ícone (?) com tooltip ao hover:
+```
+Título do Hero (?)  ← Hover mostra dica
+                 ↓
+      ┌─────────────────────────┐
+      │ Título principal da     │
+      │ página inicial.         │
+      │ Máx: 60 caracteres.     │
+      └─────────────────────────┘
 ```
 
-**Arquivos a corrigir:**
+**LabelWithHelp.tsx** - Label com tooltip integrado:
+```
+<LabelWithHelp 
+  label="Título do Hero" 
+  helpText="Título principal exibido na página inicial"
+/>
+```
 
-| Arquivo | Linha | Correção |
-|---------|-------|----------|
-| `AdminLogin.tsx` | 45 | Padrão de conversão de erro |
-| `FooterSettingsManager.tsx` | 273-277 | Usar `err` em vez de `error` após conversão |
-| `AIAdminChat.tsx` | 235 | Padrão de conversão de erro |
-| `VisualContentEditor.tsx` | 375 | Padrão de conversão de erro |
+### Textos de Ajuda por Tipo de Campo
 
-### 1.3 Arquivos com Interfaces Faltantes
-
-| Arquivo | Problema | Correção |
-|---------|----------|----------|
-| `AdminUserManagement.tsx` | `csrfToken` e `userId` não existem no tipo | Substituir `userId` por `id` e remover `csrfToken` |
-| `EventManagementPanel.tsx` | `servicesStatus` é `unknown` | Criar interface `ServicesStatus` com tipagem |
-| `LocationPicker.tsx` | `item` é `unknown` no map | Criar interface `NominatimResult` |
-| `TechnicalUserManager.tsx` | `user.region` e `user.city` não existem | Usar `region_name` e `city_name` |
-| `WorkflowManagement.tsx` | Cast de `unknown[]` para tipos específicos | Adicionar cast explícito |
-| `FinancialManagement.tsx` | `r.paid_date`, `e.due_date` em `unknown` | Criar interfaces `RevenueItem` e `ExpenseItem` |
-| `PartnersManagement.tsx` | `updateData.approved_at/by` em `unknown` | Tipar objeto `updateData` |
-
-### 1.4 Arquivo Extenso - Estratégia @ts-nocheck
-
-O arquivo `AutonomousAIAgent.tsx` (1.751 linhas) tem mais de 15 erros TypeScript. Seguindo a estratégia já adotada em 27+ arquivos do projeto, adicionar `// @ts-nocheck` no topo.
+| Tipo de Campo | Tooltip |
+|---------------|---------|
+| Hero Title | "Título principal. Recomendado: até 60 caracteres." |
+| Hero Subtitle | "Texto secundário abaixo do título." |
+| CTA Button | "Texto do botão de ação. Use verbos: 'Explorar', 'Descobrir'." |
+| Video URL | "Cole link do YouTube ou Vimeo. Será incorporado automaticamente." |
+| Image | "Formatos: JPG, PNG, WebP. Tamanho máx: 5MB." |
+| JSON | "Formato JSON válido. Ex: [\"item1\", \"item2\"]" |
 
 ---
 
-## 2. Sistema de Tooltips de Ajuda (?)
+## 2. Melhorias de Layout no SimpleTextEditor
 
-### 2.1 Novo Componente: HelpTooltip
+### Problema Atual
+- Campos empilhados sem organização visual
+- Botões desalinhados
+- Espaçamento inconsistente
 
-Criar componente reutilizável em `src/components/admin/ui/HelpTooltip.tsx`:
+### Solução: Grid Responsivo
 
-```text
-┌─────────────────────────────────────────────┐
-│ Título do Hero (?)                          │
-│                    ↓ Hover mostra tooltip   │
-│            ┌─────────────────────────┐      │
-│            │ Título principal da     │      │
-│            │ página inicial.         │      │
-│            │ Máximo: 60 caracteres.  │      │
-│            └─────────────────────────┘      │
-│ ┌─────────────────────────────────────────┐ │
-│ │ Input de texto                          │ │
-│ └─────────────────────────────────────────┘ │
-└─────────────────────────────────────────────┘
+**Layout Proposto:**
+
 ```
-
-### 2.2 Componente LabelWithHelp
-
-Wrapper para labels com tooltip integrado:
-
-```typescript
-interface LabelWithHelpProps {
-  htmlFor: string;
-  label: string;
-  helpText?: string;
-}
-```
-
-### 2.3 Textos de Ajuda por Campo
-
-| Campo | Tooltip |
-|-------|---------|
-| Hero Title | "Título principal da página inicial. Recomendado: até 60 caracteres." |
-| Hero Subtitle | "Texto secundário abaixo do título. Descreve o propósito da plataforma." |
-| CTA Button | "Texto do botão de ação. Use verbos como 'Explorar', 'Descobrir'." |
-| Video URL | "Cole o link do YouTube ou Vimeo. O vídeo será incorporado automaticamente." |
-| Image Upload | "Formatos aceitos: JPG, PNG, WebP. Tamanho máximo: 5MB." |
-| JSON Field | "Formato JSON válido. Exemplo: [\"item1\", \"item2\"]" |
-
----
-
-## 3. Melhorias de Layout e Responsividade
-
-### 3.1 SimpleTextEditor - Grid Responsivo
-
-**Problema atual:** Campos empilhados verticalmente sem aproveitamento do espaço horizontal.
-
-**Solução:** Grid de 2 colunas para campos `text` em desktop, 1 coluna em mobile.
-
-```text
 MOBILE (< 768px):
 ┌──────────────────────────────┐
-│ Hero Principal               │
-├──────────────────────────────┤
-│ Badge (?)                    │
-│ [Input                     ] │
-│ [Voltar] [Salvar]           │
-├──────────────────────────────┤
-│ Título Principal (?)         │
-│ [Input                     ] │
-│ [Voltar] [Salvar]           │
+│ ┌─ Hero Principal ─────────┐ │
+│ │ Badge (?)                 │ │
+│ │ [Input                  ] │ │
+│ │          [Voltar] [Salvar]│ │
+│ ├───────────────────────────┤ │
+│ │ Título Principal (?)      │ │
+│ │ [Input                  ] │ │
+│ │          [Voltar] [Salvar]│ │
+│ └───────────────────────────┘ │
 └──────────────────────────────┘
 
 DESKTOP (>= 768px):
 ┌──────────────────────────────────────────────────────────┐
-│ Hero Principal                                            │
-├────────────────────────────────┬─────────────────────────┤
-│ Badge (?)                      │ Título Principal (?)     │
-│ [Input               ]         │ [Input               ]   │
-│        [Voltar] [Salvar]       │        [Voltar] [Salvar] │
-├────────────────────────────────┴─────────────────────────┤
-│ Subtítulo (?) - campo largo (textarea)                    │
-│ [Textarea                                              ] │
-│                                        [Voltar] [Salvar] │
+│ ┌─ Hero Principal ─────────────────────────────────────┐ │
+│ │ ┌────────────────────┐ ┌────────────────────┐        │ │
+│ │ │ Badge (?)          │ │ Título (?)         │        │ │
+│ │ │ [Input       ]     │ │ [Input       ]     │        │ │
+│ │ │ [Voltar] [Salvar]  │ │ [Voltar] [Salvar]  │        │ │
+│ │ └────────────────────┘ └────────────────────┘        │ │
+│ │ ┌────────────────────────────────────────────┐       │ │
+│ │ │ Descrição (?) - campo largo                │       │ │
+│ │ │ [Textarea                                ] │       │ │
+│ │ │                        [Voltar] [Salvar]  │       │ │
+│ │ └────────────────────────────────────────────┘       │ │
+│ └──────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 ModernAdminLayout - Sidebar Mobile
+### Mudanças Específicas no SimpleTextEditor
 
-**Problema atual:** Sidebar ocupa largura fixa, não há drawer mobile.
+- Usar grid `grid-cols-1 md:grid-cols-2` para campos `text`
+- Campos `textarea`, `json` e `image` ocupam 100% da largura (`col-span-full`)
+- Padding consistente: `p-4 md:p-6`
+- Gap entre campos: `gap-4 md:gap-6`
+- Botões alinhados à direita com `justify-end`
 
-**Solução:** Em telas < 768px, sidebar vira drawer sobreposto com botão hamburguer.
+---
 
-```text
+## 3. Responsividade Mobile no ModernAdminLayout
+
+### Problema Atual
+- Sidebar ocupa largura fixa mesmo em mobile
+- Menu não é colapsável
+
+### Solução: Drawer Mobile
+
+**Comportamento:**
+- Desktop (>= 768px): Sidebar fixa à esquerda
+- Mobile (< 768px): Drawer sobreposto ativado por botão hamburguer
+
+```
 MOBILE:
 ┌──────────────────────────────────┐
-│ [≡] Dashboard Administrativo [X] │
+│ [≡] Dashboard Administrativo     │  ← Botão hamburguer
 ├──────────────────────────────────┤
-│ ┌────────────────────────────┐  │
-│ │ Drawer Overlay             │  │
-│ │ ├─ Dashboard               │  │
-│ │ ├─ Plataformas            │  │
-│ │ │   ├─ ViajARTur          │  │
-│ │ │   └─ Descubra MS        │  │
-│ │ ├─ Financeiro             │  │
-│ │ └─ Sistema                │  │
-│ └────────────────────────────┘  │
-│ Conteúdo Principal              │
-│ (100% largura)                  │
+│                                  │
+│ ┌────────────────────┐           │
+│ │ Drawer Overlay     │◄──────────┤ Overlay escuro
+│ │ ├─ Dashboard       │           │
+│ │ ├─ Plataformas    │           │
+│ │ │   ├─ ViajARTur  │           │
+│ │ │   └─ Descubra MS│           │
+│ │ ├─ Financeiro     │           │
+│ │ └─ Sistema        │           │
+│ │              [X]  │           │
+│ └────────────────────┘           │
+│                                  │
+│ Conteúdo Principal               │
+│ (100% largura)                   │
 └──────────────────────────────────┘
 ```
+
+### Implementação
+
+- Adicionar state `isSidebarOpen`
+- Botão hamburguer no header mobile
+- Sidebar como `fixed` com `left-0` ou `-left-full` baseado no state
+- Overlay escuro quando aberto
+- Fechar ao clicar fora ou em item do menu
 
 ---
 
 ## 4. Correção do Vídeo YouTube no Mobile
 
-### 4.1 Problema Identificado
+### Problema Identificado
+No UniversalHero.tsx, mesmo com parâmetros `modestbranding=1`, `controls=0`, `showinfo=0`, o YouTube ainda mostra informações no mobile (título, logo, etc).
 
-No arquivo `UniversalHero.tsx`, o embed do YouTube mostra informações (título, logo) no mobile mesmo com os parâmetros `showinfo=0`, `modestbranding=1`, `controls=0`.
+### Solução: Overlay Físico
 
-### 4.2 Solução: Overlays Adicionais
+Adicionar divs físicas como overlays que cobrem as áreas onde o YouTube mostra informações:
 
-A solução atual já usa CSS para esconder elementos, mas precisamos reforçar:
+```
+┌─────────────────────────────────────┐
+│ ████████████████████████████████████│ ← Top cover (60px)
+│                                     │
+│           VÍDEO YOUTUBE             │
+│                                     │
+│ ████████████████████████████████████│ ← Bottom cover (80px)
+└─────────────────────────────────────┘
+```
 
-1. **Adicionar overlay sólido sobre a borda inferior do vídeo** (onde aparecem infos no mobile)
-2. **Ajustar CSS para garantir que overlays fiquem acima do iframe**
-3. **Usar gradiente para disfarçar a transição**
+### Implementação
 
+Adicionar overlays dentro do container do vídeo:
 ```css
-/* Overlay para esconder bottom bar do YouTube no mobile */
-@media (max-width: 768px) {
-  .youtube-bottom-cover {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    z-index: 15;
-    pointer-events: none;
-  }
+/* Top overlay - esconde título/logo */
+.youtube-top-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* Bottom overlay - esconde controles/info */
+.youtube-bottom-cover {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  z-index: 15;
+  pointer-events: none;
 }
 ```
+
+### Por que isso funciona?
+- CSS não consegue esconder elementos dentro de um iframe
+- Mas podemos **cobrir** essas áreas com divs posicionadas absolutamente
+- Os gradientes criam transição suave para não parecer artificial
 
 ---
 
@@ -208,44 +209,22 @@ A solução atual já usa CSS para esconder elementos, mas precisamos reforçar:
 |---------|-----------|
 | `src/components/admin/ui/HelpTooltip.tsx` | Componente de tooltip de ajuda |
 | `src/components/admin/ui/LabelWithHelp.tsx` | Label com tooltip integrado |
-| `src/components/admin/ui/index.ts` | Barrel export |
+| `src/components/admin/ui/index.ts` | Barrel export dos componentes |
 
 ---
 
 ## 6. Arquivos a Modificar
 
-### Edge Functions
 | Arquivo | Alteração |
 |---------|-----------|
-| `supabase/functions/refund-event-payment/index.ts` | Incluir `amount` no select |
-| `supabase/functions/send-notification-email/index.ts` | Adicionar `event_refunded` ao mapeamento |
-
-### Componentes Admin - Correções TypeScript
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/admin/AdminLogin.tsx` | Conversão de erro |
-| `src/components/admin/AdminUserManagement.tsx` | Usar `id` em vez de `userId` |
-| `src/components/admin/EventManagementPanel.tsx` | Criar interface `ServicesStatus` |
-| `src/components/admin/FooterSettingsManager.tsx` | Usar variável convertida |
-| `src/components/admin/LocationPicker.tsx` | Criar interface `NominatimResult` |
-| `src/components/admin/TechnicalUserManager.tsx` | Usar campos corretos |
-| `src/components/admin/WorkflowManagement.tsx` | Cast explícito |
-| `src/components/admin/ai/AIAdminChat.tsx` | Conversão de erro |
-| `src/components/admin/ai/AutonomousAIAgent.tsx` | Adicionar `@ts-nocheck` |
-| `src/components/admin/descubra_ms/PartnersManagement.tsx` | Tipar `updateData` |
-| `src/components/admin/editor/VisualContentEditor.tsx` | Conversão de erro |
-| `src/components/admin/financial/FinancialManagement.tsx` | Criar interfaces |
-
-### Layout e UX
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/admin/platform/SimpleTextEditor.tsx` | Grid responsivo + LabelWithHelp |
-| `src/components/admin/layout/ModernAdminLayout.tsx` | Drawer mobile |
-| `src/components/layout/UniversalHero.tsx` | Overlay para esconder info YouTube mobile |
+| `src/components/admin/platform/SimpleTextEditor.tsx` | Grid responsivo + usar LabelWithHelp |
+| `src/components/admin/settings/PoliciesEditor.tsx` | Adicionar tooltips de ajuda |
+| `src/components/admin/layout/ModernAdminLayout.tsx` | Implementar drawer mobile |
+| `src/components/layout/UniversalHero.tsx` | Adicionar overlays físicos para YouTube mobile |
 
 ---
 
-## 7. O Que NAO Será Alterado
+## 7. O Que NÃO Será Alterado
 
 - Funcionalidades existentes do CMS (já funcionando)
 - Lógica de salvamento no Supabase
@@ -258,92 +237,134 @@ A solução atual já usa CSS para esconder elementos, mas precisamos reforçar:
 
 ## 8. Detalhes Técnicos
 
-### 8.1 Interface ServicesStatus (EventManagementPanel)
+### 8.1 HelpTooltip Component
 
 ```typescript
-interface ServiceState {
-  isRunning: boolean;
-  config?: {
-    cleanupInterval?: number;
-    syncInterval?: number;
-  };
-  lastError?: string;
+import { HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+interface HelpTooltipProps {
+  content: string;
+  side?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-interface ServicesStatus {
-  cleanup?: ServiceState;
-  googleCalendar?: ServiceState;
-  geminiAI?: ServiceState;
+export function HelpTooltip({ content, side = 'top' }: HelpTooltipProps) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button 
+            type="button"
+            className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side={side} className="max-w-[300px]">
+          <p className="text-sm">{content}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 ```
 
-### 8.2 Interface NominatimResult (LocationPicker)
+### 8.2 LabelWithHelp Component
 
 ```typescript
-interface NominatimResult {
-  display_name: string;
-  lat: string;
-  lon: string;
+import { Label } from '@/components/ui/label';
+import { HelpTooltip } from './HelpTooltip';
+
+interface LabelWithHelpProps {
+  htmlFor: string;
+  label: string;
+  helpText?: string;
+}
+
+export function LabelWithHelp({ htmlFor, label, helpText }: LabelWithHelpProps) {
+  return (
+    <div className="flex items-center gap-1">
+      <Label htmlFor={htmlFor}>{label}</Label>
+      {helpText && <HelpTooltip content={helpText} />}
+    </div>
+  );
 }
 ```
 
-### 8.3 Interfaces Financeiras
+### 8.3 YouTube Mobile Overlay
 
 ```typescript
-interface RevenueItem {
-  paid_date?: string;
-  amount?: number;
-}
-
-interface ExpenseItem {
-  due_date?: string;
-  amount?: number;
-  payment_status?: string;
-}
-```
-
-### 8.4 Correção AdminUserManagement
-
-```typescript
-// ANTES:
-setPendingOperation({ 
-  type: 'role_update', 
-  data: { userId: selectedUserId, role: newUserRole, csrfToken: token } 
-});
-
-// DEPOIS:
-setPendingOperation({ 
-  type: 'role_update', 
-  data: { id: selectedUserId, email: '', role: newUserRole } 
-});
+{/* Overlays para esconder info do YouTube no mobile */}
+{isMobile && embedUrl?.includes('youtube') && (
+  <>
+    {/* Top overlay - esconde título/logo */}
+    <div 
+      className="absolute top-0 left-0 right-0 h-[60px] z-[15] pointer-events-none"
+      style={{
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)'
+      }}
+    />
+    {/* Bottom overlay - esconde controles/info */}
+    <div 
+      className="absolute bottom-0 left-0 right-0 h-[80px] z-[15] pointer-events-none"
+      style={{
+        background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)'
+      }}
+    />
+  </>
+)}
 ```
 
 ---
 
-## 9. Ordem de Execução
+## 9. Mapeamento de Tooltips por Campo
 
-1. **Fase 1**: Corrigir erros em Edge Functions (bloqueia deploy)
-2. **Fase 2**: Corrigir erros TypeScript nos componentes admin
-3. **Fase 3**: Criar componentes HelpTooltip e LabelWithHelp
-4. **Fase 4**: Aplicar grid responsivo no SimpleTextEditor
-5. **Fase 5**: Implementar drawer mobile no ModernAdminLayout
-6. **Fase 6**: Adicionar overlay para esconder info YouTube no mobile
+### SimpleTextEditor - ViajarTur
+
+| Campo | helpText |
+|-------|----------|
+| viajar_hero_badge | "Texto pequeno que aparece acima do título principal" |
+| viajar_hero_title | "Nome da plataforma. Será exibido em destaque na página inicial" |
+| viajar_hero_subtitle | "Frase de efeito que resume a proposta da plataforma" |
+| viajar_hero_description | "Texto explicativo mais detalhado sobre a plataforma" |
+| viajar_hero_cta_primary | "Texto do botão principal. Use verbos de ação" |
+| viajar_hero_cta_secondary | "Texto do botão secundário" |
+| viajar_hero_video_url | "Link do YouTube. O vídeo será incorporado como background" |
+
+### SimpleTextEditor - Descubra MS
+
+| Campo | helpText |
+|-------|----------|
+| ms_hero_title | "Título principal da página inicial do Descubra MS" |
+| ms_hero_subtitle | "Descrição que convida o visitante a explorar o estado" |
+| ms_hero_video_url | "Link do YouTube para o vídeo de fundo do hero" |
+| ms_hero_video_placeholder_image_url | "Imagem exibida enquanto o vídeo carrega" |
+| ms_tourism_title | "Título da seção de descrição turística" |
 
 ---
 
-## 10. Resultado Esperado
+## 10. Ordem de Execução
+
+1. **Fase 1**: Criar componentes HelpTooltip e LabelWithHelp
+2. **Fase 2**: Aplicar grid responsivo e tooltips no SimpleTextEditor
+3. **Fase 3**: Implementar drawer mobile no ModernAdminLayout
+4. **Fase 4**: Adicionar overlays físicos para YouTube no UniversalHero
+5. **Fase 5**: Adicionar tooltips no PoliciesEditor
+
+---
+
+## 11. Resultado Esperado
 
 | Antes | Depois |
 |-------|--------|
-| 80+ erros de build TypeScript | Build sem erros |
-| Layout desalinhado e inconsistente | Layout profissional e centralizado |
-| Sem orientação para administradores | Tooltips de ajuda (?) em campos importantes |
-| Interface quebrada em mobile | Interface responsiva e funcional |
-| Info do YouTube visível no mobile | Vídeo limpo sem informações sobrepostas |
+| Campos sem orientação | Tooltips de ajuda (?) explicando cada campo |
+| Layout desalinhado | Grid responsivo com espaçamento consistente |
+| Sidebar fixa em mobile | Drawer colapsável com overlay |
+| Info YouTube visível no mobile | Overlays escondendo informações |
 
 ---
 
-## 11. Compatibilidade
+## 12. Compatibilidade
 
 - Responsivo (mobile/tablet/desktop)
 - Mantém funcionalidades existentes
