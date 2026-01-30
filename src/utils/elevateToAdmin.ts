@@ -15,8 +15,9 @@ export const elevateToAdmin = async (userEmail: string): Promise<boolean> => {
     });
 
     if (error) {
-      console.error("❌ Erro ao elevar usuário:", error);
-      toast.error(`Erro ao elevar usuário: ${error.message}`);
+      const errorMessage = getErrorMessage(error, 'Erro desconhecido ao elevar usuário');
+      console.error("❌ Erro ao elevar usuário:", errorMessage);
+      toast.error(`Erro ao elevar usuário: ${errorMessage}`);
       return false;
     }
 

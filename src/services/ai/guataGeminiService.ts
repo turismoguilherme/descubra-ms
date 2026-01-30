@@ -323,14 +323,19 @@ class GuataGeminiService {
         }
         
         // Tratamento para chave expirada - apenas se for erro específico
-        if (error.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
+        const errorObj = error && typeof error === 'object' && 'message' in error
+          ? (error as { message?: string })
+          : null;
+        
+        if (errorObj?.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
           logger.dev('[Guatá] API Key expirada, usando fallback');
           return this.generateFallbackResponse(query);
         }
         
         // Outros erros: logar apenas em desenvolvimento
         if (isDev) {
-          console.warn('[Guatá] Erro no Gemini, usando fallback:', error.message);
+          const errorMessage = getErrorMessage(error);
+          console.warn('[Guatá] Erro no Gemini, usando fallback:', errorMessage);
         }
         // Se falhar, usar fallback
         return this.generateFallbackResponse(query);
@@ -1132,9 +1137,13 @@ REGRAS ABSOLUTAS:
       // Se Edge Function falhou, logar detalhes mas continuar para fallback
       if (error) {
         if (isDev) {
+          const errorObj = error && typeof error === 'object'
+            ? (error as { message?: string; status?: number })
+            : null;
+          
           console.warn('[Guatá] Edge Function falhou:', {
-            message: error.message,
-            status: error.status,
+            message: errorObj?.message || getErrorMessage(error),
+            status: errorObj?.status,
             data: data,
             error: error
           });
@@ -1320,7 +1329,11 @@ REGRAS ABSOLUTAS:
         }
         
         // Tratamento para chave expirada - apenas se for erro específico
-        if (error.status === 401 || error.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
+        const errorObj = error && typeof error === 'object'
+          ? (error as { status?: number; message?: string })
+          : null;
+        
+        if (errorObj?.status === 401 || errorObj?.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
           // Log apenas uma vez por sessão
           if (!this.hasLoggedExpiredKey) {
             logger.error('[ERRO] API Key do Gemini inválida ou expirada');

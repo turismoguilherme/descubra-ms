@@ -53,7 +53,8 @@ export async function generateContent(
 
     // Verificar se há erro na resposta
     if (error) {
-      throw new Error(`Edge Function error: ${error.message}`);
+      const errorMessage = getErrorMessage(error, 'Erro desconhecido na Edge Function');
+      throw new Error(`Edge Function error: ${errorMessage}`);
     }
 
     if (data?.error || !data?.success) {

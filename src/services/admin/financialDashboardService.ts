@@ -550,14 +550,18 @@ export const financialDashboardService = {
 
         if (error) {
           console.error('Erro ao criar despesa:', error);
+          const errorObj = error && typeof error === 'object' && 'code' in error
+            ? (error as { code?: string; message?: string })
+            : null;
+          
           // Melhorar mensagem de erro para overflow numérico
-          if (error.code === '22003' || error.message?.includes('overflow')) {
+          if (errorObj?.code === '22003' || errorObj?.message?.includes('overflow')) {
             throw new Error('Valor muito grande. O valor máximo permitido é R$ 99.999.999,99.');
           }
-          if (error.code === 'PGRST301' || error.message?.includes('JWT expired')) {
+          if (errorObj?.code === 'PGRST301' || errorObj?.message?.includes('JWT expired')) {
             throw new Error('Sessão expirada. Por favor, faça login novamente.');
           }
-          throw new Error(error.message || 'Erro ao criar despesa');
+          throw new Error(getErrorMessage(error, 'Erro ao criar despesa'));
         }
 
         return expenseData;
@@ -590,7 +594,7 @@ export const financialDashboardService = {
         .single();
 
       if (error) {
-        throw new Error(error.message || 'Erro ao atualizar despesa');
+        throw new Error(getErrorMessage(error, 'Erro ao atualizar despesa'));
       }
 
       return updatedData;
@@ -637,7 +641,7 @@ export const financialDashboardService = {
         .single();
 
       if (error) {
-        throw new Error(error.message || 'Erro ao registrar pagamento de salário');
+        throw new Error(getErrorMessage(error, 'Erro ao registrar pagamento de salário'));
       }
 
       return salaryData;
@@ -663,7 +667,7 @@ export const financialDashboardService = {
         .single();
 
       if (error) {
-        throw new Error(error.message || 'Erro ao atualizar salário');
+        throw new Error(getErrorMessage(error, 'Erro ao atualizar salário'));
       }
 
       return updatedData;
@@ -694,7 +698,11 @@ export const financialDashboardService = {
 
           if (error) {
             // Não logar erro de JWT expirado como warning (já será tratado pelo retry)
-            if (error.code !== 'PGRST301') {
+            const errorObj = error && typeof error === 'object' && 'code' in error
+              ? (error as { code?: string })
+              : null;
+            
+            if (errorObj?.code !== 'PGRST301') {
               console.warn('Tabela master_financial_records não encontrada ou erro na query:', error);
             }
             throw error;
@@ -742,7 +750,11 @@ export const financialDashboardService = {
             
             if (error) {
               // Não logar erro de JWT expirado como warning (já será tratado pelo retry)
-              if (error.code !== 'PGRST301') {
+              const errorObj = error && typeof error === 'object' && 'code' in error
+                ? (error as { code?: string })
+                : null;
+              
+              if (errorObj?.code !== 'PGRST301') {
                 console.warn('Tabela expenses não encontrada ou erro na query:', error);
               }
               throw error;
@@ -767,7 +779,11 @@ export const financialDashboardService = {
 
           if (error) {
             // Não logar erro de JWT expirado como warning (já será tratado pelo retry)
-            if (error.code !== 'PGRST301') {
+            const errorObj = error && typeof error === 'object' && 'code' in error
+              ? (error as { code?: string })
+              : null;
+            
+            if (errorObj?.code !== 'PGRST301') {
               console.warn('Tabela expenses não encontrada ou erro na query:', error);
             }
             throw error;

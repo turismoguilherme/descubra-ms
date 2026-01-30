@@ -4,6 +4,8 @@
  * Integra Google Custom Search API + SerpAPI + APIs de turismo
  */
 
+import { getErrorMessage } from '@/utils/errorUtils';
+
 export interface WebSearchResult {
   title: string;
   snippet: string;
@@ -197,10 +199,14 @@ class GuataRealWebSearchService {
 
         // Se Edge Function falhou, logar detalhes mas continuar para fallback
         if (error) {
+          const errorObj = error && typeof error === 'object'
+            ? (error as { message?: string; status?: number; context?: unknown })
+            : null;
+          
           console.error('[Web Search] ❌ Edge Function falhou:', {
-            message: error.message,
-            status: error.status,
-            context: error.context,
+            message: errorObj?.message || getErrorMessage(error),
+            status: errorObj?.status,
+            context: errorObj?.context,
             data: data,
             error: error
           });

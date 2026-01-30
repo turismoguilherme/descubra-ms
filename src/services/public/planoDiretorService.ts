@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { v5 as uuidv5 } from 'uuid';
 import { PlanoDiretorAIService } from '../ai/planoDiretorAIService';
 import { PlanoDiretorIntegrationService } from './planoDiretorIntegrationService';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 // Interfaces principais (mantidas compatíveis com o serviço antigo)
 export interface DiagnosticoData {
@@ -567,11 +568,15 @@ export class PlanoDiretorService {
       }
       
       // Verificar se é erro de tabela não encontrada
-      const isTableNotFound = error.code === '42P01' || 
-                              error.code === 'PGRST116' ||
-                              error.message?.includes('relation') || 
-                              error.message?.includes('does not exist') || 
-                              error.message?.includes('not found');
+      const errorObj = error && typeof error === 'object' && 'code' in error
+        ? (error as { code?: string; message?: string })
+        : null;
+      
+      const isTableNotFound = errorObj?.code === '42P01' || 
+                              errorObj?.code === 'PGRST116' ||
+                              errorObj?.message?.includes('relation') || 
+                              errorObj?.message?.includes('does not exist') || 
+                              errorObj?.message?.includes('not found');
       
       return !isTableNotFound;
     } catch (error: unknown) {
@@ -675,49 +680,53 @@ export class PlanoDiretorService {
       }
 
       if (error) {
+        const errorObj = error && typeof error === 'object'
+          ? (error as { code?: string; message?: string; details?: string; hint?: string })
+          : null;
+        
         console.error('planoDiretorService: Erro do Supabase:', error);
-        console.error('planoDiretorService: Código do erro:', error.code);
-        console.error('planoDiretorService: Mensagem do erro:', error.message);
-        console.error('planoDiretorService: Detalhes do erro:', error.details);
-        console.error('planoDiretorService: Hint do erro:', error.hint);
+        console.error('planoDiretorService: Código do erro:', errorObj?.code);
+        console.error('planoDiretorService: Mensagem do erro:', errorObj?.message);
+        console.error('planoDiretorService: Detalhes do erro:', errorObj?.details);
+        console.error('planoDiretorService: Hint do erro:', errorObj?.hint);
         
         // Verificar se é erro 404 (tabela não existe)
         // Objeto vazio ou sem código/mensagem geralmente indica 404 do PostgREST
-        const isEmptyError = !error.code && !error.message && Object.keys(error).length === 0;
+        const isEmptyError = !errorObj?.code && !errorObj?.message && error && typeof error === 'object' && Object.keys(error).length === 0;
         const is404Error = isEmptyError || 
-          error.code === '42P01' ||
-          error.code === 'PGRST116' || 
-          error.message?.includes('relation') || 
-          error.message?.includes('does not exist') || 
-          error.message?.includes('not found') || 
-          error.message?.includes('404') ||
-          (error.message?.toLowerCase().includes('table') && error.message?.toLowerCase().includes('not exist'));
+          errorObj?.code === '42P01' ||
+          errorObj?.code === 'PGRST116' || 
+          errorObj?.message?.includes('relation') || 
+          errorObj?.message?.includes('does not exist') || 
+          errorObj?.message?.includes('not found') || 
+          errorObj?.message?.includes('404') ||
+          (errorObj?.message?.toLowerCase().includes('table') && errorObj?.message?.toLowerCase().includes('not exist'));
         
         if (is404Error) {
           const errorMessage = 'Tabela não encontrada (404). As migrations do Plano Diretor não foram executadas no Supabase. Por favor, execute as migrations antes de usar este módulo. Consulte o arquivo docs/INSTRUCOES_MIGRATIONS_PLANO_DIRETOR.md para instruções detalhadas.';
-          const migrationError = new Error(`Erro ao criar plano diretor: ${errorMessage}${error.code ? ` (${error.code})` : ''}`);
-          (migrationError as any).isMigrationError = true;
+          const migrationError = new Error(`Erro ao criar plano diretor: ${errorMessage}${errorObj?.code ? ` (${errorObj.code})` : ''}`);
+          (migrationError as { isMigrationError?: boolean }).isMigrationError = true;
           throw migrationError;
         }
         
         // Mensagem mais amigável baseada no tipo de erro
-        let errorMessage = error.message || 'Erro desconhecido';
+        let errorMessage = getErrorMessage(error, 'Erro desconhecido');
         
-        if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('policy')) {
+        if (errorObj?.code === '42501' || errorObj?.message?.includes('permission denied') || errorObj?.message?.includes('policy')) {
           errorMessage = 'Permissão negada. Verifique as políticas RLS ou se o usuário está autenticado corretamente.';
-        } else if (error.code === '23503' || error.message?.includes('foreign key')) {
+        } else if (errorObj?.code === '23503' || errorObj?.message?.includes('foreign key')) {
           errorMessage = 'Erro de referência. O usuário não existe no sistema de autenticação do Supabase. Se você está usando um usuário de teste, é necessário criar o usuário no Supabase Auth ou ajustar as políticas RLS.';
-          const migrationError = new Error(`Erro ao criar plano diretor: ${errorMessage}${error.code ? ` (${error.code})` : ''}`);
-          (migrationError as any).isMigrationError = true;
-          (migrationError as any).isUserError = true;
+          const migrationError = new Error(`Erro ao criar plano diretor: ${errorMessage}${errorObj?.code ? ` (${errorObj.code})` : ''}`);
+          (migrationError as { isMigrationError?: boolean; isUserError?: boolean }).isMigrationError = true;
+          (migrationError as { isMigrationError?: boolean; isUserError?: boolean }).isUserError = true;
           throw migrationError;
-        } else if (error.code === '23502' || error.message?.includes('null value') || error.message?.includes('violates not-null constraint')) {
+        } else if (errorObj?.code === '23502' || errorObj?.message?.includes('null value') || errorObj?.message?.includes('violates not-null constraint')) {
           // Erro de constraint NOT NULL - geralmente indica problema na função trigger
-          errorMessage = `Erro ao criar histórico: ${error.message || 'Campo obrigatório não foi preenchido'}. Isso pode indicar um problema na função de histórico. Verifique se a migration mais recente foi executada.`;
+          errorMessage = `Erro ao criar histórico: ${errorObj?.message || 'Campo obrigatório não foi preenchido'}. Isso pode indicar um problema na função de histórico. Verifique se a migration mais recente foi executada.`;
           // Não é erro de migration, mas sim um erro de configuração
         }
         
-        throw new Error(`Erro ao criar plano diretor: ${errorMessage}${error.code ? ` (${error.code})` : ''}`);
+        throw new Error(`Erro ao criar plano diretor: ${errorMessage}${errorObj?.code ? ` (${errorObj.code})` : ''}`);
       }
       
       // Verificar se plano é null (pode indicar erro 404 também)

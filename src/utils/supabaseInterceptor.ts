@@ -6,6 +6,18 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getErrorMessage } from '@/utils/errorUtils';
 
+/**
+ * Interface para erros do Supabase
+ */
+interface SupabaseError {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+  status?: number;
+  statusCode?: number;
+}
+
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -65,9 +77,9 @@ async function refreshSession(): Promise<boolean> {
  * Wrapper para operações do Supabase que renova token automaticamente em caso de 401
  */
 export async function withAutoRefresh<T>(
-  operation: () => Promise<{ data: T | null; error: any }>,
+  operation: () => Promise<{ data: T | null; error: SupabaseError | null }>,
   retries = 1
-): Promise<{ data: T | null; error: any }> {
+): Promise<{ data: T | null; error: SupabaseError | null }> {
   try {
     const result = await operation();
     

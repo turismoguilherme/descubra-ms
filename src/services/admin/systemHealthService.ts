@@ -84,7 +84,11 @@ export const systemHealthService = {
       }
 
       // Se for erro 401 e a mensagem indicar problema de políticas, as políticas estão incorretas
-      if (error.code === 'PGRST301' || error.message?.includes('JWT expired')) {
+      const errorObj = error && typeof error === 'object' && 'code' in error
+        ? (error as { code?: string; message?: string })
+        : null;
+      
+      if (errorObj?.code === 'PGRST301' || errorObj?.message?.includes('JWT expired')) {
         // Tentar renovar token primeiro
         try {
           await supabase.auth.refreshSession();
@@ -103,7 +107,7 @@ export const systemHealthService = {
       }
 
       // Se for erro de permissão (não JWT expired), pode ser políticas incorretas
-      if (error.code === '42501' || error.message?.includes('permission denied')) {
+      if (errorObj?.code === '42501' || errorObj?.message?.includes('permission denied')) {
         return {
           correct: false,
           message: 'Políticas RLS podem estar incorretas. Execute a migration de correção no Supabase Dashboard.'
@@ -111,7 +115,7 @@ export const systemHealthService = {
       }
 
       // Se for erro 401 mas não JWT expired, pode ser políticas
-      if (error.code === 'PGRST301') {
+      if (errorObj?.code === 'PGRST301') {
         return {
           correct: false,
           message: 'JWT expirado ou políticas RLS incorretas. Tente fazer logout e login novamente, ou execute a migration de correção.'
@@ -239,10 +243,14 @@ export const systemHealthService = {
         const latency = Date.now() - start;
         
         // Se retornar erro de validação ou rate limit, significa que a função está funcionando
+        const errorObj = error && typeof error === 'object' && 'message' in error
+          ? (error as { message?: string })
+          : null;
+        
         const isAvailable = !error || 
-          error.message?.includes('prompt') || 
-          error.message?.includes('rate limit') ||
-          error.message?.includes('invalid');
+          errorObj?.message?.includes('prompt') || 
+          errorObj?.message?.includes('rate limit') ||
+          errorObj?.message?.includes('invalid');
 
         return {
           service_name: 'API Gemini (IA)',
@@ -250,7 +258,7 @@ export const systemHealthService = {
           status: isAvailable ? (latency > 2000 ? 'slow' : 'online') : 'offline',
           latency_ms: latency,
           response_data: { method: 'edge_function' },
-          error_message: isAvailable ? undefined : error?.message,
+          error_message: isAvailable ? undefined : getErrorMessage(error),
         };
       } catch (edgeError: unknown) {
         // Se Edge Function não disponível, verificar se o cliente está configurado
@@ -295,12 +303,16 @@ export const systemHealthService = {
       
       // Se retornar erro de validação de email ou campos obrigatórios, significa que a função está funcionando
       // Se retornar erro de configuração (RESEND_API_KEY), também significa que está funcionando mas não configurado
+      const errorObj = error && typeof error === 'object' && 'message' in error
+        ? (error as { message?: string })
+        : null;
+      
       const isAvailable = !error || 
-        error.message?.includes('email') || 
-        error.message?.includes('to') || 
-        error.message?.includes('type') ||
-        error.message?.includes('RESEND') ||
-        error.message?.includes('SENDGRID');
+        errorObj?.message?.includes('email') || 
+        errorObj?.message?.includes('to') || 
+        errorObj?.message?.includes('type') ||
+        errorObj?.message?.includes('RESEND') ||
+        errorObj?.message?.includes('SENDGRID');
       
       return {
         service_name: 'Serviço de Email',
@@ -467,8 +479,8 @@ export const systemHealthService = {
             });
             
             // Usar supabase.functions.invoke - o Supabase client serializa o body corretamente
-            let emailResult: any = null;
-            let emailError: any = null;
+            let emailResult: unknown = null;
+            let emailError: { code?: string; message?: string; name?: string; stack?: string; context?: unknown; constructor?: { name?: string } } | null = null;
             
             try {
               // #region agent log - HYP-C: Tentando invocar via Supabase client
@@ -513,21 +525,21 @@ export const systemHealthService = {
               errorMessage: emailError?.message,
               errorStack: emailError?.stack,
               errorContext: emailError?.context,
-              errorKeys: Object.keys(emailError || {}),
+              errorKeys: emailError ? Object.keys(emailError) : [],
               errorType: typeof emailError,
               errorConstructor: emailError?.constructor?.name,
-              fullErrorString: JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2)
+              fullErrorString: emailError ? JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2) : 'null'
             });
             // #endregion
               
               // Tentar extrair mensagem de erro mais detalhada
-              const errorMessage = emailError.message || JSON.stringify(emailError);
+              const errorMessage = emailError?.message || (emailError ? JSON.stringify(emailError) : 'Erro desconhecido');
               console.error(`❌ Erro ao enviar email de alerta para ${config.email_address}:`, {
                 error: emailError,
                 message: errorMessage,
                 errorName: emailError?.name,
                 errorContext: emailError?.context,
-                fullError: JSON.stringify(emailError, null, 2),
+                fullError: emailError ? JSON.stringify(emailError, null, 2) : 'null',
                 context: {
                   service_name: alert.service_name,
                   alert_type: alert.alert_type,
@@ -630,7 +642,11 @@ export const systemHealthService = {
           .eq('user_id', user.id)
           .maybeSingle(); // Usar maybeSingle ao invés de single para evitar erro 406
 
-        if (error && error.code !== 'PGRST116') {
+        const errorObj = error && typeof error === 'object' && 'code' in error
+          ? (error as { code?: string })
+          : null;
+        
+        if (error && errorObj?.code !== 'PGRST116') {
           console.error('Erro ao carregar configurações:', error);
           return null;
         }
@@ -695,12 +711,16 @@ export const systemHealthService = {
         .select();
 
       if (error) {
+        const errorObj = error && typeof error === 'object'
+          ? (error as { code?: string; message?: string; details?: string; hint?: string })
+          : null;
+        
         console.error('❌ [systemHealthService] Erro ao salvar no banco:', error);
         console.error('❌ [systemHealthService] Detalhes do erro:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
+          code: errorObj?.code,
+          message: errorObj?.message,
+          details: errorObj?.details,
+          hint: errorObj?.hint,
         });
         throw error;
       }
