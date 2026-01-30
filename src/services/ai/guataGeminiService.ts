@@ -9,6 +9,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "@/utils/logger";
 import { supabase } from "@/integrations/supabase/client";
 import { guataResponseCacheService } from "./cache/guataResponseCacheService";
+import { getErrorMessage } from "@/utils/errorUtils";
 
 export interface GeminiQuery {
   question: string;
@@ -1144,10 +1145,10 @@ REGRAS ABSOLUTAS:
           console.warn('[Guatá] Edge Function retornou dados inválidos:', data);
         }
       }
-    } catch (edgeFunctionError: any) {
+    } catch (edgeFunctionError: unknown) {
       // Edge Function não disponível ou falhou - usar método antigo
       if (isDev) {
-        console.warn('[Guatá] Edge Function não disponível, usando método direto:', edgeFunctionError.message);
+        console.warn('[Guatá] Edge Function não disponível, usando método direto:', getErrorMessage(edgeFunctionError));
       }
     }
 
@@ -1191,20 +1192,29 @@ REGRAS ABSOLUTAS:
             console.log(`[SUCESSO] Modelo ${modelName} funcionou, resposta:`, text.length, 'caracteres');
           }
           return text;
-        } catch (modelError: any) {
+        } catch (modelError: unknown) {
+          // Extrair propriedades do erro de forma type-safe
+          const errorObj = modelError && typeof modelError === 'object' 
+            ? (modelError as { status?: number; code?: number; statusCode?: number; message?: string })
+            : null;
+          
+          const errorStatus = errorObj?.status || errorObj?.code || errorObj?.statusCode;
+          const errorMessage = errorObj?.message || getErrorMessage(modelError);
+          const errorString = JSON.stringify(modelError).toLowerCase();
+          
           // Log detalhado do erro para diagnóstico
           const errorDetails = {
             model: modelName,
-            status: modelError.status || modelError.code || modelError.statusCode,
-            message: modelError.message || String(modelError),
+            status: errorStatus,
+            message: errorMessage,
             fullError: modelError
           };
           
           // Erro no modelo (log removido para reduzir verbosidade)
           
           // Tratamento específico para erro 403 (API key leaked/inválida)
-          if (modelError.message?.includes('leaked') || 
-              (modelError.status === 403 && modelError.message?.toLowerCase().includes('api'))) {
+          if (errorMessage.includes('leaked') || 
+              (errorStatus === 403 && errorMessage.toLowerCase().includes('api'))) {
             if (isDev) {
               console.error('[ERRO] Gemini API Key foi reportada como vazada!');
             }
@@ -1212,35 +1222,34 @@ REGRAS ABSOLUTAS:
           }
           
           // Tratamento específico para erro 401 (não autorizado - chave inválida/expirada)
-          if (modelError.status === 401) {
+          if (errorStatus === 401) {
             logger.error('[ERRO] Gemini API Key inválida ou expirada (401)');
             logger.dev('Verifique VITE_GEMINI_API_KEY em https://aistudio.google.com/app/apikey');
             throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
           }
           
           // Tratamento para erro 400 - verificar se a mensagem menciona API key expirada
-          const errorMessage = (modelError.message || '').toLowerCase();
-          const errorString = JSON.stringify(modelError).toLowerCase();
+          const errorMessageLower = errorMessage.toLowerCase();
           
           // Verificar se a mensagem contém "api key expired" - apenas se for EXPLICITAMENTE mencionado
           // Ser mais restritivo para evitar falsos positivos
           const hasExplicitExpiredMessage = (
-            errorMessage.includes('api key expired') && 
-            (errorMessage.includes('please renew') || errorMessage.includes('renew the api key'))
+            errorMessageLower.includes('api key expired') && 
+            (errorMessageLower.includes('please renew') || errorMessageLower.includes('renew the api key'))
           ) || errorString.includes('"api key expired"') || errorString.includes("'api key expired'");
           
           const isApiKeyExpired = (
-            modelError.status === 400 && hasExplicitExpiredMessage
+            errorStatus === 400 && hasExplicitExpiredMessage
           );
           
           // Verificar se é erro de API key inválida (mas não expirada) - apenas se for EXPLICITO
           const hasExplicitInvalidMessage = (
-            errorMessage.includes('invalid api key') ||
-            (errorMessage.includes('api key') && errorMessage.includes('not valid') && errorMessage.includes('invalid'))
+            errorMessageLower.includes('invalid api key') ||
+            (errorMessageLower.includes('api key') && errorMessageLower.includes('not valid') && errorMessageLower.includes('invalid'))
           );
           
           const isApiKeyInvalid = (
-            modelError.status === 400 &&
+            errorStatus === 400 &&
             !isApiKeyExpired &&
             hasExplicitInvalidMessage
           );
@@ -1265,9 +1274,9 @@ REGRAS ABSOLUTAS:
           }
           
           // Se for erro 404 (modelo não encontrado), tentar próximo modelo
-          if (modelError.status === 404 || 
-              modelError.message?.includes('not found') || 
-              modelError.message?.includes('404')) {
+          if (errorStatus === 404 || 
+              errorMessage.includes('not found') || 
+              errorMessage.includes('404')) {
             if (isDev) {
               console.log(`[INFO] Modelo ${modelName} não encontrado, tentando próximo...`);
             }
@@ -1275,7 +1284,7 @@ REGRAS ABSOLUTAS:
           }
           
           // Para outros erros 400 (pode ser modelo inválido, prompt inválido, etc), tentar próximo modelo
-          if (modelError.status === 400) {
+          if (errorStatus === 400) {
             if (isDev) {
               console.warn(`[AVISO] Modelo ${modelName} retornou erro 400, tentando próximo modelo...`);
             }
@@ -1284,9 +1293,9 @@ REGRAS ABSOLUTAS:
           
           // Para outros erros, propagar
           if (isDev) {
-            console.warn(`[AVISO] Modelo ${modelName} falhou:`, modelError.message);
+            console.warn(`[AVISO] Modelo ${modelName} falhou:`, errorMessage);
           }
-          throw modelError;
+          throw modelError instanceof Error ? modelError : new Error(errorMessage);
         }
       }
       

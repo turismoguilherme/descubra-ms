@@ -652,16 +652,26 @@ export class PlanoDiretorService {
           .single();
         plano = result.data;
         error = result.error;
-      } catch (fetchError: any) {
+      } catch (fetchError: unknown) {
         // Capturar erros de fetch (404, etc)
         console.error('planoDiretorService: Erro de fetch:', fetchError);
-        if (fetchError.message?.includes('404') || fetchError.status === 404 || fetchError.statusText === 'Not Found') {
-          const errorMessage = 'Tabela não encontrada (404). As migrations do Plano Diretor não foram executadas no Supabase. Por favor, execute as migrations antes de usar este módulo. Consulte o arquivo docs/INSTRUCOES_MIGRATIONS_PLANO_DIRETOR.md para instruções detalhadas.';
-          const migrationError = new Error(`Erro ao criar plano diretor: ${errorMessage}`);
-          (migrationError as any).isMigrationError = true;
+        
+        // Extrair propriedades do erro de forma type-safe
+        const errorObj = fetchError && typeof fetchError === 'object'
+          ? (fetchError as { message?: string; status?: number; statusText?: string })
+          : null;
+        
+        const errorMessage = errorObj?.message || String(fetchError);
+        const errorStatus = errorObj?.status;
+        const errorStatusText = errorObj?.statusText;
+        
+        if (errorMessage.includes('404') || errorStatus === 404 || errorStatusText === 'Not Found') {
+          const migrationErrorMessage = 'Tabela não encontrada (404). As migrations do Plano Diretor não foram executadas no Supabase. Por favor, execute as migrations antes de usar este módulo. Consulte o arquivo docs/INSTRUCOES_MIGRATIONS_PLANO_DIRETOR.md para instruções detalhadas.';
+          const migrationError = new Error(`Erro ao criar plano diretor: ${migrationErrorMessage}`);
+          (migrationError as { isMigrationError?: boolean }).isMigrationError = true;
           throw migrationError;
         }
-        throw fetchError;
+        throw fetchError instanceof Error ? fetchError : new Error(errorMessage);
       }
 
       if (error) {

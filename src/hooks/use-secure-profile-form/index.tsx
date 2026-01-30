@@ -264,9 +264,15 @@ export const useSecureProfileForm = () => {
       let errorMessage = "Ocorreu um erro inesperado. Tente novamente.";
       
       // Tratamento específico de erros do Supabase
-      if ((err as { code?: string }).code) {
-        console.log("🔍 PERFIL: Analisando código de erro:", error.code);
-        switch (error.code) {
+      // Verificar se o erro original tem propriedade 'code' (erros do Supabase)
+      const errorWithCode = error && typeof error === 'object' && 'code' in error 
+        ? (error as { code?: string; message?: string })
+        : null;
+      
+      if (errorWithCode?.code) {
+        const errorCode = errorWithCode.code;
+        console.log("🔍 PERFIL: Analisando código de erro:", errorCode);
+        switch (errorCode) {
           case '23505':
             errorMessage = "Este perfil já existe. Tente fazer login.";
             break;
@@ -280,10 +286,10 @@ export const useSecureProfileForm = () => {
             errorMessage = "Erro de permissão. Entre em contato com o suporte.";
             break;
           default:
-            errorMessage = `Erro do banco de dados (${error.code}): ${error.message}`;
+            errorMessage = `Erro do banco de dados (${errorCode}): ${errorWithCode.message || err.message}`;
         }
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
 
       console.log("📢 PERFIL: Exibindo erro para o usuário:", errorMessage);

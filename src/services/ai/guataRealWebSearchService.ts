@@ -227,19 +227,25 @@ class GuataRealWebSearchService {
         } else {
           console.warn('[Web Search] Edge Function retornou resposta vazia (sem data e sem error)');
         }
-      } catch (invokeError: any) {
+      } catch (invokeError: unknown) {
         if (isDev) {
+          const errorObj = invokeError && typeof invokeError === 'object'
+            ? (invokeError as { message?: string; stack?: string })
+            : null;
           console.error('[Web Search] ❌ Erro ao invocar Edge Function:', {
-            message: invokeError.message,
-            stack: invokeError.stack,
+            message: errorObj?.message || String(invokeError),
+            stack: errorObj?.stack,
             error: invokeError
           });
         }
       }
-    } catch (edgeFunctionError: any) {
+    } catch (edgeFunctionError: unknown) {
       // Edge Function não disponível ou falhou - usar método antigo
       if (isDev) {
-        console.warn('[Web Search] Edge Function não disponível, usando método direto:', edgeFunctionError.message);
+        const errorMessage = edgeFunctionError && typeof edgeFunctionError === 'object' && 'message' in edgeFunctionError
+          ? (edgeFunctionError as { message: string }).message
+          : String(edgeFunctionError);
+        console.warn('[Web Search] Edge Function não disponível, usando método direto:', errorMessage);
       }
     }
 
