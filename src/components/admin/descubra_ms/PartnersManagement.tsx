@@ -112,7 +112,15 @@ export default function PartnersManagement() {
       }
 
       // Atualizar parceiro: aprovar + ativar assinatura manualmente
-      const updateData: unknown = {
+      const updateData: {
+        status: string;
+        is_active: boolean;
+        subscription_status: string;
+        subscription_start_date: string;
+        updated_at: string;
+        approved_at?: string;
+        approved_by?: string;
+      } = {
         status: 'approved',
         is_active: true,
         subscription_status: 'active', // Ativar assinatura sem pagamento
@@ -121,8 +129,7 @@ export default function PartnersManagement() {
         updated_at: new Date().toISOString(),
       };
 
-      // Adicionar campos de aprovação apenas se existirem (não causar erro se não existirem)
-      // O código tentará atualizar, mas se as colunas não existirem, o Supabase ignorará
+      // Adicionar campos de aprovação
       try {
         updateData.approved_at = new Date().toISOString();
         updateData.approved_by = user.id;
@@ -201,7 +208,13 @@ export default function PartnersManagement() {
 
       console.log(`🔄 [PartnersManagement] Atualizando parceiro ${partnerId} para status: ${status}`);
       
-      const updateData: unknown = {
+      const updateData: {
+        status: string;
+        is_active: boolean;
+        updated_at: string;
+        approved_at?: string;
+        approved_by?: string;
+      } = {
         status,
         is_active: status === 'approved',
         updated_at: new Date().toISOString(),

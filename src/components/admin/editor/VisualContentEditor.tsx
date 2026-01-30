@@ -369,10 +369,11 @@ export default function VisualContentEditor({ platform: propPlatform }: ContentE
           description: 'Conteúdo salvo localmente. Erro ao salvar no banco de dados.',
           variant: 'default',
         });
-      } catch (localError) {
+      } catch (localError: unknown) {
+        const localErr = localError instanceof Error ? localError : new Error(String(localError));
         toast({
           title: 'Erro ao salvar',
-          description: error.message || 'Não foi possível salvar as alterações.',
+          description: err.message || 'Não foi possível salvar as alterações.',
           variant: 'destructive',
         });
       }

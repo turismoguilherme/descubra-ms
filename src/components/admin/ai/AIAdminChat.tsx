@@ -232,7 +232,7 @@ export default function AIAdminChat() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `❌ Erro ao processar sua pergunta: ${error.message || 'Erro desconhecido'}\n\n` +
+        content: `❌ Erro ao processar sua pergunta: ${err.message || 'Erro desconhecido'}\n\n` +
           `Por favor, tente novamente ou verifique se as tabelas financeiras foram criadas no banco de dados.`,
         timestamp: new Date(),
       };
