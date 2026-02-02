@@ -10,11 +10,35 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PlanSelector from '@/components/onboarding/PlanSelector';
 import type { PlanTier, BillingPeriod } from '@/services/subscriptionService';
+import { platformContentService } from '@/services/admin/platformContentService';
+import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
+import ViaJARFooter from '@/components/layout/ViaJARFooter';
 
 export default function ViaJARPricing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [preSelectedPlan, setPreSelectedPlan] = useState<PlanTier | null>(null);
+  const [content, setContent] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  // Carregar conteúdo do CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('viajar_pricing_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadContent();
+  }, []);
 
   // Capturar parâmetros de plano da URL
   useEffect(() => {
@@ -25,6 +49,8 @@ export default function ViaJARPricing() {
     }
   }, [searchParams]);
 
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
+
   const handleSelectPlan = (planId: PlanTier, billingPeriod: BillingPeriod) => {
     // Redireciona para registro com plano pré-selecionado (apenas mensal)
     navigate(`/viajar/register?plan=${planId}&billing=monthly`);
@@ -32,20 +58,26 @@ export default function ViaJARPricing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30">
+      <ViaJARNavbar />
+      
       {/* Hero Section */}
       <div className="border-b">
         <div className="container max-w-6xl mx-auto px-6 py-16 text-center space-y-6">
-          <Badge variant="secondary" className="gap-1">
-            ✨ Planos Flexíveis para Todos os Tamanhos
-          </Badge>
+          {getContent('viajar_pricing_hero_subtitle', 'Planos Flexíveis para Todos os Tamanhos') && (
+            <Badge variant="secondary" className="gap-1">
+              ✨ {getContent('viajar_pricing_hero_subtitle', 'Planos Flexíveis para Todos os Tamanhos')}
+            </Badge>
+          )}
           
           <h1 className="text-4xl md:text-5xl font-bold max-w-3xl mx-auto">
-            Escolha o Plano Perfeito para o Seu Negócio
+            {getContent('viajar_pricing_hero_title', 'Escolha o Plano Perfeito para o Seu Negócio')}
           </h1>
           
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Do pequeno estabelecimento ao grande hotel, temos o plano ideal para impulsionar seu turismo.
-          </p>
+          {getContent('viajar_pricing_hero_description', '') && (
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {getContent('viajar_pricing_hero_description', 'Do pequeno estabelecimento ao grande hotel, temos o plano ideal para impulsionar seu turismo.')}
+            </p>
+          )}
         </div>
       </div>
 
@@ -65,11 +97,13 @@ export default function ViaJARPricing() {
         <div className="container max-w-6xl mx-auto px-6 py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              Todos os Planos Incluem
+              {getContent('viajar_pricing_plans_title', 'Todos os Planos Incluem')}
             </h2>
-            <p className="text-muted-foreground">
-              Recursos fundamentais disponíveis em todos os planos
-            </p>
+            {getContent('viajar_pricing_plans_subtitle', '') && (
+              <p className="text-muted-foreground">
+                {getContent('viajar_pricing_plans_subtitle', 'Recursos fundamentais disponíveis em todos os planos')}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -285,11 +319,13 @@ export default function ViaJARPricing() {
       <div className="container max-w-4xl mx-auto px-6 py-16">
         <div className="p-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl text-center text-white">
           <h2 className="text-3xl font-bold mb-4">
-            Pronto para Transformar seu Negócio?
+            {getContent('viajar_pricing_cta_title', 'Pronto para Transformar seu Negócio?')}
           </h2>
-          <p className="text-lg mb-8 opacity-90">
-            Junte-se a centenas de estabelecimentos que já usam ViaJAR
-          </p>
+          {getContent('viajar_pricing_cta_description', '') && (
+            <p className="text-lg mb-8 opacity-90">
+              {getContent('viajar_pricing_cta_description', 'Junte-se a centenas de estabelecimentos que já usam ViaJAR')}
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
@@ -337,6 +373,8 @@ export default function ViaJARPricing() {
           </div>
         </div>
       </div>
+      
+      <ViaJARFooter />
     </div>
   );
 }

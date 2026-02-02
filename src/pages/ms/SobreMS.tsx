@@ -52,17 +52,19 @@ const SobreMS = () => {
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative ms-container text-center">
             <div className="flex justify-center mb-6">
-              <img 
-                src={logoUrl} 
-                alt="Descubra Mato Grosso do Sul" 
-                className="h-28 w-auto drop-shadow-lg"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (!target.src.includes('logo-descubra-ms.png')) {
-                    target.src = "/images/logo-descubra-ms.png?v=3";
-                  }
-                }}
-              />
+              <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-2xl">
+                <img 
+                  src={logoUrl} 
+                  alt="Descubra Mato Grosso do Sul" 
+                  className="h-36 w-auto"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('logo-descubra-ms.png')) {
+                      target.src = "/images/logo-descubra-ms.png?v=3";
+                    }
+                  }}
+                />
+              </div>
             </div>
             <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
               {getContent('ms_about_title', 'Sobre o Descubra MS')}

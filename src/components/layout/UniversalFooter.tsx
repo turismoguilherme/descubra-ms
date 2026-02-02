@@ -7,6 +7,7 @@ import { useFooterSettings } from '@/hooks/useFooterSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { platformContentService } from '@/services/admin/platformContentService';
 
 const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
 const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -49,11 +50,33 @@ const UniversalFooter = () => {
   const { isOverflowOne } = brandContext;
   safeLog({location:'UniversalFooter.tsx:40',message:'UniversalFooter verificando isOverflowOne',data:{isOverflowOne},hypothesisId:'B'});
   const { settings: msSettings, loading: msLoading, refetch: refetchMsSettings } = useFooterSettings('ms');
+  const [footerContent, setFooterContent] = useState<Record<string, string>>({});
+  
+  // Carregar conteúdo do CMS para footer
+  useEffect(() => {
+    if (!isOverflowOne) {
+      const loadContent = async () => {
+        try {
+          const contents = await platformContentService.getContentByPrefix('ms_footer_');
+          const contentMap: Record<string, string> = {};
+          contents.forEach(item => {
+            contentMap[item.content_key] = item.content_value || '';
+          });
+          setFooterContent(contentMap);
+        } catch (error) {
+          console.error('Erro ao carregar conteúdo do footer:', error);
+        }
+      };
+      loadContent();
+    }
+  }, [isOverflowOne]);
   
   // Log para debug
   useEffect(() => {
     console.log('📄 [UniversalFooter] Settings do MS carregados:', msSettings);
   }, [msSettings]);
+
+  const getContent = (key: string, fallback: string) => footerContent[key] || fallback;
 
   if (isOverflowOne) {
     safeLog({location:'UniversalFooter.tsx:43',message:'UniversalFooter renderizando footer overflow-one',data:{isOverflowOne},hypothesisId:'B'});
@@ -344,7 +367,14 @@ const UniversalFooter = () => {
           {/* Coluna 4 - Newsletter e Legal */}
           <div className="text-center lg:text-left">
             {/* Newsletter */}
-            <h3 className="text-sm font-bold mb-4 text-white">Newsletter</h3>
+            {getContent('ms_footer_newsletter_title', 'Newsletter') && (
+              <h3 className="text-sm font-bold mb-4 text-white">{getContent('ms_footer_newsletter_title', 'Newsletter')}</h3>
+            )}
+            {getContent('ms_footer_newsletter_description', '') && (
+              <p className="text-blue-200 text-xs mb-2 text-center lg:text-left">
+                {getContent('ms_footer_newsletter_description', '')}
+              </p>
+            )}
             <form onSubmit={handleNewsletterSubmit} className="mb-6">
               <div className="flex flex-col gap-2">
                 <Input

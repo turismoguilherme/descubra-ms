@@ -11,13 +11,15 @@ import { Save, Loader2, Check, RotateCcw, Upload, Image as ImageIcon, X } from '
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { LabelWithHelp } from '@/components/admin/ui/LabelWithHelp';
 
 interface TextField {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'image' | 'json';
+  type: 'text' | 'textarea' | 'image' | 'json' | 'toggle' | 'select';
   placeholder?: string;
   section: string;
+  options?: { value: string; label: string }[];
 }
 
 interface SimpleTextEditorProps {
@@ -106,8 +108,30 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'viajar_cases_koda_image', label: 'Koda - Imagem', type: 'image', placeholder: 'URL da imagem ou faça upload', section: 'Cases de Sucesso' },
     
     // Página Sobre
+    { key: 'viajar_sobre_destaque', label: 'Texto de Destaque', type: 'text', placeholder: 'Transformar dados turísticos em decisões estratégicas que geram impacto real.', section: 'Página Sobre' },
+    { key: 'viajar_sobre_narrativa', label: 'Narrativa Unificada (Missão + Visão)', type: 'textarea', placeholder: 'A ViajarTur existe para transformar dados turísticos em decisões estratégicas...', section: 'Página Sobre' },
     { key: 'viajar_sobre_missao', label: 'Nossa Missão', type: 'textarea', placeholder: 'Democratizar tecnologia de ponta para o setor turístico.', section: 'Página Sobre' },
     { key: 'viajar_sobre_visao', label: 'Nossa Visão', type: 'textarea', placeholder: 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.', section: 'Página Sobre' },
+    
+    // Página Preços
+    { key: 'viajar_pricing_hero_title', label: 'Título do Hero', type: 'text', placeholder: 'Escolha o Plano Perfeito para o Seu Negócio', section: 'Página Preços' },
+    { key: 'viajar_pricing_hero_subtitle', label: 'Subtítulo do Hero', type: 'text', placeholder: 'Planos Flexíveis para Todos os Tamanhos', section: 'Página Preços' },
+    { key: 'viajar_pricing_hero_description', label: 'Descrição do Hero', type: 'textarea', placeholder: 'Do pequeno estabelecimento ao grande hotel, temos o plano ideal para impulsionar seu turismo.', section: 'Página Preços' },
+    { key: 'viajar_pricing_plans_title', label: 'Título da Seção de Planos', type: 'text', placeholder: 'Todos os Planos Incluem', section: 'Página Preços' },
+    { key: 'viajar_pricing_plans_subtitle', label: 'Subtítulo da Seção de Planos', type: 'textarea', placeholder: 'Recursos fundamentais disponíveis em todos os planos', section: 'Página Preços' },
+    { key: 'viajar_pricing_cta_title', label: 'Título do CTA', type: 'text', placeholder: 'Pronto para começar?', section: 'Página Preços' },
+    { key: 'viajar_pricing_cta_description', label: 'Descrição do CTA', type: 'textarea', placeholder: 'Escolha seu plano e comece a transformar seu negócio hoje mesmo.', section: 'Página Preços' },
+    
+    // Página Contato
+    { key: 'viajar_contact_hero_title', label: 'Título do Hero', type: 'text', placeholder: 'Entre em Contato', section: 'Página Contato' },
+    { key: 'viajar_contact_hero_subtitle', label: 'Subtítulo do Hero', type: 'textarea', placeholder: 'Estamos aqui para ajudar você a transformar seu negócio turístico.', section: 'Página Contato' },
+    { key: 'viajar_contact_form_title', label: 'Título do Formulário', type: 'text', placeholder: 'Envie sua Mensagem', section: 'Página Contato' },
+    { key: 'viajar_contact_form_description', label: 'Descrição do Formulário', type: 'textarea', placeholder: 'Preencha o formulário abaixo e nossa equipe entrará em contato em breve.', section: 'Página Contato' },
+    
+    // Página Soluções
+    { key: 'viajar_solutions_hero_title', label: 'Título do Hero', type: 'text', placeholder: 'Soluções Inteligentes para o Turismo', section: 'Página Soluções' },
+    { key: 'viajar_solutions_hero_subtitle', label: 'Subtítulo do Hero', type: 'textarea', placeholder: 'Tecnologia de ponta para transformar a gestão do turismo', section: 'Página Soluções' },
+    { key: 'viajar_solutions_items', label: 'Itens de Soluções (JSON)', type: 'json', placeholder: '[{"title": "Revenue Optimizer", "description": "..."}]', section: 'Página Soluções' },
   ],
   descubra_ms: [
     // Hero Principal
@@ -127,8 +151,12 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_guata_roteiro_image_url', label: 'Imagem do Guatá - Banner Roteiro (URL)', type: 'text', placeholder: 'URL da imagem do Guatá para o banner "Montamos seu roteiro"', section: 'Hero Universal' },
     
     // Banner Roteiro Personalizado
-    { key: 'ms_roteiro_banner_enabled', label: 'Exibir Banner de Roteiros', type: 'text', placeholder: 'true ou false', section: 'Banner Roteiro Personalizado' },
-    { key: 'ms_roteiro_contact_type', label: 'Tipo de Contato', type: 'text', placeholder: 'whatsapp, link ou both', section: 'Banner Roteiro Personalizado' },
+    { key: 'ms_roteiro_banner_enabled', label: 'Ativar Banner de Roteiros Personalizados', type: 'toggle', section: 'Banner Roteiro Personalizado' },
+    { key: 'ms_roteiro_contact_type', label: 'Tipo de Contato', type: 'select', section: 'Banner Roteiro Personalizado', options: [
+      { value: 'whatsapp', label: 'Apenas WhatsApp' },
+      { value: 'link', label: 'Apenas Link Externo' },
+      { value: 'both', label: 'WhatsApp e Link Externo' }
+    ]},
     { key: 'ms_roteiro_external_link', label: 'Link Externo (URL)', type: 'text', placeholder: 'https://exemplo.com', section: 'Banner Roteiro Personalizado' },
     { key: 'ms_roteiro_external_link_text', label: 'Texto do Botão Link Externo', type: 'text', placeholder: 'Acessar Site', section: 'Banner Roteiro Personalizado' },
     
@@ -152,7 +180,20 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_about_vision_title', label: 'Título Visão', type: 'text', placeholder: 'Nossa Visão', section: 'Página Sobre' },
     { key: 'ms_about_vision_text', label: 'Texto da Visão', type: 'textarea', placeholder: 'Ser a principal plataforma de turismo...', section: 'Página Sobre' },
     
+    // Seção Experiências
+    { key: 'ms_experience_title', label: 'Título', type: 'text', placeholder: 'Experiências Completas', section: 'Seção Experiências' },
+    { key: 'ms_experience_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis', section: 'Seção Experiências' },
+    { key: 'ms_experience_description', label: 'Descrição', type: 'textarea', placeholder: 'Explore diferentes tipos de experiências turísticas disponíveis na plataforma', section: 'Seção Experiências' },
+    
+    // Seção CATs
+    { key: 'ms_cats_title', label: 'Título', type: 'text', placeholder: 'Centros de Atendimento ao Turista', section: 'Seção CATs' },
+    { key: 'ms_cats_description', label: 'Descrição', type: 'textarea', placeholder: 'Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul.', section: 'Seção CATs' },
+    
     // Footer
+    { key: 'ms_footer_about', label: 'Texto Sobre', type: 'textarea', placeholder: 'Sobre o Descubra MS...', section: 'Rodapé' },
+    { key: 'ms_footer_links', label: 'Links do Footer (JSON)', type: 'json', placeholder: '[{"label": "Destinos", "path": "/destinos"}]', section: 'Rodapé' },
+    { key: 'ms_footer_newsletter_title', label: 'Título da Newsletter', type: 'text', placeholder: 'Receba nossas novidades', section: 'Rodapé' },
+    { key: 'ms_footer_newsletter_description', label: 'Descrição da Newsletter', type: 'textarea', placeholder: 'Cadastre-se para receber informações sobre eventos e destinos', section: 'Rodapé' },
     { key: 'ms_footer_copyright', label: 'Copyright', type: 'text', placeholder: '© 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.', section: 'Rodapé' },
     { key: 'ms_footer_privacy_link', label: 'Link Política de Privacidade', type: 'text', placeholder: 'Política de Privacidade', section: 'Rodapé' },
     { key: 'ms_footer_terms_link', label: 'Link Termos de Uso', type: 'text', placeholder: 'Termos de Uso', section: 'Rodapé' },
@@ -160,6 +201,80 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
 };
 
 const BUCKET_NAME = 'tourism-images';
+
+// Campos que devem ser salvos em site_settings ao invés de platform_content
+const SITE_SETTINGS_KEYS = [
+  'ms_roteiro_banner_enabled',
+  'ms_roteiro_contact_type',
+  'ms_roteiro_external_link',
+  'ms_roteiro_external_link_text'
+];
+
+// Função helper para gerar tooltips baseado na chave do campo
+const getHelpText = (key: string, type: string): string => {
+  // Tooltips específicos por campo
+  const specificTooltips: Record<string, string> = {
+    // ViajARTur - Hero
+    'viajar_hero_badge': 'Texto pequeno que aparece acima do título principal',
+    'viajar_hero_title': 'Nome da plataforma. Será exibido em destaque na página inicial',
+    'viajar_hero_subtitle': 'Frase de efeito que resume a proposta da plataforma',
+    'viajar_hero_description': 'Texto explicativo mais detalhado sobre a plataforma',
+    'viajar_hero_cta_primary': 'Texto do botão principal. Use verbos de ação',
+    'viajar_hero_cta_secondary': 'Texto do botão secundário',
+    'viajar_hero_video_url': 'Link do YouTube. O vídeo será incorporado como background',
+    
+    // ViajARTur - Cases
+    'viajar_cases_descubra_ms_title': 'Título do case Descubra MS',
+    'viajar_cases_descubra_ms_technologies': 'Array JSON com tecnologias: ["Guatá IA", "Passaporte Digital"]',
+    'viajar_cases_koda_title': 'Título do case Koda',
+    'viajar_cases_koda_technologies': 'Array JSON com tecnologias: ["IA Conversacional", "Multi-idioma"]',
+    
+    // ViajARTur - Sobre
+    'viajar_sobre_destaque': 'Texto de destaque que aparece no topo da página Sobre',
+    'viajar_sobre_narrativa': 'Narrativa unificada combinando missão e visão em um texto corrido',
+    
+    // Descubra MS - Hero
+    'ms_hero_title': 'Título principal da página inicial do Descubra MS',
+    'ms_hero_subtitle': 'Descrição que convida o visitante a explorar o estado',
+    'ms_hero_video_url': 'Link do YouTube para o vídeo de fundo do hero',
+    'ms_hero_video_placeholder_image_url': 'Imagem exibida enquanto o vídeo carrega',
+    'ms_guata_roteiro_image_url': 'Imagem do Guatá para o banner "Montamos seu roteiro"',
+    
+    // Descubra MS - Destinos
+    'ms_destinations_title': 'Título da seção de destinos em destaque',
+    'ms_destinations_description': 'Descrição que convida a explorar os destinos',
+    'ms_destinations_button': 'Texto do botão para ver todos os destinos',
+    
+    // Descubra MS - Experiências
+    'ms_experience_title': 'Título da seção de experiências',
+    'ms_experience_subtitle': 'Subtítulo explicando as experiências disponíveis',
+    
+    // Descubra MS - CATs
+    'ms_cats_title': 'Título da seção de Centros de Atendimento ao Turista',
+    'ms_cats_description': 'Descrição explicando o que são os CATs',
+  };
+  
+  // Se houver tooltip específico, retornar
+  if (specificTooltips[key]) {
+    return specificTooltips[key];
+  }
+  
+  // Tooltips genéricos por tipo
+  if (type === 'text') {
+    return 'Texto simples. Recomendado: até 60 caracteres para títulos.';
+  }
+  if (type === 'textarea') {
+    return 'Texto longo. Use para descrições e parágrafos.';
+  }
+  if (type === 'image') {
+    return 'URL da imagem ou faça upload. Formatos: JPG, PNG, WebP. Tamanho máx: 5MB.';
+  }
+  if (type === 'json') {
+    return 'Formato JSON válido. Ex: ["item1", "item2"] ou {"key": "value"}.';
+  }
+  
+  return 'Este campo será exibido publicamente no site.';
+};
 
 export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   const { toast } = useToast();
@@ -217,6 +332,28 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           });
         }
       });
+
+      // Carregar campos de roteiro de site_settings
+      const { data: siteSettings, error: siteSettingsError } = await supabase
+        .from('site_settings')
+        .select('setting_key, setting_value')
+        .eq('platform', 'ms')
+        .in('setting_key', SITE_SETTINGS_KEYS);
+
+      if (!siteSettingsError && siteSettings) {
+        siteSettings.forEach(setting => {
+          const value = typeof setting.setting_value === 'string' 
+            ? setting.setting_value.replace(/^"|"$/g, '') // Remove aspas JSON se houver
+            : String(setting.setting_value || '');
+          contentMap[setting.setting_key] = value;
+          console.log('✅ [SimpleTextEditor] Campo de roteiro carregado de site_settings:', {
+            key: setting.setting_key,
+            value: value.substring(0, 50)
+          });
+        });
+      } else if (siteSettingsError) {
+        console.error('❌ [SimpleTextEditor] Erro ao carregar site_settings:', siteSettingsError);
+      }
 
       // Para campos que não existem no banco, usar string vazia (não placeholder)
       // O placeholder é apenas uma dica visual, não o valor real
@@ -535,35 +672,61 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     setSaving(prev => ({ ...prev, [key]: true }));
 
     try {
-      if (id) {
-        console.log('📝 [SimpleTextEditor] Atualizando conteúdo existente:', { key, id, value: value.substring(0, 100) });
-        // Atualizar existente
-        await platformContentService.updateContent(id, value);
-        console.log('✅ [SimpleTextEditor] updateContent concluído com sucesso:', { key, id });
-      } else {
-        console.log('➕ [SimpleTextEditor] Criando novo conteúdo:', { 
-          key, 
-          value: value.substring(0, 100), 
-          fieldType: fields.find(f => f.key === key)?.type 
-        });
-        // Criar novo
+      // Se for campo de roteiro, salvar em site_settings
+      if (SITE_SETTINGS_KEYS.includes(key)) {
+        console.log('💾 [SimpleTextEditor] Salvando em site_settings:', { key, value: value.substring(0, 100) });
         const field = fields.find(f => f.key === key);
-        const newContent = await platformContentService.createContent({
-          content_key: key,
-          content_value: value,
-          content_type: field?.type || 'text',
-          description: field?.label || null,
-          is_active: true,
-        });
-        console.log('✅ [SimpleTextEditor] createContent concluído:', { 
-          key, 
-          newId: newContent.id, 
-          newContentValue: newContent.content_value?.substring(0, 100) 
-        });
-        // Atualizar IDs
-        setContentIds(prev => ({ ...prev, [key]: newContent.id }));
-        // Recarregar para obter o ID
-        await loadContent();
+        
+        const { error } = await supabase
+          .from('site_settings')
+          .upsert({
+            platform: 'ms',
+            setting_key: key,
+            setting_value: value,
+            description: field?.label || null,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'platform,setting_key',
+          });
+
+        if (error) {
+          console.error('❌ [SimpleTextEditor] Erro ao salvar em site_settings:', error);
+          throw error;
+        }
+
+        console.log('✅ [SimpleTextEditor] Salvo em site_settings com sucesso:', { key });
+      } else {
+        // Comportamento padrão: salvar em platform_content
+        if (id) {
+          console.log('📝 [SimpleTextEditor] Atualizando conteúdo existente:', { key, id, value: value.substring(0, 100) });
+          // Atualizar existente
+          await platformContentService.updateContent(id, value);
+          console.log('✅ [SimpleTextEditor] updateContent concluído com sucesso:', { key, id });
+        } else {
+          console.log('➕ [SimpleTextEditor] Criando novo conteúdo:', { 
+            key, 
+            value: value.substring(0, 100), 
+            fieldType: fields.find(f => f.key === key)?.type 
+          });
+          // Criar novo
+          const field = fields.find(f => f.key === key);
+          const newContent = await platformContentService.createContent({
+            content_key: key,
+            content_value: value,
+            content_type: field?.type || 'text',
+            description: field?.label || null,
+            is_active: true,
+          });
+          console.log('✅ [SimpleTextEditor] createContent concluído:', { 
+            key, 
+            newId: newContent.id, 
+            newContentValue: newContent.content_value?.substring(0, 100) 
+          });
+          // Atualizar IDs
+          setContentIds(prev => ({ ...prev, [key]: newContent.id }));
+          // Recarregar para obter o ID
+          await loadContent();
+        }
       }
 
       setSaved(prev => ({ ...prev, [key]: true }));
@@ -624,7 +787,8 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           <CardHeader>
             <CardTitle>{section}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {sectionFields.map(field => {
               // Usar valor do banco, ou string vazia se não existir
               // O placeholder é apenas uma dica visual no input
@@ -643,10 +807,23 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
               }
               // #endregion
 
+              // Determinar se o campo ocupa largura total (textarea, json, image)
+              const isFullWidth = field.type === 'textarea' || field.type === 'json' || field.type === 'image';
+              
               return (
-                <div key={field.key} className="space-y-2">
+                <div 
+                  key={field.key} 
+                  className={cn(
+                    "space-y-2",
+                    isFullWidth && "md:col-span-2"
+                  )}
+                >
                   <div className="flex items-center justify-between">
-                    <Label htmlFor={field.key}>{field.label}</Label>
+                    <LabelWithHelp 
+                      htmlFor={field.key}
+                      label={field.label}
+                      helpText={getHelpText(field.key, field.type)}
+                    />
                     <div className="flex items-center gap-2">
                       {hasChanged && (
                         <Button
@@ -808,6 +985,40 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                         isSaved && "border-green-300 bg-green-50/50"
                       )}
                     />
+                  ) : field.type === 'toggle' ? (
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id={field.key}
+                        checked={value === 'true' || value === true}
+                        onChange={(e) => updateField(field.key, e.target.checked ? 'true' : 'false')}
+                        className={cn(
+                          "w-4 h-4 text-blue-600 rounded focus:ring-blue-500",
+                          hasChanged && "ring-2 ring-amber-300",
+                          isSaved && "ring-2 ring-green-300"
+                        )}
+                      />
+                      <Label htmlFor={field.key} className="cursor-pointer">
+                        {field.label}
+                      </Label>
+                    </div>
+                  ) : field.type === 'select' ? (
+                    <select
+                      id={field.key}
+                      value={value || ''}
+                      onChange={(e) => updateField(field.key, e.target.value)}
+                      className={cn(
+                        "w-full px-3 py-2 border rounded-md bg-white",
+                        hasChanged && "border-amber-300 bg-amber-50/50",
+                        isSaved && "border-green-300 bg-green-50/50"
+                      )}
+                    >
+                      {field.options?.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <Input
                       id={field.key}
@@ -828,6 +1039,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                 </div>
               );
             })}
+            </div>
           </CardContent>
         </Card>
       ))}

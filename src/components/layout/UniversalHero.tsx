@@ -402,6 +402,17 @@ const UniversalHero = () => {
                     setVideoLoading(false);
                   }}
                 />
+                {/* Overlay físico para esconder informações do YouTube no mobile */}
+                {isMobile && (
+                  <div 
+                    className="absolute inset-0 w-full h-full z-[10] pointer-events-none"
+                    style={{
+                      backgroundColor: 'transparent',
+                      backgroundImage: 'linear-gradient(to bottom, transparent 0%, transparent 100%)',
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
               </div>
             </div>
           ) : embedUrl.includes('vimeo.com') ? (

@@ -102,6 +102,8 @@ const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ platform = 'd
           analytics_storage: 'denied',
         });
       }
+      // Desabilitar tracking próprio (será verificado automaticamente pelo InteractionTrackerService)
+      console.log('🍪 Cookies de analytics rejeitados - tracking próprio desabilitado');
     } else {
       // Habilitar Google Analytics
       if (window.gtag) {
@@ -109,6 +111,8 @@ const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ platform = 'd
           analytics_storage: 'granted',
         });
       }
+      // Habilitar tracking próprio (será verificado automaticamente pelo InteractionTrackerService)
+      console.log('🍪 Cookies de analytics aceitos - tracking próprio habilitado');
     }
   };
 

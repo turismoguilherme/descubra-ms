@@ -9,10 +9,29 @@ import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
+import { platformContentService } from '@/services/admin/platformContentService';
 
 const Contato = () => {
   const { toast } = useToast();
   const { settings: footerSettings, loading: footerLoading } = useFooterSettings('viajar');
+  const [content, setContent] = useState<Record<string, string>>({});
+
+  // Carregar conteúdo do CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('viajar_contact_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      }
+    };
+    loadContent();
+  }, []);
 
   // Log para debug
   useEffect(() => {
@@ -23,6 +42,8 @@ const Contato = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -233,11 +254,13 @@ const Contato = () => {
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Entre em Contato
+              {getContent('viajar_contact_hero_title', 'Entre em Contato')}
             </h1>
-            <p className="text-xl text-white/70">
-              Estamos prontos para ajudar você a transformar o turismo na sua região
-            </p>
+            {getContent('viajar_contact_hero_subtitle', '') && (
+              <p className="text-xl text-white/70">
+                {getContent('viajar_contact_hero_subtitle', 'Estamos prontos para ajudar você a transformar o turismo na sua região')}
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -249,12 +272,13 @@ const Contato = () => {
             {/* Contact Info */}
             <div>
               <h2 className="text-3xl font-bold text-foreground mb-6">
-                Vamos Conversar
+                {getContent('viajar_contact_form_title', 'Vamos Conversar')}
               </h2>
-              <p className="text-muted-foreground mb-8 leading-relaxed">
-                Preencha o formulário ou entre em contato diretamente pelos nossos canais. 
-                Nossa equipe está pronta para atender empresários e gestores públicos.
-              </p>
+              {getContent('viajar_contact_form_description', '') && (
+                <p className="text-muted-foreground mb-8 leading-relaxed">
+                  {getContent('viajar_contact_form_description', 'Preencha o formulário ou entre em contato diretamente pelos nossos canais. Nossa equipe está pronta para atender empresários e gestores públicos.')}
+                </p>
+              )}
 
               <div className="space-y-6 mb-10">
                 {footerSettings.email && (

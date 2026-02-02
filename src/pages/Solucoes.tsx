@@ -1,15 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Brain, BarChart3, Map, Shield, TrendingUp, Building2, ArrowRight, Sparkles } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import { platformContentService } from '@/services/admin/platformContentService';
 
 const Solucoes = () => {
+  const [content, setContent] = useState<Record<string, string>>({});
+  
+  // Carregar conteúdo do CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('viajar_solutions_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      }
+    };
+    loadContent();
+  }, []);
+
   // Scroll para o topo quando a página carregar
-  React.useEffect(() => {
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
 
   // Scroll suave para seções (com offset para header fixo)
   React.useEffect(() => {
@@ -100,11 +122,13 @@ const Solucoes = () => {
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Soluções
+              {getContent('viajar_solutions_hero_title', 'Soluções')}
             </h1>
-            <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-              Tecnologia avançada para turismo
-            </p>
+            {getContent('viajar_solutions_hero_subtitle', '') && (
+              <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
+                {getContent('viajar_solutions_hero_subtitle', 'Tecnologia avançada para turismo')}
+              </p>
+            )}
             <div className="flex flex-wrap gap-4 justify-center">
               <Link to="/precos">
                 <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold gap-2">

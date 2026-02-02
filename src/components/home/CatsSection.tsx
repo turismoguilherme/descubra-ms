@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MapPin, Clock, Info, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { platformContentService } from '@/services/admin/platformContentService';
 
 interface CAT {
   id: string;
@@ -20,10 +21,30 @@ const CatsSection = () => {
   const { t } = useTranslation('pages');
   const [cats, setCats] = useState<CAT[]>([]);
   const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState<Record<string, string>>({});
+
+  // Carregar conteúdo do CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('ms_cats_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      }
+    };
+    loadContent();
+  }, []);
 
   useEffect(() => {
     loadCATs();
   }, []);
+
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
 
   const loadCATs = async () => {
     try {
@@ -67,10 +88,10 @@ const CatsSection = () => {
       <div className="ms-container">
         <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h2 className="text-4xl md:text-5xl font-bold text-ms-primary-blue mb-5">
-            {t('home.cats.title', { defaultValue: 'Centros de Atendimento ao Turista' })}
+            {getContent('ms_cats_title', t('home.cats.title', { defaultValue: 'Centros de Atendimento ao Turista' }))}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            {t('home.cats.description', { defaultValue: 'Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul.' })}
+            {getContent('ms_cats_description', t('home.cats.description', { defaultValue: 'Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul.' }))}
           </p>
         </div>
         

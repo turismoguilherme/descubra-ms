@@ -44,7 +44,6 @@ const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
 const BankAccountsManager = lazy(() => import('@/components/admin/financial/BankAccountsManager'));
 const DatabaseManager = lazy(() => import('@/components/admin/database/DatabaseManager'));
-const VisualContentEditor = lazy(() => import('@/components/admin/editor/VisualContentEditor'));
 const SystemHealthMonitor = lazy(() => import('@/components/admin/system/SystemHealthMonitor'));
 const TranslationManager = lazy(() => import('@/components/admin/TranslationManager'));
 const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIAgent'));

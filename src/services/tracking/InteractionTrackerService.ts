@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { InteractionData } from './types';
 import { logger } from '@/utils/logger';
+import { hasAnalyticsConsent } from '@/utils/cookieConsent';
 
 class InteractionTrackerService {
   private static instance: InteractionTrackerService;
@@ -29,7 +30,25 @@ class InteractionTrackerService {
     return sid;
   }
 
+  /**
+   * Detecta a plataforma baseado na URL atual
+   */
+  private detectPlatform(): 'viajar' | 'descubra_ms' {
+    if (typeof window === 'undefined') return 'descubra_ms';
+    return window.location.pathname.startsWith('/viajar') ? 'viajar' : 'descubra_ms';
+  }
+
   public async track(data: InteractionData): Promise<void> {
+    // Verificar consentimento de cookies de analytics antes de rastrear
+    const platform = this.detectPlatform();
+    const hasConsent = hasAnalyticsConsent(platform);
+    
+    // Se o usuário não aceitou cookies de analytics, não rastrear
+    if (!hasConsent) {
+      logger.dev('📡 Tracking bloqueado: usuário não aceitou cookies de analytics');
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
 
     // Só rastreia se o usuário estiver logado

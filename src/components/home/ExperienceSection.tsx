@@ -1,6 +1,8 @@
 import { MapPin, Calendar, Book, Image, Sparkles, ArrowRight, LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
+import { platformContentService } from '@/services/admin/platformContentService';
 
 interface Experiencia {
   id: number;
@@ -44,6 +46,26 @@ const experiencias: Experiencia[] = [
 
 const ExperienceSection = () => {
   const { t } = useTranslation('pages');
+  const [content, setContent] = useState<Record<string, string>>({});
+
+  // Carregar conteúdo do CMS
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const contents = await platformContentService.getContentByPrefix('ms_experience_');
+        const contentMap: Record<string, string> = {};
+        contents.forEach(item => {
+          contentMap[item.content_key] = item.content_value || '';
+        });
+        setContent(contentMap);
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error);
+      }
+    };
+    loadContent();
+  }, []);
+
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
   
   // Traduzir experiências (conteúdo estático)
   const experienciasTraduzidas = experiencias.map(exp => ({
@@ -62,10 +84,10 @@ const ExperienceSection = () => {
             </div>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-ms-primary-blue mb-5">
-            {t('home.experiences.title', { defaultValue: 'Experiências Completas' })}
+            {getContent('ms_experience_title', t('home.experiences.title', { defaultValue: 'Experiências Completas' }))}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            {t('home.experiences.subtitle', { defaultValue: 'Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis' })}
+            {getContent('ms_experience_subtitle', t('home.experiences.subtitle', { defaultValue: 'Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis' }))}
           </p>
         </div>
         
