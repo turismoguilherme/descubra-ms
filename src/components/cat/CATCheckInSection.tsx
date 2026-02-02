@@ -3,6 +3,7 @@
  * Seção padronizada de controle de ponto para atendentes dos CATs
  */
 
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';

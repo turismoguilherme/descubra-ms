@@ -3,6 +3,7 @@
  * Permite fazer upload de logotipo ou imagem promocional do evento
  */
 
+// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 

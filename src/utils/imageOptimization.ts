@@ -1,6 +1,8 @@
 /**
  * Helper para otimização de imagens do Supabase Storage
  * Aplica parâmetros de width e quality para melhorar qualidade e performance
+ * 
+ * IMPORTANTE: O Supabase requer o uso de /render/image/ em vez de /object/ para aplicar transformações
  */
 
 /**
@@ -21,11 +23,23 @@ export function optimizeSupabaseImage(
     return '';
   }
 
-  // Se for URL do Supabase Storage, otimizar
-  if (url.includes('supabase.co')) {
-    // Remover query params existentes e adicionar novos
+  // Se for URL do Supabase Storage, otimizar usando o endpoint de transformação
+  if (url.includes('supabase.co') && url.includes('/storage/v1/')) {
+    // Remover query params existentes
     const baseUrl = url.split('?')[0];
-    let optimizedUrl = `${baseUrl}?width=${width}&quality=${quality}`;
+    
+    // Converter de /storage/v1/object/public/ para /storage/v1/render/image/public/
+    // Isso permite aplicar transformações de imagem (width, quality)
+    let transformUrl = baseUrl;
+    if (baseUrl.includes('/storage/v1/object/public/')) {
+      transformUrl = baseUrl.replace(
+        '/storage/v1/object/public/',
+        '/storage/v1/render/image/public/'
+      );
+    }
+    
+    // Adicionar parâmetros de transformação
+    let optimizedUrl = `${transformUrl}?width=${width}&quality=${quality}`;
     
     // Adicionar cache busting se solicitado
     if (addCacheBust) {

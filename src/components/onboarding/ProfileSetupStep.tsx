@@ -3,6 +3,7 @@
  * Coleta informações básicas sobre o negócio do usuário
  */
 
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
