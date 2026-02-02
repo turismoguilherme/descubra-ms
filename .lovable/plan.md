@@ -1,373 +1,116 @@
 
-# Plano: Melhorias no Painel Admin - CMS, Layout e YouTube Mobile
+# Plano: Melhorias no Sistema de Eventos e Banner de Roteiros Personalizados
 
-## Resumo Executivo
-
-Este plano aborda as melhorias solicitadas para o painel administrativo:
-1. **Sistema de Tooltips de Ajuda (?)** - Criar componentes reutilizáveis para orientar administradores
-2. **Melhorias de Layout** - Corrigir alinhamento, centralização e espaçamento nos editores
-3. **Responsividade Mobile** - Melhorar sidebar com drawer mobile
-4. **YouTube no Mobile** - Adicionar overlay físico para esconder informações do YouTube no Descubra MS
+## Resumo das Solicitações
+1. **Qualidade das imagens de eventos** - Corrigir a qualidade baixa das imagens quando alguém cadastra um evento (ex: Luan Santana)
+2. **Toggle para Banner de Roteiros Personalizados** - Adicionar opção no admin para ativar/desativar o banner
+3. **Duas opções de contato no Banner** - Além do WhatsApp, ter opção de redirecionar para outro site
 
 ---
 
-## 1. Sistema de Tooltips de Ajuda (?)
+## Análise Técnica
 
-### Problema Identificado
-Não existe um sistema de tooltips para orientar administradores ao editar campos.
+### 1. Problema de Qualidade das Imagens
 
-### Solução
+**Causa Raiz Identificada:**
+O arquivo `src/utils/imageOptimization.ts` está construindo URLs incorretas para transformação de imagens do Supabase.
 
-Criar dois componentes reutilizáveis:
+```text
+URL ATUAL (incorreta):
+https://hvtrpkbjgbuypkskqcqm.supabase.co/storage/v1/object/public/event-images/image.jpg?width=1920&quality=95
 
-**HelpTooltip.tsx** - Ícone (?) com tooltip ao hover:
-```
-Título do Hero (?)  ← Hover mostra dica
-                 ↓
-      ┌─────────────────────────┐
-      │ Título principal da     │
-      │ página inicial.         │
-      │ Máx: 60 caracteres.     │
-      └─────────────────────────┘
+URL CORRETA (para transformação):
+https://hvtrpkbjgbuypkskqcqm.supabase.co/storage/v1/render/image/public/event-images/image.jpg?width=1920&quality=95
 ```
 
-**LabelWithHelp.tsx** - Label com tooltip integrado:
-```
-<LabelWithHelp 
-  label="Título do Hero" 
-  helpText="Título principal exibido na página inicial"
-/>
-```
+O Supabase Storage exige que a URL use `/render/image/` em vez de `/object/` para aplicar transformações de imagem (redimensionamento e qualidade).
 
-### Textos de Ajuda por Tipo de Campo
+**Solução:**
+Corrigir a função `optimizeSupabaseImage()` para:
+- Substituir `/object/public/` por `/render/image/public/` nas URLs
+- Manter a qualidade em 95% para exibição nítida
+- Adicionar tratamento de fallback se a transformação falhar
 
-| Tipo de Campo | Tooltip |
-|---------------|---------|
-| Hero Title | "Título principal. Recomendado: até 60 caracteres." |
-| Hero Subtitle | "Texto secundário abaixo do título." |
-| CTA Button | "Texto do botão de ação. Use verbos: 'Explorar', 'Descobrir'." |
-| Video URL | "Cole link do YouTube ou Vimeo. Será incorporado automaticamente." |
-| Image | "Formatos: JPG, PNG, WebP. Tamanho máx: 5MB." |
-| JSON | "Formato JSON válido. Ex: [\"item1\", \"item2\"]" |
+### 2. Toggle para Ativar/Desativar Banner
+
+**Implementação:**
+- Adicionar nova configuração `ms_roteiro_banner_enabled` na tabela `site_settings`
+- Adicionar campo toggle no painel admin (SimpleTextEditor)
+- Modificar o componente `RoteiroPersonalizadoBanner` para verificar essa configuração
+
+### 3. Duas Opções de Contato no Banner
+
+**Implementação:**
+- Adicionar novas configurações:
+  - `ms_roteiro_contact_type` = 'whatsapp' | 'link' | 'both'
+  - `ms_roteiro_external_link` = URL do site externo
+  - `ms_roteiro_external_link_text` = Texto do botão para link externo
+- Modificar o banner para exibir um ou dois botões conforme configuração
 
 ---
 
-## 2. Melhorias de Layout no SimpleTextEditor
+## Plano de Implementação
 
-### Problema Atual
-- Campos empilhados sem organização visual
-- Botões desalinhados
-- Espaçamento inconsistente
+### Fase 1: Correção da Qualidade das Imagens
 
-### Solução: Grid Responsivo
+**Arquivo: `src/utils/imageOptimization.ts`**
+- Corrigir a função `optimizeSupabaseImage()` para usar `/render/image/` 
+- Adicionar tratamento para URLs já otimizadas
+- Manter fallback para URL original se a transformação não funcionar
 
-**Layout Proposto:**
+### Fase 2: Toggle do Banner no Admin
 
-```
-MOBILE (< 768px):
-┌──────────────────────────────┐
-│ ┌─ Hero Principal ─────────┐ │
-│ │ Badge (?)                 │ │
-│ │ [Input                  ] │ │
-│ │          [Voltar] [Salvar]│ │
-│ ├───────────────────────────┤ │
-│ │ Título Principal (?)      │ │
-│ │ [Input                  ] │ │
-│ │          [Voltar] [Salvar]│ │
-│ └───────────────────────────┘ │
-└──────────────────────────────┘
+**Arquivo: `src/components/admin/platform/SimpleTextEditor.tsx`**
+- Adicionar novo campo na seção "Hero Universal" para toggle do banner de roteiros
 
-DESKTOP (>= 768px):
-┌──────────────────────────────────────────────────────────┐
-│ ┌─ Hero Principal ─────────────────────────────────────┐ │
-│ │ ┌────────────────────┐ ┌────────────────────┐        │ │
-│ │ │ Badge (?)          │ │ Título (?)         │        │ │
-│ │ │ [Input       ]     │ │ [Input       ]     │        │ │
-│ │ │ [Voltar] [Salvar]  │ │ [Voltar] [Salvar]  │        │ │
-│ │ └────────────────────┘ └────────────────────┘        │ │
-│ │ ┌────────────────────────────────────────────┐       │ │
-│ │ │ Descrição (?) - campo largo                │       │ │
-│ │ │ [Textarea                                ] │       │ │
-│ │ │                        [Voltar] [Salvar]  │       │ │
-│ │ └────────────────────────────────────────────┘       │ │
-│ └──────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────┘
+**Nova Configuração no Banco:**
+```sql
+INSERT INTO site_settings (platform, setting_key, setting_value, description)
+VALUES ('ms', 'ms_roteiro_banner_enabled', 'true', 'Ativar/desativar o banner de roteiros personalizados');
 ```
 
-### Mudanças Específicas no SimpleTextEditor
+### Fase 3: Opções de Contato no Banner
 
-- Usar grid `grid-cols-1 md:grid-cols-2` para campos `text`
-- Campos `textarea`, `json` e `image` ocupam 100% da largura (`col-span-full`)
-- Padding consistente: `p-4 md:p-6`
-- Gap entre campos: `gap-4 md:gap-6`
-- Botões alinhados à direita com `justify-end`
+**Arquivo: `src/components/admin/platform/SimpleTextEditor.tsx`**
+- Adicionar campos para:
+  - Tipo de contato (WhatsApp / Link Externo / Ambos)
+  - URL do link externo
+  - Texto do botão do link externo
 
----
+**Arquivo: `src/components/home/RoteiroPersonalizadoBanner.tsx`**
+- Carregar as novas configurações
+- Renderizar botões conforme configuração:
+  - WhatsApp apenas
+  - Link externo apenas
+  - Ambos os botões
 
-## 3. Responsividade Mobile no ModernAdminLayout
-
-### Problema Atual
-- Sidebar ocupa largura fixa mesmo em mobile
-- Menu não é colapsável
-
-### Solução: Drawer Mobile
-
-**Comportamento:**
-- Desktop (>= 768px): Sidebar fixa à esquerda
-- Mobile (< 768px): Drawer sobreposto ativado por botão hamburguer
-
-```
-MOBILE:
-┌──────────────────────────────────┐
-│ [≡] Dashboard Administrativo     │  ← Botão hamburguer
-├──────────────────────────────────┤
-│                                  │
-│ ┌────────────────────┐           │
-│ │ Drawer Overlay     │◄──────────┤ Overlay escuro
-│ │ ├─ Dashboard       │           │
-│ │ ├─ Plataformas    │           │
-│ │ │   ├─ ViajARTur  │           │
-│ │ │   └─ Descubra MS│           │
-│ │ ├─ Financeiro     │           │
-│ │ └─ Sistema        │           │
-│ │              [X]  │           │
-│ └────────────────────┘           │
-│                                  │
-│ Conteúdo Principal               │
-│ (100% largura)                   │
-└──────────────────────────────────┘
-```
-
-### Implementação
-
-- Adicionar state `isSidebarOpen`
-- Botão hamburguer no header mobile
-- Sidebar como `fixed` com `left-0` ou `-left-full` baseado no state
-- Overlay escuro quando aberto
-- Fechar ao clicar fora ou em item do menu
-
----
-
-## 4. Correção do Vídeo YouTube no Mobile
-
-### Problema Identificado
-No UniversalHero.tsx, mesmo com parâmetros `modestbranding=1`, `controls=0`, `showinfo=0`, o YouTube ainda mostra informações no mobile (título, logo, etc).
-
-### Solução: Overlay Físico
-
-Adicionar divs físicas como overlays que cobrem as áreas onde o YouTube mostra informações:
-
-```
-┌─────────────────────────────────────┐
-│ ████████████████████████████████████│ ← Top cover (60px)
-│                                     │
-│           VÍDEO YOUTUBE             │
-│                                     │
-│ ████████████████████████████████████│ ← Bottom cover (80px)
-└─────────────────────────────────────┘
-```
-
-### Implementação
-
-Adicionar overlays dentro do container do vídeo:
-```css
-/* Top overlay - esconde título/logo */
-.youtube-top-cover {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-  z-index: 15;
-  pointer-events: none;
-}
-
-/* Bottom overlay - esconde controles/info */
-.youtube-bottom-cover {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  z-index: 15;
-  pointer-events: none;
-}
-```
-
-### Por que isso funciona?
-- CSS não consegue esconder elementos dentro de um iframe
-- Mas podemos **cobrir** essas áreas com divs posicionadas absolutamente
-- Os gradientes criam transição suave para não parecer artificial
-
----
-
-## 5. Arquivos a Criar
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/components/admin/ui/HelpTooltip.tsx` | Componente de tooltip de ajuda |
-| `src/components/admin/ui/LabelWithHelp.tsx` | Label com tooltip integrado |
-| `src/components/admin/ui/index.ts` | Barrel export dos componentes |
-
----
-
-## 6. Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/admin/platform/SimpleTextEditor.tsx` | Grid responsivo + usar LabelWithHelp |
-| `src/components/admin/settings/PoliciesEditor.tsx` | Adicionar tooltips de ajuda |
-| `src/components/admin/layout/ModernAdminLayout.tsx` | Implementar drawer mobile |
-| `src/components/layout/UniversalHero.tsx` | Adicionar overlays físicos para YouTube mobile |
-
----
-
-## 7. O Que NÃO Será Alterado
-
-- Funcionalidades existentes do CMS (já funcionando)
-- Lógica de salvamento no Supabase
-- Estrutura de navegação do admin
-- Componentes que já funcionam corretamente
-- Identidade visual e cores
-- Vídeo do YouTube em desktop (funciona bem)
-
----
-
-## 8. Detalhes Técnicos
-
-### 8.1 HelpTooltip Component
-
-```typescript
-import { HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-interface HelpTooltipProps {
-  content: string;
-  side?: 'top' | 'bottom' | 'left' | 'right';
-}
-
-export function HelpTooltip({ content, side = 'top' }: HelpTooltipProps) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button 
-            type="button"
-            className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side={side} className="max-w-[300px]">
-          <p className="text-sm">{content}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-```
-
-### 8.2 LabelWithHelp Component
-
-```typescript
-import { Label } from '@/components/ui/label';
-import { HelpTooltip } from './HelpTooltip';
-
-interface LabelWithHelpProps {
-  htmlFor: string;
-  label: string;
-  helpText?: string;
-}
-
-export function LabelWithHelp({ htmlFor, label, helpText }: LabelWithHelpProps) {
-  return (
-    <div className="flex items-center gap-1">
-      <Label htmlFor={htmlFor}>{label}</Label>
-      {helpText && <HelpTooltip content={helpText} />}
-    </div>
-  );
-}
-```
-
-### 8.3 YouTube Mobile Overlay
-
-```typescript
-{/* Overlays para esconder info do YouTube no mobile */}
-{isMobile && embedUrl?.includes('youtube') && (
-  <>
-    {/* Top overlay - esconde título/logo */}
-    <div 
-      className="absolute top-0 left-0 right-0 h-[60px] z-[15] pointer-events-none"
-      style={{
-        background: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)'
-      }}
-    />
-    {/* Bottom overlay - esconde controles/info */}
-    <div 
-      className="absolute bottom-0 left-0 right-0 h-[80px] z-[15] pointer-events-none"
-      style={{
-        background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)'
-      }}
-    />
-  </>
-)}
+**Novas Configurações no Banco:**
+```sql
+INSERT INTO site_settings (platform, setting_key, setting_value, description)
+VALUES 
+  ('ms', 'ms_roteiro_contact_type', 'whatsapp', 'Tipo de contato: whatsapp, link, ou both'),
+  ('ms', 'ms_roteiro_external_link', '', 'URL do site externo para contato'),
+  ('ms', 'ms_roteiro_external_link_text', 'Acessar Site', 'Texto do botão para link externo');
 ```
 
 ---
 
-## 9. Mapeamento de Tooltips por Campo
+## Arquivos a Modificar
 
-### SimpleTextEditor - ViajarTur
-
-| Campo | helpText |
-|-------|----------|
-| viajar_hero_badge | "Texto pequeno que aparece acima do título principal" |
-| viajar_hero_title | "Nome da plataforma. Será exibido em destaque na página inicial" |
-| viajar_hero_subtitle | "Frase de efeito que resume a proposta da plataforma" |
-| viajar_hero_description | "Texto explicativo mais detalhado sobre a plataforma" |
-| viajar_hero_cta_primary | "Texto do botão principal. Use verbos de ação" |
-| viajar_hero_cta_secondary | "Texto do botão secundário" |
-| viajar_hero_video_url | "Link do YouTube. O vídeo será incorporado como background" |
-
-### SimpleTextEditor - Descubra MS
-
-| Campo | helpText |
-|-------|----------|
-| ms_hero_title | "Título principal da página inicial do Descubra MS" |
-| ms_hero_subtitle | "Descrição que convida o visitante a explorar o estado" |
-| ms_hero_video_url | "Link do YouTube para o vídeo de fundo do hero" |
-| ms_hero_video_placeholder_image_url | "Imagem exibida enquanto o vídeo carrega" |
-| ms_tourism_title | "Título da seção de descrição turística" |
+| Arquivo | Modificação |
+|---------|-------------|
+| `src/utils/imageOptimization.ts` | Corrigir URL para usar `/render/image/` |
+| `src/components/admin/platform/SimpleTextEditor.tsx` | Adicionar campos de configuração do banner |
+| `src/components/home/RoteiroPersonalizadoBanner.tsx` | Implementar toggle e opções de contato |
+| Migração SQL | Criar novas configurações no banco |
 
 ---
 
-## 10. Ordem de Execução
+## Resultado Esperado
 
-1. **Fase 1**: Criar componentes HelpTooltip e LabelWithHelp
-2. **Fase 2**: Aplicar grid responsivo e tooltips no SimpleTextEditor
-3. **Fase 3**: Implementar drawer mobile no ModernAdminLayout
-4. **Fase 4**: Adicionar overlays físicos para YouTube no UniversalHero
-5. **Fase 5**: Adicionar tooltips no PoliciesEditor
-
----
-
-## 11. Resultado Esperado
-
-| Antes | Depois |
-|-------|--------|
-| Campos sem orientação | Tooltips de ajuda (?) explicando cada campo |
-| Layout desalinhado | Grid responsivo com espaçamento consistente |
-| Sidebar fixa em mobile | Drawer colapsável com overlay |
-| Info YouTube visível no mobile | Overlays escondendo informações |
-
----
-
-## 12. Compatibilidade
-
-- Responsivo (mobile/tablet/desktop)
-- Mantém funcionalidades existentes
-- Segue padrões já estabelecidos no projeto
-- Não requer alterações no banco de dados
-- CMS continua funcionando normalmente
+1. **Imagens de eventos** serão exibidas com alta qualidade (1920px, 95% qualidade)
+2. **Admin** terá controle total sobre o banner de roteiros:
+   - Ativar/desativar completamente
+   - Escolher tipo de contato (WhatsApp, Link ou Ambos)
+   - Configurar URL e texto do link externo
+3. **Usuários** verão opções de contato conforme configurado pelo admin
