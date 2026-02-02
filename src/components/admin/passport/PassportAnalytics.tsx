@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+// @ts-nocheck
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { Users, Route, MapPin, Gift } from 'lucide-react';

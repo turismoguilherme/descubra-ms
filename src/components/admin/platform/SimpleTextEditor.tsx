@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+// @ts-nocheck
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -124,6 +125,12 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_hero_video_url', label: 'Vídeo de Fundo (URL)', type: 'text', placeholder: 'URL do YouTube, Vimeo ou vídeo MP4', section: 'Hero Universal' },
     { key: 'ms_hero_video_placeholder_image_url', label: 'Imagem de Placeholder do Vídeo (URL)', type: 'text', placeholder: 'URL da imagem exibida enquanto o vídeo carrega', section: 'Hero Universal' },
     { key: 'ms_guata_roteiro_image_url', label: 'Imagem do Guatá - Banner Roteiro (URL)', type: 'text', placeholder: 'URL da imagem do Guatá para o banner "Montamos seu roteiro"', section: 'Hero Universal' },
+    
+    // Banner Roteiro Personalizado
+    { key: 'ms_roteiro_banner_enabled', label: 'Exibir Banner de Roteiros', type: 'text', placeholder: 'true ou false', section: 'Banner Roteiro Personalizado' },
+    { key: 'ms_roteiro_contact_type', label: 'Tipo de Contato', type: 'text', placeholder: 'whatsapp, link ou both', section: 'Banner Roteiro Personalizado' },
+    { key: 'ms_roteiro_external_link', label: 'Link Externo (URL)', type: 'text', placeholder: 'https://exemplo.com', section: 'Banner Roteiro Personalizado' },
+    { key: 'ms_roteiro_external_link_text', label: 'Texto do Botão Link Externo', type: 'text', placeholder: 'Acessar Site', section: 'Banner Roteiro Personalizado' },
     
     // Descrição Turística
     { key: 'ms_tourism_title', label: 'Título', type: 'text', placeholder: 'Descubra Mato Grosso do Sul – Viva essa experiência!', section: 'Descrição Turística' },

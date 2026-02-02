@@ -1,13 +1,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, ArrowRight } from "lucide-react";
+import { MessageCircle, ArrowRight, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { platformContentService } from '@/services/admin/platformContentService';
+
+type ContactType = 'whatsapp' | 'link' | 'both';
 
 const RoteiroPersonalizadoBanner = () => {
   const [whatsappPhone, setWhatsappPhone] = useState<string>("");
   const [guataImageUrl, setGuataImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  
+  // Novas configurações
+  const [bannerEnabled, setBannerEnabled] = useState<boolean>(true);
+  const [contactType, setContactType] = useState<ContactType>('whatsapp');
+  const [externalLink, setExternalLink] = useState<string>("");
+  const [externalLinkText, setExternalLinkText] = useState<string>("Acessar Site");
 
   useEffect(() => {
     loadConfig();
@@ -15,19 +23,45 @@ const RoteiroPersonalizadoBanner = () => {
 
   const loadConfig = async () => {
     try {
-      // Carregar WhatsApp
-      const { data: whatsappData, error: whatsappError } = await supabase
+      // Carregar todas as configurações do banner de uma vez
+      const { data: settings, error: settingsError } = await supabase
         .from('site_settings')
         .select('setting_key, setting_value')
         .eq('platform', 'ms')
-        .eq('setting_key', 'ms_whatsapp_phone')
-        .maybeSingle();
+        .in('setting_key', [
+          'ms_whatsapp_phone',
+          'ms_roteiro_banner_enabled',
+          'ms_roteiro_contact_type',
+          'ms_roteiro_external_link',
+          'ms_roteiro_external_link_text'
+        ]);
 
-      if (whatsappError) throw whatsappError;
+      if (settingsError) throw settingsError;
       
-      if (whatsappData?.setting_value) {
-        setWhatsappPhone(whatsappData.setting_value as string);
-      }
+      // Processar configurações
+      settings?.forEach(setting => {
+        const value = typeof setting.setting_value === 'string' 
+          ? setting.setting_value.replace(/^"|"$/g, '') // Remove aspas JSON
+          : setting.setting_value;
+          
+        switch (setting.setting_key) {
+          case 'ms_whatsapp_phone':
+            setWhatsappPhone(value as string);
+            break;
+          case 'ms_roteiro_banner_enabled':
+            setBannerEnabled(value === 'true' || value === true);
+            break;
+          case 'ms_roteiro_contact_type':
+            setContactType((value as ContactType) || 'whatsapp');
+            break;
+          case 'ms_roteiro_external_link':
+            setExternalLink(value as string || '');
+            break;
+          case 'ms_roteiro_external_link_text':
+            setExternalLinkText(value as string || 'Acessar Site');
+            break;
+        }
+      });
 
       // Carregar imagem do Guatá do admin
       const contents = await platformContentService.getContentByPrefix('ms_guata_roteiro_image_url');
@@ -62,8 +96,17 @@ const RoteiroPersonalizadoBanner = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  if (loading || !whatsappPhone) {
-    return null; // Não exibir se não houver número configurado
+  const handleExternalLinkClick = () => {
+    if (!externalLink) return;
+    window.open(externalLink, '_blank');
+  };
+
+  // Não exibir se o banner estiver desabilitado ou se não tiver opção de contato configurada
+  const hasWhatsApp = whatsappPhone && (contactType === 'whatsapp' || contactType === 'both');
+  const hasExternalLink = externalLink && (contactType === 'link' || contactType === 'both');
+  
+  if (loading || !bannerEnabled || (!hasWhatsApp && !hasExternalLink)) {
+    return null;
   }
 
   return (
@@ -78,15 +121,37 @@ const RoteiroPersonalizadoBanner = () => {
             <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto md:mx-0">
               Escolha destinos, combine experiências e descubra o melhor de Mato Grosso do Sul com um roteiro feito especialmente para você.
             </p>
-            <Button
-              onClick={handleWhatsAppClick}
-              size="lg"
-              className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-gray-900 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Entre em contato
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Botão WhatsApp */}
+              {hasWhatsApp && (
+                <Button
+                  onClick={handleWhatsAppClick}
+                  size="lg"
+                  className="bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-gray-900 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  WhatsApp
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              )}
+              
+              {/* Botão Link Externo */}
+              {hasExternalLink && (
+                <Button
+                  onClick={handleExternalLinkClick}
+                  size="lg"
+                  variant={hasWhatsApp ? "outline" : "default"}
+                  className={hasWhatsApp 
+                    ? "border-2 border-white text-white hover:bg-white hover:text-green-700 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                    : "bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-gray-900 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  }
+                >
+                  <ExternalLink className="mr-2 h-5 w-5" />
+                  {externalLinkText}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Imagem do Guatá - Destacada e Maior */}

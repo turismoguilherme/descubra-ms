@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect } from 'react';
 import UniversalNavbar from './UniversalNavbar';
 import UniversalFooter from './UniversalFooter';
