@@ -4364,6 +4364,84 @@ export type Database = {
           },
         ]
       }
+      pending_refunds: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          days_until_reservation: number | null
+          id: string
+          partner_id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          refund_amount: number
+          refund_percent: number
+          reservation_code: string | null
+          reservation_id: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_refund_id: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          days_until_reservation?: number | null
+          id?: string
+          partner_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          refund_amount: number
+          refund_percent: number
+          reservation_code?: string | null
+          reservation_id: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          days_until_reservation?: number | null
+          id?: string
+          partner_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          refund_amount?: number
+          refund_percent?: number
+          reservation_code?: string | null
+          reservation_id?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_refunds_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_refunds_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plano_diretor_acoes: {
         Row: {
           created_at: string | null

@@ -406,12 +406,23 @@ const UniversalHero = () => {
                 {isMobile && (
                   <div 
                     className="absolute inset-0 w-full h-full z-[10] pointer-events-none"
-                    style={{
-                      backgroundColor: 'transparent',
-                      backgroundImage: 'linear-gradient(to bottom, transparent 0%, transparent 100%)',
-                    }}
                     aria-hidden="true"
-                  />
+                  >
+                    {/* Gradiente superior para esconder título/logo do YouTube */}
+                    <div 
+                      className="absolute top-0 left-0 right-0 h-24"
+                      style={{
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+                      }}
+                    />
+                    {/* Gradiente inferior para esconder barra de controles */}
+                    <div 
+                      className="absolute bottom-0 left-0 right-0 h-20"
+                      style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+                      }}
+                    />
+                  </div>
                 )}
               </div>
             </div>
