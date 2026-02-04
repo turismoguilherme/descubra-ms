@@ -52,7 +52,7 @@ const SobreMS = () => {
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative ms-container text-center">
             <div className="flex justify-center mb-6">
-              <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-2xl">
+              <div className="bg-white rounded-2xl p-4 shadow-2xl">
                 <img 
                   src={logoUrl} 
                   alt="Descubra Mato Grosso do Sul" 
