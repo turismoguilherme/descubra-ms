@@ -233,11 +233,23 @@ const UniversalHero = () => {
         z-index: 1 !important;
       }
       
-      /* Mobile: Esconder completamente informações do YouTube */
+      /* Mobile: Esconder completamente informações do YouTube e garantir cobertura total */
       @media (max-width: 768px) {
         .hero-section iframe[src*="youtube"] {
           /* Forçar esconder todos os elementos do YouTube */
           overflow: hidden !important;
+          /* Garantir que o iframe cubra toda a área */
+          object-fit: cover !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        
+        /* Container do vídeo no mobile - garantir cobertura total */
+        .hero-section > div > div[style*="youtube"] {
+          width: 177.77vh !important;
+          height: 100dvh !important;
+          min-width: 177.77vh !important;
+          min-height: 100dvh !important;
         }
         
         /* Esconder qualquer elemento filho do iframe do YouTube */
@@ -329,7 +341,7 @@ const UniversalHero = () => {
                   left: 0,
                   width: '100%',
                   height: '100%',
-                minHeight: '100vh'
+                  minHeight: isMobile ? '100dvh' : '100vh'
               }}
             >
               {/* Container para vídeo YouTube - técnica para cobrir toda tela (desktop e mobile) */}
@@ -338,13 +350,16 @@ const UniversalHero = () => {
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
-                  width: isMobile ? '120vw' : '100vw', // Mobile: aumentar largura para cobrir bordas
-                  height: isMobile ? '120dvh' : '56.25vw', // Mobile: aumentar altura e usar dvh, Desktop: 16:9
+                  width: isMobile ? '177.77vh' : '100vw', // Mobile: largura baseada na altura (16:9), Desktop: 100vw
+                  height: isMobile ? '100dvh' : '56.25vw', // Mobile: altura completa, Desktop: proporção 16:9
                   minHeight: isMobile ? '100dvh' : '100vh',
-                  minWidth: isMobile ? '120vw' : '177.77vh', // Mobile: garantir largura suficiente
-                  transform: 'translate(-50%, -50%)',
+                  minWidth: isMobile ? '177.77vh' : '177.77vh',
+                  transform: isMobile 
+                    ? 'translate(-50%, -50%) scale(1.5)' // Mobile: scale 1.5 para garantir cobertura total
+                    : 'translate(-50%, -50%)', // Desktop: sem scale
+                  transformOrigin: 'center center',
                   zIndex: 0,
-                  overflow: 'hidden' // Esconder qualquer overflow no mobile
+                  overflow: 'hidden' // Esconder qualquer overflow
                 }}
               >
                 <iframe
@@ -402,17 +417,18 @@ const UniversalHero = () => {
                     setVideoLoading(false);
                   }}
                 />
-                {/* Overlay físico para esconder informações do YouTube no mobile */}
+                {/* Overlay físico para esconder informações do YouTube no mobile e barras pretas */}
                 {isMobile && (
                   <div 
                     className="absolute inset-0 w-full h-full z-[10] pointer-events-none"
                     aria-hidden="true"
                   >
-                    {/* Gradiente superior para esconder título/logo do YouTube */}
+                    {/* Gradiente superior mais forte para esconder título/logo do YouTube e barras pretas */}
                     <div 
-                      className="absolute top-0 left-0 right-0 h-24"
+                      className="absolute top-0 left-0 right-0"
                       style={{
-                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+                        height: '200px', // Aumentado para 200px para cobrir área maior
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 20%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.3) 80%, transparent 100%)',
                       }}
                     />
                     {/* Gradiente inferior para esconder barra de controles */}
