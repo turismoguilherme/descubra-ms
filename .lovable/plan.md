@@ -1,195 +1,251 @@
 
-# Plano: Correção da Logo, Traduções Dinâmicas e Vídeo Mobile
+# Plano Completo: Tradução Dinâmica em Toda a Plataforma Descubra MS
 
-## Resumo dos Problemas Identificados
+## Diagnóstico Atual
 
-Com base na imagem enviada e na análise do código, identifiquei três problemas:
+### O que funciona ✅
+- **i18next** traduz textos estáticos (UI, botões, títulos fixos) corretamente
+- **DestinoDetalhes.tsx** já usa tradução dinâmica para exibir destinos traduzidos
+- **Serviços de tradução** (LibreTranslate com fallback) estão configurados
+- **Tabela `content_translations`** existe no banco
 
-1. **Vídeo no Mobile**: A imagem mostra que há uma área preta grande acima do conteúdo do Hero - o vídeo não está ocupando toda a tela vertical no celular
-2. **Logo na Página Sobre**: O fundo branco sólido que foi aplicado não ficou agradável visualmente
-3. **Traduções Incompletas**: Os textos estáticos do Hero estão traduzidos (como "Découvrir maintenant" em francês), mas o conteúdo dinâmico do banco de dados não está sendo traduzido
-
----
-
-## Análise Técnica
-
-### 1. Problema do Vídeo no Mobile
-
-**Diagnóstico pela Imagem:**
-- A área do vídeo mostra uma grande parte preta no topo
-- O conteúdo do Hero (título, subtítulo, botões) está posicionado muito abaixo
-- O vídeo não está cobrindo toda a altura da viewport
-
-**Causa no Código (UniversalHero.tsx - linhas 336-348):**
-```tsx
-<div
-  style={{
-    height: isMobile ? '100vh' : '56.25vw',
-    minHeight: '100vh',
-    // ...
-  }}
->
-```
-
-O problema é que mesmo com `height: 100vh`, o container pai pode estar limitando a exibição. Além disso, o iframe do YouTube pode não estar renderizando corretamente em dispositivos móveis.
-
-**Solução Proposta:**
-- Aumentar a escala do vídeo no mobile para cobrir toda a área visível
-- Usar `scale(1.5)` ou similar para garantir que o vídeo preencha toda a viewport sem bordas pretas
-- Ajustar o `objectFit: cover` equivalente para iframes
-
-### 2. Problema da Logo na Página Sobre
-
-**Situação Atual (SobreMS.tsx - linha 55):**
-```tsx
-<div className="bg-white rounded-2xl p-4 shadow-2xl">
-```
-
-**O usuário não gostou** do fundo branco sólido porque fica muito contrastante e "pesado" visualmente sobre o gradiente colorido do Hero.
-
-**Soluções Alternativas:**
-- **Opção A**: Usar um gradiente claro suave (`bg-gradient-to-br from-white/80 to-white/60`) com blur para manter a transparência mas com mais visibilidade
-- **Opção B**: Usar sombra mais forte na logo sem container (`drop-shadow`) para destacá-la diretamente sobre o fundo
-- **Opção C**: Manter transparência sutil (`bg-white/50`) mas aumentar o blur para melhor legibilidade
-
-A **Opção B** parece mais elegante: remover o container e usar múltiplas sombras (`drop-shadow-2xl` ou filtro CSS customizado) para fazer a logo se destacar naturalmente sobre o gradiente.
-
-### 3. Problema das Traduções Dinâmicas
-
-**O que ESTÁ funcionando:**
-- ✅ Textos do i18next (arquivos JSON em `src/i18n/locales/`) - Como visto na imagem: "Découvrir maintenant", "Passeport numérique"
-- ✅ Títulos e subtítulos do Hero que estão nos arquivos de tradução
-
-**O que NÃO está funcionando:**
-- ❌ Conteúdo do banco de dados (`institutional_content`)
-- ❌ Descrições de destinos, eventos, roteiros
-- ❌ Qualquer texto que vem do CMS
-
-**Análise do Sistema de Tradução:**
-
-O código tem uma arquitetura completa mas com problemas na execução:
-
-1. **TranslationManager** (prioridade):
-   - LibreTranslate (gratuito, prioridade 1) → URL: `https://libretranslate.de`
-   - Google Translate (prioridade 2) → Requer API Key
-   - Gemini AI (prioridade 3) → Requer API Key
-
-2. **Problema com LibreTranslate:**
-   - O serviço `libretranslate.de` é uma instância pública que pode estar lenta, bloqueada por CORS, ou fora do ar
-   - Não há tratamento adequado para timeout ou fallback quando o serviço falha
-
-3. **Fluxo de Tradução Automática:**
-   - Quando conteúdo é salvo, `platformContentService.updateContent()` tenta gerar traduções automaticamente
-   - Mas isso depende do `AutoTranslationGenerator` que usa o `TranslationManager`
-   - Se LibreTranslate falha e não há API keys configuradas, nenhuma tradução é gerada
-
-**Soluções Propostas:**
-
-1. **Configurar uma instância confiável de LibreTranslate** ou usar outra API gratuita como fallback
-2. **Adicionar mais idiomas nos arquivos estáticos** do i18next para cobrir mais textos
-3. **Criar uma UI no admin** para verificar status das traduções e regerar manualmente
-4. **Implementar cache local** para traduções já realizadas
-5. **Adicionar timeout adequado** e melhor tratamento de erros no LibreTranslateService
+### O que NÃO funciona ❌
+1. **Tabela `destination_translations`** não existe - erro ao tentar traduzir destinos
+2. **Tabela `content_translations`** está vazia (0 traduções)
+3. **Páginas de listagem** (Destinos, Eventos, Roteiros) não buscam/exibem traduções
+4. **Hook `useTouristRegions`** retorna dados em português sem opção de tradução
+5. **Nenhuma tradução automática** está sendo gerada quando conteúdo é salvo
 
 ---
 
-## Plano de Implementação
+## Plano de Implementação (4 Fases)
 
-### Fase 1: Correção do Vídeo no Mobile (UniversalHero.tsx)
+### Fase 1: Criar Tabelas de Tradução Faltantes
 
-**Modificações:**
-1. Aumentar escala do vídeo no mobile para cobrir toda a área:
-```tsx
-<div style={{
-  // Container do vídeo
-  transform: isMobile ? 'translate(-50%, -50%) scale(1.3)' : 'translate(-50%, -50%)',
-  width: isMobile ? '140vw' : '100vw',
-  height: isMobile ? '140vh' : '56.25vw',
-  minHeight: '100vh',
-}}>
+**1.1 Criar tabela `destination_translations`**
+```sql
+CREATE TABLE IF NOT EXISTS destination_translations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  destination_id UUID NOT NULL REFERENCES destinations(id) ON DELETE CASCADE,
+  language_code TEXT NOT NULL,
+  name TEXT,
+  description TEXT,
+  promotional_text TEXT,
+  highlights TEXT[],
+  how_to_get_there TEXT,
+  best_time_to_visit TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(destination_id, language_code)
+);
 ```
 
-2. Garantir que o container principal do Hero tenha altura mínima correta:
-```tsx
-<div style={{
-  minHeight: '100vh',
-  height: '100dvh', // dvh para mobile (dynamic viewport height)
-}}>
+**1.2 Criar tabela `event_translations`**
+```sql
+CREATE TABLE IF NOT EXISTS event_translations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  language_code TEXT NOT NULL,
+  name TEXT,
+  title TEXT,
+  description TEXT,
+  short_description TEXT,
+  location TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(event_id, language_code)
+);
 ```
 
-### Fase 2: Correção da Logo (SobreMS.tsx)
-
-**Abordagem escolhida:** Remover container branco e usar múltiplas sombras na própria logo
-
-```tsx
-<div className="flex justify-center mb-6">
-  <img 
-    src={logoUrl} 
-    alt="Descubra Mato Grosso do Sul" 
-    className="h-36 w-auto"
-    style={{
-      filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.8)) drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
-    }}
-  />
-</div>
+**1.3 Criar tabela `route_translations`**
+```sql
+CREATE TABLE IF NOT EXISTS route_translations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  route_id UUID NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+  language_code TEXT NOT NULL,
+  name TEXT,
+  title TEXT,
+  description TEXT,
+  overview TEXT,
+  highlights TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(route_id, language_code)
+);
 ```
 
-Isso cria um "brilho" branco ao redor da logo que a destaca do fundo colorido sem precisar de um container.
+**1.4 Criar tabela `region_translations`**
+```sql
+CREATE TABLE IF NOT EXISTS region_translations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  region_id UUID NOT NULL REFERENCES tourist_regions(id) ON DELETE CASCADE,
+  language_code TEXT NOT NULL,
+  name TEXT,
+  description TEXT,
+  highlights TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(region_id, language_code)
+);
+```
 
-### Fase 3: Melhorar Sistema de Traduções
+---
 
-**3.1 - Adicionar fallback mock quando APIs falham:**
-Modificar o `TranslationManager` para retornar uma tradução parcial (mesmo que não perfeita) quando APIs externas falham, em vez de retornar o texto original.
+### Fase 2: Criar Hook Universal de Tradução Dinâmica
 
-**3.2 - Adicionar instância alternativa de LibreTranslate:**
+**Arquivo: `src/hooks/useTranslatedContent.ts`**
+
+Hook reutilizável que:
+1. Recebe dados originais em português
+2. Verifica idioma atual
+3. Busca traduções no banco (se existirem)
+4. Gera tradução via API se não existir (lazy translation)
+5. Retorna dados traduzidos ou originais
+
 ```typescript
-// Lista de instâncias públicas de LibreTranslate
-const LIBRE_TRANSLATE_INSTANCES = [
-  'https://libretranslate.de',
-  'https://lt.vern.cc',
-  'https://translate.argosopentech.com',
-];
+export function useTranslatedContent<T>({
+  data: T,
+  translationTable: string,
+  idField: string,
+  translatableFields: string[]
+}) {
+  const { language } = useLanguage();
+  const [translatedData, setTranslatedData] = useState<T>(data);
+  const [isTranslating, setIsTranslating] = useState(false);
+  
+  useEffect(() => {
+    if (language === 'pt-BR') {
+      setTranslatedData(data);
+      return;
+    }
+    
+    // Buscar tradução ou gerar via lazy translation
+    fetchOrGenerateTranslation();
+  }, [data, language]);
+  
+  return { translatedData, isTranslating };
+}
 ```
-
-**3.3 - Implementar verificação de saúde das APIs:**
-Criar um hook `useTranslationStatus` que verifica se as APIs estão funcionando.
-
-**3.4 - Adicionar mais traduções estáticas:**
-Expandir os arquivos JSON de tradução para cobrir mais textos da interface.
 
 ---
 
-## Arquivos a Modificar
+### Fase 3: Integrar Traduções nas Páginas de Listagem
 
-| Arquivo | Modificação |
-|---------|-------------|
-| `src/components/layout/UniversalHero.tsx` | Ajustar escala e dimensões do vídeo no mobile |
-| `src/pages/ms/SobreMS.tsx` | Remover container branco da logo, usar drop-shadow |
-| `src/services/translation/LibreTranslateService.ts` | Adicionar múltiplas instâncias e fallback |
-| `src/services/translation/TranslationManager.ts` | Melhorar tratamento de erros e timeout |
+**3.1 Modificar `useTouristRegions.ts`**
+- Adicionar parâmetro `language` 
+- Buscar traduções quando idioma ≠ pt-BR
+- Retornar dados com campos traduzidos
+
+**3.2 Modificar `Destinos.tsx`**
+- Usar `useLanguage()` para obter idioma atual
+- Exibir `regiao.name` / `regiao.description` traduzidos
+
+**3.3 Modificar páginas de Eventos e Roteiros**
+- Mesmo padrão: buscar traduções e exibir dados no idioma correto
+
+---
+
+### Fase 4: Gerar Traduções Automaticamente
+
+**4.1 Criar função no admin para gerar traduções em massa**
+```typescript
+// Botão: "Gerar todas as traduções"
+async function generateAllTranslations() {
+  // Buscar todos os destinos
+  // Para cada destino, gerar traduções para 4 idiomas
+  // Salvar no banco
+}
+```
+
+**4.2 Integrar tradução automática ao salvar conteúdo**
+- Quando admin salva destino → Chamar `autoTranslateDestination()`
+- Quando admin aprova evento → Chamar `autoTranslateEvent()`
+- Quando admin salva roteiro → Chamar `autoTranslateRoute()`
+
+**4.3 Criar página de status de traduções no admin**
+- Mostrar quantos itens têm tradução
+- Permitir regenerar traduções manualmente
+
+---
+
+## Arquivos a Criar/Modificar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| Migração SQL | Criar | 4 tabelas de tradução |
+| `src/hooks/useTranslatedContent.ts` | Criar | Hook universal de tradução |
+| `src/hooks/useTouristRegions.ts` | Modificar | Adicionar busca de traduções |
+| `src/pages/Destinos.tsx` | Modificar | Exibir nomes/descrições traduzidos |
+| `src/pages/ms/EventosMS.tsx` | Modificar | Exibir dados traduzidos |
+| `src/pages/ms/RoteirosMS.tsx` | Modificar | Exibir dados traduzidos |
+| `src/services/translation/RegionTranslationService.ts` | Criar | Serviço para tradução de regiões |
+| `src/components/admin/TranslationStatusPanel.tsx` | Criar | Painel para gerar/verificar traduções |
+
+---
+
+## Fluxo Final Esperado
+
+```text
+┌─────────────────────┐
+│ Usuário muda idioma │
+│    para "en-US"     │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Hook detecta idioma │
+│    useLanguage()    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────────────────┐
+│ Busca tradução no banco         │
+│ SELECT * FROM destination_      │
+│ translations WHERE language=en  │
+└──────────┬──────────────────────┘
+           │
+    ┌──────┴──────┐
+    │             │
+    ▼             ▼
+┌───────┐    ┌────────────────────┐
+│Existe │    │ Não existe         │
+│       │    │ → Gerar via API    │
+│       │    │ → Salvar no banco  │
+└───┬───┘    └─────────┬──────────┘
+    │                  │
+    └────────┬─────────┘
+             │
+             ▼
+┌─────────────────────┐
+│  Exibir dados       │
+│  traduzidos na UI   │
+└─────────────────────┘
+```
 
 ---
 
 ## Resultado Esperado
 
-1. **Vídeo** ocupará toda a tela no mobile, sem áreas pretas visíveis
-2. **Logo** terá boa visibilidade com um efeito de brilho suave, sem container branco
-3. **Traduções** terão maior confiabilidade com múltiplos fallbacks
+Após implementação completa:
+
+1. ✅ **Usuário seleciona idioma** → Toda UI estática traduz via i18next
+2. ✅ **Nomes de destinos** → Traduzidos automaticamente
+3. ✅ **Descrições de regiões** → Traduzidas automaticamente  
+4. ✅ **Eventos e roteiros** → Títulos e descrições traduzidos
+5. ✅ **Conteúdo editável do CMS** → Traduzido via tabela content_translations
+6. ✅ **Admin pode regenerar traduções** → Painel de controle
 
 ---
 
-## Seção Técnica: O que precisa para traduções funcionarem completamente
+## Prioridade de Implementação
 
-Para tradução completa de conteúdo dinâmico, o sistema precisa de:
+1. **Alta**: Criar tabelas `destination_translations` e `region_translations`
+2. **Alta**: Modificar `useTouristRegions` para buscar traduções
+3. **Média**: Modificar páginas de listagem para exibir dados traduzidos
+4. **Média**: Criar painel admin para gerar traduções em massa
+5. **Baixa**: Refinar serviços de tradução automática
 
-1. **Tabela `content_translations`** - Já criada na última sessão
-2. **API de tradução funcional** - LibreTranslate ou Google Translate/Gemini
-3. **Geração automática** - Ao salvar conteúdo no admin, gerar traduções
-4. **Busca de traduções** - Ao exibir conteúdo, verificar se existe tradução
-
-O problema atual é que LibreTranslate (`https://libretranslate.de`) pode estar:
-- Com rate limiting
-- Bloqueado por CORS no navegador
-- Fora do ar temporariamente
-
-A solução definitiva seria configurar a chave `VITE_GOOGLE_TRANSLATE_API_KEY` no projeto, mas isso tem custo. Alternativamente, podemos usar múltiplas instâncias públicas de LibreTranslate como fallback.
