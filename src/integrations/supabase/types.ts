@@ -1319,6 +1319,39 @@ export type Database = {
         }
         Relationships: []
       }
+      content_translations: {
+        Row: {
+          content: Json
+          content_key: string
+          created_at: string | null
+          id: string
+          language_code: string
+          platform: string
+          section: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: Json
+          content_key: string
+          created_at?: string | null
+          id?: string
+          language_code: string
+          platform?: string
+          section?: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: Json
+          content_key?: string
+          created_at?: string | null
+          id?: string
+          language_code?: string
+          platform?: string
+          section?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       content_versions: {
         Row: {
           content: string
