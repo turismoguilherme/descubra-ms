@@ -20,6 +20,8 @@ export interface TranslationProvider {
 }
 
 class TranslationManager {
+  private readonly TIMEOUT = 15000; // 15 segundos para o manager (mais tempo que serviços individuais)
+  
   private providers: TranslationProvider[] = [
     {
       name: 'LibreTranslate',
@@ -70,12 +72,19 @@ class TranslationManager {
 
     let lastError: string = '';
 
-    // Tentar cada provedor em ordem de prioridade
+    // Tentar cada provedor em ordem de prioridade com timeout
     for (const provider of availableProviders) {
       try {
         console.log(`🔄 [TranslationManager] Tentando tradução com ${provider.name}...`);
 
-        const result = await provider.service.translateText(text, options);
+        // Aplicar timeout no nível do manager
+        const timeoutPromise = new Promise<TranslationResult>((_, reject) => {
+          setTimeout(() => reject(new Error(`Timeout após ${this.TIMEOUT}ms`)), this.TIMEOUT);
+        });
+
+        const translationPromise = provider.service.translateText(text, options);
+        
+        const result = await Promise.race([translationPromise, timeoutPromise]);
 
         if (result.success && result.translatedText && result.translatedText !== text) {
           console.log(`✅ [TranslationManager] Tradução bem-sucedida com ${provider.name}`);
@@ -85,8 +94,11 @@ class TranslationManager {
           lastError = result.error || 'Tradução falhou';
         }
       } catch (error: unknown) {
-        console.error(`❌ [TranslationManager] Erro com ${provider.name}:`, error);
-        lastError = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        console.error(`❌ [TranslationManager] Erro com ${provider.name}:`, errorMessage);
+        lastError = errorMessage;
+        // Continuar para próximo provedor
+        continue;
       }
     }
 

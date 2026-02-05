@@ -52,19 +52,21 @@ const SobreMS = () => {
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative ms-container text-center">
             <div className="flex justify-center mb-6">
-              <div className="bg-white rounded-2xl p-4 shadow-2xl">
-                <img 
-                  src={logoUrl} 
-                  alt="Descubra Mato Grosso do Sul" 
-                  className="h-36 w-auto"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    if (!target.src.includes('logo-descubra-ms.png')) {
-                      target.src = "/images/logo-descubra-ms.png?v=3";
-                    }
-                  }}
-                />
-              </div>
+              <img 
+                src={logoUrl} 
+                alt="Descubra Mato Grosso do Sul" 
+                className="h-36 w-auto"
+                style={{
+                  filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.9)) drop-shadow(0 0 40px rgba(255,255,255,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))',
+                  WebkitFilter: 'drop-shadow(0 0 20px rgba(255,255,255,0.9)) drop-shadow(0 0 40px rgba(255,255,255,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))'
+                }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.src.includes('logo-descubra-ms.png')) {
+                    target.src = "/images/logo-descubra-ms.png?v=3";
+                  }
+                }}
+              />
             </div>
             <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
               {getContent('ms_about_title', 'Sobre o Descubra MS')}

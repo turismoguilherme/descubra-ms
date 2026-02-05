@@ -268,9 +268,9 @@ const UniversalHero = () => {
         position: 'relative',
         zIndex: 1,
         width: '100%',
-        minHeight: '100vh',
-        height: '100vh',
-        maxHeight: '100vh',
+        minHeight: isMobile ? '100dvh' : '100vh',
+        height: isMobile ? '100dvh' : '100vh',
+        maxHeight: isMobile ? '100dvh' : '100vh',
         backgroundColor: '#000000'
       }}
     >
@@ -338,10 +338,10 @@ const UniversalHero = () => {
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
-                  width: isMobile ? '100vw' : '100vw',
-                  height: isMobile ? '100vh' : '56.25vw', // Mobile: altura completa, Desktop: 16:9
-                  minHeight: '100vh',
-                  minWidth: isMobile ? '100vw' : '177.77vh', // Mobile: largura completa
+                  width: isMobile ? '120vw' : '100vw', // Mobile: aumentar largura para cobrir bordas
+                  height: isMobile ? '120dvh' : '56.25vw', // Mobile: aumentar altura e usar dvh, Desktop: 16:9
+                  minHeight: isMobile ? '100dvh' : '100vh',
+                  minWidth: isMobile ? '120vw' : '177.77vh', // Mobile: garantir largura suficiente
                   transform: 'translate(-50%, -50%)',
                   zIndex: 0,
                   overflow: 'hidden' // Esconder qualquer overflow no mobile
