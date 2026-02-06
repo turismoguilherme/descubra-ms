@@ -100,6 +100,8 @@ const sidebarItems: SidebarItem[] = [
       { label: 'Chat', path: '/viajar/admin/ai/chat', icon: Bot },
       { label: 'Sugestões', path: '/viajar/admin/ai/suggestions', icon: Lightbulb },
       { label: 'Ações Pendentes', path: '/viajar/admin/ai/actions', icon: ListChecks },
+      { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base', icon: FileText },
+      { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts', icon: Bot },
     ],
   },
 ];

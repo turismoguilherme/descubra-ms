@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { kodaResponseCacheService } from "./cache/kodaResponseCacheService";
 import { guataRealWebSearchService, RealWebSearchQuery } from "./guataRealWebSearchService";
 import { languageDetectionService, SupportedLanguage } from "./languageDetectionService";
+import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
 
 export interface KodaGeminiQuery {
   question: string;
@@ -218,7 +219,7 @@ class KodaGeminiService {
       console.log(`   - Conversation history: ${(query.conversationHistory || []).length} mensagens`);
     }
     
-    const prompt = this.buildPrompt(question, webSearchResults, query.conversationHistory || [], targetLanguage, detectedLanguage);
+    const prompt = await this.buildPrompt(question, webSearchResults, query.conversationHistory || [], targetLanguage, detectedLanguage);
     
     if (isDev) {
       console.log(`📝 [Koda] Prompt construído (${prompt.length} caracteres)`);
@@ -344,9 +345,93 @@ class KodaGeminiService {
   }
 
   /**
+   * Busca prompts do banco ou usa fallback do código
+   */
+  private async getPromptFromDatabase(): Promise<{
+    system?: string;
+    personality?: string;
+    instructions?: string;
+    rules?: string;
+    disclaimer?: string;
+  } | null> {
+    try {
+      const prompts = await aiPromptAdminService.getPrompts('koda');
+      if (prompts.length === 0) return null;
+
+      const activePrompts: Record<string, string> = {};
+      prompts.forEach(p => {
+        if (p.is_active) {
+          activePrompts[p.prompt_type] = p.content;
+        }
+      });
+
+      return activePrompts as any;
+    } catch (error) {
+      // Se houver erro, retornar null para usar fallback do código
+      if (import.meta.env.DEV) {
+        console.warn('[Koda] Erro ao buscar prompts do banco, usando código:', error);
+      }
+      return null;
+    }
+  }
+
+  /**
    * Constrói prompt para Gemini
    */
-  private buildPrompt(
+  private async buildPrompt(
+    question: string,
+    webSearchResults: any[],
+    conversationHistory: string[],
+    targetLanguage: string,
+    detectedLanguage: string
+  ): Promise<string> {
+    // Tentar buscar prompts do banco primeiro
+    const dbPrompts = await this.getPromptFromDatabase();
+    
+    // Se não houver prompts no banco, usar código (fallback)
+    if (!dbPrompts) {
+      return this.buildPromptFromCode(question, webSearchResults, conversationHistory, targetLanguage, detectedLanguage);
+    }
+
+    // Construir prompt usando prompts do banco
+    const languageNames: Record<string, string> = {
+      'en': 'English',
+      'fr': 'French (français)',
+      'pt': 'Portuguese (português)',
+      'es': 'Spanish (español)',
+      'hi': 'Hindi (हिंदी)'
+    };
+
+    const responseLanguage = languageNames[targetLanguage] || 'English';
+
+    let prompt = dbPrompts.system || `You are Koda, a friendly moose and Canadian travel guide specialist. 🦌🍁`;
+    
+    if (dbPrompts.personality) {
+      prompt += `\n\n${dbPrompts.personality}`;
+    }
+    
+    if (dbPrompts.instructions) {
+      prompt += `\n\n${dbPrompts.instructions}`;
+    }
+    
+    if (dbPrompts.rules) {
+      prompt += `\n\n${dbPrompts.rules}`;
+    }
+    
+    if (dbPrompts.disclaimer) {
+      prompt += `\n\n${dbPrompts.disclaimer}`;
+    }
+
+    // Adicionar contexto dinâmico (histórico, busca web, etc.)
+    prompt = this.addDynamicContext(prompt, question, webSearchResults, conversationHistory, targetLanguage, detectedLanguage);
+
+    return prompt;
+  }
+
+  /**
+   * Método original de construção de prompt (fallback quando banco está vazio)
+   */
+  private buildPromptFromCode(
     question: string,
     webSearchResults: any[],
     conversationHistory: string[],
@@ -411,6 +496,70 @@ SAFETY AND ETHICS:
 - If asked about something inappropriate or illegal, respond: "I'm Koda, your friendly Canadian travel guide! 🦌 I'm here to help you explore the wonders of Canada. How can I help you discover amazing destinations, activities, or experiences in the Great White North?"
 - Always maintain a positive, helpful, and respectful tone
 - Focus ONLY on Canadian tourism, travel, culture, and related topics`;
+
+    // Adicionar histórico de conversa
+    if (conversationHistory.length > 0) {
+      prompt += `\n\n💬 CONVERSATION HISTORY (use this context for ambiguous questions):\n`;
+      const recentHistory = conversationHistory.slice(-6);
+      recentHistory.forEach((message, index) => {
+        prompt += `\n${index + 1}. ${message}`;
+      });
+      prompt += `\n\n⚠️ IMPORTANT: If the current question is ambiguous (e.g., "where is it?", "how much?", "which one?"), use the conversation history above to understand what the user is referring to.`;
+    }
+
+    // Adicionar resultados da busca web
+    if (webSearchResults.length > 0) {
+      prompt += `\n\n🌐 WEB SEARCH RESULTS ABOUT CANADA (USE ONLY THIS REAL INFORMATION - NEVER MENTION SOURCES OR URLS):\n`;
+      webSearchResults.forEach((result, index) => {
+        const snippet = result.snippet || result.description || '';
+        prompt += `\n${index + 1}. ${result.title}\n   ${snippet}\n`;
+      });
+      prompt += `\n\n⚠️ CRITICAL INSTRUCTIONS ABOUT WEB SEARCH RESULTS:
+- ALL results above are about CANADA ONLY (they have been filtered)
+- You MUST use these results to provide SPECIFIC, DETAILED information
+- Extract and include: specific names, locations, dates, numbers, statistics, facts, details from the results
+- Be SPECIFIC: mention exact places, numbers, names, dates when available in the results
+- NEVER say "I don't have specific details" - USE the information from the results above
+- NEVER mention that you "found" or "searched" - respond directly as if you already knew
+- NEVER mention URLs, sources, or "the website X says"
+- If a result mentions something NOT about Canada (e.g., Brazil, Mato Grosso do Sul), IGNORE that result completely
+- Your answer MUST be about Canada only and MUST include specific details from the results above`;
+    } else {
+      prompt += `\n\n⚠️ NOTE: No web search results available about Canada. Use your general knowledge about Canada, but be honest if you don't know something specific.`;
+    }
+
+    prompt += `\n\nUSER'S QUESTION: ${question}`;
+    prompt += `\n\n⚠️ FINAL INSTRUCTIONS:
+- Respond in ${responseLanguage} (${targetLanguage})
+- Be natural, conversational, and helpful
+- Use the web search results if available
+- NEVER invent information
+- NEVER mention sources, URLs, or that you "searched"
+- Be enthusiastic about Canada! 🍁`;
+
+    return prompt;
+  }
+
+  /**
+   * Adiciona contexto dinâmico ao prompt (histórico, busca web, etc.)
+   */
+  private addDynamicContext(
+    basePrompt: string,
+    question: string,
+    webSearchResults: any[],
+    conversationHistory: string[],
+    targetLanguage: string,
+    detectedLanguage: string
+  ): string {
+    let prompt = basePrompt;
+    const languageNames: Record<string, string> = {
+      'en': 'English',
+      'fr': 'French (français)',
+      'pt': 'Portuguese (português)',
+      'es': 'Spanish (español)',
+      'hi': 'Hindi (हिंदी)'
+    };
+    const responseLanguage = languageNames[targetLanguage] || 'English';
 
     // Adicionar histórico de conversa
     if (conversationHistory.length > 0) {

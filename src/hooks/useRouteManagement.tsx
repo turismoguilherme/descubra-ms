@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/useLanguage";
 import { 
   fetchTouristRoutes, 
   fetchRouteById,
@@ -10,11 +11,13 @@ import {
 } from "@/services/passport";
 import { supabase } from "@/integrations/supabase/client";
 import { TouristRoute, RouteCreateData } from "@/types/passport";
+import { routeTranslationService } from "@/services/translation/RouteTranslationService";
 
 export const useRouteManagement = (userRegion?: string) => {
   const [routes, setRoutes] = useState<TouristRoute[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   // Carregar rotas automaticamente ao montar o hook
   useEffect(() => {
@@ -78,8 +81,37 @@ export const useRouteManagement = (userRegion?: string) => {
       
       console.log('✅ [useRouteManagement] Rotas encontradas:', data?.length || 0);
       
+      // Buscar traduções se não for português
+      let translationsMap = new Map<string, { title: string | null; description: string | null }>();
+      if (language !== 'pt-BR' && data && data.length > 0) {
+        try {
+          const routeIds = data.map(r => r.id);
+          const translationPromises = routeIds.map(async (routeId) => {
+            const translation = await routeTranslationService.getTranslation(routeId, language);
+            return { routeId, translation };
+          });
+          
+          const translationResults = await Promise.all(translationPromises);
+          translationResults.forEach(({ routeId, translation }) => {
+            if (translation) {
+              translationsMap.set(routeId, {
+                title: translation.title,
+                description: translation.description,
+              });
+            }
+          });
+          
+          console.log(`✅ [useRouteManagement] ${translationsMap.size} traduções carregadas para idioma ${language}`);
+        } catch (translationError) {
+          console.warn('⚠️ [useRouteManagement] Erro ao buscar traduções:', translationError);
+          // Continuar com dados originais se tradução falhar
+        }
+      }
+      
       // Map routes data to TouristRoute format
       const formattedRoutes: TouristRoute[] = (data || []).map(route => {
+        // Obter tradução se disponível
+        const translation = translationsMap.get(route.id);
         // Converter difficulty de inglês para português
         let difficulty_level: "facil" | "medio" | "dificil" = "facil";
         if (route.difficulty === 'easy') difficulty_level = 'facil';
@@ -108,12 +140,12 @@ export const useRouteManagement = (userRegion?: string) => {
         
         return {
           id: route.id,
-          name: route.name || '',
-          description: route.description,
+          name: translation?.title || route.name || '',
+          description: translation?.description || route.description,
           region: route.region,
           difficulty_level,
           estimated_duration,
-          promotional_text: route.description,
+          promotional_text: translation?.description || route.description,
           video_url: route.video_url || '',
           is_active: route.is_active !== false
         };
@@ -148,7 +180,7 @@ export const useRouteManagement = (userRegion?: string) => {
       setLoading(false);
       console.log('🏁 [useRouteManagement] Carregamento finalizado');
     }
-  }, [userRegion, toast]);
+  }, [userRegion, toast, language]);
 
   const createRoute = async (routeData: RouteCreateData) => {
     try {

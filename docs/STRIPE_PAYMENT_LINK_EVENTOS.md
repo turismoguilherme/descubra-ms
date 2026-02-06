@@ -223,7 +223,28 @@ await supabase
 1. Verificar se `return_domain` foi salvo no evento (campo `return_domain` na tabela `events`)
 2. Verificar se a URL de sucesso no Stripe está configurada como: `https://descubrams.com/eventos/payment-return?session_id={CHECKOUT_SESSION_ID}`
 3. Verificar logs da página intermediária no console do navegador
-4. Verificar se a Edge Function `get-stripe-session` está funcionando corretamente
+4. **VERIFICAR SE `STRIPE_SECRET_KEY` ESTÁ CONFIGURADA** (veja seção abaixo)
+
+### **Problema: Erro 500 na Edge Function `get-stripe-session`**
+
+**Sintoma:** 
+- Página de retorno mostra "Erro ao processar pagamento"
+- Console mostra: "Edge Function returned a non-2xx status code"
+- Logs mostram: "STRIPE_SECRET_KEY não configurada"
+
+**Solução:**
+1. Acesse: https://supabase.com/dashboard
+2. Selecione seu projeto
+3. Vá em: **Project Settings → Edge Functions → Secrets**
+4. Adicione a variável:
+   - **Nome:** `STRIPE_SECRET_KEY`
+   - **Valor:** Sua chave secreta do Stripe (começa com `sk_test_` ou `sk_live_`)
+5. **Onde obter a chave:**
+   - Acesse: https://dashboard.stripe.com/test/apikeys (teste) ou https://dashboard.stripe.com/apikeys (produção)
+   - Copie a **"Secret key"** (não a Publishable key)
+6. Após adicionar, a Edge Function funcionará automaticamente
+
+**Nota:** O pagamento JÁ funciona via webhook mesmo sem essa configuração. Esta chave é necessária apenas para a página de retorno funcionar corretamente.
 
 ---
 
@@ -284,10 +305,36 @@ O sistema suporta automaticamente múltiplos domínios (descubrams.com e viajart
 
 ---
 
+## ⚙️ **CONFIGURAÇÃO NECESSÁRIA**
+
+### **Variáveis de Ambiente no Supabase**
+
+Para que a página de retorno funcione corretamente, você precisa configurar:
+
+1. **STRIPE_SECRET_KEY** (OBRIGATÓRIO para página de retorno)
+   - Acesse: Supabase Dashboard → Project Settings → Edge Functions → Secrets
+   - Adicione: `STRIPE_SECRET_KEY` = sua chave secreta do Stripe
+   - Onde obter: https://dashboard.stripe.com/test/apikeys
+
+**Importante:**
+- O **pagamento funciona** mesmo sem essa configuração (via webhook)
+- A chave é necessária apenas para a **página de retorno** funcionar
+- Sem a chave, o usuário verá erro na página de retorno, mas o pagamento será processado normalmente
+
+### **Outras Variáveis (Opcionais)**
+
+- `STRIPE_PUBLISHABLE_KEY` - Usado em alguns componentes (não crítico)
+- `STRIPE_WEBHOOK_SECRET` - Já deve estar configurado para o webhook funcionar
+
+Veja mais detalhes em: `docs/STRIPE_CONFIGURACAO.md`
+
+---
+
 ## 📚 **REFERÊNCIAS**
 
 - [Stripe Payment Links Documentation](https://stripe.com/docs/payment-links)
 - [Stripe Webhooks Guide](https://stripe.com/docs/webhooks)
+- [Configuração Completa do Stripe](docs/STRIPE_CONFIGURACAO.md)
 - Handler: `supabase/functions/stripe-webhook-handler/index.ts`
 - Componente Admin: `src/components/admin/EventPaymentConfig.tsx`
 - Edge Function: `supabase/functions/get-stripe-session/index.ts`

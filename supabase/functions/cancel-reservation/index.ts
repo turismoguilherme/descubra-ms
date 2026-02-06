@@ -136,53 +136,53 @@ serve(async (req) => {
       totalAmount: reservation.total_amount,
     });
 
-    // Processar reembolso no Stripe (se houver pagamento)
-    let stripeRefundId = null;
+    // NOVO: Criar registro de reembolso pendente em vez de processar automaticamente
+    // O admin processará manualmente através da interface
+    let pendingRefundId = null;
     const paymentIntentId = reservation.stripe_payment_intent_id || reservation.stripe_checkout_session_id;
     
     if (paymentIntentId && refundAmountInCents > 0) {
       try {
-        // Se for checkout_session_id, buscar o payment_intent da sessão
-        let actualPaymentIntentId = paymentIntentId;
+        // Buscar partner_id da reserva
+        const partnerId = reservation.partner_id || reservation.institutional_partners?.id;
         
-        if (reservation.stripe_checkout_session_id && !reservation.stripe_payment_intent_id) {
-          const session = await stripe.checkout.sessions.retrieve(
-            reservation.stripe_checkout_session_id
-          );
-          actualPaymentIntentId = session.payment_intent as string;
-        }
+        if (!partnerId) {
+          console.warn('⚠️ Partner ID não encontrado para criar reembolso pendente');
+        } else {
+          // Criar registro de reembolso pendente
+          const { data: pendingRefund, error: refundError } = await supabase
+            .from('pending_refunds')
+            .insert({
+              reservation_id: reservationId,
+              partner_id: partnerId,
+              refund_amount: refundAmount,
+              refund_percent: refundPercent,
+              total_amount: reservation.total_amount,
+              stripe_payment_intent_id: reservation.stripe_payment_intent_id || null,
+              stripe_checkout_session_id: reservation.stripe_checkout_session_id || null,
+              status: 'pending',
+              reason: reason || 'Cancelamento solicitado pelo cliente',
+              days_until_reservation: daysUntilReservation,
+              reservation_code: reservation.reservation_code,
+            })
+            .select('id')
+            .single();
 
-        if (actualPaymentIntentId) {
-          // Buscar PaymentIntent
-          const paymentIntent = await stripe.paymentIntents.retrieve(
-            actualPaymentIntentId
-          );
-
-          if (paymentIntent.status === 'succeeded') {
-            // Criar reembolso
-            const refund = await stripe.refunds.create({
-              payment_intent: actualPaymentIntentId,
-              amount: refundAmountInCents,
-              reason: 'requested_by_customer',
-              metadata: {
-                reservation_id: reservationId,
-                reservation_code: reservation.reservation_code,
-                refund_percent: refundPercent.toString(),
-                days_until_reservation: daysUntilReservation.toString(),
-              },
-            });
-
-            stripeRefundId = refund.id;
-            console.log('Reembolso criado no Stripe:', refund.id);
+          if (refundError) {
+            console.error('❌ Erro ao criar reembolso pendente:', refundError);
+          } else {
+            pendingRefundId = pendingRefund?.id;
+            console.log('✅ Reembolso pendente criado:', pendingRefundId);
           }
         }
-      } catch (stripeError: any) {
-        console.error('Erro ao processar reembolso no Stripe:', stripeError);
-        // Continuar mesmo se houver erro no Stripe (pode ser processado manualmente depois)
+      } catch (error: any) {
+        console.error('❌ Erro ao criar reembolso pendente:', error);
+        // Continuar mesmo se houver erro (reserva será cancelada, reembolso pode ser criado manualmente depois)
       }
     }
 
     // Atualizar status da reserva
+    // NOTA: Não processamos reembolso automaticamente - fica pendente para o admin processar
     const { error: updateError } = await supabase
       .from('partner_reservations')
       .update({
@@ -191,9 +191,11 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
         refund_amount: refundAmount,
         refund_percent: refundPercent,
-        stripe_refund_id: stripeRefundId,
-        refunded_at: stripeRefundId ? new Date().toISOString() : null,
-        partner_notes: reason ? `Cancelado pelo cliente. Motivo: ${reason}` : 'Cancelado pelo cliente',
+        stripe_refund_id: null, // Será preenchido quando admin processar o reembolso
+        refunded_at: null, // Será preenchido quando admin processar o reembolso
+        partner_notes: reason 
+          ? `Cancelado pelo cliente. Motivo: ${reason}. Reembolso pendente (ID: ${pendingRefundId || 'N/A'})` 
+          : `Cancelado pelo cliente. Reembolso pendente (ID: ${pendingRefundId || 'N/A'})`,
       })
       .eq('id', reservationId);
 

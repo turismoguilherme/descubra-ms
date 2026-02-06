@@ -21,6 +21,19 @@ serve(async (req) => {
   }
 
   try {
+    // Verificar se STRIPE_SECRET_KEY está configurada
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey || stripeKey.trim() === '') {
+      console.error('STRIPE_SECRET_KEY não configurada');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'STRIPE_SECRET_KEY não configurada. Configure no Supabase Dashboard → Edge Functions → Secrets. Veja: docs/STRIPE_CONFIGURACAO.md'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
     const { session_id } = await req.json();
 
     if (!session_id) {
@@ -31,8 +44,14 @@ serve(async (req) => {
     }
 
     // Buscar sessão do Stripe
+    console.log('Buscando sessão do Stripe:', { session_id: session_id.substring(0, 20) + '...' });
     const session = await stripe.checkout.sessions.retrieve(session_id, {
       expand: ['customer', 'payment_intent'],
+    });
+    console.log('Sessão encontrada:', { 
+      id: session.id, 
+      client_reference_id: session.client_reference_id,
+      payment_status: session.payment_status 
     });
 
     // Retornar informações relevantes
@@ -53,10 +72,38 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Erro ao buscar sessão do Stripe:', error);
+    console.error('Error type:', error.constructor?.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Verificar se é erro de autenticação do Stripe
+    if (error.type === 'StripeAuthenticationError' || error.message?.includes('Invalid API Key')) {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'STRIPE_SECRET_KEY inválida. Verifique se a chave está correta no Supabase Dashboard → Edge Functions → Secrets'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    // Verificar se é erro de sessão não encontrada
+    if (error.type === 'StripeInvalidRequestError' && error.code === 'resource_missing') {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Sessão não encontrada no Stripe. Verifique se o session_id está correto.'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message || 'Erro ao buscar sessão do Stripe' 
+        error: error.message || 'Erro ao buscar sessão do Stripe',
+        errorType: error.type || 'Unknown',
+        errorCode: error.code || 'Unknown'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );

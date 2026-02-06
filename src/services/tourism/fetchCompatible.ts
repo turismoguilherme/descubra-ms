@@ -12,7 +12,12 @@ export const fetchCompatible = async (url: string, options?: RequestInit): Promi
   try {
     // Use native fetch API
     return await fetch(url, options);
-  } catch (error) {
+  } catch (error: any) {
+    // Suprimir erros CORS em desenvolvimento - são esperados quando APIs externas não permitem localhost
+    if (error?.message?.includes('CORS') || error?.message?.includes('Failed to fetch')) {
+      // Não logar erros CORS esperados
+      throw error;
+    }
     console.error("Error in fetchCompatible:", error);
     throw error;
   }
@@ -49,11 +54,8 @@ export const checkApiAvailability = async (endpoint?: string): Promise<boolean> 
     `${apiUrl}/health`,
   ];
   
-  console.log(`Verificando disponibilidade do endpoint: ${apiUrl}`);
-  
   for (const endpoint of endpointsToTry) {
     try {
-      console.log(`Verificando disponibilidade do endpoint: ${endpoint}`);
       const response = await fetchWithTimeout(
         fetchCompatible(endpoint, { 
           method: 'GET',
@@ -63,14 +65,17 @@ export const checkApiAvailability = async (endpoint?: string): Promise<boolean> 
       );
       
       if (response.ok) {
-        console.log(`Endpoint disponível: ${endpoint}`);
         return true;
       }
-    } catch (error) {
-      console.warn(`Erro ao verificar endpoint ${endpoint}:`, error);
+    } catch (error: any) {
+      // Suprimir erros CORS esperados em desenvolvimento
+      if (error?.message?.includes('CORS') || error?.message?.includes('Failed to fetch')) {
+        // CORS errors são esperados quando APIs externas não permitem localhost
+        continue;
+      }
+      // Outros erros podem ser logados se necessário, mas não vamos poluir o console
     }
   }
   
-  console.warn("Nenhum endpoint da API está acessível");
   return false;
 };

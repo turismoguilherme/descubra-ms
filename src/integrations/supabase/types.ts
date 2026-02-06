@@ -6622,6 +6622,99 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_prompt_configs: {
+        Row: {
+          id: string
+          chatbot_name: string
+          prompt_type: string
+          content: string
+          variables: Json
+          is_active: boolean
+          version: number
+          description: string | null
+          notes: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          chatbot_name: string
+          prompt_type: string
+          content: string
+          variables?: Json
+          is_active?: boolean
+          version?: number
+          description?: string | null
+          notes?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          chatbot_name?: string
+          prompt_type?: string
+          content?: string
+          variables?: Json
+          is_active?: boolean
+          version?: number
+          description?: string | null
+          notes?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      knowledge_base_uploads: {
+        Row: {
+          id: string
+          filename: string
+          file_type: string
+          file_size: number
+          status: string
+          items_created: number | null
+          items_failed: number | null
+          error_message: string | null
+          chatbot_target: string | null
+          uploaded_by: string | null
+          uploaded_at: string
+          processed_at: string | null
+        }
+        Insert: {
+          id?: string
+          filename: string
+          file_type: string
+          file_size: number
+          status?: string
+          items_created?: number | null
+          items_failed?: number | null
+          error_message?: string | null
+          chatbot_target?: string | null
+          uploaded_by?: string | null
+          uploaded_at?: string
+          processed_at?: string | null
+        }
+        Update: {
+          id?: string
+          filename?: string
+          file_type?: string
+          file_size?: number
+          status?: string
+          items_created?: number | null
+          items_failed?: number | null
+          error_message?: string | null
+          chatbot_target?: string | null
+          uploaded_by?: string | null
+          uploaded_at?: string
+          processed_at?: string | null
+        }
+        Relationships: []
+      }
       workflow_definitions: {
         Row: {
           created_at: string | null

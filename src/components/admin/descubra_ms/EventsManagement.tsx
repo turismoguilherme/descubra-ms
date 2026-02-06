@@ -1001,6 +1001,30 @@ export default function EventsManagement() {
         }
       }
 
+      // Traduzir automaticamente após salvar (se evento estiver aprovado ou for aprovado agora)
+      try {
+        const { data: updatedEvent } = await supabase
+          .from('events')
+          .select('id, name, description, location, category, approval_status')
+          .eq('id', editingEvent.id)
+          .single();
+
+        if (updatedEvent && (updatedEvent.approval_status === 'approved' || updateData.approval_status === 'approved')) {
+          const { autoTranslateEvent } = await import('@/utils/autoTranslation');
+          // Traduzir em background (não bloquear UI)
+          autoTranslateEvent({
+            id: updatedEvent.id,
+            name: updatedEvent.name || editingEvent.name || '',
+            description: updatedEvent.description || editingEvent.description || null,
+            location: updatedEvent.location || editingEvent.location || null,
+            category: updatedEvent.category || editingEvent.category || null,
+          });
+        }
+      } catch (translationError) {
+        console.error('Erro ao traduzir evento (não crítico):', translationError);
+        // Não bloquear o fluxo principal se a tradução falhar
+      }
+
       toast({
         title: 'Evento atualizado!',
         description: 'As alterações foram salvas com sucesso.',

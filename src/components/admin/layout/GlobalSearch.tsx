@@ -44,6 +44,10 @@ const searchItems: SearchItem[] = [
   { label: 'Auditoria', path: '/viajar/admin/system/logs', category: 'Sistema' },
   
   // IA
+  { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base', category: 'IA' },
+  { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts', category: 'IA' },
+  
+  // IA
   { label: 'Chat IA', path: '/viajar/admin/ai/chat', category: 'IA Administradora' },
   { label: 'Sugestões IA', path: '/viajar/admin/ai/suggestions', category: 'IA Administradora' },
   { label: 'Ações Pendentes IA', path: '/viajar/admin/ai/actions', category: 'IA Administradora' },

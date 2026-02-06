@@ -47,14 +47,31 @@ export default function SystemMonitoring() {
     const startTime = Date.now();
     try {
       if (name === 'Supabase') {
-        const { error } = await supabase.from('_prisma_migrations').select('id').limit(1);
+        // Usar uma tabela que realmente existe no Supabase
+        const { error } = await supabase.from('user_profiles').select('id').limit(1);
         if (error) throw error;
         return { status: 'online', latency: Date.now() - startTime };
       }
       if (name === 'API Backend') {
-        const isAvailable = await checkApiAvailability();
-        const latency = Date.now() - startTime;
-        return { status: isAvailable ? 'online' : 'offline', latency };
+        // Em desenvolvimento local, não verificar API externa para evitar erros CORS no console
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isDevelopment) {
+          // Em desenvolvimento, retornar como offline sem fazer requisição
+          return { status: 'offline', latency: 0 };
+        }
+        
+        // Em produção, verificar normalmente
+        try {
+          const isAvailable = await checkApiAvailability();
+          const latency = Date.now() - startTime;
+          return { status: isAvailable ? 'online' : 'offline', latency };
+        } catch (error: any) {
+          // CORS errors são esperados quando APIs externas não permitem localhost
+          if (error?.message?.includes('CORS') || error?.message?.includes('Failed to fetch')) {
+            return { status: 'offline', latency: Date.now() - startTime };
+          }
+          throw error;
+        }
       }
       if (name === 'CDN') {
         // Verificar CDN através do Supabase Storage

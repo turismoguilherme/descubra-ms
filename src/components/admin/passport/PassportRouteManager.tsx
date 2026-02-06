@@ -244,6 +244,29 @@ const PassportRouteManager: React.FC = () => {
         ...formData,
         map_image_url: mapImageUrl,
       });
+
+      // Traduzir automaticamente após salvar
+      try {
+        const { data: updatedRoute } = await supabase
+          .from('routes')
+          .select('id, name, description')
+          .eq('id', editingRoute.id)
+          .single();
+
+        if (updatedRoute) {
+          const { autoTranslateRoute } = await import('@/utils/autoTranslation');
+          // Traduzir em background (não bloquear UI)
+          autoTranslateRoute({
+            id: updatedRoute.id,
+            title: updatedRoute.name || formData.name || '',
+            description: updatedRoute.description || formData.description || null,
+          });
+        }
+      } catch (translationError) {
+        console.error('Erro ao traduzir rota (não crítico):', translationError);
+        // Não bloquear o fluxo principal se a tradução falhar
+      }
+
       toast({
         title: 'Rota atualizada',
         description: 'As configurações do passaporte foram salvas.',
@@ -358,6 +381,22 @@ const PassportRouteManager: React.FC = () => {
       }
 
       console.log('✅ [PassportRouteManager] Rota criada com sucesso:', data);
+      
+      // Traduzir automaticamente após criar
+      if (data && data.length > 0) {
+        try {
+          const { autoTranslateRoute } = await import('@/utils/autoTranslation');
+          // Traduzir em background (não bloquear UI)
+          autoTranslateRoute({
+            id: data[0].id,
+            title: data[0].name || newRouteForm.name,
+            description: data[0].description || newRouteForm.description || null,
+          });
+        } catch (translationError) {
+          console.error('Erro ao traduzir rota (não crítico):', translationError);
+          // Não bloquear o fluxo principal se a tradução falhar
+        }
+      }
       
       toast({
         title: 'Rota criada',

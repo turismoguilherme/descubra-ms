@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { touristRegions2025, TouristRegion2025 } from '@/data/touristRegions2025';
+import { useLanguage } from './useLanguage';
+import { regionTranslationService } from '@/services/translation/RegionTranslationService';
+import type { LanguageCode } from '@/utils/translationHelpers';
 
 export interface TouristRegion {
   id: string;
@@ -32,7 +35,9 @@ const convertDbRegionToComponent = (dbRegion: Record<string, unknown>): TouristR
   };
 };
 
-export function useTouristRegions() {
+export function useTouristRegions(language?: LanguageCode) {
+  const { language: currentLanguage } = useLanguage();
+  const targetLanguage = language || currentLanguage;
   const [regions, setRegions] = useState<TouristRegion2025[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -57,9 +62,39 @@ export function useTouristRegions() {
 
       if (dbRegions && dbRegions.length > 0) {
         // Converter regiões do banco para formato do componente
-        const convertedRegions = dbRegions.map(convertDbRegionToComponent);
+        let convertedRegions = dbRegions.map(convertDbRegionToComponent);
+
+        // Se não for português, buscar traduções
+        if (targetLanguage !== 'pt-BR') {
+          try {
+            const regionIds = dbRegions.map(r => r.id);
+            const translations = await regionTranslationService.getTranslations(regionIds, targetLanguage);
+
+            // Mesclar traduções com dados originais
+            convertedRegions = convertedRegions.map(region => {
+              // Encontrar região original no banco para obter o ID correto
+              const dbRegion = dbRegions.find(r => r.slug === region.id);
+              if (!dbRegion) return region;
+
+              const translation = translations.get(dbRegion.id);
+              if (translation) {
+                return {
+                  ...region,
+                  name: translation.name || region.name,
+                  description: translation.description || region.description,
+                  highlights: translation.highlights || region.highlights,
+                };
+              }
+              return region;
+            });
+          } catch (translationError) {
+            console.warn('Erro ao buscar traduções de regiões:', translationError);
+            // Continuar com dados originais se tradução falhar
+          }
+        }
+
         setRegions(convertedRegions);
-        console.log(`✅ [useTouristRegions] ${convertedRegions.length} regiões carregadas do banco`);
+        console.log(`✅ [useTouristRegions] ${convertedRegions.length} regiões carregadas do banco (idioma: ${targetLanguage})`);
         return;
       }
 
@@ -74,7 +109,7 @@ export function useTouristRegions() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [targetLanguage]);
 
   useEffect(() => {
     loadRegions();

@@ -236,9 +236,11 @@ export default function TouristRegionsManager() {
         });
       } else {
         // Criar
-        const { error } = await supabase
+        const { data: newRegion, error } = await supabase
           .from('tourist_regions')
-          .insert(payload);
+          .insert(payload)
+          .select()
+          .single();
 
         if (error) throw error;
 
@@ -246,6 +248,54 @@ export default function TouristRegionsManager() {
           title: 'Sucesso',
           description: 'Região criada com sucesso!',
         });
+
+        // Traduzir automaticamente após criar
+        if (newRegion) {
+          try {
+            const regionForTranslation = {
+              id: newRegion.id,
+              name: newRegion.name,
+              description: newRegion.description || null,
+              highlights: newRegion.highlights || null,
+            };
+
+            // Traduzir em background (não bloquear UI)
+            import('@/utils/autoTranslation').then(({ autoTranslateRegion }) => {
+              autoTranslateRegion(regionForTranslation);
+            });
+          } catch (translationError) {
+            console.error('Erro ao traduzir região (não crítico):', translationError);
+            // Não bloquear o fluxo principal se a tradução falhar
+          }
+        }
+      }
+
+      // Traduzir automaticamente após atualizar
+      if (editingRegion) {
+        try {
+          const { data: fullRegion } = await supabase
+            .from('tourist_regions')
+            .select('id, name, description, highlights')
+            .eq('id', editingRegion.id)
+            .single();
+
+          if (fullRegion) {
+            const regionForTranslation = {
+              id: fullRegion.id,
+              name: fullRegion.name,
+              description: fullRegion.description || null,
+              highlights: fullRegion.highlights || null,
+            };
+
+            // Traduzir em background (não bloquear UI)
+            import('@/utils/autoTranslation').then(({ autoTranslateRegion }) => {
+              autoTranslateRegion(regionForTranslation);
+            });
+          }
+        } catch (translationError) {
+          console.error('Erro ao traduzir região (não crítico):', translationError);
+          // Não bloquear o fluxo principal se a tradução falhar
+        }
       }
 
       // Disparar evento para atualizar componentes que usam o hook

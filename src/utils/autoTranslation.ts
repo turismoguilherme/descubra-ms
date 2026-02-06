@@ -6,6 +6,7 @@
 import { destinationTranslationService, type DestinationData } from '@/services/translation/DestinationTranslationService';
 import { eventTranslationService, type EventData } from '@/services/translation/EventTranslationService';
 import { routeTranslationService, type RouteData } from '@/services/translation/RouteTranslationService';
+import { regionTranslationService, type RegionData } from '@/services/translation/RegionTranslationService';
 import type { LanguageCode } from '@/utils/translationHelpers';
 
 // Idiomas principais para tradução automática
@@ -74,6 +75,28 @@ export async function autoTranslateRoute(route: RouteData): Promise<void> {
     console.log(`✅ [AutoTranslate] Roteiro traduzido com sucesso`);
   } catch (error) {
     console.error('❌ [AutoTranslate] Erro ao traduzir roteiro:', error);
+    // Não lançar erro - tradução é opcional
+  }
+}
+
+/**
+ * Traduz automaticamente uma região para os idiomas principais
+ */
+export async function autoTranslateRegion(region: RegionData): Promise<void> {
+  try {
+    console.log(`🌐 [AutoTranslate] Traduzindo região: ${region.name}`);
+    
+    const translationPromises = MAIN_LANGUAGES.map(lang =>
+      regionTranslationService.getOrCreateTranslation(region, lang).catch(error => {
+        console.error(`❌ [AutoTranslate] Erro ao traduzir região para ${lang}:`, error);
+        return null;
+      })
+    );
+
+    await Promise.all(translationPromises);
+    console.log(`✅ [AutoTranslate] Região traduzida com sucesso`);
+  } catch (error) {
+    console.error('❌ [AutoTranslate] Erro ao traduzir região:', error);
     // Não lançar erro - tradução é opcional
   }
 }

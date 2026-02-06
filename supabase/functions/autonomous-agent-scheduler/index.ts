@@ -618,6 +618,7 @@ Seja rigoroso mas justo. Conteúdo de turismo deve ser profissional e adequado p
 }
 
 // Função para moderar evento
+// NOVA LÓGICA: Aceita por padrão, rejeita apenas se detectar problemas graves
 async function moderateEvent(event: any): Promise<{
   approved: boolean;
   score: number;
@@ -631,15 +632,20 @@ async function moderateEvent(event: any): Promise<{
 
   const fullContent = contentParts.join(' ');
 
-  // Verificações básicas
+  // Verificações básicas - problemas graves que causam rejeição
   const hasProfanity = checkProfanity(fullContent);
   const hasProhibitedTopic = checkProhibitedTopics(fullContent);
   const hasSpam = checkSpam(fullContent);
 
-  // Análise com IA
+  // Análise com IA para detectar conteúdo falso ou claramente inadequado
   const aiAnalysis = await analyzeContentWithAI(fullContent);
 
-  // Calcular pontuação (0-100)
+  // NOVA LÓGICA: Aceitar por padrão, rejeitar apenas se tiver problemas graves
+  // Rejeitar se: palavrões OU apologia OU spam OU conteúdo falso/inadequado detectado pela IA
+  const approved = !hasProfanity && !hasProhibitedTopic && !hasSpam && aiAnalysis.isAppropriate;
+  const needsHumanReview = false; // Não precisa mais de revisão humana intermediária
+
+  // Calcular score apenas para registro (não usado na decisão)
   let score = 100;
   if (hasProfanity) score -= 40;
   if (hasProhibitedTopic) score -= 50;
@@ -647,14 +653,7 @@ async function moderateEvent(event: any): Promise<{
   if (!aiAnalysis.isAppropriate) {
     score -= (1 - aiAnalysis.confidence) * 30;
   }
-  if (aiAnalysis.isAppropriate && aiAnalysis.confidence > 0.8) {
-    score += 10;
-  }
-
   score = Math.max(0, Math.min(100, score));
-
-  const approved = score >= 90;
-  const needsHumanReview = score >= 70 && score < 90;
 
   let reason: string | undefined;
   if (!approved) {
@@ -662,7 +661,7 @@ async function moderateEvent(event: any): Promise<{
     if (hasProfanity) reasons.push('contém palavrões');
     if (hasProhibitedTopic) reasons.push('faz apologia a temas proibidos');
     if (hasSpam) reasons.push('identificado como spam');
-    if (!aiAnalysis.isAppropriate) reasons.push(aiAnalysis.reason || 'conteúdo inadequado');
+    if (!aiAnalysis.isAppropriate) reasons.push(aiAnalysis.reason || 'conteúdo inadequado ou falso detectado pela IA');
     reason = reasons.join(', ');
   }
 
@@ -687,26 +686,28 @@ async function executeAutoApproveEvents(supabase: any) {
     const rejectedEvents: any[] = [];
     const needsReviewEvents: any[] = [];
     const today = new Date();
+    // REMOVIDO: Exigência de 7 dias no futuro - agora aceita eventos a partir de hoje
     const minDate = new Date(today);
-    minDate.setDate(minDate.getDate() + 7); // Mínimo 7 dias no futuro
+    minDate.setHours(0, 0, 0, 0); // Aceitar eventos a partir de hoje (00:00)
 
     for (const event of pendingEvents || []) {
       const startDate = event.start_date ? new Date(event.start_date) : null;
       const isFree = event.is_free === true || event.price === 0 || event.price === null;
+      // Aceitar eventos a partir de hoje (sem exigir 7 dias)
       const hasValidDate = startDate && startDate >= minDate;
       const hasRequiredFields = event.name || event.title;
 
-      // Verificações básicas primeiro
+      // Verificações básicas: apenas campos obrigatórios e data válida (a partir de hoje)
       if (!hasValidDate || !hasRequiredFields) {
         rejectedEvents.push({
           event,
-          reason: !hasValidDate ? 'Data muito próxima ou inválida' :
-                 !hasRequiredFields ? 'Campos obrigatórios faltando' : 'Outro motivo',
+          reason: !hasValidDate ? 'Data inválida ou no passado' :
+                 !hasRequiredFields ? 'Campos obrigatórios faltando (nome/título)' : 'Outro motivo',
         });
         continue;
       }
 
-      // Moderação de conteúdo
+      // Moderação de conteúdo - NOVA LÓGICA: aceita por padrão, rejeita apenas problemas graves
       const moderation = await moderateEvent(event);
 
       if (moderation.approved) {
@@ -725,7 +726,7 @@ async function executeAutoApproveEvents(supabase: any) {
           
           await supabase.from('ai_auto_approvals').insert({
             event_id: event.id,
-            approval_reason: `Aprovado automaticamente - Score: ${moderation.score}/100`,
+            approval_reason: `Aprovado automaticamente - Sem problemas detectados (palavrões, apologia, spam ou conteúdo falso)`,
             rules_applied: {
               isFree: isFree,
               hasValidDate: true,
@@ -735,36 +736,16 @@ async function executeAutoApproveEvents(supabase: any) {
                 hasProfanity: false,
                 hasProhibitedTopic: false,
                 hasSpam: false,
+                aiAppropriate: true,
               },
             },
             event_data: event,
           });
 
-          console.log(`✅ [AutoApproveEvents] Evento aprovado: ${event.name || event.title} (Score: ${moderation.score})`);
+          console.log(`✅ [AutoApproveEvents] Evento aprovado automaticamente: ${event.name || event.title}`);
         }
-      } else if (moderation.needsHumanReview) {
-        // Encaminhar para revisão humana
-        needsReviewEvents.push({
-          event,
-          reason: moderation.reason,
-          score: moderation.score,
-        });
-
-        await supabase.from('ai_auto_approvals').insert({
-          event_id: event.id,
-          approval_reason: `Necessita revisão humana - Score: ${moderation.score}/100 - ${moderation.reason}`,
-          rules_applied: {
-            isFree: true,
-            hasValidDate: true,
-            hasRequiredFields: true,
-            moderationScore: moderation.score,
-            needsHumanReview: true,
-          },
-          event_data: event,
-        });
-
-        console.log(`⚠️ [AutoApproveEvents] Evento precisa de revisão: ${event.name || event.title} (Score: ${moderation.score})`);
       } else {
+        // Rejeitar apenas se detectar problemas graves (palavrões, apologia, spam ou conteúdo falso)
         // Rejeitar automaticamente
         rejectedEvents.push({
           event,
@@ -776,39 +757,40 @@ async function executeAutoApproveEvents(supabase: any) {
           .from('events')
           .update({
             approval_status: 'rejected',
-            rejection_reason: moderation.reason || 'Conteúdo não atende aos critérios de aprovação automática',
+            rejection_reason: moderation.reason || 'Conteúdo contém palavrões, apologia, spam ou foi identificado como falso/inadequado',
           })
           .eq('id', event.id);
 
         if (!updateError) {
           await supabase.from('ai_auto_approvals').insert({
             event_id: event.id,
-            approval_reason: `Rejeitado automaticamente - Score: ${moderation.score}/100 - ${moderation.reason}`,
+            approval_reason: `Rejeitado automaticamente - ${moderation.reason}`,
             rules_applied: {
-              isFree: true,
+              isFree: isFree,
               hasValidDate: true,
               hasRequiredFields: true,
               moderationScore: moderation.score,
               rejected: true,
+              rejectionReason: moderation.reason,
             },
             event_data: event,
           });
 
-          console.log(`❌ [AutoApproveEvents] Evento rejeitado: ${event.name || event.title} (Score: ${moderation.score}) - ${moderation.reason}`);
+          console.log(`❌ [AutoApproveEvents] Evento rejeitado: ${event.name || event.title} - Motivo: ${moderation.reason}`);
         }
       }
     }
 
-    console.log(`📊 [AutoApproveEvents] Resumo: ${approvedEvents.length} aprovados, ${rejectedEvents.length} rejeitados, ${needsReviewEvents.length} precisam revisão`);
+    console.log(`📊 [AutoApproveEvents] Resumo: ${approvedEvents.length} aprovados automaticamente, ${rejectedEvents.length} rejeitados (problemas graves detectados)`);
 
     return {
       success: true,
-      message: `${approvedEvents.length} evento(s) aprovado(s), ${rejectedEvents.length} rejeitado(s), ${needsReviewEvents.length} precisam revisão`,
+      message: `${approvedEvents.length} evento(s) aprovado(s) automaticamente, ${rejectedEvents.length} rejeitado(s) (palavrões, apologia, spam ou conteúdo falso)`,
       data: {
         totalChecked: pendingEvents?.length || 0,
         approved: approvedEvents.length,
         rejected: rejectedEvents.length,
-        needsReview: needsReviewEvents.length,
+        needsReview: 0, // Não há mais revisão intermediária
         timestamp: new Date().toISOString(),
       },
     };

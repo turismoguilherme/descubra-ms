@@ -5,13 +5,16 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { useBrand } from "@/context/BrandContext";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Destinos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isMS } = useBrand();
   const { t } = useTranslation('pages');
-  const { regions: touristRegions = [], error: regionsError, loading: regionsLoading } = useTouristRegions();
+  const { language } = useLanguage();
+  // useTouristRegions já busca traduções automaticamente baseado no idioma atual
+  const { regions: touristRegions = [], error: regionsError, loading: regionsLoading } = useTouristRegions(language);
   
   const regiaoSlug = searchParams.get('regiao');
 

@@ -10,6 +10,7 @@ import { logger } from "@/utils/logger";
 import { supabase } from "@/integrations/supabase/client";
 import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 import { getErrorMessage } from "@/utils/errorUtils";
+import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
 
 export interface GeminiQuery {
   question: string;
@@ -716,7 +717,77 @@ class GuataGeminiService {
     return adapted;
   }
 
+  /**
+   * Busca prompts do banco ou usa fallback do código
+   */
+  private async getPromptFromDatabase(): Promise<{
+    system?: string;
+    personality?: string;
+    instructions?: string;
+    rules?: string;
+    disclaimer?: string;
+  } | null> {
+    try {
+      const prompts = await aiPromptAdminService.getPrompts('guata');
+      if (prompts.length === 0) return null;
+
+      const activePrompts: Record<string, string> = {};
+      prompts.forEach(p => {
+        if (p.is_active) {
+          activePrompts[p.prompt_type] = p.content;
+        }
+      });
+
+      return activePrompts as any;
+    } catch (error) {
+      // Se houver erro, retornar null para usar fallback do código
+      if (import.meta.env.DEV) {
+        console.warn('[Guatá] Erro ao buscar prompts do banco, usando código:', error);
+      }
+      return null;
+    }
+  }
+
   private async buildPrompt(query: GeminiQuery): Promise<string> {
+    const { question, context, userLocation, searchResults } = query;
+    
+    // Tentar buscar prompts do banco primeiro
+    const dbPrompts = await this.getPromptFromDatabase();
+    
+    // Se não houver prompts no banco, usar código (fallback)
+    if (!dbPrompts) {
+      return this.buildPromptFromCode(query);
+    }
+
+    // Construir prompt usando prompts do banco
+    let prompt = dbPrompts.system || `Você é o Guatá, um GUIA INTELIGENTE DE TURISMO DE MATO GROSSO DO SUL.`;
+    
+    if (dbPrompts.personality) {
+      prompt += `\n\n${dbPrompts.personality}`;
+    }
+    
+    if (dbPrompts.instructions) {
+      prompt += `\n\n${dbPrompts.instructions}`;
+    }
+    
+    if (dbPrompts.rules) {
+      prompt += `\n\n${dbPrompts.rules}`;
+    }
+    
+    if (dbPrompts.disclaimer) {
+      prompt += `\n\n${dbPrompts.disclaimer}`;
+    }
+
+    // Adicionar contexto dinâmico (histórico, localização, parceiros, etc.)
+    prompt = this.addDynamicContext(prompt, query);
+
+    return prompt;
+  }
+
+  /**
+   * Método original de construção de prompt (fallback quando banco está vazio)
+   */
+  private buildPromptFromCode(query: GeminiQuery): string {
     const { question, context, userLocation, searchResults } = query;
     
     let prompt = `Você é o Guatá, um GUIA INTELIGENTE DE TURISMO DE MATO GROSSO DO SUL. 

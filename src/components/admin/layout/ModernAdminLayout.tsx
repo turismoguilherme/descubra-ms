@@ -154,6 +154,7 @@ const navigationItems: NavItem[] = [
       { id: 'accounts', label: 'Contas Bancárias', icon: CreditCard, path: '/viajar/admin/financial/accounts', permission: 'financial', platform: 'system' },
       { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/viajar/admin/financial/suppliers', permission: 'financial', platform: 'system' },
       { id: 'reports', label: 'Relatórios', icon: FileText, path: '/viajar/admin/financial/reports', permission: 'reports', platform: 'system' },
+      { id: 'refunds', label: 'Reembolsos', icon: RefreshCw, path: '/viajar/admin/financial/refunds', permission: 'financial', platform: 'system' },
       { id: 'contact-leads', label: 'Leads de Contato', icon: Mail, path: '/viajar/admin/financial/contact-leads', permission: 'financial', platform: 'system' },
     ],
   },
@@ -193,6 +194,8 @@ const navigationItems: NavItem[] = [
     children: [
       { id: 'ai-agent', label: 'Agente Autônomo', icon: Zap, path: '/viajar/admin/ai/agent', permission: 'ai', platform: 'system' },
       { id: 'ai-tasks', label: 'Tarefas Automáticas', icon: Activity, path: '/viajar/admin/ai/tasks', permission: 'ai', platform: 'system' },
+      { id: 'ai-knowledge-base', label: 'Base de Conhecimento', icon: FileText, path: '/viajar/admin/ai/knowledge-base', permission: 'ai', platform: 'system' },
+      { id: 'ai-prompts', label: 'Editor de Prompts', icon: Bot, path: '/viajar/admin/ai/prompts', permission: 'ai', platform: 'system' },
     ],
   },
 ];

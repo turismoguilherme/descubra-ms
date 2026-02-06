@@ -16,6 +16,7 @@ const RoteirosMS = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation('pages');
+  // useRouteManagement já busca traduções automaticamente baseado no idioma atual
   const { routes, loading, loadRoutes } = useRouteManagement();
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('');

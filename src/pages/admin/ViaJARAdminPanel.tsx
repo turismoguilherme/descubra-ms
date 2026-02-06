@@ -40,6 +40,8 @@ const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
 const AISuggestions = lazy(() => import('@/components/admin/ai/AISuggestions'));
 const AIActionsQueue = lazy(() => import('@/components/admin/ai/AIActionsQueue'));
+const KnowledgeBaseAdmin = lazy(() => import('@/components/admin/ai/KnowledgeBaseAdmin'));
+const AIPromptEditor = lazy(() => import('@/components/admin/ai/AIPromptEditor'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
 const BankAccountsManager = lazy(() => import('@/components/admin/financial/BankAccountsManager'));
@@ -49,6 +51,7 @@ const TranslationManager = lazy(() => import('@/components/admin/TranslationMana
 const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIAgent'));
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
+const RefundManagement = lazy(() => import('@/components/admin/financial/RefundManagement'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
@@ -213,6 +216,11 @@ export default function ViaJARAdminPanel() {
             <FinancialReports />
           </Suspense>
         } />
+        <Route path="financial/refunds" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <RefundManagement />
+          </Suspense>
+        } />
             <Route path="financial/contact-leads" element={
               <Suspense fallback={<LoadingFallback />}>
                 <ContactLeadsManagement />
@@ -289,6 +297,16 @@ export default function ViaJARAdminPanel() {
             <Route path="ai/tasks" element={
               <Suspense fallback={<LoadingFallback />}>
                 <AutonomousAIAgent />
+              </Suspense>
+            } />
+            <Route path="ai/knowledge-base" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <KnowledgeBaseAdmin />
+              </Suspense>
+            } />
+            <Route path="ai/prompts" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <AIPromptEditor />
               </Suspense>
             } />
             
