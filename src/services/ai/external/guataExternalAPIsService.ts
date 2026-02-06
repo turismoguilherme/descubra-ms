@@ -346,32 +346,3 @@ export class GuataExternalAPIsService {
 
 export const guataExternalAPIsService = new GuataExternalAPIsService();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -18,4 +18,3 @@ const CardBox: React.FC<CardBoxProps> = ({
 
 export default CardBox;
 
-

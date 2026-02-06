@@ -199,10 +199,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
           // IMPORTANTE: Verificar se estamos no domínio correto antes de redirecionar
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT',message:'OAuth redirect detectado no AuthProvider',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,hash:window.location.hash},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
-            // #endregion
-            
+
             console.log('🔄 [AuthProvider] ========== OAUTH REDIRECT DETECTADO ==========');
             console.log('🔄 [AuthProvider] Origin atual:', window.location.origin);
             console.log('🔄 [AuthProvider] Hostname completo:', window.location.hostname);
@@ -246,10 +243,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             
             const isDescubraMS = isDescubraMSContext();
-
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthProvider.tsx:onAuthStateChange:OAUTH_REDIRECT_PATH',message:'Path de redirecionamento OAuth calculado',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname,currentHostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
-            // #endregion
 
             console.log('🔄 [AuthProvider] 📋 RESUMO DO REDIRECIONAMENTO:');
             console.log('🔄 [AuthProvider]   - É contexto Descubra MS:', isDescubraMS);

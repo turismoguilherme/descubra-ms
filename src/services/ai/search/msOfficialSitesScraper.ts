@@ -372,32 +372,3 @@ export class MSOfficialSitesScraper {
 // Instância singleton
 export const msOfficialSitesScraper = new MSOfficialSitesScraper();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

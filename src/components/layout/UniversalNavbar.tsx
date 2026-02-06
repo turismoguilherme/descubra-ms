@@ -23,10 +23,7 @@ const UniversalNavbar = () => {
   };
 
   console.log("🧭 NAVBAR: Componente UniversalNavbar sendo renderizado");
-  // #region agent log
-  safeLog({location:'UniversalNavbar.tsx:9',message:'UniversalNavbar iniciando renderização',data:{timestamp:Date.now()},hypothesisId:'D'});
-  // #endregion
-  
+
   const [isOpen, setIsOpen] = useState(false);
   
   // Verificar se o AuthProvider está disponível
@@ -35,9 +32,7 @@ const UniversalNavbar = () => {
     auth = useAuth();
   } catch (error) {
     console.error('UniversalNavbar: AuthProvider não disponível:', error);
-    // #region agent log
-    safeLog({location:'UniversalNavbar.tsx:19',message:'UniversalNavbar AuthProvider erro capturado',data:{error:String(error)},hypothesisId:'C'});
-    // #endregion
+    
     // Retornar navbar sem funcionalidades de usuário
     return (
       <nav className="bg-white shadow-sm border-b border-gray-200 relative" style={{ zIndex: 1000 }}>
@@ -56,19 +51,13 @@ const UniversalNavbar = () => {
   }
   
   // Verificar se o BrandProvider está disponível
-  // #region agent log
-  safeLog({location:'UniversalNavbar.tsx:37',message:'UniversalNavbar ANTES de chamar useBrand',data:{timestamp:Date.now()},hypothesisId:'B'});
-  // #endregion
+  
   let brandContext = null;
   try {
     brandContext = useBrand();
-    // #region agent log
-    safeLog({location:'UniversalNavbar.tsx:40',message:'UniversalNavbar useBrand sucesso',data:{hasContext:!!brandContext},hypothesisId:'B'});
-    // #endregion
+    
   } catch (error) {
-    // #region agent log
-    safeLog({location:'UniversalNavbar.tsx:42',message:'UniversalNavbar BrandProvider erro capturado',data:{error:String(error),errorMessage:error instanceof Error?error.message:'unknown'},hypothesisId:'C'});
-    // #endregion
+    
     console.error('UniversalNavbar: BrandProvider não disponível:', error);
     // Retornar navbar básica sem branding
     return (
@@ -108,9 +97,7 @@ const UniversalNavbar = () => {
 
   // Log do link do logo (fora do JSX)
   useEffect(() => {
-    // #region agent log
-    safeLog({location:'UniversalNavbar.tsx:95',message:'UniversalNavbar logo link',data:{isOverflowOne,linkTo:isOverflowOne?'/':'/descubrams',pathname:location.pathname},hypothesisId:'C'});
-    // #endregion
+    
   }, [isOverflowOne, location.pathname]);
 
   return (
@@ -121,9 +108,7 @@ const UniversalNavbar = () => {
           <Link to={isOverflowOne ? "/" : "/descubrams"} className="flex items-center justify-center flex-1 md:flex-none md:justify-start">
             <div className="flex items-center">
               {(() => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:118',message:'Renderizando logo no navbar',data:{logoSrc:config.logo.src,logoAlt:config.logo.alt,isMS,isOverflowOne,pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
+                
                 return (
                   <img
                     key={`${config.logo.src}-${location.pathname === '/eventos' ? Date.now() : ''}`}
@@ -134,15 +119,11 @@ const UniversalNavbar = () => {
                     className="h-16 w-auto transition-transform duration-300 hover:scale-105 object-contain"
                     loading="eager"
                     onLoad={(e) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:onLoad',message:'Logo carregada com sucesso no navbar',data:{src:e.currentTarget.src,complete:e.currentTarget.complete,naturalWidth:e.currentTarget.naturalWidth,naturalHeight:e.currentTarget.naturalHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                      // #endregion
+                      
                     }}
                     onError={(e) => {
                       console.error('❌ Erro ao carregar logo PNG:', e);
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalNavbar.tsx:onError',message:'Erro ao carregar logo no navbar',data:{src:e.currentTarget.src,attemptedSrc:config.logo.src},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                      // #endregion
+                      
                       console.log('Tentando fallback...');
                       const target = e.target as HTMLImageElement;
                       if (!target.src.includes('fallback=true')) {

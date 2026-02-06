@@ -71,7 +71,6 @@ const Sobre = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />

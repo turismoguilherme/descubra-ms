@@ -5,7 +5,6 @@
  * SEGURANÇA: Não interfere com funcionalidades existentes
  */
 
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ const EventSystemDebugger: React.FC = () => {
     errors
   } = useEventManagement();
 
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const runDiagnostics = async () => {
@@ -207,5 +206,4 @@ const EventSystemDebugger: React.FC = () => {
 };
 
 export default EventSystemDebugger;
-
 

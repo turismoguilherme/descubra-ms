@@ -558,4 +558,3 @@ const AttendanceControl: React.FC = () => {
 
 export default AttendanceControl;
 
-

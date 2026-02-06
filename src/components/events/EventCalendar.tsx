@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Componente de Calendário de Eventos
  * Cards em grid com eventos patrocinados em destaque
@@ -262,7 +261,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         }
       });
 
-
       setAllEvents(events);
     } catch (error: unknown) {
       console.error("Erro ao carregar eventos:", error);
@@ -375,7 +373,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
 
   const sponsoredEvents = filteredEvents.filter(e => e.is_sponsored);
   const regularEvents = filteredEvents.filter(e => !e.is_sponsored);
-  
 
   const formatDate = (dateStr: string) => {
     try {
@@ -450,7 +447,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     { value: 'vale-aguas', label: '💧 Vale das Águas' },
     { value: 'vale-apore', label: '🏞️ Vale do Aporé' },
   ];
-
 
   if (loading) {
     return (

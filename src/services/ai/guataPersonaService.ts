@@ -247,32 +247,3 @@ Seja humilde e agradecido pelo feedback! É assim que você melhora! 🙏`;
 // Instância singleton
 export const guataPersonaService = new GuataPersonaService();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

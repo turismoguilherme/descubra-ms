@@ -533,17 +533,12 @@ class PassportService {
       // 2. Por checkpoint_id IN (stamps antigos que podem não ter route_id)
       let stamps: StampProgressData[] = [];
       try {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:398',message:'Buscando passport_stamps',data:{userId,routeId,checkpointsCount:checkpoints?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-        // #endregion
-        
+
         // Primeiro, tentar buscar por route_id
         let stampsByRoute: StampProgressData[] = [];
         try {
           stampsByRoute = await this.fetchSupabase<StampProgressData[]>(`passport_stamps?user_id=eq.${userId}&route_id=eq.${routeId}&select=checkpoint_id,stamped_at`);
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:400a',message:'Stamps por route_id',data:{stampsCount:stampsByRoute?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-          // #endregion
+          
         } catch (e) {
           console.warn('⚠️ [getRouteProgress] Erro ao buscar stamps por route_id:', e);
         }
@@ -560,9 +555,7 @@ class PassportService {
               .in('checkpoint_id', checkpointIds);
             
             stampsByCheckpoint = (checkpointStamps || []) as StampProgressData[];
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:400b',message:'Stamps por checkpoint_id',data:{stampsCount:stampsByCheckpoint?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-            // #endregion
+            
           } catch (e) {
             console.warn('⚠️ [getRouteProgress] Erro ao buscar stamps por checkpoint_id:', e);
           }
@@ -573,28 +566,15 @@ class PassportService {
         stamps = Array.from(
           new Map(allStamps.map(s => [s.checkpoint_id, s])).values()
         );
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:400',message:'Stamps encontrados combinado',data:{stampsCount:stamps?.length||0,stampsByRoute:stampsByRoute?.length||0,stampsByCheckpoint:stampsByCheckpoint?.length||0,stamps:stamps?.map((s:any)=>({checkpointId:s.checkpoint_id,stampedAt:s.stamped_at}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-        // #endregion
+
       } catch (e) {
         console.warn('⚠️ [getRouteProgress] Tabela passport_stamps não existe:', e);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:402',message:'Erro ao buscar stamps',data:{error:e?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-        // #endregion
+        
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:405',message:'Processando collectedCheckpointIds',data:{stampsCount:stamps?.length||0,checkpointsCount:checkpoints?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
       const collectedCheckpointIds = new Set(stamps?.map(s => s.checkpoint_id) || []);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:406',message:'Collected checkpoint IDs',data:{collectedIds:Array.from(collectedCheckpointIds),collectedCount:collectedCheckpointIds.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
+      
       const collectedFragments = checkpoints.filter(cp => collectedCheckpointIds.has(cp.id));
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:407',message:'Collected fragments calculado',data:{collectedFragmentsCount:collectedFragments.length,totalFragments:config.stamp_fragments},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
 
       const fragments = checkpoints.map(cp => {
         const stamp = stamps?.find(s => s.checkpoint_id === cp.id);
@@ -845,9 +825,7 @@ class PassportService {
       }
 
       // Verificar se já fez check-in (validação de duplicação)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:656',message:'Verificando se check-in já existe',data:{userId,checkpointId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
+      
       const { data: existing, error: existingError } = await supabase
         .from('passport_stamps')
         .select('id, stamped_at')
@@ -894,9 +872,6 @@ class PassportService {
         });
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:663',message:'Resultado verificação check-in existente',data:{hasExisting:!!existing,existingId:existing?.id,existingData:existing,hasError:!!existingError,errorCode:existingError?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       console.log('🔵 [passportService.checkIn] Verificação check-in existente:', {
         hasExisting: !!existing,
         existingId: existing?.id,
@@ -947,9 +922,7 @@ class PassportService {
       if (checkpoint.routes.difficulty === 'hard') pointsEarned = 35;
 
       // Criar carimbo
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:703',message:'Inserindo passport_stamp no banco',data:{userId,routeId,checkpointId,pointsEarned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       const { data: stamp, error: stampError } = await supabase
         .from('passport_stamps')
         .insert({
@@ -964,25 +937,12 @@ class PassportService {
         .select()
         .single();
 
-      // #region agent log
-      if (stampError) {
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:718',message:'Erro ao inserir passport_stamp',data:{error:stampError.message,errorCode:stampError.code,errorDetails:stampError.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      } else {
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:718',message:'passport_stamp inserido com sucesso',data:{stampId:stamp?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      }
-      // #endregion
-
       if (stampError) throw stampError;
 
       // Verificar se roteiro foi completado
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:720',message:'Verificando progresso da rota',data:{routeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+      
       const progress = await this.getRouteProgress(userId, routeId);
       const routeCompleted = progress?.completion_percentage === 100;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportService.ts:722',message:'Progresso verificado',data:{completionPercentage:progress?.completion_percentage,routeCompleted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       // Desbloquear recompensas se roteiro completo
       let rewardsUnlocked: UnlockedReward[] = [];

@@ -12,5 +12,3 @@ export interface IASuggestion {
   metadata?: Record<string, any>;
 }
 
-
-

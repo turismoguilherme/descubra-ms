@@ -34,16 +34,12 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
   // Verificar se um checkpoint foi completado
   const isCheckpointCompleted = (checkpointId: string): boolean => {
     if (!progress?.fragments) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointList.tsx:36',message:'Verificando checkpoint - sem fragments',data:{checkpointId,hasProgress:!!progress},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
+      
       return false;
     }
     const fragment = progress.fragments.find(f => f.checkpoint_id === checkpointId);
     const isCompleted = fragment?.collected || false;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointList.tsx:38',message:'Verificando checkpoint completado',data:{checkpointId,isCompleted,hasFragment:!!fragment,fragmentsCount:progress.fragments.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-    // #endregion
+    
     return isCompleted;
   };
 

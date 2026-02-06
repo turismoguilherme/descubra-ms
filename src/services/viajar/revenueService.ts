@@ -355,4 +355,3 @@ IMPORTANTE: Retorne APENAS o JSON, sem markdown, sem explicações adicionais.`;
 
 export const revenueService = new RevenueService();
 
-

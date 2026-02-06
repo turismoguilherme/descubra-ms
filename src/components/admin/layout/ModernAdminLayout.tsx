@@ -281,7 +281,6 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     expandParents(navigationItems);
   }, [location.pathname]);
 
-
   return (
     <div className="min-h-screen bg-gray-50 relative">
       <ViaJARNavbar />

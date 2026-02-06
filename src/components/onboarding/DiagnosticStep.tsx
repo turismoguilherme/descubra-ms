@@ -3,7 +3,6 @@
  * Questionário obrigatório para avaliação do negócio
  */
 
-// @ts-nocheck
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,8 @@ interface DiagnosticStepProps {
 
 const DiagnosticStep: React.FC<DiagnosticStepProps> = ({ data, onNext }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>(data.diagnosticAnswers || {});
+  const dataObj = data as Record<string, unknown>;
+  const [answers, setAnswers] = useState<Record<string, unknown>>((dataObj.diagnosticAnswers as Record<string, unknown>) || {});
 
   const questions = [
     {

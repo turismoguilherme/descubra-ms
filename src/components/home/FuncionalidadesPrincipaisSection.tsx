@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Link } from "react-router-dom";
 import { Map, Calendar, Users, MessageSquare, BookOpen, Info, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";

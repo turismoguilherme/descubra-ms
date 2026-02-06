@@ -1353,7 +1353,6 @@ export default function SecretaryDashboard() {
             <TourismInventoryManager />
           )}
 
-
           {/* Gestão de Eventos */}
           {activeSection === 'events' && (
             <EventManagementSystem />
@@ -1366,8 +1365,6 @@ export default function SecretaryDashboard() {
             </React.Suspense>
           )}
 
-
-
           {/* GUILHERME IA */}
           {activeSection === 'ai-strategic' && (
             <StrategicAIChat />
@@ -1377,7 +1374,6 @@ export default function SecretaryDashboard() {
           {activeSection === 'documents' && (
             <DocumentUploadPublic />
           )}
-
 
           {/* Relatórios */}
           {activeSection === 'plano-diretor' && (

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Consent Term Component
  * Termo de consentimento para benchmarking (para TODOS - privado e público)
@@ -276,7 +275,6 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
             </div>
           </div>
 
-
           {/* Termo de consentimento - OBRIGATÓRIO - MELHORADO */}
           <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg shadow-sm">
             <div className="flex items-start space-x-4">
@@ -493,5 +491,4 @@ export default function ConsentTerm({ onComplete, onSkip }: ConsentTermProps) {
     </div>
   );
 }
-
 

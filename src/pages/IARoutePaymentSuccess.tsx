@@ -242,10 +242,3 @@ export default function IARoutePaymentSuccess() {
   );
 }
 
-
-
-
-
-
-
-

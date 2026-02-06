@@ -248,6 +248,3 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ className = '' }) => 
 
 export default ReportGenerator;
 
-
-
-

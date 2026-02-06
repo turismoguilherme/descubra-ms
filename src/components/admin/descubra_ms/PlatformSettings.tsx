@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Save } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 export default function PlatformSettings() {
   const [loading, setLoading] = useState(false);
@@ -150,10 +151,11 @@ export default function PlatformSettings() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Configurações Descubra MS</h2>
-          <p className="text-gray-600 mt-1">Configure a plataforma Descubra MS</p>
-        </div>
+        <AdminPageHeader
+          title="Configurações da Plataforma"
+          description="Configure informações gerais, funcionalidades e contatos da plataforma Descubra MS."
+          helpText="Configure informações gerais, funcionalidades e contatos da plataforma Descubra MS."
+        />
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Salvando...' : 'Salvar'}

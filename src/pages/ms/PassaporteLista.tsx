@@ -29,7 +29,6 @@ interface PassaporteRoute {
   progress: number;
 }
 
-
 const PassaporteLista = () => {
   console.log("📱 PASSAPORTE LISTA: Componente PassaporteLista sendo renderizado");
   

@@ -371,17 +371,3 @@ class GuataFallbackService {
 export const guataFallbackService = new GuataFallbackService();
 export type { FallbackQuery, FallbackResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-

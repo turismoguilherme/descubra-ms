@@ -236,4 +236,3 @@ const ViaJARFooter: React.FC = () => {
 
 export default ViaJARFooter;
 
-

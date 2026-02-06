@@ -126,16 +126,3 @@ export const API_SETUP_INSTRUCTIONS = {
 
 // API Config carregada (log removido para reduzir verbosidade)
 
-
-
-
-
-
-
-
-
-
-
-
-
-

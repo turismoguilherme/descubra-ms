@@ -123,4 +123,3 @@ export class CommunityKnowledgeIntegration {
 // Exportar instância única
 export const communityKnowledgeIntegration = new CommunityKnowledgeIntegration();
 
-

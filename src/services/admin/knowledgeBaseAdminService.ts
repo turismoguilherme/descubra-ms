@@ -141,20 +141,10 @@ class KnowledgeBaseAdminService {
    */
   async createEntry(entry: Omit<KnowledgeBaseEntry, 'id' | 'criado_em' | 'ultima_atualizacao' | 'usado_por'>): Promise<KnowledgeBaseEntry> {
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'knowledgeBaseAdminService.ts:142',message:'createEntry called',data:{entryKeys:Object.keys(entry),entryId:entry.id,hasMetadata:!!entry.metadata_arquivo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+      
       const { data: { user } } = await supabase.auth.getUser();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'knowledgeBaseAdminService.ts:145',message:'User fetched',data:{userId:user?.id,userIsNull:user===null,userIsUndefined:user===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       const normalizedQuestion = this.normalizeQuestion(entry.pergunta);
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'knowledgeBaseAdminService.ts:151',message:'Before creating newEntry',data:{criadoPorValue:user?.id,criadoPorType:typeof user?.id,criadoPorIsEmpty:user?.id===''},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
 
       const newEntry: any = {
         ...entry,
@@ -181,27 +171,17 @@ class KnowledgeBaseAdminService {
         }
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'knowledgeBaseAdminService.ts:170',message:'Before insert',data:{newEntryKeys:Object.keys(newEntry),criadoPorInEntry:newEntry.criado_por,criadoPorType:typeof newEntry.criado_por,hasEmptyStrings:Object.values(newEntry).some(v=>v==='')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       const { data, error } = await supabase
         .from('guata_knowledge_base')
         .insert(newEntry)
         .select()
         .single();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'knowledgeBaseAdminService.ts:175',message:'Insert result',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,hasData:!!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       if (error) throw error;
 
       return data as KnowledgeBaseEntry;
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'knowledgeBaseAdminService.ts:180',message:'Error caught',data:{errorMessage:error instanceof Error?error.message:'unknown',errorCode:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       console.error('❌ Erro ao criar item:', error);
       throw error;
     }

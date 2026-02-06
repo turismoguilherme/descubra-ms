@@ -176,4 +176,3 @@ class RegionTranslationService {
 
 export const regionTranslationService = new RegionTranslationService();
 
-

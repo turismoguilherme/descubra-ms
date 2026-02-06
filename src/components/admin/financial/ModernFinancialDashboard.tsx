@@ -20,6 +20,7 @@ import {
   CreditCard, Building, Users, Clock, CheckCircle, XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 // Cores do gráfico
 const CHART_COLORS = {
@@ -238,10 +239,11 @@ export default function ModernFinancialDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard Financeiro</h2>
-          <p className="text-gray-600 mt-1">Visão completa das finanças da empresa</p>
-        </div>
+        <AdminPageHeader
+          title="Financeiro"
+          description="Acompanhe receitas, despesas e lucro da plataforma. Gerencie contas a pagar."
+          helpText="Acompanhe receitas, despesas e lucro da plataforma. Gerencie contas a pagar."
+        />
         <div className="flex items-center gap-2">
           <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <TabsList className="bg-gray-100">

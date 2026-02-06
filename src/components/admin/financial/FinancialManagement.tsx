@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReportPreviewDialog } from './ReportPreviewDialog';
 import { generateDREPDF, generateCashFlowPDF, generateProfitReportPDF } from '@/utils/financialReportGenerator';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface RevenueItem {
   id: string;
@@ -619,10 +620,11 @@ export default function FinancialManagement() {
   return (
     <div className="space-y-6 pb-16 min-h-full">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestão Financeira</h2>
-          <p className="text-gray-600 mt-1">Gerencie receitas, despesas e salários</p>
-        </div>
+        <AdminPageHeader
+          title="Gestão Financeira"
+          description="Gerencie receitas, despesas e salários da plataforma."
+          helpText="Gerencie receitas, despesas e salários da plataforma."
+        />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

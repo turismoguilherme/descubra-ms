@@ -304,8 +304,3 @@ const VoucherList: React.FC<VoucherListProps> = ({ partnerId, partnerName }) => 
 
 export default VoucherList;
 
-
-
-
-
-

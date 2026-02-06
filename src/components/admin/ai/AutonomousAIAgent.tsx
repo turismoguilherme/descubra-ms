@@ -203,31 +203,21 @@ export default function AutonomousAIAgent() {
   });
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Componente montado, iniciando carregamento de configurações',data:{hasLocalStorage:typeof localStorage !== 'undefined',navigatorOnline:navigator.onLine},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
+
     // Carregar configuração do Supabase (prioridade) ou localStorage (fallback)
     const loadConfig = async () => {
       try {
         // Tentar carregar do Supabase primeiro (última configuração, ativa ou inativa)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadConfig',message:'Iniciando query ao Supabase para ai_agent_config',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         const { data: dbConfig, error: dbError } = await supabase
           .from('ai_agent_config')
           .select('*')
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadConfig',message:'Resultado da query ai_agent_config recebido',data:{hasError:!!dbError,errorMessage:dbError?.message,errorCode:dbError?.code,errorDetails:dbError?.details,errorHint:dbError?.hint,hasData:!!dbConfig,dataKeys:dbConfig ? Object.keys(dbConfig) : []},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
 
         if (!dbError && dbConfig) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Configuração encontrada no Supabase, aplicando estado',data:{configActive:dbConfig.active,configAutonomyLevel:dbConfig.autonomy_level,configUpdatedAt:dbConfig.updated_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
+          
           setAgentActive(dbConfig.active || false);
           setAutonomyLevel([dbConfig.autonomy_level || 50]);
           if (dbConfig.tasks && Array.isArray(dbConfig.tasks)) {
@@ -257,15 +247,11 @@ export default function AutonomousAIAgent() {
 
         // Fallback: tentar localStorage
         const saved = localStorage.getItem('ai_agent_config');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Verificando localStorage para configurações (fallback)',data:{hasSavedConfig:!!saved,savedConfigLength:saved?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         if (saved) {
           try {
             const config = JSON.parse(saved);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Configuração encontrada no localStorage, aplicando estado',data:{configActive:config.active,configAutonomyLevel:config.autonomyLevel,configSavedAt:config.savedAt},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
+            
             setAgentActive(config.active || false);
             setAutonomyLevel([config.autonomyLevel || 50]);
             if (config.tasks) setTasks(config.tasks);
@@ -289,14 +275,10 @@ export default function AutonomousAIAgent() {
             }
           } catch (error: unknown) {
             console.error('Erro ao carregar configurações salvas:', error);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Erro ao parsear configuração do localStorage',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
+            
           }
         } else {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Nenhuma configuração encontrada, usando valores padrão',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-          // #endregion
+          
           // Valores padrão baseados no nível de autonomia inicial (50)
           setPermissions({
             modifyDatabase: false,
@@ -307,9 +289,7 @@ export default function AutonomousAIAgent() {
         }
       } catch (error: unknown) {
         console.error('Erro ao carregar configuração:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:mount',message:'Erro ao carregar configuração do Supabase',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        
       }
     };
 
@@ -333,9 +313,7 @@ export default function AutonomousAIAgent() {
   const loadAnalysesData = async () => {
     try {
       setLoadingData(true);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Iniciando carregamento de análises',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
       const [metricsResult, financialResult] = await Promise.all([
         supabase
           .from('ai_analyses')
@@ -352,32 +330,23 @@ export default function AutonomousAIAgent() {
           .limit(1)
           .maybeSingle(),
       ]);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Resultados das queries recebidos',data:{metricsError:metricsResult.error?.message,financialError:financialResult.error?.message,hasMetricsData:!!metricsResult.data,hasFinancialData:!!financialResult.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       if (metricsResult.error) {
         console.error('Erro ao carregar análise de métricas:', metricsResult.error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Erro ao carregar análise de métricas',data:{error:metricsResult.error.message,code:metricsResult.error.code,details:metricsResult.error.details,hint:metricsResult.error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        
       } else if (metricsResult.data) {
         setLastMetricsAnalysis(metricsResult.data);
       }
       
       if (financialResult.error) {
         console.error('Erro ao carregar relatório financeiro:', financialResult.error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Erro ao carregar relatório financeiro',data:{error:financialResult.error.message,code:financialResult.error.code,details:financialResult.error.details,hint:financialResult.error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        
       } else if (financialResult.data) {
         setLastFinancialReport(financialResult.data);
       }
     } catch (error: unknown) {
       console.warn('Erro ao carregar análises:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:loadAnalysesData',message:'Exceção ao carregar análises',data:{error:error?.message,errorString:String(error),stack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
     } finally {
       setLoadingData(false);
     }
@@ -417,21 +386,14 @@ export default function AutonomousAIAgent() {
 
   // Sistema de agendamento automático
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:scheduling',message:'Sistema de agendamento verificado',data:{agentActive,navigatorOnline:navigator.onLine,pageVisible:!document.hidden},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
+    
     if (!agentActive) {
       console.log('🤖 [AutonomousAgent] Agente desativado - tarefas automáticas pausadas');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:scheduling',message:'Agente desativado, sistema de agendamento não iniciado',data:{agentActive},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-      // #endregion
+      
       return;
     }
 
     console.log('🤖 [AutonomousAgent] Agente ativado - iniciando verificação de tarefas agendadas');
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:useEffect:scheduling',message:'Agente ativado, iniciando sistema de agendamento',data:{agentActive,navigatorOnline:navigator.onLine,pageVisible:!document.hidden},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-    // #endregion
 
     const checkScheduledTasks = () => {
       const now = new Date();
@@ -572,9 +534,7 @@ export default function AutonomousAIAgent() {
 
   const saveConfig = async () => {
     console.log('🔵 [DEBUG] saveConfig chamado', { agentActive, autonomyLevel: autonomyLevel[0], permissions });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Iniciando salvamento de configurações',data:{agentActive,autonomyLevel:autonomyLevel[0],permissions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
     try {
       const config = {
         active: agentActive,
@@ -584,24 +544,16 @@ export default function AutonomousAIAgent() {
         savedAt: new Date().toISOString()
       };
       console.log('🔵 [DEBUG] Configuração preparada:', config);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Configuração preparada, salvando no Supabase e localStorage',data:{config},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
+
       // Salvar no Supabase (prioridade para execução 24/7)
       // Buscar última configuração (ativa ou inativa)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Buscando configuração existente no Supabase',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+      
       const { data: existingConfig, error: queryError } = await supabase
         .from('ai_agent_config')
         .select('id')
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da busca de configuração existente',data:{hasError:!!queryError,errorMessage:queryError?.message,errorCode:queryError?.code,errorDetails:queryError?.details,errorHint:queryError?.hint,hasExistingConfig:!!existingConfig,existingConfigId:existingConfig?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       const configData = {
         active: agentActive,
@@ -612,37 +564,25 @@ export default function AutonomousAIAgent() {
       };
 
       if (queryError && queryError.code !== 'PGRST116') { // PGRST116 = no rows returned (normal)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Erro ao buscar configuração existente, tentando criar nova',data:{error:queryError.message,code:queryError.code,details:queryError.details,hint:queryError.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
       }
 
       if (existingConfig) {
         // Atualizar configuração existente
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Atualizando configuração existente',data:{configId:existingConfig.id,configData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         const { error: updateError } = await supabase
           .from('ai_agent_config')
           .update(configData as any)
           .eq('id', existingConfig.id);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da atualização',data:{hasError:!!updateError,errorMessage:updateError?.message,errorCode:updateError?.code,errorDetails:updateError?.details,errorHint:updateError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
 
         if (updateError) throw updateError;
         console.log('🔵 [DEBUG] Configuração atualizada no Supabase');
       } else {
         // Criar nova configuração
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Criando nova configuração',data:{configData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         const { error: insertError } = await supabase
           .from('ai_agent_config')
           .insert([configData] as any);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Resultado da inserção',data:{hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError?.details,errorHint:insertError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
 
         if (insertError) throw insertError;
         console.log('🔵 [DEBUG] Configuração criada no Supabase');
@@ -651,16 +591,12 @@ export default function AutonomousAIAgent() {
       // Também salvar no localStorage como backup
       localStorage.setItem('ai_agent_config', JSON.stringify(config));
       console.log('🔵 [DEBUG] Configuração salva no localStorage (backup)');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Configuração salva com sucesso no Supabase e localStorage',data:{saved:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       return config;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('🔴 [DEBUG] Erro em saveConfig:', err);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:saveConfig',message:'Erro ao salvar configuração',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       throw error;
     }
   };
@@ -1444,7 +1380,6 @@ RESPOSTA:`;
           </div>
         </TabsContent>
 
-
         {/* Chat com IA */}
         <TabsContent value="chat">
           <Card className="bg-white border-slate-200">
@@ -1705,33 +1640,25 @@ RESPOSTA:`;
                 type="button"
                 onClick={async (e) => {
                   console.log('🔵 [DEBUG] Botão Salvar Configurações clicado!', { event: e, type: e.type });
-                  // #region agent log
-                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Botão Salvar Configurações clicado',data:{eventType:e.type,currentTarget:e.currentTarget?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                  // #endregion
+                  
                   e.preventDefault();
                   e.stopPropagation();
                   console.log('🔵 [DEBUG] Prevenindo comportamento padrão, iniciando saveConfig...');
                   try {
                     const config = await saveConfig();
                     console.log('🔵 [DEBUG] Configuração salva:', config);
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Chamando toast para exibir sucesso',data:{config},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
+                    
                     console.log('🔵 [DEBUG] Chamando toast...');
                     toast.success('✅ Configurações salvas!', {
                       description: `Nível de autonomia: ${config.autonomyLevel}% | Agente: ${config.active ? 'Ativo' : 'Inativo'}`,
                       duration: 3000
                     });
                     console.log('🔵 [DEBUG] Toast chamado com sucesso!', { toastFunction: typeof toast });
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Toast chamado com sucesso',data:{toastCalled:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
+                    
                   } catch (error: unknown) {
                     const err = error instanceof Error ? error : new Error(String(error));
                     console.error('🔴 [DEBUG] Erro ao salvar configurações:', err);
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AutonomousAIAgent.tsx:onClick',message:'Erro ao salvar configurações',data:{error:error?.message,errorString:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
+                    
                     toast.error('❌ Erro ao salvar', {
                       description: error?.message || 'Não foi possível salvar as configurações',
                       duration: 5000

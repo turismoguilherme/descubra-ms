@@ -724,6 +724,3 @@ const CATGeolocationManager: React.FC = () => {
 
 export default CATGeolocationManager;
 
-
-
-

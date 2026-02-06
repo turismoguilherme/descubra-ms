@@ -800,12 +800,6 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
 
               const hasChanged = hasChanges(field.key);
               const isEmpty = !value || value.trim() === '';
-              
-              // #region agent log
-              if (field.key === 'ms_hero_video_placeholder_image_url') {
-                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SimpleTextEditor.tsx:475',message:'Render campo placeholder',data:{key:field.key,value:value.substring(0,100),valueLength:value.length,hasChanged,isEmpty,contentsState:contents[field.key]?.substring(0,100),originalValue:originalContents[field.key]?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-              }
-              // #endregion
 
               // Determinar se o campo ocupa largura total (textarea, json, image)
               const isFullWidth = field.type === 'textarea' || field.type === 'json' || field.type === 'image';
@@ -866,9 +860,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
                           id={field.key}
                           value={value}
                           onChange={(e) => {
-                            // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SimpleTextEditor.tsx:527',message:'Input onChange disparado',data:{key:field.key,newValue:e.target.value.substring(0,100),newValueLength:e.target.value.length,currentValue:value.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-                            // #endregion
+                            
                             updateField(field.key, e.target.value);
                           }}
                           placeholder={field.placeholder}

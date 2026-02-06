@@ -111,40 +111,8 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
     watch,
   } = useForm<FormData>({
     resolver: zodResolver(partnerSchema),
-    mode: 'onSubmit', // #region agent log
-    defaultValues: {
-      name: '',
-      description: '',
-      partner_type: '',
-      person_type: 'pj' as const,
-      cpf: '',
-      cnpj: '',
-      youtube_url: '',
-      website_url: '',
-      contact_email: '',
-      contact_phone: '',
-      address: '',
-      password: '',
-      confirmPassword: '',
-    },
-  }); // #endregion
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:90',message:'Form initialized',data:{hasDefaultValues:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  }, []);
-  
-  const formValues = watch();
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:95',message:'Form values changed',data:formValues,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }, [formValues]);
-  
-  useEffect(() => {
-    if (Object.keys(errors).length > 0) {
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:100',message:'Validation errors detected',data:{errors,formValues},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }
-  }, [errors, formValues]);
-  // #endregion
+    mode: 'onSubmit',
+  });
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -205,9 +173,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   };
 
   const onSubmit = async (data: FormData) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:149',message:'onSubmit called',data:data,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
     setIsSubmitting(true);
     setUploadProgress(0);
 
@@ -341,18 +307,6 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
       </Card>
     );
   }
-
-  // #region agent log
-  const handleFormSubmit = handleSubmit(
-    onSubmit,
-    (validationErrors) => {
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:310',message:'Form validation failed',data:{validationErrors,formValues},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }
-  );
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerApplicationForm.tsx:315',message:'Form component rendered',data:{includePassword},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  }, [includePassword]);
-  // #endregion
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-8">

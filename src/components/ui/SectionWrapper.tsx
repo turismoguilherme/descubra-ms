@@ -53,4 +53,3 @@ const SectionWrapper: React.FC<SectionWrapperProps> = ({
 
 export default SectionWrapper;
 
-

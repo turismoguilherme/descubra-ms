@@ -150,7 +150,6 @@ const OverflowOneLogin: React.FC = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />
@@ -290,7 +289,6 @@ const OverflowOneLogin: React.FC = () => {
                 {isLoading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
-
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">

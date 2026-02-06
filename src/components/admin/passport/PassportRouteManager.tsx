@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Loader2, X, MapPin, Power, PowerOff } from 'lucide-
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 const PassportRouteManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -439,10 +440,15 @@ const PassportRouteManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <AdminPageHeader
+        title="Rotas do Passaporte Digital"
+        description="Configure rotas, carimbos e recompensas do programa de fidelidade turística."
+        helpText="Configure rotas, carimbos e recompensas do programa de fidelidade turística."
+      />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-center flex-1">Rotas do Passaporte</CardTitle>
+            <CardTitle className="text-center flex-1">Rotas</CardTitle>
             <Button 
               onClick={() => {
                 console.log('🔵 [PassportRouteManager] Botão "Nova Rota" clicado');

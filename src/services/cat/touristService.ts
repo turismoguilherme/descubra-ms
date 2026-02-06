@@ -278,4 +278,3 @@ export class TouristService {
 
 export const touristService = new TouristService();
 
-

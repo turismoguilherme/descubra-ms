@@ -573,16 +573,3 @@ class GuataEmotionalIntelligenceService {
 export const guataEmotionalIntelligenceService = new GuataEmotionalIntelligenceService();
 export type { EmotionalIntelligenceQuery, EmotionalIntelligenceResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-

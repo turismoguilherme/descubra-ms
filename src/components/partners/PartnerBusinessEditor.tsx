@@ -42,9 +42,6 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
 
   const loadPartnerData = async () => {
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:42',message:'Iniciando loadPartnerData',data:{partnerId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       const { data, error } = await supabase
         .from('institutional_partners')
@@ -52,17 +49,9 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
         .eq('id', partnerId)
         .single();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:48',message:'Resultado do SELECT após salvamento',data:{hasError:!!error,errorMessage:error?.message,hasData:!!data,logoUrl:data?.logo_url,galleryImages:data?.gallery_images,galleryImagesType:typeof data?.gallery_images,galleryImagesLength:Array.isArray(data?.gallery_images)?data.gallery_images.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-
       if (error) throw error;
 
       setPartnerData(data);
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:55',message:'Atualizando estados de preview',data:{hasLogoUrl:!!data.logo_url,logoUrl:data.logo_url,hasGalleryImages:!!data.gallery_images,galleryImagesCount:Array.isArray(data.gallery_images)?data.gallery_images.length:0,galleryImages:data.gallery_images},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       if (data.logo_url) {
         setLogoPreview(data.logo_url);
@@ -76,9 +65,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
         setGalleryPreviews([]);
       }
     } catch (error: unknown) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:62',message:'Erro ao carregar dados',data:{errorMessage:error?.message,errorCode:error?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
       console.error('Erro ao carregar dados:', error);
       toast({
         title: 'Erro',
@@ -149,17 +136,9 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
     const fileExt = logoFile.name.split('.').pop();
     const fileName = `${partnerId}/logo_${Date.now()}.${fileExt}`;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:145',message:'Iniciando upload do logo',data:{fileName,fileSize:logoFile.size,fileType:logoFile.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     const { data, error } = await supabase.storage
       .from('partner-images')
       .upload(fileName, logoFile, { upsert: true });
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:152',message:'Resultado do upload do logo',data:{hasError:!!error,errorMessage:error?.message,errorCode:error?.statusCode,hasData:!!data,uploadPath:data?.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     if (error) {
       console.error('Erro ao fazer upload do logo:', error);
@@ -170,36 +149,20 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
       .from('partner-images')
       .getPublicUrl(fileName);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:160',message:'URL pública gerada para logo',data:{publicUrl:urlData?.publicUrl,fileName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     return urlData?.publicUrl || null;
   };
 
   const uploadGalleryImages = async (): Promise<string[]> => {
     const uploadedUrls: string[] = [];
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:167',message:'Iniciando upload de imagens da galeria',data:{galleryFilesCount:galleryFiles.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     for (let i = 0; i < galleryFiles.length; i++) {
       const file = galleryFiles[i];
       const fileExt = file.name.split('.').pop();
       const fileName = `${partnerId}/gallery_${Date.now()}_${i}.${fileExt}`;
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:173',message:'Fazendo upload de imagem da galeria',data:{index:i,fileName,fileSize:file.size,fileType:file.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       const { data, error } = await supabase.storage
         .from('partner-images')
         .upload(fileName, file);
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:177',message:'Resultado do upload da imagem da galeria',data:{index:i,hasError:!!error,errorMessage:error?.message,errorCode:error?.statusCode,hasData:!!data,uploadPath:data?.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
 
       if (error) {
         console.error('Erro ao fazer upload:', error);
@@ -210,10 +173,6 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
         .from('partner-images')
         .getPublicUrl(fileName);
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:186',message:'URL pública gerada para imagem da galeria',data:{index:i,publicUrl:urlData?.publicUrl,fileName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       if (urlData?.publicUrl) {
         uploadedUrls.push(urlData.publicUrl);
       }
@@ -223,10 +182,6 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
     const existingImages = partnerData?.gallery_images || [];
     const keptExisting = existingImages.slice(0, Math.max(0, 5 - uploadedUrls.length));
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:221',message:'Upload de galeria concluído',data:{uploadedUrlsCount:uploadedUrls.length,keptExistingCount:keptExisting.length,finalUrlsCount:(uploadedUrls.length + keptExisting.length),uploadedUrls},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     return [...uploadedUrls, ...keptExisting].slice(0, 5);
   };
 
@@ -235,32 +190,21 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
 
     setSaving(true);
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:163',message:'Iniciando salvamento de dados do parceiro',data:{partnerId,hasLogoFile:!!logoFile,galleryFilesCount:galleryFiles.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
 
       let logoUrl = partnerData.logo_url;
       let galleryUrls = partnerData.gallery_images || [];
 
       // Upload do logo se houver novo arquivo
       if (logoFile) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:172',message:'Fazendo upload do logo',data:{logoFileSize:logoFile.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
         logoUrl = await uploadLogo();
       }
 
       // Upload das imagens da galeria se houver novos arquivos
       if (galleryFiles.length > 0) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:178',message:'Fazendo upload das imagens da galeria',data:{galleryFilesCount:galleryFiles.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
         galleryUrls = await uploadGalleryImages();
       }
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:182',message:'Antes de atualizar dados no banco',data:{partnerId,updateData:{name:partnerData.name,hasDescription:!!partnerData.description,hasLogoUrl:!!logoUrl,hasWebsiteUrl:!!partnerData.website_url}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       // Atualizar dados no banco
       const { data: updateData, error } = await supabase
@@ -279,15 +223,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
         .eq('id', partnerId)
         .select();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:197',message:'Resultado do UPDATE',data:{error:error?.message,errorCode:error?.code,hasData:!!updateData,dataCount:updateData?.length,updateDataLogoUrl:updateData?.[0]?.logo_url,updateDataGalleryImages:updateData?.[0]?.gallery_images,updateDataGalleryImagesType:typeof updateData?.[0]?.gallery_images,updateDataGalleryImagesLength:Array.isArray(updateData?.[0]?.gallery_images)?updateData[0].gallery_images.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-
       if (error) throw error;
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:216',message:'UPDATE bem-sucedido, atualizando estados locais',data:{logoUrl,galleryUrls,galleryUrlsLength:galleryUrls.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
 
       // Atualizar estados locais imediatamente com os dados salvos
       if (updateData && updateData[0]) {
@@ -314,9 +250,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
       // Recarregar dados do banco para garantir sincronização
       await loadPartnerData();
     } catch (error: unknown) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:210',message:'Erro ao salvar dados do parceiro',data:{errorMessage:error?.message,errorCode:error?.code,errorDetails:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
       console.error('Erro ao salvar:', error);
       toast({
         title: 'Erro ao salvar',
@@ -457,15 +391,11 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
                     alt="Logo preview"
                     className="w-32 h-32 object-cover rounded-lg border"
                     onError={(e) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:391',message:'Erro ao carregar logo',data:{logoPreview,error:'Image load error'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                      // #endregion
+                      
                       console.error('Erro ao carregar logo:', logoPreview);
                     }}
                     onLoad={() => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:397',message:'Logo carregado com sucesso',data:{logoPreview},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                      // #endregion
+                      
                     }}
                   />
                 </div>
@@ -498,10 +428,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
             <Label>Galeria de Fotos (máximo 5)</Label>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {galleryPreviews.map((preview, index) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:467',message:'Renderizando imagem da galeria',data:{index,preview,previewType:typeof preview,isString:typeof preview==='string',hasPreview:!!preview},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
-                
+
                 return (
                   <div key={index} className="relative group">
                     {preview ? (
@@ -510,15 +437,11 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
                         alt={`Gallery ${index + 1}`}
                         className="w-full h-32 object-cover rounded-lg border"
                         onError={(e) => {
-                          // #region agent log
-                          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:475',message:'Erro ao carregar imagem da galeria',data:{index,preview,error:'Image load error'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                          // #endregion
+                          
                           console.error('Erro ao carregar imagem da galeria:', preview);
                         }}
                         onLoad={() => {
-                          // #region agent log
-                          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerBusinessEditor.tsx:481',message:'Imagem da galeria carregada com sucesso',data:{index,preview},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                          // #endregion
+                          
                         }}
                       />
                     ) : (

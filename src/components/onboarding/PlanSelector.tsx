@@ -269,7 +269,6 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
             </CardContent>
           </Card>
 
-
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">Posso mudar de plano depois?</CardTitle>

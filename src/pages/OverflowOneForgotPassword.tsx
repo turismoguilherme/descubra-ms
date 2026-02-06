@@ -157,7 +157,3 @@ const OverflowOneForgotPassword: React.FC = () => {
 
 export default OverflowOneForgotPassword;
 
-
-
-
-

@@ -10,7 +10,6 @@ import WhatViajARTurDoesSection from '@/components/home/WhatViajARTurDoesSection
 import SuccessCasesSection from '@/components/home/SuccessCasesSection';
 // CommercialSection removido temporariamente
 
-
 const VideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +110,6 @@ const ViaJARSaaS = () => {
   const getContent = (key: string, fallback: string = '') => {
     return content[key] || fallback;
   };
-
 
   // Stats removidos - podem ser reativados via admin futuramente
   // const stats = [
@@ -244,7 +242,6 @@ const ViaJARSaaS = () => {
           </div>
         </div>
       </section>
-
 
       <ViaJARFooter />
       <CookieConsentBanner platform="viajar" />

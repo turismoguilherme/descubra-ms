@@ -150,9 +150,7 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
         console.log('🔄 [BrandContext] ms_logo_url:', logoMap['ms_logo_url'] || 'NÃO ENCONTRADO');
         console.log('🔄 [BrandContext] viajar_logo_url:', logoMap['viajar_logo_url'] || 'NÃO ENCONTRADO');
         console.log('🔄 [BrandContext] guata_avatar_url:', logoMap['guata_avatar_url'] || 'NÃO ENCONTRADO');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:146',message:'Logos carregados do banco - comparando com anterior',data:{previousLogoUrl,newLogoUrl:logoMap['ms_logo_url'],logoChanged:previousLogoUrl!==logoMap['ms_logo_url'],logoMap},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
-        // #endregion
+        
       } catch (error) {
         console.error('Erro ao carregar logos do banco:', error);
       }
@@ -201,18 +199,11 @@ const safeLog = (payload: any) => {
   }).catch(() => {});
 };
 
-// #region agent log
-safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',data:{pathname,path},runId:'run1',hypothesisId:'A'});
-// #endregion
     if (path.startsWith('/descubrams') || path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms') || path.startsWith('/partner')) {
-    // #region agent log
-    safeLog({location:'BrandContext.tsx:162',message:'detectTenantFromPath retornando ms',data:{pathname,path},runId:'run1',hypothesisId:'A'});
-    // #endregion
+    
       return 'ms';
     }
-    // #region agent log
-    safeLog({location:'BrandContext.tsx:165',message:'detectTenantFromPath retornando overflow-one',data:{pathname,path},runId:'run1',hypothesisId:'A'});
-    // #endregion
+    
     return 'overflow-one';
   };
 
@@ -247,10 +238,7 @@ safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',
     // Detectar tenant do path se não estivermos no modo multi-tenant
     const detectedTenant = detectTenantFromPath(location.pathname);
     console.log('🎨 BRAND: Tenant detectado:', detectedTenant);
-    // #region agent log
-    safeLog({location:'BrandContext.tsx:196',message:'BrandContext config useMemo - tenant detectado',data:{pathname:location.pathname,detectedTenant,isMS:detectedTenant==='ms'},runId:'run1',hypothesisId:'A'});
-    // #endregion
-    
+
     if (detectedTenant === 'ms') {
       // Usar logo do banco se disponível, senão usar padrão
       let logoUrl = logosFromDB['ms_logo_url'] || msConfig.logo.src;
@@ -262,10 +250,7 @@ safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',
         const cacheBustParam = logoUrl.includes('?') ? '&' : '?';
         logoUrl = `${logoUrl}${cacheBustParam}t=${Date.now()}`;
       }
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BrandContext.tsx:250',message:'Calculando logo URL para MS',data:{logoFromDB:logosFromDB['ms_logo_url'],fallback:msConfig.logo.src,logoUrlFinal:logoUrl,hasLogoFromDB:!!logosFromDB['ms_logo_url']},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+
       return {
         ...msConfig,
         logo: {
@@ -289,13 +274,7 @@ safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',
   const isMS = config.brand === 'ms';
   
   console.log('🎨 BRAND: isMS:', isMS, 'isOverflowOne:', isOverflowOne, 'path:', location.pathname);
-  // #region agent log
-  safeLog({location:'BrandContext.tsx:223',message:'BrandContext valores finais',data:{pathname:location.pathname,isMS,isOverflowOne,brand:config.brand},runId:'run1',hypothesisId:'B'});
-  // #endregion
 
-  // #region agent log
-  safeLog({location:'BrandContext.tsx:225',message:'BrandProvider fornecendo contexto',data:{isMS,isOverflowOne,hasConfig:!!config},runId:'run1',hypothesisId:'A'});
-  // #endregion
   return (
     <BrandContext.Provider value={{ config, isOverflowOne, isMS }}>
       {children}
@@ -304,17 +283,11 @@ safeLog({location:'BrandContext.tsx:159',message:'detectTenantFromPath chamado',
 };
 
 export const useBrand = (): BrandContextType => {
-  // #region agent log
-  safeLog({location:'BrandContext.tsx:232',message:'useBrand chamado',data:{contextUndefined:false},runId:'post-fix',hypothesisId:'B'});
-  // #endregion
+  
   const context = useContext(BrandContext);
-  // #region agent log
-  safeLog({location:'BrandContext.tsx:234',message:'useBrand contexto obtido',data:{contextIsUndefined:context===undefined,hasContext:!!context},runId:'post-fix',hypothesisId:'B'});
-  // #endregion
+  
   if (context === undefined) {
-    // #region agent log
-    safeLog({location:'BrandContext.tsx:235',message:'useBrand contexto undefined - retornando fallback',data:{isDev:import.meta.env.DEV},runId:'post-fix',hypothesisId:'A'});
-    // #endregion
+    
     // Durante HMR, o contexto pode estar temporariamente indisponível
     // Retornar um valor padrão em vez de lançar erro para evitar quebrar a aplicação
     if (import.meta.env.DEV) {
@@ -329,9 +302,7 @@ export const useBrand = (): BrandContextType => {
     // Em produção, ainda lançar erro para detectar problemas reais
     throw new Error('useBrand must be used within a BrandProvider');
   }
-  // #region agent log
-  safeLog({location:'BrandContext.tsx:248',message:'useBrand retornando contexto',data:{hasConfig:!!context?.config},runId:'post-fix',hypothesisId:'B'});
-  // #endregion
+  
   return context;
 };
 

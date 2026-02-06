@@ -19,14 +19,9 @@ export function optimizeSupabaseImage(
   quality: number = 95,
   addCacheBust: boolean = false
 ): string {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeSupabaseImage:entry',message:'Entrada na função optimizeSupabaseImage',data:{url:url?.substring(0,100),urlLength:url?.length,width,quality,addCacheBust},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
-  
+
   if (!url || typeof url !== 'string') {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeSupabaseImage:empty',message:'URL vazia ou inválida',data:{url,type:typeof url},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
+    
     return '';
   }
 
@@ -41,22 +36,12 @@ export function optimizeSupabaseImage(
     
     // Adicionar cache busting se solicitado
     if (addCacheBust) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeSupabaseImage:supabase-cache',message:'Retornando URL original do Supabase com cache bust',data:{originalUrl:url.substring(0,100),baseUrl:baseUrl.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
       return `${baseUrl}?t=${Date.now()}`;
     }
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeSupabaseImage:supabase',message:'Retornando URL original do Supabase (sem otimização)',data:{originalUrl:url.substring(0,100),baseUrl:baseUrl.substring(0,100),reason:'render/image endpoint não disponível'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-    
+
     return baseUrl;
   }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeSupabaseImage:non-supabase',message:'URL não é do Supabase, retornando original',data:{url:url.substring(0,100),isSupabase:url.includes('supabase.co'),hasStorage:url.includes('/storage/v1/')},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
 
   // Retornar URL original se não for do Supabase
   return url;
@@ -74,14 +59,9 @@ export function optimizeThumbnail(url: string | null | undefined, addCacheBust: 
  * NOTA: Usa URL original diretamente pois /render/image/ não está disponível
  */
 export function optimizeEventCardImage(url: string | null | undefined, addCacheBust: boolean = false): string {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeEventCardImage:entry',message:'Entrada na função optimizeEventCardImage',data:{url:url?.substring(0,100),urlLength:url?.length,addCacheBust},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
+
   if (!url || typeof url !== 'string') {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeEventCardImage:empty',message:'URL vazia ou inválida',data:{url,type:typeof url},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
     return '';
   }
   
@@ -95,22 +75,12 @@ export function optimizeEventCardImage(url: string | null | undefined, addCacheB
     
     // Adicionar cache busting se solicitado
     if (addCacheBust) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeEventCardImage:supabase-cache',message:'Retornando URL original do Supabase com cache bust',data:{originalUrl:url.substring(0,100),baseUrl:baseUrl.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       return `${baseUrl}?t=${Date.now()}`;
     }
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeEventCardImage:supabase',message:'Retornando URL original do Supabase (sem otimização)',data:{originalUrl:url.substring(0,100),baseUrl:baseUrl.substring(0,100),reason:'render/image endpoint não disponível'},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
+
     return baseUrl;
   }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'imageOptimization.ts:optimizeEventCardImage:non-supabase',message:'URL não é do Supabase, retornando original',data:{url:url.substring(0,100),isSupabase:url.includes('supabase.co'),hasStorage:url.includes('/storage/v1/')},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 
   // Retornar URL original se não for do Supabase
   return url;

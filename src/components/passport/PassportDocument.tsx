@@ -123,9 +123,7 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
               route={activeRoute} 
               progress={progress || undefined}
               onProgressUpdate={() => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PassportDocument.tsx:onProgressUpdate',message:'Recarregando rota após check-in',data:{routeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
+                
                 // Recarregar rota e progresso após check-in
                 if (routeId) {
                   loadRoute(routeId);

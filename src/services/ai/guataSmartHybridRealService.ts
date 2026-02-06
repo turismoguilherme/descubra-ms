@@ -458,16 +458,3 @@ class GuataSmartHybridRealService {
 export const guataSmartHybridRealService = new GuataSmartHybridRealService();
 export type { SmartHybridRealQuery, SmartHybridRealResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-

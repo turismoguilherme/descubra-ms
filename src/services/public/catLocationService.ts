@@ -152,7 +152,6 @@ export class CATLocationService {
         insertData.radius_km = cat.radius_km;
       }
 
-
       const { data, error } = await supabase
         .from('cat_locations')
         .insert(insertData)

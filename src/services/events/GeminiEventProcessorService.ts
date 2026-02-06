@@ -374,4 +374,3 @@ export class GeminiEventProcessorService {
 // Instância singleton para uso global
 export const geminiEventProcessorService = new GeminiEventProcessorService();
 
-

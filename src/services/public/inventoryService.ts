@@ -233,7 +233,6 @@ export class InventoryService {
       insertData.created_by = null;
       insertData.updated_by = null;
 
-
       console.log('🔧 INVENTORYSERVICE: Dados preparados para inserção:', insertData);
 
       console.log('🔧 INVENTORYSERVICE: Executando insert no Supabase...');
@@ -404,11 +403,4 @@ export class InventoryService {
 }
 
 export const inventoryService = new InventoryService();
-
-
-
-
-
-
-
 

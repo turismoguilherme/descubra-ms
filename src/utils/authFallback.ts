@@ -108,6 +108,3 @@ export class AuthFallback {
 // Instância global
 export const authFallback = AuthFallback.getInstance();
 
-
-
-

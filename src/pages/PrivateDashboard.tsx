@@ -251,7 +251,6 @@ const PrivateDashboard = () => {
     };
   }, [user]);
 
-
   const handleRetakeDiagnostic = () => {
     setShowDiagnosticSection(true);
     setIsDiagnosticMinimized(false);
@@ -448,7 +447,6 @@ const PrivateDashboard = () => {
       </div>
     );
   }
-
 
   const handleDiagnosticSectionComplete = async (result: AnalysisResult, answers: QuestionnaireAnswers) => {
     setAnalysisResult(result);
@@ -1306,7 +1304,6 @@ const PrivateDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
-
 
     </div>
   );

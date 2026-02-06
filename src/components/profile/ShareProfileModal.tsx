@@ -302,7 +302,3 @@ const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
 
 export default ShareProfileModal;
 
-
-
-
-

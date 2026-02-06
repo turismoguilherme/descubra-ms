@@ -51,16 +51,8 @@ const AuthPage = () => {
   // Redirecionar se já autenticado - RECALCULAR path baseado no domínio atual
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthPage.tsx:useEffect:ALREADY_AUTHENTICATED',message:'Usuário já autenticado, recalculando redirect',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,redirectUrlParam},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C,E'})}).catch(()=>{});
-      // #endregion
-      
       // IMPORTANTE: Recalcular o path baseado no domínio ATUAL, não no render inicial
       const calculatedRedirectPath = redirectUrlParam || getLoginRedirectPath();
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthPage.tsx:useEffect:NAVIGATE_ALREADY_AUTH',message:'Navegando (já autenticado)',data:{calculatedRedirectPath,hostname:window.location.hostname,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C,E'})}).catch(()=>{});
-      // #endregion
       
       console.log('✅ [AuthPage] Usuário já autenticado, redirecionando para:', calculatedRedirectPath);
       console.log('✅ [AuthPage] Domínio atual:', window.location.hostname);
@@ -214,17 +206,9 @@ const AuthPage = () => {
         // Aguardar um pouco para garantir que a sessão foi estabelecida
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthPage.tsx:handleLogin:PRE_REDIRECT',message:'Antes de redirecionar após login',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,redirectUrlParam,hasUser:!!data?.user},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C,E'})}).catch(()=>{});
-        // #endregion
-        
         // IMPORTANTE: Recalcular o path baseado no domínio ATUAL, não usar valor do render inicial
         // Se houver parâmetro de redirect na URL, usar ele. Caso contrário, recalcular baseado no domínio atual
         const redirectPath = redirectUrlParam || getLoginRedirectPath();
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthPage.tsx:handleLogin:NAVIGATE',message:'Navegando para path calculado',data:{redirectPath,redirectUrlParam,hostname:window.location.hostname,pathname:window.location.pathname,isDescubraMS:isDescubraMSContext()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         
         console.log('✅ [AuthPage] Redirecionando para:', redirectPath);
         console.log('✅ [AuthPage] Domínio atual:', window.location.hostname);

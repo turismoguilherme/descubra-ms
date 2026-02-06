@@ -2281,13 +2281,3 @@ Com essas informações, vou montar um roteiro perfeito para você! 🚀`;
 // Exportar instância única
 export const guataIntelligentTourismService = new GuataIntelligentTourismService();
 
-
-
-
-
-
-
-
-
-
-

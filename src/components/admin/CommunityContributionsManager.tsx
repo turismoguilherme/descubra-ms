@@ -364,6 +364,3 @@ const CommunityContributionsManager = () => {
 
 export default CommunityContributionsManager;
 
-
-
-

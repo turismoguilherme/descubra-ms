@@ -53,6 +53,7 @@ import { ptBR } from 'date-fns/locale';
 import EventPaymentConfig from '@/components/admin/EventPaymentConfig';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { optimizeModalImage, optimizeThumbnail } from '@/utils/imageOptimization';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface Event {
   id: string;
@@ -146,7 +147,6 @@ export default function EventsManagement() {
     }
   };
 
-
   const fetchDefaultPaymentLink = async () => {
     setLoadingPaymentLink(true);
     try {
@@ -216,14 +216,10 @@ export default function EventsManagement() {
 
   // Buscar preço configurável
   const fetchSponsorPrice = async () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:entry',message:'fetchSponsorPrice called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
     setLoadingSponsorPrice(true);
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:before-query',message:'Before querying site_settings',data:{platform:'ms',setting_key:'event_sponsor_price'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       const { data, error } = await supabase
         .from('site_settings')
         .select('setting_value')
@@ -231,34 +227,22 @@ export default function EventsManagement() {
         .eq('setting_key', 'event_sponsor_price')
         .single();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:after-query',message:'After querying site_settings',data:{hasData:!!data,hasError:!!error,errorCode:error?.code,settingValue:data?.setting_value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       if (error && error.code !== 'PGRST116') {
         console.error('Erro ao buscar preço:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:error',message:'Error fetching price',data:{errorCode:error.code,errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
         return;
       }
 
       if (data?.setting_value) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:setting-value',message:'Setting value found',data:{settingValue:data.setting_value,settingValueType:typeof data.setting_value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
         setSponsorPrice(data.setting_value);
       }
     } catch (error) {
       console.error('Erro ao buscar preço:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:catch',message:'Exception in fetchSponsorPrice',data:{errorMessage:error instanceof Error ? error.message : String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
     } finally {
       setLoadingSponsorPrice(false);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:fetchSponsorPrice:exit',message:'fetchSponsorPrice completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
     }
   };
 
@@ -307,15 +291,11 @@ export default function EventsManagement() {
   };
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:useEffect:entry',message:'useEffect called',data:{functionsAvailable:{loadEvents:typeof loadEvents,fetchDefaultPaymentLink:typeof fetchDefaultPaymentLink,fetchSponsorPrice:typeof fetchSponsorPrice}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
     loadEvents();
     fetchDefaultPaymentLink();
     fetchSponsorPrice();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:useEffect:exit',message:'useEffect completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
   }, []);
 
   const approveEvent = async (eventId: string) => {
@@ -699,23 +679,15 @@ export default function EventsManagement() {
   };
 
   const deleteEvent = async (eventId: string) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:entry',message:'deleteEvent called',data:{eventId},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
+    
     setDeletingEventId(eventId);
     
     try {
       // Buscar dados do evento antes de excluir
       const event = events.find(e => e.id === eventId);
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:event-found',message:'Event lookup result',data:{eventFound:!!event,eventId,eventName:event?.name,paymentStatus:event?.sponsor_payment_status},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      
+
       if (!event) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:event-not-found',message:'Event not found in state',data:{eventId},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        
         toast({
           title: 'Erro',
           description: 'Evento não encontrado',
@@ -727,9 +699,7 @@ export default function EventsManagement() {
 
       // Se o evento foi pago, processar reembolso antes de excluir
       if (event.sponsor_payment_status === 'paid') {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:before-refund',message:'Attempting refund for paid event',data:{eventId,eventName:event.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        
         try {
           const { error: refundError } = await supabase.functions.invoke('refund-event-payment', {
             body: { 
@@ -737,10 +707,6 @@ export default function EventsManagement() {
               reason: 'Evento excluído permanentemente pelo administrador' 
             }
           });
-
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:refund-result',message:'Refund attempt result',data:{hasError:!!refundError,errorMessage:refundError?.message,errorName:refundError?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
 
           if (refundError) {
             console.error('Erro ao processar reembolso:', refundError);
@@ -756,9 +722,7 @@ export default function EventsManagement() {
             });
           }
         } catch (refundErr: unknown) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:refund-exception',message:'Refund exception caught',data:{errorMessage:refundErr?.message,errorName:refundErr?.name,errorStack:refundErr?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
+          
           console.error('Erro ao chamar função de reembolso:', refundErr);
           toast({
             title: 'Aviso',
@@ -769,30 +733,19 @@ export default function EventsManagement() {
       }
 
       // Excluir evento permanentemente do banco de dados
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:before-delete',message:'Before database delete',data:{eventId,eventName:event.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
       const { error, data } = await supabase
         .from('events')
         .delete()
         .eq('id', eventId)
         .select();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:delete-result',message:'Database delete result',data:{hasError:!!error,errorMessage:error?.message,errorCode:error?.code,deletedCount:data?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-
       if (error) {
         console.error('Erro ao excluir evento:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:delete-error',message:'Delete error thrown',data:{errorMessage:error.message,errorCode:error.code,errorDetails:error.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        
         throw error;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:delete-success',message:'Delete successful, showing toast and reloading',data:{eventName:event.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       toast({
         title: '✅ Evento excluído',
         description: `O evento "${event.name}" foi excluído permanentemente.`,
@@ -805,19 +758,12 @@ export default function EventsManagement() {
       setSelectedEvent(null);
 
       // Recarregar lista de eventos
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:before-reload',message:'Before reloading events',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      await loadEvents();
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:after-reload',message:'After reloading events',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       
+      await loadEvents();
+
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:catch',message:'Exception in deleteEvent',data:{errorMessage:err.message,errorName:err.name,errorStack:err.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
       console.error('Erro ao excluir evento:', err);
       toast({
         title: '❌ Erro ao excluir evento',
@@ -827,9 +773,7 @@ export default function EventsManagement() {
       });
     } finally {
       setDeletingEventId(null);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventsManagement.tsx:deleteEvent:finally',message:'deleteEvent finally block',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
     }
   };
 
@@ -871,7 +815,6 @@ export default function EventsManagement() {
     if (!editingEvent) return;
 
       console.log('🔧 Iniciando edição de evento:', editingEvent.id);
-
 
       setSaving(true);
     try {
@@ -919,7 +862,6 @@ export default function EventsManagement() {
 
       // Adicionar campos opcionais que existem na tabela
 
-
       // Adicionar campos opcionais que existem na tabela real
       const optionalFields = [
         { tableField: 'end_date', formField: 'end_date' },
@@ -939,7 +881,6 @@ export default function EventsManagement() {
           updateData[mapping.tableField] = editingEvent[mapping.formField as keyof typeof editingEvent];
         }
       }
-
 
       // Adicionar logo_evento se foi feito upload
       if (logoUrl) {
@@ -1284,10 +1225,11 @@ export default function EventsManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gerenciamento de Eventos</h2>
-          <p className="text-gray-600">Aprovar, rejeitar e destacar eventos da plataforma</p>
-        </div>
+        <AdminPageHeader
+          title="Eventos"
+          description="Aprove, edite ou remova eventos cadastrados por parceiros e organizadores."
+          helpText="Aprove, edite ou remova eventos cadastrados por parceiros e organizadores."
+        />
         <div className="flex items-center gap-4">
           <div className="flex items-center space-x-2">
             <Checkbox

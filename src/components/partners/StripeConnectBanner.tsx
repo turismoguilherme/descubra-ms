@@ -26,9 +26,6 @@ export default function StripeConnectBanner({
   const handleConnectStripe = async () => {
     setLoading(true);
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StripeConnectBanner.tsx:26',message:'Iniciando conexão com Stripe',data:{partnerId,partnerEmail,partnerName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
         body: {
@@ -40,10 +37,6 @@ export default function StripeConnectBanner({
         },
       });
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StripeConnectBanner.tsx:39',message:'Resposta da Edge Function',data:{hasError:!!error,errorMessage:error?.message,hasData:!!data,hasUrl:!!data?.url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-
       if (error) {
         throw new Error(error.message);
       }
@@ -52,9 +45,7 @@ export default function StripeConnectBanner({
         window.location.href = data.url;
       }
     } catch (error: unknown) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StripeConnectBanner.tsx:47',message:'Erro ao conectar Stripe',data:{errorMessage:error?.message,errorStack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
       console.error('Erro ao conectar Stripe:', error);
       toast({
         title: 'Erro ao conectar',

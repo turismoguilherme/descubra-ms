@@ -1726,5 +1726,3 @@ async function handleStripeConnectAccountUpdated(account: Stripe.Account, supaba
   }
 }
 
-
-

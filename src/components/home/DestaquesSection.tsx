@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { InteractionTracker } from "@/services/tracking/InteractionTrackerService";
@@ -47,7 +46,7 @@ const DestaquesSection = () => {
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;
 
-  const handleRegionClick = (regiao: typeof touristRegions2025[0]) => {
+  const handleRegionClick = (regiao: typeof regioesDestaque[0]) => {
     InteractionTracker.track({
       interaction_type: 'destination_click',
       target_id: regiao.slug,

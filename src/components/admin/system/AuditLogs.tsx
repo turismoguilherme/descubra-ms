@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface AuditLog {
   id: string;
@@ -118,10 +118,11 @@ export default function AuditLogs() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Auditoria</h2>
-          <p className="text-gray-600 mt-1">Histórico completo de ações administrativas no sistema</p>
-        </div>
+        <AdminPageHeader
+          title="Auditoria"
+          description="Veja logs de ações realizadas pelos administradores para rastreabilidade."
+          helpText="Veja logs de ações realizadas pelos administradores para rastreabilidade."
+        />
         <Button variant="outline" onClick={fetchLogs} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Atualizar

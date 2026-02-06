@@ -90,9 +90,7 @@ export const policyService = {
       return matchingPolicies[0];
     } catch (error) {
       console.warn('Erro ao buscar política do localStorage:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'policyService.ts:95',message:'getPublishedPolicyFromLocalStorage ERROR',data:{policyKey,platform,errorMessage:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+      
       return null;
     }
   },

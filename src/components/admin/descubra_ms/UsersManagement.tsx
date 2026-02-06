@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Ban } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface User {
   id: string;
@@ -78,10 +79,11 @@ export default function UsersManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Usuários Descubra MS</h2>
-        <p className="text-gray-600 mt-1">Gerencie usuários finais do Descubra MS</p>
-      </div>
+      <AdminPageHeader
+        title="Usuários"
+        description="Gerencie os usuários finais que acessam a plataforma Descubra MS. Você pode bloquear ou desbloquear usuários."
+        helpText="Gerencie os usuários finais que acessam a plataforma Descubra MS. Você pode bloquear ou desbloquear usuários."
+      />
 
       <Card>
         <CardHeader>

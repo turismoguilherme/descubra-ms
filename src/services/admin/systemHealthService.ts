@@ -403,18 +403,7 @@ export const systemHealthService = {
    * Envia notificações de alerta (email/WhatsApp) para usuários configurados
    */
   async sendAlertNotifications(alert: SystemAlert): Promise<void> {
-    // #region agent log - HYP-A: sendAlertNotifications iniciado
-    console.log('🔍 [DEBUG-HYP-A] sendAlertNotifications iniciado:', {
-      alertType: alert.alert_type,
-      serviceName: alert.service_name,
-      severity: alert.severity,
-      hasMessage: !!alert.message,
-      message: alert.message,
-      hasCreatedAt: !!alert.created_at,
-      createdAt: alert.created_at
-    });
-    // #endregion
-    
+
     try {
       // Buscar todas as configurações de alerta ativas
       const { data: configs, error } = await supabase
@@ -422,15 +411,6 @@ export const systemHealthService = {
         .select('*')
         .eq('downtime_alerts', true)
         .or(`email_enabled.eq.true,whatsapp_enabled.eq.true`);
-
-      // #region agent log - HYP-B: Configurações de alerta buscadas
-      console.log('🔍 [DEBUG-HYP-B] Configurações de alerta buscadas:', {
-        hasError: !!error,
-        errorMessage: error?.message,
-        configsCount: configs?.length || 0,
-        configs: configs
-      });
-      // #endregion
 
       if (error || !configs || configs.length === 0) {
         return; // Nenhuma configuração encontrada
@@ -452,20 +432,7 @@ export const systemHealthService = {
                 timestamp: alert.created_at,
               },
             };
-            
-            // #region agent log - HYP-A/B: Payload antes de enviar
-            console.log('🔍 [DEBUG-HYP-A] Payload completo antes de enviar:', JSON.stringify(emailPayload, null, 2));
-            console.log('🔍 [DEBUG-HYP-B] Validação do payload:', {
-              hasType: !!emailPayload.type,
-              typeValue: emailPayload.type,
-              hasTo: !!emailPayload.to,
-              toValue: emailPayload.to,
-              hasData: !!emailPayload.data,
-              dataKeys: Object.keys(emailPayload.data || {}),
-              dataValues: emailPayload.data
-            });
-            // #endregion
-            
+
             console.log('📧 [systemHealthService] Enviando email de alerta:', {
               to: config.email_address,
               payload: emailPayload,
@@ -483,55 +450,25 @@ export const systemHealthService = {
             let emailError: { code?: string; message?: string; name?: string; stack?: string; context?: unknown; constructor?: { name?: string } } | null = null;
             
             try {
-              // #region agent log - HYP-C: Tentando invocar via Supabase client
-              console.log('🔍 [DEBUG-HYP-C] Invocando Edge Function via Supabase client');
-              console.log('🔍 [DEBUG-HYP-C] Payload:', JSON.stringify(emailPayload, null, 2));
-              // #endregion
-              
+
               const result = await supabase.functions.invoke('send-notification-email', {
                 body: emailPayload,
               });
               
               emailResult = result.data;
               emailError = result.error;
-              
-              // #region agent log - HYP-C: Resultado da invocação
-              console.log('🔍 [DEBUG-HYP-C] Resultado da invocação:', {
-                hasData: !!emailResult,
-                hasError: !!emailError,
-                data: emailResult,
-                error: emailError
-              });
-              // #endregion
+
             } catch (invokeError: unknown) {
               const errorMessage = getErrorMessage(invokeError);
               const errorObj = invokeError && typeof invokeError === 'object'
                 ? (invokeError as { message?: string; stack?: string })
                 : null;
-              // #region agent log - HYP-C/E: Erro na invocação
-              console.error('🔍 [DEBUG-HYP-C] Erro ao invocar Edge Function:', {
-                error: invokeError,
-                message: errorMessage,
-                stack: errorObj?.stack
-              });
-              // #endregion
+              
               emailError = invokeError;
             }
             
             if (emailError) {
-            // #region agent log - HYP-D/E: Erro detalhado capturado
-            console.log('🔍 [DEBUG-HYP-D] Erro detalhado:', {
-              errorName: emailError?.name,
-              errorMessage: emailError?.message,
-              errorStack: emailError?.stack,
-              errorContext: emailError?.context,
-              errorKeys: emailError ? Object.keys(emailError) : [],
-              errorType: typeof emailError,
-              errorConstructor: emailError?.constructor?.name,
-              fullErrorString: emailError ? JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2) : 'null'
-            });
-            // #endregion
-              
+
               // Tentar extrair mensagem de erro mais detalhada
               const errorMessage = emailError?.message || (emailError ? JSON.stringify(emailError) : 'Erro desconhecido');
               console.error(`❌ Erro ao enviar email de alerta para ${config.email_address}:`, {
@@ -548,9 +485,7 @@ export const systemHealthService = {
               });
               console.warn('💡 Dica: Verifique os logs da Edge Function no Supabase Dashboard para mais detalhes sobre o erro 400');
             } else {
-            // #region agent log - HYP-A: Sucesso
-            console.log('🔍 [DEBUG-HYP-A] Sucesso - Edge Function retornou sem erro:', emailResult);
-            // #endregion
+            
               console.log(`✅ Email de alerta enviado para ${config.email_address}`, emailResult);
             }
           } catch (emailError: unknown) {
@@ -558,19 +493,7 @@ export const systemHealthService = {
             const errorObj = emailError && typeof emailError === 'object'
               ? (emailError as { name?: string; message?: string; stack?: string; context?: unknown; constructor?: { name?: string } })
               : null;
-            
-            // #region agent log - HYP-C/E: Exceção capturada no catch
-            console.log('🔍 [DEBUG-HYP-C] Exceção capturada no catch:', {
-              errorName: errorObj?.name,
-              errorMessage: errorMessage,
-              errorStack: errorObj?.stack,
-              errorType: typeof emailError,
-              errorConstructor: errorObj?.constructor?.name,
-              errorProps: errorObj ? Object.getOwnPropertyNames(errorObj) : [],
-              errorString: String(emailError)
-            });
-            // #endregion
-            
+
             // Capturar mensagem de erro mais detalhada
             let errorDetails = errorMessage;
             if (errorObj?.context) {

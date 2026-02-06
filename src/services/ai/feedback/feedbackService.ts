@@ -399,32 +399,3 @@ setInterval(() => {
   feedbackService.cleanupObsoletePatterns();
 }, 60 * 60 * 1000);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

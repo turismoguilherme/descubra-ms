@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Save, MessageCircle, Route } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 export default function WhatsAppSettingsManager() {
   const [loading, setLoading] = useState(true);
@@ -188,13 +189,11 @@ export default function WhatsAppSettingsManager() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <MessageCircle className="h-6 w-6 text-green-500" />
-            Configurações do WhatsApp
-          </h2>
-          <p className="text-gray-600 mt-1">Configure o botão flutuante do WhatsApp</p>
-        </div>
+        <AdminPageHeader
+          title="Configurações do WhatsApp"
+          description="Configure o botão flutuante do WhatsApp e opções de contato para roteiros personalizados."
+          helpText="Configure o botão flutuante do WhatsApp e opções de contato para roteiros personalizados."
+        />
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Salvando...' : 'Salvar'}

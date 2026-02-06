@@ -199,9 +199,6 @@ const UniversalFooter = () => {
               {(() => {
                 const logoUrl = brandContext && brandContext.isMS ? brandContext.config.logo.src : "/images/logo-descubra-ms.png?v=3";
                 const logoAlt = brandContext && brandContext.isMS ? brandContext.config.logo.alt : "Descubra Mato Grosso do Sul";
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:172',message:'Renderizando logo no footer',data:{logoUrl,logoAlt,hasBrandContext:!!brandContext,isMS:brandContext?.isMS},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
                 // Adicionar cache busting se estiver em /eventos
                 const finalLogoUrl = (location.pathname === '/eventos' && logoUrl.includes('supabase.co') && !logoUrl.includes('?t='))
                   ? `${logoUrl}${logoUrl.includes('?') ? '&' : '?'}t=${Date.now()}`
@@ -214,14 +211,8 @@ const UniversalFooter = () => {
                     alt={logoAlt} 
                     className="h-16 w-auto"
                     onLoad={(e) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:onLoad',message:'Logo carregada com sucesso no footer',data:{src:e.currentTarget.src,complete:e.currentTarget.complete,naturalWidth:e.currentTarget.naturalWidth,naturalHeight:e.currentTarget.naturalHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                      // #endregion
                     }}
                     onError={(e) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalFooter.tsx:onError',message:'Erro ao carregar logo no footer',data:{src:e.currentTarget.src,attemptedSrc:logoUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                      // #endregion
                       const target = e.target as HTMLImageElement;
                       target.src = "/images/logo-descubra-ms.png?v=3";
                     }}

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import LocationPicker from '@/components/admin/LocationPicker';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface Destination {
   id: string;
@@ -732,10 +733,11 @@ export default function DestinationManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold">Gerenciar Destinos</h2>
-          <p className="text-muted-foreground">Crie e edite destinos turísticos do Descubra MS</p>
-        </div>
+        <AdminPageHeader
+          title="Destinos"
+          description="Crie e edite destinos turísticos do Descubra MS com informações detalhadas, galeria de imagens e localização."
+          helpText="Crie e edite destinos turísticos do Descubra MS com informações detalhadas, galeria de imagens e localização."
+        />
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Destino
@@ -1225,7 +1227,4 @@ export default function DestinationManager() {
     </div>
   );
 }
-
-
-
 

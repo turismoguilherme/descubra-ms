@@ -21,27 +21,16 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
   useEffect(() => {
     if (!open) {
       setVideoPlaying(false);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:25',message:'Modal fechado, resetando estado do vídeo',data:{open},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-      // #endregion
+      
     }
   }, [open]);
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:19',message:'Building allImages array',data:{logo_url:partner.logo_url,gallery_images:partner.gallery_images,logo_type:typeof partner.logo_url,gallery_type:typeof partner.gallery_images},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
   const allImages = [
     partner.logo_url,
     ...(partner.gallery_images || [])
   ].filter(Boolean) as string[];
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:23',message:'allImages after filter',data:{length:allImages.length,images:allImages.map((img,i)=>({index:i,value:img,type:typeof img,isUndefined:img===undefined,isNull:img===null}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 
   const getYouTubeVideoId = (url: string): string | null => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:30',message:'Extraindo ID do vídeo do YouTube',data:{originalUrl:url,urlType:typeof url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    // #endregion
 
     if (!url || typeof url !== 'string') {
       return null;
@@ -57,9 +46,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:48',message:'ID do vídeo extraído',data:{originalUrl:url,videoId:match[1]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-        // #endregion
+        
         return match[1];
       }
     }
@@ -69,9 +56,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
 
   const getYouTubeEmbedUrl = (videoId: string, autoplay: boolean = false): string => {
     const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=${autoplay ? 1 : 0}&controls=1&enablejsapi=1&origin=${window.location.origin}`;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:77',message:'Gerando URL de embed do YouTube',data:{videoId,autoplay,embedUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    // #endregion
+    
     return embedUrl;
   };
 
@@ -83,14 +68,8 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
 
   // Log quando videoPlaying muda (após youtubeVideoId ser definido)
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:91',message:'Estado videoPlaying mudou',data:{videoPlaying,hasVideoId:!!youtubeVideoId,videoId:youtubeVideoId,willRenderIframe:videoPlaying},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    // #endregion
+    
   }, [videoPlaying, youtubeVideoId]);
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:97',message:'Estado do vídeo do YouTube',data:{hasYoutubeUrl:!!partner.youtube_url,youtubeUrl:partner.youtube_url,hasVideoId:!!youtubeVideoId,videoId:youtubeVideoId,videoPlaying},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-  // #endregion
 
   const openLightbox = (index: number) => {
     setLightboxImageIndex(index);
@@ -143,15 +122,11 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                     title={`Vídeo de ${partner.name}`}
                     frameBorder="0"
                     onError={(e) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:130',message:'Erro ao carregar iframe do YouTube',data:{videoId:youtubeVideoId,error:'iframe load error'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                      // #endregion
+                      
                       console.error('Erro ao carregar vídeo do YouTube:', youtubeVideoId);
                     }}
                     onLoad={() => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:138',message:'Iframe do YouTube carregado com sucesso',data:{videoId:youtubeVideoId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                      // #endregion
+                      
                     }}
                   />
                 ) : (
@@ -160,18 +135,12 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:155',message:'Thumbnail do vídeo clicada - ANTES de setVideoPlaying',data:{videoId:youtubeVideoId,currentVideoPlaying:videoPlaying},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                      // #endregion
+                      
                       setVideoPlaying(true);
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:161',message:'Thumbnail do vídeo clicada - DEPOIS de setVideoPlaying',data:{videoId:youtubeVideoId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                      // #endregion
+                      
                     }}
                     onMouseDown={(e) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:165',message:'MouseDown na thumbnail',data:{videoId:youtubeVideoId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                      // #endregion
+                      
                     }}
                   >
                     <img
@@ -179,9 +148,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                       alt={`Thumbnail do vídeo de ${partner.name}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:163',message:'Erro ao carregar thumbnail do YouTube',data:{videoId:youtubeVideoId,thumbnailUrl:getYouTubeThumbnailUrl(youtubeVideoId)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                        // #endregion
+                        
                         console.error('Erro ao carregar thumbnail do YouTube:', youtubeVideoId);
                       }}
                     />
@@ -239,9 +206,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                   <h3 className="font-semibold text-gray-900 text-lg">Galeria de Fotos</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {allImages.map((image, index) => {
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:126',message:'Before includes check in gallery map',data:{index,image,imageType:typeof image,isUndefined:image===undefined,isNull:image===null,isString:typeof image==='string'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                      // #endregion
+                      
                       const optimizedImageUrl = image && typeof image === 'string' && image.includes('supabase.co') 
                         ? image.split('?')[0] + '?width=800&quality=90'
                         : image;
@@ -293,14 +258,9 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                   size="lg"
                   className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full flex-1"
                   onClick={() => {
-                    // #region agent log
-                    const reservationUrl = `/descubrams/parceiros/${partner.id}/reservar`;
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:186',message:'Reservar Agora button clicked',data:{partnerId:partner.id,reservationUrl,windowOpenAvailable:typeof window.open==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
+                    
                     const newWindow = window.open(reservationUrl, '_blank');
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:190',message:'After window.open call',data:{newWindow:newWindow!==null,newWindowClosed:newWindow?.closed,blocked:newWindow===null},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
+                    
                   }}
                 >
                   Reservar Agora
@@ -347,9 +307,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
             <img
               src={(() => {
                 const imgUrl = allImages[lightboxImageIndex];
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:224',message:'Before includes check in lightbox',data:{lightboxImageIndex,imgUrl,imgUrlType:typeof imgUrl,isUndefined:imgUrl===undefined,isNull:imgUrl===null,allImagesLength:allImages.length,allImages:allImages},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
+                
                 if (imgUrl && typeof imgUrl === 'string' && imgUrl.includes('supabase.co')) {
                   return imgUrl.split('?')[0] + '?width=1920&quality=95';
                 }

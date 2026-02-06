@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 const PassportStampConfig: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -288,10 +289,15 @@ const PassportStampConfig: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <AdminPageHeader
+        title="Configurar Carimbos"
+        description="Configure temas e fragmentos de carimbos para as rotas do passaporte digital."
+        helpText="Configure temas e fragmentos de carimbos para as rotas do passaporte digital."
+      />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-center flex-1">Configurar Carimbos</CardTitle>
+            <CardTitle className="text-center flex-1">Carimbos</CardTitle>
             <Button 
               type="button"
               variant="outline" 

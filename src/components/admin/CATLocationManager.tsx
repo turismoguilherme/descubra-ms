@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Search, Plus, Edit2, Trash2, MapPin, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 // Interface baseada na tabela cat_locations do banco
 interface CAT {
@@ -253,6 +254,11 @@ const CATLocationManager = () => {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader
+        title="CATs"
+        description="Cadastre e gerencie os Centros de Atendimento ao Turista."
+        helpText="Cadastre e gerencie os Centros de Atendimento ao Turista."
+      />
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div className="flex gap-2 flex-1">
           <div className="relative flex-1">

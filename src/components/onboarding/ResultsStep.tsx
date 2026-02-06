@@ -3,7 +3,6 @@
  * Mostra os resultados do diagnóstico e próximos passos
  */
 
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,7 @@ interface ResultsStepProps {
 
 const ResultsStep: React.FC<ResultsStepProps> = ({ data, onNext }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(true);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analysisResult, setAnalysisResult] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     // Simular análise com IA

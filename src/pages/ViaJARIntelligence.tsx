@@ -1732,4 +1732,3 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
   );
 }
 
-

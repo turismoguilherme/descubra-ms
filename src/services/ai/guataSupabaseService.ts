@@ -214,17 +214,3 @@ class GuataSupabaseService {
 export const guataSupabaseService = new GuataSupabaseService();
 export type { SupabaseQuery, SupabaseResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-

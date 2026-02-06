@@ -1094,6 +1094,3 @@ export default function FooterSettingsManager() {
   );
 }
 
-
-
-

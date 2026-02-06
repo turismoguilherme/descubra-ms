@@ -120,5 +120,3 @@ describe('Diagnostic Analysis Service', () => {
   });
 });
 
-
-

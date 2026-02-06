@@ -11,20 +11,17 @@ export const SecurityHeaders = () => {
   useEffect(() => {
     // CSP permissivo para desenvolvimento e VLibras
     // Em produção, configurar CSP mais restritivo via headers HTTP no servidor
-    // #region agent log
-    const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const debugLogEndpoint = isDev ? 'http://127.0.0.1:7242' : '';
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:16',message:'SecurityHeaders useEffect iniciado',data:{isDev,hostname:window.location.hostname,env:import.meta.env.MODE},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
+
     // Remover meta tags CSP existentes ANTES de criar novas (evita múltiplas meta tags)
     const existingCSP = document.querySelectorAll('meta[http-equiv="Content-Security-Policy"]');
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:21',message:'CSP meta tags encontradas antes da remoção',data:{count:existingCSP.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'B'})}).catch(()=>{});
     existingCSP.forEach(meta => meta.remove());
     
-    // Verificar se há headers HTTP CSP aplicados
-    const responseHeaders = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:25',message:'Verificando headers HTTP CSP',data:{isDev,hasResponseHeaders:!!responseHeaders},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'C'})}).catch(()=>{});
+    // Verificar se está em ambiente de desenvolvimento
+    const isDev = import.meta.env.DEV || 
+      (typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1'
+      ));
     
     const connectSrc = isDev 
       ? "'self' https: wss: blob: http://127.0.0.1:* http://localhost:*"
@@ -44,10 +41,6 @@ export const SecurityHeaders = () => {
       "form-action 'self'",
       "object-src 'none'"
     ].join('; ');
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:42',message:'CSP directives criadas',data:{connectSrc,cspLength:cspDirectives.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     // Configurar meta tags de segurança
     const securityMetas = [
@@ -76,22 +69,9 @@ export const SecurityHeaders = () => {
         meta.content = content;
         // Inserir no início do head para garantir que seja aplicado primeiro
         document.head.insertBefore(meta, document.head.firstChild);
-        // #region agent log
-        if (httpEquiv === 'Content-Security-Policy') {
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:68',message:'Meta tag CSP criada',data:{content:content.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'})}).catch(()=>{});
-        }
-        // #endregion
+        
       }
     });
-    
-    // #region agent log
-    // Tentar fazer uma requisição de teste para verificar se CSP está bloqueando
-    setTimeout(() => {
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:75',message:'Teste de conexão após CSP configurado',data:{success:true},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'F'})}).catch((err) => {
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SecurityHeaders.tsx:75',message:'Erro ao conectar após CSP',data:{error:err.message},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'F'})}).catch(()=>{});
-      });
-    }, 100);
-    // #endregion
 
     // Cleanup function
     return () => {

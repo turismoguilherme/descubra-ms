@@ -262,6 +262,3 @@ export class StrategicAIService {
 // Exportar instância singleton
 export const strategicAIService = StrategicAIService.getInstance();
 
-
-
-

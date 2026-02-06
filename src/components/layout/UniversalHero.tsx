@@ -84,9 +84,7 @@ const UniversalHero = () => {
             hasPlaceholder: !!placeholderImage, 
             placeholderUrl: placeholderImage?.substring(0, 50) || 'não encontrado'
           });
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:71',message:'Verificando placeholder',data:{hasPlaceholder:!!placeholderImage,placeholderLength:placeholderImage?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
+          
           if (placeholderImage && placeholderImage.trim()) {
             setPlaceholderImageUrl(placeholderImage.trim());
             setImageLoaded(false);
@@ -94,16 +92,12 @@ const UniversalHero = () => {
             const img = new Image();
             img.onload = () => {
               console.log('✅ [UniversalHero] Imagem placeholder carregada');
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:79',message:'Imagem placeholder carregada',data:{imageLoaded:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-              // #endregion
+              
               setImageLoaded(true);
             };
             img.onerror = () => {
               console.warn('❌ [UniversalHero] Erro ao carregar imagem placeholder');
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:85',message:'Erro ao carregar placeholder',data:{imageLoaded:false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-              // #endregion
+              
               setImageLoaded(false);
             };
             img.loading = 'eager';
@@ -174,9 +168,7 @@ const UniversalHero = () => {
     if (videoUrl) {
       console.log('🔗 [UniversalHero] URL do vídeo:', videoUrl.substring(0, 50));
       console.log('🔗 [UniversalHero] URL do embed:', embedUrl?.substring(0, 100) || 'não gerada');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:131',message:'URL embed gerada',data:{hasEmbedUrl:!!embedUrl,embedUrlLength:embedUrl?.length||0,hasModestbranding:embedUrl?.includes('modestbranding')||false,hasControls:embedUrl?.includes('controls=0')||false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
     }
   }, [videoUrl, embedUrl]);
 
@@ -184,19 +176,13 @@ const UniversalHero = () => {
   useEffect(() => {
     if (embedUrl && !videoReady && videoLoading) {
       console.log('⏰ [UniversalHero] Iniciando fallback timer para vídeo');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:139',message:'Fallback timer iniciado',data:{hasEmbedUrl:!!embedUrl,videoReady,videoLoading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       const fallbackTimer = setTimeout(() => {
         console.log('⏰ [UniversalHero] Fallback: marcando vídeo como pronto após timeout');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:142',message:'Fallback timer executado',data:{videoReady:false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
         setVideoLoading(false);
         setVideoReady(true);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:145',message:'Vídeo marcado como pronto via fallback',data:{videoReady:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
       }, 2000); // Reduzido para 2 segundos para aparecer mais rápido
 
       return () => {
@@ -211,7 +197,6 @@ const UniversalHero = () => {
   const subtitle = isMS 
     ? t('hero.subtitle', { defaultValue: getContent('ms_hero_universal_subtitle', 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul') })
     : config.hero.subtitle;
-
 
   return (
     <>
@@ -300,11 +285,7 @@ const UniversalHero = () => {
                 zIndex: videoReady ? 0 : 5,
               }}
               ref={(el) => {
-                // #region agent log
-                if (el) {
-                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:273',message:'Imagem placeholder renderizada',data:{contentLoaded,hasPlaceholder:!!placeholderImageUrl,imageLoaded,videoReady},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                }
-                // #endregion
+                
               }}
             >
               <img
@@ -386,30 +367,18 @@ const UniversalHero = () => {
                   title="Background video"
                   sandbox="allow-scripts allow-same-origin allow-presentation"
                   ref={(el) => {
-                    // #region agent log
-                    if (el) {
-                      const computedStyle = window.getComputedStyle(el);
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:287',message:'Iframe renderizado',data:{videoReady,opacity:computedStyle.opacity,visibility:computedStyle.visibility,display:computedStyle.display,zIndex:computedStyle.zIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    }
-                    // #endregion
+                    
                   }}
                   onLoad={() => {
                     console.log('✅ [UniversalHero] Iframe do YouTube carregado');
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:300',message:'Iframe YouTube carregado',data:{videoReady,embedUrl:embedUrl?.substring(0,100)||''},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
-                    
+
                     // Marcar como pronto IMEDIATAMENTE para mostrar o vídeo
                     setTimeout(() => {
                       console.log('✅ [UniversalHero] Vídeo pronto para exibição');
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:305',message:'Marcando vídeo como pronto',data:{videoReady:false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                      // #endregion
+                      
                       setVideoLoading(false);
                       setVideoReady(true);
-                      // #region agent log
-                      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UniversalHero.tsx:310',message:'Vídeo marcado como pronto',data:{videoReady:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                      // #endregion
+                      
                     }, 500); // Reduzido para 500ms para aparecer mais rápido
                   }}
                   onError={(e) => {

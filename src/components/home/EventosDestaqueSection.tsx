@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Calendar, MapPin, Clock, Star, ArrowRight, Loader2 } from "lucide-react";
@@ -51,18 +50,30 @@ const EventosDestaqueSection = () => {
 
       console.log("Eventos encontrados:", data?.length || 0);
 
-      const eventsList: EventItem[] = (data || []).map((event: unknown) => ({
+      const eventsList: EventItem[] = (data || []).map((event: {
+        id: string;
+        name?: string | null;
+        description?: string | null;
+        start_date: string;
+        end_date?: string | null;
+        start_time?: string | null;
+        location?: string | null;
+        image_url?: string | null;
+        logo_evento?: string | null;
+        is_sponsored?: boolean | null;
+        sponsor_payment_status?: string | null;
+      }) => ({
         id: event.id,
         name: event.name || '',
         description: event.description || '',
         start_date: event.start_date,
-        end_date: event.end_date,
-        start_time: event.start_time,
+        end_date: event.end_date || undefined,
+        start_time: event.start_time || undefined,
         location: event.location || '',
-        image_url: event.image_url,
-        logo_evento: event.logo_evento,
+        image_url: event.image_url || undefined,
+        logo_evento: event.logo_evento || undefined,
         is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status),
-        sponsor_payment_status: event.sponsor_payment_status,
+        sponsor_payment_status: event.sponsor_payment_status || undefined,
       }));
 
       // Ordenar: patrocinados primeiro, depois por data
@@ -164,31 +175,21 @@ const EventosDestaqueSection = () => {
                 <div className="h-72 overflow-hidden relative">
                   {(() => {
                     const imageUrl = event.logo_evento || event.image_url;
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventosDestaqueSection.tsx:render-image',message:'Renderizando imagem do card de evento',data:{eventId:event.id,eventName:event.name,logo_evento:event.logo_evento?.substring(0,100),image_url:event.image_url?.substring(0,100),finalImageUrl:imageUrl?.substring(0,100),hasLogo:!!event.logo_evento,hasImageUrl:!!event.image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
+                    
                     const optimizedUrl = imageUrl ? optimizeEventCardImage(imageUrl) : '';
                     const finalUrl = optimizedUrl || imageUrl || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800";
-                    
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventosDestaqueSection.tsx:final-url',message:'URL final para carregar imagem',data:{eventId:event.id,imageUrl:imageUrl?.substring(0,100),optimizedUrl:optimizedUrl?.substring(0,100),finalUrl:finalUrl.substring(0,100),usingFallback:finalUrl.includes('unsplash.com')},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
-                    
+
                     return (
                       <img
                         src={finalUrl}
                         alt={event.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onLoad={(e) => {
-                          // #region agent log
-                          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventosDestaqueSection.tsx:onLoad',message:'Imagem carregada com sucesso',data:{eventId:event.id,src:e.currentTarget.src.substring(0,100),complete:e.currentTarget.complete,naturalWidth:e.currentTarget.naturalWidth,naturalHeight:e.currentTarget.naturalHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'C'})}).catch(()=>{});
-                          // #endregion
+                          
                         }}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          // #region agent log
-                          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventosDestaqueSection.tsx:onError',message:'Erro ao carregar imagem do card',data:{eventId:event.id,eventName:event.name,failedSrc:target.src.substring(0,100),originalImageUrl:imageUrl?.substring(0,100),willUseFallback:target.src !== "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800"},timestamp:Date.now(),sessionId:'debug-session',runId:'card-fix',hypothesisId:'D'})}).catch(()=>{});
-                          // #endregion
+                          
                           if (target.src !== "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800") {
                             target.src = "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800";
                           }

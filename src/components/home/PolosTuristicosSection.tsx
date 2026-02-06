@@ -110,4 +110,3 @@ const PolosTuristicosSection = () => {
 
 export default PolosTuristicosSection;
 
-

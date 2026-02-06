@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,6 +12,7 @@ import { Save, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 import { fallbackService } from '@/services/admin/fallbackService';
 import { useToast } from '@/hooks/use-toast';
 import { SystemFallback } from '@/types/admin';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 export default function FallbackConfig() {
   const [config, setConfig] = useState<SystemFallback | null>(null);
@@ -105,10 +105,11 @@ export default function FallbackConfig() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Configuração de Fallback</h2>
-          <p className="text-gray-600 mt-1">Configure sistema de fallback e monitoramento</p>
-        </div>
+        <AdminPageHeader
+          title="Fallback"
+          description="Configure o modo de manutenção e mensagens de indisponibilidade da plataforma."
+          helpText="Configure o modo de manutenção e mensagens de indisponibilidade da plataforma."
+        />
         <div className="flex gap-2">
           <Button variant="outline" onClick={checkHealth} disabled={checking}>
             <RefreshCw className={`h-4 w-4 mr-2 ${checking ? 'animate-spin' : ''}`} />
@@ -161,7 +162,7 @@ export default function FallbackConfig() {
               <Label htmlFor="fallback_mode">Modo de Fallback</Label>
               <Select
                 value={config.fallback_mode || ''}
-                onValueChange={(value) => setConfig({ ...config, fallback_mode: value as any })}
+                onValueChange={(value) => setConfig({ ...config, fallback_mode: value as 'maintenance' | 'readonly' | 'redirect' | null })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o modo" />

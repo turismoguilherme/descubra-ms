@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import LocationPicker from '@/components/admin/LocationPicker';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface TouristRegion {
   id: string;
@@ -966,12 +967,11 @@ export default function TouristRegionsManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold">Regiões Turísticas</h2>
-          <p className="text-muted-foreground">
-            Gerencie as 9 regiões turísticas de Mato Grosso do Sul
-          </p>
-        </div>
+        <AdminPageHeader
+          title="Regiões Turísticas"
+          description="Defina as regiões turísticas e seus destinos associados."
+          helpText="Defina as regiões turísticas e seus destinos associados."
+        />
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Região
@@ -1845,6 +1845,4 @@ export default function TouristRegionsManager() {
     </div>
   );
 }
-
-
 

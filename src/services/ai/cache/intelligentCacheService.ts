@@ -260,14 +260,3 @@ export class IntelligentCacheService {
 // Singleton global
 export const intelligentCacheService = new IntelligentCacheService();
 
-
-
-
-
-
-
-
-
-
-
-

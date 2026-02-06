@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface Bill {
   id: string;
@@ -166,10 +167,11 @@ export default function BillsManager() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-1">Contas a Pagar</h2>
-          <p className="text-sm text-gray-600">Gerencie suas contas e despesas</p>
-        </div>
+        <AdminPageHeader
+          title="Contas a Pagar"
+          description="Gerencie suas contas e despesas da plataforma."
+          helpText="Gerencie suas contas e despesas da plataforma."
+        />
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) {

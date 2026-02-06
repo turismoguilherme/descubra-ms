@@ -85,34 +85,3 @@ class ReportGeneratorService {
 
 export const reportGeneratorService = new ReportGeneratorService(); 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

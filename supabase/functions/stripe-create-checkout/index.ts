@@ -15,16 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    // #region agent log
-    const authHeader = req.headers.get('Authorization');
-    console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:19',message:'Edge Function entry - auth header check',data:{hasAuthHeader:!!authHeader,authHeaderPreview:authHeader?.substring(0,30)+'...',allHeaders:Object.fromEntries(req.headers.entries())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'}));
-    // #endregion
 
     // Verificar autenticação
     if (!authHeader) {
-      // #region agent log
-      console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:25',message:'Missing auth header - returning 401',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'}));
-      // #endregion
+      
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { 
@@ -46,15 +40,9 @@ serve(async (req) => {
 
     // Obter usuário atual
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    // #region agent log
-    console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:52',message:'getUser result',data:{hasUser:!!user,hasError:!!userError,userError:userError?.message,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'}));
-    // #endregion
-    
+
     if (userError || !user) {
-      // #region agent log
-      console.log(JSON.stringify({location:'stripe-create-checkout/index.ts:57',message:'Unauthorized - returning 401',data:{userError:userError?.message,hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'}));
-      // #endregion
+      
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { 

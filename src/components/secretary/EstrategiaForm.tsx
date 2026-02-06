@@ -316,5 +316,3 @@ const EstrategiaForm: React.FC<EstrategiaFormProps> = ({
 
 export default EstrategiaForm;
 
-
-

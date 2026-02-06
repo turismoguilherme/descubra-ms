@@ -18,4 +18,3 @@ export type { DetectedPattern } from './patternDetectionService';
 export { SupabaseMLIntegration } from './supabaseMLIntegration';
 export { MLCacheService } from './mlCacheService';
 
-

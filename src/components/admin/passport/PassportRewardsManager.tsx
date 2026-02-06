@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, HelpCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 const PassportRewardsManager: React.FC = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -197,9 +198,7 @@ const PassportRewardsManager: React.FC = () => {
 
     try {
       // Filtrar apenas campos que existem na tabela passport_rewards
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PassportRewardsManager.tsx:197',message:'Building rewardData',data:{formData:JSON.stringify(formData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+      
       const rewardData = {
         route_id: formData.route_id,
         partner_name: formData.partner_name,
@@ -222,9 +221,6 @@ const PassportRewardsManager: React.FC = () => {
         }),
       };
       console.log('🔵 [PassportRewardsManager] Dados para criação:', JSON.stringify(rewardData, null, 2));
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PassportRewardsManager.tsx:219',message:'rewardData built',data:{rewardData:JSON.stringify(rewardData),hasEmptyStrings:Object.values(rewardData).some(v=>v==='')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       await passportAdminService.createReward(rewardData);
 
@@ -314,6 +310,11 @@ const PassportRewardsManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <AdminPageHeader
+        title="Recompensas do Passaporte"
+        description="Gerencie recompensas oferecidas aos usuários que completam rotas do passaporte digital."
+        helpText="Gerencie recompensas oferecidas aos usuários que completam rotas do passaporte digital."
+      />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

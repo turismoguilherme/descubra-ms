@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { notifyPartnerApproved, notifyPartnerRejected } from '@/services/email/notificationEmailService';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 import {
   Dialog,
   DialogContent,
@@ -107,10 +108,6 @@ export default function PartnersManagement() {
         return;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:84',message:'Iniciando baixa manual (promoção)',data:{partnerId,partnerName:partner.name,currentStatus:partner.status,currentSubscriptionStatus:partner.subscription_status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
-
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -133,20 +130,12 @@ export default function PartnersManagement() {
         approved_by: user.id,
       };
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:107',message:'Antes de atualizar com baixa manual',data:{updateData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
-
       const { data: updatedPartner, error } = await supabase
         .from('institutional_partners')
         .update(updateData)
         .eq('id', partnerId)
         .select()
         .single();
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnersManagement.tsx:116',message:'Resultado da baixa manual',data:{hasError:!!error,errorMessage:error?.message,hasUpdatedPartner:!!updatedPartner},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
 
       if (error) {
         console.error('❌ [PartnersManagement] Erro ao dar baixa manual:', error);
@@ -451,10 +440,11 @@ export default function PartnersManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gerenciamento de Parceiros</h2>
-          <p className="text-gray-600">Aprovar, rejeitar e gerenciar parceiros da plataforma</p>
-        </div>
+        <AdminPageHeader
+          title="Parceiros"
+          description="Gerencie estabelecimentos parceiros que oferecem serviços turísticos na plataforma."
+          helpText="Gerencie estabelecimentos parceiros que oferecem serviços turísticos na plataforma."
+        />
         <Button onClick={loadPartners} variant="outline">
           Atualizar Lista
         </Button>

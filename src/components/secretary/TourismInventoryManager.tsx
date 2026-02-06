@@ -1622,4 +1622,3 @@ const AttractionForm: React.FC<{
 
 export default TourismInventoryManager;
 
-

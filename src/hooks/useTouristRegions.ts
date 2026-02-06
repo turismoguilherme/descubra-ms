@@ -153,5 +153,3 @@ export function useTouristRegions(language?: LanguageCode) {
   return { regions, loading, error, refetch };
 }
 
-
-

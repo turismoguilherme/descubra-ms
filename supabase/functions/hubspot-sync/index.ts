@@ -356,9 +356,3 @@ async function syncDealsFromHubSpot(supabase: any) {
   }
 }
 
-
-
-
-
-
-

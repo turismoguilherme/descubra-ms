@@ -264,4 +264,3 @@ export class GoogleCalendarSyncService {
 // Instância singleton para uso global
 export const googleCalendarSyncService = new GoogleCalendarSyncService();
 
-

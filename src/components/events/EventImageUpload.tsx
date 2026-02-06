@@ -3,7 +3,6 @@
  * Permite fazer upload de logotipo ou imagem promocional do evento
  */
 
-// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -44,16 +43,11 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventImageUpload.tsx:compressImage:imgLoad',message:'Imagem carregada para análise',data:{originalWidth:img.width,originalHeight:img.height,fileSize:file.size,fileType:file.type,needsResize:img.width > maxWidth},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'quality'})}).catch(()=>{});
-          // #endregion
-          
+
           // Se a imagem já é pequena e o arquivo não é muito grande, não processar
           // Isso preserva a qualidade original
           if (img.width <= maxWidth && file.size < 2 * 1024 * 1024) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventImageUpload.tsx:compressImage:skip',message:'Imagem pequena - pulando compressão para preservar qualidade',data:{width:img.width,height:img.height,fileSize:file.size},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'quality'})}).catch(()=>{});
-            // #endregion
+            
             resolve(file); // Retornar arquivo original sem processamento
             return;
           }
@@ -96,10 +90,6 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
 
           // Manter formato original (PNG permanece PNG, JPEG permanece JPEG)
           const outputType = file.type || 'image/jpeg';
-          
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventImageUpload.tsx:compressImage:processing',message:'Processando imagem com compressão',data:{originalWidth:img.width,originalHeight:img.height,newWidth:width,newHeight:height,quality:finalQuality,outputType,fileSizeBefore:file.size},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'quality'})}).catch(()=>{});
-          // #endregion
 
           // Converter para blob com alta qualidade
           canvas.toBlob(
@@ -108,11 +98,7 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
                 reject(new Error('Erro ao comprimir imagem'));
                 return;
               }
-              
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EventImageUpload.tsx:compressImage:complete',message:'Compressão concluída',data:{fileSizeBefore:file.size,fileSizeAfter:blob.size,compressionRatio:((file.size - blob.size) / file.size * 100).toFixed(2) + '%',quality:finalQuality},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'quality'})}).catch(()=>{});
-              // #endregion
-              
+
               // Criar novo File com o blob otimizado, mantendo formato original
               const optimizedFile = new File(
                 [blob],

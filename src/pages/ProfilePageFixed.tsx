@@ -47,7 +47,6 @@ const ProfilePageFixed: React.FC = () => {
   const [showShare, setShowShare] = useState(false);
   const [isEditingAvatarName, setIsEditingAvatarName] = useState(false);
   const [avatarCustomName, setAvatarCustomName] = useState('');
-  
 
   // Estados removidos - Roteiros Personalizados agora está em página dedicada
 
@@ -176,9 +175,7 @@ const ProfilePageFixed: React.FC = () => {
 
   const loadAvatars = async (): Promise<PantanalAnimal[]> => {
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Carregando avatares do banco',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
+      
       const { data, error } = await supabase
         .from('pantanal_avatars')
         .select('*')
@@ -188,9 +185,7 @@ const ProfilePageFixed: React.FC = () => {
 
       if (error) {
         console.error('Erro ao carregar avatares:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Erro ao carregar avatares',data:{error:error.message,code:error.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
+        
         // Retornar dados mockados como fallback
         return pantanalAnimals;
       }
@@ -210,16 +205,11 @@ const ProfilePageFixed: React.FC = () => {
         unlock_requirement: avatar.unlock_requirement || undefined
       }));
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Avatares carregados com sucesso',data:{count:avatares.length,hasImages:avatares.filter(a=>a.image).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       console.log('✅ Avatares carregados do banco:', avatares.length);
       return avatares.length > 0 ? avatares : pantanalAnimals; // Fallback para mockados se não houver dados
     } catch (error: unknown) {
       console.error('Erro ao carregar avatares:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfilePageFixed.tsx:loadAvatars',message:'Erro geral ao carregar avatares',data:{error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
+      
       return pantanalAnimals; // Fallback para mockados
     }
   };

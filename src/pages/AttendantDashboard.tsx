@@ -7,4 +7,3 @@ const AttendantDashboard = () => {
 
 export default AttendantDashboard;
 
-

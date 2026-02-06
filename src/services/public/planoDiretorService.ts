@@ -908,7 +908,6 @@ export class PlanoDiretorService {
     }
   }
 
-
   // Métodos para Objetivos
   async getObjetivos(planoDiretorId: string): Promise<Objetivo[]> {
     try {

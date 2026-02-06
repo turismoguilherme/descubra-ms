@@ -222,17 +222,3 @@ class GuataUltraFastIntelligentService {
 export const guataUltraFastIntelligentService = new GuataUltraFastIntelligentService();
 export type { UltraFastIntelligentQuery, UltraFastIntelligentResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-

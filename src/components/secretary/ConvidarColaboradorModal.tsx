@@ -342,5 +342,3 @@ const ConvidarColaboradorModal: React.FC<ConvidarColaboradorModalProps> = ({
 
 export default ConvidarColaboradorModal;
 
-
-

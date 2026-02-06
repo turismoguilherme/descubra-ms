@@ -424,16 +424,3 @@ class GuataSmartHybridService {
 export const guataSmartHybridService = new GuataSmartHybridService();
 export type { SmartHybridQuery, SmartHybridResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-

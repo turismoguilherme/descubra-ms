@@ -42,7 +42,6 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-
   useEffect(() => {
     loadPricing();
   }, [partnerId]);
@@ -71,7 +70,6 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
       setLoading(false);
     }
   };
-
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este preço?')) return;
@@ -255,7 +253,6 @@ export default function PartnerPricingEditor({ partnerId, onUpdate }: PartnerPri
         editingPricing={editingPricing}
         onSuccess={handleWizardSuccess}
       />
-
 
       {/* Filtros e Busca */}
       {pricingList.length > 0 && (

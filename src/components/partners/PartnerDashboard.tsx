@@ -119,15 +119,8 @@ export default function PartnerDashboard() {
 
   const loadPartnerData = async () => {
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:119',message:'Iniciando loadPartnerData',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
 
       const { data: { user } } = await supabase.auth.getUser();
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:122',message:'Usuário obtido do auth',data:{hasUser:!!user,userEmail:user?.email,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
 
       if (!user?.email) {
         toast({
@@ -138,24 +131,14 @@ export default function PartnerDashboard() {
         return;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:131',message:'Antes de buscar parceiro',data:{userEmail:user.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
-
       const { data: partnerData, error: partnerError } = await supabase
         .from('institutional_partners')
         .select('*')
         .eq('contact_email', user.email)
         .single();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:135',message:'Resultado da busca do parceiro',data:{hasError:!!partnerError,errorCode:partnerError?.code,errorMessage:partnerError?.message,hasPartnerData:!!partnerData,partnerId:partnerData?.id,partnerEmail:partnerData?.contact_email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
-
       if (partnerError || !partnerData) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDashboard.tsx:137',message:'Erro ao encontrar parceiro',data:{errorCode:partnerError?.code,errorMessage:partnerError?.message,errorDetails:partnerError?.details,errorHint:partnerError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-        // #endregion
+        
         toast({
           title: 'Parceiro não encontrado',
           description: 'Você não está cadastrado como parceiro',

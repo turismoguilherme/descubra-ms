@@ -7,6 +7,3 @@ const OverflowOneAtendenteDashboard: React.FC = () => {
 
 export default OverflowOneAtendenteDashboard;
 
-
-
-

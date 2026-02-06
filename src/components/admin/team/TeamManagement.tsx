@@ -45,6 +45,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { ROLE_PERMISSIONS } from '../layout/ModernAdminLayout';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface TeamMember {
   id: string;
@@ -209,9 +210,6 @@ export default function TeamManagement() {
   // Detectar aba ativa baseada na URL
   const getActiveTabFromUrl = (): string => {
     const path = location.pathname;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamManagement.tsx:getActiveTabFromUrl',message:'Detectando aba da URL',data:{path,pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (path.includes('/team/permissions')) return 'permissions';
     if (path.includes('/team/activities')) return 'activity';
     return 'members'; // default
@@ -222,17 +220,11 @@ export default function TeamManagement() {
   // Sincronizar aba quando URL mudar
   useEffect(() => {
     const tab = getActiveTabFromUrl();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamManagement.tsx:useEffect',message:'URL mudou, atualizando aba',data:{pathname:location.pathname,detectedTab:tab,currentActiveTab:activeTab},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     setActiveTab(tab);
   }, [location.pathname]);
 
   // Atualizar URL quando aba mudar
   const handleTabChange = (value: string) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TeamManagement.tsx:handleTabChange',message:'Aba mudou, atualizando URL',data:{newTab:value,currentPath:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     setActiveTab(value);
     const basePath = '/viajar/admin/team';
     switch (value) {
@@ -355,10 +347,11 @@ export default function TeamManagement() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Gestão de Equipe</h2>
-          <p className="text-slate-500 mt-1">Gerencie funcionários, permissões e acompanhe atividades</p>
-        </div>
+        <AdminPageHeader
+          title="Equipe Admin"
+          description="Gerencie membros da equipe administrativa e suas permissões de acesso."
+          helpText="Gerencie membros da equipe administrativa e suas permissões de acesso."
+        />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-emerald-600 hover:bg-emerald-700">

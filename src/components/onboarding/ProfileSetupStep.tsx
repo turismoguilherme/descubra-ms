@@ -3,7 +3,6 @@
  * Coleta informações básicas sobre o negócio do usuário
  */
 
-// @ts-nocheck
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +27,12 @@ interface ProfileSetupStepProps {
 }
 
 const ProfileSetupStep: React.FC<ProfileSetupStepProps> = ({ data, onNext }) => {
+  const dataObj = data as Record<string, unknown>;
   const [formData, setFormData] = useState({
-    businessName: data.businessName || '',
-    businessType: data.businessType || '',
-    location: data.location || '',
-    experience: data.experience || '',
+    businessName: (dataObj.businessName as string) || '',
+    businessType: (dataObj.businessType as string) || '',
+    location: (dataObj.location as string) || '',
+    experience: (dataObj.experience as string) || '',
     description: '',
     website: '',
     phone: '',

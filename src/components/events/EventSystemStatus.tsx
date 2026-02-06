@@ -5,7 +5,6 @@
  * SEGURANÇA: Não interfere com funcionalidades existentes
  */
 
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +23,9 @@ import {
 import { API_CONFIG } from '@/config/apiKeys';
 
 const EventSystemStatus: React.FC = () => {
-  const [systemStatus, setSystemStatus] = useState<any>(null);
+  const [systemStatus, setSystemStatus] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     loadSystemStatus();

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { systemHealthService } from '@/services/admin/systemHealthService';
 import { checkApiAvailability } from '@/services/tourism/fetchCompatible';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface SystemStatus {
   platform: string;
@@ -65,9 +65,10 @@ export default function SystemMonitoring() {
           const isAvailable = await checkApiAvailability();
           const latency = Date.now() - startTime;
           return { status: isAvailable ? 'online' : 'offline', latency };
-        } catch (error: any) {
+        } catch (error: unknown) {
           // CORS errors são esperados quando APIs externas não permitem localhost
-          if (error?.message?.includes('CORS') || error?.message?.includes('Failed to fetch')) {
+          const err = error instanceof Error ? error : new Error(String(error));
+          if (err.message?.includes('CORS') || err.message?.includes('Failed to fetch')) {
             return { status: 'offline', latency: Date.now() - startTime };
           }
           throw error;
@@ -213,10 +214,11 @@ export default function SystemMonitoring() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Monitoramento do Sistema</h2>
-          <p className="text-gray-600 mt-1">Status e saúde dos sistemas em tempo real</p>
-        </div>
+        <AdminPageHeader
+          title="Monitoramento"
+          description="Visualize métricas de performance e saúde do sistema em tempo real."
+          helpText="Visualize métricas de performance e saúde do sistema em tempo real."
+        />
         <Button
           onClick={handleRefresh}
           disabled={refreshing}

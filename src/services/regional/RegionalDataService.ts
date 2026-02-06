@@ -288,6 +288,3 @@ export class RegionalDataService {
 // Exportar instância singleton
 export const regionalDataService = RegionalDataService.getInstance();
 
-
-
-

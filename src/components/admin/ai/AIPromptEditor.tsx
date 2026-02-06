@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 const PROMPT_TYPES = {
   system: { label: 'Sistema', description: 'Definições básicas sobre quem é o chatbot' },
@@ -213,12 +214,11 @@ export default function AIPromptEditor() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Editor de Prompts</h2>
-          <p className="text-muted-foreground">
-            Edite os prompts do Guatá e Koda
-          </p>
-        </div>
+        <AdminPageHeader
+          title="Editor de Prompts"
+          description="Personalize o comportamento e personalidade dos chatbots editando seus prompts."
+          helpText="Personalize o comportamento e personalidade dos chatbots editando seus prompts."
+        />
         <div className="flex gap-2">
           {prompts.length === 0 && (
             <Button

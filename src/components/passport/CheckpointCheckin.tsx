@@ -43,9 +43,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       location,
       validation,
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:useEffect',message:'Estado do botão atualizado',data:{hasLocation:!!location,validationValid:validation?.valid,checkingIn,isDisabled},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch((e)=>{console.error('❌ [CheckpointCheckin] Erro ao enviar log:',e);});
-    // #endregion
+    
   }, [location, validation, checkingIn]);
 
   /**
@@ -133,14 +131,9 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       validationMode: checkpoint.validation_mode,
       hasPartnerCode: !!partnerCode,
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:92',message:'handleCheckin chamado',data:{hasLocation:!!location,hasValidation:!!validation,validationValid:validation?.valid,validationMode:checkpoint.validation_mode,hasPartnerCode:!!partnerCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch((e)=>{console.error('❌ [CheckpointCheckin] Erro ao enviar log:',e);});
-    // #endregion
-    
+
     if (!location) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:94',message:'Check-in bloqueado - sem localização',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-      // #endregion
+      
       toast({
         title: 'Localização necessária',
         description: 'Por favor, obtenha sua localização primeiro.',
@@ -150,9 +143,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
     }
 
     if (validation && !validation.valid && (checkpoint.validation_mode === 'geofence' || checkpoint.validation_mode === 'mixed')) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:102',message:'Check-in bloqueado - fora do alcance',data:{distance:validation.distance,validationMode:checkpoint.validation_mode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-      // #endregion
+      
       toast({
         title: 'Fora do alcance',
         description: `Você está a ${validation.distance}m do checkpoint. Aproxime-se mais.`,
@@ -163,9 +154,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
 
     // Se este checkpoint exige código (code ou mixed), garantir que o usuário digitou algo
     if ((checkpoint.validation_mode === 'code' || checkpoint.validation_mode === 'mixed') && !partnerCode.trim()) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:112',message:'Check-in bloqueado - código necessário',data:{validationMode:checkpoint.validation_mode,partnerCodeLength:partnerCode.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-      // #endregion
+      
       toast({
         title: 'Código do parceiro necessário',
         description: 'Peça o código no balcão/recepção do parceiro e digite para concluir o check-in.',
@@ -195,9 +184,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       console.log('🔵 [CheckpointCheckin] Dentro do try, antes de setCheckingIn');
       setCheckingIn(true);
       console.log('🔵 [CheckpointCheckin] setCheckingIn(true) executado');
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:131',message:'Iniciando check-in',data:{checkpointId:checkpoint.id,hasLocation:!!location,hasPhoto:!!photo,hasPartnerCode:!!partnerCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+      
       console.log('🔵 [CheckpointCheckin] Antes de chamar checkIn', {
         checkpointId: checkpoint.id,
         lat: location.lat,
@@ -208,9 +195,6 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       const result = await checkIn(checkpoint.id, location.lat, location.lon, photoUrl, partnerCode);
       console.log('🔵 [CheckpointCheckin] checkIn retornou', result);
       console.log('🔵 [CheckpointCheckin] Resultado completo:', JSON.stringify(result, null, 2));
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:133',message:'Resultado do check-in',data:{success:result.success,routeCompleted:result.route_completed,error:result.error,fullResult:result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
 
       if (result.success) {
         toast({
@@ -247,15 +231,9 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           }
         }
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:168',message:'Chamando onCheckinSuccess callback',data:{hasCallback:!!onCheckinSuccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         onCheckinSuccess?.();
       } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:178',message:'Check-in falhou',data:{error:result.error,hasCallback:!!onCheckinSuccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
         // Se o erro for "check-in já realizado", mostrar mensagem informativa e atualizar progresso
         if (result.error?.includes('já realizado') || result.error?.includes('Check-in já realizado')) {
           console.log('🔵 [CheckpointCheckin] Check-in já realizado, atualizando progresso');
@@ -266,9 +244,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           });
           // Sempre atualizar progresso quando check-in já existe
           if (onCheckinSuccess) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:256',message:'Atualizando progresso - check-in já existe',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
+            
             onCheckinSuccess();
           }
         } else {
@@ -467,9 +443,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
                     checkingIn,
                     disabled: isDisabled,
                   });
-                  // #region agent log
-                  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CheckpointCheckin.tsx:389',message:'Botão Fazer check-in clicado',data:{hasLocation:!!location,validationValid:validation?.valid,checkingIn,disabled:isDisabled},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch((e)=>{console.error('❌ [CheckpointCheckin] Erro ao enviar log:',e);});
-                  // #endregion
+                  
                   handleCheckin();
                 }}
                 disabled={isDisabled}

@@ -193,6 +193,3 @@ export function useFooterSettings(platform: 'ms' | 'viajar') {
   return { settings, loading, refetch };
 }
 
-
-
-

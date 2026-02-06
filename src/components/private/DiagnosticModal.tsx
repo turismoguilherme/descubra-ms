@@ -199,5 +199,3 @@ const DiagnosticModal: React.FC<DiagnosticModalProps> = ({
 
 export default DiagnosticModal;
 
-
-

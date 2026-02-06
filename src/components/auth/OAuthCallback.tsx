@@ -42,10 +42,7 @@ export const OAuthCallback = () => {
         }
 
         if (session?.user) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OAuthCallback.tsx:processOAuthCallback:OAUTH_SUCCESS',message:'OAuth login bem-sucedido, calculando redirect',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin,hash:window.location.hash,userId:session.user.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
-          
+
           console.log('✅ [OAuthCallback] ========== LOGIN OAUTH BEM-SUCEDIDO ==========');
           console.log('✅ [OAuthCallback] Usuário:', session.user.email);
           console.log('✅ [OAuthCallback] User ID:', session.user.id);
@@ -100,10 +97,6 @@ export const OAuthCallback = () => {
           }
           
           const isDescubraMS = isDescubraMSContext();
-
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'OAuthCallback.tsx:processOAuthCallback:NAVIGATE',message:'Navegando após OAuth callback',data:{redirectPath,isDescubraMS,hostname:window.location.hostname,pathname:window.location.pathname,currentHostname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
 
           console.log('🔄 [OAuthCallback] 📋 RESUMO DO REDIRECIONAMENTO:');
           console.log('🔄 [OAuthCallback]   - É contexto Descubra MS:', isDescubraMS);

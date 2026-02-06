@@ -27,7 +27,3 @@ export function HelpTooltip({ content, side = 'top' }: HelpTooltipProps) {
   );
 }
 
-
-
-
-

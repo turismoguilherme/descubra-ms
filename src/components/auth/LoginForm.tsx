@@ -18,8 +18,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLoginRedirectPath } from '@/utils/authRedirect';
 import { useBrand } from "@/context/BrandContext";
 
-
-
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   password: z.string().min(1, { message: "A senha é obrigatória" }),
@@ -113,18 +111,10 @@ const LoginForm = () => {
           navigate('/partner/dashboard');
           return;
         }
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:onSubmit:PRE_REDIRECT',message:'Antes de redirecionar após login',data:{hostname:window.location.hostname,pathname:window.location.pathname,origin:window.location.origin},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
         // Usar função utilitária para detectar plataforma corretamente
         const redirectPath = getLoginRedirectPath();
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:onSubmit:NAVIGATE',message:'Navegando para path calculado',data:{redirectPath,hostname:window.location.hostname,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
         console.log("🔄 LOGIN: Redirecionando para:", redirectPath);
         
         toast({

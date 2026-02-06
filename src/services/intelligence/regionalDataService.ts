@@ -436,4 +436,3 @@ export function getRegionsByQuality(quality: DataQualityLevel): RegionConfig[] {
   return getAvailableRegions().filter(r => r.quality === quality);
 }
 
-

@@ -543,9 +543,3 @@ const StripeSubscriptionManager = () => {
 
 export default StripeSubscriptionManager;
 
-
-
-
-
-
-

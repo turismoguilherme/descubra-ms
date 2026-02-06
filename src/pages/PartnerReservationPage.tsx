@@ -69,44 +69,28 @@ export default function PartnerReservationPage() {
     if (!id) return;
     
     try {
-      // #region agent log
-      const { data: sessionData } = await supabase.auth.getSession();
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:63',message:'loadPartnerData iniciado',data:{partnerId:id,hasUser:!!user,userEmail:user?.email,hasSession:!!sessionData?.session,userId:sessionData?.session?.user?.id,userRole:sessionData?.session?.user?.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
+
       // Tentar fazer refresh do token se houver sessão (para garantir token válido)
       if (sessionData?.session && sessionData.session.refresh_token) {
         const expiresAt = sessionData.session.expires_at ? sessionData.session.expires_at * 1000 : 0;
         const now = Date.now();
         const isExpired = expiresAt > 0 && expiresAt <= now;
         const timeUntilExpiry = expiresAt > 0 ? expiresAt - now : 0;
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:72',message:'Verificando token',data:{partnerId:id,hasSession:true,expiresAt:expiresAt > 0 ? new Date(expiresAt).toISOString() : null,now:new Date(now).toISOString(),isExpired,timeUntilExpiryMs:timeUntilExpiry,hasRefreshToken:!!sessionData.session.refresh_token},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
         // Tentar refresh se expirado ou próximo de expirar (menos de 5 minutos)
         if (isExpired || timeUntilExpiry < 5 * 60 * 1000) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:80',message:'Tentando refresh do token',data:{partnerId:id,isExpired,timeUntilExpiryMs:timeUntilExpiry},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
+          
           try {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError) {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:85',message:'Erro ao fazer refresh, limpando sessão',data:{partnerId:id,refreshError:refreshError.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
+              
               // Se não conseguir fazer refresh, limpar sessão para fazer requisições sem JWT
               await supabase.auth.signOut();
             } else {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:90',message:'Token refresh concluído com sucesso',data:{partnerId:id,hasNewSession:!!refreshData.session},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
+              
             }
           } catch (refreshError) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:94',message:'Exceção ao fazer refresh, limpando sessão',data:{partnerId:id,refreshError:refreshError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
+            
             // Se não conseguir fazer refresh, limpar sessão para fazer requisições sem JWT
             await supabase.auth.signOut();
           }
@@ -119,15 +103,9 @@ export default function PartnerReservationPage() {
         .eq('id', id)
         .single();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:110',message:'Query institutional_partners resultado',data:{hasData:!!data,hasError:!!error,errorCode:error?.code,errorMessage:error?.message,errorDetails:error?.details,errorHint:error?.hint,partnerStatus:data?.status,is401:error?.code === 'PGRST301' || error?.status === 401,is403:error?.code === '42501' || error?.status === 403},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-
       // Se erro 401 com JWT expired, limpar sessão e retentar sem JWT
       if (error && (error.code === 'PGRST301' || error.message?.includes('JWT expired'))) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:115',message:'JWT expirado detectado, limpando sessão e retentando',data:{partnerId:id,errorCode:error.code,errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        
         await supabase.auth.signOut();
         
         // Retentar sem JWT (usando políticas públicas)
@@ -136,16 +114,10 @@ export default function PartnerReservationPage() {
           .select('id, name, address, logo_url, status')
           .eq('id', id)
           .single();
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:123',message:'Retry sem JWT resultado',data:{hasData:!!retryResult.data,hasError:!!retryResult.error,errorCode:retryResult.error?.code,errorMessage:retryResult.error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
         if (retryResult.error) {
           console.error('Erro ao buscar parceiro (após limpar sessão):', retryResult.error);
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:128',message:'Erro ao buscar parceiro após limpar sessão',data:{errorCode:retryResult.error.code,errorMessage:retryResult.error.message,errorDetails:retryResult.error.details,errorHint:retryResult.error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
+          
           throw retryResult.error;
         }
         
@@ -153,38 +125,26 @@ export default function PartnerReservationPage() {
         error = null;
       } else if (error) {
         console.error('Erro ao buscar parceiro:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:135',message:'Erro ao buscar parceiro',data:{errorCode:error.code,errorMessage:error.message,errorDetails:error.details,errorHint:error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         throw error;
       }
 
       if (!data) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:85',message:'Parceiro não encontrado (data null)',data:{partnerId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        
         throw new Error('Parceiro não encontrado');
       }
 
       // Verificar se parceiro está aprovado e ativo
       if (data.status !== 'approved') {
         console.warn('Parceiro não está aprovado:', data.status);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:91',message:'Parceiro não aprovado',data:{partnerId:id,status:data.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         // Não bloquear, apenas avisar
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:97',message:'Parceiro carregado com sucesso',data:{partnerId:data.id,partnerName:data.name,status:data.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
       setPartner(data);
     } catch (error: unknown) {
       console.error('Erro ao carregar parceiro:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:103',message:'Erro final ao carregar parceiro',data:{errorMessage:error.message,errorCode:error.code,partnerId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
       toast({
         title: 'Erro',
         description: error.message || 'Não foi possível carregar as informações do parceiro.',
@@ -199,12 +159,7 @@ export default function PartnerReservationPage() {
 
     try {
       setLoading(true);
-      
-      // #region agent log
-      const { data: sessionData } = await supabase.auth.getSession();
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:100',message:'loadPricing iniciado',data:{partnerId:id,hasUser:!!user,userEmail:user?.email,hasSession:!!sessionData?.session,userId:sessionData?.session?.user?.id,userRole:sessionData?.session?.user?.role,authRole:user ? 'authenticated' : 'anonymous'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
+
       // Tentar fazer refresh do token se houver sessão (para garantir token válido)
       if (sessionData?.session && sessionData.session.refresh_token) {
         const expiresAt = sessionData.session.expires_at ? sessionData.session.expires_at * 1000 : 0;
@@ -233,16 +188,10 @@ export default function PartnerReservationPage() {
         .eq('partner_id', id)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:230',message:'Query partner_pricing resultado',data:{hasData:!!data,dataLength:data?.length,hasError:!!error,errorCode:error?.code,errorMessage:error?.message,errorDetails:error?.details,is401:error?.code === 'PGRST301' || error?.status === 401},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
+
       // Se erro 401 com JWT expired, limpar sessão e retentar sem JWT
       if (error && (error.code === 'PGRST301' || error.message?.includes('JWT expired'))) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:235',message:'JWT expirado detectado em pricing, limpando sessão e retentando',data:{partnerId:id,errorCode:error.code,errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        
         await supabase.auth.signOut();
         
         // Retentar sem JWT (usando políticas públicas)
@@ -252,16 +201,10 @@ export default function PartnerReservationPage() {
           .eq('partner_id', id)
           .eq('is_active', true)
           .order('created_at', { ascending: false });
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:245',message:'Retry pricing sem JWT resultado',data:{hasData:!!retryResult.data,dataLength:retryResult.data?.length,hasError:!!retryResult.error,errorCode:retryResult.error?.code,errorMessage:retryResult.error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+
         if (retryResult.error) {
           console.error('Erro ao carregar preços (após limpar sessão):', retryResult.error);
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:250',message:'Erro ao buscar preços após limpar sessão',data:{errorCode:retryResult.error.code,errorMessage:retryResult.error.message,errorDetails:retryResult.error.details,errorHint:retryResult.error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
+          
           throw retryResult.error;
         }
         
@@ -269,15 +212,8 @@ export default function PartnerReservationPage() {
         error = null;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:111',message:'Query partner_pricing resultado',data:{hasData:!!data,dataLength:data?.length,hasError:!!error,errorCode:error?.code,errorMessage:error?.message,errorDetails:error?.details,errorHint:error?.hint,is401:error?.code === 'PGRST301' || error?.status === 401,is403:error?.code === '42501' || error?.status === 403,isRLSError:error?.message?.includes('permission denied') || error?.message?.includes('row-level security')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       if (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:116',message:'Erro ao buscar preços',data:{errorCode:error.code,errorMessage:error.message,errorDetails:error.details,errorHint:error.hint,isTableMissing:error.code === 'PGRST116' || error.message?.includes('does not exist')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        
+
         if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
           console.log('Tabela partner_pricing ainda não foi criada.');
           setPricingList([]);
@@ -286,10 +222,6 @@ export default function PartnerReservationPage() {
         throw error;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:127',message:'Preços carregados com sucesso',data:{pricingCount:data?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
       setPricingList(data || []);
       if (data && data.length > 0) {
         // Se houver apenas 1 produto, selecionar automaticamente
@@ -304,9 +236,7 @@ export default function PartnerReservationPage() {
       }
     } catch (error: unknown) {
       console.error('Erro ao carregar preços:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:137',message:'Erro final ao carregar preços',data:{errorMessage:error.message,errorCode:error.code,partnerId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
       if (error.code !== 'PGRST116' && !error.message?.includes('does not exist')) {
         toast({
           title: 'Erro',
@@ -486,9 +416,7 @@ export default function PartnerReservationPage() {
   }
 
   if (pricingList.length === 0) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:257',message:'No pricing available - showing unavailable message',data:{pricingListLength:pricingList.length,partnerId:id,loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
+    
     return (
       <UniversalLayout>
         <div className="ms-container py-12">

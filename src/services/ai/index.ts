@@ -49,8 +49,6 @@ import { guataEmotionalIntelligenceService, EmotionalIntelligenceQuery, Emotiona
 // NOVO: Guatá Partners - Sistema de parceiros real
 import { guataPartnersService, PartnersQuery, PartnersResponse } from "./guataPartnersService";
 
-
-
 // Interfaces locais para compatibilidade (mantidas para compatibilidade)
 interface GuataQueryLegacy {
   question: string;

@@ -16,6 +16,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 interface PantanalAvatar {
   id: string;
@@ -241,9 +242,6 @@ export default function PantanalAvatarsManager() {
       const fileName = `avatars/${uuidv4()}.${fileExt}`;
 
       console.log('📤 [PantanalAvatarsManager] Tentando upload para:', BUCKET_NAME, fileName);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:201',message:'uploadImage - início',data:{bucketName:BUCKET_NAME,fileName,hasExistingUrl:!!formData.image_url,existingUrl:formData.image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
@@ -254,9 +252,7 @@ export default function PantanalAvatarsManager() {
 
       if (uploadError) {
         console.error('❌ [PantanalAvatarsManager] Erro no upload:', uploadError);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:211',message:'uploadImage - erro no upload',data:{errorMessage:uploadError.message,errorCode:uploadError.statusCode,isBucketNotFound:uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket'),hasExistingUrl:!!formData.image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+        
         // Se o bucket não existir, apenas avisar mas continuar sem imagem
         if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
           console.warn('⚠️ [PantanalAvatarsManager] Bucket não encontrado, continuando sem upload de imagem');
@@ -268,9 +264,7 @@ export default function PantanalAvatarsManager() {
           });
           // Retornar URL existente se houver, senão null
           const fallbackUrl = formData.image_url || null;
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:225',message:'uploadImage - retornando fallback',data:{fallbackUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
+          
           return fallbackUrl;
         }
         throw uploadError;
@@ -320,15 +314,11 @@ export default function PantanalAvatarsManager() {
       // Preservar URL original do avatar sendo editado (fallback se formData.image_url estiver vazio)
       const originalImageUrl = editingAvatar?.image_url || formData.image_url || '';
       let imageUrl = formData.image_url || originalImageUrl;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:279',message:'handleSave - antes do upload',data:{hasImageFile:!!imageFile,formDataImageUrl:formData.image_url,originalImageUrl,imageUrl,editingAvatarId:editingAvatar?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       if (imageFile) {
         console.log('📤 [PantanalAvatarsManager] Iniciando upload de imagem...');
         const uploadedUrl = await uploadImage();
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:285',message:'handleSave - após upload',data:{uploadedUrl,originalImageUrl,willUseOriginal:!uploadedUrl && !!originalImageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        
         if (uploadedUrl) {
           imageUrl = uploadedUrl;
           console.log('✅ [PantanalAvatarsManager] Imagem enviada com sucesso:', uploadedUrl);
@@ -338,9 +328,7 @@ export default function PantanalAvatarsManager() {
           if (originalImageUrl && originalImageUrl.trim()) {
             imageUrl = originalImageUrl;
             console.log('✅ [PantanalAvatarsManager] Preservando URL original do avatar:', imageUrl);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:295',message:'handleSave - preservando URL original',data:{preservedUrl:imageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
+            
           } else if (formData.image_url && formData.image_url.trim()) {
             // Tentar usar URL do formulário se houver
             imageUrl = formData.image_url;
@@ -386,19 +374,12 @@ export default function PantanalAvatarsManager() {
 
       // Validar URL da imagem se fornecida
       let finalImageUrl = imageUrl || null;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:300',message:'handleSave - antes da validação',data:{imageUrl,finalImageUrl,startsWithHttp:finalImageUrl?.startsWith('http'),startsWithData:finalImageUrl?.startsWith('data:'),startsWithBlob:finalImageUrl?.startsWith('blob:')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+      
       if (finalImageUrl && !finalImageUrl.startsWith('http') && !finalImageUrl.startsWith('data:') && !finalImageUrl.startsWith('blob:')) {
         console.warn('⚠️ [PantanalAvatarsManager] URL de imagem inválida, removendo:', finalImageUrl);
         finalImageUrl = null;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:303',message:'handleSave - URL removida por validação',data:{removedUrl:imageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        
       }
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PantanalAvatarsManager.tsx:305',message:'handleSave - após validação',data:{finalImageUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
 
       const avatarData: unknown = {
         name: formData.name.trim(),
@@ -836,12 +817,11 @@ export default function PantanalAvatarsManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Avatares do Pantanal</h2>
-          <p className="text-muted-foreground">
-            Gerencie os avatares de animais do Pantanal disponíveis para os usuários
-          </p>
-        </div>
+        <AdminPageHeader
+          title="Avatares do Pantanal"
+          description="Gerencie os avatares de animais do Pantanal disponíveis para os usuários no passaporte digital."
+          helpText="Gerencie os avatares de animais do Pantanal disponíveis para os usuários no passaporte digital."
+        />
         <div className="flex gap-2">
           <Button 
             variant="outline" 

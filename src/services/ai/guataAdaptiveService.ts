@@ -429,17 +429,3 @@ Responda em JSON:
 export const guataAdaptiveService = new GuataAdaptiveService();
 export type { AdaptiveQuery, AdaptiveResponse, UserPreferences, LearningInsights, MemoryUpdate };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-

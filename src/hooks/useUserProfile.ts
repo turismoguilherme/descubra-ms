@@ -175,22 +175,3 @@ export const useUserProfile = () => {
   };
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

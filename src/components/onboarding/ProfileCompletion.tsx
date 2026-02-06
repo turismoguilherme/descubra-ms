@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Profile Completion Component
  * Guia usuário para completar perfil com gamificação
@@ -819,5 +818,4 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
     </div>
   );
 }
-
 

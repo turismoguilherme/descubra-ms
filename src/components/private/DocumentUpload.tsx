@@ -315,7 +315,6 @@ const DocumentUpload: React.FC = () => {
       return labels[category || 'outro'] || 'Outro';
     };
 
-
     if (!user) {
       return (
         <SectionWrapper variant="default" title="Upload de Documentos">

@@ -410,7 +410,3 @@ const OverflowOneInventory: React.FC = () => {
 
 export default OverflowOneInventory;
 
-
-
-
-

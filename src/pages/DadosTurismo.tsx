@@ -229,7 +229,6 @@ const DadosTurismo = () => {
               </CardContent>
             </Card>
 
-
             <Card>
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-4">
@@ -758,8 +757,5 @@ const DadosTurismo = () => {
   );
 };
 
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DadosTurismo.tsx:635',message:'Exportando DadosTurismo',data:{dadosTurismoDefined:typeof DadosTurismo!=='undefined',timestamp:Date.now()},sessionId:'debug-session',runId:'run1',hypothesisId:'D',timestamp:Date.now()})}).catch(()=>{});
-// #endregion
 export default DadosTurismo;
 

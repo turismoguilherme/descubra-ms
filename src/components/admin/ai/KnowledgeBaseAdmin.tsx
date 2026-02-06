@@ -48,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 export default function KnowledgeBaseAdmin() {
   const { toast } = useToast();
@@ -251,12 +252,11 @@ export default function KnowledgeBaseAdmin() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Base de Conhecimento</h2>
-          <p className="text-muted-foreground">
-            Gerencie informações do Guatá e Koda
-          </p>
-        </div>
+        <AdminPageHeader
+          title="Base de Conhecimento"
+          description="Alimente a IA Guatá com perguntas e respostas para melhorar as respostas do chatbot."
+          helpText="Alimente a IA Guatá com perguntas e respostas para melhorar as respostas do chatbot."
+        />
         <div className="flex gap-2">
           <Button onClick={() => setUploadDialogOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />

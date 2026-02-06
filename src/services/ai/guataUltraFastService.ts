@@ -133,17 +133,3 @@ class GuataUltraFastService {
 export const guataUltraFastService = new GuataUltraFastService();
 export type { UltraFastQuery, UltraFastResponse };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-

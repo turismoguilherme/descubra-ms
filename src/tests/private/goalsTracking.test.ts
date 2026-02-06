@@ -257,5 +257,3 @@ describe('Goals Alerts Service', () => {
   });
 });
 
-
-

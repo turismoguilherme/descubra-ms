@@ -201,9 +201,7 @@ class PassportAdminService {
   ): Promise<PassportReward> {
     console.log('🔵 [PassportAdminService] ========== createReward ==========');
     console.log('🔵 [PassportAdminService] Reward data:', JSON.stringify(reward, null, 2));
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:164',message:'createReward entry',data:{reward:JSON.stringify(reward)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    
     try {
       const { data, error } = await supabase
         .from('passport_rewards')
@@ -213,10 +211,7 @@ class PassportAdminService {
 
       if (error) {
         console.error('❌ [PassportAdminService] Erro ao criar recompensa:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:173',message:'Supabase error',data:{errorMessage:error.message,errorCode:error.code,errorDetails:error.details,errorHint:error.hint,fullError:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        
+
         // Verificar se é erro de coluna não encontrada (migração não executada)
         if (error.code === 'PGRST204' && error.message?.includes('avatar_id')) {
           const migrationError = new Error(
@@ -234,9 +229,7 @@ class PassportAdminService {
         throw error;
       }
       console.log('✅ [PassportAdminService] Recompensa criada:', data?.id);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:177',message:'createReward success',data:{rewardId:data?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       return data;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -246,9 +239,7 @@ class PassportAdminService {
         code: supabaseError.code,
         details: supabaseError.details,
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'passportAdminService.ts:185',message:'createReward catch error',data:{errorMessage:supabaseError?.message || err.message,errorCode:supabaseError?.code,errorDetails:supabaseError?.details,errorHint:supabaseError?.hint,fullError:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      
       throw error;
     }
   }
