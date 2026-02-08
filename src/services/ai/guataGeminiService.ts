@@ -756,7 +756,7 @@ class GuataGeminiService {
     
     // Se não houver prompts no banco, usar código (fallback)
     if (!dbPrompts) {
-      return this.buildPromptFromCode(query);
+      return await this.buildPromptFromCode(query);
     }
 
     // Construir prompt usando prompts do banco
@@ -787,7 +787,7 @@ class GuataGeminiService {
   /**
    * Método original de construção de prompt (fallback quando banco está vazio)
    */
-  private buildPromptFromCode(query: GeminiQuery): string {
+  private async buildPromptFromCode(query: GeminiQuery): Promise<string> {
     const { question, context, userLocation, searchResults } = query;
     
     let prompt = `Você é o Guatá, um GUIA INTELIGENTE DE TURISMO DE MATO GROSSO DO SUL. 
