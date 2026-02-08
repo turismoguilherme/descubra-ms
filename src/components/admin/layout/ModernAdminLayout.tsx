@@ -5,52 +5,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import {
-  LayoutDashboard,
-  Building2,
-  MapPin,
-  DollarSign,
-  Shield,
-  Bot,
-  Users,
-  FileText,
-  Settings,
   ChevronRight,
   LogOut,
-  Wallet,
-  PieChart,
-  Receipt,
-  UserCheck,
-  Calendar,
-  Map,
-  Briefcase,
-  BookOpen,
-  Cog,
-  Stamp,
-  CreditCard,
-  Database,
-  Languages,
-  Package,
-  Edit3,
-  Activity,
-  Zap,
-  UserCog,
-  Globe,
-  Home,
-  Layers,
-  Monitor,
-  Route,
-  Gift,
-  BarChart3,
-  CreditCard as CreditCardIcon,
-  RefreshCw,
-  Mail,
-  TrendingUp,
-  MessageCircle,
-  Menu
+  Menu,
+  Building2,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AdminNotifications } from '@/components/admin/notifications/AdminNotifications';
+import { adminModulesConfig, AdminModule, Platform } from '@/config/adminModulesConfig';
 
 // Definição das permissões por cargo
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -65,140 +29,9 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   atendente: ['dashboard', 'cat', 'users'],
 };
 
-interface NavItem {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  path?: string;
-  children?: NavItem[];
-  permission?: string;
-  platform?: 'viajar' | 'descubra-ms' | 'system';
-}
-
-const navigationItems: NavItem[] = [
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    path: '/viajar/admin',
-    permission: 'dashboard',
-    platform: 'system',
-  },
-  {
-    id: 'platforms',
-    label: 'Plataformas',
-    icon: Layers,
-    permission: 'platforms',
-    platform: 'system',
-    children: [
-  {
-    id: 'viajar',
-    label: 'ViajARTur',
-    icon: Building2,
-    permission: 'viajar',
-    platform: 'viajar',
-        children: [
-          { id: 'viajar-content', label: 'Conteúdo e Menu', icon: FileText, path: '/viajar/admin/viajar/content', permission: 'viajar', platform: 'viajar' },
-          { id: 'viajar-plans', label: 'Configuração de Planos', icon: CreditCard, path: '/viajar/admin/viajar/plan-settings', permission: 'viajar', platform: 'viajar' },
-          { id: 'viajar-team', label: 'Membros da Equipe', icon: Users, path: '/viajar/admin/viajar/team-members', permission: 'viajar', platform: 'viajar' },
-          // Clientes e Assinaturas movidos para Financeiro
-        ],
-  },
-  {
-    id: 'descubra-ms',
-    label: 'Descubra MS',
-    icon: MapPin,
-    permission: 'descubra_ms',
-    platform: 'descubra-ms',
-    children: [
-      { id: 'tourist-regions', label: 'Regiões Turísticas', icon: Map, path: '/viajar/admin/descubra-ms/tourist-regions', permission: 'content', platform: 'descubra-ms' },
-      { id: 'cats', label: 'CATs', icon: MapPin, path: '/viajar/admin/descubra-ms/cats', permission: 'content', platform: 'descubra-ms' },
-      { id: 'footer', label: 'Footer', icon: Globe, path: '/viajar/admin/descubra-ms/footer', permission: 'content', platform: 'descubra-ms' },
-      { id: 'events', label: 'Eventos', icon: Calendar, path: '/viajar/admin/descubra-ms/events', permission: 'events', platform: 'descubra-ms' },
-      { id: 'partners', label: 'Parceiros', icon: Briefcase, path: '/viajar/admin/descubra-ms/partners', permission: 'partners', platform: 'descubra-ms' },
-      { id: 'avatars', label: 'Avatares', icon: Users, path: '/viajar/admin/descubra-ms/avatars', permission: 'content', platform: 'descubra-ms' },
-          {
-            id: 'passport',
-            label: 'Passaporte Digital',
-            icon: Stamp,
-            permission: 'passport',
-            platform: 'descubra-ms',
-            children: [
-              { id: 'passport-routes', label: 'Cadastrar Rotas', icon: Route, path: '/viajar/admin/descubra-ms/passport?tab=routes', permission: 'passport', platform: 'descubra-ms' },
-              { id: 'passport-stamps', label: 'Carimbos', icon: Stamp, path: '/viajar/admin/descubra-ms/passport?tab=stamps', permission: 'passport', platform: 'descubra-ms' },
-              { id: 'passport-checkpoints', label: 'Checkpoints', icon: MapPin, path: '/viajar/admin/descubra-ms/passport?tab=checkpoints', permission: 'passport', platform: 'descubra-ms' },
-              { id: 'passport-rewards', label: 'Recompensas', icon: Gift, path: '/viajar/admin/descubra-ms/passport?tab=rewards', permission: 'passport', platform: 'descubra-ms' },
-              { id: 'passport-analytics', label: 'Analytics', icon: BarChart3, path: '/viajar/admin/descubra-ms/passport?tab=analytics', permission: 'passport', platform: 'descubra-ms' },
-            ],
-          },
-      // Menus removido - desnecessário (menus são gerenciados via código)
-      { id: 'users', label: 'Usuários', icon: UserCog, path: '/viajar/admin/descubra-ms/users', permission: 'users', platform: 'descubra-ms' },
-      { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, path: '/viajar/admin/descubra-ms/whatsapp', permission: 'settings', platform: 'descubra-ms' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'financial',
-    label: 'Financeiro',
-    icon: DollarSign,
-    permission: 'financial',
-    platform: 'system',
-    children: [
-      { id: 'overview', label: 'Visão Geral', icon: PieChart, path: '/viajar/admin/financial', permission: 'financial', platform: 'system' },
-      { id: 'clients', label: 'Clientes', icon: UserCheck, path: '/viajar/admin/viajar/clients', permission: 'clients', platform: 'system' },
-      { id: 'subscriptions', label: 'Assinaturas', icon: Receipt, path: '/viajar/admin/viajar/subscriptions', permission: 'subscriptions', platform: 'system' },
-      { id: 'payments', label: 'Pagamentos', icon: CreditCardIcon, path: '/viajar/admin/financial/payments', permission: 'financial', platform: 'system' },
-      { id: 'revenue', label: 'Receitas', icon: Wallet, path: '/viajar/admin/financial/revenue', permission: 'financial', platform: 'system' },
-      { id: 'bills', label: 'Contas a Pagar', icon: Receipt, path: '/viajar/admin/financial/bills', permission: 'financial', platform: 'system' },
-      { id: 'accounts', label: 'Contas Bancárias', icon: CreditCard, path: '/viajar/admin/financial/accounts', permission: 'financial', platform: 'system' },
-      { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/viajar/admin/financial/suppliers', permission: 'financial', platform: 'system' },
-      { id: 'reports', label: 'Relatórios', icon: FileText, path: '/viajar/admin/financial/reports', permission: 'reports', platform: 'system' },
-      { id: 'refunds', label: 'Reembolsos', icon: RefreshCw, path: '/viajar/admin/financial/refunds', permission: 'financial', platform: 'system' },
-      { id: 'contact-leads', label: 'Leads de Contato', icon: Mail, path: '/viajar/admin/financial/contact-leads', permission: 'financial', platform: 'system' },
-    ],
-  },
-  {
-    id: 'administration',
-    label: 'Administração',
-    icon: UserCog,
-    permission: 'team',
-    platform: 'system',
-    children: [
-      { id: 'team-members', label: 'Equipe Admin', icon: Users, path: '/viajar/admin/team/members', permission: 'team', platform: 'system' },
-      { id: 'team-activities', label: 'Atividades', icon: Activity, path: '/viajar/admin/team/activities', permission: 'team', platform: 'system' },
-      { id: 'team-permissions', label: 'Permissões', icon: Shield, path: '/viajar/admin/team/permissions', permission: 'team', platform: 'system' },
-    ],
-  },
-  {
-    id: 'system',
-    label: 'Sistema',
-    icon: Settings,
-    permission: 'system',
-    platform: 'system',
-    children: [
-      { id: 'database', label: 'Banco de Dados', icon: Database, path: '/viajar/admin/database', permission: 'database', platform: 'system' },
-      { id: 'emails', label: 'Gestão de Emails', icon: Mail, path: '/viajar/admin/communication/emails', permission: 'communication', platform: 'system' },
-      { id: 'system-monitoring', label: 'Monitoramento', icon: Monitor, path: '/viajar/admin/system/monitoring', permission: 'system', platform: 'system' },
-      { id: 'system-logs', label: 'Auditoria', icon: FileText, path: '/viajar/admin/system/logs', permission: 'system', platform: 'system' },
-      { id: 'system-health', label: 'Saúde do Sistema', icon: Activity, path: '/viajar/admin/system/health', permission: 'system', platform: 'system' },
-      { id: 'settings-policies', label: 'Configurações - Políticas', icon: FileText, path: '/viajar/admin/settings/policies', permission: 'settings', platform: 'system' },
-    ],
-  },
-  {
-    id: 'ai',
-    label: 'IA Autônoma',
-    icon: Bot,
-    permission: 'ai',
-    platform: 'system',
-    children: [
-      { id: 'ai-agent', label: 'Agente Autônomo', icon: Zap, path: '/viajar/admin/ai/agent', permission: 'ai', platform: 'system' },
-      { id: 'ai-tasks', label: 'Tarefas Automáticas', icon: Activity, path: '/viajar/admin/ai/tasks', permission: 'ai', platform: 'system' },
-      { id: 'ai-knowledge-base', label: 'Base de Conhecimento', icon: FileText, path: '/viajar/admin/ai/knowledge-base', permission: 'ai', platform: 'system' },
-      { id: 'ai-prompts', label: 'Editor de Prompts', icon: Bot, path: '/viajar/admin/ai/prompts', permission: 'ai', platform: 'system' },
-    ],
-  },
-];
+// Usar configuração centralizada de módulos admin
+// A configuração está em src/config/adminModulesConfig.ts
+const navigationItems = adminModulesConfig;
 
 interface ModernAdminLayoutProps {
   children: React.ReactNode;
@@ -214,7 +47,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
   const userRole = userProfile?.role || 'user';
 
     // Detectar qual plataforma está sendo editada
-  const getCurrentPlatform = (): 'viajar' | 'descubra-ms' | 'system' => {
+  const getCurrentPlatform = (): Platform => {
     if (location.pathname.includes('/viajar/admin/viajar')) {
       return 'viajar';
     }
@@ -232,7 +65,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
     return permissions.includes('*') || permissions.includes(permission);
   };
 
-  const filterNavItems = (items: NavItem[]): NavItem[] => {
+  const filterNavItems = (items: AdminModule[]): AdminModule[] => {
     return items.filter(item => {
     if (!hasPermission(item.permission)) return false;
     if (item.children) {
@@ -265,7 +98,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
   };
 
   useEffect(() => {
-    const expandParents = (items: NavItem[]) => {
+    const expandParents = (items: AdminModule[]) => {
       items.forEach(item => {
         if (item.children) {
           const hasActiveChild = item.children.some(child => 
@@ -353,7 +186,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                     const isExpanded = expandedItems.includes(item.id);
                     const isItemActive = item.path ? isActive(item.path) : item.children?.some(c => isActive(c.path) || c.children?.some(gc => isActive(gc.path)));
 
-                    const renderNavItem = (navItem: NavItem, level: number = 0): React.ReactNode => {
+                    const renderNavItem = (navItem: AdminModule, level: number = 0): React.ReactNode => {
                       const NavIcon = navItem.icon;
                       const hasNavChildren = navItem.children && navItem.children.length > 0;
                       const isNavExpanded = expandedItems.includes(navItem.id);
@@ -424,7 +257,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
               const isExpanded = expandedItems.includes(item.id);
                 const isItemActive = item.path ? isActive(item.path) : item.children?.some(c => isActive(c.path) || c.children?.some(gc => isActive(gc.path)));
 
-                const renderNavItem = (navItem: NavItem, level: number = 0): React.ReactNode => {
+                const renderNavItem = (navItem: AdminModule, level: number = 0): React.ReactNode => {
                   const NavIcon = navItem.icon;
                   const hasNavChildren = navItem.children && navItem.children.length > 0;
                   const isNavExpanded = expandedItems.includes(navItem.id);
@@ -482,8 +315,10 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
         </div>
 
         {/* Conteúdo Principal - Igual aos outros dashboards - Responsivo */}
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50 space-y-4 md:space-y-6" style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}>
-          {children}
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50" style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}>
+          <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>

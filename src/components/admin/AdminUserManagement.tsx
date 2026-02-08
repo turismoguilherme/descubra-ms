@@ -17,6 +17,7 @@ import { useAdvancedRateLimit } from "@/hooks/useAdvancedRateLimit";
 import { SecurityAlertMonitor } from "@/components/security/SecurityAlertMonitor";
 import { SessionTimeoutWarning } from "@/components/security/SessionTimeoutWarning";
 import { CSRFForm, useCSRF } from "@/components/security/CSRFProtection";
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
 
 interface User {
   id: string;
@@ -246,29 +247,32 @@ const AdminUserManagement = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       {/* Security Components */}
       <SessionTimeoutWarning
         warningTimeMinutes={5}
         timeoutMinutes={30}
       />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gerenciamento Avançado de Usuários</h1>
-          <p className="text-muted-foreground">Controle completo de usuários e permissões administrativas</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {securityLevel !== 'normal' && (
-            <Badge variant={securityLevel === 'high' ? 'destructive' : 'secondary'}>
-              {securityLevel === 'elevated' ? '⚠️ Segurança Elevada' : '🚨 Alto Risco'}
-            </Badge>
-          )}
-          {isBlocked && (
-            <Badge variant="destructive">
-              🚫 Acesso Restrito
-            </Badge>
-          )}
+      <div className="space-y-4">
+        <div className="flex flex-col items-center gap-4">
+          <AdminPageHeader
+            title="Gerenciamento Avançado de Usuários"
+            description="Controle completo de usuários e permissões administrativas"
+            helpText="Gerencie membros da equipe administrativa e suas permissões de acesso."
+          />
+          <div className="flex items-center gap-2">
+            {securityLevel !== 'normal' && (
+              <Badge variant={securityLevel === 'high' ? 'destructive' : 'secondary'}>
+                {securityLevel === 'elevated' ? '⚠️ Segurança Elevada' : '🚨 Alto Risco'}
+              </Badge>
+            )}
+            {isBlocked && (
+              <Badge variant="destructive">
+                🚫 Acesso Restrito
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 

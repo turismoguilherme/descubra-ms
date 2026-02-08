@@ -12,6 +12,7 @@ import PartnerCodesManager from '@/components/admin/passport/PartnerCodesManager
 import PassportPhotosView from '@/components/admin/passport/PassportPhotosView';
 import PassportGlobalSettings from '@/components/admin/passport/PassportGlobalSettings';
 import { Route, Settings, Gift, MapPin, BarChart3, Key, Camera, Globe } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 const PassportAdmin: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,12 +33,11 @@ const PassportAdmin: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Passaporte Digital</h1>
-        <p className="text-muted-foreground">
-          Gerencie rotas, carimbos, checkpoints e recompensas do sistema de passaporte digital
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Passaporte Digital"
+        description="Gerencie rotas, carimbos, checkpoints e recompensas do sistema de passaporte digital"
+        helpText="Configure rotas, carimbos e recompensas do programa de fidelidade turística. Gerencie todo o sistema de passaporte digital."
+      />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="grid w-full grid-cols-8">
