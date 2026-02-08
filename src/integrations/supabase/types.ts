@@ -490,6 +490,54 @@ export type Database = {
           },
         ]
       }
+      ai_prompt_configs: {
+        Row: {
+          chatbot_name: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          prompt_type: string
+          updated_at: string | null
+          updated_by: string | null
+          variables: Json | null
+          version: number
+        }
+        Insert: {
+          chatbot_name: string
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          prompt_type: string
+          updated_at?: string | null
+          updated_by?: string | null
+          variables?: Json | null
+          version?: number
+        }
+        Update: {
+          chatbot_name?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          prompt_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          variables?: Json | null
+          version?: number
+        }
+        Relationships: []
+      }
       ai_seo_improvements: {
         Row: {
           applied_at: string | null
@@ -1489,6 +1537,56 @@ export type Database = {
           },
         ]
       }
+      destination_translations: {
+        Row: {
+          best_time_to_visit: string | null
+          created_at: string | null
+          description: string | null
+          destination_id: string
+          highlights: string[] | null
+          how_to_get_there: string | null
+          id: string
+          language_code: string
+          name: string | null
+          promotional_text: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          best_time_to_visit?: string | null
+          created_at?: string | null
+          description?: string | null
+          destination_id: string
+          highlights?: string[] | null
+          how_to_get_there?: string | null
+          id?: string
+          language_code: string
+          name?: string | null
+          promotional_text?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          best_time_to_visit?: string | null
+          created_at?: string | null
+          description?: string | null
+          destination_id?: string
+          highlights?: string[] | null
+          how_to_get_there?: string | null
+          id?: string
+          language_code?: string
+          name?: string | null
+          promotional_text?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destination_translations_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       destinations: {
         Row: {
           city_id: string | null
@@ -1841,6 +1939,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "event_details_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_translations: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          event_id: string
+          id: string
+          language_code: string
+          location: string | null
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_id: string
+          id?: string
+          language_code: string
+          location?: string | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_id?: string
+          id?: string
+          language_code?: string
+          location?: string | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_translations_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
@@ -2534,41 +2676,68 @@ export type Database = {
       }
       guata_knowledge_base: {
         Row: {
+          arquivo_original: string | null
           ativo: boolean
+          categoria: string | null
+          chatbot: string | null
           criado_em: string | null
+          criado_por: string | null
           fonte: string
           id: string
+          metadata_arquivo: Json | null
           pergunta: string
           pergunta_normalizada: string
+          prioridade: number | null
+          regiao: string | null
           resposta: string
           tags: string[] | null
           tipo: string
+          tipo_upload: string | null
+          titulo: string | null
           ultima_atualizacao: string | null
           usado_por: number | null
         }
         Insert: {
+          arquivo_original?: string | null
           ativo?: boolean
+          categoria?: string | null
+          chatbot?: string | null
           criado_em?: string | null
+          criado_por?: string | null
           fonte?: string
           id?: string
+          metadata_arquivo?: Json | null
           pergunta: string
           pergunta_normalizada: string
+          prioridade?: number | null
+          regiao?: string | null
           resposta: string
           tags?: string[] | null
           tipo?: string
+          tipo_upload?: string | null
+          titulo?: string | null
           ultima_atualizacao?: string | null
           usado_por?: number | null
         }
         Update: {
+          arquivo_original?: string | null
           ativo?: boolean
+          categoria?: string | null
+          chatbot?: string | null
           criado_em?: string | null
+          criado_por?: string | null
           fonte?: string
           id?: string
+          metadata_arquivo?: Json | null
           pergunta?: string
           pergunta_normalizada?: string
+          prioridade?: number | null
+          regiao?: string | null
           resposta?: string
           tags?: string[] | null
           tipo?: string
+          tipo_upload?: string | null
+          titulo?: string | null
           ultima_atualizacao?: string | null
           usado_por?: number | null
         }
@@ -3017,6 +3186,60 @@ export type Database = {
           source?: string | null
           title?: string
           updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      knowledge_base_uploads: {
+        Row: {
+          chatbot_target: string | null
+          deleted_at: string | null
+          error_message: string | null
+          file_size: number | null
+          file_type: string
+          filename: string
+          id: string
+          items_created: number | null
+          items_failed: number | null
+          metadata: Json | null
+          original_path: string | null
+          processed_at: string | null
+          status: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          chatbot_target?: string | null
+          deleted_at?: string | null
+          error_message?: string | null
+          file_size?: number | null
+          file_type: string
+          filename: string
+          id?: string
+          items_created?: number | null
+          items_failed?: number | null
+          metadata?: Json | null
+          original_path?: string | null
+          processed_at?: string | null
+          status?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          chatbot_target?: string | null
+          deleted_at?: string | null
+          error_message?: string | null
+          file_size?: number | null
+          file_type?: string
+          filename?: string
+          id?: string
+          items_created?: number | null
+          items_failed?: number | null
+          metadata?: Json | null
+          original_path?: string | null
+          processed_at?: string | null
+          status?: string
+          uploaded_at?: string | null
           uploaded_by?: string | null
         }
         Relationships: []
@@ -5175,6 +5398,47 @@ export type Database = {
           },
         ]
       }
+      region_translations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          highlights: string[] | null
+          id: string
+          language_code: string
+          name: string | null
+          region_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          highlights?: string[] | null
+          id?: string
+          language_code: string
+          name?: string | null
+          region_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          highlights?: string[] | null
+          id?: string
+          language_code?: string
+          name?: string | null
+          region_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "region_translations_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "tourist_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       regions: {
         Row: {
           created_at: string | null
@@ -5318,6 +5582,50 @@ export type Database = {
           },
           {
             foreignKeyName: "route_checkpoints_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_translations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          highlights: string[] | null
+          id: string
+          language_code: string
+          overview: string | null
+          route_id: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          highlights?: string[] | null
+          id?: string
+          language_code: string
+          overview?: string | null
+          route_id: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          highlights?: string[] | null
+          id?: string
+          language_code?: string
+          overview?: string | null
+          route_id?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_translations_route_id_fkey"
             columns: ["route_id"]
             isOneToOne: false
             referencedRelation: "routes"
@@ -6619,99 +6927,6 @@ export type Database = {
           photo_url?: string | null
           position?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      ai_prompt_configs: {
-        Row: {
-          id: string
-          chatbot_name: string
-          prompt_type: string
-          content: string
-          variables: Json
-          is_active: boolean
-          version: number
-          description: string | null
-          notes: string | null
-          created_by: string | null
-          created_at: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          id?: string
-          chatbot_name: string
-          prompt_type: string
-          content: string
-          variables?: Json
-          is_active?: boolean
-          version?: number
-          description?: string | null
-          notes?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          id?: string
-          chatbot_name?: string
-          prompt_type?: string
-          content?: string
-          variables?: Json
-          is_active?: boolean
-          version?: number
-          description?: string | null
-          notes?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      knowledge_base_uploads: {
-        Row: {
-          id: string
-          filename: string
-          file_type: string
-          file_size: number
-          status: string
-          items_created: number | null
-          items_failed: number | null
-          error_message: string | null
-          chatbot_target: string | null
-          uploaded_by: string | null
-          uploaded_at: string
-          processed_at: string | null
-        }
-        Insert: {
-          id?: string
-          filename: string
-          file_type: string
-          file_size: number
-          status?: string
-          items_created?: number | null
-          items_failed?: number | null
-          error_message?: string | null
-          chatbot_target?: string | null
-          uploaded_by?: string | null
-          uploaded_at?: string
-          processed_at?: string | null
-        }
-        Update: {
-          id?: string
-          filename?: string
-          file_type?: string
-          file_size?: number
-          status?: string
-          items_created?: number | null
-          items_failed?: number | null
-          error_message?: string | null
-          chatbot_target?: string | null
-          uploaded_by?: string | null
-          uploaded_at?: string
-          processed_at?: string | null
         }
         Relationships: []
       }

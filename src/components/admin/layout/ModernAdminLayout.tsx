@@ -314,9 +314,12 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
           </div>
         </div>
 
-        {/* Conteúdo Principal - Igual aos outros dashboards - Responsivo */}
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50" style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}>
-          <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+        {/* Conteúdo Principal - Centralizado com max-width para legibilidade */}
+        <div 
+          className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto bg-gray-50 flex justify-center" 
+          style={{ maxHeight: 'calc(100vh - 64px - 128px)' }}
+        >
+          <div className="w-full max-w-7xl mx-auto space-y-4 md:space-y-6 px-2 md:px-4 lg:px-6">
             {children}
           </div>
         </div>
