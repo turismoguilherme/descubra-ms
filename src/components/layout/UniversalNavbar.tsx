@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,13 +15,6 @@ import {
 import { touristRegions2025 } from "@/data/touristRegions2025";
 
 const UniversalNavbar = () => {
-  const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
-  const safeLog = (payload: unknown) => {
-    if (!enableDebugLogs) return;
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,timestamp:Date.now(),sessionId:'debug-session',runId:'run1'})}).catch(()=>{});
-  };
-
-  console.log("🧭 NAVBAR: Componente UniversalNavbar sendo renderizado");
 
   const [isOpen, setIsOpen] = useState(false);
   
@@ -84,7 +76,6 @@ const UniversalNavbar = () => {
   const isFromEventos = location.search.includes('from=eventos');
   const shouldShowOnlyEventos = location.pathname === '/eventos' || (location.pathname === '/descubrams/cadastrar-evento' && isFromEventos);
   
-  console.log("🧭 NAVBAR: Estado - user:", !!user, "isOverflowOne:", isOverflowOne, "isMS:", isMS, "pathname:", location.pathname, "isFromEventos:", isFromEventos, "shouldShowOnlyEventos:", shouldShowOnlyEventos);
 
   // Memoizar a função de verificação de path ativo para melhor performance
   const isActivePath = useMemo(() => {

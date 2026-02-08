@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,10 +13,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
+interface Route {
+  id: string;
+  name: string;
+}
+
+interface Config {
+  route_id: string;
+  stamp_theme?: string;
+  stamp_fragments?: number;
+  video_url?: string;
+  description?: string;
+  require_sequential?: boolean;
+}
+
+interface StampTheme {
+  id: string;
+  theme_key: string;
+  theme_name: string;
+  emoji?: string;
+  description?: string;
+}
+
 const PassportStampConfig: React.FC = () => {
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [configs, setConfigs] = useState<any[]>([]);
-  const [stampThemes, setStampThemes] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [configs, setConfigs] = useState<Config[]>([]);
+  const [stampThemes, setStampThemes] = useState<StampTheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState<string>('');
   const [creatingTheme, setCreatingTheme] = useState(false);
@@ -96,7 +117,7 @@ const PassportStampConfig: React.FC = () => {
       const [routesRes, configsRes, themesRes] = await Promise.all([
         supabase.from('routes').select('*').eq('is_active', true),
         passportAdminService.getConfigurations(),
-        supabase.from('stamp_themes' as any).select('*').eq('is_active', true).order('theme_name'),
+        supabase.from('stamp_themes').select('*').eq('is_active', true).order('theme_name'),
       ]);
 
       if (routesRes.error) {
@@ -120,13 +141,13 @@ const PassportStampConfig: React.FC = () => {
       console.error('❌ [PassportStampConfig] Erro completo ao carregar dados:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       toast({
         title: 'Erro ao carregar dados',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -162,7 +183,7 @@ const PassportStampConfig: React.FC = () => {
       
       console.log('🔵 [PassportStampConfig] Dados para inserção:', JSON.stringify(themeData, null, 2));
       
-      const { data, error } = await supabase.from('stamp_themes' as any).insert(themeData).select();
+      const { data, error } = await supabase.from('stamp_themes').insert(themeData).select();
 
       if (error) {
         console.error('❌ [PassportStampConfig] Erro ao inserir tema:', error);
@@ -189,13 +210,13 @@ const PassportStampConfig: React.FC = () => {
       console.error('❌ [PassportStampConfig] Erro completo ao criar tema:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       toast({
         title: 'Erro ao criar tema',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -253,23 +274,23 @@ const PassportStampConfig: React.FC = () => {
       console.error('❌ [PassportStampConfig] Erro completo ao salvar configuração:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       
       // Verificar se é erro de migration não executada
-      if (error.name === 'MigrationRequiredError' || (error.code === 'PGRST204' && error.message?.includes('require_sequential'))) {
+      if ((error as { name?: string }).name === 'MigrationRequiredError' || ((error as { code?: string }).code === 'PGRST204' && (error as { message?: string }).message?.includes('require_sequential'))) {
         toast({
           title: 'Migração do banco de dados necessária',
-          description: error.message || 'A coluna "require_sequential" não existe. Execute a migration no Supabase Dashboard.',
+          description: err.message || 'A coluna "require_sequential" não existe. Execute a migration no Supabase Dashboard.',
           variant: 'destructive',
           duration: 10000, // Mostrar por mais tempo
         });
       } else {
         toast({
           title: 'Erro ao salvar configuração',
-          description: error.message,
+          description: err.message,
           variant: 'destructive',
         });
       }

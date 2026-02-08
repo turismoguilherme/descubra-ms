@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Email Templates Manager Component
  * Gerencia templates de email - similar ao PantanalAvatarsManager

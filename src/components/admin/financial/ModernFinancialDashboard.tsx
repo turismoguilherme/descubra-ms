@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -112,7 +111,12 @@ export default function ModernFinancialDashboard() {
     }
   };
 
-  const generateAIInsights = (revenue: unknown, expenses: unknown, profit: unknown, bills: unknown[]) => {
+  const generateAIInsights = (
+    revenue: FinancialData['revenue'],
+    expenses: FinancialData['expenses'],
+    profit: FinancialData['profit'],
+    bills: FinancialData['upcomingBills']
+  ) => {
     const insights: AIInsight[] = [];
 
     // Análise de lucro
@@ -133,7 +137,10 @@ export default function ModernFinancialDashboard() {
 
     // Análise de contas a vencer
     if (bills.length > 5) {
-      const totalBills = bills.reduce((sum, b) => sum + b.amount, 0);
+      const totalBills = bills.reduce((sum, b) => {
+        const bill = b as { amount: number };
+        return sum + bill.amount;
+      }, 0);
       insights.push({
         type: 'danger',
         title: `${bills.length} contas a vencer`,
@@ -401,7 +408,10 @@ export default function ModernFinancialDashboard() {
             <div className="mt-4">
               <p className="text-gray-600 text-sm">Contas a Pagar</p>
               <p className="text-2xl font-bold text-yellow-600 mt-1">
-                {formatCurrency(data?.upcomingBills.reduce((sum, b) => sum + b.amount, 0) || 0)}
+                {formatCurrency(data?.upcomingBills.reduce((sum, b) => {
+                  const bill = b as { amount: number };
+                  return sum + bill.amount;
+                }, 0) || 0)}
               </p>
             </div>
             <div className="mt-4 text-xs text-gray-500">
@@ -543,43 +553,46 @@ export default function ModernFinancialDashboard() {
         <CardContent>
           {data?.upcomingBills && data.upcomingBills.length > 0 ? (
             <div className="space-y-3">
-              {data.upcomingBills.slice(0, 5).map((bill) => (
-                <div 
-                  key={bill.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "p-2 rounded-lg",
-                      bill.days_until_due <= 3 ? "bg-red-500/10" : "bg-yellow-500/10"
-                    )}>
-                      <Receipt className={cn(
-                        "h-5 w-5",
-                        bill.days_until_due <= 3 ? "text-red-500" : "text-yellow-500"
-                      )} />
+              {data.upcomingBills.slice(0, 5).map((bill) => {
+                const billData = bill as { id: string; description: string; category: string; days_until_due: number; amount: number; due_date: string };
+                return (
+                  <div 
+                    key={billData.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "p-2 rounded-lg",
+                        billData.days_until_due <= 3 ? "bg-red-500/10" : "bg-yellow-500/10"
+                      )}>
+                        <Receipt className={cn(
+                          "h-5 w-5",
+                          billData.days_until_due <= 3 ? "text-red-500" : "text-yellow-500"
+                        )} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{billData.description}</p>
+                        <p className="text-sm text-gray-600">
+                          {billData.category} • Vence em {billData.days_until_due} {billData.days_until_due === 1 ? 'dia' : 'dias'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{bill.description}</p>
-                      <p className="text-sm text-gray-600">
-                        {bill.category} • Vence em {bill.days_until_due} {bill.days_until_due === 1 ? 'dia' : 'dias'}
-                      </p>
+                    <div className="text-right">
+                      <p className="font-bold text-gray-900">{formatCurrency(billData.amount)}</p>
+                      <Badge 
+                        variant="outline"
+                        className={cn(
+                          billData.days_until_due <= 3 
+                            ? "border-red-500/30 text-red-600" 
+                            : "border-yellow-500/30 text-yellow-600"
+                        )}
+                      >
+                        {format(new Date(billData.due_date), 'dd/MM', { locale: ptBR })}
+                      </Badge>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900">{formatCurrency(bill.amount)}</p>
-                    <Badge 
-                      variant="outline"
-                      className={cn(
-                        bill.days_until_due <= 3 
-                          ? "border-red-500/30 text-red-600" 
-                          : "border-yellow-500/30 text-yellow-600"
-                      )}
-                    >
-                      {format(new Date(bill.due_date), 'dd/MM', { locale: ptBR })}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">

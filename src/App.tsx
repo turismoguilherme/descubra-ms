@@ -111,6 +111,10 @@ import ViaJARTermosUso from "@/pages/viajar/TermosUso";
 import ViaJARCookies from "@/pages/viajar/Cookies";
 import MapaTuristico from "@/pages/MapaTuristico";
 import Documentacao from "@/pages/Documentacao";
+import SobreOverFlowOne from "@/pages/SobreOverFlowOne";
+import Delinha from "@/pages/Delinha";
+import Welcome from "@/pages/Welcome";
+import BlogOverFlowOne from "@/pages/BlogOverFlowOne";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
 
 const queryClient = new QueryClient();
@@ -171,6 +175,10 @@ function App() {
                                 <Route path="/contato" element={<Contato />} />
                                 <Route path="/dados-turismo" element={<DadosTurismo />} />
                                 <Route path="/documentacao" element={<Documentacao />} />
+                                <Route path="/sobre-overflow-one" element={<SobreOverFlowOne />} />
+                                <Route path="/delinha" element={<Delinha />} />
+                                <Route path="/welcome" element={<Welcome />} />
+                                <Route path="/blog" element={<BlogOverFlowOne />} />
 
                                 {/* Chatbot Guatá Standalone - Totem */}
                                 <Route path="/chatguata" element={<ChatGuata />} />
@@ -348,6 +356,10 @@ function App() {
                             <Route path="/contato" element={<Contato />} />
                             <Route path="/dados-turismo" element={<DadosTurismo />} />
                             <Route path="/documentacao" element={<Documentacao />} />
+                            <Route path="/sobre-overflow-one" element={<SobreOverFlowOne />} />
+                            <Route path="/delinha" element={<Delinha />} />
+                            <Route path="/welcome" element={<Welcome />} />
+                            <Route path="/blog" element={<BlogOverFlowOne />} />
                             
                             {/* Chatbot Guatá Standalone - Totem */}
                             <Route path="/chatguata" element={<ChatGuata />} />

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,7 +86,7 @@ export default function RefundManagement() {
       if (error) throw error;
 
       // Processar dados para incluir informações relacionadas
-      const processedRefunds = (data || []).map((refund: any) => ({
+      const processedRefunds = (data || []).map((refund: Record<string, unknown>) => ({
         ...refund,
         partner: refund.institutional_partners,
         reservation: refund.partner_reservations,
@@ -595,5 +594,6 @@ export default function RefundManagement() {
     </div>
   );
 }
+
 
 

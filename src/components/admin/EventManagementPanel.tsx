@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Painel de Administração para Gerenciamento de Eventos
  * 

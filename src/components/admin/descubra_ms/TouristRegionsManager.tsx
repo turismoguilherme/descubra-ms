@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,8 +90,17 @@ export default function TouristRegionsManager() {
   const BUCKET_NAME = 'tourism-images';
 
   // Estados para gerenciar cidades
-  const [regionCities, setRegionCities] = useState<any[]>([]);
-  const [editingCity, setEditingCity] = useState<any | null>(null);
+  interface RegionCity {
+    id: string;
+    city_name: string;
+    description?: string;
+    video_url?: string;
+    image_gallery?: string[];
+    highlights?: string[];
+    [key: string]: unknown;
+  }
+  const [regionCities, setRegionCities] = useState<RegionCity[]>([]);
+  const [editingCity, setEditingCity] = useState<string | null>(null);
   const [cityFormData, setCityFormData] = useState({
     city_name: '',
     description: '',
@@ -448,9 +456,9 @@ export default function TouristRegionsManager() {
           highlights: Array.isArray(detailsData.highlights) ? detailsData.highlights.join('\n') : '',
           how_to_get_there: detailsData.how_to_get_there || '',
           best_time_to_visit: detailsData.best_time_to_visit || '',
-          social_instagram: detailsData.social_links?.instagram || '',
-          social_facebook: detailsData.social_links?.facebook || '',
-          social_youtube: detailsData.social_links?.youtube || '',
+          social_instagram: (detailsData.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.instagram || '',
+          social_facebook: (detailsData.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.facebook || '',
+          social_youtube: (detailsData.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.youtube || '',
         });
         setGalleryImages(detailsData.image_gallery || []);
         setMapImagePreview(detailsData.map_image_url || null);
@@ -579,23 +587,23 @@ export default function TouristRegionsManager() {
     return uploadedUrls;
   };
 
-  const handleEditCity = (cityName: string, cityData: unknown) => {
+  const handleEditCity = (cityName: string, cityData: RegionCity | null) => {
     setEditingCity(cityName);
     if (cityData) {
       setCityFormData({
         city_name: cityData.city_name || '',
         description: cityData.description || '',
         video_url: cityData.video_url || '',
-        video_type: cityData.video_type || 'youtube',
-        contact_phone: cityData.contact_phone || '',
-        contact_email: cityData.contact_email || '',
-        official_website: cityData.official_website || '',
-        social_instagram: (cityData.social_links as any)?.instagram || '',
-        social_facebook: (cityData.social_links as any)?.facebook || '',
-        social_youtube: (cityData.social_links as any)?.youtube || '',
+        video_type: (cityData.video_type as 'youtube' | 'upload' | null) || 'youtube',
+        contact_phone: (cityData.contact_phone as string) || '',
+        contact_email: (cityData.contact_email as string) || '',
+        official_website: (cityData.official_website as string) || '',
+        social_instagram: (cityData.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.instagram || '',
+        social_facebook: (cityData.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.facebook || '',
+        social_youtube: (cityData.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.youtube || '',
         highlights: (cityData.highlights || []).join('\n'),
-        best_time_to_visit: cityData.best_time_to_visit || '',
-        how_to_get_there: cityData.how_to_get_there || '',
+        best_time_to_visit: (cityData.best_time_to_visit as string) || '',
+        how_to_get_there: (cityData.how_to_get_there as string) || '',
       });
       setCityGalleryImages(cityData.image_gallery || []);
     } else {
@@ -642,12 +650,12 @@ export default function TouristRegionsManager() {
       }
 
       // Processar social links
-      const socialLinks: unknown = {};
+      const socialLinks: Record<string, string> = {};
       if (cityFormData.social_instagram) socialLinks.instagram = cityFormData.social_instagram;
       if (cityFormData.social_facebook) socialLinks.facebook = cityFormData.social_facebook;
       if (cityFormData.social_youtube) socialLinks.youtube = cityFormData.social_youtube;
 
-      const cityPayload: unknown = {
+      const cityPayload: Record<string, unknown> = {
         tourist_region_id: regionId,
         city_name: cityName,
         description: cityFormData.description?.trim() || null,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,10 +13,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
+interface Route {
+  id: string;
+  name: string;
+  video_url?: string;
+  passport_number_prefix?: string;
+  map_image_url?: string;
+  is_active?: boolean;
+  [key: string]: unknown;
+}
+
 const PassportRouteManager: React.FC = () => {
-  const [routes, setRoutes] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingRoute, setEditingRoute] = useState<any | null>(null);
+  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [creatingRoute, setCreatingRoute] = useState(false);
   const [newRouteForm, setNewRouteForm] = useState({
     name: '',
@@ -85,7 +94,7 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
-  const toggleRouteStatus = async (route: { id: string; name: string; is_active: boolean }) => {
+  const toggleRouteStatus = async (route: Route) => {
     try {
       const { error } = await supabase
         .from('routes')
@@ -114,7 +123,7 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
-  const handleDeleteRoute = async (route: { id: string; name: string }) => {
+  const handleDeleteRoute = async (route: Route) => {
     if (!window.confirm(`Tem certeza que deseja excluir a rota "${route.name}"? Esta ação não pode ser desfeita.`)) {
       return;
     }
@@ -144,7 +153,7 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
-  const handleEdit = (route: { video_url?: string; passport_number_prefix?: string; [key: string]: unknown }) => {
+  const handleEdit = (route: Route) => {
     setEditingRoute(route);
     setFormData({
       video_url: route.video_url || '',
@@ -417,20 +426,20 @@ const PassportRouteManager: React.FC = () => {
       console.error('❌ [PassportRouteManager] Erro completo ao criar rota:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       
       toast({
         title: 'Erro ao criar rota',
-        description: error.message || 'Ocorreu um erro inesperado. Tente novamente.',
+        description: err.message || 'Ocorreu um erro inesperado. Tente novamente.',
         variant: 'destructive',
         duration: 10000,
       });
       
       // Re-lançar o erro para que o onClick possa capturá-lo também
-      throw error;
+      throw err;
     }
   };
 
@@ -728,10 +737,11 @@ const PassportRouteManager: React.FC = () => {
                   } catch (err: unknown) {
                     console.error('❌ [PassportRouteManager] Erro ao chamar handleCreateRoute:', err);
                     // Se handleCreateRoute lançou erro, mostrar toast aqui também
-                    if (!err?.handled) {
+                    const error = err instanceof Error ? err : new Error(String(err));
+                    if (!(err as { handled?: boolean }).handled) {
                       toast({
                         title: 'Erro ao criar rota',
-                        description: err?.message || 'Erro desconhecido. Verifique o console para mais detalhes.',
+                        description: error.message || 'Erro desconhecido. Verifique o console para mais detalhes.',
                         variant: 'destructive',
                         duration: 10000,
                       });

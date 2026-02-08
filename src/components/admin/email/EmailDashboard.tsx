@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Email Dashboard Component
  * Dashboard completo para gerenciamento de emails no Admin

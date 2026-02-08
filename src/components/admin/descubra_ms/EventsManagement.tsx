@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,7 +128,7 @@ export default function EventsManagement() {
           id: data[0].id,
           name: data[0].name,
           is_visible: data[0].is_visible,
-          approval_status: (data[0] as any).approval_status,
+          approval_status: (data[0] as Event & { approval_status?: string }).approval_status,
         });
       }
       
@@ -165,7 +164,7 @@ export default function EventsManagement() {
       if (data?.setting_value) {
         const linkValue = typeof data.setting_value === 'string' 
           ? data.setting_value 
-          : (data.setting_value as any)?.url || data.setting_value;
+          : (data.setting_value as { url?: string } | string)?.url || (typeof data.setting_value === 'string' ? data.setting_value : String(data.setting_value));
         setDefaultPaymentLink(linkValue || '');
       }
     } catch (error) {
@@ -613,27 +612,27 @@ export default function EventsManagement() {
         const updated = prevEvents.map(e => {
           if (e.id === eventId) {
             // Usar os dados atualizados do banco se disponíveis
-            const updatedFromDb = updatedEvent[0] as any;
+            const updatedFromDb = updatedEvent[0] as Event & { approval_status?: string };
             const newEvent = {
               ...e,
               is_visible: false,
             };
             // Adicionar approval_status se existir
             if (updatedFromDb?.approval_status !== undefined) {
-              (newEvent as any).approval_status = updatedFromDb.approval_status;
+              (newEvent as Event & { approval_status?: string }).approval_status = updatedFromDb.approval_status;
             } else {
               // Se não existir no banco, marcar como rejeitado no estado local
-              (newEvent as any).approval_status = 'rejected';
+              (newEvent as Event & { approval_status?: string }).approval_status = 'rejected';
             }
             return newEvent;
           }
           return e;
         });
         const pending = updated.filter(e => {
-          const approvalStatus = (e as any).approval_status;
+          const approvalStatus = (e as Event & { approval_status?: string }).approval_status;
           return !e.is_visible && approvalStatus !== 'rejected';
         });
-        const rejected = updated.filter(e => (e as any).approval_status === 'rejected');
+        const rejected = updated.filter(e => (e as Event & { approval_status?: string }).approval_status === 'rejected');
         console.log('🔄 Estado atualizado. Eventos pendentes agora:', pending.length);
         console.log('🔄 Eventos rejeitados agora:', rejected.length);
         return updated;
@@ -846,7 +845,7 @@ export default function EventsManagement() {
       }
 
       // Campos básicos que sempre existem (campos essenciais)
-      let updateData: unknown = {};
+      let updateData: Record<string, unknown> = {};
 
       // Usar nomes de campos baseados na estrutura real da tabela descoberta
       // Usar campos baseados na estrutura real da tabela descoberta via debug
@@ -911,7 +910,7 @@ export default function EventsManagement() {
             .eq('event_id', editingEvent.id)
             .single();
 
-          const detailsData: unknown = {
+          const detailsData: Record<string, unknown> = {
             event_id: editingEvent.id,
             updated_at: new Date().toISOString()
           };
@@ -990,7 +989,7 @@ export default function EventsManagement() {
   // Filtrar eventos: pendentes são os que não estão visíveis E não foram rejeitados
   // Se approval_status não existir, considerar apenas is_visible
   const pendingEvents = events.filter(e => {
-    const approvalStatus = (e as any).approval_status;
+    const approvalStatus = (e as Event & { approval_status?: string }).approval_status;
     // Se não tem approval_status definido e não está visível, é pendente
     if (approvalStatus === undefined || approvalStatus === null) {
       return !e.is_visible; // Considerar pendente se não estiver visível
@@ -1001,7 +1000,7 @@ export default function EventsManagement() {
   const approvedEvents = events.filter(e => e.is_visible && !e.is_sponsored);
   const sponsoredEvents = events.filter(e => e.is_sponsored);
   const rejectedEvents = events.filter(e => {
-    const approvalStatus = (e as any).approval_status;
+    const approvalStatus = (e as Event & { approval_status?: string }).approval_status;
     return approvalStatus === 'rejected';
   });
 
@@ -1095,19 +1094,19 @@ export default function EventsManagement() {
                     Destaque
                   </Badge>
                 )}
-                {event.approval_status === 'rejected' && (
+                {(event as Event & { approval_status?: string }).approval_status === 'rejected' && (
                   <Badge variant="destructive">
                     <X className="w-3 h-3 mr-1" />
                     Rejeitado
                   </Badge>
                 )}
-                {!event.is_visible && event.approval_status !== 'rejected' && (
+                {!event.is_visible && (event as Event & { approval_status?: string }).approval_status !== 'rejected' && (
                   <Badge variant="secondary">
                     <Clock className="w-3 h-3 mr-1" />
                     Pendente
                   </Badge>
                 )}
-                {!event.is_visible && event.approval_status === 'approved' && (
+                {!event.is_visible && (event as Event & { approval_status?: string }).approval_status === 'approved' && (
                   <Badge variant="outline" className="bg-gray-100">
                     Arquivado
                   </Badge>
@@ -1134,7 +1133,7 @@ export default function EventsManagement() {
                   Ver Detalhes
                 </Button>
                 
-                {event.approval_status === 'rejected' && (
+                {(event as Event & { approval_status?: string }).approval_status === 'rejected' && (
                   <Button
                     size="sm"
                     variant="default"
@@ -1151,7 +1150,7 @@ export default function EventsManagement() {
                   </Button>
                 )}
                 
-                {!event.is_visible && event.approval_status !== 'rejected' && (
+                {!event.is_visible && (event as Event & { approval_status?: string }).approval_status !== 'rejected' && (
                   <>
                     <Button
                       size="sm"
@@ -1731,8 +1730,8 @@ export default function EventsManagement() {
                   <Label htmlFor="edit-company">Empresa</Label>
                   <Input
                     id="edit-company"
-                    value={(editingEvent as any).organizador_empresa || ''}
-                    onChange={(e) => setEditingEvent({...editingEvent, organizador_empresa: e.target.value})}
+                    value={(editingEvent as Event & { organizador_empresa?: string }).organizador_empresa || ''}
+                    onChange={(e) => setEditingEvent({...editingEvent, organizador_empresa: e.target.value} as Event & { organizador_empresa?: string })}
                     placeholder="Empresa organizadora"
                   />
                 </div>
@@ -2114,7 +2113,7 @@ export default function EventsManagement() {
                     </div>
                     
                     {/* Configuração de Payment Link - Apenas para eventos aprovados */}
-                    {selectedEvent.is_visible && selectedEvent.approval_status === 'approved' && (
+                    {selectedEvent.is_visible && (selectedEvent as Event & { approval_status?: string }).approval_status === 'approved' && (
                       <div className="mt-4">
                         <EventPaymentConfig
                           eventId={selectedEvent.id}

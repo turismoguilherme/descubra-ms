@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -381,7 +380,7 @@ export default function PantanalAvatarsManager() {
         
       }
 
-      const avatarData: unknown = {
+      const avatarData: Record<string, unknown> = {
         name: formData.name.trim(),
         scientific_name: formData.scientific_name.trim() || null,
         description: formData.description.trim() || null,
@@ -438,7 +437,7 @@ export default function PantanalAvatarsManager() {
       } else {
         console.log('➕ [PantanalAvatarsManager] Criando novo avatar...');
         // Remover campos undefined e garantir que não enviamos 'id'
-        const cleanAvatarData: unknown = {};
+        const cleanAvatarData: Record<string, unknown> = {};
         Object.entries(avatarData).forEach(([key, value]) => {
           if (key !== 'id' && value !== undefined) {
             cleanAvatarData[key] = value;
@@ -748,7 +747,7 @@ export default function PantanalAvatarsManager() {
         }
 
         // Preparar dados para inserção
-        const avatarData: unknown = {
+        const avatarData: Record<string, unknown> = {
           name: avatar.name,
           scientific_name: avatar.scientific_name,
           description: avatar.description,

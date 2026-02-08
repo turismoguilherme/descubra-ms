@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Unified Onboarding Wizard
  * Integra cadastro (AdaptiveQuestions) com diagnóstico (DiagnosticQuestionnaire)

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -172,9 +171,9 @@ export default function DestinationManager() {
           highlights: data.highlights?.join('\n') || '',
           how_to_get_there: data.how_to_get_there || '',
           best_time_to_visit: data.best_time_to_visit || '',
-          social_instagram: (data.social_links as any)?.instagram || '',
-          social_facebook: (data.social_links as any)?.facebook || '',
-          social_youtube: (data.social_links as any)?.youtube || '',
+          social_instagram: (data.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.instagram || '',
+          social_facebook: (data.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.facebook || '',
+          social_youtube: (data.social_links as { instagram?: string; facebook?: string; youtube?: string } | null)?.youtube || '',
         });
         setGalleryImages(data.image_gallery || []);
         // Carregar preview da imagem principal se houver

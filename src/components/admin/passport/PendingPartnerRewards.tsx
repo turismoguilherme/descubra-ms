@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-/**
+﻿/**
  * PendingPartnerRewards
  * Exibe recompensas cadastradas por parceiros aguardando aprovação
  * Permite aprovar, rejeitar e vincular a rotas

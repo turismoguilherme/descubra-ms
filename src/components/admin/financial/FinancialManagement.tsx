@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,19 +42,19 @@ export default function FinancialManagement() {
   
   // Estados para preview de relatórios
   const [reportPreviewOpen, setReportPreviewOpen] = useState(false);
-  const [reportPreviewData, setReportPreviewData] = useState<any>(null);
+  const [reportPreviewData, setReportPreviewData] = useState<Record<string, unknown> | null>(null);
   const [reportPreviewType, setReportPreviewType] = useState<'dre' | 'cashflow' | 'profit'>('dre');
   const [reportPeriod, setReportPeriod] = useState({ startDate: '', endDate: '' });
 
   // Receitas
-  const [revenues, setRevenues] = useState<any[]>([]);
+  const [revenues, setRevenues] = useState<RevenueItem[]>([]);
   const [revenueFilters, setRevenueFilters] = useState({ startDate: '', endDate: '', source: 'all' });
 
   // Despesas
-  const [expenses, setExpenses] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [expenseFilters, setExpenseFilters] = useState({ startDate: '', endDate: '', category: 'all', status: 'all' });
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<any>(null);
+  const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null);
   const [expenseForm, setExpenseForm] = useState({
     description: '',
     category: '',
@@ -65,8 +64,8 @@ export default function FinancialManagement() {
   });
 
   // Salários
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [salaries, setSalaries] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Record<string, unknown>[]>([]);
+  const [salaries, setSalaries] = useState<Record<string, unknown>[]>([]);
   const [salaryDialogOpen, setSalaryDialogOpen] = useState(false);
   const [salaryForm, setSalaryForm] = useState({
     employee_id: '',
@@ -345,8 +344,12 @@ export default function FinancialManagement() {
       return;
     }
 
-    const headers = Object.keys(data[0]);
-    const rows = data.map(item => headers.map(header => item[header] || ''));
+    const firstItem = data[0] as Record<string, unknown>;
+    const headers = Object.keys(firstItem);
+    const rows = data.map(item => {
+      const itemRecord = item as Record<string, unknown>;
+      return headers.map(header => itemRecord[header] || '');
+    });
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
     
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -593,7 +596,7 @@ export default function FinancialManagement() {
     }
   };
 
-  const generatePDF = (type: 'dre' | 'cashflow' | 'profit', data: unknown) => {
+  const generatePDF = (type: 'dre' | 'cashflow' | 'profit', data: Record<string, unknown>) => {
     try {
       if (type === 'dre') {
         generateDREPDF(data);

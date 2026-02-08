@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,10 +12,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
+interface Route {
+  id: string;
+  name: string;
+}
+
+interface Reward {
+  id: string;
+  route_id: string;
+  partner_name: string;
+  reward_type: string;
+  reward_description: string;
+  max_vouchers: number | null;
+  is_fallback: boolean;
+}
+
+interface Avatar {
+  id: string;
+  name: string;
+  image_url?: string;
+  rarity?: string;
+}
+
 const PassportRewardsManager: React.FC = () => {
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [rewards, setRewards] = useState<any[]>([]);
-  const [avatars, setAvatars] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [emittedByRewardId, setEmittedByRewardId] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,7 +114,7 @@ const PassportRewardsManager: React.FC = () => {
       setAvatars(avatarsRes.data || []);
 
       // Carregar quantidade de vouchers emitidos por recompensa (para exibir estoque)
-      const rewardIds = (rewardsRes || []).map((r: { id: string }) => r.id).filter(Boolean);
+      const rewardIds = (rewardsRes || []).map((r: Reward) => r.id).filter(Boolean);
       console.log('🔵 [PassportRewardsManager] Reward IDs encontrados:', rewardIds.length);
       
       if (rewardIds.length > 0) {
@@ -108,7 +129,7 @@ const PassportRewardsManager: React.FC = () => {
           throw userRewardsError;
         }
 
-        const counts = (userRewardsData || []).reduce((acc: Record<string, number>, row: { reward_id: string }) => {
+        const counts = (userRewardsData || []).reduce((acc: Record<string, number>, row: { reward_id: string }): Record<string, number> => {
           const rid = row.reward_id;
           acc[rid] = (acc[rid] || 0) + 1;
           return acc;
@@ -125,13 +146,13 @@ const PassportRewardsManager: React.FC = () => {
       console.error('❌ [PassportRewardsManager] Erro completo ao carregar dados:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       toast({
         title: 'Erro ao carregar dados',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -255,13 +276,13 @@ const PassportRewardsManager: React.FC = () => {
       console.error('❌ [PassportRewardsManager] Erro completo ao salvar recompensa:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       toast({
         title: 'Erro ao criar recompensa',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     } finally {
@@ -291,13 +312,13 @@ const PassportRewardsManager: React.FC = () => {
       console.error('❌ [PassportRewardsManager] Erro completo ao excluir recompensa:', {
         message: err.message,
         code: (err as { code?: string }).code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
+        details: (error as { details?: string }).details,
+        hint: (error as { hint?: string }).hint,
+        stack: err.stack,
       });
       toast({
         title: 'Erro ao excluir',
-        description: error.message,
+        description: err.message,
         variant: 'destructive',
       });
     }
@@ -416,7 +437,7 @@ const PassportRewardsManager: React.FC = () => {
                           <SelectValue placeholder="Escolha um avatar..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {avatars.map((avatar: { id: string; name: string; image_url?: string; rarity?: string }) => (
+                          {avatars.map((avatar: Avatar) => (
                             <SelectItem key={avatar.id} value={avatar.id}>
                               <div className="flex items-center gap-2">
                                 {avatar.image_url && (

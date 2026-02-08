@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useRef, useEffect } from "react";
 import KodaChatMessage from "./KodaChatMessage";
 import { AnimatePresence } from "framer-motion";

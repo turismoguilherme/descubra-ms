@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Translation Manager Component
  * Interface para gerenciar traduções de conteúdo
