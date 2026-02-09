@@ -29,9 +29,23 @@ export function AdminNotifications() {
     // Carregar notificações do localStorage ou banco de dados
     loadNotifications();
     
+    // Listener para novas notificações em tempo real
+    const handleNewNotification = (e: Event) => {
+      const customEvent = e as CustomEvent<Notification>;
+      if (customEvent.detail) {
+        setNotifications(prev => [customEvent.detail, ...prev].slice(0, 50));
+      }
+    };
+    
+    window.addEventListener('admin-notification-added', handleNewNotification as EventListener);
+    
     // Verificar novas notificações a cada 30 segundos
     const interval = setInterval(checkNewNotifications, 30000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('admin-notification-added', handleNewNotification as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -43,10 +57,18 @@ export function AdminNotifications() {
     const saved = localStorage.getItem('admin_notifications');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        const loaded = parsed.map((n: unknown) => ({
-          ...n,
-          timestamp: new Date(n.timestamp),
+        const parsed = JSON.parse(saved) as Array<Record<string, unknown>>;
+        const loaded: Notification[] = parsed.map((n) => ({
+          id: String(n.id || ''),
+          type: (n.type as Notification['type']) || 'info',
+          title: String(n.title || ''),
+          message: String(n.message || ''),
+          timestamp: new Date(String(n.timestamp)),
+          read: Boolean(n.read),
+          action: n.action ? {
+            label: String(n.action.label || ''),
+            onClick: typeof n.action.onClick === 'function' ? n.action.onClick : () => {}
+          } : undefined,
         }));
         setNotifications(loaded);
       } catch (e) {
@@ -64,29 +86,36 @@ export function AdminNotifications() {
     // Em produção, fazer polling do banco de dados ou usar WebSockets
   };
 
+  const saveNotifications = (currentNotifications: Notification[]) => {
+    const toSave = currentNotifications.map(n => ({
+      ...n,
+      timestamp: n.timestamp instanceof Date ? n.timestamp.toISOString() : n.timestamp,
+    }));
+    localStorage.setItem('admin_notifications', JSON.stringify(toSave));
+  };
+
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-    saveNotifications();
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+      saveNotifications(updated);
+      return updated;
+    });
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    saveNotifications();
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      saveNotifications(updated);
+      return updated;
+    });
   };
 
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    saveNotifications();
-  };
-
-  const saveNotifications = () => {
-    const toSave = notifications.map(n => ({
-      ...n,
-      timestamp: n.timestamp.toISOString(),
-    }));
-    localStorage.setItem('admin_notifications', JSON.stringify(toSave));
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      saveNotifications(updated);
+      return updated;
+    });
   };
 
   const getIcon = (type: Notification['type']) => {
