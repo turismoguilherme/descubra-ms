@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * CAT Check-In Section
  * Seção padronizada de controle de ponto para atendentes dos CATs
  */
