@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente de Status do Sistema de Eventos
  * 

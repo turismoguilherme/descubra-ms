@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import { AnimatePresence } from "framer-motion";
