@@ -40,11 +40,10 @@ export function AdminNotifications() {
     
     window.addEventListener('admin-notification-added', handleNewNotification as EventListener);
     
-    // Verificar novas notificações a cada 30 segundos
-    const interval = setInterval(checkNewNotifications, 30000);
+    // Notificações são atualizadas via eventos CustomEvent
+    // Não há necessidade de polling - listener de 'admin-notification-added' já implementado
     
     return () => {
-      clearInterval(interval);
       window.removeEventListener('admin-notification-added', handleNewNotification as EventListener);
     };
   }, []);
@@ -82,9 +81,9 @@ export function AdminNotifications() {
   };
 
   const checkNewNotifications = async () => {
-    // Verificar se há novas notificações do sistema
-    // Por enquanto, apenas verificar erros do console ou eventos do sistema
-    // Em produção, fazer polling do banco de dados ou usar WebSockets
+    // Função removida - notificações são atualizadas via eventos CustomEvent
+    // e listener de 'admin-notification-added' já implementado no useEffect
+    // Não há necessidade de polling adicional
   };
 
   const saveNotifications = (currentNotifications: Notification[]) => {

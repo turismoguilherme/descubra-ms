@@ -87,6 +87,9 @@ serve(async (req) => {
       );
     }
 
+    // Garantir que amount existe e é um número
+    const paymentAmount = (paymentRecord as any).amount || 0;
+
     // Extrair checkout_session_id do metadata
     const metadata = paymentRecord.metadata as any;
     const checkoutSessionId = metadata?.checkout_session_id;
@@ -192,7 +195,7 @@ serve(async (req) => {
           refund_id: refund.id,
           reason: reason || 'Evento rejeitado pelo administrador',
           refund_type: 'partial_net_amount',
-          original_amount: paymentRecord.amount,
+          original_amount: paymentAmount,
           refunded_amount: refundAmountInReais,
         },
       });
