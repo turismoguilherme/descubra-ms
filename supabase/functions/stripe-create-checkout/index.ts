@@ -15,6 +15,7 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
 
     // Verificar autenticação
     if (!authHeader) {

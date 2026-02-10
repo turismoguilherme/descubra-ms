@@ -69,7 +69,7 @@ serve(async (req) => {
     // Buscar checkout_session_id de master_financial_records
     const { data: paymentRecord, error: paymentError } = await supabase
       .from('master_financial_records')
-      .select('metadata, stripe_invoice_id')
+      .select('metadata, stripe_invoice_id, amount')
       .eq('source', 'event_sponsor')
       .contains('metadata', { event_id })
       .eq('status', 'paid')

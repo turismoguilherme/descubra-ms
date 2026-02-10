@@ -74,6 +74,7 @@ serve(async (req) => {
       );
     }
 
+    let stripeRefundId = '';
     try {
       let finalPaymentIntentId = null;
 
