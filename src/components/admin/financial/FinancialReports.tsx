@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PeriodFilterTabs } from '@/components/admin/ui/PeriodFilterTabs';
 import { Download, FileText, FileJson } from 'lucide-react';
 import { financialService } from '@/services/admin/financialService';
 import { useToast } from '@/hooks/use-toast';
@@ -104,18 +104,8 @@ export default function FinancialReports() {
           <h2 className="text-2xl font-bold text-gray-900">Relatórios Financeiros</h2>
           <p className="text-gray-600 mt-1">Relatórios e exportação de dados financeiros</p>
         </div>
-        <div className="flex gap-2">
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Selecione o período" />
-            </SelectTrigger>
-            <SelectContent className="z-[10000]">
-              <SelectItem value="week">Última Semana</SelectItem>
-              <SelectItem value="month">Último Mês</SelectItem>
-              <SelectItem value="quarter">Último Trimestre</SelectItem>
-              <SelectItem value="year">Último Ano</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2 items-center">
+          <PeriodFilterTabs value={period} onChange={setPeriod} />
           <Button variant="outline" onClick={handleExportCSV}>
             <FileText className="h-4 w-4 mr-2" />
             CSV

@@ -8,6 +8,7 @@ import { Loader2, Key, CheckCircle, XCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { partnerCodeService } from '@/services/passport/partnerCodeService';
 
 interface PartnerCodeInputProps {
   checkpointId: string;
@@ -45,27 +46,19 @@ const PartnerCodeInput: React.FC<PartnerCodeInputProps> = ({
     setError(null);
 
     try {
-      // Buscar o checkpoint para obter informações
-      const { data: checkpoint, error: checkpointError } = await supabase
-        .from('route_checkpoints')
-        .select('partner_code, points_reward')
-        .eq('id', checkpointId)
-        .single();
+      // Usar validação server-side com rate limiting e auditoria
+      const validation = await partnerCodeService.validatePartnerCode(
+        code.trim(),
+        checkpointId,
+        user.id
+      );
 
-      if (checkpointError) throw checkpointError;
-
-      if (!checkpoint.partner_code) {
-        setError('Este checkpoint não possui código de parceiro configurado');
+      if (!validation.isValid) {
+        setError(validation.error || 'Código inválido. Verifique com o parceiro.');
         return;
       }
 
-      // Validar o código
-      if (code.trim().toUpperCase() !== checkpoint.partner_code.toUpperCase()) {
-        setError('Código inválido. Verifique com o parceiro.');
-        return;
-      }
-
-      // Verificar se já foi usado por este usuário
+      // Verificar se já foi usado por este usuário (validação adicional)
       const { data: existingStamp, error: stampError } = await supabase
         .from('passport_stamps')
         .select('id')
@@ -81,6 +74,7 @@ const PartnerCodeInput: React.FC<PartnerCodeInputProps> = ({
       }
 
       // Criar o carimbo
+      const points = validation.points || 10;
       const { error: insertError } = await supabase
         .from('passport_stamps')
         .insert({
@@ -89,7 +83,7 @@ const PartnerCodeInput: React.FC<PartnerCodeInputProps> = ({
           checkpoint_id: checkpointId,
           stamp_type: 'partner_code',
           activity_type: 'checkpoint_validation',
-          points_earned: checkpoint.points_reward || 10,
+          points_earned: points,
           stamped_at: new Date().toISOString()
         });
 
@@ -98,10 +92,10 @@ const PartnerCodeInput: React.FC<PartnerCodeInputProps> = ({
       // Sucesso!
       toast({
         title: 'Checkpoint validado!',
-        description: `Você ganhou ${checkpoint.points_reward || 10} pontos!`,
+        description: `Você ganhou ${points} pontos!`,
       });
 
-      onCodeValidated(checkpoint.points_reward || 10);
+      onCodeValidated(points);
 
     } catch (err: unknown) {
       console.error('Erro ao validar código:', err);

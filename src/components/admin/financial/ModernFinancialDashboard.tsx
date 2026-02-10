@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PeriodFilterTabs } from '@/components/admin/ui/PeriodFilterTabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { financialDashboardService } from '@/services/admin/financialDashboardService';
@@ -252,14 +253,7 @@ export default function ModernFinancialDashboard() {
           helpText="Acompanhe receitas, despesas e lucro da plataforma. Gerencie contas a pagar."
         />
         <div className="flex items-center gap-2">
-          <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <TabsList className="bg-gray-100">
-              <TabsTrigger value="week">7 dias</TabsTrigger>
-              <TabsTrigger value="month">30 dias</TabsTrigger>
-              <TabsTrigger value="quarter">90 dias</TabsTrigger>
-              <TabsTrigger value="year">1 ano</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <PeriodFilterTabs value={selectedPeriod} onChange={setSelectedPeriod} />
         </div>
       </div>
 

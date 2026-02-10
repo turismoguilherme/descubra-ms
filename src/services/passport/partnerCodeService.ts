@@ -47,7 +47,7 @@ export const partnerCodeService = {
   },
 
   /**
-   * Valida um código de parceiro
+   * Valida um código de parceiro (SERVER-SIDE com rate limiting e auditoria)
    */
   async validatePartnerCode(
     code: string,
@@ -55,63 +55,74 @@ export const partnerCodeService = {
     userId: string
   ): Promise<PartnerCodeValidation> {
     try {
-      // Buscar checkpoint com o código
+      // Obter IP (se disponível via headers ou contexto)
+      // Por enquanto, deixar como null - pode ser melhorado com Edge Function
+      const ipAddress = null;
+      
+      // Usar função RPC server-side para validação segura
+      const { data: result, error } = await supabase.rpc('validate_partner_code', {
+        p_checkpoint_id: checkpointId,
+        p_code_input: code,
+        p_user_id: userId,
+        p_ip_address: ipAddress,
+        p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      });
+
+      if (error) {
+        console.error('Erro ao validar código do parceiro via RPC:', error);
+        return {
+          isValid: false,
+          error: 'Erro ao validar código. Tente novamente.'
+        };
+      }
+
+      const validation = result as { 
+        success: boolean; 
+        error?: string; 
+        blocked?: boolean;
+        attempts_remaining?: number;
+      };
+      
+      if (!validation.success) {
+        return {
+          isValid: false,
+          error: validation.error || 'Código inválido',
+        };
+      }
+
+      // Se validação foi bem-sucedida, buscar dados do checkpoint para retornar
       const { data: checkpoint, error: checkpointError } = await supabase
         .from('route_checkpoints')
         .select(`
           id,
           name,
-          partner_code,
           points_reward,
           partner_id,
-          partners(name)
+          institutional_partners(name)
         `)
         .eq('id', checkpointId)
         .single();
 
       if (checkpointError) {
+        console.warn('Erro ao buscar dados do checkpoint após validação:', checkpointError);
+        // Mesmo com erro, retornar sucesso pois a validação RPC já passou
         return {
-          isValid: false,
-          error: 'Checkpoint não encontrado'
-        };
-      }
-
-      if (!checkpoint.partner_code) {
-        return {
-          isValid: false,
-          error: 'Este checkpoint não possui código de parceiro'
-        };
-      }
-
-      // Verificar se o código está correto
-      if (code.toUpperCase() !== checkpoint.partner_code.toUpperCase()) {
-        return {
-          isValid: false,
-          error: 'Código inválido'
-        };
-      }
-
-      // Verificar se já foi usado por este usuário
-      const { data: existingStamp } = await supabase
-        .from('passport_stamps')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('checkpoint_id', checkpointId)
-        .maybeSingle();
-
-      if (existingStamp) {
-        return {
-          isValid: false,
-          error: 'Você já validou este checkpoint'
+          isValid: true,
+          points: 10, // Default
+          checkpoint: {
+            id: checkpointId,
+            name: '',
+            partner_name: undefined
+          }
         };
       }
 
       return {
         isValid: true,
-        points: checkpoint.points_reward || 10,
+        points: checkpoint?.points_reward || 10,
         checkpoint: {
           id: checkpoint.id,
-          name: checkpoint.name,
+          name: checkpoint.name || '',
           partner_name: checkpoint.institutional_partners?.name
         }
       };
