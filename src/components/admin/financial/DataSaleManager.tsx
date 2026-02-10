@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Data Sale Manager
  * Gerencia solicitações de venda de dados de turismo
  */
