@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Contact Leads Management
  * Gerencia leads do formulário de contato

@@ -558,6 +558,7 @@ async function getTemplateFromDatabase(
       partner_notification: 'Partner Notification',
       stripe_connect_complete: 'Stripe Connect Complete',
       reservation_payment_received: 'Reservation Payment Received',
+      event_refunded: 'Event Refunded',
     };
 
     const templateName = templateNameMap[type];

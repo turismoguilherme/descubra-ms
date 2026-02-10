@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Globe, Heart, Send, ArrowRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';

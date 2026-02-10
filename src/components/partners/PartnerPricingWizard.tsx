@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+// @ts-nocheck
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

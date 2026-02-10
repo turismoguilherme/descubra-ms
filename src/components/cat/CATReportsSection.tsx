@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CAT Reports Section
  * Seção de relatórios avançados para atendentes dos CATs

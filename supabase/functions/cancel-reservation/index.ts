@@ -139,6 +139,7 @@ serve(async (req) => {
     // NOVO: Criar registro de reembolso pendente em vez de processar automaticamente
     // O admin processará manualmente através da interface
     let pendingRefundId = null;
+    let stripeRefundId = '';
     const paymentIntentId = reservation.stripe_payment_intent_id || reservation.stripe_checkout_session_id;
     
     if (paymentIntentId && refundAmountInCents > 0) {

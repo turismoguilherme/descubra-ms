@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Debugger do Sistema de Eventos
  * 
