@@ -308,16 +308,17 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   const loadContent = async () => {
     setLoading(true);
     try {
-      console.log('📥 [SimpleTextEditor] Carregando conteúdo com prefixo:', prefix);
+      // Log removido para produção - usar apenas em desenvolvimento
+      if (import.meta.env.DEV) console.log('📥 [SimpleTextEditor] Carregando conteúdo com prefixo:', prefix);
       const data = await platformContentService.getContentByPrefix(prefix);
-      console.log('📦 [SimpleTextEditor] Dados recebidos do banco:', data.length, 'itens');
+      if (import.meta.env.DEV) console.log('📦 [SimpleTextEditor] Dados recebidos do banco:', data.length, 'itens');
       
       const contentMap: Record<string, string> = {};
       const idMap: Record<string, string> = {};
 
       // Filtrar apenas campos que pertencem à plataforma atual
       const platformFieldKeys = new Set(fields.map(f => f.key));
-      console.log('🔑 [SimpleTextEditor] Campos esperados:', Array.from(platformFieldKeys));
+      if (import.meta.env.DEV) console.log('🔑 [SimpleTextEditor] Campos esperados:', Array.from(platformFieldKeys));
 
       // Carregar valores do banco - APENAS para campos desta plataforma
       data.forEach(item => {
@@ -325,7 +326,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         if (platformFieldKeys.has(item.content_key)) {
           contentMap[item.content_key] = item.content_value || '';
           idMap[item.content_key] = item.id;
-          console.log('✅ [SimpleTextEditor] Campo carregado:', {
+          if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] Campo carregado:', {
             key: item.content_key,
             value: (item.content_value || '').substring(0, 50),
             id: item.id
@@ -346,7 +347,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
             ? setting.setting_value.replace(/^"|"$/g, '') // Remove aspas JSON se houver
             : String(setting.setting_value || '');
           contentMap[setting.setting_key] = value;
-          console.log('✅ [SimpleTextEditor] Campo de roteiro carregado de site_settings:', {
+          if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] Campo de roteiro carregado de site_settings:', {
             key: setting.setting_key,
             value: value.substring(0, 50)
           });
@@ -360,11 +361,11 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       fields.forEach(field => {
         if (!contentMap[field.key]) {
           contentMap[field.key] = '';
-          console.log('⚠️ [SimpleTextEditor] Campo não encontrado no banco, usando vazio:', field.key);
+          if (import.meta.env.DEV) console.log('⚠️ [SimpleTextEditor] Campo não encontrado no banco, usando vazio:', field.key);
         }
       });
 
-      console.log('📊 [SimpleTextEditor] Estado final:', {
+      if (import.meta.env.DEV) console.log('📊 [SimpleTextEditor] Estado final:', {
         contentsKeys: Object.keys(contentMap),
         idsKeys: Object.keys(idMap),
         totalFields: fields.length
@@ -387,10 +388,10 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   };
 
   const updateField = (key: string, value: string) => {
-    console.log('✏️ [SimpleTextEditor] updateField chamado:', { key, value: value.substring(0, 100), valueLength: value.length });
+    if (import.meta.env.DEV) console.log('✏️ [SimpleTextEditor] updateField chamado:', { key, value: value.substring(0, 100), valueLength: value.length });
     setContents(prev => {
       const newContents = { ...prev, [key]: value };
-      console.log('📝 [SimpleTextEditor] Estado contents atualizado:', { 
+      if (import.meta.env.DEV) console.log('📝 [SimpleTextEditor] Estado contents atualizado:', { 
         key, 
         newValue: newContents[key]?.substring(0, 100), 
         newValueLength: newContents[key]?.length || 0 
@@ -423,14 +424,14 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   };
 
   const handleImageSelect = (key: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('📎 [SimpleTextEditor] handleImageSelect chamado para:', key);
+    if (import.meta.env.DEV) console.log('📎 [SimpleTextEditor] handleImageSelect chamado para:', key);
     const file = event.target.files?.[0];
     if (!file) {
       console.warn('⚠️ [SimpleTextEditor] Nenhum arquivo selecionado');
       return;
     }
 
-    console.log('📄 [SimpleTextEditor] Arquivo selecionado:', { name: file.name, size: file.size, type: file.type });
+    if (import.meta.env.DEV) console.log('📄 [SimpleTextEditor] Arquivo selecionado:', { name: file.name, size: file.size, type: file.type });
 
     if (!file.type.startsWith('image/')) {
       console.error('❌ [SimpleTextEditor] Arquivo não é uma imagem:', file.type);
@@ -452,11 +453,11 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       return;
     }
 
-    console.log('🖼️ [SimpleTextEditor] Criando preview da imagem...');
+    if (import.meta.env.DEV) console.log('🖼️ [SimpleTextEditor] Criando preview da imagem...');
     const reader = new FileReader();
     reader.onload = (e) => {
       const preview = e.target?.result as string;
-      console.log('✅ [SimpleTextEditor] Preview criado, tamanho:', preview?.length);
+      if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] Preview criado, tamanho:', preview?.length);
       setImagePreviews(prev => ({ ...prev, [key]: preview }));
     };
     reader.onerror = (error) => {
@@ -471,7 +472,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   };
 
   const uploadImage = async (key: string, file: File): Promise<string | null> => {
-    console.log('📤 [SimpleTextEditor] Iniciando upload:', { key, fileName: file.name, fileSize: file.size, fileType: file.type });
+    if (import.meta.env.DEV) console.log('📤 [SimpleTextEditor] Iniciando upload:', { key, fileName: file.name, fileSize: file.size, fileType: file.type });
     
     try {
       // Verificar e renovar token se necessário antes do upload
@@ -490,21 +491,21 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         const expiresAt = session.expires_at * 1000;
         const timeUntilExpiry = expiresAt - Date.now();
         if (timeUntilExpiry < 5 * 60 * 1000 && session.refresh_token) {
-          console.log('🔄 [SimpleTextEditor] Token próximo de expirar, renovando antes do upload...');
+          if (import.meta.env.DEV) console.log('🔄 [SimpleTextEditor] Token próximo de expirar, renovando antes do upload...');
           await supabase.auth.refreshSession();
         }
       }
 
       const fileExt = file.name.split('.').pop();
       const fileName = `platform-content/${key}/${uuidv4()}.${fileExt}`;
-      console.log('📁 [SimpleTextEditor] Nome do arquivo gerado:', fileName);
+      if (import.meta.env.DEV) console.log('📁 [SimpleTextEditor] Nome do arquivo gerado:', fileName);
 
       let uploadError;
       let retries = 1;
       
       // Tentar upload com retry em caso de erro 401
       while (retries >= 0) {
-        console.log(`🔄 [SimpleTextEditor] Tentativa de upload (${retries + 1}/2)...`);
+        if (import.meta.env.DEV) console.log(`🔄 [SimpleTextEditor] Tentativa de upload (${retries + 1}/2)...`);
         const result = await supabase.storage
           .from(BUCKET_NAME)
           .upload(fileName, file, {
@@ -521,7 +522,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
             name: uploadError.name
           });
         } else {
-          console.log('✅ [SimpleTextEditor] Upload bem-sucedido!');
+          if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] Upload bem-sucedido!');
         }
         
         // Se não há erro ou não é erro de JWT, sair do loop
@@ -531,7 +532,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         
         // Se é erro de JWT, tentar renovar e retry
         if (uploadError.message?.includes('exp') && retries > 0) {
-          console.log('🔄 [SimpleTextEditor] Token expirado no upload, renovando...');
+          if (import.meta.env.DEV) console.log('🔄 [SimpleTextEditor] Token expirado no upload, renovando...');
           await supabase.auth.refreshSession();
           await new Promise(resolve => setTimeout(resolve, 300));
           retries--;
@@ -557,7 +558,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
         .getPublicUrl(fileName);
 
       const publicUrl = publicUrlData?.publicUrl || null;
-      console.log('🔗 [SimpleTextEditor] URL pública gerada:', publicUrl);
+      if (import.meta.env.DEV) console.log('🔗 [SimpleTextEditor] URL pública gerada:', publicUrl);
       
       return publicUrl;
     } catch (error: unknown) {
@@ -584,9 +585,9 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     setUploading(prev => ({ ...prev, [key]: true }));
 
     try {
-      console.log('🚀 [SimpleTextEditor] Iniciando upload para:', key);
+      if (import.meta.env.DEV) console.log('🚀 [SimpleTextEditor] Iniciando upload para:', key);
       const uploadedUrl = await uploadImage(key, file);
-      console.log('📥 [SimpleTextEditor] URL recebida:', uploadedUrl);
+      if (import.meta.env.DEV) console.log('📥 [SimpleTextEditor] URL recebida:', uploadedUrl);
       if (uploadedUrl) {
         updateField(key, uploadedUrl);
         setImagePreviews(prev => ({ ...prev, [key]: uploadedUrl }));
@@ -660,7 +661,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     const value = contents[key] !== undefined ? contents[key] : '';
     const id = contentIds[key];
 
-    console.log('💾 [SimpleTextEditor] saveField iniciado:', {
+    if (import.meta.env.DEV) console.log('💾 [SimpleTextEditor] saveField iniciado:', {
       key,
       value: value.substring(0, 100),
       valueLength: value.length,
@@ -674,7 +675,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
     try {
       // Se for campo de roteiro, salvar em site_settings
       if (SITE_SETTINGS_KEYS.includes(key)) {
-        console.log('💾 [SimpleTextEditor] Salvando em site_settings:', { key, value: value.substring(0, 100) });
+        if (import.meta.env.DEV) console.log('💾 [SimpleTextEditor] Salvando em site_settings:', { key, value: value.substring(0, 100) });
         const field = fields.find(f => f.key === key);
         
         const { error } = await supabase
@@ -694,16 +695,16 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
           throw error;
         }
 
-        console.log('✅ [SimpleTextEditor] Salvo em site_settings com sucesso:', { key });
+        if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] Salvo em site_settings com sucesso:', { key });
       } else {
         // Comportamento padrão: salvar em platform_content
         if (id) {
-          console.log('📝 [SimpleTextEditor] Atualizando conteúdo existente:', { key, id, value: value.substring(0, 100) });
+          if (import.meta.env.DEV) console.log('📝 [SimpleTextEditor] Atualizando conteúdo existente:', { key, id, value: value.substring(0, 100) });
           // Atualizar existente
           await platformContentService.updateContent(id, value);
-          console.log('✅ [SimpleTextEditor] updateContent concluído com sucesso:', { key, id });
+          if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] updateContent concluído com sucesso:', { key, id });
         } else {
-          console.log('➕ [SimpleTextEditor] Criando novo conteúdo:', { 
+          if (import.meta.env.DEV) console.log('➕ [SimpleTextEditor] Criando novo conteúdo:', { 
             key, 
             value: value.substring(0, 100), 
             fieldType: fields.find(f => f.key === key)?.type 
@@ -717,7 +718,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
             description: field?.label || null,
             is_active: true,
           });
-          console.log('✅ [SimpleTextEditor] createContent concluído:', { 
+          if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] createContent concluído:', { 
             key, 
             newId: newContent.id, 
             newContentValue: newContent.content_value?.substring(0, 100) 
@@ -734,7 +735,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
       // Atualizar valor original após salvar
       setOriginalContents(prev => ({ ...prev, [key]: value }));
       
-      console.log('✅ [SimpleTextEditor] saveField concluído com sucesso:', { key, value: value.substring(0, 100) });
+      if (import.meta.env.DEV) console.log('✅ [SimpleTextEditor] saveField concluído com sucesso:', { key, value: value.substring(0, 100) });
       
       toast({
         title: 'Salvo!',

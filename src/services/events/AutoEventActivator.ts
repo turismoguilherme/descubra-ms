@@ -104,8 +104,9 @@ export class AutoEventActivator {
 // Instância singleton
 export const autoEventActivator = AutoEventActivator.getInstance();
 
-// Auto-ativação imediata (reativada)
-if (typeof window !== 'undefined' && true) { // Reativado
+// Auto-ativação imediata - DESABILITADA para evitar overhead desnecessário
+// Pode ser ativada manualmente quando necessário
+if (typeof window !== 'undefined' && false) { // Desabilitado para otimização
   // Iniciando ativação automática (log removido)
   
   // Aguardar um pouco para garantir que a aplicação esteja carregada

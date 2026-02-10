@@ -94,8 +94,9 @@ export class IntelligentEventActivator {
 // Instância singleton
 export const intelligentEventActivator = IntelligentEventActivator.getInstance();
 
-// Auto-ativação imediata
-if (typeof window !== 'undefined') {
+// Auto-ativação imediata - DESABILITADA para evitar overhead desnecessário
+// Pode ser ativada manualmente quando necessário
+if (typeof window !== 'undefined' && false) { // Desabilitado para otimização
   // Iniciando ativação automática (log removido)
   
   // Aguardar um pouco para garantir que a aplicação esteja carregada
