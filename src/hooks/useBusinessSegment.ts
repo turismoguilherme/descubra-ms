@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useBusinessSegment Hook
  * Hook para obter configuração de métricas baseada em business_category

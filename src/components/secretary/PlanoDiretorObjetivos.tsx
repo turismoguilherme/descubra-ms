@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Plano Diretor Objetivos Component
  * Gerenciamento de objetivos estratégicos

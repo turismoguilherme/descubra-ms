@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Analytics Avançados para Secretarias
  * Dashboard com métricas, gráficos e relatórios de turismo

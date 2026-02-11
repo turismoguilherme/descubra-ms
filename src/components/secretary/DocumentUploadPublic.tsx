@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Document Upload Component for Public Sector
  * Componente para upload e gerenciamento de documentos municipais

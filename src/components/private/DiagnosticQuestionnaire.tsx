@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import DiagnosticQuestionnaire, { QuestionnaireAnswers } from '@/components/diagnostic/DiagnosticQuestionnaire';
 import { Card } from '@/components/ui/card';

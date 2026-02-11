@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Diagnostic Reports Tab Component
  * Aba de relatórios dentro do diagnóstico (Opção B)

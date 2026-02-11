@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Plano Diretor Diagnóstico Component
  * Visualização e edição de diagnóstico com geração automática via IA

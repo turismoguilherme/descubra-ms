@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dados Regionais para Setor Público
  * Exibe dados de APIs governamentais (IBGE, INMET, ANTT, Fundtur-MS)

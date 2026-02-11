@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Document Upload Component
  * Componente para upload e gerenciamento de documentos

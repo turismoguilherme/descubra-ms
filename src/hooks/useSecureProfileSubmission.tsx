@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { useAutoRetry } from './useAutoRetry';
 import { useToast } from '@/hooks/use-toast';

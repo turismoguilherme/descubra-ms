@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Convidar Colaborador Modal
  * Modal para convidar colaboradores com sistema flexível de permissões

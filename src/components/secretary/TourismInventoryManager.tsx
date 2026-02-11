@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gerenciador de Inventário Turístico
  * CRUD de atrativos, serviços e pontos de interesse

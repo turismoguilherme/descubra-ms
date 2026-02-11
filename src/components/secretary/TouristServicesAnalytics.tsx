@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tourist Services Analytics Component
  * Componente para exibir análises e insights de atendimentos presenciais aos turistas

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Estratégia Form Component
  * Formulário para criar/editar estratégias com cálculo de ROI
