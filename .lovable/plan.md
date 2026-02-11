@@ -1,169 +1,138 @@
 
-# Auditoria Completa: Codigo Morto, Erros de Build, Seguranca e Pendencias
 
----
+# Redesign do Hero da ViaJARTur - Identidade Travel Tech
 
-## PARTE 1: ERROS DE BUILD ATUAIS (7 erros em Edge Functions + ~50 erros em componentes)
+## Contexto
 
-### 1.1 Edge Functions com Erros (7 erros - CRITICOS)
+A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
 
-| # | Arquivo | Erro | Correcao |
-|---|---------|------|----------|
-| 1 | `cancel-reservation/index.ts:323` | `stripeRefundId` nao declarada | Declarar `let stripeRefundId = '';` antes do bloco try |
-| 2-3 | `process-refund/index.ts:130,136` | `stripeRefundId` nao declarada | Declarar `let stripeRefundId = '';` antes do bloco try |
-| 4 | `refund-event-payment/index.ts:195` | `paymentRecord.amount` nao existe | Adicionar `amount` ao tipo do select ou usar cast |
-| 5 | `send-notification-email/index.ts:546` | `event_refunded` ausente no map | Adicionar `event_refunded: 'Event Refunded'` ao `templateNameMap` |
-| 6-7 | `stripe-create-checkout/index.ts:20,36` | `authHeader` nao declarada | Adicionar `const authHeader = req.headers.get('Authorization');` antes da linha 20 |
+A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
 
-### 1.2 Componentes Frontend com Erros (~50+ erros)
+## O que NAO sera alterado
 
-Arquivos que precisam de `// @ts-nocheck` na linha 1 (estrategia do projeto):
+- Nenhuma funcionalidade do Descubra MS
+- Nenhuma funcionalidade interna da ViaJARTur
+- Navbar e Footer permanecem iguais
+- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
+- Secoes de video e CTA final permanecem iguais
+- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
 
-| Arquivo | Quantidade de Erros |
-|---------|-------------------|
-| `PlatformSettings.tsx` | 2 |
-| `TouristRegionsManager.tsx` | 7 |
-| `EmailDashboard.tsx` | 3 |
-| `EmailTemplatesManager.tsx` | 1 |
-| `BankAccountsManager.tsx` | 5+ |
-| + todos os demais truncados nos erros de build | ~30+ |
+## O que sera criado
 
----
+### Novo Hero Section com identidade Travel Tech
 
-## PARTE 2: CODIGO MORTO IDENTIFICADO
+**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
 
-### 2.1 Componentes Admin NAO Usados em Nenhuma Rota
+**Lado Esquerdo**:
+- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
+- Titulo: "Tecnologia que transforma o turismo"
+- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
+- Dois botoes CTA (manter os atuais)
+- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
 
-Estes arquivos existem em `src/components/admin/` mas NAO sao importados em `ViaJARAdminPanel.tsx` nem em nenhum outro lugar:
+**Lado Direito - Ilustracao do Robo/IA**:
+Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
+- Corpo geometrico moderno com cores ciano/slate da marca
+- Tela no "peito" mostrando graficos/dados (pulso animado)
+- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
+- Particulas e linhas conectando os icones (efeito tech)
+- Animacoes sutis de flutuacao (CSS keyframes)
 
-| # | Arquivo | Motivo |
-|---|---------|--------|
-| 1 | `EventManagementPanel.tsx` | Zero imports encontrados em todo o projeto |
-| 2 | `AiPerformanceMonitoring.tsx` | Nao importado em nenhuma rota |
-| 3 | `SystemMaintenancePanel.tsx` | Nao importado em nenhuma rota |
-| 4 | `SupabaseDataLoader.tsx` | Nao importado em nenhuma rota |
-| 5 | `ContentPreviewTabs.tsx` | Nao importado em nenhuma rota |
-| 6 | `ManagerAIAssistant.tsx` | Nao importado em nenhuma rota |
-| 7 | `AdminUserManagement.tsx` | Nao importado em nenhuma rota |
-| 8 | `AdminElevateUser.tsx` | Nao importado em nenhuma rota |
-| 9 | `AdminEditButton.tsx` | Nao importado em nenhuma rota |
-| 10 | `AccessLogs.tsx` | Nao importado em nenhuma rota |
-| 11 | `HubSpotLeadManager.tsx` | Nao importado em nenhuma rota |
-| 12 | `PlatformConfigCenter.tsx` | Nao importado em nenhuma rota |
-| 13 | `PrivacyComplianceCenter.tsx` | Nao importado em nenhuma rota |
-| 14 | `PartnerLeadsManagement.tsx` | Nao importado em nenhuma rota |
-| 15 | `StripeSubscriptionManager.tsx` | Nao importado em nenhuma rota |
-| 16 | `TechnicalUserManager.tsx` | Nao importado em nenhuma rota |
-| 17 | `UserDataManager.tsx` | Nao importado em nenhuma rota |
-| 18 | `UserManagement.tsx` | Nao importado (existe `UsersManagement` que e usado) |
-| 19 | `EventsList.tsx` | Nao importado (existe `EventsManagement` que e usado) |
-| 20 | `community-moderation/CommunityModerationTrigger.tsx` | So faz `console.log`, sem funcionalidade real |
-| 21 | `studio/OverflowStudio.tsx` | Nao importado em nenhuma rota |
+**Fundo**:
+- Grid de pontos sutil (ja existe, manter)
+- Orbs de gradiente ciano/azul (ja existe, manter)
+- Linha decorativa de circuito/tech no fundo
 
-**Total: ~21 componentes admin mortos**
+### Componente novo: `TravelTechRobot.tsx`
 
-### 2.2 Edge Functions Potencialmente Mortas
+Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
+- Responsivo (menor em mobile, maior em desktop)
+- Animado com CSS puro (sem bibliotecas extras)
+- Nas cores da marca (ciano, slate, emerald)
+- Icones flutuantes usando Lucide icons
 
-| # | Edge Function | Motivo |
-|---|---------------|--------|
-| 1 | `test-gemini` | Funcao de teste - nao referenciada no frontend |
-| 2 | `ingest-run` | Funcao de setup - nao referenciada no frontend |
-| 3 | `rag-setup` | Setup unico - nao referenciada no frontend |
-| 4 | `check-data` | Funcao de debug - nao referenciada no frontend |
-| 5 | `admin-feedback` | Potencial duplicado de `guata-feedback` |
-| 6 | `crawler-run` | Nao referenciada no frontend |
+## Estrutura de arquivos
 
-### 2.3 Servicos de Eventos Potencialmente Mortos
-
-Os seguintes servicos em `src/services/events/` sao importados no `App.tsx` como side-effects, mas podem nao ter funcionalidade real:
-
-| # | Arquivo | Status |
-|---|---------|--------|
-| 1 | `EventSystemTester.ts` | Importado como side-effect no App.tsx - servico de teste |
-| 2 | `IntelligentEventActivator.ts` | Importado como side-effect no App.tsx |
-| 3 | `AutoEventActivator.ts` | Importado como side-effect no App.tsx |
-| 4 | `EventServiceInitializer.ts` | Importado como side-effect no App.tsx |
-
-**Nota**: Estes sao importados no `App.tsx` (linhas 24-28) e executam codigo ao carregar. Devem ser verificados se realmente fazem algo util em producao ou sao apenas para debug.
-
----
-
-## PARTE 3: ROTAS DUPLICADAS NO App.tsx
-
-O `App.tsx` tem um problema grave de duplicacao. As mesmas rotas existem **3 vezes**:
-
-1. **Linhas 167-286**: Dentro de `{showViajar && (<>...)}`
-2. **Linhas 290-347**: Dentro de `{showMS && (<>...)}`
-3. **Linhas 349-530**: Fora de qualquer condicional (SEMPRE renderizadas)
-
-Isso significa que TODAS as rotas ViaJAR e MS sao renderizadas independente do dominio, tornando a logica de `showViajar`/`showMS` **completamente inutil**. As rotas condicionais (blocos 1 e 2) nunca tem efeito porque as mesmas rotas existem no bloco 3.
-
-**Estimativa**: ~180 linhas duplicadas poderiam ser removidas.
-
----
-
-## PARTE 4: NOTIFICACOES (AdminNotifications.tsx)
-
-### Status Atual
-O componente foi **corrigido parcialmente** em uma sessao anterior. Analisando o codigo atual:
-
-- **Tipagem**: CORRIGIDA - usa `Array<Record<string, unknown>>` com casting manual
-- **Listener de Eventos**: CORRIGIDO - escuta `admin-notification-added`
-- **saveNotifications**: CORRIGIDO - recebe `currentNotifications` como parametro
-
-### Problema Restante
-- `checkNewNotifications` (linha 83-87) esta **vazia** - nao faz polling de nenhuma fonte
-- `n.action` (linhas 68-71): Tenta acessar `n.action.label` e `n.action.onClick` de um `Record<string, unknown>`, pode falhar em runtime se `action` nao for um objeto valido
-
----
-
-## PARTE 5: FEATURES PENDENTES (do plano aprovado)
-
-| Feature | Status | Acao |
-|---------|--------|------|
-| PeriodFilterTabs | EXISTE - `src/components/admin/ui/PeriodFilterTabs.tsx` ja criado | Ja foi criado. Falta aplicar nos modulos |
-| Scrollbar CSS | Ja existe no `index.css` (linhas 218-233) | **JA IMPLEMENTADO** |
-| Aplicar PeriodFilterTabs no FinancialDashboard | NAO FEITO | Substituir Tabs inline pelo componente |
-| Aplicar PeriodFilterTabs no FinancialReports | NAO FEITO | Substituir Select pelo componente |
-
----
-
-## PARTE 6: SEGURANCA
-
-### 6.1 Problemas nos Edge Functions
-- `stripe-create-checkout/index.ts`: **authHeader nunca declarado** - Funcao aceita requests sem autenticacao
-- `cancel-reservation/index.ts` e `process-refund/index.ts`: Variavel `stripeRefundId` nao declarada - Pode causar erros em runtime durante reembolsos reais
-
-### 6.2 Side-Effect Imports no App.tsx
-As linhas 24-28 importam 5 servicos como side-effects que executam ao carregar:
+```text
+src/
+  components/
+    home/
+      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
+      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
+  pages/
+    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
 ```
-import "@/services/events/EventServiceInitializer";
-import "@/services/events/AutoEventActivator";
-import "@/services/events/IntelligentEventService";
-import "@/services/events/IntelligentEventActivator";
-import "@/services/events/EventSystemTester";
+
+## Visual esperado (layout em texto)
+
+```text
+Desktop:
++------------------------------------------------------------------+
+|  [Navbar ViaJARTur]                                               |
++------------------------------------------------------------------+
+|                                                                    |
+|  [Travel Tech Badge]              +---------------------------+   |
+|                                   |                           |   |
+|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
+|  transforma o turismo             |     com icones de aviao,  |   |
+|                                   |     mapa, dados, chat     |   |
+|  IA, dados e automacao            |     flutuando ao redor    |   |
+|  para destinos...                 |                           |   |
+|                                   +---------------------------+   |
+|  [Acessar Plataforma] [Agendar Demo]                              |
+|                                                                    |
+|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
++------------------------------------------------------------------+
+
+Mobile:
++---------------------------+
+|  [Navbar]                 |
++---------------------------+
+|                           |
+|  [Travel Tech Badge]     |
+|                           |
+|  Tecnologia que           |
+|  transforma o turismo     |
+|                           |
+|  [Robo menor centralizado]|
+|                           |
+|  [Botoes CTA empilhados] |
+|                           |
+|  Stats em linha           |
++---------------------------+
 ```
-Estes podem estar fazendo chamadas de rede, logging excessivo ou consumindo recursos desnecessariamente para todos os usuarios.
 
-### 6.3 Console.logs Excessivos
-`SimpleTextEditor.tsx` tem 15+ `console.log` detalhados que expoe estrutura interna da aplicacao em producao.
+## Detalhes tecnicos
 
----
+### TravelTechRobot.tsx
+- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
+- Circulos e retangulos geometricos formando o robo
+- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
+- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
 
-## RESUMO DE ACOES NECESSARIAS (Sem executar)
+### TravelTechHero.tsx
+- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
+- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
+- Adiciona stats com numeros animados (count-up simples com CSS)
+- Layout flex: `flex-col lg:flex-row` para responsividade
+- Background: grid de pontos + orbs de gradiente (ja existem)
 
-### Prioridade ALTA (Build funcional)
-1. Corrigir 7 erros em edge functions (declarar variaveis, adicionar tipo ao map)
-2. Adicionar `// @ts-nocheck` nos ~10 componentes restantes com erros de tipo
+### ViaJARSaaS.tsx
+- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
+- Restante da pagina permanece identico
 
-### Prioridade MEDIA (Limpeza)
-3. Deletar ~21 componentes admin mortos
-4. Remover rotas duplicadas do App.tsx (bloco condicional OU bloco incondicional)
-5. Corrigir `checkNewNotifications` para ser funcional ou remover o interval
-6. Aplicar `PeriodFilterTabs` nos modulos financeiros
+## Sequencia de implementacao
 
-### Prioridade BAIXA (Seguranca e otimizacao)
-7. Verificar e possivelmente deletar 6 edge functions mortas
-8. Verificar side-effect imports no App.tsx
-9. Remover console.logs excessivos em producao
-10. Remover `EventSystemTester` import do App.tsx (servico de teste)
+1. Criar `TravelTechRobot.tsx` - componente SVG do robo
+2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
+3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
+4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+
+## Notas importantes
+
+- Os textos do hero continuam editaveis via admin (platformContentService)
+- O robo e puramente visual/decorativo - nao tem funcionalidade
+- Todas as animacoes usam CSS puro (sem framer-motion no hero)
+- O componente respeita `prefers-reduced-motion` para acessibilidade
+- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+
