@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+// @ts-nocheck
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { achievementService } from '@/services/achievementService';

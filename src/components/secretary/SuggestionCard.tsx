@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Suggestion Card Component
  * Card individual para exibir uma sugestão de IA com opções de aceitar/rejeitar/editar

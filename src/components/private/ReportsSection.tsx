@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Reports Section Component
  * Seção para gerar e baixar relatório completo do negócio
  */

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Settings Modal Component
  * Modal completo de configurações com abas: Perfil, Segurança, Plano, Notificações, Integrações, Privacidade

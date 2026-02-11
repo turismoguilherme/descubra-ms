@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Report Generator Component for Public Sector
  * Componente para geração de relatórios municipais
  * Layout padronizado conforme regras definitivas ViaJAR

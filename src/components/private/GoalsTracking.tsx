@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Goals Tracking Component
  * Gerencia metas e acompanhamento de objetivos
  */

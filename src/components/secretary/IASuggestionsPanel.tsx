@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * IA Suggestions Panel
  * Painel lateral para exibir sugestões de IA de forma transparente

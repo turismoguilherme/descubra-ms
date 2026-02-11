@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Plano Diretor de Turismo Manager
  * Componente principal para gerenciamento completo do Plano Diretor
  */

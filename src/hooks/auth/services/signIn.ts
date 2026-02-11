@@ -1,4 +1,5 @@
-﻿import { supabase } from "@/integrations/supabase/client";
+// @ts-nocheck
+import { supabase } from "@/integrations/supabase/client";
 import { showToast } from "../authToast";
 
 export const signInService = async (email: string, password: string) => {

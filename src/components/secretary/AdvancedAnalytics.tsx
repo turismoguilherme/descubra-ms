@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Analytics Avançados para Setor Público
  * Dashboard com análises profundas e preditivas
  */

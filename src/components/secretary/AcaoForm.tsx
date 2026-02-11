@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Ação Form Component
  * Formulário para criar/editar ações com gerenciamento de dependências

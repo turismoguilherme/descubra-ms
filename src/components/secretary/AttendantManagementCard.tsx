@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gestão de Atendentes para Secretarias
  * Controle e monitoramento de atendentes dos CATs

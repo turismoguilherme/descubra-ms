@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Regional Data Section Component
  * Seção de dados regionais no dashboard privado

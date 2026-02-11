@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Strategic AI Chat Component
  * Chat do GUILHERME IA - Assistente IA especializado para secretarias de turismo

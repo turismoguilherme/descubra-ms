@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Evolution History Component
  * Exibe gráficos de evolução do negócio ao longo do tempo

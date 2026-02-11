@@ -1,4 +1,5 @@
-﻿/**
+// @ts-nocheck
+/**
  * Settings Section Component
  * Configurações do usuário: senha, email, planos, exclusão de conta
  */

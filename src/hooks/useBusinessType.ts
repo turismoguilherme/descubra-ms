@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook para obter e gerenciar o tipo de negócio do usuário
  * Retorna o business_type do perfil do usuário

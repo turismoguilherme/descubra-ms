@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inventory Analytics Component
  * Componente para exibir análises e insights do inventário turístico

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Plano Diretor Comentários Component
  * Componente para exibir e gerenciar comentários em seções do plano

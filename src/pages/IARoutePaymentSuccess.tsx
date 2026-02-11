@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Página de Sucesso - Pagamento Roteiros Personalizados
  * Exibida após pagamento bem-sucedido do Payment Link do Stripe

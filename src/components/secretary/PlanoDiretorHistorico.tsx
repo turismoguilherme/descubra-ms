@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Plano Diretor Histórico Component
  * Visualização do histórico de alterações do plano

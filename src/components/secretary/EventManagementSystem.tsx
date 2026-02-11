@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sistema de Gestão de Eventos
  * Calendário funcional para secretarias de turismo

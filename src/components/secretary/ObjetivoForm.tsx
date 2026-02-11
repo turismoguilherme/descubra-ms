@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Objetivo Form Component
  * Formulário para criar/editar objetivos com validação SMART

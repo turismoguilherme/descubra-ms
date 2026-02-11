@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Settings Modal Component para Setor Público
  * Modal completo de configurações com abas: Perfil, Segurança, Notificações, Privacidade

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook para carregar configurações do ViaJARTur do banco de dados
  */

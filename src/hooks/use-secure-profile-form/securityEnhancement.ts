@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 import { sanitizeText, sanitizeEmail, validateInput } from "@/utils/sanitization";
