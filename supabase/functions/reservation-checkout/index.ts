@@ -15,6 +15,8 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
+    console.log('[reservation-checkout] Request body received:', JSON.stringify(body, null, 2));
+    
     const { 
       partnerId, 
       reservationType, 
@@ -32,9 +34,24 @@ serve(async (req) => {
       cancelUrl
     } = body;
 
+    console.log('[reservation-checkout] Extracted values:', {
+      partnerId: !!partnerId,
+      totalAmount: !!totalAmount,
+      guestName: !!guestName,
+      guestEmail: !!guestEmail,
+      hasServiceId: !!serviceId,
+    });
+
     if (!partnerId || !totalAmount || !guestName || !guestEmail) {
+      const missingFields = [];
+      if (!partnerId) missingFields.push('partnerId');
+      if (!totalAmount) missingFields.push('totalAmount');
+      if (!guestName) missingFields.push('guestName');
+      if (!guestEmail) missingFields.push('guestEmail');
+      
+      console.error('[reservation-checkout] Missing required fields:', missingFields);
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: partnerId, totalAmount, guestName, guestEmail' }),
+        JSON.stringify({ error: `Missing required fields: ${missingFields.join(', ')}` }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -65,9 +82,31 @@ serve(async (req) => {
     }
 
     // Verificar se parceiro está ativo
+    console.log('[reservation-checkout] Partner status:', {
+      is_active: partner.is_active,
+      subscription_status: partner.subscription_status,
+      partner_id: partner.id,
+      partner_name: partner.name,
+    });
+    
     if (!partner.is_active || partner.subscription_status !== 'active') {
+      const reasons = [];
+      if (!partner.is_active) reasons.push('parceiro não está marcado como ativo');
+      if (partner.subscription_status !== 'active') reasons.push(`assinatura está com status: ${partner.subscription_status || 'null'}`);
+      
+      console.error('[reservation-checkout] Partner not active:', {
+        is_active: partner.is_active,
+        subscription_status: partner.subscription_status,
+        reasons: reasons.join(', '),
+      });
       return new Response(
-        JSON.stringify({ error: 'Parceiro não está ativo ou assinatura não está ativa' }),
+        JSON.stringify({ 
+          error: `Parceiro não está disponível para reservas: ${reasons.join(', ')}. Entre em contato com o suporte.`,
+          details: {
+            is_active: partner.is_active,
+            subscription_status: partner.subscription_status,
+          }
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 

@@ -29,6 +29,16 @@
           "value": "descubrams.com"
         }
       ]
+    },
+    {
+      "source": "/\\descubrams",
+      "destination": "/descubrams",
+      "permanent": false
+    },
+    {
+      "source": "/\\descubrams/:path*",
+      "destination": "/descubrams/:path*",
+      "permanent": false
     }
   ],
   "headers": [

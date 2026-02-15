@@ -9,10 +9,28 @@ export default defineConfig(({ mode }) => {
   server: {
     host: "::",
     port: 8080,
+    // Middleware para normalizar barras invertidas em URLs
+    middlewareMode: false,
   },
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
+    // Plugin para normalizar barras invertidas em desenvolvimento
+    mode === 'development' && {
+      name: 'normalize-backslash',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.includes('\\')) {
+            const normalizedUrl = req.url.replace(/\\/g, '/');
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'vite.config.ts:middleware',message:'Normalizando URL com barra invertida no servidor',data:{original:req.url,normalized:normalizedUrl},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            req.url = normalizedUrl;
+          }
+          next();
+        });
+      }
+    },
   ].filter(Boolean),
   resolve: {
     alias: {

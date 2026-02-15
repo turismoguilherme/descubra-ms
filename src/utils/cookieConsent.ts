@@ -58,3 +58,7 @@ export function hasConsent(platform: 'viajar' | 'descubra_ms' = 'descubra_ms'): 
 
 
 
+
+
+
+

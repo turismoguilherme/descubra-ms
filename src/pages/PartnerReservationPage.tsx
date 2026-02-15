@@ -70,6 +70,15 @@ export default function PartnerReservationPage() {
     if (!id) return;
     
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:69',message:'loadPartnerData - Starting',data:{partnerId:id},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
+      // Obter sessão atual
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:75',message:'loadPartnerData - Session obtained',data:{hasSession:!!sessionData?.session,hasRefreshToken:!!sessionData?.session?.refresh_token,sessionError:sessionError?.message},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       // Tentar fazer refresh do token se houver sessão (para garantir token válido)
       if (sessionData?.session && sessionData.session.refresh_token) {
@@ -80,18 +89,26 @@ export default function PartnerReservationPage() {
 
         // Tentar refresh se expirado ou próximo de expirar (menos de 5 minutos)
         if (isExpired || timeUntilExpiry < 5 * 60 * 1000) {
-          
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:82',message:'loadPartnerData - Attempting token refresh',data:{isExpired,timeUntilExpiry},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           try {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError) {
-              
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:86',message:'loadPartnerData - Token refresh failed',data:{refreshError:refreshError.message},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+              // #endregion
               // Se não conseguir fazer refresh, limpar sessão para fazer requisições sem JWT
               await supabase.auth.signOut();
             } else {
-              
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:91',message:'loadPartnerData - Token refresh successful',data:{},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+              // #endregion
             }
           } catch (refreshError) {
-            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:94',message:'loadPartnerData - Token refresh exception',data:{refreshError:refreshError instanceof Error ? refreshError.message : String(refreshError)},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             // Se não conseguir fazer refresh, limpar sessão para fazer requisições sem JWT
             await supabase.auth.signOut();
           }
@@ -160,6 +177,15 @@ export default function PartnerReservationPage() {
 
     try {
       setLoading(true);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:175',message:'loadPricing - Starting',data:{partnerId:id},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
+      // Obter sessão atual
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:182',message:'loadPricing - Session obtained',data:{hasSession:!!sessionData?.session,hasRefreshToken:!!sessionData?.session?.refresh_token,sessionError:sessionError?.message},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       // Tentar fazer refresh do token se houver sessão (para garantir token válido)
       if (sessionData?.session && sessionData.session.refresh_token) {
@@ -170,13 +196,22 @@ export default function PartnerReservationPage() {
         
         // Tentar refresh se expirado ou próximo de expirar (menos de 5 minutos)
         if (isExpired || timeUntilExpiry < 5 * 60 * 1000) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:189',message:'loadPricing - Attempting token refresh',data:{isExpired,timeUntilExpiry},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           try {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError) {
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:192',message:'loadPricing - Token refresh failed',data:{refreshError:refreshError.message},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+              // #endregion
               // Se não conseguir fazer refresh, limpar sessão para fazer requisições sem JWT
               await supabase.auth.signOut();
             }
           } catch (refreshError) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:197',message:'loadPricing - Token refresh exception',data:{refreshError:refreshError instanceof Error ? refreshError.message : String(refreshError)},timestamp:Date.now(),runId:'debug-3',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             // Se não conseguir fazer refresh, limpar sessão para fazer requisições sem JWT
             await supabase.auth.signOut();
           }
@@ -348,27 +383,86 @@ export default function PartnerReservationPage() {
     try {
       const totalAmount = calculateTotal();
 
+      const requestBody = {
+        partnerId: id,
+        serviceId: selectedService, // Adicionar service_id
+        reservationType: 'other',
+        serviceName: selectedPricing.service_name,
+        reservationDate: dateString,
+        reservationTime: reservationTime || null,
+        guests,
+        totalAmount,
+        guestName: user.user_metadata?.full_name || user.email,
+        guestEmail: user.email,
+        guestPhone: user.user_metadata?.phone || null,
+        specialRequests: specialRequests || null,
+        successUrl: `${window.location.origin}/minhas-reservas`,
+        cancelUrl: window.location.href,
+      };
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:387',message:'handleReserve - Request body prepared',data:requestBody,timestamp:Date.now(),runId:'debug-4',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
       // Chamar Edge Function para criar checkout
       const { data, error } = await supabase.functions.invoke('reservation-checkout', {
-        body: {
-          partnerId: id,
-          serviceId: selectedService, // Adicionar service_id
-          reservationType: 'other',
-          serviceName: selectedPricing.service_name,
-          reservationDate: dateString,
-          reservationTime: reservationTime || null,
-          guests,
-          totalAmount,
-          guestName: user.user_metadata?.full_name || user.email,
-          guestEmail: user.email,
-          guestPhone: user.user_metadata?.phone || null,
-          specialRequests: specialRequests || null,
-          successUrl: `${window.location.origin}/minhas-reservas`,
-          cancelUrl: window.location.href,
-        },
+        body: requestBody,
       });
 
-      if (error) throw error;
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:412',message:'handleReserve - Edge Function response',data:{hasData:!!data,hasError:!!error,errorMessage:error?.message,errorContext:error?.context,dataContent:data,dataKeys:data ? Object.keys(data) : []},timestamp:Date.now(),runId:'debug-4',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
+      if (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:416',message:'handleReserve - Error details',data:{errorMessage:error.message,errorName:error.name,errorStack:error.stack,errorContext:error.context,dataContent:data,fullError:JSON.stringify(error,Object.getOwnPropertyNames(error))},timestamp:Date.now(),runId:'debug-4',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
+        // Tentar fazer requisição HTTP direta para capturar o body da resposta de erro
+        let errorMessage = error.message || 'Não foi possível criar a reserva. Tente novamente.';
+        
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          // Usar a URL do Supabase do client
+          const supabaseUrl = (supabase as any).supabaseUrl || 'https://hvtrpkbjgbuypkskqcqm.supabase.co';
+          const functionUrl = `${supabaseUrl}/functions/v1/reservation-checkout`;
+          
+          const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token || ''}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+          
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:425',message:'handleReserve - Direct fetch error body',data:{errorBody,status:response.status},timestamp:Date.now(),runId:'debug-4',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            if (errorBody.error) {
+              errorMessage = errorBody.error;
+            }
+          }
+        } catch (fetchError) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerReservationPage.tsx:437',message:'handleReserve - Direct fetch failed',data:{fetchError:fetchError instanceof Error ? fetchError.message : String(fetchError)},timestamp:Date.now(),runId:'debug-4',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
+          // Ignorar erro ao tentar capturar body - usar mensagem padrão
+        }
+        
+        // Verificar se data contém informações de erro (às vezes o Supabase retorna erro no data)
+        if (data && typeof data === 'object') {
+          if (data.error) {
+            errorMessage = data.error;
+          } else if (data.message) {
+            errorMessage = data.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
 
       if (data?.checkoutUrl) {
         // Redirecionar para Stripe Checkout

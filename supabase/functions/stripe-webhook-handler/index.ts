@@ -777,11 +777,69 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
   console.log('Falha no pagamento:', invoice.id);
   
   try {
-    // Atualizar status do cliente para 'overdue'
+    const subscriptionId = invoice.subscription as string;
+    if (!subscriptionId) {
+      console.log('Invoice sem subscription_id, ignorando');
+      return;
+    }
+
+    // Verificar se é assinatura de parceiro
+    const { data: partner, error: partnerError } = await supabase
+      .from('institutional_partners')
+      .select('id, name, contact_email, stripe_subscription_id')
+      .eq('stripe_subscription_id', subscriptionId)
+      .maybeSingle();
+
+    if (partner) {
+      // É assinatura de parceiro - bloquear imediatamente
+      console.log(`Bloqueando parceiro ${partner.name} por falha de pagamento`);
+      
+      const { error: updateError } = await supabase
+        .from('institutional_partners')
+        .update({
+          subscription_status: 'past_due',
+          is_active: false,
+          status: 'pending',
+        })
+        .eq('stripe_subscription_id', subscriptionId);
+
+      if (updateError) {
+        console.error('Erro ao bloquear parceiro:', updateError);
+      } else {
+        console.log(`Parceiro ${partner.name} bloqueado com sucesso`);
+
+        // Criar notificação para o admin
+        try {
+          const { error: notificationError } = await supabase
+            .from('partner_notifications')
+            .insert({
+              partner_id: partner.id,
+              type: 'payment_failed',
+              title: 'Pagamento Falhou',
+              message: `Falha no pagamento da assinatura. Parceiro bloqueado automaticamente.`,
+              email_sent: false,
+              metadata: {
+                invoice_id: invoice.id,
+                subscription_id: subscriptionId,
+                invoice_url: invoice.hosted_invoice_url,
+              },
+            });
+
+          if (notificationError) {
+            console.warn('Erro ao criar notificação (não crítico):', notificationError);
+          }
+        } catch (notificationErr) {
+          console.warn('Erro ao criar notificação (não crítico):', notificationErr);
+        }
+      }
+      return; // Não processar como cliente ViaJAR
+    }
+
+    // Se não for parceiro, tratar como cliente ViaJAR
     const { error } = await supabase
       .from('master_clients')
       .update({ status: 'overdue' })
-      .eq('stripe_subscription_id', invoice.subscription);
+      .eq('stripe_subscription_id', subscriptionId);
     
     if (error) {
       console.error('Erro ao atualizar status do cliente:', error);

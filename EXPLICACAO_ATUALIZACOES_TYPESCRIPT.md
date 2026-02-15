@@ -369,3 +369,7 @@ const generateAIInsights = (
 **Build:** ✅ Funcionando
 
 
+
+
+
+

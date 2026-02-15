@@ -22,7 +22,9 @@ import {
   CreditCard,
   Link2,
   Save,
-  Loader2
+  Loader2,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { notifyPartnerApproved, notifyPartnerRejected } from '@/services/email/notificationEmailService';
@@ -455,6 +457,11 @@ export default function PartnersManagement() {
   const pendingPartners = partners.filter(p => p.status === 'pending');
   const approvedPartners = partners.filter(p => p.status === 'approved');
   const rejectedPartners = partners.filter(p => p.status === 'rejected' || p.status === 'suspended');
+  const overduePartners = partners.filter(p => 
+    p.subscription_status === 'past_due' || 
+    p.subscription_status === 'unpaid' ||
+    (p.status === 'approved' && !p.is_active && p.subscription_status !== 'active' && p.subscription_status !== 'trialing')
+  );
 
   const PartnerCard = ({ partner }: { partner: Partner }) => (
     <Card className="hover:shadow-md transition-shadow">
@@ -487,17 +494,53 @@ export default function PartnersManagement() {
                   </Badge>
                 )}
               </div>
-              <Badge 
-                variant={
-                  partner.status === 'approved' ? 'default' : 
-                  partner.status === 'pending' ? 'secondary' : 
-                  'destructive'
-                }
-              >
-                {partner.status === 'approved' ? 'Ativo' : 
-                 partner.status === 'pending' ? 'Pendente' : 
-                 'Rejeitado'}
-              </Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge 
+                  variant={
+                    partner.subscription_status === 'past_due' ? 'destructive' :
+                    partner.subscription_status === 'unpaid' ? 'destructive' :
+                    partner.subscription_status === 'active' && partner.is_active ? 'default' :
+                    partner.status === 'pending' ? 'secondary' : 
+                    'destructive'
+                  }
+                  className={
+                    partner.subscription_status === 'past_due' || 
+                    partner.subscription_status === 'unpaid' 
+                      ? 'animate-pulse' 
+                      : ''
+                  }
+                >
+                  {partner.subscription_status === 'past_due' ? '⚠️ Pagamento Atrasado' :
+                   partner.subscription_status === 'unpaid' ? '❌ Não Pago' :
+                   partner.subscription_status === 'active' && partner.is_active ? '✅ Ativo' :
+                   partner.status === 'pending' ? '⏳ Pendente' : 
+                   '❌ Rejeitado'}
+                </Badge>
+                {partner.subscription_status && (
+                  <span className="text-xs text-gray-500">
+                    {partner.subscription_status === 'past_due' && (
+                      <span className="text-orange-600 font-medium">
+                        ⚠️ Assinatura em atraso
+                      </span>
+                    )}
+                    {partner.subscription_status === 'unpaid' && (
+                      <span className="text-red-600 font-medium">
+                        ❌ Pagamento não realizado
+                      </span>
+                    )}
+                    {partner.subscription_status === 'active' && (
+                      <span className="text-green-600">
+                        ✅ Assinatura ativa
+                      </span>
+                    )}
+                    {partner.subscription_status === 'trialing' && (
+                      <span className="text-blue-600">
+                        🎁 Período de teste
+                      </span>
+                    )}
+                  </span>
+                )}
+              </div>
             </div>
 
             {partner.discount_offer && (
@@ -593,7 +636,7 @@ export default function PartnersManagement() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-yellow-800">Pendentes</CardTitle>
@@ -611,6 +654,16 @@ export default function PartnersManagement() {
           <CardContent>
             <div className="text-3xl font-bold text-green-900">{approvedPartners.length}</div>
             <p className="text-xs text-green-600">Parceiros aprovados</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-orange-200 bg-orange-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-orange-800">Inadimplentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-900">{overduePartners.length}</div>
+            <p className="text-xs text-orange-600">Pagamento em atraso</p>
           </CardContent>
         </Card>
 
@@ -635,6 +688,15 @@ export default function PartnersManagement() {
           <TabsTrigger value="approved" className="gap-2">
             <Check className="w-4 h-4" />
             Ativos ({approvedPartners.length})
+          </TabsTrigger>
+          <TabsTrigger value="overdue" className="gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Inadimplentes ({overduePartners.length})
+            {overduePartners.length > 0 && (
+              <Badge variant="destructive" className="ml-1">
+                {overduePartners.length}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="rejected" className="gap-2">
             <X className="w-4 h-4" />
@@ -665,6 +727,46 @@ export default function PartnersManagement() {
             approvedPartners.map(partner => (
               <PartnerCard key={partner.id} partner={partner} />
             ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="overdue" className="space-y-4 mt-4">
+          {overduePartners.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-500" />
+                <p className="text-sm font-medium">Nenhum parceiro inadimplente</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Todos os parceiros estão em dia com os pagamentos
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {/* Alerta informativo */}
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-medium text-orange-900">
+                        Parceiros com pagamento em atraso
+                      </h4>
+                      <p className="text-xs text-orange-700 mt-1">
+                        Estes parceiros estão bloqueados e não recebem novas reservas até regularizarem o pagamento.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Lista de parceiros inadimplentes */}
+              <div className="grid gap-4">
+                {overduePartners.map(partner => (
+                  <PartnerCard key={partner.id} partner={partner} />
+                ))}
+              </div>
+            </div>
           )}
         </TabsContent>
 

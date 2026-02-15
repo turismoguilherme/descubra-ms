@@ -30,44 +30,94 @@ import {
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-const partnerSchema = z.object({
-  name: z.string().min(2, 'Nome da empresa é obrigatório'),
-  description: z.string().min(20, 'Descrição deve ter pelo menos 20 caracteres'),
-  partner_type: z.string().min(1, 'Selecione o tipo de negócio'),
-  person_type: z.enum(['pf', 'pj'], { required_error: 'Selecione o tipo de pessoa' }),
-  cpf: z.string().optional(),
-  cnpj: z.string().optional(),
-  youtube_url: z.string().url('URL inválida').optional().or(z.literal('')),
-  website_url: z.string().url('URL inválida').optional().or(z.literal('')),
-  contact_email: z.string().email('Email inválido'),
-  contact_phone: z.string().optional(),
-  address: z.string().optional(),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  confirmPassword: z.string().min(6, 'Confirme sua senha'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'As senhas não coincidem',
-  path: ['confirmPassword'],
-}).refine((data) => {
-  // CPF obrigatório para pessoa física
-  if (data.person_type === 'pf') {
-    return data.cpf && data.cpf.length >= 11;
-  }
-  return true;
-}, {
-  message: 'CPF é obrigatório para pessoa física',
-  path: ['cpf'],
-}).refine((data) => {
-  // CNPJ obrigatório para pessoa jurídica
-  if (data.person_type === 'pj') {
-    return data.cnpj && data.cnpj.length >= 14;
-  }
-  return true;
-}, {
-  message: 'CNPJ é obrigatório para pessoa jurídica',
-  path: ['cnpj'],
-});
+// Função para criar schema dinâmico baseado em includePassword
+const createPartnerSchema = (includePassword: boolean) => {
+  const baseSchema = z.object({
+    name: z.string().min(2, 'Nome da empresa é obrigatório'),
+    description: z.string().min(20, 'Descrição deve ter pelo menos 20 caracteres'),
+    partner_type: z.string().min(1, 'Selecione o tipo de negócio'),
+    person_type: z.enum(['pf', 'pj'], { required_error: 'Selecione o tipo de pessoa' }),
+    cpf: z.string().optional(),
+    cnpj: z.string().optional(),
+    youtube_url: z.string().optional().refine((val) => {
+      if (!val || val.trim() === '') return true;
+      try {
+        new URL(val);
+        return true;
+      } catch {
+        return false;
+      }
+    }, {
+      message: 'URL inválida',
+    }),
+    website_url: z.string().optional().refine((val) => {
+      if (!val || val.trim() === '') return true;
+      try {
+        new URL(val);
+        return true;
+      } catch {
+        return false;
+      }
+    }, {
+      message: 'URL inválida',
+    }),
+    contact_email: z.string().email('Email inválido'),
+    contact_phone: z.string().optional(),
+    address: z.string().optional(),
+  });
 
-type FormData = z.infer<typeof partnerSchema>;
+  // Adicionar campos de senha apenas se includePassword for true
+  if (includePassword) {
+    return baseSchema.extend({
+      password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+      confirmPassword: z.string().min(6, 'Confirme sua senha'),
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: 'As senhas não coincidem',
+      path: ['confirmPassword'],
+    }).refine((data) => {
+      // CPF obrigatório para pessoa física
+      if (data.person_type === 'pf') {
+        return data.cpf && data.cpf.length >= 11;
+      }
+      return true;
+    }, {
+      message: 'CPF é obrigatório para pessoa física',
+      path: ['cpf'],
+    }).refine((data) => {
+      // CNPJ obrigatório para pessoa jurídica
+      if (data.person_type === 'pj') {
+        return data.cnpj && data.cnpj.length >= 14;
+      }
+      return true;
+    }, {
+      message: 'CNPJ é obrigatório para pessoa jurídica',
+      path: ['cnpj'],
+    });
+  }
+
+  // Schema sem senha
+  return baseSchema.refine((data) => {
+    // CPF obrigatório para pessoa física
+    if (data.person_type === 'pf') {
+      return data.cpf && data.cpf.length >= 11;
+    }
+    return true;
+  }, {
+    message: 'CPF é obrigatório para pessoa física',
+    path: ['cpf'],
+  }).refine((data) => {
+    // CNPJ obrigatório para pessoa jurídica
+    if (data.person_type === 'pj') {
+      return data.cnpj && data.cnpj.length >= 14;
+    }
+    return true;
+  }, {
+    message: 'CNPJ é obrigatório para pessoa jurídica',
+    path: ['cnpj'],
+  });
+};
+
+type FormData = z.infer<ReturnType<typeof createPartnerSchema>>;
 
 const businessTypes = [
   { value: 'hotel', label: 'Hotel' },
@@ -103,6 +153,8 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const partnerSchema = createPartnerSchema(includePassword);
+
   const {
     register,
     handleSubmit,
@@ -113,7 +165,19 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   } = useForm<FormData>({
     resolver: zodResolver(partnerSchema),
     mode: 'onSubmit',
+    defaultValues: {
+      person_type: 'pj', // Setar valor padrão
+      partner_type: '', // Inicializar vazio para forçar seleção
+    },
   });
+
+  // Garantir que person_type seja setado inicialmente
+  useEffect(() => {
+    const currentPersonType = watch('person_type');
+    if (!currentPersonType) {
+      setValue('person_type', 'pj', { shouldValidate: false });
+    }
+  }, [setValue, watch]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -310,7 +374,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   }
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {/* Dados da Empresa */}
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-ms-primary-blue">
@@ -333,9 +397,12 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="partner_type">Tipo de Negócio *</Label>
-            <Select onValueChange={(value) => {
-              setValue('partner_type', value);
-            }}>
+            <Select 
+              value={watch('partner_type') || ''}
+              onValueChange={(value) => {
+                setValue('partner_type', value, { shouldValidate: true });
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
@@ -356,8 +423,16 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
           <div className="space-y-3 md:col-span-2">
             <Label>Tipo de Cadastro *</Label>
             <RadioGroup
-              defaultValue="pj"
-              onValueChange={(value: 'pf' | 'pj') => setValue('person_type', value)}
+              value={watch('person_type') || 'pj'}
+              onValueChange={(value: 'pf' | 'pj') => {
+                setValue('person_type', value, { shouldValidate: true });
+                // Limpar CPF/CNPJ quando mudar o tipo
+                if (value === 'pf') {
+                  setValue('cnpj', '');
+                } else {
+                  setValue('cpf', '');
+                }
+              }}
               className="flex gap-6"
             >
               <div className="flex items-center space-x-2">

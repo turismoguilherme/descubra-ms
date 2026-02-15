@@ -33,29 +33,32 @@ const ViaJARLogo: React.FC<ViaJARLogoProps> = ({
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Gradient definitions */}
+          {/* Ícone de bússola/compasso teal melhorado */}
           <defs>
-            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="hsl(222, 47%, 11%)" />
-              <stop offset="100%" stopColor="hsl(187, 85%, 43%)" />
+            <linearGradient id="logoGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#14b8a6" />
+              <stop offset="100%" stopColor="#0d9488" />
             </linearGradient>
           </defs>
-          {/* Modern geometric icon - stylized compass/travel */}
-          <circle cx="20" cy="20" r="18" stroke="url(#logoGradient)" strokeWidth="2" fill="none" />
+          {/* Círculo externo */}
+          <circle cx="20" cy="20" r="18" stroke="url(#logoGradientIcon)" strokeWidth="2.5" fill="none" />
+          {/* Rosa dos ventos */}
           <path 
-            d="M20 8L26 20L20 32L14 20L20 8Z" 
-            fill="url(#logoGradient)" 
+            d="M20 6L24 20L20 34L16 20L20 6Z" 
+            fill="url(#logoGradientIcon)" 
             opacity="0.9"
           />
-          <circle cx="20" cy="20" r="4" fill="hsl(187, 85%, 43%)" />
+          {/* Centro da bússola */}
+          <circle cx="20" cy="20" r="5" fill="#14b8a6" />
+          <circle cx="20" cy="20" r="2.5" fill="white" />
         </svg>
       </div>
     );
   }
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      {/* Icon */}
+    <div className={cn('flex items-center gap-3', className)}>
+      {/* Icon - Bússola teal */}
       <svg 
         viewBox="0 0 40 40" 
         className={cn(sizeClasses[size], 'w-auto')}
@@ -64,24 +67,23 @@ const ViaJARLogo: React.FC<ViaJARLogoProps> = ({
       >
         <defs>
           <linearGradient id="logoGradientFull" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(222, 47%, 11%)" />
-            <stop offset="100%" stopColor="hsl(187, 85%, 43%)" />
+            <stop offset="0%" stopColor="#14b8a6" />
+            <stop offset="100%" stopColor="#0d9488" />
           </linearGradient>
         </defs>
-        <circle cx="20" cy="20" r="18" stroke="url(#logoGradientFull)" strokeWidth="2" fill="none" />
+        <circle cx="20" cy="20" r="18" stroke="url(#logoGradientFull)" strokeWidth="2.5" fill="none" />
         <path 
-          d="M20 8L26 20L20 32L14 20L20 8Z" 
+          d="M20 6L24 20L20 34L16 20L20 6Z" 
           fill="url(#logoGradientFull)" 
           opacity="0.9"
         />
-        <circle cx="20" cy="20" r="4" fill="hsl(187, 85%, 43%)" />
+        <circle cx="20" cy="20" r="5" fill="#14b8a6" />
+        <circle cx="20" cy="20" r="2.5" fill="white" />
       </svg>
       
-      {/* Text */}
-      <span className={cn(textSizes[size], 'font-bold tracking-tight')}>
-        <span className="text-viajar-slate">Viaj</span>
-        <span className="text-viajar-cyan">AR</span>
-        <span className="text-viajar-slate">Tur</span>
+      {/* Text - Preto */}
+      <span className={cn(textSizes[size], 'font-bold tracking-tight text-black')}>
+        ViajARTur
       </span>
     </div>
   );

@@ -35,6 +35,7 @@ import UniversalLayout from '@/components/layout/UniversalLayout';
 import PartnerRewardsManager from './PartnerRewardsManager';
 import PendingApprovalBanner from './PendingApprovalBanner';
 import StripeConnectBanner from './StripeConnectBanner';
+import BlockedPartnerBanner from './BlockedPartnerBanner';
 import WelcomeModal from './WelcomeModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
@@ -526,8 +527,22 @@ export default function PartnerDashboard() {
           <div className="flex-1 ms-container py-8">
             {/* Banners de Status */}
             <div className="space-y-4 mb-6">
+              {/* Banner: Parceiro Bloqueado (Inadimplente) */}
+              {partner && (
+                (!partner.is_active || 
+                 partner.subscription_status === 'past_due' || 
+                 partner.subscription_status === 'unpaid' || 
+                 partner.subscription_status === 'canceled') && 
+                partner.subscription_status !== 'active' && 
+                partner.subscription_status !== 'trialing' && (
+                  <BlockedPartnerBanner subscriptionStatus={partner.subscription_status} />
+                )
+              )}
+
               {/* Banner: Aguardando Aprovação */}
-              {partner.status === 'pending' && !partner.is_active && (
+              {partner.status === 'pending' && !partner.is_active && 
+               partner.subscription_status !== 'past_due' && 
+               partner.subscription_status !== 'unpaid' && (
                 <PendingApprovalBanner />
               )}
 

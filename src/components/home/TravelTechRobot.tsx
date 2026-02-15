@@ -1,87 +1,81 @@
 import React from 'react';
-import { Plane, Map, BarChart3, Globe, MessageCircle, Brain, Wifi } from 'lucide-react';
 
 const TravelTechRobot = () => {
   return (
-    <div className="relative w-full max-w-md mx-auto lg:max-w-lg xl:max-w-xl aspect-square">
-      {/* Floating icons */}
-      <FloatingIcon icon={<Plane className="w-5 h-5" />} className="top-4 right-8 animation-delay-0" />
-      <FloatingIcon icon={<Map className="w-5 h-5" />} className="top-16 left-2 animation-delay-1" />
-      <FloatingIcon icon={<BarChart3 className="w-5 h-5" />} className="bottom-24 right-4 animation-delay-2" />
-      <FloatingIcon icon={<Globe className="w-5 h-5" />} className="bottom-12 left-8 animation-delay-3" />
-      <FloatingIcon icon={<MessageCircle className="w-5 h-5" />} className="top-1/3 right-0 animation-delay-4" />
-      <FloatingIcon icon={<Brain className="w-4 h-4" />} className="top-8 left-1/3 animation-delay-2" />
-      <FloatingIcon icon={<Wifi className="w-4 h-4" />} className="bottom-32 left-1/4 animation-delay-1" />
-
-      {/* Connection lines (SVG) */}
-      <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 400">
-        <line x1="200" y1="120" x2="320" y2="60" stroke="hsl(var(--viajar-cyan))" strokeWidth="1" strokeDasharray="4 4" className="travel-tech-line" />
-        <line x1="200" y1="120" x2="60" y2="100" stroke="hsl(var(--viajar-cyan))" strokeWidth="1" strokeDasharray="4 4" className="travel-tech-line" />
-        <line x1="200" y1="280" x2="340" y2="240" stroke="hsl(var(--viajar-cyan))" strokeWidth="1" strokeDasharray="4 4" className="travel-tech-line" />
-        <line x1="200" y1="280" x2="80" y2="320" stroke="hsl(var(--viajar-cyan))" strokeWidth="1" strokeDasharray="4 4" className="travel-tech-line" />
-      </svg>
-
+    <div className="relative w-full max-w-md mx-auto aspect-square flex items-center justify-center">
       {/* Robot body */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative travel-tech-float">
-          {/* Head */}
-          <div className="relative mx-auto w-28 h-24 bg-gradient-to-b from-viajar-cyan to-viajar-blue rounded-2xl border-2 border-viajar-cyan/30 shadow-lg shadow-viajar-cyan/20">
-            {/* Eyes */}
-            <div className="absolute top-6 left-5 w-5 h-5 rounded-full bg-white shadow-inner flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-viajar-slate travel-tech-blink" />
-            </div>
-            <div className="absolute top-6 right-5 w-5 h-5 rounded-full bg-white shadow-inner flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-viajar-slate travel-tech-blink" />
-            </div>
-            {/* Mouth - LED strip */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-              <div className="w-2 h-1 rounded-full bg-viajar-emerald travel-tech-pulse" />
-              <div className="w-2 h-1 rounded-full bg-viajar-emerald travel-tech-pulse animation-delay-1" />
-              <div className="w-2 h-1 rounded-full bg-viajar-emerald travel-tech-pulse animation-delay-2" />
-            </div>
-            {/* Antenna */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 bg-viajar-cyan/60">
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-viajar-cyan travel-tech-pulse shadow-md shadow-viajar-cyan/50" />
-            </div>
+      <div className="relative travel-tech-float">
+        {/* Head */}
+        <div className="relative mx-auto w-32 h-28 bg-gradient-to-b from-slate-300 to-slate-400 rounded-2xl border-2 border-slate-400 shadow-xl">
+          {/* Eyes - azuis brilhantes */}
+          <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-white travel-tech-blink" />
           </div>
+          <div className="absolute top-8 right-6 w-6 h-6 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-white travel-tech-blink" />
+          </div>
+          
+          {/* Mouth - curva sorridente */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-12 h-6 border-2 border-blue-500 border-t-0 rounded-b-full" />
+          
+          {/* Acentos laterais (sensores) */}
+          <div className="absolute top-4 left-2 w-4 h-4 rounded-full bg-blue-500/30" />
+          <div className="absolute top-4 right-2 w-4 h-4 rounded-full bg-blue-500/30" />
+        </div>
 
-          {/* Neck */}
-          <div className="mx-auto w-8 h-4 bg-slate-400 rounded-b-sm" />
+        {/* Neck */}
+        <div className="mx-auto w-10 h-6 bg-slate-400 rounded-b-sm" />
 
-          {/* Body */}
-          <div className="relative mx-auto w-40 h-44 bg-gradient-to-b from-viajar-slate to-slate-700 rounded-3xl border-2 border-viajar-cyan/20 shadow-xl">
-            {/* Chest screen */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-20 bg-slate-900 rounded-xl border border-viajar-cyan/30 overflow-hidden">
-              {/* Animated chart bars */}
-              <div className="absolute bottom-2 left-3 flex items-end gap-1.5">
-                <div className="w-3 bg-viajar-cyan/80 rounded-t travel-tech-bar-1" />
-                <div className="w-3 bg-viajar-emerald/80 rounded-t travel-tech-bar-2" />
-                <div className="w-3 bg-viajar-cyan/80 rounded-t travel-tech-bar-3" />
-                <div className="w-3 bg-viajar-emerald/80 rounded-t travel-tech-bar-4" />
-                <div className="w-3 bg-viajar-cyan/80 rounded-t travel-tech-bar-1" />
+        {/* Body */}
+        <div className="relative mx-auto w-48 h-52 bg-gradient-to-b from-slate-300 to-slate-500 rounded-3xl border-2 border-slate-400 shadow-2xl">
+          {/* Chest screen com globo azul */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 w-36 h-28 bg-slate-900 rounded-xl border-2 border-blue-500/30 overflow-hidden shadow-inner">
+            {/* Globo azul animado */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-24 h-24">
+                {/* Círculo base do globo */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/50" />
+                {/* Linhas de longitude */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                  <ellipse cx="50" cy="50" rx="45" ry="20" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"/>
+                  <ellipse cx="50" cy="50" rx="45" ry="20" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" transform="rotate(60 50 50)"/>
+                  <ellipse cx="50" cy="50" rx="45" ry="20" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" transform="rotate(-60 50 50)"/>
+                  <line x1="5" y1="50" x2="95" y2="50" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"/>
+                </svg>
+                {/* Pontos de dados */}
+                <div className="absolute top-1/4 left-1/3 w-1.5 h-1.5 rounded-full bg-blue-300 travel-tech-pulse" />
+                <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 rounded-full bg-blue-300 travel-tech-pulse animation-delay-1" />
+                <div className="absolute bottom-1/3 left-1/2 w-1.5 h-1.5 rounded-full bg-blue-300 travel-tech-pulse animation-delay-2" />
               </div>
-              {/* Pulse line */}
-              <svg className="absolute top-3 left-2 w-24 h-8 opacity-60" viewBox="0 0 100 30">
-                <polyline
-                  points="0,15 15,15 20,5 25,25 30,15 45,15 50,8 55,20 60,15 100,15"
-                  fill="none"
-                  stroke="hsl(var(--viajar-cyan))"
-                  strokeWidth="1.5"
-                  className="travel-tech-pulse-line"
-                />
-              </svg>
             </div>
-
-            {/* Arms */}
-            <div className="absolute -left-6 top-8 w-5 h-24 bg-gradient-to-b from-slate-500 to-slate-600 rounded-full border border-viajar-cyan/10" />
-            <div className="absolute -right-6 top-8 w-5 h-24 bg-gradient-to-b from-slate-500 to-slate-600 rounded-full border border-viajar-cyan/10" />
-
-            {/* Belt accent */}
-            <div className="absolute bottom-12 left-0 right-0 h-1 bg-viajar-cyan/40" />
-
-            {/* Power core */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-viajar-cyan/60 travel-tech-pulse shadow-md shadow-viajar-cyan/30" />
+            
+            {/* Barras de dados ao redor */}
+            <div className="absolute bottom-2 left-2 flex items-end gap-1">
+              <div className="w-2 bg-blue-500/60 rounded-t travel-tech-bar-1" style={{ height: '8px' }} />
+              <div className="w-2 bg-blue-500/60 rounded-t travel-tech-bar-2" style={{ height: '12px' }} />
+              <div className="w-2 bg-blue-500/60 rounded-t travel-tech-bar-3" style={{ height: '6px' }} />
+            </div>
+            <div className="absolute bottom-2 right-2 flex items-end gap-1">
+              <div className="w-2 bg-blue-500/60 rounded-t travel-tech-bar-4" style={{ height: '10px' }} />
+              <div className="w-2 bg-blue-500/60 rounded-t travel-tech-bar-1" style={{ height: '14px' }} />
+            </div>
           </div>
+
+          {/* Arms */}
+          <div className="absolute -left-8 top-12 w-6 h-32 bg-gradient-to-b from-slate-400 to-slate-500 rounded-full border border-slate-400 shadow-lg" />
+          <div className="absolute -right-8 top-12 w-6 h-32 bg-gradient-to-b from-slate-400 to-slate-500 rounded-full border border-slate-400 shadow-lg" />
+
+          {/* Hands */}
+          <div className="absolute -left-10 top-40 w-8 h-8 bg-slate-400 rounded-full border border-slate-500" />
+          <div className="absolute -right-10 top-40 w-8 h-8 bg-slate-400 rounded-full border border-slate-500" />
+
+          {/* Legs */}
+          <div className="absolute -bottom-2 left-8 w-8 h-16 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full border border-slate-500" />
+          <div className="absolute -bottom-2 right-8 w-8 h-16 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full border border-slate-500" />
+
+          {/* Feet */}
+          <div className="absolute -bottom-4 left-6 w-12 h-4 bg-slate-500 rounded-full" />
+          <div className="absolute -bottom-4 right-6 w-12 h-4 bg-slate-500 rounded-full" />
         </div>
       </div>
 
@@ -94,10 +88,7 @@ const TravelTechRobot = () => {
           .travel-tech-bar-1,
           .travel-tech-bar-2,
           .travel-tech-bar-3,
-          .travel-tech-bar-4,
-          .travel-tech-pulse-line,
-          .travel-tech-line,
-          .travel-tech-icon-float {
+          .travel-tech-bar-4 {
             animation: none !important;
           }
         }
@@ -114,8 +105,8 @@ const TravelTechRobot = () => {
           animation: ttPulse 2s ease-in-out infinite;
         }
         @keyframes ttPulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
         }
 
         .travel-tech-blink {
@@ -131,55 +122,16 @@ const TravelTechRobot = () => {
         .travel-tech-bar-3 { animation: ttBar3 3s ease-in-out infinite 0.6s; }
         .travel-tech-bar-4 { animation: ttBar4 3s ease-in-out infinite 0.9s; }
 
-        @keyframes ttBar1 { 0%,100% { height: 12px; } 50% { height: 28px; } }
-        @keyframes ttBar2 { 0%,100% { height: 20px; } 50% { height: 14px; } }
-        @keyframes ttBar3 { 0%,100% { height: 8px; } 50% { height: 32px; } }
-        @keyframes ttBar4 { 0%,100% { height: 24px; } 50% { height: 10px; } }
+        @keyframes ttBar1 { 0%,100% { height: 8px; } 50% { height: 16px; } }
+        @keyframes ttBar2 { 0%,100% { height: 12px; } 50% { height: 20px; } }
+        @keyframes ttBar3 { 0%,100% { height: 6px; } 50% { height: 14px; } }
+        @keyframes ttBar4 { 0%,100% { height: 10px; } 50% { height: 18px; } }
 
-        .travel-tech-pulse-line {
-          stroke-dasharray: 200;
-          stroke-dashoffset: 200;
-          animation: ttPulseLine 3s linear infinite;
-        }
-        @keyframes ttPulseLine {
-          to { stroke-dashoffset: 0; }
-        }
-
-        .travel-tech-line {
-          stroke-dashoffset: 0;
-          animation: ttLine 4s linear infinite;
-        }
-        @keyframes ttLine {
-          from { stroke-dashoffset: 0; }
-          to { stroke-dashoffset: -16; }
-        }
-
-        .travel-tech-icon-float {
-          animation: ttIconFloat 5s ease-in-out infinite;
-        }
-        @keyframes ttIconFloat {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-8px) scale(1.05); }
-        }
-
-        .animation-delay-0 .travel-tech-icon-float { animation-delay: 0s; }
-        .animation-delay-1 .travel-tech-icon-float { animation-delay: 0.8s; }
-        .animation-delay-2 .travel-tech-icon-float { animation-delay: 1.6s; }
-        .animation-delay-3 .travel-tech-icon-float { animation-delay: 2.4s; }
-        .animation-delay-4 .travel-tech-icon-float { animation-delay: 3.2s; }
+        .animation-delay-1 { animation-delay: 0.5s; }
+        .animation-delay-2 { animation-delay: 1s; }
       `}</style>
     </div>
   );
 };
-
-const FloatingIcon = ({ icon, className }: { icon: React.ReactNode; className?: string }) => (
-  <div className={`absolute z-10 ${className}`}>
-    <div className="travel-tech-icon-float">
-      <div className="w-10 h-10 rounded-xl bg-white/80 backdrop-blur-sm border border-viajar-cyan/20 shadow-lg flex items-center justify-center text-viajar-cyan">
-        {icon}
-      </div>
-    </div>
-  </div>
-);
 
 export default TravelTechRobot;

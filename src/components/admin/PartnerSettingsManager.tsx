@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Save, Loader2, Percent } from 'lucide-react';
+import { DollarSign, Save, Loader2, Percent, ExternalLink, CreditCard, Link2 } from 'lucide-react';
 
 export default function PartnerSettingsManager() {
   const { toast } = useToast();
   const [monthlyFee, setMonthlyFee] = useState<string>('299.00');
   const [commissionRate, setCommissionRate] = useState<string>('10.00');
+  const [stripeConnectLink, setStripeConnectLink] = useState<string>('');
+  const [paymentLink, setPaymentLink] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -51,6 +53,30 @@ export default function PartnerSettingsManager() {
           ? commissionData.setting_value 
           : String(commissionData.setting_value);
         setCommissionRate(rate);
+      }
+
+      // Carregar link do Stripe Connect
+      const { data: connectData, error: connectError } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_stripe_connect_link')
+        .maybeSingle();
+
+      if (!connectError && connectData?.setting_value) {
+        setStripeConnectLink(String(connectData.setting_value || ''));
+      }
+
+      // Carregar link de pagamento
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_payment_link')
+        .maybeSingle();
+
+      if (!paymentError && paymentData?.setting_value) {
+        setPaymentLink(String(paymentData.setting_value || ''));
       }
     } catch (error) {
       console.error('Erro ao carregar settings:', error);
@@ -111,6 +137,36 @@ export default function PartnerSettingsManager() {
         });
 
       if (commissionError) throw commissionError;
+
+      // Salvar link do Stripe Connect
+      const { error: connectError } = await supabase
+        .from('site_settings')
+        .upsert({
+          platform: 'ms',
+          setting_key: 'partner_stripe_connect_link',
+          setting_value: stripeConnectLink,
+          description: 'Link do Stripe Connect para parceiros conectarem e receberem pagamentos',
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'platform,setting_key',
+        });
+
+      if (connectError) throw connectError;
+
+      // Salvar link de pagamento
+      const { error: paymentError } = await supabase
+        .from('site_settings')
+        .upsert({
+          platform: 'ms',
+          setting_key: 'partner_payment_link',
+          setting_value: paymentLink,
+          description: 'Link de pagamento mensal para parceiros (Stripe Payment Link)',
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'platform,setting_key',
+        });
+
+      if (paymentError) throw paymentError;
 
       toast({
         title: 'Salvo com sucesso!',
@@ -188,6 +244,64 @@ export default function PartnerSettingsManager() {
           </div>
           <p className="text-sm text-gray-500">
             Percentual de comissão calculado automaticamente sobre cada reserva paga. Você pode alterar este valor a qualquer momento.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="stripe_connect_link" className="flex items-center gap-2">
+            <Link2 className="w-4 h-4" />
+            Link do Stripe Connect
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="stripe_connect_link"
+              type="url"
+              value={stripeConnectLink}
+              onChange={(e) => setStripeConnectLink(e.target.value)}
+              placeholder="https://connect.stripe.com/..."
+              className="flex-1"
+            />
+            {stripeConnectLink && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => window.open(stripeConnectLink, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-gray-500">
+            Link para parceiros conectarem sua conta Stripe e receberem pagamentos
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="payment_link" className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4" />
+            Link de Pagamento Mensal
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="payment_link"
+              type="url"
+              value={paymentLink}
+              onChange={(e) => setPaymentLink(e.target.value)}
+              placeholder="https://buy.stripe.com/..."
+              className="flex-1"
+            />
+            {paymentLink && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => window.open(paymentLink, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-gray-500">
+            Link de pagamento mensal criado no Stripe Dashboard (Payment Link)
           </p>
         </div>
 
