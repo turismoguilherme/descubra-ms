@@ -113,10 +113,55 @@ serve(async (req) => {
         );
       }
 
-      // Criar reembolso no Stripe
+      // Buscar taxa do Stripe (se não estiver salva no banco)
+      let stripeFee = 0;
+      try {
+        // Tentar buscar do banco primeiro
+        const { data: reservation } = await supabase
+          .from('partner_reservations')
+          .select('stripe_processing_fee')
+          .eq('id', pendingRefund.reservation_id)
+          .single();
+
+        if (reservation?.stripe_processing_fee) {
+          stripeFee = Number(reservation.stripe_processing_fee);
+          console.log('✅ Taxa encontrada no banco:', stripeFee);
+        } else {
+          // Se não estiver no banco, buscar do Stripe
+          if (paymentIntent.latest_charge) {
+            const charge = await stripe.charges.retrieve(
+              paymentIntent.latest_charge as string
+            );
+            
+            if (charge.balance_transaction) {
+              const balanceTransaction = await stripe.balanceTransactions.retrieve(
+                charge.balance_transaction as string
+              );
+              stripeFee = balanceTransaction.fee / 100; // Converter centavos para reais
+              console.log('✅ Taxa buscada do Stripe:', stripeFee);
+            }
+          }
+        }
+      } catch (feeError) {
+        console.warn('⚠️ Erro ao buscar taxa (não crítico):', feeError);
+        // Continua mesmo se não conseguir buscar a taxa
+      }
+
+      // Calcular reembolso DESCONTANDO a taxa
+      const originalRefundAmount = refundAmountInCents / 100; // Converter para reais
+      const refundAmountWithFeeDeducted = Math.max(0, originalRefundAmount - stripeFee);
+      const finalRefundAmountInCents = Math.round(refundAmountWithFeeDeducted * 100);
+
+      console.log('💰 Cálculo de reembolso:', {
+        valorOriginal: originalRefundAmount,
+        taxaStripe: stripeFee,
+        valorFinal: refundAmountWithFeeDeducted,
+      });
+
+      // Criar reembolso no Stripe (com valor já descontado da taxa)
       const refund = await stripe.refunds.create({
         payment_intent: finalPaymentIntentId,
-        amount: refundAmountInCents,
+        amount: finalRefundAmountInCents, // Valor já descontado
         reason: 'requested_by_customer',
         metadata: {
           refund_id: refundId,
@@ -124,6 +169,7 @@ serve(async (req) => {
           reservation_code: pendingRefund.reservation_code || '',
           refund_percent: pendingRefund.refund_percent.toString(),
           days_until_reservation: pendingRefund.days_until_reservation?.toString() || '',
+          stripe_fee_deducted: stripeFee.toString(), // Informar taxa descontada
           processed_by: 'admin',
         },
       });
@@ -131,12 +177,26 @@ serve(async (req) => {
       stripeRefundId = refund.id;
       console.log('✅ Reembolso criado no Stripe:', refund.id);
 
+      // Atualizar registro de reembolso com a taxa
+      await supabase
+        .from('pending_refunds')
+        .update({
+          stripe_refund_id: refund.id,
+          stripe_fee_deducted: stripeFee,
+          refund_amount: refundAmountWithFeeDeducted, // Valor final reembolsado
+          status: 'completed',
+          processed_at: new Date().toISOString(),
+        })
+        .eq('id', refundId);
+
       return new Response(
         JSON.stringify({ 
           success: true,
           stripe_refund_id: stripeRefundId,
-          refund_amount: amount,
-          message: 'Reembolso processado com sucesso no Stripe'
+          refund_amount: refundAmountWithFeeDeducted, // Valor final reembolsado
+          original_refund_amount: originalRefundAmount, // Valor original calculado
+          stripe_fee_deducted: stripeFee, // Taxa descontada
+          message: 'Reembolso processado com sucesso no Stripe (taxa descontada)'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -456,7 +456,8 @@ export default function UserReservations() {
               Cancelar Reserva
             </DialogTitle>
             <DialogDescription>
-              Confirme o cancelamento da sua reserva. O reembolso será processado automaticamente conforme a política de cancelamento.
+              Confirme o cancelamento da sua reserva. O reembolso será processado automaticamente conforme a política de cancelamento. 
+              A taxa de processamento do Stripe será descontada do valor reembolsado.
             </DialogDescription>
           </DialogHeader>
 
@@ -488,6 +489,18 @@ export default function UserReservations() {
                         <p className="text-xs text-yellow-700 mt-2">
                           ✗ Cancelamento no dia ou após: sem reembolso
                         </p>
+                      )}
+                      {cancelPolicy.refundPercent > 0 && (
+                        <div className="mt-3 pt-3 border-t border-yellow-300">
+                          <p className="text-xs font-semibold text-yellow-900 mb-1">
+                            ⚠️ Informação Importante:
+                          </p>
+                          <p className="text-xs text-yellow-800">
+                            O valor do reembolso será calculado descontando a taxa de processamento do Stripe 
+                            (aproximadamente 3,99% + R$ 0,30 por transação). 
+                            Exemplo: Se você pagou R$ 100,00, o reembolso será de aproximadamente R$ 96,01.
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>

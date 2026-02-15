@@ -24,9 +24,11 @@ export default function PartnerPaymentStep({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [monthlyFee, setMonthlyFee] = useState<number>(299.00); // Valor padrão
+  const [paymentLink, setPaymentLink] = useState<string>('');
 
   useEffect(() => {
     loadMonthlyFee();
+    loadPaymentLink();
   }, []);
 
   const loadMonthlyFee = async () => {
@@ -53,29 +55,39 @@ export default function PartnerPaymentStep({
     }
   };
 
+  const loadPaymentLink = async () => {
+    try {
+      // Buscar link de pagamento configurado no admin
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_payment_link')
+        .maybeSingle();
+
+      if (!error && data?.setting_value) {
+        setPaymentLink(String(data.setting_value || ''));
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar link de pagamento:', error);
+    }
+  };
+
   const handlePayment = async () => {
+    // Verificar se o link de pagamento está configurado
+    if (!paymentLink || paymentLink.trim() === '') {
+      toast({
+        title: 'Link de pagamento não configurado',
+        description: 'O link de pagamento precisa ser configurado no painel administrativo. Entre em contato com o suporte.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Chamar Edge Function para criar checkout
-      const { data, error } = await supabase.functions.invoke('partner-checkout', {
-        body: {
-          partnerId,
-          monthlyFee,
-          successUrl: `${window.location.origin}/descubrams/seja-um-parceiro/success?partner_id=${partnerId}`,
-          cancelUrl: `${window.location.origin}/descubrams/seja-um-parceiro?step=3`,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Erro ao criar checkout');
-      }
-
-      if (data?.checkoutUrl) {
-        // Redirecionar para Stripe Checkout
-        window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error('URL de checkout não retornada');
-      }
+      // Redirecionar diretamente para o Payment Link configurado
+      window.location.href = paymentLink;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao processar pagamento:', err);
@@ -84,7 +96,6 @@ export default function PartnerPaymentStep({
         description: err.message || 'Não foi possível iniciar o pagamento. Tente novamente.',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };

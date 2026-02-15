@@ -928,6 +928,34 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       .eq('id', partnerId)
       .single();
 
+    // Buscar taxa do Stripe para armazenar no banco
+    let stripeFee = 0;
+    try {
+      if (session.payment_intent) {
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          session.payment_intent as string
+        );
+        
+        if (paymentIntent.latest_charge) {
+          const charge = await stripe.charges.retrieve(
+            paymentIntent.latest_charge as string
+          );
+          
+          if (charge.balance_transaction) {
+            const balanceTransaction = await stripe.balanceTransactions.retrieve(
+              charge.balance_transaction as string
+            );
+            // Taxa em centavos, converter para reais
+            stripeFee = balanceTransaction.fee / 100;
+            console.log('✅ Taxa do Stripe capturada:', stripeFee);
+          }
+        }
+      }
+    } catch (feeError) {
+      console.warn('⚠️ Erro ao buscar taxa do Stripe (não crítico):', feeError);
+      // Continua mesmo se não conseguir buscar a taxa
+    }
+
     // Buscar dados da reserva antes de atualizar
     const { data: reservation, error: reservationFetchError } = await supabase
       .from('partner_reservations')
@@ -941,6 +969,7 @@ async function handleReservationPaymentCompleted(session: Stripe.Checkout.Sessio
       .update({
         status: 'confirmed', // Pagamento confirmado, aguardando parceiro confirmar
         confirmed_at: new Date().toISOString(),
+        stripe_processing_fee: stripeFee, // Salvar taxa do Stripe
         updated_at: new Date().toISOString(),
       })
       .eq('id', reservationId);
@@ -1532,6 +1561,34 @@ async function handleReservationConnectPaymentCompleted(session: Stripe.Checkout
       .eq('id', partnerId)
       .single();
 
+    // Buscar taxa do Stripe para armazenar no banco
+    let stripeFee = 0;
+    try {
+      if (session.payment_intent) {
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          session.payment_intent as string
+        );
+        
+        if (paymentIntent.latest_charge) {
+          const charge = await stripe.charges.retrieve(
+            paymentIntent.latest_charge as string
+          );
+          
+          if (charge.balance_transaction) {
+            const balanceTransaction = await stripe.balanceTransactions.retrieve(
+              charge.balance_transaction as string
+            );
+            // Taxa em centavos, converter para reais
+            stripeFee = balanceTransaction.fee / 100;
+            console.log('✅ Taxa do Stripe capturada:', stripeFee);
+          }
+        }
+      }
+    } catch (feeError) {
+      console.warn('⚠️ Erro ao buscar taxa do Stripe (não crítico):', feeError);
+      // Continua mesmo se não conseguir buscar a taxa
+    }
+
     // Atualizar status da reserva para 'confirmed'
     const { error: reservationError } = await supabase
       .from('partner_reservations')
@@ -1542,6 +1599,7 @@ async function handleReservationConnectPaymentCompleted(session: Stripe.Checkout
         platform_fee: commissionAmount,
         partner_earnings: partnerAmount,
         stripe_payment_intent_id: session.payment_intent as string,
+        stripe_processing_fee: stripeFee, // Salvar taxa do Stripe
         updated_at: new Date().toISOString(),
       })
       .eq('id', reservationId);

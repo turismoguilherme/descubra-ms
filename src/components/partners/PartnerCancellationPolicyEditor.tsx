@@ -216,7 +216,8 @@ export default function PartnerCancellationPolicyEditor({
           </TooltipProvider>
         </div>
         <p className="text-sm text-gray-600">
-          Configure as regras de reembolso para cancelamentos de reservas
+          Configure as regras de reembolso para cancelamentos de reservas. 
+          <span className="text-orange-600 font-medium"> A taxa de processamento do Stripe será descontada automaticamente do valor reembolsado.</span>
         </p>
       </div>
 
@@ -278,6 +279,24 @@ export default function PartnerCancellationPolicyEditor({
                   {activePolicy.days_before_0_refund_percent}%
                 </p>
                 <p className="text-xs text-red-600 mt-1">de reembolso</p>
+              </div>
+            </div>
+
+            {/* Aviso sobre taxa do Stripe */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    Informação sobre reembolsos
+                  </p>
+                  <p className="text-xs text-blue-800">
+                    Os percentuais de reembolso são calculados sobre o valor pago, porém a taxa de processamento 
+                    do Stripe (aproximadamente 3,99% + R$ 0,30 por transação) será descontada automaticamente 
+                    do valor final reembolsado ao cliente. Isso garante que a plataforma não tenha prejuízo 
+                    com taxas de processamento.
+                  </p>
+                </div>
               </div>
             </div>
 

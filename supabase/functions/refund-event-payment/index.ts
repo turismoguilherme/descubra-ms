@@ -131,29 +131,53 @@ serve(async (req) => {
       );
     }
 
-    // Calcular valor do reembolso: usar amount_received (valor líquido) em vez de amount (valor bruto)
-    // Isso evita que você perca a taxa de processamento do Stripe
-    const refundAmount = paymentIntent.amount_received || paymentIntent.amount;
+    // Buscar taxa do Stripe (mesmo método usado para reservas)
+    let stripeFee = 0;
+    try {
+      if (paymentIntent.latest_charge) {
+        const charge = await stripe.charges.retrieve(
+          paymentIntent.latest_charge as string
+        );
+        
+        if (charge.balance_transaction) {
+          const balanceTransaction = await stripe.balanceTransactions.retrieve(
+            charge.balance_transaction as string
+          );
+          // Taxa em centavos, converter para reais
+          stripeFee = balanceTransaction.fee / 100;
+          console.log('✅ Taxa do Stripe capturada:', stripeFee);
+        }
+      }
+    } catch (feeError) {
+      console.warn('⚠️ Erro ao buscar taxa do Stripe (não crítico):', feeError);
+      // Se não conseguir buscar, usar amount_received como fallback
+    }
+
+    // Calcular valor do reembolso: valor total MENOS a taxa
+    const totalAmountInReais = paymentIntent.amount / 100;
+    const refundAmountInReais = Math.max(0, totalAmountInReais - stripeFee);
+    const refundAmount = Math.round(refundAmountInReais * 100); // Converter para centavos
     
-    console.log('Valores do pagamento:', {
-      amount_total: paymentIntent.amount,
-      amount_received: paymentIntent.amount_received,
-      refund_amount: refundAmount,
-      fee: paymentIntent.amount - (paymentIntent.amount_received || paymentIntent.amount),
+    console.log('💰 Cálculo de reembolso de evento:', {
+      valorTotal: totalAmountInReais,
+      taxaStripe: stripeFee,
+      valorReembolso: refundAmountInReais,
+      valorReembolsoCentavos: refundAmount,
     });
 
-    // Criar reembolso parcial no Stripe (reembolsa apenas o valor líquido recebido)
+    // Criar reembolso no Stripe (com valor já descontado da taxa)
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
-      amount: refundAmount, // Reembolso parcial: apenas o valor líquido
+      amount: refundAmount, // Valor já descontado da taxa
       reason: 'requested_by_customer',
       metadata: {
         event_id: event_id,
         event_name: event.name,
         reason: reason || 'Evento rejeitado pelo administrador',
-        refund_type: 'partial_net_amount', // Indica que é reembolso parcial
+        refund_type: 'fee_deducted', // Indica que taxa foi descontada
         original_amount: paymentIntent.amount,
         refunded_amount: refundAmount,
+        stripe_fee_deducted: Math.round(stripeFee * 100).toString(), // Taxa em centavos
       },
     });
 
@@ -175,14 +199,12 @@ serve(async (req) => {
     }
 
     // Registrar reembolso em master_financial_records
-    // Usar o valor reembolsado (refundAmount já está em centavos do Stripe, converter para reais)
-    const refundAmountInReais = refundAmount / 100;
     await supabase
       .from('master_financial_records')
       .insert({
         record_type: 'refund',
         amount: refundAmountInReais,
-        description: `Reembolso parcial de evento em destaque: ${event.name} (valor líquido, sem taxa de processamento)`,
+        description: `Reembolso de evento em destaque: ${event.name} (taxa de processamento do Stripe descontada: R$ ${stripeFee.toFixed(2)})`,
         stripe_invoice_id: refund.id,
         status: 'completed',
         paid_date: new Date().toISOString().split('T')[0],
@@ -194,9 +216,10 @@ serve(async (req) => {
           original_payment_id: paymentRecord.stripe_invoice_id,
           refund_id: refund.id,
           reason: reason || 'Evento rejeitado pelo administrador',
-          refund_type: 'partial_net_amount',
+          refund_type: 'fee_deducted',
           original_amount: paymentAmount,
           refunded_amount: refundAmountInReais,
+          stripe_fee_deducted: stripeFee,
         },
       });
 
@@ -230,7 +253,10 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         refund_id: refund.id,
-        message: 'Refund processed successfully' 
+        refund_amount: refundAmountInReais,
+        original_amount: paymentAmount,
+        stripe_fee_deducted: stripeFee,
+        message: 'Reembolso processado com sucesso (taxa do Stripe descontada)' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

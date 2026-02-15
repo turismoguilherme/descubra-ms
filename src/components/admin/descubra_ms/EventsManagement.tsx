@@ -492,7 +492,7 @@ export default function EventsManagement() {
       // Se o evento foi pago, processar reembolso
       if (event.sponsor_payment_status === 'paid') {
         try {
-          const { error: refundError } = await supabase.functions.invoke('refund-event-payment', {
+          const { data: refundData, error: refundError } = await supabase.functions.invoke('refund-event-payment', {
             body: { 
               event_id: eventId, 
               reason: reason || 'Evento rejeitado pelo administrador' 
@@ -507,9 +507,20 @@ export default function EventsManagement() {
               variant: 'destructive',
             });
           } else {
+            // Extrair informações do reembolso se disponível
+            const refundAmount = refundData?.refund_amount;
+            const stripeFee = refundData?.stripe_fee_deducted;
+            
+            let description = 'O pagamento foi reembolsado automaticamente.';
+            if (refundAmount && stripeFee) {
+              description = `Reembolso de R$ ${refundAmount.toFixed(2)} processado. Taxa do Stripe (R$ ${stripeFee.toFixed(2)}) descontada automaticamente.`;
+            } else if (refundAmount) {
+              description = `Reembolso de R$ ${refundAmount.toFixed(2)} processado. Taxa do Stripe descontada automaticamente.`;
+            }
+            
             toast({
               title: 'Reembolso processado',
-              description: 'O pagamento foi reembolsado automaticamente.',
+              description: description,
             });
           }
         } catch (refundErr: unknown) {
@@ -701,7 +712,7 @@ export default function EventsManagement() {
       if (event.sponsor_payment_status === 'paid') {
         
         try {
-          const { error: refundError } = await supabase.functions.invoke('refund-event-payment', {
+          const { data: refundData, error: refundError } = await supabase.functions.invoke('refund-event-payment', {
             body: { 
               event_id: eventId, 
               reason: 'Evento excluído permanentemente pelo administrador' 
@@ -716,9 +727,20 @@ export default function EventsManagement() {
               variant: 'destructive',
             });
           } else {
+            // Extrair informações do reembolso se disponível
+            const refundAmount = refundData?.refund_amount;
+            const stripeFee = refundData?.stripe_fee_deducted;
+            
+            let description = 'O pagamento foi reembolsado antes da exclusão.';
+            if (refundAmount && stripeFee) {
+              description = `Reembolso de R$ ${refundAmount.toFixed(2)} processado. Taxa do Stripe (R$ ${stripeFee.toFixed(2)}) descontada automaticamente.`;
+            } else if (refundAmount) {
+              description = `Reembolso de R$ ${refundAmount.toFixed(2)} processado. Taxa do Stripe descontada automaticamente.`;
+            }
+            
             toast({
               title: 'Reembolso processado',
-              description: 'O pagamento foi reembolsado antes da exclusão.',
+              description: description,
             });
           }
         } catch (refundErr: unknown) {
