@@ -4,7 +4,7 @@ import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-12-15.clover',
   httpClient: Stripe.createFetchHttpClient(),
 });
 
