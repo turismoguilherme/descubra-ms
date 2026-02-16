@@ -53,8 +53,40 @@ export default function StripeConnectStep({
       // Limpar parâmetros da URL
       window.history.replaceState({}, '', window.location.pathname);
       
-      // Verificar status atualizado
-      checkConnectionStatus();
+      // Chamar callback para verificar status atualizado
+      const verifyConnection = async () => {
+        try {
+          // Buscar stripe_account_id do parceiro
+          const { data: partnerData, error: partnerError } = await supabase
+            .from('institutional_partners')
+            .select('stripe_account_id')
+            .eq('id', partnerId)
+            .single();
+
+          if (!partnerError && partnerData?.stripe_account_id) {
+            // Chamar Edge Function para verificar status atualizado
+            const { error: callbackError } = await supabase.functions.invoke('stripe-connect-callback', {
+              body: {
+                partnerId,
+                accountId: partnerData.stripe_account_id,
+              },
+            });
+
+            if (callbackError) {
+              console.warn('Erro ao verificar status via callback:', callbackError);
+              // Continuar mesmo se falhar, o webhook também atualiza
+            }
+          }
+        } catch (error) {
+          console.warn('Erro ao verificar conexão:', error);
+          // Continuar mesmo se falhar
+        }
+        
+        // Verificar status atualizado no banco
+        checkConnectionStatus();
+      };
+
+      verifyConnection();
       
       toast({
         title: '✅ Conta Stripe conectada!',
@@ -68,7 +100,7 @@ export default function StripeConnectStep({
         variant: 'destructive',
       });
     }
-  }, []);
+  }, [partnerId]);
 
   const checkConnectionStatus = async () => {
     setChecking(true);

@@ -41,7 +41,7 @@ export const SecurityAlertMonitor: React.FC = () => {
         .from('security_audit_log')
         .select('*')
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .or('action.ilike.%suspicious%,action.ilike.%rate_limit%,action.ilike.%privilege%,action.ilike.%unauthorized%')
+        .or('action.ilike.%suspicious%,action.ilike.%rate_limit%,action.ilike.%privilege%,action.ilike.%unauthorized%,action.ilike.%stripe_connect%')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -66,6 +66,14 @@ export const SecurityAlertMonitor: React.FC = () => {
         alert => alert.severity === 'critical' && !alert.resolved
       );
 
+      // Check for high/critical Stripe Connect alerts
+      const stripeConnectAlerts = transformedAlerts.filter(
+        alert => 
+          (alert.severity === 'high' || alert.severity === 'critical') && 
+          !alert.resolved &&
+          alert.message.toLowerCase().includes('stripe connect')
+      );
+
       if (criticalAlerts.length > 0) {
         toast({
           title: "🚨 Alerta Crítico de Segurança",
@@ -73,6 +81,23 @@ export const SecurityAlertMonitor: React.FC = () => {
           variant: "destructive",
           duration: 10000,
         });
+      }
+
+      // Adicionar notificações no admin para alertas críticos do Stripe Connect
+      if (stripeConnectAlerts.length > 0) {
+        try {
+          const { addAdminNotification } = await import('@/components/admin/notifications/AdminNotifications');
+          
+          stripeConnectAlerts.forEach(alert => {
+            addAdminNotification({
+              type: alert.severity === 'critical' ? 'error' : 'warning',
+              title: '🚨 Alerta de Segurança - Stripe Connect',
+              message: alert.message,
+            });
+          });
+        } catch (error) {
+          console.error('Erro ao adicionar notificação no admin:', error);
+        }
       }
 
     } catch (error: unknown) {
@@ -83,6 +108,8 @@ export const SecurityAlertMonitor: React.FC = () => {
   };
 
   const getAlertType = (action: string): SecurityAlert['type'] => {
+    if (action.includes('stripe_connect_rate_limit')) return 'rate_limit_exceeded';
+    if (action.includes('stripe_connect_unauthorized')) return 'unauthorized_access';
     if (action.includes('rate_limit')) return 'rate_limit_exceeded';
     if (action.includes('privilege')) return 'privilege_escalation';
     if (action.includes('brute') || action.includes('login')) return 'brute_force';
@@ -91,6 +118,7 @@ export const SecurityAlertMonitor: React.FC = () => {
 
   const getSeverityFromAction = (action: string): SecurityAlert['severity'] => {
     if (action.includes('critical') || action.includes('privilege_escalation')) return 'critical';
+    if (action.includes('stripe_connect_unauthorized') || action.includes('stripe_connect_rate_limit_exceeded')) return 'high';
     if (action.includes('unauthorized') || action.includes('rate_limit_exceeded')) return 'high';
     if (action.includes('suspicious')) return 'medium';
     return 'low';
@@ -98,6 +126,15 @@ export const SecurityAlertMonitor: React.FC = () => {
 
   const generateAlertMessage = (event: unknown): string => {
     const action = event.action;
+    if (action.includes('stripe_connect_rate_limit_exceeded')) {
+      return 'Stripe Connect: Limite de tentativas excedido - acesso temporariamente bloqueado';
+    }
+    if (action.includes('stripe_connect_unauthorized_access')) {
+      return 'Stripe Connect: Tentativa de acesso não autorizado detectada';
+    }
+    if (action.includes('stripe_connect_invalid_input')) {
+      return 'Stripe Connect: Entrada inválida detectada (possível tentativa de ataque)';
+    }
     if (action.includes('rate_limit_exceeded')) {
       return 'Limite de tentativas excedido - acesso temporariamente bloqueado';
     }
