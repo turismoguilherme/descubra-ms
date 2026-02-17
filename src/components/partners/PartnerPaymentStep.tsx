@@ -86,8 +86,22 @@ export default function PartnerPaymentStep({
 
     setLoading(true);
     try {
-      // Redirecionar diretamente para o Payment Link configurado
-      window.location.href = paymentLink;
+      // Construir URL de sucesso com partner_id real
+      const successUrl = `${window.location.origin}/descubrams/seja-um-parceiro/success?partner_id=${partnerId}&session_id={CHECKOUT_SESSION_ID}`;
+      
+      // Adicionar URL de redirecionamento ao Payment Link
+      // O Stripe aceita o parâmetro after_completion[redirect][url] na URL do Payment Link
+      const separator = paymentLink.includes('?') ? '&' : '?';
+      const paymentLinkWithRedirect = `${paymentLink}${separator}after_completion[redirect][url]=${encodeURIComponent(successUrl)}`;
+      
+      console.log('🔗 [PartnerPaymentStep] Redirecionando para Payment Link com URL de sucesso:', {
+        paymentLink,
+        successUrl,
+        paymentLinkWithRedirect,
+      });
+      
+      // Redirecionar para o Payment Link com URL de sucesso configurada
+      window.location.href = paymentLinkWithRedirect;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao processar pagamento:', err);

@@ -121,35 +121,19 @@ const queryClient = new QueryClient();
 
 // Componente para normalizar barras invertidas em rotas (Windows usa \ mas URLs usam /)
 const NormalizePathRoute = () => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:124',message:'NormalizePathRoute executado',data:{windowLocation:window.location.href,windowPathname:window.location.pathname},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   try {
     const location = useLocation();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:127',message:'useLocation retornado',data:{pathname:location.pathname,search:location.search,hasBackslash:location.pathname.includes('\\')},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const normalizedPath = location.pathname.replace(/\\/g, '/');
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:130',message:'Path normalizado',data:{original:location.pathname,normalized:normalizedPath,changed:normalizedPath!==location.pathname},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     
     // Se o path foi alterado (tinha barras invertidas), redirecionar
     if (normalizedPath !== location.pathname) {
       const newPath = normalizedPath + location.search;
       console.log(`🔄 [NormalizePath] Normalizando rota: ${location.pathname} -> ${newPath}`);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:135',message:'Redirecionando para path normalizado',data:{from:location.pathname,to:newPath},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       return <Navigate to={newPath} replace />;
     }
     
     return null;
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:142',message:'ERRO em NormalizePathRoute',data:{error:error instanceof Error?error.message:String(error),stack:error instanceof Error?error.stack:undefined},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     console.error('❌ [NormalizePath] Erro ao normalizar path:', error);
     return null;
   }
@@ -179,10 +163,6 @@ function AppRoutes() {
   const showViajar = currentDomain === 'viajartur.com' || 
                      (currentDomain === 'localhost' && !location.pathname.startsWith('/descubrams')) ||
                      (!showMS && currentDomain !== 'descubrams.com' && currentDomain !== 'localhost');
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:153',message:'Domínio detectado',data:{currentDomain,pathname:location.pathname,showMS,showViajar},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 
   return (
     <BrandProvider>
@@ -432,9 +412,6 @@ function AppRoutes() {
 }
 
 function App() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:147',message:'App component renderizando',data:{windowLocation:window.location.href,windowPathname:window.location.pathname,hasBackslash:window.location.pathname.includes('\\')},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   
   return (
     <QueryClientProvider client={queryClient}>

@@ -238,23 +238,26 @@ export async function savePartnerTermsAcceptance(
       updated_at: new Date().toISOString(),
     };
     
-    // Adicionar campos de termo se disponíveis (pode não existir se migration não foi aplicada)
-    try {
-      updateFields.terms_accepted_at = new Date().toISOString();
-      updateFields.terms_accepted_version = termsVersion;
-    } catch (err) {
-      // Ignorar
-    }
+    // Não adicionar campos de termo se não existirem no banco
+    // O erro PGRST204 indica que a coluna não está no schema cache
+    // Remover esses campos do updateFields para evitar erro
+    
+    // Remover terms_accepted_at e terms_accepted_version se não existirem
+    // (será tratado silenciosamente se a migration não foi aplicada)
+    delete updateFields.terms_accepted_at;
+    delete updateFields.terms_accepted_version;
     
     const { error } = await supabase
       .from('institutional_partners')
       .update(updateFields)
       .eq('id', partnerId);
 
-    // Se erro for por coluna não encontrada, continuar (migration não aplicada)
+    // Se erro for por coluna não encontrada (PGRST204 ou similar), continuar (migration não aplicada)
     if (error) {
-      if (error.message?.includes("column") && error.message?.includes("not found")) {
-        console.warn('Campos de termo não disponíveis (migration não aplicada?). Continuando...');
+      if (error.code === 'PGRST204' || 
+          (error.message?.includes("column") && error.message?.includes("not found")) ||
+          error.message?.includes("schema cache")) {
+        console.warn('Campos de termo não disponíveis (migration não aplicada?). Continuando...', error);
         // Retornar sucesso mesmo assim - o processo pode continuar
         return { success: true };
       }

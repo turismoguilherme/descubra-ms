@@ -19,26 +19,78 @@ export default function PartnerSuccessPage() {
   }, [partnerId]);
 
   const checkPartnerStatus = async () => {
-    if (!partnerId) {
+    let partnerIdToUse = partnerId;
+    
+    // Validar se partner_id existe e não é o placeholder literal
+    const isInvalidPartnerId = !partnerIdToUse || partnerIdToUse === '{PARTNER_ID}' || partnerIdToUse.trim() === '';
+    
+    if (isInvalidPartnerId) {
+      console.warn('⚠️ [PartnerSuccessPage] partner_id inválido ou não fornecido, tentando buscar por email:', partnerId);
+      
+      // Tentar buscar parceiro pelo email do usuário autenticado
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (user?.email) {
+          console.log('🔍 [PartnerSuccessPage] Buscando parceiro por email:', user.email);
+          
+          const { data: partnerData, error: emailError } = await supabase
+            .from('institutional_partners')
+            .select('id, status, is_active')
+            .eq('contact_email', user.email)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (!emailError && partnerData) {
+            console.log('✅ [PartnerSuccessPage] Parceiro encontrado por email:', partnerData.id);
+            partnerIdToUse = partnerData.id;
+          } else {
+            console.warn('⚠️ [PartnerSuccessPage] Nenhum parceiro encontrado com email:', user.email);
+          }
+        } else {
+          console.warn('⚠️ [PartnerSuccessPage] Usuário não autenticado ou sem email');
+        }
+      } catch (emailSearchError) {
+        console.error('❌ [PartnerSuccessPage] Erro ao buscar parceiro por email:', emailSearchError);
+      }
+    }
+
+    // Se ainda não tiver partner_id válido, mostrar como pendente
+    if (!partnerIdToUse || partnerIdToUse === '{PARTNER_ID}' || partnerIdToUse.trim() === '') {
+      console.warn('⚠️ [PartnerSuccessPage] Não foi possível identificar o parceiro');
       setLoading(false);
+      setPartnerStatus('pending');
       return;
     }
+
+    console.log('🔍 [PartnerSuccessPage] Verificando status do parceiro:', { partnerId: partnerIdToUse, sessionId });
 
     try {
       const { data, error } = await supabase
         .from('institutional_partners')
-        .select('status, is_active, subscription_status')
-        .eq('id', partnerId)
+        .select('status, is_active')
+        .eq('id', partnerIdToUse)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PartnerSuccessPage] Erro ao buscar parceiro:', error);
+        throw error;
+      }
 
       if (data) {
-        const isActive = data.is_active && (data.subscription_status === 'active' || data.subscription_status === 'trialing');
+        console.log('✅ [PartnerSuccessPage] Dados do parceiro encontrados:', data);
+        // Verificar se o parceiro está ativo: is_active = true e status = 'approved' (ou similar)
+        const isActive = data.is_active && (data.status === 'approved' || data.status === 'active');
         setPartnerStatus(isActive ? 'active' : 'pending');
+      } else {
+        console.warn('⚠️ [PartnerSuccessPage] Parceiro não encontrado com ID:', partnerIdToUse);
+        setPartnerStatus('pending');
       }
     } catch (error) {
-      console.error('Erro ao verificar status:', error);
+      console.error('❌ [PartnerSuccessPage] Erro ao verificar status:', error);
+      // Em caso de erro, mostrar como pendente (pode estar processando)
+      setPartnerStatus('pending');
     } finally {
       setLoading(false);
     }
