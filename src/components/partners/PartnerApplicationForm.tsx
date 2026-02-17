@@ -341,17 +341,27 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
               throw new Error('Já existe uma solicitação de parceria com este email. Entre em contato conosco se precisar de ajuda.');
             }
             
-            // Email existe no auth mas não há parceiro - continuar sem authUserId
-            // O parceiro será criado sem autenticação (authUserId = null)
-            console.log('ℹ️ [PartnerApplicationForm] Email existe no auth mas não há parceiro. Continuando sem autenticação.');
-            authUserId = null;
+            // Email existe no auth mas não há parceiro
+            // NÃO criar parceiro sem conta no Auth (segurança e para garantir que login funcione)
+            throw new Error('Este email já está cadastrado em nossa plataforma. Por favor, faça login primeiro ou use outro email para criar uma nova conta de parceiro.');
           } else {
             throw new Error(`Erro ao criar conta: ${authError.message}`);
           }
         } else {
           authUserId = authData?.user?.id || null;
           console.log('✅ [PartnerApplicationForm] Conta criada com sucesso');
+          
+          // Garantir que sempre temos authUserId quando includePassword é true
+          if (!authUserId) {
+            throw new Error('Falha ao criar conta: usuário não foi criado corretamente. Tente novamente.');
+          }
         }
+      }
+
+      // Validação de segurança: se includePassword é true, authUserId deve existir
+      if (includePassword && !authUserId) {
+        console.error('❌ [PartnerApplicationForm] Tentativa de criar parceiro sem authUserId quando includePassword é true');
+        throw new Error('Falha na autenticação: não foi possível criar a conta. Por favor, tente novamente.');
       }
 
       // 2. Criar registro do parceiro

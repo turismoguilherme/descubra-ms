@@ -9,21 +9,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { platformContentService } from '@/services/admin/platformContentService';
 
-const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
-const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const safeLog = (payload: unknown) => {
-  if (!enableDebugLogs || !isDev) return;
-  try {
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({...payload,timestamp:Date.now(),sessionId:'debug-session',runId:payload?.runId||'run1'})
-    }).catch(()=>{});
-  } catch (error) {
-    // Silenciosamente falha em produção
-  }
-};
-
 const UniversalFooter = () => {
   const location = useLocation();
   
@@ -48,7 +33,6 @@ const UniversalFooter = () => {
   }
 
   const { isOverflowOne } = brandContext;
-  safeLog({location:'UniversalFooter.tsx:40',message:'UniversalFooter verificando isOverflowOne',data:{isOverflowOne},hypothesisId:'B'});
   const { settings: msSettings, loading: msLoading, refetch: refetchMsSettings } = useFooterSettings('ms');
   const [footerContent, setFooterContent] = useState<Record<string, string>>({});
   
@@ -79,7 +63,6 @@ const UniversalFooter = () => {
   const getContent = (key: string, fallback: string) => footerContent[key] || fallback;
 
   if (isOverflowOne) {
-    safeLog({location:'UniversalFooter.tsx:43',message:'UniversalFooter renderizando footer overflow-one',data:{isOverflowOne},hypothesisId:'B'});
     // Footer para OverFlow One
     return (
       <footer className="bg-gray-900 text-white">
