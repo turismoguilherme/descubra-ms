@@ -30,11 +30,60 @@ const steps = [
 export default function PartnerOnboardingWizard() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [loadingPartnerData, setLoadingPartnerData] = useState(false);
 
   const progress = (currentStep / steps.length) * 100;
+
+  // Verificar se há parâmetros de URL para retomar o cadastro
+  useEffect(() => {
+    const stepParam = searchParams.get('step');
+    const partnerIdParam = searchParams.get('partner_id');
+    
+    if (stepParam && partnerIdParam) {
+      const step = parseInt(stepParam, 10);
+      if (step >= 1 && step <= 4) {
+        console.log('🔄 [PartnerOnboardingWizard] Retomando cadastro:', { step, partnerId: partnerIdParam });
+        setCurrentStep(step);
+        loadPartnerData(partnerIdParam, step);
+      }
+    }
+  }, [searchParams]);
+
+  const loadPartnerData = async (partnerId: string, targetStep: number) => {
+    setLoadingPartnerData(true);
+    try {
+      const { data: partner, error } = await supabase
+        .from('institutional_partners')
+        .select('id, name, contact_email')
+        .eq('id', partnerId)
+        .single();
+
+      if (error) throw error;
+
+      if (partner) {
+        console.log('✅ [PartnerOnboardingWizard] Dados do parceiro carregados:', partner);
+        setOnboardingData({
+          partnerId: partner.id,
+          partnerName: partner.name,
+          partnerEmail: partner.contact_email,
+        });
+        setCurrentStep(targetStep);
+      }
+    } catch (error) {
+      console.error('❌ [PartnerOnboardingWizard] Erro ao carregar dados do parceiro:', error);
+      toast({
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar os dados do parceiro. Por favor, recomece o cadastro.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingPartnerData(false);
+    }
+  };
 
   const handleStep1Complete = (data: {
     partnerId: string;
@@ -101,6 +150,19 @@ export default function PartnerOnboardingWizard() {
       console.warn('Erro ao enviar email de boas-vindas (não crítico):', error);
     }
   };
+
+  if (loadingPartnerData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-ms-primary-blue mx-auto mb-4" />
+            <p className="text-gray-600">Carregando dados do cadastro...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ export default function PartnerSuccessPage() {
   const [partnerStatus, setPartnerStatus] = useState<'active' | 'pending' | null>(null);
   const sessionId = searchParams.get('session_id');
   const partnerId = searchParams.get('partner_id');
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
     checkPartnerStatus();
@@ -83,6 +84,16 @@ export default function PartnerSuccessPage() {
         // Verificar se o parceiro está ativo: is_active = true e status = 'approved' (ou similar)
         const isActive = data.is_active && (data.status === 'approved' || data.status === 'active');
         setPartnerStatus(isActive ? 'active' : 'pending');
+        
+        // Se o parceiro foi encontrado (mesmo que pendente) e ainda não redirecionou, redirecionar para continuar o cadastro
+        // Redirecionar para o wizard no Step 4 (Stripe Connect) para continuar o onboarding
+        if (!hasRedirected.current && !isActive) {
+          hasRedirected.current = true;
+          console.log('🔄 [PartnerSuccessPage] Redirecionando para continuar cadastro no Step 4');
+          setTimeout(() => {
+            navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${partnerIdToUse}`);
+          }, 2000); // Aguardar 2 segundos para mostrar a mensagem de sucesso
+        }
       } else {
         console.warn('⚠️ [PartnerSuccessPage] Parceiro não encontrado com ID:', partnerIdToUse);
         setPartnerStatus('pending');
@@ -134,18 +145,14 @@ export default function PartnerSuccessPage() {
             <>
               <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
               <CardTitle className="text-2xl font-bold text-gray-800 mb-2">
-                Pagamento em processamento
+                Pagamento recebido!
               </CardTitle>
               <p className="text-gray-600 mb-6">
-                Seu pagamento está sendo processado. Você receberá um email de confirmação em breve.
+                Seu pagamento foi recebido com sucesso. Redirecionando para continuar o cadastro...
               </p>
-              <Button
-                onClick={() => navigate('/descubrams')}
-                variant="outline"
-                className="w-full"
-              >
-                Voltar ao site
-              </Button>
+              <div className="flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-ms-primary-blue" />
+              </div>
             </>
           )}
         </CardContent>
