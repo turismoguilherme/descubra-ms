@@ -46,9 +46,9 @@ CREATE POLICY "Admins can view all term acceptances"
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM public.user_profiles
-      WHERE user_profiles.user_id = auth.uid()
-      AND user_profiles.role IN ('admin', 'master_admin', 'tech')
+      SELECT 1 FROM public.user_roles
+      WHERE user_roles.user_id = auth.uid()
+      AND user_roles.role IN ('admin', 'tech')
     )
   );
 
