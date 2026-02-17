@@ -2,22 +2,37 @@
 -- Tabela: partner_terms_acceptances
 -- Objetivo: Armazenar histórico completo de aceites de termos com PDFs e metadados para segurança jurídica
 
+-- Remover constraint se já existir (caso de execução parcial anterior)
+ALTER TABLE IF EXISTS public.partner_terms_acceptances 
+  DROP CONSTRAINT IF EXISTS partner_terms_acceptances_partner_id_fkey;
+
 -- Criar tabela de aceites de termos
 CREATE TABLE IF NOT EXISTS public.partner_terms_acceptances (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  partner_id UUID NOT NULL REFERENCES public.institutional_partners(id) ON DELETE CASCADE,
+  partner_id UUID NOT NULL,
   terms_version INTEGER NOT NULL,
   pdf_url TEXT,
   ip_address TEXT,
   user_agent TEXT,
   document_hash TEXT NOT NULL,
   signed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
-  -- Constraints
-  CONSTRAINT partner_terms_acceptances_partner_id_fkey FOREIGN KEY (partner_id) 
-    REFERENCES public.institutional_partners(id) ON DELETE CASCADE
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Adicionar foreign key constraint separadamente (se não existir)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'partner_terms_acceptances_partner_id_fkey'
+  ) THEN
+    ALTER TABLE public.partner_terms_acceptances
+      ADD CONSTRAINT partner_terms_acceptances_partner_id_fkey 
+      FOREIGN KEY (partner_id) 
+      REFERENCES public.institutional_partners(id) 
+      ON DELETE CASCADE;
+  END IF;
+END $$;
 
 -- Comentários
 COMMENT ON TABLE public.partner_terms_acceptances IS 'Histórico de aceites de termos de parceria com PDFs e metadados para segurança jurídica';
@@ -39,6 +54,11 @@ CREATE INDEX IF NOT EXISTS idx_partner_terms_acceptances_signed_at
 
 -- RLS Policies
 ALTER TABLE public.partner_terms_acceptances ENABLE ROW LEVEL SECURITY;
+
+-- Remover políticas antigas se existirem (caso de execução parcial anterior)
+DROP POLICY IF EXISTS "Admins can view all term acceptances" ON public.partner_terms_acceptances;
+DROP POLICY IF EXISTS "Partners can view their own term acceptances" ON public.partner_terms_acceptances;
+DROP POLICY IF EXISTS "System can insert term acceptances" ON public.partner_terms_acceptances;
 
 -- Política: Admins podem ver todos os aceites
 CREATE POLICY "Admins can view all term acceptances"
