@@ -203,8 +203,9 @@ serve(async (req) => {
     });
 
     // Criar Checkout Session com split de pagamento
+    // Métodos de pagamento: Cartão, PIX e Boleto (habilitados para Brasil)
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'pix', 'boleto'],
       mode: 'payment',
       customer_email: customerEmail,
       line_items: [

@@ -255,9 +255,10 @@ serve(async (req) => {
     const amountInCents = Math.round(totalAmount * 100);
 
     // Criar sessão de checkout no Stripe
+    // Métodos de pagamento: Cartão, PIX e Boleto (habilitados para Brasil)
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'pix', 'boleto'],
       line_items: [
         {
           price_data: {
