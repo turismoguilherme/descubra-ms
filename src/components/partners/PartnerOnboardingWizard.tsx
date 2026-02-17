@@ -35,6 +35,7 @@ export default function PartnerOnboardingWizard() {
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [loadingPartnerData, setLoadingPartnerData] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
 
   const progress = (currentStep / steps.length) * 100;
 
@@ -42,6 +43,7 @@ export default function PartnerOnboardingWizard() {
   useEffect(() => {
     const stepParam = searchParams.get('step');
     const partnerIdParam = searchParams.get('partner_id');
+    const stripeConnectParam = searchParams.get('stripe_connect');
     
     if (stepParam && partnerIdParam) {
       const step = parseInt(stepParam, 10);
@@ -49,6 +51,17 @@ export default function PartnerOnboardingWizard() {
         console.log('🔄 [PartnerOnboardingWizard] Retomando cadastro:', { step, partnerId: partnerIdParam });
         setCurrentStep(step);
         loadPartnerData(partnerIdParam, step);
+      }
+    }
+    
+    // Verificar retorno do Stripe Connect
+    if (stripeConnectParam === 'success') {
+      const partnerIdToCheck = partnerIdParam || onboardingData.partnerId;
+      if (partnerIdToCheck) {
+        // Aguardar um pouco para dar tempo do webhook atualizar o banco
+        setTimeout(() => {
+          checkStripeStatus(partnerIdToCheck);
+        }, 2000);
       }
     }
   }, [searchParams]);
@@ -72,6 +85,11 @@ export default function PartnerOnboardingWizard() {
           partnerEmail: partner.contact_email,
         });
         setCurrentStep(targetStep);
+        
+        // Verificar status do Stripe Connect se estiver no step 4
+        if (targetStep === 4) {
+          checkStripeStatus(partnerId);
+        }
       }
     } catch (error) {
       console.error('❌ [PartnerOnboardingWizard] Erro ao carregar dados do parceiro:', error);
@@ -82,6 +100,35 @@ export default function PartnerOnboardingWizard() {
       });
     } finally {
       setLoadingPartnerData(false);
+    }
+  };
+
+  // Verificar status real do Stripe Connect no banco
+  const checkStripeStatus = async (partnerId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('institutional_partners')
+        .select('stripe_account_id, stripe_connect_status')
+        .eq('id', partnerId)
+        .single();
+
+      if (error) {
+        console.warn('⚠️ [PartnerOnboardingWizard] Erro ao verificar status do Stripe:', error);
+        return;
+      }
+
+      // Só é "conectado" se tem account_id E status é 'connected'
+      const isConnected = !!data?.stripe_account_id && data?.stripe_connect_status === 'connected';
+      console.log('🔍 [PartnerOnboardingWizard] Status do Stripe Connect:', {
+        hasAccountId: !!data?.stripe_account_id,
+        status: data?.stripe_connect_status,
+        isConnected,
+      });
+      
+      setStripeConnected(isConnected);
+    } catch (error) {
+      console.error('❌ [PartnerOnboardingWizard] Erro ao verificar Stripe:', error);
+      setStripeConnected(false);
     }
   };
 
@@ -293,7 +340,7 @@ export default function PartnerOnboardingWizard() {
         isOpen={showWelcomeModal}
         onClose={handleCloseWelcomeModal}
         partnerName={onboardingData.partnerName || 'Parceiro'}
-        hasStripeConnected={currentStep === 4}
+        hasStripeConnected={stripeConnected}
       />
     </div>
   );

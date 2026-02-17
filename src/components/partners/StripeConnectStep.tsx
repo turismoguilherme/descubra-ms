@@ -82,16 +82,15 @@ export default function StripeConnectStep({
           // Continuar mesmo se falhar
         }
         
-        // Verificar status atualizado no banco
-        checkConnectionStatus();
+        // Verificar status atualizado no banco (com delay para dar tempo do webhook)
+        setTimeout(() => {
+          checkConnectionStatus();
+        }, 2000);
       };
 
       verifyConnection();
       
-      toast({
-        title: '✅ Conta Stripe conectada!',
-        description: 'Você está pronto para receber pagamentos.',
-      });
+      // Toast será mostrado após verificação do status
     } else if (stripeSuccess === 'error') {
       window.history.replaceState({}, '', window.location.pathname);
       toast({
@@ -119,6 +118,18 @@ export default function StripeConnectStep({
       if (data?.stripe_account_id && data?.stripe_connect_status === 'connected') {
         setIsConnected(true);
         setStripeAccountId(data.stripe_account_id);
+        
+        // Se acabou de conectar (veio do callback), mostrar toast
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('stripe_connect') === 'success') {
+          toast({
+            title: '✅ Conta Stripe conectada!',
+            description: 'Você está pronto para receber pagamentos.',
+          });
+        }
+      } else {
+        // Garantir que isConnected seja false se não estiver realmente conectado
+        setIsConnected(false);
       }
     } catch (error) {
       console.error('Erro:', error);
