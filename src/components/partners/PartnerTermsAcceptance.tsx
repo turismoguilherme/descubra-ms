@@ -95,7 +95,7 @@ export default function PartnerTermsAcceptance({
         // Continuar mesmo se o PDF falhar
       }
 
-      // Salvar aceite do termo (pode falhar silenciosamente se migration não foi aplicada)
+      // Salvar aceite do termo
       const result = await savePartnerTermsAcceptance(
         partnerId,
         partnerName,
@@ -104,6 +104,18 @@ export default function PartnerTermsAcceptance({
         pdfUrl,
         ipAddress
       );
+
+      // Verificar se PDF foi salvo
+      if (!result.pdfSaved) {
+        console.warn('⚠️ [PartnerTermsAcceptance] PDF não foi salvo. Verifique configuração do bucket "documents" no Supabase.');
+        // Notificar admin (será implementado no admin)
+        toast({
+          title: 'Aviso',
+          description: 'O termo foi aceito, mas houve um problema ao salvar o PDF. Entre em contato com o suporte se necessário.',
+          variant: 'destructive',
+          duration: 5000,
+        });
+      }
 
       // Se houver erro mas não for crítico (ex: campos não existem), continuar
       if (!result.success && result.error?.includes('column') && result.error?.includes('not found')) {

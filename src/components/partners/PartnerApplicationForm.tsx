@@ -77,20 +77,22 @@ const createPartnerSchema = (includePassword: boolean) => {
     }).refine((data) => {
       // CPF obrigatório para pessoa física
       if (data.person_type === 'pf') {
-        return data.cpf && data.cpf.length >= 11;
+        const cpfClean = data.cpf?.replace(/\D/g, '') || '';
+        return cpfClean.length >= 11;
       }
       return true;
     }, {
-      message: 'CPF é obrigatório para pessoa física',
+      message: 'CPF é obrigatório para pessoa física (mínimo 11 dígitos)',
       path: ['cpf'],
     }).refine((data) => {
       // CNPJ obrigatório para pessoa jurídica
       if (data.person_type === 'pj') {
-        return data.cnpj && data.cnpj.length >= 14;
+        const cnpjClean = data.cnpj?.replace(/\D/g, '') || '';
+        return cnpjClean.length >= 14;
       }
       return true;
     }, {
-      message: 'CNPJ é obrigatório para pessoa jurídica',
+      message: 'CNPJ é obrigatório para pessoa jurídica (mínimo 14 dígitos)',
       path: ['cnpj'],
     });
   }
@@ -99,20 +101,22 @@ const createPartnerSchema = (includePassword: boolean) => {
   return baseSchema.refine((data) => {
     // CPF obrigatório para pessoa física
     if (data.person_type === 'pf') {
-      return data.cpf && data.cpf.length >= 11;
+      const cpfClean = data.cpf?.replace(/\D/g, '') || '';
+      return cpfClean.length >= 11;
     }
     return true;
   }, {
-    message: 'CPF é obrigatório para pessoa física',
+    message: 'CPF é obrigatório para pessoa física (mínimo 11 dígitos)',
     path: ['cpf'],
   }).refine((data) => {
     // CNPJ obrigatório para pessoa jurídica
     if (data.person_type === 'pj') {
-      return data.cnpj && data.cnpj.length >= 14;
+      const cnpjClean = data.cnpj?.replace(/\D/g, '') || '';
+      return cnpjClean.length >= 14;
     }
     return true;
   }, {
-    message: 'CNPJ é obrigatório para pessoa jurídica',
+    message: 'CNPJ é obrigatório para pessoa jurídica (mínimo 14 dígitos)',
     path: ['cnpj'],
   });
 };
@@ -153,6 +157,8 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  console.log('📋 [PartnerApplicationForm] Componente renderizado', { includePassword, hasOnComplete: !!onComplete });
+
   const partnerSchema = createPartnerSchema(includePassword);
 
   const {
@@ -170,6 +176,66 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
       partner_type: '', // Inicializar vazio para forçar seleção
     },
   });
+
+  // Chave para localStorage
+  const STORAGE_KEY = 'partner_application_form_progress';
+
+  // Carregar dados salvos ao montar o componente
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        console.log('📥 [PartnerApplicationForm] Carregando dados salvos do localStorage');
+        
+        // Restaurar campos (exceto senhas por segurança)
+        Object.keys(parsed).forEach((key) => {
+          if (key !== 'password' && key !== 'confirmPassword' && parsed[key] !== undefined && parsed[key] !== '') {
+            setValue(key as any, parsed[key], { shouldValidate: false });
+          }
+        });
+        
+        toast({
+          title: 'Dados restaurados',
+          description: 'Seus dados foram restaurados automaticamente.',
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar dados salvos:', error);
+    }
+  }, []);
+
+  // Salvar progresso automaticamente (com debounce)
+  useEffect(() => {
+    const subscription = watch((data) => {
+      // Debounce: aguardar 1 segundo após última mudança
+      const timeoutId = setTimeout(() => {
+        try {
+          // Não salvar senhas por segurança
+          const dataToSave = { ...data };
+          delete dataToSave.password;
+          delete dataToSave.confirmPassword;
+          
+          // Salvar apenas se houver dados relevantes
+          const hasRelevantData = Object.values(dataToSave).some(
+            (value) => value !== undefined && value !== null && value !== ''
+          );
+          
+          if (hasRelevantData) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            console.log('💾 [PartnerApplicationForm] Progresso salvo automaticamente');
+          }
+        } catch (error) {
+          console.warn('Erro ao salvar progresso:', error);
+        }
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   // Garantir que person_type seja setado inicialmente
   useEffect(() => {
@@ -238,14 +304,17 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   };
 
   const onSubmit = async (data: FormData) => {
+    console.log('🚀 [PartnerApplicationForm] onSubmit chamado', { data, includePassword, hasOnComplete: !!onComplete });
     
     setIsSubmitting(true);
     setUploadProgress(0);
 
     try {
+      console.log('📝 [PartnerApplicationForm] Iniciando processo de cadastro...');
       // 1. Se includePassword, criar conta no Supabase Auth primeiro
       let authUserId: string | null = null;
       if (includePassword && data.password) {
+        console.log('🔐 [PartnerApplicationForm] Criando conta no Supabase Auth...');
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: data.contact_email,
           password: data.password,
@@ -255,54 +324,104 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
         });
 
         if (authError) {
-          // Se email já existe, tentar fazer login para obter o user_id
-          if (authError.message.includes('already registered')) {
-            const { data: signInData } = await supabase.auth.signInWithPassword({
-              email: data.contact_email,
-              password: data.password,
-            });
-            authUserId = signInData?.user?.id || null;
+          console.warn('⚠️ [PartnerApplicationForm] Erro ao criar conta:', authError);
+          // Se email já existe, verificar se já existe um parceiro com esse email
+          if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
+            console.log('🔄 [PartnerApplicationForm] Email já existe, verificando se já existe parceiro...');
+            
+            // Verificar se já existe um parceiro com esse email
+            const { data: existingPartner, error: checkError } = await supabase
+              .from('institutional_partners')
+              .select('id, name, contact_email')
+              .eq('contact_email', data.contact_email)
+              .maybeSingle();
+            
+            if (existingPartner) {
+              // Parceiro já existe com esse email
+              throw new Error('Já existe uma solicitação de parceria com este email. Entre em contato conosco se precisar de ajuda.');
+            }
+            
+            // Email existe no auth mas não há parceiro - continuar sem authUserId
+            // O parceiro será criado sem autenticação (authUserId = null)
+            console.log('ℹ️ [PartnerApplicationForm] Email existe no auth mas não há parceiro. Continuando sem autenticação.');
+            authUserId = null;
           } else {
             throw new Error(`Erro ao criar conta: ${authError.message}`);
           }
         } else {
           authUserId = authData?.user?.id || null;
+          console.log('✅ [PartnerApplicationForm] Conta criada com sucesso');
         }
       }
 
       // 2. Criar registro do parceiro
-      const { data: partner, error: insertError } = await supabase
-        .from('institutional_partners')
-        .insert([{
-          name: data.name,
-          description: data.description,
-          partner_type: data.partner_type,
-          person_type: data.person_type,
-          cpf: data.person_type === 'pf' ? data.cpf : null,
-          cnpj: data.person_type === 'pj' ? data.cnpj : null,
-          website_url: data.website_url || null,
-          contact_email: data.contact_email,
-          contact_phone: data.contact_phone || null,
-          address: data.address || null,
-          youtube_url: data.youtube_url || null,
-          status: 'pending',
-          is_active: false,
-          created_by: authUserId,
-          stripe_connect_status: 'pending',
-        }])
-        .select()
-        .single();
+      console.log('💾 [PartnerApplicationForm] Criando registro do parceiro...');
+      const partnerData = {
+        name: data.name,
+        description: data.description,
+        partner_type: data.partner_type,
+        person_type: data.person_type,
+        cpf: data.person_type === 'pf' ? data.cpf : null,
+        cnpj: data.person_type === 'pj' ? data.cnpj : null,
+        website_url: data.website_url || null,
+        contact_email: data.contact_email,
+        contact_phone: data.contact_phone || null,
+        address: data.address || null,
+        youtube_url: data.youtube_url || null,
+        status: 'pending',
+        is_active: false,
+        created_by: authUserId,
+        stripe_connect_status: 'pending',
+      };
+      console.log('📦 [PartnerApplicationForm] Dados do parceiro:', partnerData);
+      
+      // Usar função stored procedure para bypassar RLS
+      const { data: functionResult, error: functionError } = await supabase.rpc('insert_partner_application', {
+        p_name: partnerData.name,
+        p_description: partnerData.description,
+        p_partner_type: partnerData.partner_type,
+        p_person_type: partnerData.person_type,
+        p_cpf: partnerData.cpf,
+        p_cnpj: partnerData.cnpj,
+        p_website_url: partnerData.website_url,
+        p_contact_email: partnerData.contact_email,
+        p_contact_phone: partnerData.contact_phone,
+        p_address: partnerData.address,
+        p_youtube_url: partnerData.youtube_url,
+        p_created_by: partnerData.created_by,
+      });
+
+      // Converter resultado da função para formato esperado
+      const partner = functionResult && Array.isArray(functionResult) && functionResult.length > 0 ? {
+        id: functionResult[0].partner_id,
+        name: functionResult[0].partner_name,
+        contact_email: functionResult[0].partner_email,
+      } : null;
+      const insertError = functionError;
 
       if (insertError) {
+        console.error('❌ [PartnerApplicationForm] Erro ao inserir parceiro:', insertError);
+        console.error('❌ [PartnerApplicationForm] Erro completo:', JSON.stringify(insertError, null, 2));
         throw new Error(insertError.message);
       }
 
+      if (!partner) {
+        console.error('❌ [PartnerApplicationForm] Insert retornou sem erro mas também sem partner!');
+        console.error('❌ [PartnerApplicationForm] insertError:', insertError);
+        console.error('❌ [PartnerApplicationForm] partner:', partner);
+        throw new Error('Falha ao criar parceiro: nenhum dado retornado');
+      }
+
+      console.log('✅ [PartnerApplicationForm] Parceiro criado com sucesso:', partner?.id);
+
       // 3. Upload das fotos (se houver)
       if (photos.length > 0 && partner) {
+        console.log(`📸 [PartnerApplicationForm] Fazendo upload de ${photos.length} foto(s)...`);
         const photoUrls = await uploadPhotosToStorage(partner.id);
         
         // Atualizar parceiro com as URLs das fotos
         if (photoUrls.length > 0) {
+          console.log('🖼️ [PartnerApplicationForm] Atualizando parceiro com URLs das fotos...');
           await supabase
             .from('institutional_partners')
             .update({ 
@@ -310,17 +429,28 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
               gallery_images: photoUrls // Todas as fotos na galeria
             })
             .eq('id', partner.id);
+          console.log('✅ [PartnerApplicationForm] Fotos atualizadas com sucesso');
         }
+      }
+
+      // Limpar dados salvos após submissão bem-sucedida
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('🧹 [PartnerApplicationForm] Dados salvos limpos após submissão bem-sucedida');
+      } catch (error) {
+        console.warn('Erro ao limpar dados salvos:', error);
       }
 
       // 4. Se onComplete existe (wizard), chamar callback
       if (onComplete && includePassword) {
+        console.log('🎯 [PartnerApplicationForm] Chamando callback onComplete do wizard...');
         onComplete({
           partnerId: partner.id,
           partnerName: data.name,
           partnerEmail: data.contact_email,
           password: data.password || '',
         });
+        console.log('✅ [PartnerApplicationForm] Callback executado, retornando...');
         return; // Não mostrar tela de sucesso, wizard continua
       }
 
@@ -329,6 +459,13 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
       reset();
       setPhotos([]);
       setPhotosPreviews([]);
+      
+      // Limpar dados salvos também no comportamento padrão
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (error) {
+        console.warn('Erro ao limpar dados salvos:', error);
+      }
 
       toast({
         title: '🎉 Solicitação enviada!',
@@ -337,13 +474,16 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao enviar solicitação:', err);
+      console.error('❌ [PartnerApplicationForm] Erro ao enviar solicitação:', err);
+      console.error('❌ [PartnerApplicationForm] Stack trace:', err.stack);
+      console.error('❌ [PartnerApplicationForm] Erro completo:', error);
       toast({
         title: 'Erro ao enviar',
         description: err.message || 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
+      console.log('🏁 [PartnerApplicationForm] Finalizando processo...');
       setIsSubmitting(false);
       setUploadProgress(0);
     }
@@ -373,8 +513,21 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
     );
   }
 
+  const handleFormSubmit = handleSubmit(
+    onSubmit,
+    (errors) => {
+      console.error('❌ [PartnerApplicationForm] Erros de validação:', errors);
+      console.error('❌ [PartnerApplicationForm] Campos com erro:', Object.keys(errors));
+      toast({
+        title: 'Erro de validação',
+        description: 'Por favor, verifique os campos marcados em vermelho.',
+        variant: 'destructive',
+      });
+    }
+  );
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleFormSubmit} className="space-y-8">
       {/* Dados da Empresa */}
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-ms-primary-blue">

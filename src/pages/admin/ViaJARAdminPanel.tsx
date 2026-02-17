@@ -24,6 +24,7 @@ const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersM
 const WhatsAppSettingsManager = lazy(() => import('@/components/admin/descubra_ms/WhatsAppSettingsManager'));
 const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
 const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
+const PartnerTermsAcceptances = lazy(() => import('@/components/admin/descubra_ms/PartnerTermsAcceptances'));
 const PartnerSettingsManager = lazy(() => import('@/components/admin/PartnerSettingsManager'));
 const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
@@ -157,6 +158,11 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/partners" element={
               <Suspense fallback={<LoadingFallback />}>
                 <PartnersManagement />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/partner-terms" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PartnerTermsAcceptances />
               </Suspense>
             } />
             <Route path="descubra-ms/partner-settings" element={

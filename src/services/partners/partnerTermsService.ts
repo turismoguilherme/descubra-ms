@@ -191,13 +191,14 @@ export async function generatePartnerTermsPDF(
 
     // Se o bucket 'documents' não existir, tentar criar ou usar outro bucket
     if (uploadError && uploadError.message.includes('Bucket not found')) {
-      console.warn('Bucket "documents" não encontrado. PDF não será salvo, mas o processo continua.');
+      console.error('❌ [partnerTermsService] Bucket "documents" não encontrado no Supabase Storage. O PDF não será salvo.');
+      console.error('❌ [partnerTermsService] Ação necessária: Criar bucket "documents" no Supabase Storage com permissões públicas para leitura.');
       // Retornar vazio - o PDF não será salvo, mas o processo de aceite continua
       return '';
     }
 
     if (uploadError) {
-      console.warn('Erro ao fazer upload do PDF:', uploadError);
+      console.error('❌ [partnerTermsService] Erro ao fazer upload do PDF:', uploadError);
       // Retornar URL vazia se falhar, mas continuar o processo
       return '';
     }
@@ -224,7 +225,7 @@ export async function savePartnerTermsAcceptance(
   termsVersion: number,
   pdfUrl?: string,
   ipAddress?: string | null
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; pdfSaved?: boolean }> {
   try {
     // Gerar hash do documento
     const policy = await policyService.getPublishedPolicy('partner_terms', 'descubra_ms');
@@ -232,46 +233,79 @@ export async function savePartnerTermsAcceptance(
     const termText = generateTermText(partnerName, partnerEmail, termsContent, termsVersion);
     const documentHash = generateDocumentHash(termText);
 
-    // Atualizar parceiro com aceite do termo
-    // Tentar atualizar campos de termo (pode falhar se migration não foi aplicada)
+    // Obter user agent do navegador
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null;
+
+    // Salvar na nova tabela partner_terms_acceptances
+    const { data: acceptanceData, error: acceptanceError } = await supabase
+      .from('partner_terms_acceptances')
+      .insert({
+        partner_id: partnerId,
+        terms_version: termsVersion,
+        pdf_url: pdfUrl || null,
+        ip_address: ipAddress || null,
+        user_agent: userAgent || null,
+        document_hash: documentHash,
+        signed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (acceptanceError) {
+      // Se a tabela não existir ainda (migration não aplicada), logar aviso mas continuar
+      if (acceptanceError.code === '42P01' || acceptanceError.message?.includes('does not exist')) {
+        console.warn('⚠️ [partnerTermsService] Tabela partner_terms_acceptances não existe. A migration pode não ter sido aplicada. Continuando sem salvar histórico detalhado.', acceptanceError);
+      } else {
+        console.error('❌ [partnerTermsService] Erro ao salvar aceite na tabela:', acceptanceError);
+        // Continuar mesmo assim - não bloquear o processo
+      }
+    } else {
+      console.log('✅ [partnerTermsService] Aceite salvo na tabela partner_terms_acceptances:', acceptanceData?.id);
+    }
+
+    // Atualizar parceiro com aceite do termo (campos opcionais)
     const updateFields: any = {
       updated_at: new Date().toISOString(),
     };
     
-    // Não adicionar campos de termo se não existirem no banco
-    // O erro PGRST204 indica que a coluna não está no schema cache
-    // Remover esses campos do updateFields para evitar erro
+    // Tentar atualizar campos de termo se existirem (pode falhar silenciosamente)
+    try {
+      updateFields.terms_accepted_at = new Date().toISOString();
+      updateFields.terms_accepted_version = termsVersion;
+    } catch {
+      // Ignorar se campos não existirem
+    }
     
-    // Remover terms_accepted_at e terms_accepted_version se não existirem
-    // (será tratado silenciosamente se a migration não foi aplicada)
-    delete updateFields.terms_accepted_at;
-    delete updateFields.terms_accepted_version;
-    
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('institutional_partners')
       .update(updateFields)
       .eq('id', partnerId);
 
-    // Se erro for por coluna não encontrada (PGRST204 ou similar), continuar (migration não aplicada)
-    if (error) {
-      if (error.code === 'PGRST204' || 
-          (error.message?.includes("column") && error.message?.includes("not found")) ||
-          error.message?.includes("schema cache")) {
-        console.warn('Campos de termo não disponíveis (migration não aplicada?). Continuando...', error);
-        // Retornar sucesso mesmo assim - o processo pode continuar
-        return { success: true };
+    // Se erro for por coluna não encontrada, continuar (migration não aplicada)
+    if (updateError) {
+      if (updateError.code === 'PGRST204' || 
+          (updateError.message?.includes("column") && updateError.message?.includes("not found")) ||
+          updateError.message?.includes("schema cache")) {
+        console.warn('⚠️ [partnerTermsService] Campos de termo não disponíveis na tabela institutional_partners. Continuando...');
+      } else {
+        console.error('❌ [partnerTermsService] Erro ao atualizar parceiro:', updateError);
       }
-      console.error('Erro ao salvar aceite do termo:', error);
-      return { success: false, error: error.message };
     }
 
-    // TODO: Salvar PDF URL e metadados da assinatura em tabela separada se necessário
-    // Por enquanto, apenas salvar no campo terms_accepted_at
+    // Verificar se PDF foi salvo
+    const pdfSaved = !!pdfUrl && pdfUrl.trim() !== '';
+    
+    if (!pdfSaved) {
+      console.warn('⚠️ [partnerTermsService] PDF não foi salvo. Verifique se o bucket "documents" existe no Supabase Storage.');
+    }
 
-    return { success: true };
+    return { 
+      success: true, 
+      pdfSaved 
+    };
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error('Erro ao salvar aceite do termo:', err);
+    console.error('❌ [partnerTermsService] Erro inesperado ao salvar aceite do termo:', err);
     return { success: false, error: err.message };
   }
 }

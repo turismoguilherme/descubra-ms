@@ -15,6 +15,8 @@ const getAllowedOrigins = (): string[] => {
     // Produção
     'https://www.viajartur.com',
     'https://viajartur.com',
+    'https://descubrams.com',
+    'https://www.descubrams.com',
     'https://descubra-ms.vercel.app',
     'https://*.vercel.app',
     // Desenvolvimento - aceita portas dinâmicas
