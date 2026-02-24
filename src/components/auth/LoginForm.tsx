@@ -32,7 +32,7 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   
   // Tentar obter logo do BrandContext, com fallback
-  let logoUrl = "/images/logo-descubra-ms.png?v=3";
+  let logoUrl = "/images/logo-descubra-ms.png";
   let logoAlt = "Descubra Mato Grosso do Sul - Plataforma de Turismo";
   try {
     const brand = useBrand();
@@ -145,7 +145,7 @@ const LoginForm = () => {
             className="h-[60px] w-auto" 
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = "/images/logo-descubra-ms.png?v=3";
+              target.src = "/images/logo-descubra-ms.png";
             }}
           />
         </div>

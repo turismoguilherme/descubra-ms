@@ -180,7 +180,7 @@ const UniversalFooter = () => {
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start mb-4">
               {(() => {
-                const logoUrl = brandContext && brandContext.isMS ? brandContext.config.logo.src : "/images/logo-descubra-ms.png?v=3";
+                const logoUrl = brandContext && brandContext.isMS ? brandContext.config.logo.src : "/images/logo-descubra-ms.png";
                 const logoAlt = brandContext && brandContext.isMS ? brandContext.config.logo.alt : "Descubra Mato Grosso do Sul";
                 // Adicionar cache busting se estiver em /eventos
                 const finalLogoUrl = (location.pathname === '/eventos' && logoUrl.includes('supabase.co') && !logoUrl.includes('?t='))
@@ -197,7 +197,7 @@ const UniversalFooter = () => {
                     }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/images/logo-descubra-ms.png?v=3";
+                      target.src = "/images/logo-descubra-ms.png";
                     }}
                   />
                 );

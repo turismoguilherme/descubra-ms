@@ -273,7 +273,7 @@ const AuthPage = () => {
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             if (!target.src.includes('logo-descubra-ms.png')) {
-              target.src = "/images/logo-descubra-ms.png?v=3";
+              target.src = "/images/logo-descubra-ms.png";
             }
           }}
         />

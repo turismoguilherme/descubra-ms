@@ -15,7 +15,7 @@ const Navbar = () => {
   const { t } = useTranslation('common');
   
   // Tentar obter logo do BrandContext, com fallback
-  let logoUrl = "/images/logo-descubra-ms.png?v=3";
+  let logoUrl = "/images/logo-descubra-ms.png";
   let logoAlt = "Descubra Mato Grosso do Sul";
   try {
     const brand = useBrand();
@@ -96,7 +96,7 @@ const Navbar = () => {
                 loading="eager"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = "/images/logo-descubra-ms.png?v=3";
+                  target.src = "/images/logo-descubra-ms.png";
                 }}
               />
             </div>

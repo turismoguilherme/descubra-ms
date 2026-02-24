@@ -30,7 +30,7 @@ export const useMultiTenantSimple = () => {
         setTenantConfig({
           code: 'MS',
           name: 'Mato Grosso do Sul',
-          logo_url: '/images/logo-descubra-ms.png?v=3',
+          logo_url: '/images/logo-descubra-ms.png',
           is_active: true
         });
       }
