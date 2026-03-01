@@ -18,8 +18,8 @@ export default defineConfig(({ mode }) => {
     // Plugin para normalizar barras invertidas em desenvolvimento
     mode === 'development' && {
       name: 'normalize-backslash',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
+      configureServer(server: any) {
+        server.middlewares.use((req: any, res: any, next: any) => {
           if (req.url && req.url.includes('\\')) {
             const normalizedUrl = req.url.replace(/\\/g, '/');
             // #region agent log
