@@ -49,7 +49,7 @@ const TravelTechHero = () => {
 
             <div className="flex justify-center lg:justify-start">
               <Link to="/viajar/login">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 h-14 text-lg rounded-lg shadow-lg">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 h-14 text-lg rounded-lg shadow-lg">
                   {getContent('viajar_hero_cta_primary', 'Acessar Plataforma')}
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
