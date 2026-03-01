@@ -4155,6 +4155,7 @@ export type Database = {
           status: string
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
+          stripe_processing_fee: number | null
           stripe_refund_id: string | null
           total_amount: number
           updated_at: string
@@ -4193,6 +4194,7 @@ export type Database = {
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_processing_fee?: number | null
           stripe_refund_id?: string | null
           total_amount?: number
           updated_at?: string
@@ -4231,6 +4233,7 @@ export type Database = {
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_processing_fee?: number | null
           stripe_refund_id?: string | null
           total_amount?: number
           updated_at?: string
@@ -4249,6 +4252,50 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "partner_pricing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_terms_acceptances: {
+        Row: {
+          created_at: string
+          document_hash: string
+          id: string
+          ip_address: string | null
+          partner_id: string
+          pdf_url: string | null
+          signed_at: string
+          terms_version: number
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_hash: string
+          id?: string
+          ip_address?: string | null
+          partner_id: string
+          pdf_url?: string | null
+          signed_at?: string
+          terms_version: number
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_hash?: string
+          id?: string
+          ip_address?: string | null
+          partner_id?: string
+          pdf_url?: string | null
+          signed_at?: string
+          terms_version?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_terms_acceptances_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners"
             referencedColumns: ["id"]
           },
         ]
@@ -4636,6 +4683,7 @@ export type Database = {
           reservation_id: string
           status: string
           stripe_checkout_session_id: string | null
+          stripe_fee_deducted: number | null
           stripe_payment_intent_id: string | null
           stripe_refund_id: string | null
           total_amount: number
@@ -4656,6 +4704,7 @@ export type Database = {
           reservation_id: string
           status?: string
           stripe_checkout_session_id?: string | null
+          stripe_fee_deducted?: number | null
           stripe_payment_intent_id?: string | null
           stripe_refund_id?: string | null
           total_amount: number
@@ -4676,6 +4725,7 @@ export type Database = {
           reservation_id?: string
           status?: string
           stripe_checkout_session_id?: string | null
+          stripe_fee_deducted?: number | null
           stripe_payment_intent_id?: string | null
           stripe_refund_id?: string | null
           total_amount?: number
@@ -5763,6 +5813,7 @@ export type Database = {
           error_message: string | null
           id: string
           ip_address: unknown
+          metadata: Json | null
           success: boolean
           user_agent: string | null
           user_id: string | null
@@ -5773,6 +5824,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           ip_address?: unknown
+          metadata?: Json | null
           success: boolean
           user_agent?: string | null
           user_id?: string | null
@@ -5783,6 +5835,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           ip_address?: unknown
+          metadata?: Json | null
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
@@ -7191,6 +7244,27 @@ export type Database = {
       increment_koda_cache_usage: {
         Args: { cache_id: string }
         Returns: undefined
+      }
+      insert_partner_application: {
+        Args: {
+          p_address: string
+          p_cnpj: string
+          p_contact_email: string
+          p_contact_phone: string
+          p_cpf: string
+          p_created_by: string
+          p_description: string
+          p_name: string
+          p_partner_type: string
+          p_person_type: string
+          p_website_url: string
+          p_youtube_url: string
+        }
+        Returns: {
+          partner_email: string
+          partner_id: string
+          partner_name: string
+        }[]
       }
       is_admin_user: { Args: { check_user_id: string }; Returns: boolean }
       is_manager: { Args: { check_user_id: string }; Returns: boolean }
