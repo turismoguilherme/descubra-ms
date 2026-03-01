@@ -58,7 +58,7 @@ const TravelTechHero = () => {
           </div>
 
           {/* Lado direito - Robô */}
-          <div className="flex-1 w-full max-w-lg lg:max-w-xl">
+          <div className="flex-1 w-full max-w-lg lg:max-w-2xl">
             <TravelTechRobot />
           </div>
         </div>
