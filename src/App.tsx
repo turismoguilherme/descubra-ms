@@ -155,14 +155,12 @@ function AppRoutes() {
   const { shouldShowMSContent, shouldShowViajarContent, currentDomain } = useDomainValidation();
   const location = useLocation();
 
-  // Lógica: mostrar conteúdo baseado no domínio E no path (para permitir testar MS em localhost)
-  // Em produção (descubrams.com), sempre mostrar MS
-  // Em localhost, mostrar MS se o path começar com /descubrams
+  // Lógica: mostrar conteúdo baseado no domínio E no path
+  // Se o path começar com /descubrams, sempre mostrar MS (funciona em qualquer domínio/preview)
   const showMS = currentDomain === 'descubrams.com' || 
-                 (currentDomain === 'localhost' && location.pathname.startsWith('/descubrams'));
+                 location.pathname.startsWith('/descubrams');
   const showViajar = currentDomain === 'viajartur.com' || 
-                     (currentDomain === 'localhost' && !location.pathname.startsWith('/descubrams')) ||
-                     (!showMS && currentDomain !== 'descubrams.com' && currentDomain !== 'localhost');
+                     !location.pathname.startsWith('/descubrams');
 
   return (
     <BrandProvider>

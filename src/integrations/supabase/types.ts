@@ -5691,7 +5691,7 @@ export type Database = {
           description: string | null
           difficulty: string | null
           distance_km: number | null
-          estimated_duration: unknown
+          estimated_duration: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -5711,7 +5711,7 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           distance_km?: number | null
-          estimated_duration?: unknown
+          estimated_duration?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -5731,7 +5731,7 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           distance_km?: number | null
-          estimated_duration?: unknown
+          estimated_duration?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null

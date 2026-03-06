@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
-import { MapPin, ArrowRight, Globe } from "lucide-react";
-import { touristRegions2025 } from "@/data/touristRegions2025";
+import { MapPin, ArrowRight, Globe, Loader2 } from "lucide-react";
+import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { useTranslation } from "react-i18next";
 
 const RegioesTuristicasSection = () => {
   const { t } = useTranslation('pages');
+  const { regions, loading } = useTouristRegions();
   
-  // Pegar todas as regiões (ou as últimas 6 se houver muitas)
-  const regioes = touristRegions2025.slice(4, 10);
+  // Pegar regiões a partir do índice 4 (ou as últimas 6 se houver muitas)
+  const regioes = regions.slice(4, 10);
 
   return (
     <section className="py-24 bg-gradient-to-br from-blue-50/30 via-white to-green-50/30">
