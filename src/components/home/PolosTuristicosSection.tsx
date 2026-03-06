@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, ArrowRight, Compass, Loader2 } from "lucide-react";
-import { touristRegions2025 } from "@/data/touristRegions2025";
+import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { useTranslation } from "react-i18next";
 
 const PolosTuristicosSection = () => {
   const { t } = useTranslation('pages');
-  const [loading, setLoading] = useState(false);
+  const { regions, loading } = useTouristRegions();
 
   // Pegar as primeiras 4 regiões como "polos turísticos"
-  const polos = touristRegions2025.slice(0, 4);
+  const polos = regions.slice(0, 4);
 
   return (
     <section className="py-24 bg-gradient-to-br from-white via-green-50/30 to-blue-50/30">
