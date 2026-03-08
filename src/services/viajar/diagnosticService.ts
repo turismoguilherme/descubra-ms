@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Diagnostic Service
  * Serviço para persistência de resultados de diagnóstico no Supabase

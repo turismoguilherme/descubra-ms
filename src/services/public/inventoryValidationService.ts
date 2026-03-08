@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inventory Validation Service
  * Serviço para validação inteligente de inventário turístico

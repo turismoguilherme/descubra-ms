@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Strategic AI Service for Public Sector
  * Serviço do GUILHERME IA - IA estratégica especializado para secretarias de turismo

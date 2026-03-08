@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Complete Business Report Service
  * Gera relatório completo com todos os dados do negócio

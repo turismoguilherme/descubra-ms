@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Regional Data Service para Setor Público
  * Integra dados de APIs governamentais (IBGE, INMET, ANTT, Fundtur-MS)

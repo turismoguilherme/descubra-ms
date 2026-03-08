@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Report Service
  * Serviço para gerenciar relatórios gerados

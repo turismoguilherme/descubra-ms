@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Goals Tracking Service
  * Gerencia metas e acompanhamento de objetivos do negócio

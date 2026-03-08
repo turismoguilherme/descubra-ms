@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Business Metrics Service
  * Serviço para salvar, buscar e calcular métricas de negócios

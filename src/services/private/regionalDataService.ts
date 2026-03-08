@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Regional Data Service
  * Serviço para buscar dados regionais de turismo

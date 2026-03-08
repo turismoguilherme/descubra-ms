@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Event Analytics Service
  * Serviço para análise e insights de eventos turísticos

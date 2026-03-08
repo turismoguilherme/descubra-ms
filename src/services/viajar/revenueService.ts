@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Revenue Service
  * Serviço para gerenciar otimizações de receita

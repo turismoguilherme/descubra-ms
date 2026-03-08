@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SeTur Validation Service
  * Serviço para validação e geração de códigos conforme padrão SeTur

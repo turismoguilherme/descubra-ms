@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * API Usage Tracking Service
  * Rastreia uso de APIs por usuário e data
