@@ -223,24 +223,21 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     if (!svgEl) return;
 
     const activeSlug = selectedRegion || hoveredRegion;
-    const groups = svgEl.querySelectorAll('g[data-region]');
+    // Selecionar TODOS os elementos com data-region (paths individuais + grupos)
+    const regionElements = svgEl.querySelectorAll('[data-region]');
 
-    groups.forEach(g => {
-      const gEl = g as SVGGElement;
-      const regionSlug = g.getAttribute('data-region');
-      const isSpanning = g.getAttribute('data-spanning') === 'true';
+    regionElements.forEach(el => {
+      const svgEl2 = el as SVGElement;
+      const regionSlug = el.getAttribute('data-region');
 
-      if (isSpanning && activeSlug) {
-        // Paths que cruzam fisicamente 2 regiões: manter neutro
-        gEl.style.filter = 'none';
-      } else if (activeSlug && regionSlug === activeSlug) {
-        gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
+      if (activeSlug && regionSlug === activeSlug) {
+        svgEl2.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
       } else if (activeSlug && regionSlug !== activeSlug) {
-        gEl.style.filter = 'brightness(0.7)';
+        svgEl2.style.filter = 'brightness(0.7)';
       } else {
-        gEl.style.filter = 'none';
+        svgEl2.style.filter = 'none';
       }
-      gEl.style.transition = 'filter 0.2s ease';
+      svgEl2.style.transition = 'filter 0.2s ease';
     });
   }, [selectedRegion, hoveredRegion]);
 
