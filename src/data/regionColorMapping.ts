@@ -73,6 +73,8 @@ const BONITO_COLORS = [
 const FRONTEIRA_COLORS = [
   '77694D', '786C4F', '76684C', '776A4D',
   '776D4F', '776B4E', '77694C', '7A6C4F',
+  // Cores de borda/transição (bege-cinza, Y > 850)
+  'BCB8AB', 'BFB9AD', 'BFB8AC',
 ];
 
 // ═══════════════════════════════════════════════════════
