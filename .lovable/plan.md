@@ -1,60 +1,138 @@
 
 
-# Correção Definitiva: Campo Grande vs Celeiro - Highlighting Visual
+# Redesign do Hero da ViaJARTur - Identidade Travel Tech
 
-## Problema Raiz Identificado
+## Contexto
 
-O problema NÃO é na detecção de clique (que já usa coordenadas reais). O problema é no **highlighting visual**.
+A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
 
-Grupos SVG ambíguos como `BEAFC9` (Y=586→751) e `75428C` (Y=548→754) são **um único elemento DOM**. Não é possível iluminar metade e escurecer a outra metade. Na inicialização, o código atribui `data-region` baseado no primeiro ponto M, e o highlighting usa esse atributo:
+A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
 
-- `BEAFC9` recebe `data-region="campo-grande-ipes"` (primeiro M Y=586)
-- Quando Celeiro é ativo → BEAFC9 fica escurecido (errado, pois metade é Celeiro)
-- Quando Campo Grande é ativo → BEAFC9 fica iluminado (errado, pois metade é Celeiro)
+## O que NAO sera alterado
 
-O replay confirma: o hover alterna rapidamente entre Campo Grande e Celeiro ao mover o mouse sobre esses paths.
+- Nenhuma funcionalidade do Descubra MS
+- Nenhuma funcionalidade interna da ViaJARTur
+- Navbar e Footer permanecem iguais
+- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
+- Secoes de video e CTA final permanecem iguais
+- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
 
-## Solução
+## O que sera criado
 
-Para grupos ambíguos que cruzam fisicamente ambas as regiões: **torná-los visualmente neutros** (sem filtro de brilho). Isso impede que iluminem ou escureçam incorretamente.
+### Novo Hero Section com identidade Travel Tech
 
-Adicionalmente, o grupo `CED1DD` (Y=689→866) também cruza Celeiro e Caminhos da Fronteira, então precisa do mesmo tratamento.
+**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
 
-### Mudanças em `MSInteractiveMap.tsx` (highlighting - ~5 linhas)
+**Lado Esquerdo**:
+- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
+- Titulo: "Tecnologia que transforma o turismo"
+- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
+- Dois botoes CTA (manter os atuais)
+- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
 
-No bloco de highlighting (linhas 207-214), para grupos com `data-ambiguous="true"`:
+**Lado Direito - Ilustracao do Robo/IA**:
+Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
+- Corpo geometrico moderno com cores ciano/slate da marca
+- Tela no "peito" mostrando graficos/dados (pulso animado)
+- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
+- Particulas e linhas conectando os icones (efeito tech)
+- Animacoes sutis de flutuacao (CSS keyframes)
+
+**Fundo**:
+- Grid de pontos sutil (ja existe, manter)
+- Orbs de gradiente ciano/azul (ja existe, manter)
+- Linha decorativa de circuito/tech no fundo
+
+### Componente novo: `TravelTechRobot.tsx`
+
+Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
+- Responsivo (menor em mobile, maior em desktop)
+- Animado com CSS puro (sem bibliotecas extras)
+- Nas cores da marca (ciano, slate, emerald)
+- Icones flutuantes usando Lucide icons
+
+## Estrutura de arquivos
+
+```text
+src/
+  components/
+    home/
+      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
+      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
+  pages/
+    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
 ```
-// ANTES: tentava iluminar/escurecer baseado em data-region
-// DEPOIS: sempre neutro (sem filtro)
-if (isAmbiguous && activeSlug) {
-  gEl.style.filter = 'none'; // Neutro — evita contaminação visual
-}
+
+## Visual esperado (layout em texto)
+
+```text
+Desktop:
++------------------------------------------------------------------+
+|  [Navbar ViaJARTur]                                               |
++------------------------------------------------------------------+
+|                                                                    |
+|  [Travel Tech Badge]              +---------------------------+   |
+|                                   |                           |   |
+|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
+|  transforma o turismo             |     com icones de aviao,  |   |
+|                                   |     mapa, dados, chat     |   |
+|  IA, dados e automacao            |     flutuando ao redor    |   |
+|  para destinos...                 |                           |   |
+|                                   +---------------------------+   |
+|  [Acessar Plataforma] [Agendar Demo]                              |
+|                                                                    |
+|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
++------------------------------------------------------------------+
+
+Mobile:
++---------------------------+
+|  [Navbar]                 |
++---------------------------+
+|                           |
+|  [Travel Tech Badge]     |
+|                           |
+|  Tecnologia que           |
+|  transforma o turismo     |
+|                           |
+|  [Robo menor centralizado]|
+|                           |
+|  [Botoes CTA empilhados] |
+|                           |
+|  Stats em linha           |
++---------------------------+
 ```
 
-### Mudanças em `regionColorMapping.ts` (~3 linhas)
+## Detalhes tecnicos
 
-Adicionar `CED1DD` ao `AMBIGUOUS_PURPLE_SET` (cruza Celeiro + Fronteira):
-```
-const AMBIGUOUS_PURPLE_SET = new Set([
-  ...existentes,
-  'CED1DD', // cinza-lilás que cruza Celeiro e Fronteira
-]);
-```
+### TravelTechRobot.tsx
+- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
+- Circulos e retangulos geometricos formando o robo
+- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
+- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
 
-E adicionar `CDABB3` e `C6B2B4` como ambíguos (paths de transição na fronteira Campo Grande/Celeiro/Costa Leste).
+### TravelTechHero.tsx
+- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
+- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
+- Adiciona stats com numeros animados (count-up simples com CSS)
+- Layout flex: `flex-col lg:flex-row` para responsividade
+- Background: grid de pontos + orbs de gradiente (ja existem)
 
-### Resultado esperado
+### ViaJARSaaS.tsx
+- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
+- Restante da pagina permanece identico
 
-- Clique continua preciso (usa coordenada Y real)
-- Hover no sidebar da lista continua funcionando
-- Regiões NÃO ambíguas iluminam/escurecem normalmente (sem mudança)
-- Paths que cruzam duas regiões ficam neutros visualmente (nem iluminam nem escurecem)
-- Campo Grande e Celeiro nunca "acendem" um ao outro
+## Sequencia de implementacao
 
-### Arquivos a modificar
+1. Criar `TravelTechRobot.tsx` - componente SVG do robo
+2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
+3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
+4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
 
-| Arquivo | Ação |
-|---|---|
-| `src/components/map/MSInteractiveMap.tsx` | Highlighting neutro para ambíguos (~5 linhas) |
-| `src/data/regionColorMapping.ts` | Expandir AMBIGUOUS set com 3 cores (~3 linhas) |
+## Notas importantes
+
+- Os textos do hero continuam editaveis via admin (platformContentService)
+- O robo e puramente visual/decorativo - nao tem funcionalidade
+- Todas as animacoes usam CSS puro (sem framer-motion no hero)
+- O componente respeita `prefers-reduced-motion` para acessibilidade
+- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
 
