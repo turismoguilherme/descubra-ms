@@ -42,17 +42,13 @@ function resolveRegionForGroup(gElement: Element, svgY?: number): string | null 
     if (svgY !== undefined) {
       return svgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
     }
-    // Fallback: centroide Y de todos os pontos M de todos os paths
-    const pathEls = gElement.querySelectorAll('path');
-    let totalY = 0, count = 0;
-    pathEls.forEach(p => {
-      const d = p.getAttribute('d') || '';
-      const matches = d.matchAll(/M\s+([\d.]+)\s+([\d.]+)/g);
-      for (const m of matches) { totalY += parseFloat(m[2]); count++; }
-    });
-    if (count > 0) {
-      const avgY = totalY / count;
-      return avgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+    // Fallback: bounding box nativo do SVG (preciso)
+    try {
+      const bbox = (gElement as unknown as SVGGElement).getBBox();
+      const centerY = bbox.y + bbox.height / 2;
+      return centerY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+    } catch {
+      // getBBox pode falhar se elemento não estiver no DOM
     }
   }
 
