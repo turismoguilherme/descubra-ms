@@ -25,16 +25,6 @@ export interface DocumentProcessingResult {
 }
 
 export class DocumentProcessor {
-  private genAI: GoogleGenerativeAI | null = null;
-  private readonly MODEL = 'gemini-1.5-flash'; // Modelo otimizado para processamento rápido
-
-  constructor() {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    } else {
-      console.warn('⚠️ Gemini API Key não configurada. DocumentProcessor não funcionará.');
-    }
-  }
 
   /**
    * Processar arquivo e extrair métricas estruturadas
