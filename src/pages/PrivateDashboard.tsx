@@ -102,7 +102,7 @@ const PrivateDashboard = () => {
   const [hasMissingData, setHasMissingData] = useState(false);
   const [autoFillingProfile, setAutoFillingProfile] = useState(false);
   const [isFirstAccess, setIsFirstAccess] = useState(false);
-  const [showTestLogin, setShowTestLogin] = useState(false);
+  
 
   // Verificar se deve abrir configurações com aba específica
   useEffect(() => {
