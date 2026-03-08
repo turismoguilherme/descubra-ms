@@ -209,7 +209,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
         const purposeCounts: Record<string, number> = {};
         const preferenceCounts: Record<string, number> = {};
 
-        profiles.forEach((profile: unknown) => {
+        profiles.forEach((profile: any) => {
           const age = profile.age_range;
           const gender = profile.gender;
           const origin = profile.origin_state || profile.state;
