@@ -53,15 +53,6 @@ export interface StrategicAIResponse {
 }
 
 export class StrategicAIService {
-  private genAI: GoogleGenerativeAI | null = null;
-  private apiKey: string | null = null;
-
-  constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || null;
-    if (this.apiKey) {
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
-    }
-  }
 
   /**
    * Buscar dados integrados de todos os módulos
