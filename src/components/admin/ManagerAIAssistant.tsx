@@ -19,7 +19,7 @@ import {
   Target,
   BarChart3
 } from 'lucide-react';
-import { geminiClient } from '@/config/gemini';
+import { generateContent } from '@/config/gemini';
 
 interface Message {
   id: string;
