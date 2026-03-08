@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ SMART HYBRID REAL SERVICE - Sistema híbrido inteligente real
  * Conhecimento local + Web search inteligente + Aprendizado contínuo

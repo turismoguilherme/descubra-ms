@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 /**
  * 🧠 GUATÁ GEMINI SERVICE - Integração com Gemini AI

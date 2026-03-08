@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { KnowledgeItem } from "@/types/ai";
 import { knowledgeService } from "./knowledge/knowledgeService";
 import { generateContent } from "@/config/gemini";

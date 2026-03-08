@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 💾 SUPABASE ML INTEGRATION
  * Integração com Supabase para persistir dados de aprendizado

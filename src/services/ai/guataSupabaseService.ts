@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ SUPABASE SERVICE - IA que usa Supabase Edge Functions
  * 

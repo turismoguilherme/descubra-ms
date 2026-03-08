@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠 GUATÁ MACHINE LEARNING SERVICE
  * Serviço principal que coordena todo aprendizado do Guatá

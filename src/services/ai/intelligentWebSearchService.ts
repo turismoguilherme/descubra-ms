@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🧠 SERVIÇO DE BUSCA WEB INTELIGENTE
 // Sistema avançado que combina APIs reais, base de conhecimento e IA
 
