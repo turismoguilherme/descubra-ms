@@ -72,7 +72,7 @@ const PassaporteLista = () => {
 
         console.log("📱 PASSAPORTE LISTA: Resultado da query:", {
           routesCount: routesData?.length || 0,
-          routes: routesData?.map((r: unknown) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
+          routes: routesData?.map((r: any) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
         });
         
         const routesError = null;
