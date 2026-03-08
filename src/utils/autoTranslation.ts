@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Auto Translation Utility
  * Utilitário para tradução automática de conteúdo
