@@ -1,5 +1,7 @@
-// Google Custom Search API para busca real de informações sobre MS
-// Busca específica em sites oficiais e confiáveis
+// Google Custom Search API - Todas as buscas passam pela Edge Function
+// Chaves protegidas no servidor via guata-google-search-proxy
+
+import { callGoogleSearchProxy } from './googleSearchProxy';
 
 export interface GoogleSearchResult {
   title: string;
@@ -16,194 +18,74 @@ export interface GoogleSearchResponse {
   searchTime: number;
 }
 
+// Sites oficiais de MS para classificação de confiabilidade
+const OFFICIAL_SITES = [
+  'fundtur.ms.gov.br',
+  'campogrande.ms.gov.br',
+  'bonito.ms.gov.br',
+  'corumba.ms.gov.br',
+  'bioparque.com',
+  'turismo.ms.gov.br'
+];
+
+function classifyReliability(source: string): 'high' | 'medium' | 'low' {
+  if (OFFICIAL_SITES.some(site => source.includes(site))) return 'high';
+  if (source.includes('.gov.br')) return 'high';
+  if (source.includes('tripadvisor') || source.includes('booking.com')) return 'medium';
+  return 'low';
+}
+
+function extractSource(link: string): string {
+  try {
+    return new URL(link).hostname;
+  } catch {
+    return 'unknown';
+  }
+}
+
 export class GoogleSearchAPI {
-  private readonly API_KEY = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
-  private readonly SEARCH_ENGINE_ID = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
-  
-  // Sites oficiais de MS para busca específica
-  private readonly OFFICIAL_SITES = [
-    'fundtur.ms.gov.br',
-    'campogrande.ms.gov.br', 
-    'bonito.ms.gov.br',
-    'corumba.ms.gov.br',
-    'bioparque.com',
-    'turismo.ms.gov.br'
-  ];
-
-  /**
-   * Buscar informações específicas sobre MS
-   */
   async searchMSInfo(query: string, category?: string): Promise<GoogleSearchResponse> {
-    console.log('🔍 Google Search: Buscando informações sobre MS:', query);
-
-    if (!this.API_KEY || !this.SEARCH_ENGINE_ID) {
-      console.log('⚠️ Google Search: API keys não configuradas');
-      return {
-        success: false,
-        results: [],
-        totalResults: 0,
-        searchTime: 0
-      };
-    }
-
     try {
-      // Construir query específica para MS
-      const msQuery = this.buildMSQuery(query, category);
-      
-      // Fazer busca no Google
-      const response = await this.performGoogleSearch(msQuery);
-      
-      // Filtrar e classificar resultados
-      const filteredResults = this.filterAndClassifyResults(response);
-      
-      console.log(`✅ Google Search: Encontrados ${filteredResults.length} resultados`);
-      
-      return {
-        success: true,
-        results: filteredResults,
-        totalResults: filteredResults.length,
-        searchTime: Date.now()
-      };
+      const msQuery = category ? `${query} "Mato Grosso do Sul" ${category}` : `${query} "Mato Grosso do Sul"`;
+      const response = await callGoogleSearchProxy(msQuery, { maxResults: 10 });
 
+      if (!response.success) {
+        return { success: false, results: [], totalResults: 0, searchTime: 0 };
+      }
+
+      const results: GoogleSearchResult[] = response.results.map(item => {
+        const source = extractSource(item.link);
+        return {
+          title: item.title,
+          link: item.link,
+          snippet: item.snippet,
+          source,
+          reliability: classifyReliability(source)
+        };
+      }).filter(r => r.reliability !== 'low');
+
+      return { success: true, results, totalResults: results.length, searchTime: Date.now() };
     } catch (error) {
-      console.log('❌ Google Search: Erro na busca:', error);
-      return {
-        success: false,
-        results: [],
-        totalResults: 0,
-        searchTime: 0
-      };
+      console.warn('❌ Google Search: Erro na busca:', error);
+      return { success: false, results: [], totalResults: 0, searchTime: 0 };
     }
   }
 
-  /**
-   * Construir query específica para MS
-   */
-  private buildMSQuery(query: string, category?: string): string {
-    let msQuery = `${query} "Mato Grosso do Sul"`;
-    
-    // Adicionar sites oficiais específicos
-    const siteRestrictions = this.OFFICIAL_SITES.map(site => `site:${site}`).join(' OR ');
-    msQuery += ` (${siteRestrictions})`;
-    
-    // Adicionar categoria se especificada
-    if (category) {
-      msQuery += ` ${category}`;
-    }
-    
-    return msQuery;
-  }
-
-  /**
-   * Executar busca no Google
-   */
-  private async performGoogleSearch(query: string): Promise<any> {
-    const url = 'https://www.googleapis.com/customsearch/v1';
-    const params = new URLSearchParams({
-      key: this.API_KEY!,
-      cx: this.SEARCH_ENGINE_ID!,
-      q: query,
-      num: '10', // Máximo de resultados
-      dateRestrict: 'm6', // Últimos 6 meses
-      sort: 'date' // Mais recentes primeiro
-    });
-
-    const response = await fetch(`${url}?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`Google Search API error: ${response.status}`);
-    }
-
-    return await response.json();
-  }
-
-  /**
-   * Filtrar e classificar resultados
-   */
-  private filterAndClassifyResults(googleResponse: any): GoogleSearchResult[] {
-    if (!googleResponse.items) {
-      return [];
-    }
-
-    return googleResponse.items.map((item: any) => {
-      const source = this.extractSource(item.link);
-      const reliability = this.classifyReliability(source, item.link);
-      
-      return {
-        title: item.title,
-        link: item.link,
-        snippet: item.snippet,
-        source,
-        reliability
-      };
-    }).filter(result => result.reliability !== 'low'); // Remover fontes não confiáveis
-  }
-
-  /**
-   * Extrair fonte do link
-   */
-  private extractSource(link: string): string {
-    try {
-      const url = new URL(link);
-      return url.hostname;
-    } catch {
-      return 'unknown';
-    }
-  }
-
-  /**
-   * Classificar confiabilidade da fonte
-   */
-  private classifyReliability(source: string, link: string): 'high' | 'medium' | 'low' {
-    // Fontes oficiais = alta confiabilidade
-    if (this.OFFICIAL_SITES.some(site => source.includes(site))) {
-      return 'high';
-    }
-    
-    // Sites governamentais = alta confiabilidade
-    if (source.includes('.gov.br') || source.includes('.ms.gov.br')) {
-      return 'high';
-    }
-    
-    // Sites de turismo conhecidos = média confiabilidade
-    if (source.includes('tripadvisor') || source.includes('booking.com')) {
-      return 'medium';
-    }
-    
-    // Outros = baixa confiabilidade
-    return 'low';
-  }
-
-  /**
-   * Buscar hotéis específicos
-   */
   async searchHotels(location: string): Promise<GoogleSearchResult[]> {
-    const query = `hotéis ${location} Mato Grosso do Sul`;
-    const response = await this.searchMSInfo(query, 'hospedagem');
+    const response = await this.searchMSInfo(`hotéis ${location}`, 'hospedagem');
     return response.results;
   }
 
-  /**
-   * Buscar restaurantes específicos
-   */
   async searchRestaurants(location: string): Promise<GoogleSearchResult[]> {
-    const query = `restaurantes ${location} Mato Grosso do Sul`;
-    const response = await this.searchMSInfo(query, 'gastronomia');
+    const response = await this.searchMSInfo(`restaurantes ${location}`, 'gastronomia');
     return response.results;
   }
 
-  /**
-   * Buscar atrações turísticas
-   */
   async searchAttractions(location: string): Promise<GoogleSearchResult[]> {
-    const query = `atrações turísticas ${location} Mato Grosso do Sul`;
-    const response = await this.searchMSInfo(query, 'turismo');
+    const response = await this.searchMSInfo(`atrações turísticas ${location}`, 'turismo');
     return response.results;
   }
 
-  /**
-   * Verificar se uma informação específica existe
-   */
   async verifyInformation(info: string, location?: string): Promise<{
     exists: boolean;
     sources: string[];
@@ -211,13 +93,13 @@ export class GoogleSearchAPI {
   }> {
     const query = location ? `${info} ${location} MS` : `${info} Mato Grosso do Sul`;
     const response = await this.searchMSInfo(query);
-    
     const exists = response.results.length > 0;
     const sources = response.results.map(r => r.source);
-    const confidence = response.results.filter(r => r.reliability === 'high').length / response.results.length;
-    
+    const confidence = response.results.length > 0
+      ? response.results.filter(r => r.reliability === 'high').length / response.results.length
+      : 0;
     return { exists, sources, confidence };
   }
 }
 
-export const googleSearchAPI = new GoogleSearchAPI(); 
+export const googleSearchAPI = new GoogleSearchAPI();
