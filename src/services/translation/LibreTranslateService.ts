@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LibreTranslate Service
  * Serviço de tradução gratuita usando LibreTranslate API

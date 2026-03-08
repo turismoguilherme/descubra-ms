@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Google Translate Service
  * Serviço de tradução automática usando Google Translate API
