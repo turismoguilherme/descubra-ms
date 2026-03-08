@@ -42,15 +42,17 @@ function resolveRegionForGroup(gElement: Element, svgY?: number): string | null 
     if (svgY !== undefined) {
       return svgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
     }
-    // Fallback: usar primeiro ponto M do path
-    const pathEl = gElement.querySelector('path');
-    if (pathEl) {
-      const d = pathEl.getAttribute('d') || '';
-      const match = d.match(/M\s+([\d.]+)\s+([\d.]+)/);
-      if (match) {
-        const y = parseFloat(match[2]);
-        return y > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
-      }
+    // Fallback: centroide Y de todos os pontos M de todos os paths
+    const pathEls = gElement.querySelectorAll('path');
+    let totalY = 0, count = 0;
+    pathEls.forEach(p => {
+      const d = p.getAttribute('d') || '';
+      const matches = d.matchAll(/M\s+([\d.]+)\s+([\d.]+)/g);
+      for (const m of matches) { totalY += parseFloat(m[2]); count++; }
+    });
+    if (count > 0) {
+      const avgY = totalY / count;
+      return avgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
     }
   }
 
