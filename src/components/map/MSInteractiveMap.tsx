@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { useTouristRegions } from '@/hooks/useTouristRegions';
-import { getRegionByColor, isAmbiguousPurple, resolveAmbiguousPurple } from '@/data/regionColorMapping';
+import { getRegionByColor, isAmbiguousPurple } from '@/data/regionColorMapping';
+
+const CAMPO_GRANDE_CELEIRO_Y_THRESHOLD = 650;
 
 interface MSInteractiveMapProps {
   onRegionClick: (region: TouristRegion2025) => void;
@@ -11,10 +13,23 @@ interface MSInteractiveMapProps {
 }
 
 /**
- * Determina o slug da região de um grupo SVG <g> baseado no fill e posição.
- * Para cores roxas ambíguas (Campo Grande vs Celeiro), usa a coordenada Y.
+ * Converte coordenadas de tela (clientX/Y) para coordenadas SVG.
  */
-function resolveRegionForGroup(gElement: Element): string | null {
+function clientToSvgCoords(svgEl: SVGSVGElement, clientX: number, clientY: number): { x: number; y: number } | null {
+  const ctm = svgEl.getScreenCTM();
+  if (!ctm) return null;
+  const point = svgEl.createSVGPoint();
+  point.x = clientX;
+  point.y = clientY;
+  const svgPoint = point.matrixTransform(ctm.inverse());
+  return { x: svgPoint.x, y: svgPoint.y };
+}
+
+/**
+ * Determina o slug da região para um grupo <g>, considerando se a cor é ambígua.
+ * Para cores ambíguas, usa coordenadas SVG do clique para decidir.
+ */
+function resolveRegionForGroup(gElement: Element, svgY?: number): string | null {
   const fill = gElement.getAttribute('fill');
   if (!fill || fill === 'None' || fill === 'none') return null;
 
@@ -22,13 +37,20 @@ function resolveRegionForGroup(gElement: Element): string | null {
   const slug = getRegionByColor(hex);
   if (!slug) return null;
 
-  // Para cores roxas que aparecem tanto em Campo Grande quanto em Celeiro,
-  // verificar posição Y do primeiro path para distinguir
+  // Para cores que existem em ambas as regiões, usar coordenada Y
   if (isAmbiguousPurple(hex)) {
+    if (svgY !== undefined) {
+      return svgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+    }
+    // Fallback: usar primeiro ponto M do path
     const pathEl = gElement.querySelector('path');
     if (pathEl) {
       const d = pathEl.getAttribute('d') || '';
-      return resolveAmbiguousPurple(d);
+      const match = d.match(/M\s+([\d.]+)\s+([\d.]+)/);
+      if (match) {
+        const y = parseFloat(match[2]);
+        return y > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+      }
     }
   }
 
@@ -66,58 +88,73 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     return touristRegions.find(r => r.slug === slug);
   }, [touristRegions]);
 
-  // Determinar região de um elemento clicado subindo na hierarquia
-  const getRegionSlugFromElement = useCallback((element: Element): string | null => {
+  /**
+   * Determina região a partir de um elemento, subindo na hierarquia.
+   * Para cores ambíguas, usa svgY para decidir Campo Grande vs Celeiro.
+   */
+  const getRegionSlugFromElement = useCallback((element: Element, svgY?: number): string | null => {
     let current: Element | null = element;
     while (current && current.tagName !== 'svg') {
       if (current.tagName === 'g') {
-        const regionSlug = current.getAttribute('data-region');
-        if (regionSlug) return regionSlug;
+        const fill = current.getAttribute('fill');
+        if (fill && fill !== 'None' && fill !== 'none') {
+          return resolveRegionForGroup(current, svgY);
+        }
       }
       current = current.parentElement;
     }
     return null;
   }, []);
 
-  // Attach event handlers e data-region ao SVG inline
+  // Attach event handlers ao SVG inline
   useEffect(() => {
     if (!svgContent || !svgContainerRef.current || eventHandlersAttached.current) return;
     if (touristRegions.length === 0) return;
 
-    const svgEl = svgContainerRef.current.querySelector('svg');
+    const svgEl = svgContainerRef.current.querySelector('svg') as SVGSVGElement | null;
     if (!svgEl) return;
 
     svgEl.setAttribute('width', '100%');
     svgEl.setAttribute('height', '100%');
     svgEl.style.maxHeight = '850px';
 
-    // Resolver e marcar cada <g> com data-region
+    // Marcar grupos com data-region (para highlighting) e data-ambiguous
     const groups = svgEl.querySelectorAll('g[fill]');
     groups.forEach(g => {
-      const slug = resolveRegionForGroup(g);
-      if (slug) {
+      const fill = (g.getAttribute('fill') || '').replace('#', '').toUpperCase();
+      if (isAmbiguousPurple(fill)) {
         (g as HTMLElement).style.cursor = 'pointer';
-        g.setAttribute('data-region', slug);
+        g.setAttribute('data-ambiguous', 'true');
+        // Marcar com data-region baseado no path (fallback)
+        const slug = resolveRegionForGroup(g);
+        if (slug) g.setAttribute('data-region', slug);
+      } else {
+        const slug = resolveRegionForGroup(g);
+        if (slug) {
+          (g as HTMLElement).style.cursor = 'pointer';
+          g.setAttribute('data-region', slug);
+        }
       }
     });
 
-    // Delegação de eventos no SVG
     const handleClick = (e: Event) => {
-      const target = e.target as Element;
-      const slug = getRegionSlugFromElement(target);
+      const me = e as MouseEvent;
+      const target = me.target as Element;
+      const svgCoords = clientToSvgCoords(svgEl, me.clientX, me.clientY);
+      const slug = getRegionSlugFromElement(target, svgCoords?.y);
       if (slug) {
         e.stopPropagation();
         const region = findRegionBySlug(slug);
-        if (region) {
-          onRegionClick(region);
-        }
+        if (region) onRegionClick(region);
       }
     };
 
     const handleMouseOver = (e: Event) => {
       if (selectedRegion) return;
-      const target = e.target as Element;
-      const slug = getRegionSlugFromElement(target);
+      const me = e as MouseEvent;
+      const target = me.target as Element;
+      const svgCoords = clientToSvgCoords(svgEl, me.clientX, me.clientY);
+      const slug = getRegionSlugFromElement(target, svgCoords?.y);
       if (slug && slug !== hoveredRegion) {
         setHoveredRegion(slug);
         const region = findRegionBySlug(slug);
@@ -129,7 +166,9 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       if (selectedRegion) return;
       const relatedTarget = (e as MouseEvent).relatedTarget as Element | null;
       if (relatedTarget && svgEl.contains(relatedTarget)) {
-        const newSlug = getRegionSlugFromElement(relatedTarget);
+        const me = e as MouseEvent;
+        const svgCoords = clientToSvgCoords(svgEl, me.clientX, me.clientY);
+        const newSlug = getRegionSlugFromElement(relatedTarget, svgCoords?.y);
         if (newSlug) return;
       }
       setHoveredRegion(null);
@@ -159,19 +198,28 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     const groups = svgEl.querySelectorAll('g[data-region]');
 
     groups.forEach(g => {
-      const regionSlug = g.getAttribute('data-region');
       const gEl = g as SVGGElement;
+      const regionSlug = g.getAttribute('data-region');
+      const isAmbiguous = g.getAttribute('data-ambiguous') === 'true';
 
-      if (activeSlug && regionSlug === activeSlug) {
+      // Para grupos ambíguos, verificar se o data-region corresponde ao ativo
+      // Mas como o path cruza 2 regiões, usar lógica especial
+      if (isAmbiguous && activeSlug) {
+        // Grupos ambíguos: acender se o slug do grupo corresponde ao ativo
+        // Mas atenuar se o slug NÃO corresponde
+        if (regionSlug === activeSlug) {
+          gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
+        } else {
+          gEl.style.filter = 'brightness(0.7)';
+        }
+      } else if (activeSlug && regionSlug === activeSlug) {
         gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
-        gEl.style.transition = 'filter 0.2s ease';
       } else if (activeSlug && regionSlug !== activeSlug) {
         gEl.style.filter = 'brightness(0.7)';
-        gEl.style.transition = 'filter 0.2s ease';
       } else {
         gEl.style.filter = 'none';
-        gEl.style.transition = 'filter 0.2s ease';
       }
+      gEl.style.transition = 'filter 0.2s ease';
     });
   }, [selectedRegion, hoveredRegion]);
 

@@ -43,9 +43,10 @@ const COSTA_LESTE_COLORS = [
 // ═══════════════════════════════════════════════════════
 const CAMPO_GRANDE_COLORS = [
   // Roxos escuros (primários) - podem ser Campo Grande OU Celeiro
+  // Resolvidos por coordenada Y do clique real (AMBIGUOUS_PURPLE_SET)
   '76448E', '76438D', '76428E', '76428D',
   '75428C', '75428E', '77448E', '77448F',
-  // Roxos claros EXCLUSIVOS de Campo Grande (mais acinzentados, ~C9)
+  // Roxos claros que CRUZAM ambas as regiões - também ambíguos
   'BFB2C9', 'BEAFC9',
 ];
 
@@ -58,6 +59,8 @@ const CELEIRO_COLORS = [
   'B3B3D2', 'B2B4D6', 'B1B2D5',
   // Cores de borda/transição (cinza-azulado, Y > 700)
   'B5C2CD', 'BDB6BE',
+  // Cinza-lilás de borda sul
+  'CED1DD',
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -123,8 +126,11 @@ addColors(CONE_SUL_COLORS, 'caminhos-natureza-cone-sul');
  * Para estas cores, a região correta depende da posição Y do path.
  */
 const AMBIGUOUS_PURPLE_SET = new Set([
+  // Roxos escuros que aparecem em ambas as regiões
   '76448E', '76438D', '76428E', '76428D',
   '75428C', '75428E', '77448E', '77448F',
+  // Roxos/lilás claros cujos paths cruzam ambas as regiões
+  'BEAFC9', 'BFB2C9',
 ]);
 
 /** Limiar Y para separar Campo Grande (centro) de Celeiro (sul) no SVG (viewBox 0 0 896 1152) */
