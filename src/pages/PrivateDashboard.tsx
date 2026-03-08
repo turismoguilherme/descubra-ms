@@ -116,12 +116,6 @@ const PrivateDashboard = () => {
   }, [searchParams, navigate]);
 
   useEffect(() => {
-    // Verificar se há usuário de teste logado
-    const testUser = getCurrentTestUser();
-    if (!user && !testUser) {
-      setShowTestLogin(true);
-    }
-    
     // Timeout de segurança para evitar loading infinito
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ PrivateDashboard: Timeout no carregamento, forçando renderização');
