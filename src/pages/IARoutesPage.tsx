@@ -203,7 +203,7 @@ export default function IARoutesPage() {
 
       // Salvar roteiro no banco de dados
       try {
-        const { error: saveError } = await supabase
+        const { error: saveError } = await (supabase as any)
           .from('user_routes')
           .insert({
             user_id: user.id,
