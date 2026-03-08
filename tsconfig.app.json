@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "gl-matrix": [
+        "./src/types/gl-matrix.d.ts"
       ]
     },
     "skipLibCheck": true,
