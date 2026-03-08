@@ -191,19 +191,19 @@ export class RegionalDataService {
 
       const allResults: any[] = [];
       
-      // Buscar para cada query usando Google Custom Search diretamente
-      const apiKey = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
-      const searchEngineId = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
-      
-      if (!apiKey || !searchEngineId) {
-        throw new Error('Google Search API não configurada');
-      }
+      // Buscar via Edge Function (chaves protegidas no servidor)
+      const { callGoogleSearchProxy } = await import('@/services/ai/search/googleSearchProxy');
 
       for (const query of queries) {
         try {
-          const searchQuery = `${query} ${state} Brasil`;
-          const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(searchQuery)}&num=5`;
-          const response = await fetch(url);
+          const result = await callGoogleSearchProxy(`${query} ${state} Brasil`, { maxResults: 5 });
+          if (result.success && result.results.length > 0) {
+            allResults.push(...result.results.map(r => ({
+              title: r.title,
+              snippet: r.snippet,
+              link: r.link
+            })));
+          }
           
           if (!response.ok) {
             const errorText = await response.text();
