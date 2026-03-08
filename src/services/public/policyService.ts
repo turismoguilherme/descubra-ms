@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import DOMPurify from 'dompurify';
 
 export interface Policy {
   id: string;
