@@ -502,43 +502,22 @@ export class IntelligentEventService {
     reasoning: string;
   }> {
     try {
-      if (!GEMINI_API_KEY) {
-        return {
-          category: 'cultural',
-          confidence: 0.5,
-          reasoning: 'IA não configurada, usando categoria padrão',
-        };
-      }
+      const { callGeminiProxy } = await import('@/services/ai/geminiProxy');
 
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-      const prompt = `
-Classifique o seguinte evento turístico em uma das categorias:
-- cultural (festivais, shows, exposições, arte)
-- gastronomia (festivais de comida, degustações)
-- esportivo (competições, maratonas, esportes)
-- religioso (festas religiosas, romarias)
-- natureza (ecoturismo, observação de aves, trilhas)
-- entretenimento (shows, festas, entretenimento)
-- educacional (workshops, palestras, cursos)
-- outros
+      const prompt = `Classifique o seguinte evento turístico em uma das categorias:
+- cultural, gastronomia, esportivo, religioso, natureza, entretenimento, educacional, outros
 
 Título: ${title}
 Descrição: ${description || 'Sem descrição'}
 
-Responda em JSON:
-{
-  "category": "categoria",
-  "confidence": 0.0-1.0,
-  "reasoning": "explicação breve"
-}
-`;
+Responda em JSON: {"category":"categoria","confidence":0.0-1.0,"reasoning":"explicação breve"}`;
 
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      const result = await callGeminiProxy(prompt);
+      if (!result.ok) {
+        return { category: 'cultural', confidence: 0.5, reasoning: 'IA indisponível' };
+      }
 
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      const jsonMatch = result.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         return {
@@ -548,18 +527,10 @@ Responda em JSON:
         };
       }
 
-      return {
-        category: 'cultural',
-        confidence: 0.5,
-        reasoning: 'Não foi possível classificar automaticamente',
-      };
+      return { category: 'cultural', confidence: 0.5, reasoning: 'Não foi possível classificar automaticamente' };
     } catch (error) {
       console.error('Erro ao classificar categoria:', error);
-      return {
-        category: 'cultural',
-        confidence: 0.5,
-        reasoning: 'Erro ao classificar',
-      };
+      return { category: 'cultural', confidence: 0.5, reasoning: 'Erro ao classificar' };
     }
   }
 
