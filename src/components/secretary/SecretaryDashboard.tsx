@@ -326,7 +326,6 @@ export default function SecretaryDashboard() {
       <ViaJARNavbar />
       
       {/* Seção de login de teste removida por segurança */}
-      )}
       
       {/* Header com gradiente azul-roxo */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white py-8">
