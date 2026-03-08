@@ -336,8 +336,7 @@ class OpenStreetMapService {
 }
 
 class GoogleSearchService {
-  private apiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
-  private searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+  // Chaves protegidas via Edge Function (guata-google-search-proxy)
   
   async getTourismData(region: string, type: string): Promise<any[]> {
     if (!this.apiKey || !this.searchEngineId) {
