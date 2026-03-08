@@ -293,7 +293,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
 
     setSavingConsent(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('data_sharing_consents')
         .upsert({
           user_id: user.id,
