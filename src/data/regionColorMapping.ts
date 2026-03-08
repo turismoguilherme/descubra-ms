@@ -23,6 +23,8 @@ const CERRADO_PANTANAL_COLORS = [
   '84A24B', '83A148', '84A148', '83A147', '84A147',
   '83A049', '86A155',
   'C2CDAF', 'C2CAAF', // versões claras
+  // Cor de borda/transição (bege, Y < 500)
+  'CCC0A9',
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -54,6 +56,8 @@ const CAMPO_GRANDE_COLORS = [
 const CELEIRO_COLORS = [
   'B1B2D4', 'B0B2D4', 'B5B4D4', 'B3B3D4',
   'B3B3D2', 'B2B4D6', 'B1B2D5',
+  // Cores de borda/transição (cinza-azulado, Y > 700)
+  'B5C2CD', 'BDB6BE',
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -71,6 +75,8 @@ const BONITO_COLORS = [
 const FRONTEIRA_COLORS = [
   '77694D', '786C4F', '76684C', '776A4D',
   '776D4F', '776B4E', '77694C', '7A6C4F',
+  // Cores de borda/transição (bege-cinza, Y > 850)
+  'BCB8AB', 'BFB9AD', 'BFB8AC',
 ];
 
 // ═══════════════════════════════════════════════════════

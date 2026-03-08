@@ -1,68 +1,138 @@
 
 
-# Plano: Corrigir Mapa (Campo Grande vs Celeiro) + Info sobre Rotas Removidas
+# Redesign do Hero da ViaJARTur - Identidade Travel Tech
 
-## Sobre as rotas removidas anteriormente
+## Contexto
 
-Na ultima alteracao foram removidas rotas duplicadas que existiam FORA dos blocos `showMS`/`showViajar`. Eram rotas compartilhadas como:
-- `/admin/*`, `/overflow-one/*`, `/cat-login`
-- Dashboard routes que estavam duplicados fora dos condicionais
+A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
 
-**Nenhuma funcionalidade foi perdida** — essas rotas continuam existindo dentro dos blocos `showViajar` (linhas 174-298) e `showMS` (linhas 302-360). A duplicacao causava ambiguidade no React Router.
+A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
 
----
+## O que NAO sera alterado
 
-## Diagnostico do mapa: Campo Grande vs Celeiro
+- Nenhuma funcionalidade do Descubra MS
+- Nenhuma funcionalidade interna da ViaJARTur
+- Navbar e Footer permanecem iguais
+- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
+- Secoes de video e CTA final permanecem iguais
+- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
 
-O SVG `mapa-ms-regioes.svg` usa a mesma familia de cores roxas escuras (`76448E`, `76438D`, `76428E`, `76428D`) para AMBAS as regioes. A logica atual tenta distinguir pela coordenada Y do primeiro ponto M de cada grupo:
+## O que sera criado
 
-| Grupo `<g>` | Cor | Primeiro M (Y) | Regiao esperada |
-|---|---|---|---|
-| Linha 2737 | `76448E` | Y=506 | Campo Grande |
-| Linha 2869 | `76438D` | Y=526 | Campo Grande |
-| Linha 2885 | `76438D` | Y=538 | Campo Grande |
-| Linha 3057 | `76428E` | Y=618 | Campo Grande |
-| Linha 3086 | `76428E` | Y=596 | Campo Grande |
-| Linha 3333 | `76428E` | Y=690 | **Celeiro** |
-| Linha 3481 | `76428D` | Y=730 | **Celeiro** |
+### Novo Hero Section com identidade Travel Tech
 
-O threshold atual e `Y > 650`. Isso parece correto para esses grupos.
+**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
 
-**Porem**, ha cores neutras NAO mapeadas que pertencem ao Celeiro:
+**Lado Esquerdo**:
+- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
+- Titulo: "Tecnologia que transforma o turismo"
+- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
+- Dois botoes CTA (manter os atuais)
+- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
 
-| Cor | Primeiro M (Y) | Descricao | Regiao provavel |
-|---|---|---|---|
-| `B5C2CD` | Y=743 | Cinza-azulado | Celeiro (borda) |
-| `BDB6BE` | Y=781 | Cinza | Celeiro (borda) |
-| `BCB8AB` | Y=878 | Bege-cinza | Caminhos da Fronteira (borda) |
-| `BFB9AD` | Y=900 | Bege-cinza | Caminhos da Fronteira (borda) |
-| `BFB8AC` | Y=931 | Bege-cinza | Caminhos da Fronteira (borda) |
-| `CCC0A9` | Y=494 | Bege | Cerrado Pantanal (borda) |
+**Lado Direito - Ilustracao do Robo/IA**:
+Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
+- Corpo geometrico moderno com cores ciano/slate da marca
+- Tela no "peito" mostrando graficos/dados (pulso animado)
+- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
+- Particulas e linhas conectando os icones (efeito tech)
+- Animacoes sutis de flutuacao (CSS keyframes)
 
-Essas cores neutras sao transicoes/bordas entre regioes. Quando o usuario clica nessas areas, nada acontece (zona morta), e visualmente elas nao se destacam junto com a regiao.
+**Fundo**:
+- Grid de pontos sutil (ja existe, manter)
+- Orbs de gradiente ciano/azul (ja existe, manter)
+- Linha decorativa de circuito/tech no fundo
 
-## Plano de correcao
+### Componente novo: `TravelTechRobot.tsx`
 
-### 1. Adicionar cores neutras ao mapeamento (`regionColorMapping.ts`)
+Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
+- Responsivo (menor em mobile, maior em desktop)
+- Animado com CSS puro (sem bibliotecas extras)
+- Nas cores da marca (ciano, slate, emerald)
+- Icones flutuantes usando Lucide icons
 
-Mapear as cores de borda/transicao para suas regioes corretas com base na posicao geografica:
+## Estrutura de arquivos
 
-- `B5C2CD`, `BDB6BE` → `celeiro-ms` (sul, Y > 700)
-- `BCB8AB`, `BFB9AD`, `BFB8AC` → `caminhos-fronteira` (extremo sul, Y > 850)
-- `CCC0A9` → `rota-cerrado-pantanal` (norte, Y < 500)
+```text
+src/
+  components/
+    home/
+      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
+      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
+  pages/
+    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
+```
 
-### 2. Refinar threshold Campo Grande vs Celeiro
+## Visual esperado (layout em texto)
 
-Manter Y=650 como threshold (os dados confirmam que funciona), mas adicionar log de debug temporario para validar se os grupos estao sendo classificados corretamente.
+```text
+Desktop:
++------------------------------------------------------------------+
+|  [Navbar ViaJARTur]                                               |
++------------------------------------------------------------------+
+|                                                                    |
+|  [Travel Tech Badge]              +---------------------------+   |
+|                                   |                           |   |
+|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
+|  transforma o turismo             |     com icones de aviao,  |   |
+|                                   |     mapa, dados, chat     |   |
+|  IA, dados e automacao            |     flutuando ao redor    |   |
+|  para destinos...                 |                           |   |
+|                                   +---------------------------+   |
+|  [Acessar Plataforma] [Agendar Demo]                              |
+|                                                                    |
+|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
++------------------------------------------------------------------+
 
-### 3. Verificar contorno visual
+Mobile:
++---------------------------+
+|  [Navbar]                 |
++---------------------------+
+|                           |
+|  [Travel Tech Badge]     |
+|                           |
+|  Tecnologia que           |
+|  transforma o turismo     |
+|                           |
+|  [Robo menor centralizado]|
+|                           |
+|  [Botoes CTA empilhados] |
+|                           |
+|  Stats em linha           |
++---------------------------+
+```
 
-O destaque usa `brightness(1.4)` para a regiao ativa e `brightness(0.7)` para as outras. Grupos nao mapeados ficam sem filtro (neutros), o que cria a impressao de "contorno errado". Ao mapear as cores neutras, o contorno visual ficara completo.
+## Detalhes tecnicos
 
-## Arquivos a modificar
+### TravelTechRobot.tsx
+- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
+- Circulos e retangulos geometricos formando o robo
+- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
+- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
 
-| Arquivo | Acao |
-|---|---|
-| `src/data/regionColorMapping.ts` | Adicionar ~6 cores neutras ao mapeamento |
-| `src/components/map/MSInteractiveMap.tsx` | Nenhuma mudanca estrutural necessaria |
+### TravelTechHero.tsx
+- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
+- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
+- Adiciona stats com numeros animados (count-up simples com CSS)
+- Layout flex: `flex-col lg:flex-row` para responsividade
+- Background: grid de pontos + orbs de gradiente (ja existem)
+
+### ViaJARSaaS.tsx
+- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
+- Restante da pagina permanece identico
+
+## Sequencia de implementacao
+
+1. Criar `TravelTechRobot.tsx` - componente SVG do robo
+2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
+3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
+4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+
+## Notas importantes
+
+- Os textos do hero continuam editaveis via admin (platformContentService)
+- O robo e puramente visual/decorativo - nao tem funcionalidade
+- Todas as animacoes usam CSS puro (sem framer-motion no hero)
+- O componente respeita `prefers-reduced-motion` para acessibilidade
+- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
 
