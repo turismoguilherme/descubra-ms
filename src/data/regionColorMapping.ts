@@ -23,6 +23,8 @@ const CERRADO_PANTANAL_COLORS = [
   '84A24B', '83A148', '84A148', '83A147', '84A147',
   '83A049', '86A155',
   'C2CDAF', 'C2CAAF', // versões claras
+  // Cor de borda/transição (bege, Y < 500)
+  'CCC0A9',
 ];
 
 // ═══════════════════════════════════════════════════════
