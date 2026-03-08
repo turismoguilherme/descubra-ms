@@ -1,138 +1,111 @@
 
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+# Auditoria de Segurança Completa — Plano de Remediação
 
-## Contexto
+## Resumo Executivo
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+Foram identificadas **13 vulnerabilidades** em diferentes níveis de severidade. As mais críticas envolvem escalação de privilégios via RLS, exposição de API keys no client-side e dados pessoais acessíveis publicamente.
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+---
 
-## O que NAO sera alterado
+## Vulnerabilidades Encontradas (ordenadas por criticidade)
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+### CRÍTICA (Ação Imediata)
 
-## O que sera criado
+**1. RLS permite auto-escalação de privilégios em `user_roles`**
+- **Risco**: Qualquer usuário autenticado pode executar `UPDATE user_roles SET role = 'admin' WHERE user_id = auth.uid()` e se tornar admin instantaneamente.
+- **Causa**: Policies `"Admins and self-update can update roles"` e `"Admins and self-register can insert roles"` têm `OR (auth.uid() = user_id)`.
+- **Correção**: Migração SQL para dropar essas policies e criar novas que permitem apenas admins modificar roles. Usar `secure_update_user_role()` (que já existe) como único caminho de alteração.
 
-### Novo Hero Section com identidade Travel Tech
+**2. Gemini API Key exposta no client-side (24+ arquivos)**
+- **Risco**: `VITE_GEMINI_API_KEY` é incluída no bundle JS público. Qualquer pessoa pode extraí-la e usar a API sem limites.
+- **Arquivos afetados**: `guataGeminiService.ts`, `StrategicAIService.ts`, `ragService.ts`, `GeminiAIService.ts`, `documentAnalysisService.ts`, `autoInsightsService.ts`, `inventoryAIService.ts`, `dataInterpretationAIService.ts`, `DocumentProcessor.ts`, `inventoryAnalyticsService.ts` e mais.
+- **Correção**: Redirecionar todas as chamadas Gemini para edge functions existentes (`guata-gemini-proxy`, `guata-ai`). Remover `VITE_GEMINI_API_KEY` do client. Criar edge functions adicionais se necessário.
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+**3. Tabela `events` com policy `USING (true)` expõe dados de contato + eventos rejeitados**
+- **Risco**: Emails e telefones de organizadores acessíveis publicamente, incluindo eventos com `approval_status = 'rejected'`.
+- **Correção**: Dropar policy permissiva, criar policy que filtra por `is_visible = true AND approval_status = 'approved'` para público, e permitir criadores/admins verem tudo.
 
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+### ALTA
 
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
+**4. Tabela `user_profiles` expõe todos os perfis para qualquer autenticado**
+- **Risco**: Policy `"Authenticated users can read user profiles"` permite ler nome, email, telefone de todos os usuários. Viola LGPD.
+- **Correção**: Substituir por policy owner-scoped + policy para admins.
 
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
+**5. Múltiplas tabelas com RLS desabilitado (`SUPA_rls_disabled_in_public`)**
+- **Risco**: Tabelas públicas sem proteção de acesso.
+- **Correção**: Habilitar RLS e criar policies apropriadas para cada tabela afetada.
 
-### Componente novo: `TravelTechRobot.tsx`
+**6. `dangerouslySetInnerHTML` sem sanitização em `EmailTemplatesManager.tsx`**
+- **Risco**: XSS se um admin inserir HTML malicioso em templates de email. O `body_template` é renderizado diretamente sem DOMPurify.
+- **Correção**: Passar `formData.body_template` por `sanitizeHtml()` antes de renderizar.
 
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
+**7. `markdownToHtml` em `policyService.ts` não sanitiza saída**
+- **Risco**: Conversão de markdown para HTML via regex sem sanitização posterior. Se o conteúdo das policies vier do banco (editável por admins), pode injetar scripts.
+- **Correção**: Aplicar `DOMPurify.sanitize()` no resultado final de `markdownToHtml()`.
 
-## Estrutura de arquivos
+### MÉDIA
 
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
-```
+**8. Dados financeiros (contas bancárias, fornecedores) em `localStorage`**
+- **Risco**: `BankAccountsManager.tsx` persiste dados bancários sensíveis (número de conta, agência, saldo) em localStorage, acessível por qualquer script na página.
+- **Correção**: Migrar para Supabase com RLS. Remover localStorage para dados financeiros.
 
-## Visual esperado (layout em texto)
+**9. `@ts-nocheck` em 175+ arquivos**
+- **Risco**: Desabilita verificação de tipos, permitindo bugs e potenciais falhas de segurança passarem despercebidos.
+- **Correção**: Remover gradualmente `@ts-nocheck`, corrigir erros de tipo.
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
+**10. Dependência `jspdf@2.5.2` com vulnerabilidade crítica (Path Traversal)**
+- **Risco**: Local File Inclusion / Path Traversal (GHSA-f8cm-6447-x5h2).
+- **Correção**: Atualizar jspdf para versão corrigida.
 
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
-```
+### BAIXA
 
-## Detalhes tecnicos
+**11. Rate limiting client-side em `securityService.ts` usando localStorage**
+- **Risco**: Facilmente burlável limpando localStorage.
+- **Correção**: Já existem edge functions de rate limiting; garantir que os fluxos críticos usem apenas server-side.
 
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
+**12. Logs de segurança desabilitados em `securityService.ts`**
+- **Risco**: `logSecurityEvent` retorna imediatamente com `return;` — nenhum evento é de fato registrado.
+- **Correção**: Reabilitar logging ou remover código morto e usar `enhancedSecurityService` consistentemente.
 
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
+**13. `registration_data` com dados de CNPJ em localStorage (`OverflowOneRegister.tsx`)**
+- **Risco**: Dados de negócio persistidos em localStorage sem TTL.
+- **Correção**: Usar sessionStorage ou limpar após consumo.
 
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
+---
 
-## Sequencia de implementacao
+## Plano de Implementação (Faseado)
 
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+### Fase 1 — Críticas (imediata)
+| # | Ação | Arquivo/Local |
+|---|------|---------------|
+| 1 | Migração SQL: corrigir RLS de `user_roles` | Nova migração SQL |
+| 2 | Migração SQL: corrigir policy de `events` | Nova migração SQL |
+| 3 | Migração SQL: corrigir policy de `user_profiles` | Nova migração SQL |
+| 4 | Redirecionar chamadas Gemini para edge functions | 10+ serviços em `src/services/ai/` |
 
-## Notas importantes
+### Fase 2 — Altas (1-2 dias)
+| # | Ação | Arquivo/Local |
+|---|------|---------------|
+| 5 | Habilitar RLS em tabelas faltantes | Nova migração SQL |
+| 6 | Sanitizar `dangerouslySetInnerHTML` no EmailTemplates | `EmailTemplatesManager.tsx` |
+| 7 | Sanitizar saída de `markdownToHtml` | `policyService.ts` |
+| 8 | Migrar dados financeiros de localStorage para Supabase | `BankAccountsManager.tsx` |
 
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+### Fase 3 — Médias/Baixas (gradual)
+| # | Ação | Arquivo/Local |
+|---|------|---------------|
+| 9 | Atualizar jspdf | `package.json` |
+| 10 | Reabilitar security logging | `securityService.ts` |
+| 11 | Limpar `@ts-nocheck` dos arquivos críticos | 175 arquivos |
+| 12 | Migrar rate limiting para server-side | `securityService.ts` |
+| 13 | Usar sessionStorage para dados temporários de registro | `OverflowOneRegister.tsx` |
+
+---
+
+## Recomendação
+
+Sugiro começar pela **Fase 1** (vulnerabilidades críticas), especialmente os itens 1-3 que são migrações SQL que podem ser aplicadas imediatamente. O item 4 (Gemini API key) é o mais trabalhoso, pois afeta 24+ arquivos, mas é fundamental.
+
+Deseja que eu implemente a **Fase 1** agora?
 
