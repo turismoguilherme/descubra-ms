@@ -49,7 +49,7 @@ export const aiAdminService = {
 
   async executeAction(id: string) {
     // Marcar ação como executada
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .update({
         status: 'executed',
