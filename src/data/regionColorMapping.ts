@@ -59,8 +59,6 @@ const CELEIRO_COLORS = [
   'B3B3D2', 'B2B4D6', 'B1B2D5',
   // Cores de borda/transição (cinza-azulado, Y > 700)
   'B5C2CD', 'BDB6BE',
-  // Cinza-lilás de borda sul
-  'CED1DD',
 ];
 
 // ═══════════════════════════════════════════════════════
