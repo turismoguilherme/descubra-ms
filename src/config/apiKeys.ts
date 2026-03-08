@@ -23,10 +23,9 @@ export const API_CONFIG = {
     isConfigured: () => true // APIs públicas sem chave
   },
 
-  // Gemini AI
+  // Gemini AI — SEGURANÇA: Chave movida para Edge Function (guata-gemini-proxy)
   GEMINI: {
-    API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
-    isConfigured: () => Boolean(API_CONFIG.GEMINI.API_KEY)
+    isConfigured: () => true // Sempre via Edge Function
   },
 
   // Google Translate API (para tradução de conteúdo)
