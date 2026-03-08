@@ -54,6 +54,8 @@ const CAMPO_GRANDE_COLORS = [
 const CELEIRO_COLORS = [
   'B1B2D4', 'B0B2D4', 'B5B4D4', 'B3B3D4',
   'B3B3D2', 'B2B4D6', 'B1B2D5',
+  // Cores de borda/transição (cinza-azulado, Y > 700)
+  'B5C2CD', 'BDB6BE',
 ];
 
 // ═══════════════════════════════════════════════════════
