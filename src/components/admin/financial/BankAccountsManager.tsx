@@ -215,20 +215,16 @@ export default function BankAccountsManager() {
       };
 
       if (editingSupplier) {
+        const { error } = await supabase.from('suppliers').update(supplierData).eq('id', editingSupplier.id);
+        if (error) throw error;
         const updated = suppliers.map(s => s.id === editingSupplier.id ? { ...s, ...supplierData } : s);
         setSuppliers(updated);
-        localStorage.setItem('suppliers', JSON.stringify(updated));
       } else {
-        const newSupplier: Supplier = {
-          ...supplierData,
-          id: `local-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          total_paid: 0,
-          last_payment: '',
-        };
-        const updated = [...suppliers, newSupplier];
-        setSuppliers(updated);
-        localStorage.setItem('suppliers', JSON.stringify(updated));
+        const { data, error } = await supabase.from('suppliers').insert(supplierData).select().single();
+        if (error) throw error;
+        if (data) {
+          setSuppliers([...suppliers, data]);
+        }
       }
 
       setSupplierDialogOpen(false);
