@@ -614,34 +614,20 @@ Responda em JSON: {"category":"categoria","confidence":0.0-1.0,"reasoning":"expl
    */
   public async suggestTags(title: string, description: string, category: string): Promise<string[]> {
     try {
-      if (!GEMINI_API_KEY) {
-        return [category, title.toLowerCase().split(' ')[0]];
-      }
+      const { callGeminiProxy } = await import('@/services/ai/geminiProxy');
 
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-      const prompt = `
-Sugira 5-8 tags relevantes para o seguinte evento turístico:
-
+      const prompt = `Sugira 5-8 tags relevantes para o seguinte evento turístico:
 Título: ${title}
 Descrição: ${description || 'Sem descrição'}
 Categoria: ${category}
+Retorne apenas um array JSON de strings: ["tag1", "tag2", "tag3"]`;
 
-As tags devem ser:
-- Palavras-chave relevantes para busca
-- Em português
-- Relacionadas ao turismo brasileiro
-- Específicas e úteis
+      const result = await callGeminiProxy(prompt);
+      if (!result.ok) {
+        return [category, title.toLowerCase().split(' ')[0]];
+      }
 
-Retorne apenas um array JSON de strings:
-["tag1", "tag2", "tag3"]
-`;
-
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
-
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      const jsonMatch = result.text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         return Array.isArray(parsed) ? parsed : [];

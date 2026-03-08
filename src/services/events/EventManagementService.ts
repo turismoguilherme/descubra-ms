@@ -164,14 +164,8 @@ export class EventManagementService {
    */
   private async checkGeminiCredentials(): Promise<boolean> {
     try {
-      // Verificar variáveis de ambiente
-      const hasApiKey = !!(typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY);
-      
-      if (!hasApiKey) {
-        // O serviço próprio já verifica disponibilidade
-        return false;
-      }
-      
+      // Credenciais gerenciadas via Edge Function (guata-gemini-proxy)
+      // O serviço próprio verifica disponibilidade ao chamar a edge function
       return true;
     } catch (error) {
       console.error("🎯 EVENT MANAGEMENT: Erro ao verificar credenciais do Gemini AI:", error);
