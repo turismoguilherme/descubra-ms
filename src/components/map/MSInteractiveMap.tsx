@@ -88,9 +88,27 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
   /**
    * Determina região a partir de um elemento, subindo na hierarquia.
+   * Primeiro verifica data-region no próprio elemento ou ancestrais (path ou group).
    * Para cores ambíguas, usa svgY para decidir Campo Grande vs Celeiro.
    */
   const getRegionSlugFromElement = useCallback((element: Element, svgY?: number): string | null => {
+    // 1) Verificar data-region no próprio elemento ou ancestrais (path-level ou group-level)
+    const regionEl = element.closest('[data-region]');
+    if (regionEl) {
+      const slug = regionEl.getAttribute('data-region');
+      // Para ambíguos com svgY, re-resolver com posição do mouse
+      if (slug && svgY !== undefined) {
+        const fill = (regionEl.closest('g[fill]') || regionEl).getAttribute('fill');
+        if (fill) {
+          const hex = fill.replace('#', '').toUpperCase();
+          if (isAmbiguousPurple(hex)) {
+            return svgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+          }
+        }
+      }
+      return slug;
+    }
+    // 2) Fallback: subir hierarquia procurando <g fill>
     let current: Element | null = element;
     while (current && current.tagName !== 'svg') {
       if (current.tagName === 'g') {
@@ -116,17 +134,28 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     svgEl.setAttribute('height', '100%');
     svgEl.style.maxHeight = '850px';
 
-    // Marcar grupos com data-region (para highlighting), data-ambiguous e data-spanning
+    // Marcar grupos/paths com data-region para highlighting
     const groups = svgEl.querySelectorAll('g[fill]');
     groups.forEach(g => {
       const fill = (g.getAttribute('fill') || '').replace('#', '').toUpperCase();
-      const spanning = isSpanningPath(fill);
       if (isAmbiguousPurple(fill)) {
+        // AMBÍGUO: classificar cada path individualmente pelo seu próprio bounding box
         (g as HTMLElement).style.cursor = 'pointer';
         g.setAttribute('data-ambiguous', 'true');
-        if (spanning) g.setAttribute('data-spanning', 'true');
-        const slug = resolveRegionForGroup(g);
-        if (slug) g.setAttribute('data-region', slug);
+        // NÃO colocar data-region no <g> — colocar em cada <path>
+        const paths = g.querySelectorAll('path');
+        paths.forEach(pathEl => {
+          try {
+            const bbox = (pathEl as SVGPathElement).getBBox();
+            const centerY = bbox.y + bbox.height / 2;
+            const slug = centerY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+            pathEl.setAttribute('data-region', slug);
+          } catch {
+            // fallback: usar grupo inteiro
+            const slug = resolveRegionForGroup(g);
+            if (slug) pathEl.setAttribute('data-region', slug);
+          }
+        });
       } else {
         const slug = resolveRegionForGroup(g);
         if (slug) {
@@ -194,24 +223,21 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     if (!svgEl) return;
 
     const activeSlug = selectedRegion || hoveredRegion;
-    const groups = svgEl.querySelectorAll('g[data-region]');
+    // Selecionar TODOS os elementos com data-region (paths individuais + grupos)
+    const regionElements = svgEl.querySelectorAll('[data-region]');
 
-    groups.forEach(g => {
-      const gEl = g as SVGGElement;
-      const regionSlug = g.getAttribute('data-region');
-      const isSpanning = g.getAttribute('data-spanning') === 'true';
+    regionElements.forEach(el => {
+      const svgEl2 = el as SVGElement;
+      const regionSlug = el.getAttribute('data-region');
 
-      if (isSpanning && activeSlug) {
-        // Paths que cruzam fisicamente 2 regiões: manter neutro
-        gEl.style.filter = 'none';
-      } else if (activeSlug && regionSlug === activeSlug) {
-        gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
+      if (activeSlug && regionSlug === activeSlug) {
+        svgEl2.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
       } else if (activeSlug && regionSlug !== activeSlug) {
-        gEl.style.filter = 'brightness(0.7)';
+        svgEl2.style.filter = 'brightness(0.7)';
       } else {
-        gEl.style.filter = 'none';
+        svgEl2.style.filter = 'none';
       }
-      gEl.style.transition = 'filter 0.2s ease';
+      svgEl2.style.transition = 'filter 0.2s ease';
     });
   }, [selectedRegion, hoveredRegion]);
 
