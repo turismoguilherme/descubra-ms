@@ -1,138 +1,118 @@
 
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+# Redesign Visual — ViajARTur (Travel Tech Identity)
 
-## Contexto
+## Diagnóstico do Estado Atual
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+O site da ViajARTur hoje tem um visual genérico de SaaS corporativo — fundos slate escuros, dot patterns, cards simples. Não comunica visualmente que é uma **empresa de tecnologia** especializada em IA, dados e turismo inteligente. O robô mascote (TravelTechRobot.tsx) existe mas é pequeno e discreto, usando apenas uma imagem estática com animações CSS básicas.
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+---
 
-## O que NAO sera alterado
+## Escopo da Mudança
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+**O que muda:** Visual das páginas públicas/marketing (Home, Soluções, Cases, Preços, Sobre, Contato, Navbar, Footer)
+**O que NÃO muda:** Dashboards internos, lógica de negócio, autenticação, rotas, banco de dados
 
-## O que sera criado
+---
 
-### Novo Hero Section com identidade Travel Tech
+## Conceito Visual: "Neural Network / AI-First Travel Tech"
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+Direção: Dark mode tech com acentos de ciano/azul neon, elementos de grid/circuitos, partículas, gradientes vibrantes. Inspiração: sites de empresas de IA como Vercel, Linear, OpenAI.
 
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+Paleta mantida: Ciano (#14b8a6 / viajar-cyan), Slate escuro (viajar-slate), com adição de efeitos de glow e gradientes mais ousados.
 
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
+---
 
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
+## Componentes a Criar/Refatorar
 
-### Componente novo: `TravelTechRobot.tsx`
+### 1. Navbar (ViaJARNavbar.tsx) — Refatorar
+- Glassmorphism mais forte com blur e borda sutil brilhante
+- Logo com efeito glow sutil no ícone
+- Botão "Começar Agora" com gradiente ciano animado (shimmer)
+- Menu mobile com backdrop blur escuro
 
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
+### 2. Hero da Home (TravelTechHero.tsx) — Redesign completo
+- Fundo escuro (slate-950) com grid animado estilo "neural network"
+- Texto principal com gradiente text (branco → ciano)
+- Subtítulo enfatizando IA, dados, tecnologia
+- Robô MAIOR e mais impactante — ocupando ~50% da viewport no desktop
+- Partículas de dados mais densas e visíveis
+- Badges animados flutuando ("IA", "Big Data", "Analytics", "Machine Learning")
+- CTA com efeito glow pulsante
 
-## Estrutura de arquivos
+### 3. TravelTechRobot.tsx — Upgrade visual
+- Imagem maior (de w-64/96 para tamanho hero completo)
+- Halo de luz ciano mais intenso por trás
+- Partículas de código/dados (0s e 1s, ícones de gráfico) orbitando
+- Efeito de "hologram scan lines" sutil
+- Animação de flutuação mais pronunciada
 
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
-```
+### 4. WhatViajARTurDoesSection.tsx — Refatorar
+- Fundo escuro com grid sutil
+- Cards com borda de glow no hover (efeito "neon border")
+- Ícones com efeito de pulse/glow
+- Título com gradiente text
 
-## Visual esperado (layout em texto)
+### 5. SuccessCasesSection.tsx — Refatorar
+- Cards com overlay mais tech (scan lines, grid overlay)
+- Métricas com efeito de "contador digital" visual
+- Bordas com glow sutil
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
+### 6. Soluções (Solucoes.tsx) — Refatorar hero + cards
+- Hero com fundo dark tech (grid neural) em vez do slate genérico
+- Cards de soluções com efeito glassmorphism escuro
+- Ícones com glow colorido
 
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
-```
+### 7. Cases (CasosSucesso.tsx) — Refatorar hero
+- Hero dark tech consistente
+- Cards mantidos mas com overlay tech
 
-## Detalhes tecnicos
+### 8. Preços (Precos.tsx) — Refatorar hero + cards
+- Hero dark tech consistente
+- Cards com borda glow no highlighted
+- Efeito "spotlight" no plano destacado
 
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
+### 9. Sobre (Sobre.tsx) — Refatorar hero
+- Hero dark tech consistente
+- Seção narrativa com fundo escuro e tipografia maior
 
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
+### 10. Contato (Contato.tsx) — Refatorar hero
+- Hero dark tech consistente
+- Formulário com glassmorphism escuro
 
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
+### 11. Footer (ViaJARFooter.tsx) — Upgrade
+- Grid de circuito sutil no fundo
+- Logo com glow
+- Links com hover ciano mais vibrante
 
-## Sequencia de implementacao
+### 12. Novo componente: TechBackground.tsx (reutilizável)
+- Componente compartilhado de fundo tech (grid neural, partículas, orbs)
+- Usado em todas as páginas para consistência
 
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+### 13. Novo componente: GlowCard.tsx (reutilizável)
+- Card com efeito de borda glow no hover
+- Substitui os cards simples atuais
 
-## Notas importantes
+---
 
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+## Detalhes Técnicos
+
+- **0 alterações no banco de dados** — apenas visual
+- **0 alterações nas rotas** — mesmas URLs
+- **CSS animations** via `<style>` inline ou classes Tailwind + keyframes no index.css
+- **Framer Motion** já instalado — usar para animações de entrada (fade-in, slide-up)
+- **Preservação total do CMS** — todos os `getContent()` e `platformContentService` mantidos
+- **Preservação da marca** — Ciano, logo, "ViajARTur" mantidos. Apenas modernização do layout.
+
+## Ordem de Implementação
+
+1. `TechBackground.tsx` + `GlowCard.tsx` (componentes base reutilizáveis)
+2. `TravelTechHero.tsx` + `TravelTechRobot.tsx` (hero impactante)
+3. `ViaJARNavbar.tsx` (glassmorphism tech)
+4. `WhatViajARTurDoesSection.tsx` + `SuccessCasesSection.tsx` (seções da home)
+5. `ViaJARSaaS.tsx` (composição da home com fundo dark)
+6. `Solucoes.tsx`, `CasosSucesso.tsx`, `Precos.tsx`, `Sobre.tsx`, `Contato.tsx` (páginas internas)
+7. `ViaJARFooter.tsx` (footer tech)
+
+**Estimativa: ~13 arquivos modificados/criados, 0 migrações SQL.**
 
