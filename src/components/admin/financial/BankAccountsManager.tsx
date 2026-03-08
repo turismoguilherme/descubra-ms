@@ -137,11 +137,8 @@ export default function BankAccountsManager() {
       if (error) throw error;
       setAccounts(data || []);
     } catch (error) {
-      console.warn('Usando localStorage para contas:', error);
-      const cached = localStorage.getItem('bank_accounts');
-      if (cached) {
-        setAccounts(JSON.parse(cached));
-      }
+      console.error('Erro ao carregar contas bancárias:', error);
+      toast({ title: 'Erro', description: 'Não foi possível carregar contas bancárias.', variant: 'destructive' });
     }
   };
 
@@ -155,11 +152,8 @@ export default function BankAccountsManager() {
       if (error) throw error;
       setSuppliers(data || []);
     } catch (error) {
-      console.warn('Usando localStorage para fornecedores:', error);
-      const cached = localStorage.getItem('suppliers');
-      if (cached) {
-        setSuppliers(JSON.parse(cached));
-      }
+      console.error('Erro ao carregar fornecedores:', error);
+      toast({ title: 'Erro', description: 'Não foi possível carregar fornecedores.', variant: 'destructive' });
     }
   };
 
@@ -178,31 +172,16 @@ export default function BankAccountsManager() {
       };
 
       if (editingAccount) {
-        // Atualizar
-        try {
-          await supabase.from('bank_accounts').update(accountData).eq('id', editingAccount.id);
-        } catch (e) {
-          console.warn('Salvando no localStorage');
-        }
+        const { error } = await supabase.from('bank_accounts').update(accountData).eq('id', editingAccount.id);
+        if (error) throw error;
         const updated = accounts.map(a => a.id === editingAccount.id ? { ...a, ...accountData } : a);
         setAccounts(updated);
-        localStorage.setItem('bank_accounts', JSON.stringify(updated));
       } else {
-        // Criar
-        const newAccount = {
-          ...accountData,
-          id: `local-${Date.now()}`,
-          created_at: new Date().toISOString(),
-        };
-        try {
-          const { data } = await supabase.from('bank_accounts').insert(accountData).select().single();
-          if (data) newAccount.id = data.id;
-        } catch (e) {
-          console.warn('Salvando no localStorage');
+        const { data, error } = await supabase.from('bank_accounts').insert(accountData).select().single();
+        if (error) throw error;
+        if (data) {
+          setAccounts([...accounts, data]);
         }
-        const updated = [...accounts, newAccount];
-        setAccounts(updated);
-        localStorage.setItem('bank_accounts', JSON.stringify(updated));
       }
 
       setAccountDialogOpen(false);
@@ -236,20 +215,16 @@ export default function BankAccountsManager() {
       };
 
       if (editingSupplier) {
+        const { error } = await supabase.from('suppliers').update(supplierData).eq('id', editingSupplier.id);
+        if (error) throw error;
         const updated = suppliers.map(s => s.id === editingSupplier.id ? { ...s, ...supplierData } : s);
         setSuppliers(updated);
-        localStorage.setItem('suppliers', JSON.stringify(updated));
       } else {
-        const newSupplier: Supplier = {
-          ...supplierData,
-          id: `local-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          total_paid: 0,
-          last_payment: '',
-        };
-        const updated = [...suppliers, newSupplier];
-        setSuppliers(updated);
-        localStorage.setItem('suppliers', JSON.stringify(updated));
+        const { data, error } = await supabase.from('suppliers').insert(supplierData).select().single();
+        if (error) throw error;
+        if (data) {
+          setSuppliers([...suppliers, data]);
+        }
       }
 
       setSupplierDialogOpen(false);
@@ -323,18 +298,26 @@ export default function BankAccountsManager() {
     setSupplierDialogOpen(true);
   };
 
-  const deleteAccount = (id: string) => {
-    const updated = accounts.filter(a => a.id !== id);
-    setAccounts(updated);
-    localStorage.setItem('bank_accounts', JSON.stringify(updated));
-    toast({ title: 'Conta removida' });
+  const deleteAccount = async (id: string) => {
+    try {
+      await supabase.from('bank_accounts').delete().eq('id', id);
+      setAccounts(accounts.filter(a => a.id !== id));
+      toast({ title: 'Conta removida' });
+    } catch (error) {
+      console.error('Erro ao remover conta:', error);
+      toast({ title: 'Erro ao remover conta', variant: 'destructive' });
+    }
   };
 
-  const deleteSupplier = (id: string) => {
-    const updated = suppliers.filter(s => s.id !== id);
-    setSuppliers(updated);
-    localStorage.setItem('suppliers', JSON.stringify(updated));
-    toast({ title: 'Fornecedor removido' });
+  const deleteSupplier = async (id: string) => {
+    try {
+      await supabase.from('suppliers').delete().eq('id', id);
+      setSuppliers(suppliers.filter(s => s.id !== id));
+      toast({ title: 'Fornecedor removido' });
+    } catch (error) {
+      console.error('Erro ao remover fornecedor:', error);
+      toast({ title: 'Erro ao remover fornecedor', variant: 'destructive' });
+    }
   };
 
   const formatCurrency = (value: number) => {

@@ -105,7 +105,7 @@ class GuataGeminiService {
     
     // Log adicional se não estiver configurado (para debug no Vercel)
     if (!this.isConfigured) {
-      console.error('[ERRO] Gemini não configurado - Verifique VITE_GEMINI_API_KEY');
+      console.error('[ERRO] Gemini não configurado - Verifique a Edge Function guata-gemini-proxy');
       return this.generateFallbackResponse(query);
     }
     

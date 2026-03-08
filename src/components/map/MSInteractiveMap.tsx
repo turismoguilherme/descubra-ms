@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { useTouristRegions } from '@/hooks/useTouristRegions';
 import { getRegionByColor, isAmbiguousPurple, isSpanningPath } from '@/data/regionColorMapping';
@@ -252,7 +253,7 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
             ref={svgContainerRef}
             className="w-full h-full"
             style={{ maxHeight: '850px' }}
-            dangerouslySetInnerHTML={{ __html: svgContent }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['use'] }) }}
           />
         )}
 
