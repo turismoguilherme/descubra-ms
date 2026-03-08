@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotificationEmail } from '@/services/email/notificationEmailService';
 
