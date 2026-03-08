@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { useTouristRegions } from '@/hooks/useTouristRegions';
-import { getRegionByColor, getRegionByPosition } from '@/data/regionColorMapping';
+import { getRegionByColor, isAmbiguousPurple, resolveAmbiguousPurple } from '@/data/regionColorMapping';
 
 interface MSInteractiveMapProps {
   onRegionClick: (region: TouristRegion2025) => void;
@@ -11,11 +11,30 @@ interface MSInteractiveMapProps {
 }
 
 /**
- * Mapa interativo de MS usando SVG inline com detecção direta por cor de grupo.
- * 
- * Abordagem: O SVG original é carregado via fetch(), renderizado inline,
- * e cada <g fill="#COR"> recebe event handlers baseados no mapeamento cor→região.
+ * Determina o slug da região de um grupo SVG <g> baseado no fill e posição.
+ * Para cores roxas ambíguas (Campo Grande vs Celeiro), usa a coordenada Y.
  */
+function resolveRegionForGroup(gElement: Element): string | null {
+  const fill = gElement.getAttribute('fill');
+  if (!fill || fill === 'None' || fill === 'none') return null;
+
+  const hex = fill.replace('#', '').toUpperCase();
+  const slug = getRegionByColor(hex);
+  if (!slug) return null;
+
+  // Para cores roxas que aparecem tanto em Campo Grande quanto em Celeiro,
+  // verificar posição Y do primeiro path para distinguir
+  if (isAmbiguousPurple(hex)) {
+    const pathEl = gElement.querySelector('path');
+    if (pathEl) {
+      const d = pathEl.getAttribute('d') || '';
+      return resolveAmbiguousPurple(d);
+    }
+  }
+
+  return slug;
+}
+
 const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   onRegionClick,
   onRegionHover,
@@ -43,38 +62,24 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       });
   }, []);
 
-  // Encontrar região pelo slug
   const findRegionBySlug = useCallback((slug: string): TouristRegion2025 | undefined => {
     return touristRegions.find(r => r.slug === slug);
   }, [touristRegions]);
 
-  // Determinar região de um elemento SVG <g> pelo seu fill
+  // Determinar região de um elemento clicado subindo na hierarquia
   const getRegionSlugFromElement = useCallback((element: Element): string | null => {
-    // Subir na hierarquia até encontrar um <g> com fill
     let current: Element | null = element;
     while (current && current.tagName !== 'svg') {
       if (current.tagName === 'g') {
-        const fill = current.getAttribute('fill');
-        if (fill && fill !== 'None' && fill !== 'none') {
-          const hex = fill.replace('#', '').toUpperCase();
-          const slug = getRegionByColor(hex);
-          if (slug) return slug;
-
-          // Fallback por posição geográfica
-          const pathEl = current.querySelector('path');
-          if (pathEl) {
-            const d = pathEl.getAttribute('d') || '';
-            const fallback = getRegionByPosition(d, hex);
-            if (fallback) return fallback;
-          }
-        }
+        const regionSlug = current.getAttribute('data-region');
+        if (regionSlug) return regionSlug;
       }
       current = current.parentElement;
     }
     return null;
   }, []);
 
-  // Attach event handlers ao SVG inline
+  // Attach event handlers e data-region ao SVG inline
   useEffect(() => {
     if (!svgContent || !svgContainerRef.current || eventHandlersAttached.current) return;
     if (touristRegions.length === 0) return;
@@ -82,26 +87,21 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     const svgEl = svgContainerRef.current.querySelector('svg');
     if (!svgEl) return;
 
-    // Garantir que o SVG ocupe todo o espaço
     svgEl.setAttribute('width', '100%');
     svgEl.setAttribute('height', '100%');
     svgEl.style.maxHeight = '850px';
 
-    // Adicionar cursor pointer em todos os <g> com fill mapeado
+    // Resolver e marcar cada <g> com data-region
     const groups = svgEl.querySelectorAll('g[fill]');
     groups.forEach(g => {
-      const fill = g.getAttribute('fill');
-      if (fill && fill !== 'None' && fill !== 'none') {
-        const hex = fill.replace('#', '').toUpperCase();
-        const slug = getRegionByColor(hex);
-        if (slug) {
-          (g as HTMLElement).style.cursor = 'pointer';
-          g.setAttribute('data-region', slug);
-        }
+      const slug = resolveRegionForGroup(g);
+      if (slug) {
+        (g as HTMLElement).style.cursor = 'pointer';
+        g.setAttribute('data-region', slug);
       }
     });
 
-    // Click handler no SVG inteiro (delegação de eventos)
+    // Delegação de eventos no SVG
     const handleClick = (e: Event) => {
       const target = e.target as Element;
       const slug = getRegionSlugFromElement(target);
@@ -109,7 +109,6 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
         e.stopPropagation();
         const region = findRegionBySlug(slug);
         if (region) {
-          console.log(`🗺️ Região clicada: ${region.name} (${slug})`);
           onRegionClick(region);
         }
       }
@@ -131,7 +130,7 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       const relatedTarget = (e as MouseEvent).relatedTarget as Element | null;
       if (relatedTarget && svgEl.contains(relatedTarget)) {
         const newSlug = getRegionSlugFromElement(relatedTarget);
-        if (newSlug) return; // Still over a mapped region
+        if (newSlug) return;
       }
       setHoveredRegion(null);
       onRegionHover?.(null);
@@ -150,7 +149,7 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     };
   }, [svgContent, touristRegions, selectedRegion, hoveredRegion, onRegionClick, onRegionHover, findRegionBySlug, getRegionSlugFromElement]);
 
-  // Aplicar destaque visual na região selecionada/hovered
+  // Aplicar destaque visual
   useEffect(() => {
     if (!svgContainerRef.current) return;
     const svgEl = svgContainerRef.current.querySelector('svg');
@@ -164,15 +163,12 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       const gEl = g as SVGGElement;
 
       if (activeSlug && regionSlug === activeSlug) {
-        // Destacar: brilho + contorno
         gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
         gEl.style.transition = 'filter 0.2s ease';
       } else if (activeSlug && regionSlug !== activeSlug) {
-        // Escurecer outras regiões levemente
         gEl.style.filter = 'brightness(0.7)';
         gEl.style.transition = 'filter 0.2s ease';
       } else {
-        // Estado normal
         gEl.style.filter = 'none';
         gEl.style.transition = 'filter 0.2s ease';
       }
@@ -185,7 +181,6 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   return (
     <div className={`relative ${className}`}>
       <div className="relative w-full h-full">
-        {/* SVG inline do mapa */}
         {svgContent && (
           <div
             ref={svgContainerRef}
@@ -195,7 +190,6 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
           />
         )}
 
-        {/* Loading */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-ms-primary-blue border-t-transparent"></div>
@@ -203,7 +197,6 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
         )}
       </div>
 
-      {/* Tooltip */}
       {activeRegion && !selectedRegion && (
         <div className="absolute top-4 right-4 bg-white rounded-lg shadow-xl px-4 py-3 pointer-events-none z-20 border-l-4 border-ms-primary-blue animate-in fade-in slide-in-from-top-2">
           <p className="font-bold text-gray-800">{activeRegion.name}</p>

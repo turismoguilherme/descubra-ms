@@ -359,44 +359,6 @@ function AppRoutes() {
                               </>
                             )}
 
-                            {/* Rotas compartilhadas (sempre disponíveis independente do domínio) */}
-                            {/* Dashboard Routes Específicos - compartilhados entre domínios */}
-                            <Route path="/secretary-dashboard" element={
-                              <ProtectedRoute allowedRoles={['gestor_municipal', 'admin']}>
-                                <Suspense fallback={<LoadingFallback />}><SecretaryDashboard /></Suspense>
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/attendant-dashboard" element={
-                              <ProtectedRoute allowedRoles={['atendente', 'cat_attendant', 'admin']}>
-                                <Suspense fallback={<LoadingFallback />}><AttendantDashboardRestored /></Suspense>
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/private-dashboard" element={
-                              <ProtectedRoute allowedRoles={['user', 'admin']}>
-                                <ErrorBoundary>
-                                  <Suspense fallback={<LoadingFallback />}><PrivateDashboard /></Suspense>
-                                </ErrorBoundary>
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/unified" element={
-                              <ProtectedRoute allowedRoles={['user', 'admin', 'gestor_municipal', 'atendente', 'cat_attendant']}>
-                                <Suspense fallback={<LoadingFallback />}><UnifiedDashboard /></Suspense>
-                              </ProtectedRoute>
-                            } />
-                            
-                            {/* Rotas de parceiros - compartilhadas */}
-                            <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
-                            <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
-                            <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
-                            
-                            {/* Redirecionamentos legados - compartilhados */}
-                            <Route path="/descubramatogrossodosul" element={<Navigate to="/descubrams" replace />} />
-                            <Route path="/descubramatogrossodosul/:path*" element={<RedirectOldMSRoute />} />
-                            <Route path="/ms/login" element={<AuthPage />} />
-                            <Route path="/ms/register" element={<Register />} />
-                            <Route path="/ms" element={<Suspense fallback={<LoadingFallback />}><OAuthCallback /></Suspense>} />
-                            <Route path="/ms/*" element={<Navigate to="/descubrams" replace />} />
-                            
                             {/* Fallback baseado no domínio */}
                             {showMS ? (
                               <Route path="*" element={<MSIndex />} />
