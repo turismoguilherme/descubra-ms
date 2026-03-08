@@ -191,7 +191,7 @@ const ProfilePageFixed: React.FC = () => {
       }
 
       // Converter dados do banco para o formato esperado
-      const avatares: PantanalAnimal[] = (data || []).map((avatar) => ({
+      const avatares: PantanalAnimal[] = (data || []).map((avatar: any) => ({
         id: avatar.id,
         name: avatar.name,
         scientific_name: avatar.scientific_name || '',
