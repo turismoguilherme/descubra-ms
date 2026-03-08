@@ -1,6 +1,6 @@
 import { KnowledgeItem } from "@/types/ai";
 import { knowledgeService } from "./knowledge/knowledgeService";
-import { geminiClient } from "@/config/gemini";
+import { generateContent } from "@/config/gemini";
 import { GuataResponse as GuataTypesResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
