@@ -88,9 +88,27 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
   /**
    * Determina região a partir de um elemento, subindo na hierarquia.
+   * Primeiro verifica data-region no próprio elemento ou ancestrais (path ou group).
    * Para cores ambíguas, usa svgY para decidir Campo Grande vs Celeiro.
    */
   const getRegionSlugFromElement = useCallback((element: Element, svgY?: number): string | null => {
+    // 1) Verificar data-region no próprio elemento ou ancestrais (path-level ou group-level)
+    const regionEl = element.closest('[data-region]');
+    if (regionEl) {
+      const slug = regionEl.getAttribute('data-region');
+      // Para ambíguos com svgY, re-resolver com posição do mouse
+      if (slug && svgY !== undefined) {
+        const fill = (regionEl.closest('g[fill]') || regionEl).getAttribute('fill');
+        if (fill) {
+          const hex = fill.replace('#', '').toUpperCase();
+          if (isAmbiguousPurple(hex)) {
+            return svgY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+          }
+        }
+      }
+      return slug;
+    }
+    // 2) Fallback: subir hierarquia procurando <g fill>
     let current: Element | null = element;
     while (current && current.tagName !== 'svg') {
       if (current.tagName === 'g') {
