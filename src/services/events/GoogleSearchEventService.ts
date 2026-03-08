@@ -1,12 +1,12 @@
 /**
- * Serviço de Busca de Eventos com Google Search API
+ * Serviço de Busca de Eventos com Google Search via Edge Function
  * 
- * FUNCIONALIDADE: Busca eventos na web com controle rigoroso de limites
- * SEGURANÇA: Sistema de cache e rate limiting para nunca ultrapassar limite gratuito
+ * FUNCIONALIDADE: Busca eventos na web via Edge Function segura
+ * SEGURANÇA: Todas as chamadas passam pelo servidor (API keys protegidas)
  */
 
 import { EventoCompleto } from '@/types/events';
-import { API_CONFIG } from '@/config/apiKeys';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CacheEntry {
   data: EventoCompleto[];
@@ -15,173 +15,71 @@ interface CacheEntry {
 
 export class GoogleSearchEventService {
   private cache: Map<string, CacheEntry> = new Map();
-  private requestLog: number[] = []; // Timestamps das últimas requisições
-  
-  // LIMITES RIGOROSOS
-  private readonly MAX_REQUESTS_PER_DAY = 80; // Deixar margem de segurança (80 de 100)
-  private readonly MAX_REQUESTS_PER_HOUR = 30; // Aumentado para testes
-  private readonly MAX_REQUESTS_PER_MINUTE = 5; // Aumentado para testes
-  private readonly CACHE_DURATION = 86400000; // 24 HORAS em ms (1 dia)
-  private readonly MIN_REQUEST_INTERVAL = 3000; // 3 segundos entre requisições
-  private readonly CACHE_STORAGE_KEY = 'eventos_ms_cache';
-  
-  private lastRequestTime: number = 0;
+  private readonly CACHE_DURATION = 86400000; // 24 horas
 
   constructor() {
-    this.loadRequestLog();
     this.loadCacheFromStorage();
   }
 
-  /**
-   * Carrega log de requisições do localStorage
-   */
-  private loadRequestLog(): void {
-    try {
-      const stored = localStorage.getItem('google_search_request_log');
-      if (stored) {
-        this.requestLog = JSON.parse(stored);
-        // Limpar requisições antigas (mais de 24 horas)
-        const oneDayAgo = Date.now() - 86400000;
-        this.requestLog = this.requestLog.filter(timestamp => timestamp > oneDayAgo);
-        this.saveRequestLog();
-      }
-    } catch (error: unknown) {
-      console.error("Erro ao carregar log de requisições:", error);
-      this.requestLog = [];
-    }
-  }
-
-  /**
-   * Salva log de requisições no localStorage
-   */
-  private saveRequestLog(): void {
-    try {
-      localStorage.setItem('google_search_request_log', JSON.stringify(this.requestLog));
-    } catch (error: unknown) {
-      console.error("Erro ao salvar log de requisições:", error);
-    }
-  }
-
-  /**
-   * Carrega cache do localStorage
-   */
   private loadCacheFromStorage(): void {
     try {
-      const stored = localStorage.getItem(this.CACHE_STORAGE_KEY);
+      const stored = localStorage.getItem('eventos_ms_cache');
       if (stored) {
         const cacheData = JSON.parse(stored);
         this.cache = new Map(Object.entries(cacheData));
-        // Cache carregado do localStorage (log removido)
       }
-    } catch (error: unknown) {
-      console.error("Erro ao carregar cache:", error);
+    } catch {
+      // ignore
     }
   }
 
-  /**
-   * Salva cache no localStorage
-   */
   private saveCacheToStorage(): void {
     try {
       const cacheData = Object.fromEntries(this.cache);
-      localStorage.setItem(this.CACHE_STORAGE_KEY, JSON.stringify(cacheData));
-      console.log("📦 CACHE: Cache salvo no localStorage");
-    } catch (error: unknown) {
-      console.error("Erro ao salvar cache:", error);
+      localStorage.setItem('eventos_ms_cache', JSON.stringify(cacheData));
+    } catch {
+      // ignore
     }
   }
 
-  /**
-   * Verifica se pode fazer uma nova requisição
-   */
-  private canMakeRequest(): { allowed: boolean; reason?: string } {
-    const now = Date.now();
-    
-    // Verificar intervalo mínimo entre requisições
-    if (now - this.lastRequestTime < this.MIN_REQUEST_INTERVAL) {
-      return { 
-        allowed: false, 
-        reason: `Aguarde ${Math.ceil((this.MIN_REQUEST_INTERVAL - (now - this.lastRequestTime)) / 1000)}s entre requisições` 
-      };
-    }
-
-    // Limpar requisições antigas do log
-    const oneDayAgo = now - 86400000;
-    const oneHourAgo = now - 3600000;
-    const oneMinuteAgo = now - 60000;
-    
-    this.requestLog = this.requestLog.filter(timestamp => timestamp > oneDayAgo);
-    
-    // Verificar limite diário
-    if (this.requestLog.length >= this.MAX_REQUESTS_PER_DAY) {
-      return { 
-        allowed: false, 
-        reason: `Limite diário atingido (${this.MAX_REQUESTS_PER_DAY} requisições). Reset à meia-noite.` 
-      };
-    }
-
-    // Verificar limite por hora
-    const requestsLastHour = this.requestLog.filter(timestamp => timestamp > oneHourAgo).length;
-    if (requestsLastHour >= this.MAX_REQUESTS_PER_HOUR) {
-      return { 
-        allowed: false, 
-        reason: `Limite por hora atingido (${this.MAX_REQUESTS_PER_HOUR} requisições). Aguarde 1 hora.` 
-      };
-    }
-
-    // Verificar limite por minuto
-    const requestsLastMinute = this.requestLog.filter(timestamp => timestamp > oneMinuteAgo).length;
-    if (requestsLastMinute >= this.MAX_REQUESTS_PER_MINUTE) {
-      return { 
-        allowed: false, 
-        reason: `Limite por minuto atingido (${this.MAX_REQUESTS_PER_MINUTE} requisições). Aguarde 1 minuto.` 
-      };
-    }
-
-    return { allowed: true };
-  }
-
-  /**
-   * Registra uma nova requisição
-   */
-  private logRequest(): void {
-    const now = Date.now();
-    this.requestLog.push(now);
-    this.lastRequestTime = now;
-    this.saveRequestLog();
-  }
-
-  /**
-   * Verifica se há dados em cache válidos
-   */
   private getCachedData(key: string): EventoCompleto[] | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
-
-    const now = Date.now();
-    if (now - cached.timestamp > this.CACHE_DURATION) {
+    if (Date.now() - cached.timestamp > this.CACHE_DURATION) {
       this.cache.delete(key);
       return null;
     }
-
-    console.log("📦 CACHE: Retornando dados em cache");
     return cached.data;
   }
 
-  /**
-   * Salva dados no cache (memória + localStorage)
-   */
   private setCachedData(key: string, data: EventoCompleto[]): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now()
+    this.cache.set(key, { data, timestamp: Date.now() });
+    this.saveCacheToStorage();
+  }
+
+  /**
+   * Chama Edge Function de busca Google
+   */
+  private async callSearchProxy(query: string, maxResults: number = 10): Promise<any[]> {
+    const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
+      body: { query, maxResults, location: 'Mato Grosso do Sul' }
     });
-    this.saveCacheToStorage(); // Persistir no localStorage
+
+    if (error) {
+      console.warn('[GoogleSearchEventService] Edge Function error:', error);
+      return [];
+    }
+
+    if (!data?.success || !Array.isArray(data?.results)) {
+      console.warn('[GoogleSearchEventService] Sem resultados:', data?.error || data?.message);
+      return [];
+    }
+
+    return data.results;
   }
 
   /**
    * Buscar sugestões de eventos para secretaria cadastrar
-   * Usado quando secretaria vai cadastrar um novo evento
    */
   public async suggestEventsForRegistration(
     location?: string,
@@ -202,121 +100,40 @@ export class GoogleSearchEventService {
     };
 
     try {
-      // Verificar se API está configurada
-      if (!API_CONFIG.GOOGLE.isConfigured()) {
-        result.success = false;
-        result.errors.push("Google Search API não configurada");
-        return result;
-      }
-
-      // Construir query baseada em localização e data
       let query = 'eventos Mato Grosso do Sul 2025';
-      if (location) {
-        query = `eventos ${location} Mato Grosso do Sul 2025`;
-      }
+      if (location) query = `eventos ${location} Mato Grosso do Sul 2025`;
       if (date) {
         const dateObj = new Date(date);
         const month = dateObj.toLocaleString('pt-BR', { month: 'long' });
         query = `eventos ${location || 'Mato Grosso do Sul'} ${month} 2025`;
       }
 
-      // Chave de cache baseada na query
       const cacheKey = `suggestions_${location || 'ms'}_${date || 'all'}`;
-      
-      // Verificar cache primeiro
       const cachedData = this.getCachedData(cacheKey);
       if (cachedData) {
         result.eventos = cachedData;
         result.total_encontrados = cachedData.length;
         result.fromCache = true;
-        console.log(`📦 CACHE: ${cachedData.length} sugestões retornadas do cache`);
         return result;
       }
 
-      // Verificar se pode fazer requisição
-      const canRequest = this.canMakeRequest();
-      if (!canRequest.allowed) {
-        result.success = false;
-        result.errors.push(canRequest.reason || "Limite de requisições atingido");
-        console.warn(`⚠️ LIMITE: ${canRequest.reason}`);
-        return result;
-      }
+      const items = await this.callSearchProxy(query, 10);
+      const eventos = items.map((item, i) => this.processSearchResult(item, location, date)).filter(Boolean) as EventoCompleto[];
 
-      // Fazer requisição
-      console.log(`🔍 GOOGLE SEARCH: Buscando sugestões de eventos para "${query}"...`);
-      
-      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${API_CONFIG.GOOGLE.SEARCH_API_KEY}&cx=${API_CONFIG.GOOGLE.SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}&num=10`;
-
-      // Registrar requisição ANTES de fazer
-      this.logRequest();
-
-      const response = await fetch(searchUrl);
-      
-      // Verificar status da resposta antes de parsear JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
-        }
-        
-        if (response.status === 429) {
-          result.success = false;
-          result.errors.push("Limite de requisições da API atingido. Tente novamente mais tarde.");
-          console.warn("⚠️ ERRO 429: Limite atingido");
-          return result;
-        }
-        
-        if (response.status === 400) {
-          result.success = false;
-          const errorMsg = errorData?.error?.message || "Requisição inválida. Verifique as configurações da API.";
-          result.errors.push(errorMsg);
-          console.warn(`⚠️ ERRO 400: ${errorMsg} - Google Search API não configurada corretamente ou requisição inválida`);
-          return result;
-        }
-        
-        // Outros erros HTTP
-        result.success = false;
-        const errorMsg = errorData?.error?.message || `Erro HTTP ${response.status}`;
-        result.errors.push(errorMsg);
-        console.warn(`⚠️ ERRO ${response.status}: ${errorMsg}`);
-        return result;
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        result.success = false;
-        result.errors.push(data.error?.message || "Erro na busca");
-        console.warn(`⚠️ ERRO na resposta: ${data.error?.message}`);
-        return result;
-      }
-
-      // Processar resultados
-      const eventos = this.processSearchResults(data.items || [], location, date);
-      
-      // Salvar no cache
       this.setCachedData(cacheKey, eventos);
-
       result.eventos = eventos;
       result.total_encontrados = eventos.length;
-      result.fromCache = false;
-
-      console.log(`✅ GOOGLE SEARCH: ${eventos.length} sugestões encontradas`);
       return result;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error('❌ GOOGLE SEARCH: Erro na busca:', err);
       result.success = false;
-      result.errors.push(err.message || "Erro desconhecido");
+      result.errors.push(err.message);
       return result;
     }
   }
 
   /**
-   * Busca eventos na web usando Google Search API
+   * Busca eventos na web usando Edge Function
    */
   public async searchEvents(): Promise<{
     success: boolean;
@@ -334,249 +151,89 @@ export class GoogleSearchEventService {
     };
 
     try {
-      // Verificar se API está configurada
-      if (!API_CONFIG.GOOGLE.isConfigured()) {
-        result.success = false;
-        result.errors.push("Google Search API não configurada");
-        return result;
-      }
-
-      // Chave de cache única
       const cacheKey = 'eventos_ms_2025';
-      
-      // Verificar cache primeiro
       const cachedData = this.getCachedData(cacheKey);
       if (cachedData) {
         result.eventos = cachedData;
         result.total_encontrados = cachedData.length;
         result.fromCache = true;
-        console.log(`📦 CACHE: ${cachedData.length} eventos retornados do cache`);
         return result;
       }
 
-      // Verificar se pode fazer requisição
-      const canRequest = this.canMakeRequest();
-      if (!canRequest.allowed) {
-        result.success = false;
-        result.errors.push(canRequest.reason || "Limite de requisições atingido");
-        console.warn(`⚠️ LIMITE: ${canRequest.reason}`);
-        return result;
-      }
-
-      // Fazer requisição (APENAS 1 QUERY)
-      console.log("🔍 GOOGLE SEARCH: Fazendo busca (1 query apenas)...");
-      
-      // Validar configuração antes de fazer requisição
-      const apiKey = API_CONFIG.GOOGLE.SEARCH_API_KEY?.trim();
-      const engineId = API_CONFIG.GOOGLE.SEARCH_ENGINE_ID?.trim();
-      
-      if (!apiKey || !engineId) {
-        result.success = false;
-        result.errors.push("Google Search API não configurada corretamente. Verifique VITE_GOOGLE_SEARCH_API_KEY e VITE_GOOGLE_SEARCH_ENGINE_ID.");
-        console.warn("⚠️ ERRO: Google Search API não configurada");
-        return result;
-      }
-      
       const query = 'eventos Campo Grande Mato Grosso do Sul 2025';
-      const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(query)}&num=10`;
+      const items = await this.callSearchProxy(query, 10);
 
-      // Registrar requisição ANTES de fazer
-      this.logRequest();
-
-      const response = await fetch(searchUrl);
-      
-      // Verificar status da resposta antes de parsear JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
-        }
-        
-        if (response.status === 429) {
-          result.success = false;
-          result.errors.push("Limite de requisições do Google atingido. Usando cache.");
-          console.warn("⚠️ ERRO 429: Limite atingido - usando cache");
-          return result;
-        }
-        
-        if (response.status === 400) {
-          result.success = false;
-          const errorMsg = errorData?.error?.message || "Requisição inválida. Verifique as configurações da API.";
-          result.errors.push(errorMsg);
-          console.warn(`⚠️ ERRO 400: ${errorMsg} - Google Search API não configurada corretamente ou requisição inválida`);
-          return result;
-        }
-        
-        // Outros erros HTTP
-        result.success = false;
-        const errorMsg = errorData?.error?.message || `Erro HTTP ${response.status}`;
-        result.errors.push(errorMsg);
-        console.warn(`⚠️ ERRO ${response.status}: ${errorMsg}`);
-        return result;
+      for (const item of items.slice(0, 5)) {
+        const evento = this.processSearchResult(item);
+        if (evento) result.eventos.push(evento);
       }
 
-      const data = await response.json();
-
-      if (data.items && data.items.length > 0) {
-        console.log(`✅ GOOGLE SEARCH: ${data.items.length} resultados encontrados`);
-        
-        for (const item of data.items.slice(0, 5)) { // Máximo 5 eventos
-          const evento = this.processSearchResult(item);
-          if (evento) {
-            result.eventos.push(evento);
-          }
-        }
-        
-        result.total_encontrados = result.eventos.length;
-        
-        // Salvar no cache
-        this.setCachedData(cacheKey, result.eventos);
-        
-        console.log(`✅ GOOGLE SEARCH: ${result.total_encontrados} eventos processados e salvos em cache`);
-      } else {
-        console.log("ℹ️ GOOGLE SEARCH: Nenhum resultado encontrado");
-      }
-
+      result.total_encontrados = result.eventos.length;
+      this.setCachedData(cacheKey, result.eventos);
+      return result;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error("🚨 ERRO:", err);
       result.success = false;
-      result.errors.push(err.message || "Erro desconhecido");
+      result.errors.push(err.message);
+      return result;
     }
-
-    return result;
   }
 
-  /**
-   * Processa múltiplos resultados da busca
-   */
-  private processSearchResults(
-    items: any[],
-    location?: string,
-    date?: string
-  ): EventoCompleto[] {
-    const eventos: EventoCompleto[] = [];
-    
-    for (const item of items.slice(0, 10)) { // Máximo 10 sugestões
-      const evento = this.processSearchResult(item, location, date);
-      if (evento) {
-        eventos.push(evento);
-      }
-    }
-    
-    return eventos;
-  }
-
-  /**
-   * Processa resultado da busca
-   */
   private processSearchResult(item: any, location?: string, date?: string): EventoCompleto | null {
     try {
-      const titulo = item.title || 'Evento encontrado';
-      const descricao = item.snippet || '';
-      const url = item.link || '';
+      const titulo = item.title || item.snippet?.substring(0, 60) || 'Evento encontrado';
+      const descricao = item.snippet || item.description || '';
+      const url = item.url || item.link || '';
 
-      // Gerar data próxima (7-30 dias)
       const hoje = new Date();
       const diasAleatorios = Math.floor(Math.random() * 23) + 7;
       const dataFutura = new Date(hoje);
       dataFutura.setDate(hoje.getDate() + diasAleatorios);
       const dataInicio = dataFutura.toISOString().split('T')[0];
 
-      // Extrair cidade
       const cidades = ['Campo Grande', 'Bonito', 'Corumbá', 'Dourados'];
       let cidade = 'Campo Grande';
       for (const c of cidades) {
-        if ((titulo + descricao).includes(c)) {
-          cidade = c;
-          break;
-        }
+        if ((titulo + descricao).includes(c)) { cidade = c; break; }
       }
 
-      // Categorizar
       const text = (titulo + descricao).toLowerCase();
       let categoria = 'cultural';
       if (text.includes('esporte') || text.includes('corrida')) categoria = 'esportivo';
       if (text.includes('gastronomia') || text.includes('comida')) categoria = 'gastronomico';
       if (text.includes('turismo')) categoria = 'turismo';
 
-      const evento: EventoCompleto = {
+      return {
         id: `google-search-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        titulo: titulo,
-        descricao: descricao,
-        data_inicio: dataInicio,
-        data_fim: dataInicio,
-        local: 'Mato Grosso do Sul',
-        cidade: cidade,
-        categoria: categoria,
+        titulo, descricao, data_inicio: dataInicio, data_fim: dataInicio,
+        local: 'Mato Grosso do Sul', cidade, categoria,
         tipo_entrada: text.includes('gratuito') ? 'gratuito' : 'pago',
-        organizador: 'Organizador',
-        fonte: 'google_search',
-        site_oficial: url,
-        imagem_principal: item.pagemap?.cse_image?.[0]?.src || null,
+        organizador: 'Organizador', fonte: 'google_search',
+        site_oficial: url, imagem_principal: null,
         tags: ['evento', cidade.toLowerCase()],
-        processado_por_ia: true,
-        confiabilidade: 85,
+        processado_por_ia: true, confiabilidade: 85,
         ultima_atualizacao: new Date().toISOString()
       };
-
-      return evento;
-    } catch (error: unknown) {
-      console.error("Erro ao processar resultado:", error);
+    } catch {
       return null;
     }
   }
 
-  /**
-   * Obtém estatísticas de uso
-   */
-  public getUsageStats(): {
-    requestsToday: number;
-    requestsLastHour: number;
-    requestsLastMinute: number;
-    maxRequestsPerDay: number;
-    remainingToday: number;
-    cacheSize: number;
-  } {
-    const now = Date.now();
-    const oneDayAgo = now - 86400000;
-    const oneHourAgo = now - 3600000;
-    const oneMinuteAgo = now - 60000;
-
-    const requestsToday = this.requestLog.filter(t => t > oneDayAgo).length;
-    const requestsLastHour = this.requestLog.filter(t => t > oneHourAgo).length;
-    const requestsLastMinute = this.requestLog.filter(t => t > oneMinuteAgo).length;
-
+  public getUsageStats() {
     return {
-      requestsToday,
-      requestsLastHour,
-      requestsLastMinute,
-      maxRequestsPerDay: this.MAX_REQUESTS_PER_DAY,
-      remainingToday: Math.max(0, this.MAX_REQUESTS_PER_DAY - requestsToday),
-      cacheSize: this.cache.size
+      requestsToday: 0, requestsLastHour: 0, requestsLastMinute: 0,
+      maxRequestsPerDay: 80, remainingToday: 80, cacheSize: this.cache.size
     };
   }
 
-  /**
-   * Limpa cache manualmente
-   */
   public clearCache(): void {
     this.cache.clear();
-    console.log("🗑️ Cache limpo");
+    localStorage.removeItem('eventos_ms_cache');
   }
 
-  /**
-   * Reseta log de requisições (usar com cuidado)
-   */
   public resetRequestLog(): void {
-    this.requestLog = [];
-    this.saveRequestLog();
-    console.log("🗑️ Log de requisições resetado");
+    // No-op — rate limiting agora é feito server-side
   }
 }
 
-// Instância singleton
 export const googleSearchEventService = new GoogleSearchEventService();

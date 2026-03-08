@@ -103,7 +103,7 @@ export const API_SETUP_INSTRUCTIONS = {
     instructions: [
       '1. Acesse: https://ai.google.dev/',
       '2. Obtenha uma chave de API do Gemini',
-      '3. Adicione a variável: VITE_GEMINI_API_KEY'
+      '3. Adicione o secret no Supabase (Settings → Edge Functions → Secrets): GEMINI_API_KEY'
     ],
     priority: 'Crítica - Obrigatória para funcionamento'
   },
