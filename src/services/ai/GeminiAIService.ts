@@ -1,7 +1,10 @@
 /**
  * Serviço de IA com Google Gemini API
  * Processa diagnósticos e gera recomendações
+ * SEGURANÇA: Todas as chamadas passam pela Edge Function via callGeminiProxy
  */
+
+import { callGeminiProxy } from './geminiProxy';
 
 export interface DiagnosticAnswers {
   business_type: string;
@@ -33,63 +36,18 @@ export interface ChatMessage {
 }
 
 export class GeminiAIService {
-  private apiKey: string;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-
-  constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-  }
-
-  private async makeRequest(endpoint: string, data: any) {
-    try {
-      const response = await fetch(`${this.baseUrl}${endpoint}?key=${this.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Gemini API Error:', error);
-      throw error;
-    }
-  }
-
   async analyzeDiagnostic(answers: DiagnosticAnswers): Promise<DiagnosticResult> {
     try {
       const prompt = this.buildDiagnosticPrompt(answers);
-      
-      const data = {
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      };
+      const result = await callGeminiProxy(prompt, { temperature: 0.7, maxOutputTokens: 2048 });
 
-      const response = await this.makeRequest('/models/gemini-1.5-flash:generateContent', data);
-      
-      if (!response.candidates || !response.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Invalid response from Gemini API');
+      if (!result.ok || !result.text) {
+        return this.generateFallbackAnalysis(answers);
       }
 
-      const analysis = response.candidates[0].content.parts[0].text;
-      return this.parseDiagnosticResponse(analysis, answers);
+      return this.parseDiagnosticResponse(result.text, answers);
     } catch (error) {
       console.error('Error analyzing diagnostic:', error);
-      // Fallback para análise simulada
       return this.generateFallbackAnalysis(answers);
     }
   }
@@ -97,28 +55,13 @@ export class GeminiAIService {
   async generateChatResponse(message: string, context: string = ''): Promise<string> {
     try {
       const prompt = this.buildChatPrompt(message, context);
-      
-      const data = {
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        }
-      };
+      const result = await callGeminiProxy(prompt, { temperature: 0.8, maxOutputTokens: 1024 });
 
-      const response = await this.makeRequest('/models/gemini-1.5-flash:generateContent', data);
-      
-      if (!response.candidates || !response.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Invalid response from Gemini API');
+      if (!result.ok || !result.text) {
+        return this.generateFallbackChatResponse(message);
       }
 
-      return response.candidates[0].content.parts[0].text;
+      return result.text;
     } catch (error) {
       console.error('Error generating chat response:', error);
       return this.generateFallbackChatResponse(message);
@@ -128,31 +71,16 @@ export class GeminiAIService {
   async translateText(text: string, targetLanguage: string): Promise<string> {
     try {
       const prompt = `Traduza o seguinte texto para ${targetLanguage}: "${text}"`;
-      
-      const data = {
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.3,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 512,
-        }
-      };
+      const result = await callGeminiProxy(prompt, { temperature: 0.3, maxOutputTokens: 512 });
 
-      const response = await this.makeRequest('/models/gemini-1.5-flash:generateContent', data);
-      
-      if (!response.candidates || !response.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Invalid response from Gemini API');
+      if (!result.ok || !result.text) {
+        return text;
       }
 
-      return response.candidates[0].content.parts[0].text;
+      return result.text;
     } catch (error) {
       console.error('Error translating text:', error);
-      return text; // Retorna o texto original em caso de erro
+      return text;
     }
   }
 
@@ -197,7 +125,6 @@ Seja conciso mas completo, e sempre ofereça informações práticas e úteis.
 
   private parseDiagnosticResponse(response: string, answers: DiagnosticAnswers): DiagnosticResult {
     try {
-      // Tentar extrair JSON da resposta
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -214,14 +141,11 @@ Seja conciso mas completo, e sempre ofereça informações práticas e úteis.
     } catch (error) {
       console.error('Error parsing diagnostic response:', error);
     }
-
-    // Fallback se não conseguir parsear
     return this.generateFallbackAnalysis(answers);
   }
 
   private generateFallbackAnalysis(answers: DiagnosticAnswers): DiagnosticResult {
     const score = this.calculateScore(answers);
-    
     return {
       score,
       recommendations: [
@@ -230,16 +154,8 @@ Seja conciso mas completo, e sempre ofereça informações práticas e úteis.
         'Criar programa de fidelidade',
         'Otimizar preços baseado na demanda'
       ],
-      strengths: [
-        'Experiência no ramo',
-        'Localização privilegiada',
-        'Qualidade do atendimento'
-      ],
-      weaknesses: [
-        'Presença digital limitada',
-        'Falta de sistema de reservas',
-        'Marketing passivo'
-      ],
+      strengths: ['Experiência no ramo', 'Localização privilegiada', 'Qualidade do atendimento'],
+      weaknesses: ['Presença digital limitada', 'Falta de sistema de reservas', 'Marketing passivo'],
       action_plan: [
         'Criar site responsivo (30 dias)',
         'Implementar sistema de reservas (45 dias)',
@@ -252,14 +168,11 @@ Seja conciso mas completo, e sempre ofereça informações práticas e úteis.
   }
 
   private calculateScore(answers: DiagnosticAnswers): number {
-    let score = 50; // Base score
-
-    // Ajustar baseado nas respostas
+    let score = 50;
     if (answers.digital_presence >= '4') score += 15;
     if (answers.customer_service >= '4') score += 15;
     if (answers.marketing_channels.length >= 3) score += 10;
     if (answers.technology_usage.length >= 3) score += 10;
-
     return Math.min(100, Math.max(0, score));
   }
 
@@ -270,7 +183,6 @@ Seja conciso mas completo, e sempre ofereça informações práticas e úteis.
       'Estou aqui para ajudá-lo! Posso fornecer informações sobre a região, atrativos, serviços e muito mais.',
       'Ótima pergunta! Posso orientá-lo sobre os melhores atrativos, restaurantes, hospedagem e atividades na região.'
     ];
-
     return responses[Math.floor(Math.random() * responses.length)];
   }
 }
