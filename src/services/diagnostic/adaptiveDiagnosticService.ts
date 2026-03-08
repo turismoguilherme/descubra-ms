@@ -29,14 +29,6 @@ export interface AnswerQuality {
 }
 
 export class AdaptiveDiagnosticService {
-  private genAI: GoogleGenerativeAI | null = null;
-
-  constructor() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (apiKey) {
-      this.genAI = new GoogleGenerativeAI(apiKey);
-    }
-  }
 
   /**
    * Analisa qualidade das respostas e identifica se precisa de mais informações
