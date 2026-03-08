@@ -53,8 +53,6 @@ import { weeklyInsightsService } from '@/services/private/weeklyInsightsService'
 import { profileAIService } from '@/services/ai/profileAIService';
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import QuickTestLogin from '@/components/auth/QuickTestLogin';
-import { getCurrentTestUser } from '@/services/auth/TestUsers';
 
 const PrivateDashboard = () => {
   // Verificar se o AuthProvider está disponível
@@ -104,7 +102,7 @@ const PrivateDashboard = () => {
   const [hasMissingData, setHasMissingData] = useState(false);
   const [autoFillingProfile, setAutoFillingProfile] = useState(false);
   const [isFirstAccess, setIsFirstAccess] = useState(false);
-  const [showTestLogin, setShowTestLogin] = useState(false);
+  
 
   // Verificar se deve abrir configurações com aba específica
   useEffect(() => {
@@ -118,12 +116,6 @@ const PrivateDashboard = () => {
   }, [searchParams, navigate]);
 
   useEffect(() => {
-    // Verificar se há usuário de teste logado
-    const testUser = getCurrentTestUser();
-    if (!user && !testUser) {
-      setShowTestLogin(true);
-    }
-    
     // Timeout de segurança para evitar loading infinito
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ PrivateDashboard: Timeout no carregamento, forçando renderização');
@@ -529,18 +521,7 @@ const PrivateDashboard = () => {
         </div>
       </div>
 
-      {/* Login de Testes - Mostrar quando não autenticado */}
-      {showTestLogin && !user && (
-        <div className="container mx-auto px-6 py-4">
-          <QuickTestLogin 
-            onLogin={(testUser) => {
-              setShowTestLogin(false);
-              window.location.reload();
-            }}
-            onClose={() => setShowTestLogin(false)}
-          />
-        </div>
-      )}
+      {/* Seção de login de teste removida por segurança */}
 
       <div className="flex h-screen">
         {/* Sidebar Esquerda */}

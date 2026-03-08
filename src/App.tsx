@@ -61,7 +61,7 @@ const ViaJAROnboarding = lazy(() => import("@/pages/ViaJAROnboarding"));
 const ViaJARPricing = lazy(() => import("@/pages/ViaJARPricing"));
 const DiagnosticPage = lazy(() => import("@/pages/DiagnosticPage"));
 const SmartOnboarding = lazy(() => import("@/pages/SmartOnboarding"));
-const TestLogin = lazy(() => import("@/pages/TestLogin"));
+// TestLogin removido por segurança — autenticação apenas via Supabase Auth
 const CATDashboard = lazy(() => import("@/pages/CATDashboard"));
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
 const SecretaryDashboard = lazy(() => import("@/components/secretary/SecretaryDashboard"));
@@ -215,7 +215,7 @@ function AppRoutes() {
                                 <Route path="/viajar/termos" element={<ViaJARTermosUso />} />
                                 <Route path="/viajar/cookies" element={<ViaJARCookies />} />
 
-                                <Route path="/test-login" element={<Suspense fallback={<LoadingFallback />}><TestLogin /></Suspense>} />
+                                {/* /test-login removido por segurança */}
 
                                 {/* Dashboard Routes Específicos */}
                                 <Route path="/secretary-dashboard" element={

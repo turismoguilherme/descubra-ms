@@ -1,126 +1,138 @@
 
 
-# Auditoria de Segurança Completa — Descubra MS + ViajARTur
+# Redesign do Hero da ViaJARTur - Identidade Travel Tech
 
-## VULNERABILIDADE CRÍTICA #1: Bypass de Autenticação via localStorage (FRAUDE TOTAL)
+## Contexto
 
-**Risco**: Qualquer pessoa pode se tornar admin da plataforma inteira abrindo o console do navegador e digitando:
-```js
-localStorage.setItem('test_user_id', 'admin-1');
-localStorage.setItem('test_user_data', JSON.stringify({id:'admin-1', role:'admin', name:'Hacker', email:'x@x.com', autoLogin:true}));
+A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+
+A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+
+## O que NAO sera alterado
+
+- Nenhuma funcionalidade do Descubra MS
+- Nenhuma funcionalidade interna da ViaJARTur
+- Navbar e Footer permanecem iguais
+- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
+- Secoes de video e CTA final permanecem iguais
+- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+
+## O que sera criado
+
+### Novo Hero Section com identidade Travel Tech
+
+**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+
+**Lado Esquerdo**:
+- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
+- Titulo: "Tecnologia que transforma o turismo"
+- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
+- Dois botoes CTA (manter os atuais)
+- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+
+**Lado Direito - Ilustracao do Robo/IA**:
+Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
+- Corpo geometrico moderno com cores ciano/slate da marca
+- Tela no "peito" mostrando graficos/dados (pulso animado)
+- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
+- Particulas e linhas conectando os icones (efeito tech)
+- Animacoes sutis de flutuacao (CSS keyframes)
+
+**Fundo**:
+- Grid de pontos sutil (ja existe, manter)
+- Orbs de gradiente ciano/azul (ja existe, manter)
+- Linha decorativa de circuito/tech no fundo
+
+### Componente novo: `TravelTechRobot.tsx`
+
+Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
+- Responsivo (menor em mobile, maior em desktop)
+- Animado com CSS puro (sem bibliotecas extras)
+- Nas cores da marca (ciano, slate, emerald)
+- Icones flutuantes usando Lucide icons
+
+## Estrutura de arquivos
+
+```text
+src/
+  components/
+    home/
+      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
+      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
+  pages/
+    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
 ```
 
-O `AuthProvider.tsx` (linhas 70-140) aceita esses dados **sem validação nenhuma** e cria um "usuário simulado" com qualquer role. O `useRoleBasedAccess.ts` (linhas 30-70) também lê `test_user_data` do localStorage e concede permissões baseadas nesse JSON.
+## Visual esperado (layout em texto)
 
-**Impacto**: Acesso total a painéis admin, gestão municipal, CAT, dados de todos os usuários, parceiros comerciais, financeiro.
+```text
+Desktop:
++------------------------------------------------------------------+
+|  [Navbar ViaJARTur]                                               |
++------------------------------------------------------------------+
+|                                                                    |
+|  [Travel Tech Badge]              +---------------------------+   |
+|                                   |                           |   |
+|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
+|  transforma o turismo             |     com icones de aviao,  |   |
+|                                   |     mapa, dados, chat     |   |
+|  IA, dados e automacao            |     flutuando ao redor    |   |
+|  para destinos...                 |                           |   |
+|                                   +---------------------------+   |
+|  [Acessar Plataforma] [Agendar Demo]                              |
+|                                                                    |
+|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
++------------------------------------------------------------------+
 
-**Arquivos afetados**:
-- `src/hooks/auth/AuthProvider.tsx` — aceita test users via localStorage
-- `src/hooks/useRoleBasedAccess.ts` — deriva permissões de localStorage
-- `src/services/auth/TestUsers.ts` — lista hardcoded de test users com roles admin
-- `src/pages/TestLogin.tsx` — UI pública para login como qualquer role
-- `src/components/auth/TestUserSelector.tsx`
-- `src/components/auth/QuickTestLogin.tsx`
-- `src/pages/PrivateDashboard.tsx` — usa getCurrentTestUser()
-- `src/components/secretary/SecretaryDashboard.tsx` — usa getCurrentTestUser()
-- `src/components/cat/AttendantDashboardRestored.tsx` — lê test_user do localStorage
+Mobile:
++---------------------------+
+|  [Navbar]                 |
++---------------------------+
+|                           |
+|  [Travel Tech Badge]     |
+|                           |
+|  Tecnologia que           |
+|  transforma o turismo     |
+|                           |
+|  [Robo menor centralizado]|
+|                           |
+|  [Botoes CTA empilhados] |
+|                           |
+|  Stats em linha           |
++---------------------------+
+```
 
-**Correção**: Remover TODA a lógica de test users do código de produção. Envolver em `import.meta.env.DEV` ou remover completamente.
+## Detalhes tecnicos
 
----
+### TravelTechRobot.tsx
+- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
+- Circulos e retangulos geometricos formando o robo
+- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
+- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
 
-## VULNERABILIDADE CRÍTICA #2: Gemini API Key ainda exposta em 23+ arquivos
+### TravelTechHero.tsx
+- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
+- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
+- Adiciona stats com numeros animados (count-up simples com CSS)
+- Layout flex: `flex-col lg:flex-row` para responsividade
+- Background: grid de pontos + orbs de gradiente (ja existem)
 
-A correção anterior tocou apenas `src/config/gemini.ts` e `src/services/ai/index.ts`, mas **23 outros arquivos** ainda usam `import.meta.env.VITE_GEMINI_API_KEY` diretamente:
+### ViaJARSaaS.tsx
+- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
+- Restante da pagina permanece identico
 
-| Arquivo | Uso direto |
-|---|---|
-| `src/services/ai/GeminiAIService.ts` | `this.apiKey = import.meta.env.VITE_GEMINI_API_KEY` |
-| `src/services/ai/StrategicAIService.ts` | idem |
-| `src/services/ai/guataGeminiService.ts` | idem |
-| `src/services/ai/autoInsightsService.ts` | `new GoogleGenerativeAI(GEMINI_API_KEY)` |
-| `src/services/ai/documentAnalysisService.ts` | idem |
-| `src/services/ai/goalsAIService.ts` | idem |
-| `src/services/ai/ragService.ts` | idem |
-| `src/services/public/inventoryAnalyticsService.ts` | idem |
-| `src/services/public/eventPredictiveAnalytics.ts` | idem |
-| `src/services/public/userDataAggregationService.ts` | idem |
-| `src/services/events/IntelligentEventService.ts` | idem (3 instâncias) |
-| `src/services/events/GeminiEventProcessor.ts` | idem |
-| `src/services/viajar/DocumentProcessor.ts` | idem |
-| `src/services/diagnostic/adaptiveDiagnosticService.ts` | idem |
-| + mais 8-10 arquivos |
+## Sequencia de implementacao
 
-Google Search API key e engine ID também estão expostas no client-side.
+1. Criar `TravelTechRobot.tsx` - componente SVG do robo
+2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
+3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
+4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
 
-**Correção**: Criar uma função centralizada `callGeminiProxy()` que chama a edge function existente e substituir todos os usos diretos.
+## Notas importantes
 
----
-
-## VULNERABILIDADE CRÍTICA #3: Supabase URL + anon key hardcoded no passportService
-
-`src/services/passport/passportService.ts` (linhas 83-85) tem URL e anon key hardcoded como propriedades de classe, fazendo fetch direto sem o SDK. Isso **bypassa RLS** se usado com Bearer do anon key em vez do token do usuário autenticado.
-
-**Correção**: Usar o cliente Supabase SDK (`supabase` importado) em vez de fetch manual.
-
----
-
-## VULNERABILIDADE ALTA #4: Geolocation validation é 100% client-side (FRAUDE NO PASSAPORTE)
-
-O `geolocationService.ts` calcula a distância Haversine **no browser**. Um fraudador pode:
-1. Usar GPS spoofing no celular
-2. Interceptar a resposta do `navigator.geolocation` via console
-3. Chamar diretamente a API do Supabase para inserir stamps sem validação
-
-Existe uma função `validateProximitySQL` (RPC `check_geofence`), mas o fluxo principal em `CheckpointCheckin.tsx` usa a validação client-side.
-
-**Correção**: Mover validação de geofence para server-side (edge function ou RPC que valide coordenadas antes de inserir stamp).
-
----
-
-## VULNERABILIDADE ALTA #5: PoliciesEditor — XSS sem sanitização
-
-`src/components/admin/settings/PoliciesEditor.tsx` (linhas 516-526 e 722-726) renderiza `currentPolicy.content` com `dangerouslySetInnerHTML` usando regex de markdown sem DOMPurify. Se um admin malicioso inserir `<script>` no conteúdo da policy, será executado para todos os visitantes.
-
-**Correção**: Aplicar `DOMPurify.sanitize()` no resultado da conversão markdown.
-
----
-
-## VULNERABILIDADE MÉDIA #6: Google Search Engine ID hardcoded
-
-`src/services/ai/guataRealWebSearchService.ts` (linha 99) tem um engine ID hardcoded como fallback: `'a3641e1665f7b4909'`. Isso não é secreto, mas é uma configuração que deveria estar no servidor.
-
----
-
-## Plano de Implementação (Priorizado)
-
-### Fase 1 — URGENTE (impacto máximo)
-| # | Ação | Escopo |
-|---|------|--------|
-| 1 | **Remover sistema de test users de produção** | `AuthProvider.tsx`, `useRoleBasedAccess.ts`, `TestUsers.ts`, `TestLogin.tsx`, `TestUserSelector.tsx`, `QuickTestLogin.tsx` + dashboards que usam `getCurrentTestUser()` |
-| 2 | **Centralizar chamadas Gemini no proxy** | Criar `callGeminiProxy()` e substituir em 23+ arquivos |
-| 3 | **Remover fetch manual no passportService** | Usar SDK do Supabase |
-
-### Fase 2 — ALTA
-| # | Ação | Escopo |
-|---|------|--------|
-| 4 | **Server-side geofence validation** | Migrar validação de check-in para RPC/edge function |
-| 5 | **Sanitizar PoliciesEditor** | Adicionar DOMPurify no `dangerouslySetInnerHTML` |
-| 6 | **Mover Google Search keys para edge functions** | `guataRealWebSearchService.ts`, `intelligentWebSearchService.ts`, etc. |
-
-### Fase 3 — Consolidação
-| # | Ação | Escopo |
-|---|------|--------|
-| 7 | Remover `@ts-nocheck` dos arquivos de segurança | Priorizar auth, passport, admin |
-| 8 | Atualizar jspdf (Path Traversal) | `package.json` |
-
----
-
-## Seção Técnica: Detalhes
-
-**Test Users Bypass**: O `AuthProvider` tem um `useEffect` que na montagem verifica `getCurrentTestUser()`. Se encontrar, cria um `User` simulado e seta no contexto React — sem nenhuma verificação com Supabase. Todos os componentes downstream (dashboards, rotas protegidas) confiam cegamente nesse contexto.
-
-A correção envolve envolver todo o bloco em `if (import.meta.env.DEV)` ou, preferencialmente, remover completamente e usar apenas autenticação real via Supabase Auth.
-
-**Passport Fraud**: O fluxo de check-in faz `geolocationService.validateProximity()` (client-side Haversine) → se válido → `supabase.from('passport_stamps').insert()`. Não há validação server-side das coordenadas. Um usuário pode inserir stamps diretamente via API REST do Supabase com coordenadas falsas.
+- Os textos do hero continuam editaveis via admin (platformContentService)
+- O robo e puramente visual/decorativo - nao tem funcionalidade
+- Todas as animacoes usam CSS puro (sem framer-motion no hero)
+- O componente respeita `prefers-reduced-motion` para acessibilidade
+- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
 

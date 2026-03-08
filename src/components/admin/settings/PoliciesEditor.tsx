@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -516,13 +517,15 @@ export default function PoliciesEditor() {
                               <div 
                                 className="bg-white p-6 rounded-lg border border-gray-200"
                                 dangerouslySetInnerHTML={{ 
-                                  __html: currentPolicy.content
-                                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                                    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                                    .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                                    .replace(/\n/gim, '<br />')
+                                  __html: DOMPurify.sanitize(
+                                    currentPolicy.content
+                                      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                                      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                                      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                                      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                                      .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                                      .replace(/\n/gim, '<br />')
+                                  )
                                 }}
                               />
                             ) : (
@@ -722,13 +725,15 @@ export default function PoliciesEditor() {
                           <div 
                             className="bg-white p-6 rounded-lg border border-gray-200"
                             dangerouslySetInnerHTML={{ 
-                              __html: currentPolicy.content
-                                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                                .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                                .replace(/\n/gim, '<br />')
+                              __html: DOMPurify.sanitize(
+                                currentPolicy.content
+                                  .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                                  .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                                  .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                                  .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                                  .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                                  .replace(/\n/gim, '<br />')
+                              )
                             }}
                           />
                         ) : (

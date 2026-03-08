@@ -59,8 +59,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import QuickTestLogin from '@/components/auth/QuickTestLogin';
-import { getCurrentTestUser } from '@/services/auth/TestUsers';
 import { useAuth } from '@/hooks/useAuth';
 import { businessMetricsService, CityAverage } from '@/services/viajar/businessMetricsService';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,7 +109,7 @@ export default function SecretaryDashboard() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [autoInsights, setAutoInsights] = useState<any>(null);
   const [loadingAutoInsights, setLoadingAutoInsights] = useState(false);
-  const [showTestLogin, setShowTestLogin] = useState(false);
+  
   const [heatmapData, setHeatmapData] = useState<CityAverage[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(false);
   const [userCityId, setUserCityId] = useState<string | null>(null);
@@ -278,13 +276,7 @@ export default function SecretaryDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
 
-  // Verificar se há usuário autenticado
-  useEffect(() => {
-    const testUser = getCurrentTestUser();
-    if (!user && !testUser) {
-      setShowTestLogin(true);
-    }
-  }, [user]);
+  // Autenticação agora é gerenciada pelo ProtectedRoute
 
   // Carregar city_id do usuário
   useEffect(() => {
@@ -333,18 +325,7 @@ export default function SecretaryDashboard() {
     <div className="min-h-screen bg-gray-50">
       <ViaJARNavbar />
       
-      {/* Login de Testes - Mostrar quando não autenticado */}
-      {showTestLogin && !user && (
-        <div className="container mx-auto px-6 py-4">
-          <QuickTestLogin 
-            onLogin={(testUser) => {
-              setShowTestLogin(false);
-              window.location.reload();
-            }}
-            onClose={() => setShowTestLogin(false)}
-          />
-        </div>
-      )}
+      {/* Seção de login de teste removida por segurança */}
       
       {/* Header com gradiente azul-roxo */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white py-8">

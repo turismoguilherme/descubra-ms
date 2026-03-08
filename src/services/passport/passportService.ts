@@ -80,30 +80,47 @@ interface UnlockedReward {
 }
 
 class PassportService {
-  // Constantes para fetch direto
-  private SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-  private SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
-
-  // Função auxiliar para fazer fetch no Supabase
+  /**
+   * SEGURANÇA: Usando Supabase SDK ao invés de fetch direto.
+   * O SDK respeita RLS e usa o token do usuário autenticado.
+   */
   private async fetchSupabase<T = unknown>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.SUPABASE_URL}/rest/v1/${endpoint}`, {
-      headers: {
-        'apikey': this.SUPABASE_KEY,
-        'Authorization': `Bearer ${this.SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': options?.method === 'POST' ? 'return=representation' : '',
-        ...options?.headers
-      },
-      ...options
-    });
+    // Parse endpoint para extrair tabela e query params
+    const [tablePart, ...queryParts] = endpoint.split('?');
+    const table = tablePart;
+    const queryString = queryParts.join('?');
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erro ${response.status}: ${errorText}`);
+    if (options?.method === 'POST') {
+      const body = options.body ? JSON.parse(options.body as string) : {};
+      const { data, error } = await supabase
+        .from(table)
+        .insert(body)
+        .select();
+      if (error) throw new Error(`Erro: ${error.message}`);
+      return data as T;
     }
     
-    const text = await response.text();
-    return text ? JSON.parse(text) : null;
+    // Parse query params para SELECT
+    let query = supabase.from(table).select('*');
+    
+    if (queryString) {
+      const params = queryString.split('&');
+      for (const param of params) {
+        if (param.startsWith('order=')) {
+          const [col, dir] = param.replace('order=', '').split('.');
+          query = query.order(col, { ascending: dir !== 'desc' });
+        } else {
+          const match = param.match(/^(\w+)=eq\.(.+)$/);
+          if (match) {
+            query = query.eq(match[1], match[2]);
+          }
+        }
+      }
+    }
+    
+    const { data, error } = await query;
+    if (error) throw new Error(`Erro: ${error.message}`);
+    return data as T;
   }
 
   /**
