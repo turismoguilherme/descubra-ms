@@ -308,7 +308,7 @@ export const financialDashboardService = {
         };
       }
 
-      const total = expenses.reduce((sum: number, e: any) => sum + Number(e.amount || 0), 0);
+      const total = (expenses as any[]).reduce((sum: number, e: any) => sum + Number(e.amount || 0), 0);
       
       const byCategory = {
         servidores: expenses
