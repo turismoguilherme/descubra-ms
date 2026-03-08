@@ -9,9 +9,6 @@ import { EventoCompleto, EventoFiltros, EventoEstatisticas } from '@/types/event
 import { googleSearchEventService } from './GoogleSearchEventService';
 import { geminiEventProcessor } from './GeminiEventProcessor';
 import { supabase } from '@/integrations/supabase/client';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export interface IntelligentEventConfig {
   googleSearch: {
