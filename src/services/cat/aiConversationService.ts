@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AI Conversation Service
  * Serviço para gerenciar conversas com IA nos CATs

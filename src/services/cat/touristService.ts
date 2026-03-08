@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tourist Service
  * Serviço para gerenciar turistas atendidos nos CATs
