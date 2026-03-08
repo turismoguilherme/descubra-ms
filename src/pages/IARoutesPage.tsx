@@ -576,7 +576,7 @@ export default function IARoutesPage() {
                     Itinerário
                   </h3>
                   <div className="grid md:grid-cols-3 gap-4">
-                    {generatedPlan.dias.map((dia: unknown, idx: number) => (
+                    {generatedPlan.dias.map((dia: any, idx: number) => (
                       <Card key={idx} className="border-2 border-ms-primary-blue/20 bg-white hover:shadow-lg transition-all hover:border-ms-primary-blue/40">
                         <CardHeader className="pb-3 bg-gradient-to-r from-ms-primary-blue/10 to-ms-discovery-teal/10">
                           <CardTitle className="text-base font-bold text-ms-primary-blue">
