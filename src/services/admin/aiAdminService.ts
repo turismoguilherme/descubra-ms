@@ -3,7 +3,7 @@ import { AIAdminAction } from '@/types/admin';
 
 export const aiAdminService = {
   async getActions(status?: AIAdminAction['status']) {
-    let query = supabase
+    let query = (supabase as any)
       .from('ai_admin_actions')
       .select('*')
       .order('created_at', { ascending: false });
