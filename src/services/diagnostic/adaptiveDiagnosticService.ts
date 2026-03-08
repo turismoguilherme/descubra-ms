@@ -4,7 +4,7 @@
  */
 
 import { QuestionnaireAnswers } from '@/types/diagnostic';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callGeminiProxy } from '../ai/geminiProxy';
 
 export interface AdaptiveQuestion {
   id: string;
