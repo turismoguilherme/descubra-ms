@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import DOMPurify from 'dompurify';
 
 export interface Policy {
   id: string;
@@ -102,7 +103,7 @@ export const policyService = {
   markdownToHtml(markdown: string): string {
     if (!markdown) return '';
 
-    return markdown
+    const rawHtml = markdown
       // Títulos
       .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mt-6 mb-4">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>')
@@ -122,6 +123,12 @@ export const policyService = {
         return `<p class="mb-4 leading-relaxed">${para}</p>`;
       })
       .join('');
+
+    // SECURITY: Sanitizar HTML para prevenir XSS
+    return DOMPurify.sanitize(rawHtml, { 
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'span'],
+      ALLOWED_ATTR: ['class', 'href', 'target', 'rel']
+    });
   },
 };
 

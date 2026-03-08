@@ -19,7 +19,7 @@ import {
   Target,
   BarChart3
 } from 'lucide-react';
-import { geminiClient } from '@/config/gemini';
+import { generateContent } from '@/config/gemini';
 
 interface Message {
   id: string;
@@ -204,10 +204,9 @@ INSTRUÇÕES:
 Responda em português brasileiro de forma estruturada e acionável.
 `;
 
-    const model = geminiClient.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    const result = await generateContent(prompt);
+    if (!result.ok) throw new Error(result.error);
+    return result.text;
   };
 
   const formatTimestamp = (date: Date): string => {

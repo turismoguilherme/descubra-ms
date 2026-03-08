@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -578,9 +579,10 @@ export default function EmailTemplatesManager() {
                       <>
                         <div 
                           dangerouslySetInnerHTML={{ 
-                            __html: formData.body_template
-                              // Mostrar variáveis como placeholders visuais no preview
-                              .replace(/\{\{(\w+)\}\}/g, '<span style="background: #fef3c7; padding: 2px 6px; border-radius: 3px; font-weight: 600; color: #92400e;">{$1}</span>')
+                            __html: DOMPurify.sanitize(
+                              formData.body_template,
+                              { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'span', 'div', 'img', 'table', 'tr', 'td', 'th', 'thead', 'tbody'], ALLOWED_ATTR: ['class', 'style', 'href', 'target', 'rel', 'src', 'alt', 'width', 'height'] }
+                            ).replace(/\{\{(\w+)\}\}/g, '<span style="background: #fef3c7; padding: 2px 6px; border-radius: 3px; font-weight: 600; color: #92400e;">{$1}</span>')
                           }}
                           style={{
                             maxWidth: '600px',

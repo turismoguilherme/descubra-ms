@@ -1,6 +1,6 @@
 import { KnowledgeItem } from "@/types/ai";
 import { knowledgeService } from "./knowledge/knowledgeService";
-import { geminiClient } from "@/config/gemini";
+import { generateContent } from "@/config/gemini";
 import { GuataResponse as GuataTypesResponse, GuataUserInfo } from "./types/guataTypes";
 import { OfficialSources } from "./knowledge/knowledgeService";
 
@@ -189,9 +189,9 @@ Pergunta do usuário: ${prompt}
 Responda de forma amigável e natural, usando o conhecimento fornecido sobre MS. Se não tiver informações específicas, seja honesto e sugira alternativas ou indique onde encontrar a informação.`;
 
       try {
-        const model = geminiClient.getGenerativeModel({ model: "gemini-pro" });
-        const result = await model.generateContent(fallbackPrompt);
-        const geminiResponse = result.response.text();
+        const geminiResult = await generateContent(fallbackPrompt);
+        if (!geminiResult.ok) throw new Error(geminiResult.error);
+        const geminiResponse = geminiResult.text;
         return {
           resposta: geminiResponse,
           response: geminiResponse,
