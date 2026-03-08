@@ -164,6 +164,14 @@ export function isAmbiguousPurple(hexColor: string): boolean {
 }
 
 /**
+ * Verifica se uma cor corresponde a um path que cruza fisicamente duas regiões.
+ */
+export function isSpanningPath(hexColor: string): boolean {
+  const normalized = hexColor.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+  return SPANNING_PATH_SET.has(normalized);
+}
+
+/**
  * Para cores roxas ambíguas, determina se é Campo Grande ou Celeiro
  * com base na posição Y do primeiro ponto M do path.
  */
