@@ -55,7 +55,7 @@ const ProfileCompletionChecker: React.FC<{ children: React.ReactNode }> = ({ chi
         '/viajar/atendente',
         '/viajar/municipal',
         '/viajar/estadual',
-        '/viajar/test-login',
+        '/viajar/forgot-password',
         '/viajar/forgot-password',
         '/viajar/precos',
         '/viajar/sobre',

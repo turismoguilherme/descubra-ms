@@ -67,89 +67,10 @@ const AttendantDashboardRestored: React.FC = () => {
   const isAttendant = roleAccess?.isAttendant || false;
   const userRole = roleAccess?.userRole || 'user';
 
-  // Debug: Log do estado de autenticação
-  console.log('🔍 AttendantDashboardRestored: Estado atual:', {
-    user: user ? { id: user.id, email: user.email } : null,
-    isAttendant,
-    userRole,
-    testUserId: typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null,
-    testUserData: typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null
-  });
-
   const [activeTab, setActiveTab] = useState('checkin');
   const [showSettings, setShowSettings] = useState(false);
 
-  // Forçar processamento de usuário de teste se necessário
-  useEffect(() => {
-    let testUserId: string | null = null;
-    let testUserData: string | null = null;
-    
-    try {
-      testUserId = typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null;
-      testUserData = typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null;
-    } catch (e) {
-      // Ignorar erros de localStorage
-    }
-    
-    if (testUserId && testUserData && !user) {
-      console.log('🔍 AttendantDashboardRestored: Forçando processamento de usuário de teste...');
-      // Disparar evento customizado para o AuthProvider processar
-      try {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('storage'));
-          // Também tentar novamente após um pequeno delay
-          const timeout = setTimeout(() => {
-            window.dispatchEvent(new Event('storage'));
-          }, 100);
-          
-          return () => clearTimeout(timeout);
-        }
-      } catch (e) {
-        console.warn('🔍 AttendantDashboardRestored: Erro ao disparar evento:', e);
-      }
-    }
-  }, [user]);
-
-  // Verificar se há usuário de teste no localStorage (aguardar processamento)
-  let testUserId: string | null = null;
-  let testUserData: string | null = null;
-  
-  try {
-    testUserId = typeof window !== 'undefined' ? localStorage.getItem('test_user_id') : null;
-    testUserData = typeof window !== 'undefined' ? localStorage.getItem('test_user_data') : null;
-  } catch (e) {
-    console.warn('🔍 AttendantDashboardRestored: Erro ao acessar localStorage:', e);
-  }
-  
-  // Se há usuário de teste mas ainda não foi processado, aguardar
-  if (testUserId && testUserData && !user) {
-    try {
-      const testUser = JSON.parse(testUserData);
-      const isTestAttendant = testUser.role === 'atendente' || testUser.role === 'cat_attendant';
-      
-      if (isTestAttendant) {
-        console.log('🔍 AttendantDashboardRestored: Aguardando processamento do usuário de teste...');
-        return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Carregando usuário de teste...</p>
-            </div>
-          </div>
-        );
-      }
-    } catch (error) {
-      console.error('🔍 AttendantDashboardRestored: Erro ao processar usuário de teste:', error);
-    }
-  }
-
   if (!user || !isAttendant) {
-    console.warn('🔍 AttendantDashboardRestored: Acesso negado', {
-      hasUser: !!user,
-      isAttendant,
-      userRole
-    });
-    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-lg">
@@ -158,7 +79,7 @@ const AttendantDashboardRestored: React.FC = () => {
           <p className="text-sm text-gray-500 mb-4">
             Role: {userRole || 'não definido'} | isAttendant: {isAttendant ? 'sim' : 'não'}
           </p>
-          <Button onClick={() => window.location.href = '/test-login'}>Voltar para Login de Teste</Button>
+          <Button onClick={() => window.location.href = '/viajar/login'}>Voltar para Login</Button>
         </div>
       </div>
     );

@@ -255,7 +255,7 @@ export default function ProfileCompletion({ onComplete, initialData }: ProfileCo
   const handleAutoFill = async () => {
     try {
       // Buscar dados do registro
-      const registrationData = localStorage.getItem('registration_data');
+      const registrationData = sessionStorage.getItem('registration_data');
       if (!registrationData) {
         toast({
           title: 'Dados não encontrados',

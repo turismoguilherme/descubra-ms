@@ -219,7 +219,7 @@ export default function ViaJAROnboarding() {
 
   const handleFinish = () => {
     // Limpar dados temporários
-    localStorage.removeItem('registration_data');
+    sessionStorage.removeItem('registration_data');
     // Redireciona para dashboard apropriado
     navigate('/viajar/dashboard');
   };

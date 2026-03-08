@@ -180,7 +180,7 @@ const OverflowOneRegister: React.FC = () => {
         }
       } else {
         // Salvar dados temporários no localStorage para o onboarding
-        localStorage.setItem('registration_data', JSON.stringify({
+        sessionStorage.setItem('registration_data', JSON.stringify({
           country: formData.country,
           cnpj: formData.country === 'BR' ? formData.cnpj : '',
           category: formData.category,
