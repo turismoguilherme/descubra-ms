@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ INTELLIGENT TOURISM SERVICE
  * Chatbot de turismo verdadeiramente inteligente

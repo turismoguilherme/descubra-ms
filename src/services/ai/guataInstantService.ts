@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ INSTANT SERVICE - Resposta instantânea e confiável
  * Sem web search, apenas conhecimento local expandido

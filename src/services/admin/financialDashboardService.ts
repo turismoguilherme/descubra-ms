@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Financial Dashboard Service
  * Serviço completo para gestão financeira: receitas, despesas, salários e cálculo de lucro

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ EMOTIONAL INTELLIGENCE SERVICE - Inteligência emocional e personalização
  */

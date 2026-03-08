@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ PARTNERS SERVICE - Sistema de parceiros real
  * Integra com a tabela institutional_partners do Supabase

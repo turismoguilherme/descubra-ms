@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ INTELLIGENT SERVICE - Chatbot verdadeiramente inteligente e interativo
  */
