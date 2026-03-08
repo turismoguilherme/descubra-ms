@@ -126,8 +126,11 @@ addColors(CONE_SUL_COLORS, 'caminhos-natureza-cone-sul');
  * Para estas cores, a região correta depende da posição Y do path.
  */
 const AMBIGUOUS_PURPLE_SET = new Set([
+  // Roxos escuros que aparecem em ambas as regiões
   '76448E', '76438D', '76428E', '76428D',
   '75428C', '75428E', '77448E', '77448F',
+  // Roxos/lilás claros cujos paths cruzam ambas as regiões
+  'BEAFC9', 'BFB2C9',
 ]);
 
 /** Limiar Y para separar Campo Grande (centro) de Celeiro (sul) no SVG (viewBox 0 0 896 1152) */
