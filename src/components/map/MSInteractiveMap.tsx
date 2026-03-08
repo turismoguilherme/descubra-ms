@@ -253,7 +253,7 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
             ref={svgContainerRef}
             className="w-full h-full"
             style={{ maxHeight: '850px' }}
-            dangerouslySetInnerHTML={{ __html: svgContent }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['use'] }) }}
           />
         )}
 

@@ -89,47 +89,14 @@ export interface RealWebSearchResponse {
 }
 
 class GuataRealWebSearchService {
-  // API KEY ESPECÍFICA DO GUATÁ - Google Search API
-  // Prioridade: Variável de ambiente (.env)
-  private readonly GUATA_GOOGLE_SEARCH_API_KEY = 
-    (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
-  // ENGINE ID ESPECÍFICO DO GUATÁ - Configurado pelo usuário
-  // Prioridade: 1) Variável de ambiente, 2) Engine ID hardcoded
-  private readonly GUATA_ENGINE_ID = 
-    (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || 'a3641e1665f7b4909').trim();
-  
-  private googleApiKey: string;
-  private googleEngineId: string;
-  private serpApiKey: string;
-  private isConfigured: boolean = false;
-  
-  // Rate limiting para Google Search (100 requisições/dia no plano gratuito)
-  private readonly MAX_SEARCHES_PER_DAY = 100;
-  private searchCount: number = 0;
-  private searchResetTime: number = Date.now() + (24 * 60 * 60 * 1000); // 24 horas
+  // Cache de resultados para evitar chamadas repetidas
   private searchCache: Map<string, { results: WebSearchResult[]; timestamp: number }> = new Map();
   private readonly SEARCH_CACHE_DURATION = 30 * 60 * 1000; // 30 minutos
 
   constructor() {
-    // Usar API Key específica do Guatá, com fallback para variável de ambiente
-    this.googleApiKey = this.GUATA_GOOGLE_SEARCH_API_KEY || (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
-    this.googleEngineId = this.GUATA_ENGINE_ID; // Usar Engine ID específico do Guatá
-    this.serpApiKey = (import.meta.env.VITE_SERPAPI_KEY || '').trim();
-    
-    this.isConfigured = !!(this.googleApiKey && this.googleEngineId);
-    
-    // Log apenas em desenvolvimento e sem expor informações sensíveis
-    const isDev = import.meta.env.DEV;
-    if (isDev) {
-      console.log('[Guatá Web Search] Configurado:', this.isConfigured);
-      if (this.isConfigured) {
-        console.log('[Guatá Web Search] Engine ID:', this.googleEngineId);
-      }
-    }
-    
-    // Verificação silenciosa (sem logs que expõem informações)
-    if (!this.isConfigured && isDev) {
-      console.warn('[Guatá Web Search] Não configurado - Verifique VITE_GOOGLE_SEARCH_API_KEY e VITE_GOOGLE_SEARCH_ENGINE_ID');
+    // Todas as buscas passam pela Edge Function (chaves protegidas no servidor)
+    if (import.meta.env.DEV) {
+      console.log('[Guatá Web Search] Usando Edge Function para buscas (chaves protegidas)');
     }
   }
 

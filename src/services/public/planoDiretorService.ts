@@ -781,16 +781,7 @@ export class PlanoDiretorService {
     try {
       console.log('planoDiretorService: Buscando planos para userId:', userId);
       
-      // Namespace UUID fixo para gerar UUIDs determinísticos para usuários de teste
-      const TEST_USER_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
-      
-      // Verificar se é um ID de teste e converter para UUID
-      const isTestUserId = userId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-      const searchUserId = isTestUserId ? uuidv5(userId, TEST_USER_NAMESPACE) : userId;
-      
-      if (isTestUserId) {
-        console.log('planoDiretorService: ID de teste detectado, convertendo para UUID:', userId, '->', searchUserId);
-      }
+      const searchUserId = userId;
       
       // Buscar planos onde o usuário é criador
       const { data: planosCriados, error: errorCriados } = await supabase
