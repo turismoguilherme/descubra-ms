@@ -118,14 +118,15 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     svgEl.setAttribute('height', '100%');
     svgEl.style.maxHeight = '850px';
 
-    // Marcar grupos com data-region (para highlighting) e data-ambiguous
+    // Marcar grupos com data-region (para highlighting), data-ambiguous e data-spanning
     const groups = svgEl.querySelectorAll('g[fill]');
     groups.forEach(g => {
       const fill = (g.getAttribute('fill') || '').replace('#', '').toUpperCase();
+      const spanning = isSpanningPath(fill);
       if (isAmbiguousPurple(fill)) {
         (g as HTMLElement).style.cursor = 'pointer';
         g.setAttribute('data-ambiguous', 'true');
-        // Marcar com data-region baseado no path (fallback)
+        if (spanning) g.setAttribute('data-spanning', 'true');
         const slug = resolveRegionForGroup(g);
         if (slug) g.setAttribute('data-region', slug);
       } else {
