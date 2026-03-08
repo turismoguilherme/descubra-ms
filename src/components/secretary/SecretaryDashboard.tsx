@@ -276,13 +276,7 @@ export default function SecretaryDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
 
-  // Verificar se há usuário autenticado
-  useEffect(() => {
-    const testUser = getCurrentTestUser();
-    if (!user && !testUser) {
-      setShowTestLogin(true);
-    }
-  }, [user]);
+  // Autenticação agora é gerenciada pelo ProtectedRoute
 
   // Carregar city_id do usuário
   useEffect(() => {
