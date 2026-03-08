@@ -585,7 +585,7 @@ export default function IARoutesPage() {
                         </CardHeader>
                         <CardContent className="space-y-2 pt-4">
                           <ul className="space-y-2">
-                            {dia.atividades.map((a: string, i: number) => (
+                            {(dia.atividades as string[]).map((a: string, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                                 <div className="w-1.5 h-1.5 rounded-full bg-ms-primary-blue mt-2 flex-shrink-0"></div>
                                 <span className="hover:text-ms-primary-blue transition-colors">{a}</span>
