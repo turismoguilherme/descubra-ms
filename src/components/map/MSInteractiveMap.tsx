@@ -205,13 +205,8 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       // Para grupos ambíguos, verificar se o data-region corresponde ao ativo
       // Mas como o path cruza 2 regiões, usar lógica especial
       if (isAmbiguous && activeSlug) {
-        // Grupos ambíguos: acender se o slug do grupo corresponde ao ativo
-        // Mas atenuar se o slug NÃO corresponde
-        if (regionSlug === activeSlug) {
-          gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
-        } else {
-          gEl.style.filter = 'brightness(0.7)';
-        }
+        // Grupos ambíguos cruzam 2 regiões: manter neutro para evitar contaminação visual
+        gEl.style.filter = 'none';
       } else if (activeSlug && regionSlug === activeSlug) {
         gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
       } else if (activeSlug && regionSlug !== activeSlug) {

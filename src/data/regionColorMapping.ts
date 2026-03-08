@@ -129,6 +129,10 @@ const AMBIGUOUS_PURPLE_SET = new Set([
   '75428C', '75428E', '77448E', '77448F',
   // Roxos/lilás claros cujos paths cruzam ambas as regiões
   'BEAFC9', 'BFB2C9',
+  // Cinza-lilás que cruza Celeiro e Fronteira
+  'CED1DD',
+  // Paths de transição na fronteira Campo Grande/Celeiro/Costa Leste
+  'CDABB3', 'C6B2B4',
 ]);
 
 /** Limiar Y para separar Campo Grande (centro) de Celeiro (sul) no SVG (viewBox 0 0 896 1152) */
