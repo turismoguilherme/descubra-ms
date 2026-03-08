@@ -339,40 +339,23 @@ class GoogleSearchService {
   // Chaves protegidas via Edge Function (guata-google-search-proxy)
   
   async getTourismData(region: string, type: string): Promise<any[]> {
-    if (!this.apiKey || !this.searchEngineId) {
-      console.warn('⚠️ Google Search API não configurada');
+    try {
+      const { callGoogleSearchProxy } = await import('@/services/ai/search/googleSearchProxy');
+      const result = await callGoogleSearchProxy(`tourism ${region} ${type}`, { maxResults: 10 });
+      return result.success ? result.results : [];
+    } catch (error) {
+      console.warn('⚠️ Google Search proxy error:', error);
       return [];
     }
-    
+  }
+  
+  async searchTourismInfo(query: string, region: string): Promise<any[]> {
     try {
-      const query = `tourism ${region} ${type}`;
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(query)}`
-      );
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
-        }
-        console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
-        return [];
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        console.warn(`⚠️ Google Search API error:`, data.error.message);
-        return [];
-      }
-      
-      return data.items || [];
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.warn(`⚠️ Erro ao buscar dados de turismo:`, err.message);
+      const { callGoogleSearchProxy } = await import('@/services/ai/search/googleSearchProxy');
+      const result = await callGoogleSearchProxy(`${query} ${region} tourism`, { maxResults: 10 });
+      return result.success ? result.results : [];
+    } catch (error) {
+      console.warn('⚠️ Google Search proxy error:', error);
       return [];
     }
   }
