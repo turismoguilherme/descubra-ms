@@ -201,12 +201,10 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     groups.forEach(g => {
       const gEl = g as SVGGElement;
       const regionSlug = g.getAttribute('data-region');
-      const isAmbiguous = g.getAttribute('data-ambiguous') === 'true';
+      const isSpanning = g.getAttribute('data-spanning') === 'true';
 
-      // Para grupos ambíguos, verificar se o data-region corresponde ao ativo
-      // Mas como o path cruza 2 regiões, usar lógica especial
-      if (isAmbiguous && activeSlug) {
-        // Grupos ambíguos cruzam 2 regiões: manter neutro para evitar contaminação visual
+      if (isSpanning && activeSlug) {
+        // Paths que cruzam fisicamente 2 regiões: manter neutro
         gEl.style.filter = 'none';
       } else if (activeSlug && regionSlug === activeSlug) {
         gEl.style.filter = 'brightness(1.4) drop-shadow(0 0 8px rgba(255,255,255,0.8))';
