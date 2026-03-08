@@ -53,8 +53,6 @@ import { weeklyInsightsService } from '@/services/private/weeklyInsightsService'
 import { profileAIService } from '@/services/ai/profileAIService';
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import QuickTestLogin from '@/components/auth/QuickTestLogin';
-import { getCurrentTestUser } from '@/services/auth/TestUsers';
 
 const PrivateDashboard = () => {
   // Verificar se o AuthProvider está disponível

@@ -215,7 +215,7 @@ function AppRoutes() {
                                 <Route path="/viajar/termos" element={<ViaJARTermosUso />} />
                                 <Route path="/viajar/cookies" element={<ViaJARCookies />} />
 
-                                <Route path="/test-login" element={<Suspense fallback={<LoadingFallback />}><TestLogin /></Suspense>} />
+                                {/* /test-login removido por segurança */}
 
                                 {/* Dashboard Routes Específicos */}
                                 <Route path="/secretary-dashboard" element={

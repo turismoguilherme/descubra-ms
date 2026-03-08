@@ -59,8 +59,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import QuickTestLogin from '@/components/auth/QuickTestLogin';
-import { getCurrentTestUser } from '@/services/auth/TestUsers';
 import { useAuth } from '@/hooks/useAuth';
 import { businessMetricsService, CityAverage } from '@/services/viajar/businessMetricsService';
 import { supabase } from '@/integrations/supabase/client';
