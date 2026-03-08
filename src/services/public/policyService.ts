@@ -102,7 +102,7 @@ export const policyService = {
   markdownToHtml(markdown: string): string {
     if (!markdown) return '';
 
-    return markdown
+    const rawHtml = markdown
       // Títulos
       .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mt-6 mb-4">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>')
@@ -122,6 +122,27 @@ export const policyService = {
         return `<p class="mb-4 leading-relaxed">${para}</p>`;
       })
       .join('');
+
+    // SECURITY: Sanitizar HTML para prevenir XSS
+    if (typeof window !== 'undefined' && window.DOMPurify) {
+      return window.DOMPurify.sanitize(rawHtml, { 
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'span'],
+        ALLOWED_ATTR: ['class', 'href', 'target', 'rel']
+      });
+    }
+    
+    // Fallback: usar DOMPurify importado
+    try {
+      const DOMPurify = require('dompurify');
+      return DOMPurify.sanitize(rawHtml, { 
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'span'],
+        ALLOWED_ATTR: ['class', 'href', 'target', 'rel']
+      });
+    } catch {
+      // Se DOMPurify não estiver disponível, strip tags perigosos manualmente
+      return rawHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                     .replace(/on\w+\s*=/gi, '');
+    }
   },
 };
 

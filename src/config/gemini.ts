@@ -1,9 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '@/integrations/supabase/client';
 import { getErrorMessage } from '@/utils/errorUtils';
 
-// Cliente Gemini para compatibilidade com outros arquivos
-export const geminiClient = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+// SECURITY: geminiClient removido - todas as chamadas devem usar generateContent() via Edge Function
 
 // Cache para reduzir chamadas à API
 const responseCache = new Map<string, { response: string; timestamp: number }>();

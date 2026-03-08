@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { geminiClient } from '@/config/gemini';
 import { getErrorMessage } from '@/utils/errorUtils';
 
 /**
