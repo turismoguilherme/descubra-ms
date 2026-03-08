@@ -1,15 +1,13 @@
 /**
  * Auto Insights Service
  * Serviço para gerar insights automáticos periodicamente
+ * SEGURANÇA: Usa callGeminiProxy (Edge Function) em vez de API key direta
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { supabase } from '@/integrations/supabase/client';
+import { callGeminiProxy } from './geminiProxy';
 import { inventoryService } from '../public/inventoryService';
 import { eventService } from '../public/eventService';
 import { userDataAggregationService } from '../public/userDataAggregationService';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export interface DashboardInsights {
   summary: string;
@@ -34,38 +32,22 @@ export interface InsightNotification {
 }
 
 export class AutoInsightsService {
-  private genAI: GoogleGenerativeAI | null = null;
   private updateIntervals: Map<string, NodeJS.Timeout> = new Map();
 
-  constructor() {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    }
-  }
-
-  /**
-   * Gerar insights automáticos para um município
-   */
   async generateAutoInsights(municipalityId?: string): Promise<DashboardInsights> {
     try {
-      // Coletar todos os dados
       const [inventory, events, userData] = await Promise.all([
         inventoryService.getAttractions({ is_active: true }),
         eventService.getEvents({}),
         userDataAggregationService.aggregateUserData(municipalityId),
       ]);
 
-      // Preparar dados para análise
       const dataSummary = {
         totalAttractions: inventory.length,
         totalEvents: events.length,
         totalUsers: userData.totalUsers,
-        averageCompleteness: inventory.reduce((sum, item) => {
-          return sum + ((item as any).data_completeness_score || 0);
-        }, 0) / (inventory.length || 1),
-        averageCompliance: inventory.reduce((sum, item) => {
-          return sum + ((item as any).setur_compliance_score || 0);
-        }, 0) / (inventory.length || 1),
+        averageCompleteness: inventory.reduce((sum, item) => sum + ((item as any).data_completeness_score || 0), 0) / (inventory.length || 1),
+        averageCompliance: inventory.reduce((sum, item) => sum + ((item as any).setur_compliance_score || 0), 0) / (inventory.length || 1),
         upcomingEvents: events.filter((e: any) => {
           const eventDate = new Date(e.data_inicio || e.start_date);
           return eventDate > new Date() && eventDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -74,11 +56,7 @@ export class AutoInsightsService {
         mostCommonMotive: userData.trends.mostCommonMotive,
       };
 
-      // Analisar com IA
-      if (this.genAI) {
-        const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-        const prompt = `
+      const prompt = `
 Você é um consultor estratégico especializado em turismo municipal. Analise os seguintes dados e gere insights acionáveis:
 
 DADOS DO MUNICÍPIO:
@@ -97,21 +75,21 @@ Forneça uma resposta em JSON:
   "keyFindings": ["achado1", "achado2", "achado3"],
   "trends": ["tendência1", "tendência2"],
   "opportunities": ["oportunidade1", "oportunidade2"],
-  "alerts": ["alerta1 se houver", "alerta2 se houver"],
+  "alerts": ["alerta1 se houver"],
   "recommendations": ["recomendação acionável1", "recomendação acionável2"]
 }
 
-Seja específico, acionável e focado em ajudar gestores públicos a tomar decisões estratégicas.
+Seja específico, acionável e focado em ajudar gestores públicos.
 `;
 
-        const result = await model.generateContent(prompt);
-        const response = result.response.text();
+      const result = await callGeminiProxy(prompt, { temperature: 0.7, maxOutputTokens: 2000 });
 
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (result.ok && result.text) {
+        const jsonMatch = result.text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           const nextUpdate = new Date();
-          nextUpdate.setHours(nextUpdate.getHours() + 2); // Próxima atualização em 2 horas
+          nextUpdate.setHours(nextUpdate.getHours() + 2);
 
           return {
             summary: parsed.summary || '',
@@ -126,7 +104,6 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
         }
       }
 
-      // Fallback sem IA
       return this.getFallbackInsights(dataSummary);
     } catch (error) {
       console.error('Erro ao gerar insights automáticos:', error);
@@ -134,21 +111,13 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
     }
   }
 
-  /**
-   * Agendar atualização periódica
-   */
   scheduleInsightsUpdate(municipalityId: string, intervalHours: number = 2): void {
-    // Cancelar atualização anterior se existir
     const existing = this.updateIntervals.get(municipalityId);
-    if (existing) {
-      clearInterval(existing);
-    }
+    if (existing) clearInterval(existing);
 
-    // Agendar nova atualização
     const interval = setInterval(async () => {
       try {
         await this.generateAutoInsights(municipalityId);
-        // TODO: Salvar insights no banco e enviar notificações se necessário
       } catch (error) {
         console.error('Erro na atualização automática de insights:', error);
       }
@@ -157,9 +126,6 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
     this.updateIntervals.set(municipalityId, interval);
   }
 
-  /**
-   * Cancelar atualização agendada
-   */
   cancelScheduledUpdate(municipalityId: string): void {
     const interval = this.updateIntervals.get(municipalityId);
     if (interval) {
@@ -168,13 +134,9 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
     }
   }
 
-  /**
-   * Gerar notificações de insights importantes
-   */
   async generateNotifications(insights: DashboardInsights): Promise<InsightNotification[]> {
     const notifications: InsightNotification[] = [];
 
-    // Notificação de alertas
     if (insights.alerts.length > 0) {
       insights.alerts.forEach((alert, index) => {
         notifications.push({
@@ -188,7 +150,6 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
       });
     }
 
-    // Notificação de oportunidades
     if (insights.opportunities.length > 0) {
       insights.opportunities.slice(0, 2).forEach((opportunity, index) => {
         notifications.push({
@@ -202,7 +163,6 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
       });
     }
 
-    // Notificação de tendências importantes
     if (insights.trends.length > 0) {
       notifications.push({
         id: `trend-${Date.now()}`,
@@ -217,9 +177,6 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
     return notifications;
   }
 
-  /**
-   * Fallback sem IA
-   */
   private getFallbackInsights(dataSummary: any): DashboardInsights {
     const nextUpdate = new Date();
     nextUpdate.setHours(nextUpdate.getHours() + 2);
@@ -235,17 +192,9 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
         `Origem principal: ${dataSummary.mostCommonOrigin}`,
         `Motivo mais comum: ${dataSummary.mostCommonMotive}`,
       ],
-      opportunities: [
-        'Melhorar completude dos dados do inventário',
-        'Aumentar número de eventos cadastrados',
-      ],
-      alerts: dataSummary.averageCompleteness < 70
-        ? ['Completude dos dados abaixo do recomendado']
-        : [],
-      recommendations: [
-        'Revise regularmente os dados do inventário',
-        'Mantenha eventos atualizados',
-      ],
+      opportunities: ['Melhorar completude dos dados do inventário', 'Aumentar número de eventos cadastrados'],
+      alerts: dataSummary.averageCompleteness < 70 ? ['Completude dos dados abaixo do recomendado'] : [],
+      recommendations: ['Revise regularmente os dados do inventário', 'Mantenha eventos atualizados'],
       generatedAt: new Date().toISOString(),
       nextUpdate: nextUpdate.toISOString(),
     };
@@ -253,4 +202,3 @@ Seja específico, acionável e focado em ajudar gestores públicos a tomar decis
 }
 
 export const autoInsightsService = new AutoInsightsService();
-

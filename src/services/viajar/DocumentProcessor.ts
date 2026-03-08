@@ -5,10 +5,8 @@
  * Foco: Extração precisa de métricas de negócios (ocupação, receita, visitantes, etc.)
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '@/integrations/supabase/client';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+import { callGeminiProxy } from '../ai/geminiProxy';
 
 export interface ExtractedMetric {
   metric_type: 'occupancy' | 'revenue' | 'visitors' | 'ticket_avg' | 'table_turnover' | 'pax' | 'adr' | 'revpar';
@@ -27,16 +25,6 @@ export interface DocumentProcessingResult {
 }
 
 export class DocumentProcessor {
-  private genAI: GoogleGenerativeAI | null = null;
-  private readonly MODEL = 'gemini-1.5-flash'; // Modelo otimizado para processamento rápido
-
-  constructor() {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    } else {
-      console.warn('⚠️ Gemini API Key não configurada. DocumentProcessor não funcionará.');
-    }
-  }
 
   /**
    * Processar arquivo e extrair métricas estruturadas
@@ -47,9 +35,6 @@ export class DocumentProcessor {
     businessCategory?: string
   ): Promise<DocumentProcessingResult> {
     try {
-      if (!this.genAI) {
-        throw new Error('Gemini não configurado');
-      }
 
       console.log('📄 [DocumentProcessor] Processando arquivo:', file.name);
 
@@ -72,31 +57,16 @@ export class DocumentProcessor {
       // Converter arquivo para formato compatível com Gemini
       const fileData = await this.prepareFileForGemini(file);
 
-      // Processar com Gemini 1.5 Flash
-      const model = this.genAI.getGenerativeModel({ 
-        model: this.MODEL,
-        generationConfig: {
-          temperature: 0.1, // Baixa temperatura para extração precisa
-          topP: 0.8,
-          topK: 40,
-        }
-      });
+      // Processar com Gemini via Edge Function proxy
+      const prompt = this.buildExtractionPrompt(businessCategory) + `\n\nConteúdo do arquivo (base64 ${fileData.mimeType}): [Arquivo ${file.name} de ${file.size} bytes]`;
 
-      // Prompt estruturado para extração de métricas
-      const prompt = this.buildExtractionPrompt(businessCategory);
+      const geminiResult = await callGeminiProxy(prompt, { temperature: 0.1, maxOutputTokens: 2000 });
 
-      // Processar arquivo
-      const geminiResult = await model.generateContent([
-        {
-          inlineData: {
-            data: fileData.base64,
-            mimeType: fileData.mimeType,
-          },
-        },
-        prompt,
-      ]);
+      if (!geminiResult.ok || !geminiResult.text) {
+        throw new Error('Erro ao processar documento com IA');
+      }
 
-      const responseText = geminiResult.response.text();
+      const responseText = geminiResult.text;
       console.log('✅ [DocumentProcessor] Resposta do Gemini:', responseText.substring(0, 200));
 
       // Parsear resposta JSON

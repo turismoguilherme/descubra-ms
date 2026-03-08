@@ -26,8 +26,8 @@ export class GeminiEventProcessor {
 
   constructor(config: Partial<GeminiEventProcessorConfig> = {}) {
     this.config = {
-      enabled: false, // Desabilitado por padrão
-      apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+      enabled: false,
+      apiKey: '', // SEGURANÇA: Chave movida para Edge Function
       model: 'gemini-1.5-flash',
       maxTokens: 2000,
       temperature: 0.7,

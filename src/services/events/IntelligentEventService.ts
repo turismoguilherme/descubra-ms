@@ -9,9 +9,6 @@ import { EventoCompleto, EventoFiltros, EventoEstatisticas } from '@/types/event
 import { googleSearchEventService } from './GoogleSearchEventService';
 import { geminiEventProcessor } from './GeminiEventProcessor';
 import { supabase } from '@/integrations/supabase/client';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export interface IntelligentEventConfig {
   googleSearch: {
@@ -37,12 +34,8 @@ export interface IntelligentEventConfig {
 export class IntelligentEventService {
   private config: IntelligentEventConfig;
   private isInitialized: boolean = false;
-  private genAI: GoogleGenerativeAI | null = null;
 
   constructor(config: Partial<IntelligentEventConfig> = {}) {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    }
     this.config = {
       googleSearch: {
         enabled: false, // DESATIVADO - eventos manuais

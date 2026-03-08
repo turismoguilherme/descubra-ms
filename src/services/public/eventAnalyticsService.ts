@@ -4,9 +4,6 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export interface CompletenessAnalysis {
   overallScore: number;
@@ -63,13 +60,6 @@ export interface Improvement {
 }
 
 export class EventAnalyticsService {
-  private genAI: GoogleGenerativeAI | null = null;
-
-  constructor() {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    }
-  }
 
   /**
    * Analisar completude por categoria

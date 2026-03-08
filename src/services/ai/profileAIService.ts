@@ -1,11 +1,10 @@
 /**
  * Profile AI Service
  * Serviço de IA para preenchimento automático de perfil de negócio turístico
+ * SEGURANÇA: Usa callGeminiProxy (Edge Function) em vez de API key direta
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+import { callGeminiProxy } from './geminiProxy';
 
 export interface ProfileAutoFillData {
   description?: string;
@@ -20,17 +19,6 @@ export interface ProfileAutoFillData {
 }
 
 export class ProfileAIService {
-  private genAI: GoogleGenerativeAI | null = null;
-
-  constructor() {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    }
-  }
-
-  /**
-   * Preencher perfil automaticamente baseado em informações básicas
-   */
   async autoFillProfile(
     companyName: string,
     category: string,
@@ -38,14 +26,7 @@ export class ProfileAIService {
     location?: { city?: string; state?: string; address?: string }
   ): Promise<ProfileAutoFillData> {
     try {
-      if (!this.genAI) {
-        console.warn('Gemini API não configurada, retornando dados básicos');
-        return this.getBasicAutoFill(companyName, category);
-      }
-
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-      const locationStr = location 
+      const locationStr = location
         ? `${location.address || ''}, ${location.city || ''}, ${location.state || ''}`.trim()
         : '';
 
@@ -63,22 +44,20 @@ Forneça uma resposta em JSON com os seguintes campos:
   "shortDescription": "Descrição curta e impactante (máximo 200 caracteres)",
   "services": ["serviço1", "serviço2", "serviço3"],
   "amenities": ["comodidade1", "comodidade2", "comodidade3"],
-  "openingHours": "Horário de funcionamento em formato legível (ex: Segunda a Sexta: 08:00 às 18:00)",
-  "contactPhone": "Telefone formatado se inferível",
-  "contactEmail": "Email se inferível",
-  "website": "Site se inferível",
+  "openingHours": "Horário de funcionamento em formato legível",
   "tags": ["tag1", "tag2", "tag3"]
 }
 
 Seja específico e baseado em conhecimento real sobre turismo no Brasil, especialmente Mato Grosso do Sul.
-Para ${category}, considere os serviços e comodidades típicos desse tipo de negócio.
 `;
 
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      const result = await callGeminiProxy(prompt, { temperature: 0.7, maxOutputTokens: 1500 });
 
-      // Tentar extrair JSON da resposta
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!result.ok || !result.text) {
+        return this.getBasicAutoFill(companyName, category);
+      }
+
+      const jsonMatch = result.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         return {
@@ -101,9 +80,6 @@ Para ${category}, considere os serviços e comodidades típicos desse tipo de ne
     }
   }
 
-  /**
-   * Fallback básico sem IA
-   */
   private getBasicAutoFill(companyName: string, category: string): ProfileAutoFillData {
     const categoryServices: Record<string, string[]> = {
       hotel: ['Hospedagem', 'Café da manhã', 'Recepção 24h', 'Limpeza diária'],
@@ -131,4 +107,3 @@ Para ${category}, considere os serviços e comodidades típicos desse tipo de ne
 }
 
 export const profileAIService = new ProfileAIService();
-
