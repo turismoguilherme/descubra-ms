@@ -43,9 +43,10 @@ const COSTA_LESTE_COLORS = [
 // ═══════════════════════════════════════════════════════
 const CAMPO_GRANDE_COLORS = [
   // Roxos escuros (primários) - podem ser Campo Grande OU Celeiro
+  // Resolvidos por coordenada Y do clique real (AMBIGUOUS_PURPLE_SET)
   '76448E', '76438D', '76428E', '76428D',
   '75428C', '75428E', '77448E', '77448F',
-  // Roxos claros EXCLUSIVOS de Campo Grande (mais acinzentados, ~C9)
+  // Roxos claros que CRUZAM ambas as regiões - também ambíguos
   'BFB2C9', 'BEAFC9',
 ];
 
