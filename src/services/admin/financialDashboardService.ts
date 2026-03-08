@@ -396,7 +396,7 @@ export const financialDashboardService = {
         };
       }
 
-      const total = salaries.reduce((sum: number, s: any) => sum + Number(s.total_amount || 0), 0);
+      const total = (salaries as any[]).reduce((sum: number, s: any) => sum + Number(s.total_amount || 0), 0);
       
       // Buscar nomes dos funcionários separadamente
       const employeeIds = [...new Set(salaries.map((s: any) => s.employee_id))];
