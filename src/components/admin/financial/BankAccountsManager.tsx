@@ -298,18 +298,26 @@ export default function BankAccountsManager() {
     setSupplierDialogOpen(true);
   };
 
-  const deleteAccount = (id: string) => {
-    const updated = accounts.filter(a => a.id !== id);
-    setAccounts(updated);
-    localStorage.setItem('bank_accounts', JSON.stringify(updated));
-    toast({ title: 'Conta removida' });
+  const deleteAccount = async (id: string) => {
+    try {
+      await supabase.from('bank_accounts').delete().eq('id', id);
+      setAccounts(accounts.filter(a => a.id !== id));
+      toast({ title: 'Conta removida' });
+    } catch (error) {
+      console.error('Erro ao remover conta:', error);
+      toast({ title: 'Erro ao remover conta', variant: 'destructive' });
+    }
   };
 
-  const deleteSupplier = (id: string) => {
-    const updated = suppliers.filter(s => s.id !== id);
-    setSuppliers(updated);
-    localStorage.setItem('suppliers', JSON.stringify(updated));
-    toast({ title: 'Fornecedor removido' });
+  const deleteSupplier = async (id: string) => {
+    try {
+      await supabase.from('suppliers').delete().eq('id', id);
+      setSuppliers(suppliers.filter(s => s.id !== id));
+      toast({ title: 'Fornecedor removido' });
+    } catch (error) {
+      console.error('Erro ao remover fornecedor:', error);
+      toast({ title: 'Erro ao remover fornecedor', variant: 'destructive' });
+    }
   };
 
   const formatCurrency = (value: number) => {
