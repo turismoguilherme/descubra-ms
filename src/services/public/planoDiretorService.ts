@@ -616,23 +616,8 @@ export class PlanoDiretorService {
       console.log('planoDiretorService: Usuário Supabase:', supabaseUser?.id);
       console.log('planoDiretorService: Criador ID recebido:', data.criadorId);
       
-      // Namespace UUID fixo para gerar UUIDs determinísticos para usuários de teste
-      const TEST_USER_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
-      
-      // Verificar se é um ID de teste (não é UUID válido)
-      const isTestUserId = data.criadorId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.criadorId);
-      
-      // Para usuários de teste, converter para UUID determinístico usando UUID v5
-      // Para usuários reais, usar o ID do Supabase se disponível, senão usar o ID recebido
-      let criadorId: string;
-      if (isTestUserId && !supabaseUser?.id) {
-        // Gerar UUID determinístico baseado no ID de teste
-        // O mesmo ID de teste sempre gerará o mesmo UUID
-        criadorId = uuidv5(data.criadorId, TEST_USER_NAMESPACE);
-        console.log('planoDiretorService: ID de teste detectado, convertendo para UUID:', data.criadorId, '->', criadorId);
-      } else {
-        criadorId = supabaseUser?.id || data.criadorId;
-      }
+      // Usar ID do Supabase (autenticação real) ou o ID fornecido
+      const criadorId = supabaseUser?.id || data.criadorId;
       console.log('planoDiretorService: Usando criador_id:', criadorId);
       
       const insertData = {
