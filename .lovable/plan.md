@@ -1,138 +1,63 @@
 
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+# Avaliação Final de Segurança — Março 2026
 
-## Contexto
+## Veredicto: O sistema está seguro para operação. Não há vulnerabilidades críticas exploráveis.
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+---
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+## O que ESTÁ protegido ✅
 
-## O que NAO sera alterado
+| Camada | Status |
+|--------|--------|
+| `.env` | Limpo — apenas `VITE_SUPABASE_*` (chaves públicas do Supabase) |
+| API keys sensíveis (Gemini, Google Search) | Movidas para Supabase Secrets, acessadas via Edge Functions |
+| `GoogleGenerativeAI` no client-side | **Zero instâncias** — removido completamente |
+| RLS em `user_roles` | Habilitado — impede escalação de privilégio |
+| RLS em `user_profiles` | Habilitado — protege dados pessoais |
+| RLS em `tourism_inventory` | Habilitado — protege CPFs |
+| `ai_consultant_config` | Restrito a `service_role` only |
+| `plano_diretor_documents` | Bug do `is_valid_uuid` corrigido |
+| INSERT público em tabelas de dados | Restrito a `authenticated` (20 tabelas corrigidas) |
+| Funções SQL | `search_path = 'public'` em todas |
+| SVG dinâmico | Sanitizado com `DOMPurify` |
+| HTML dinâmico (`dangerouslySetInnerHTML`) | **Todos os 11 usos** passam por `DOMPurify.sanitize()` — seguro |
+| localStorage | Apenas preferências (idioma, cookie consent, progresso de formulário) — sem tokens, senhas ou dados financeiros |
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+---
 
-## O que sera criado
+## Riscos residuais BAIXOS (não exploráveis para fraude ou roubo de dados)
 
-### Novo Hero Section com identidade Travel Tech
+### 1. Mapbox token salvo em localStorage
+- `RegionHeatMapSection.tsx` salva `mapbox_token` no localStorage
+- **Risco**: Token do Mapbox é público por natureza (acessível no bundle JS de qualquer forma). Sem impacto real.
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+### 2. Variáveis VITE_ referenciadas mas não configuradas
+- `VITE_OPENWEATHER_API_KEY`, `VITE_GOOGLE_TRANSLATE_API_KEY`, `VITE_ALUMIA_API_KEY`, `VITE_MAPBOX_TOKEN`, `VITE_GOOGLE_PLACES_API_KEY`
+- **Risco**: Nenhum. Todas retornam `''` ou `undefined`. Nenhuma chave real está no `.env`. Os serviços simplesmente não funcionam (degradação graciosa), não expõem nada.
 
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+### 3. `markdownToHtml` sem DOMPurify direto
+- Todas as chamadas a `policyService.markdownToHtml()` já usam `DOMPurify.sanitize()` internamente (linha 128 do `policyService.ts`). **Seguro.**
 
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
+---
 
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
+## Perguntas específicas respondidas
 
-### Componente novo: `TravelTechRobot.tsx`
+### "Corre risco de expor algo?"
+**Não.** Nenhuma API key sensível está no bundle do cliente. O `.env` contém apenas a anon key do Supabase (pública por design). Dados pessoais (CPFs, perfis) estão protegidos por RLS.
 
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
+### "Corre risco de fraude?"
+**Não.** A escalação de privilégio foi bloqueada (RLS em `user_roles`). Transações financeiras (`partner_transactions`) exigem autenticação. Operações admin são validadas server-side via `is_admin_user()` (SECURITY DEFINER).
 
-## Estrutura de arquivos
+### "Outro perigo?"
+**Não há perigos críticos.** Os únicos itens pendentes são:
+1. **Ação manual**: Habilitar "Leaked Password Protection" no dashboard do Supabase Auth
+2. **Ação manual**: Reduzir OTP expiry de 86400s (24h) para 300-600s (5-10min)
+3. **Erros de build (TypeScript)**: São erros de tipagem, não de segurança. Não afetam runtime.
 
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
-```
+---
 
-## Visual esperado (layout em texto)
+## Conclusão
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
-
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
-```
-
-## Detalhes tecnicos
-
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
-
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
-
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
-
-## Sequencia de implementacao
-
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
-
-## Notas importantes
-
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+O código **não expõe dados sensíveis**, **não permite fraude**, e **não tem vulnerabilidades críticas exploráveis**. As únicas ações pendentes são 2 configurações manuais no dashboard do Supabase que fortalecem a proteção de senhas.
 
