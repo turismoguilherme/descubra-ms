@@ -172,31 +172,16 @@ export default function BankAccountsManager() {
       };
 
       if (editingAccount) {
-        // Atualizar
-        try {
-          await supabase.from('bank_accounts').update(accountData).eq('id', editingAccount.id);
-        } catch (e) {
-          console.warn('Salvando no localStorage');
-        }
+        const { error } = await supabase.from('bank_accounts').update(accountData).eq('id', editingAccount.id);
+        if (error) throw error;
         const updated = accounts.map(a => a.id === editingAccount.id ? { ...a, ...accountData } : a);
         setAccounts(updated);
-        localStorage.setItem('bank_accounts', JSON.stringify(updated));
       } else {
-        // Criar
-        const newAccount = {
-          ...accountData,
-          id: `local-${Date.now()}`,
-          created_at: new Date().toISOString(),
-        };
-        try {
-          const { data } = await supabase.from('bank_accounts').insert(accountData).select().single();
-          if (data) newAccount.id = data.id;
-        } catch (e) {
-          console.warn('Salvando no localStorage');
+        const { data, error } = await supabase.from('bank_accounts').insert(accountData).select().single();
+        if (error) throw error;
+        if (data) {
+          setAccounts([...accounts, data]);
         }
-        const updated = [...accounts, newAccount];
-        setAccounts(updated);
-        localStorage.setItem('bank_accounts', JSON.stringify(updated));
       }
 
       setAccountDialogOpen(false);
