@@ -21,8 +21,7 @@ export interface SearchConfig {
 }
 
 class IntelligentWebSearchService {
-  private readonly GOOGLE_SEARCH_API_KEY = (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim();
-  private readonly GOOGLE_SEARCH_ENGINE_ID = (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim();
+  // Google Search keys protegidas via Edge Function (guata-google-search-proxy)
   
   // Base de conhecimento inteligente e expansiva
   private readonly KNOWLEDGE_BASE = {
