@@ -152,11 +152,8 @@ export default function BankAccountsManager() {
       if (error) throw error;
       setSuppliers(data || []);
     } catch (error) {
-      console.warn('Usando localStorage para fornecedores:', error);
-      const cached = localStorage.getItem('suppliers');
-      if (cached) {
-        setSuppliers(JSON.parse(cached));
-      }
+      console.error('Erro ao carregar fornecedores:', error);
+      toast({ title: 'Erro', description: 'Não foi possível carregar fornecedores.', variant: 'destructive' });
     }
   };
 
