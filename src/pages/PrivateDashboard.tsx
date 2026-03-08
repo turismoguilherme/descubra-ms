@@ -521,18 +521,7 @@ const PrivateDashboard = () => {
         </div>
       </div>
 
-      {/* Login de Testes - Mostrar quando não autenticado */}
-      {showTestLogin && !user && (
-        <div className="container mx-auto px-6 py-4">
-          <QuickTestLogin 
-            onLogin={(testUser) => {
-              setShowTestLogin(false);
-              window.location.reload();
-            }}
-            onClose={() => setShowTestLogin(false)}
-          />
-        </div>
-      )}
+      {/* Seção de login de teste removida por segurança */}
 
       <div className="flex h-screen">
         {/* Sidebar Esquerda */}
