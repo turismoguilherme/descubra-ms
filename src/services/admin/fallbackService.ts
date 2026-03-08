@@ -19,9 +19,9 @@ export const fallbackService = {
           error.code === 'PGRST301' || // JWT expired/unauthorized
           error.code === '42P01' ||    // relation does not exist
           error.code === '42501' ||    // permission denied (RLS)
-          error.status === 406 ||      // Not Acceptable
-          error.status === 404 ||      // Not Found
-          error.status === 401 ||      // Unauthorized
+           (error as any).status === 406 ||      // Not Acceptable
+           (error as any).status === 404 ||      // Not Found
+           (error as any).status === 401 ||      // Unauthorized
           error.message?.includes('does not exist') ||
           error.message?.includes('permission denied') ||
           error.message?.includes('row-level security');

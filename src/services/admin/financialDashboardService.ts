@@ -659,7 +659,7 @@ export const financialDashboardService = {
       const { data: updatedData, error } = await supabase
         .from('viajar_employees')
         .update({
-          current_salary: newSalary,
+          current_salary: newSalary as any,
           salary_updated_at: new Date().toISOString(),
         })
         .eq('id', employeeId)

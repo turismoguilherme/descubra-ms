@@ -96,7 +96,7 @@ class PassportAdminService {
         throw error;
       }
       console.log('✅ [PassportAdminService] Configuração criada:', data?.id);
-      return data;
+      return data as any;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       const supabaseError = error as { code?: string; details?: string; message?: string };
