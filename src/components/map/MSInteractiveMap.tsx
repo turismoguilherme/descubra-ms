@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { useTouristRegions } from '@/hooks/useTouristRegions';
-import { getRegionByColor, isAmbiguousPurple } from '@/data/regionColorMapping';
+import { getRegionByColor, isAmbiguousPurple, isSpanningPath } from '@/data/regionColorMapping';
 
 const CAMPO_GRANDE_CELEIRO_Y_THRESHOLD = 650;
 
