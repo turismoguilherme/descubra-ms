@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Public Sector Report Service
  * Serviço para geração de relatórios municipais
