@@ -34,7 +34,7 @@ export const aiAdminService = {
   },
 
   async rejectAction(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .update({
         status: 'rejected',
