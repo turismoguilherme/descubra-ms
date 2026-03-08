@@ -109,7 +109,7 @@ export default function SecretaryDashboard() {
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [autoInsights, setAutoInsights] = useState<any>(null);
   const [loadingAutoInsights, setLoadingAutoInsights] = useState(false);
-  const [showTestLogin, setShowTestLogin] = useState(false);
+  
   const [heatmapData, setHeatmapData] = useState<CityAverage[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(false);
   const [userCityId, setUserCityId] = useState<string | null>(null);
