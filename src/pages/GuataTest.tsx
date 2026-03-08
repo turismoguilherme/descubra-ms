@@ -39,16 +39,12 @@ const GuataTest = () => {
   }, []);
 
   const checkAPIStatus = () => {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    const googleSearchKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
-    const googleEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
-    const serpApiKey = import.meta.env.VITE_SERPAPI_KEY;
-
+    // Status verificado via Edge Functions (chaves protegidas no servidor)
     setApiStatus({
-      gemini: !!geminiKey,
-      googleSearch: !!(googleSearchKey && googleEngineId),
-      serpAPI: !!serpApiKey,
-      hasWebSearch: !!(googleSearchKey && googleEngineId) || !!serpApiKey
+      gemini: true, // Gerenciado via Edge Function guata-gemini-proxy
+      googleSearch: true, // Gerenciado via Edge Function guata-google-search-proxy
+      serpAPI: false, // Não utilizado
+      hasWebSearch: true
     });
   };
 

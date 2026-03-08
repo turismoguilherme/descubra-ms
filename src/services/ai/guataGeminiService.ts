@@ -1,13 +1,12 @@
 
 /**
  * 🧠 GUATÁ GEMINI SERVICE - Integração com Gemini AI
- * Processa respostas inteligentes e empolgantes
- * Usa API key específica do Guatá para garantir funcionamento dedicado
+ * SEGURANÇA: Todas as chamadas passam pela Edge Function (guata-gemini-proxy)
+ * Nenhuma API key é exposta no client-side.
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { logger } from "@/utils/logger";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 import { getErrorMessage } from "@/utils/errorUtils";
 import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
@@ -18,8 +17,8 @@ export interface GeminiQuery {
   userLocation?: string;
   conversationHistory?: string[];
   searchResults?: any[];
-  isTotemVersion?: boolean; // true = /chatguata (pode usar "Olá"), false = /guata (não usa "Olá" após primeira mensagem)
-  isFirstUserMessage?: boolean; // true = primeira mensagem do usuário (já teve mensagem de boas-vindas)
+  isTotemVersion?: boolean;
+  isFirstUserMessage?: boolean;
 }
 
 export interface GeminiResponse {
@@ -31,31 +30,26 @@ export interface GeminiResponse {
   emotionalState: string;
 }
 
-// Sistema de rate limiting para API gratuita
 interface RateLimit {
   count: number;
   resetTime: number;
 }
 
-// Rate limit por usuário/sessão
 interface UserRateLimit {
   count: number;
   resetTime: number;
 }
 
-// Cache de respostas para evitar chamadas duplicadas
 interface CacheEntry {
   response: string;
   timestamp: number;
-  usedBy: number; // Quantas vezes foi usado
+  usedBy: number;
 }
 
-// Cache compartilhado (perguntas comuns)
 interface SharedCacheEntry extends CacheEntry {
   question: string;
 }
 
-// Cache individual (personalizado por usuário)
 interface IndividualCacheEntry extends CacheEntry {
   userId?: string;
   sessionId: string;
@@ -63,27 +57,19 @@ interface IndividualCacheEntry extends CacheEntry {
 }
 
 class GuataGeminiService {
-  private genAI: GoogleGenerativeAI | null = null;
-  // API KEY ESPECÍFICA DO GUATÁ - Gemini API
-  // Prioridade: Variável de ambiente (.env)
-  private readonly GUATA_API_KEY: string;
-  private isConfigured: boolean = false;
-  private hasLoggedExpiredKey: boolean = false; // Para evitar logs repetidos
+  // SEGURANÇA: Sem API key no client-side — tudo via Edge Function
+  private isConfigured: boolean = true; // Sempre configurado (via Edge Function)
   
-  // Rate limiting: máximo 8 requisições por minuto GLOBAL (margem de segurança para plano gratuito)
-  private readonly MAX_REQUESTS_PER_MINUTE = 8; // Reduzido de 10 para 8 (mais conservador)
-  private readonly MAX_REQUESTS_PER_USER_PER_MINUTE = 2; // Limite por usuário
-  private readonly RATE_LIMIT_WINDOW = 60000; // 1 minuto em ms
-  private rateLimit: RateLimit = { count: 0, resetTime: Date.now() + this.RATE_LIMIT_WINDOW };
-  // Rate limit por usuário/sessão
+  private readonly MAX_REQUESTS_PER_MINUTE = 8;
+  private readonly MAX_REQUESTS_PER_USER_PER_MINUTE = 2;
+  private readonly RATE_LIMIT_WINDOW = 60000;
+  private rateLimit: RateLimit = { count: 0, resetTime: Date.now() + 60000 };
   private userRateLimits: Map<string, UserRateLimit> = new Map();
   
-  // Cache semântico otimizado: 24 horas para reutilização de respostas entre usuários
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas (respostas sobre turismo mudam pouco)
-  private readonly COMMON_QUESTIONS_CACHE_DURATION = 48 * 60 * 60 * 1000; // 48 horas para perguntas muito comuns
-  private readonly SIMILARITY_THRESHOLD = 0.75; // 75% de similaridade para reutilizar (mais preciso)
+  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000;
+  private readonly COMMON_QUESTIONS_CACHE_DURATION = 48 * 60 * 60 * 1000;
+  private readonly SIMILARITY_THRESHOLD = 0.75;
   
-  // Cache especial para perguntas de sugestão (balões): reduzido para permitir variação
   private readonly SUGGESTION_QUESTIONS = [
     "Quais são os melhores passeios em Bonito?",
     "Melhor época para visitar o Pantanal?",
@@ -92,14 +78,12 @@ class GuataGeminiService {
     "O que fazer em Campo Grande?",
     "Quais são os principais pontos turísticos de Campo Grande?"
   ];
-  private readonly SUGGESTION_SHARED_CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 horas (em vez de 24h)
-  private readonly SUGGESTION_INDIVIDUAL_CACHE_DURATION = 5 * 60 * 1000; // 5 minutos (apenas anti-spam)
+  private readonly SUGGESTION_SHARED_CACHE_DURATION = 3 * 60 * 60 * 1000;
+  private readonly SUGGESTION_INDIVIDUAL_CACHE_DURATION = 5 * 60 * 1000;
   
-  // Cache híbrido: compartilhado + individual
-  private sharedCache: Map<string, SharedCacheEntry> = new Map(); // Perguntas comuns
-  private individualCache: Map<string, Map<string, IndividualCacheEntry>> = new Map(); // Por usuário/sessão
+  private sharedCache: Map<string, SharedCacheEntry> = new Map();
+  private individualCache: Map<string, Map<string, IndividualCacheEntry>> = new Map();
   
-  // Processamento em background (1 por vez)
   private isProcessingAPI: boolean = false;
   private pendingAPICalls: Array<{ 
     query: GeminiQuery; 
@@ -108,51 +92,10 @@ class GuataGeminiService {
     resolve: (value: GeminiResponse) => void 
   }> = [];
 
-  private lastApiKey: string = ''; // Para detectar mudanças na chave
-
   constructor() {
-    // Usar API key específica do Guatá
-    const rawKey = import.meta.env.VITE_GEMINI_API_KEY;
-    this.GUATA_API_KEY = (rawKey || '').trim();
-    this.isConfigured = !!this.GUATA_API_KEY && this.GUATA_API_KEY.length > 0;
-    
-    // Se a chave mudou, resetar flag de erro
-    if (this.lastApiKey && this.lastApiKey !== this.GUATA_API_KEY) {
-      this.hasLoggedExpiredKey = false; // Reset quando chave muda
-      const isDev = import.meta.env.DEV;
-      if (isDev) {
-        console.log('[INFO] Nova chave Gemini detectada, resetando flags de erro');
-      }
-    }
-    this.lastApiKey = this.GUATA_API_KEY;
-    
     const isDev = import.meta.env.DEV;
-    
     if (isDev) {
-      console.log('[DIAGNÓSTICO] Verificando chave Gemini:');
-      console.log('  - Variável existe?', !!rawKey);
-      // NUNCA logar informações sobre a chave (tamanho, caracteres, etc)
-      console.log('  - Configurado?', this.isConfigured);
-    }
-    
-    if (this.isConfigured) {
-      try {
-        this.genAI = new GoogleGenerativeAI(this.GUATA_API_KEY);
-        if (isDev) {
-          console.log(`[Guatá Gemini] ✅ Configurado`);
-        }
-      } catch (error: unknown) {
-        console.error('[ERRO] Erro ao inicializar Gemini:', error);
-        this.isConfigured = false;
-      }
-    } else {
-      // Log apenas em desenvolvimento
-      if (isDev) {
-        console.error('[ERRO] [Guatá Gemini] ❌ NÃO configurado!');
-        console.error('  - Verifique se VITE_GEMINI_API_KEY está no .env');
-        console.error('  - Verifique se o servidor foi reiniciado após atualizar o .env');
-        console.error('  - Verifique se não há espaços ou aspas na chave');
-      }
+      console.log(`[Guatá Gemini] ✅ Configurado via Edge Function (chave protegida no servidor)`);
     }
   }
 
@@ -1232,194 +1175,8 @@ REGRAS ABSOLUTAS:
       }
     }
 
-    // FALLBACK: Método antigo (direto do frontend) - manter para compatibilidade
-    if (!this.genAI) {
-      console.error('❌ [ERRO CRÍTICO] Gemini não configurado!');
-      console.error('💡 [DIAGNÓSTICO] Verifique se VITE_GEMINI_API_KEY está configurada no .env');
-      throw new Error('Gemini não configurado');
-    }
-
-    try {
-      // Tentar modelos em ordem de preferência (usando modelos mais estáveis primeiro)
-      // Começar com modelos mais básicos e conhecidos
-      // Modelos válidos do Gemini (atualizado para modelos disponíveis)
-      const modelsToTry = [
-        'gemini-2.0-flash-exp',            // Experimental mais recente (funcionando)
-        'models/gemini-2.0-flash-exp',     // Com prefixo
-        'gemini-2.0-flash-001',            // Versão específica
-        'models/gemini-2.0-flash-001',     // Com prefixo
-        'gemini-1.5-flash-latest',         // Versão latest
-        'models/gemini-1.5-flash-latest',  // Com prefixo
-        'gemini-1.5-pro-latest',           // Pro versão latest
-        'models/gemini-1.5-pro-latest',    // Com prefixo
-      ];
-      
-      for (const modelName of modelsToTry) {
-        try {
-          // Tentando modelo (log removido)
-          const model = this.genAI.getGenerativeModel({ 
-            model: modelName,
-            generationConfig: {
-              temperature: 0.3, // Reduzido para 0.3 - mais determinístico e focado em seguir instruções rigorosamente
-              topP: 0.8,
-              maxOutputTokens: 2000
-            }
-          });
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const text = response.text();
-          if (isDev) {
-            console.log(`[SUCESSO] Modelo ${modelName} funcionou, resposta:`, text.length, 'caracteres');
-          }
-          return text;
-        } catch (modelError: unknown) {
-          // Extrair propriedades do erro de forma type-safe
-          const errorObj = modelError && typeof modelError === 'object' 
-            ? (modelError as { status?: number; code?: number; statusCode?: number; message?: string })
-            : null;
-          
-          const errorStatus = errorObj?.status || errorObj?.code || errorObj?.statusCode;
-          const errorMessage = errorObj?.message || getErrorMessage(modelError);
-          const errorString = JSON.stringify(modelError).toLowerCase();
-          
-          // Log detalhado do erro para diagnóstico
-          const errorDetails = {
-            model: modelName,
-            status: errorStatus,
-            message: errorMessage,
-            fullError: modelError
-          };
-          
-          // Erro no modelo (log removido para reduzir verbosidade)
-          
-          // Tratamento específico para erro 403 (API key leaked/inválida)
-          if (errorMessage.includes('leaked') || 
-              (errorStatus === 403 && errorMessage.toLowerCase().includes('api'))) {
-            if (isDev) {
-              console.error('[ERRO] Gemini API Key foi reportada como vazada!');
-            }
-            throw new Error('API_KEY_LEAKED_USE_FALLBACK');
-          }
-          
-          // Tratamento específico para erro 401 (não autorizado - chave inválida/expirada)
-          if (errorStatus === 401) {
-            logger.error('[ERRO] Gemini API Key inválida ou expirada (401)');
-            logger.dev('Verifique VITE_GEMINI_API_KEY em https://aistudio.google.com/app/apikey');
-            throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
-          }
-          
-          // Tratamento para erro 400 - verificar se a mensagem menciona API key expirada
-          const errorMessageLower = errorMessage.toLowerCase();
-          
-          // Verificar se a mensagem contém "api key expired" - apenas se for EXPLICITAMENTE mencionado
-          // Ser mais restritivo para evitar falsos positivos
-          const hasExplicitExpiredMessage = (
-            errorMessageLower.includes('api key expired') && 
-            (errorMessageLower.includes('please renew') || errorMessageLower.includes('renew the api key'))
-          ) || errorString.includes('"api key expired"') || errorString.includes("'api key expired'");
-          
-          const isApiKeyExpired = (
-            errorStatus === 400 && hasExplicitExpiredMessage
-          );
-          
-          // Verificar se é erro de API key inválida (mas não expirada) - apenas se for EXPLICITO
-          const hasExplicitInvalidMessage = (
-            errorMessageLower.includes('invalid api key') ||
-            (errorMessageLower.includes('api key') && errorMessageLower.includes('not valid') && errorMessageLower.includes('invalid'))
-          );
-          
-          const isApiKeyInvalid = (
-            errorStatus === 400 &&
-            !isApiKeyExpired &&
-            hasExplicitInvalidMessage
-          );
-          
-          if (isApiKeyExpired) {
-            // Log apenas uma vez por sessão para evitar spam
-            if (!this.hasLoggedExpiredKey) {
-              logger.error('[ERRO] Gemini API Key EXPIRADA');
-              logger.dev('Atualize VITE_GEMINI_API_KEY no .env e reinicie o servidor');
-              this.hasLoggedExpiredKey = true;
-            }
-            throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
-          }
-          
-          if (isApiKeyInvalid) {
-            if (!this.hasLoggedExpiredKey) {
-              logger.error('[ERRO] Gemini API Key inválida (400)');
-              logger.dev('Verifique VITE_GEMINI_API_KEY em https://aistudio.google.com/app/apikey');
-              this.hasLoggedExpiredKey = true;
-            }
-            throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
-          }
-          
-          // Se for erro 404 (modelo não encontrado), tentar próximo modelo
-          if (errorStatus === 404 || 
-              errorMessage.includes('not found') || 
-              errorMessage.includes('404')) {
-            if (isDev) {
-              console.log(`[INFO] Modelo ${modelName} não encontrado, tentando próximo...`);
-            }
-            continue; // Tentar próximo modelo
-          }
-          
-          // Para outros erros 400 (pode ser modelo inválido, prompt inválido, etc), tentar próximo modelo
-          if (errorStatus === 400) {
-            if (isDev) {
-              console.warn(`[AVISO] Modelo ${modelName} retornou erro 400, tentando próximo modelo...`);
-            }
-            continue; // Tentar próximo modelo
-          }
-          
-          // Para outros erros, propagar
-          if (isDev) {
-            console.warn(`[AVISO] Modelo ${modelName} falhou:`, errorMessage);
-          }
-          throw modelError instanceof Error ? modelError : new Error(errorMessage);
-        }
-      }
-      
-      // Se nenhum modelo funcionou, lançar erro
-      throw new Error('Nenhum modelo Gemini disponível');
-      } catch (error: unknown) {
-        const err = error as { status?: number; code?: string; statusCode?: number; message?: string };
-        // Log detalhado do erro final
-        if (isDev) {
-          console.error('[ERRO] Erro na chamada do Gemini:', {
-            status: err.status || err.code || err.statusCode,
-            message: err.message || (error instanceof Error ? error.message : String(error)),
-            error: error
-          });
-        }
-        
-        // Tratamento específico para erro de API key vazada (403)
-        if (err.status === 403 || err.message?.includes('API_KEY_LEAKED_USE_FALLBACK')) {
-          logger.error('[ERRO] API Key do Gemini reportada como vazada');
-          logger.dev('Revogue e crie nova chave em https://aistudio.google.com/app/apikey');
-          throw new Error('API_KEY_LEAKED_USE_FALLBACK');
-        }
-        
-        // Tratamento para chave expirada - apenas se for erro específico
-        const errorObj = error && typeof error === 'object'
-          ? (error as { status?: number; message?: string })
-          : null;
-        
-        if (errorObj?.status === 401 || errorObj?.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
-          // Log apenas uma vez por sessão
-          if (!this.hasLoggedExpiredKey) {
-            logger.error('[ERRO] API Key do Gemini inválida ou expirada');
-            logger.dev('Atualize VITE_GEMINI_API_KEY no .env e reinicie o servidor');
-            this.hasLoggedExpiredKey = true;
-          }
-          throw new Error('API_KEY_EXPIRED_USE_FALLBACK');
-        }
-        
-        // Para outros erros, usar fallback silenciosamente
-        if (isDev) {
-          console.warn('[AVISO] Gemini não disponível, usando fallback');
-        }
-        throw error;
-      }
+    // SEGURANÇA: Sem fallback direto — apenas Edge Function
+    throw new Error('Edge Function não disponível para o Guatá');
   }
 
   /**

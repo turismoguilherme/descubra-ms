@@ -147,9 +147,9 @@ const ViaJARFooter: React.FC = () => {
             <h3 className="text-xs font-bold mb-2 text-white">Acesso</h3>
             <ul className="space-y-1 mb-3">
               <li>
-                <Link to="/test-login" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
+                <Link to="/viajar/login" onClick={handleLinkClick} className="text-gray-400 hover:text-viajar-cyan text-xs transition-colors flex items-center gap-1.5 justify-center lg:justify-start">
                   <FlaskConical className="h-3 w-3" />
-                  Login de Testes
+                  Login
                 </Link>
               </li>
               <li>

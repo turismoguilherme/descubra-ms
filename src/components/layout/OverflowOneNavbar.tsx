@@ -124,11 +124,6 @@ const OverflowOneNavbar = () => {
                     Cadastrar
                   </Button>
                 </Link>
-                <Link to="/overflow-one/test-login">
-                  <Button size="sm" variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
-                    Teste
-                  </Button>
-                </Link>
               </>
             )}
           </div>
@@ -219,9 +214,6 @@ const OverflowOneNavbar = () => {
                   </Link>
                       <Link to="/overflow-one/register" className="block px-3 py-2 text-base font-medium text-blue-600 hover:bg-blue-50" onClick={() => setIsOpen(false)}>
                         Cadastrar
-                      </Link>
-                      <Link to="/overflow-one/test-login" className="block px-3 py-2 text-base font-medium text-orange-600 hover:bg-orange-50" onClick={() => setIsOpen(false)}>
-                        Teste
                       </Link>
                 </div>
               )}

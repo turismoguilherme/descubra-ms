@@ -77,14 +77,10 @@ const DebugPanel: React.FC = () => {
       info.warnings.push('Erro ao acessar sessionStorage');
     }
 
-    // Coletar estado de autenticação (se disponível)
+    // Coletar estado de autenticação
     try {
-      const testUserId = localStorage.getItem('test_user_id');
-      const testUserData = localStorage.getItem('test_user_data');
       info.authState = {
-        testUserId,
-        testUserData: testUserData ? JSON.parse(testUserData) : null,
-        hasAuthProvider: typeof window !== 'undefined' && 'React' in window
+        hasAuthProvider: typeof window !== 'undefined'
       };
     } catch (error: unknown) {
       info.warnings.push('Erro ao coletar estado de autenticação');

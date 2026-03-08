@@ -216,19 +216,7 @@ export const systemHealthService = {
   async checkGeminiAPI(): Promise<HealthCheckResult> {
     const start = Date.now();
     try {
-      // Verificar se a API key está configurada
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        return {
-          service_name: 'API Gemini (IA)',
-          service_type: 'api',
-          status: 'offline',
-          latency_ms: Date.now() - start,
-          error_message: 'API key não configurada',
-        };
-      }
-
-      // Verificar se a Edge Function está disponível (mais leve que chamar a API diretamente)
+      // Verificar via Edge Function (chave protegida no servidor)
       try {
         const { error } = await supabase.functions.invoke('guata-gemini-proxy', {
           body: {
