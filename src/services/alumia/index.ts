@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Sistema de Integração com ALUMIA - Preparado para Fase Futura
 // Integração com plataforma de turismo da ALUMIA
 

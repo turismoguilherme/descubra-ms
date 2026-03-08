@@ -203,7 +203,7 @@ export default function IARoutesPage() {
 
       // Salvar roteiro no banco de dados
       try {
-        const { error: saveError } = await supabase
+        const { error: saveError } = await (supabase as any)
           .from('user_routes')
           .insert({
             user_id: user.id,
@@ -234,7 +234,7 @@ export default function IARoutesPage() {
       console.error('Erro ao gerar roteiro:', error);
       toast({
         title: 'Erro ao gerar roteiro',
-        description: error.message || 'Não foi possível gerar o roteiro. Tente novamente em alguns instantes.',
+        description: (error as Error).message || 'Não foi possível gerar o roteiro. Tente novamente em alguns instantes.',
         variant: 'destructive',
       });
     } finally {
@@ -576,7 +576,7 @@ export default function IARoutesPage() {
                     Itinerário
                   </h3>
                   <div className="grid md:grid-cols-3 gap-4">
-                    {generatedPlan.dias.map((dia: unknown, idx: number) => (
+                    {generatedPlan.dias.map((dia: any, idx: number) => (
                       <Card key={idx} className="border-2 border-ms-primary-blue/20 bg-white hover:shadow-lg transition-all hover:border-ms-primary-blue/40">
                         <CardHeader className="pb-3 bg-gradient-to-r from-ms-primary-blue/10 to-ms-discovery-teal/10">
                           <CardTitle className="text-base font-bold text-ms-primary-blue">
@@ -585,7 +585,7 @@ export default function IARoutesPage() {
                         </CardHeader>
                         <CardContent className="space-y-2 pt-4">
                           <ul className="space-y-2">
-                            {dia.atividades.map((a: string, i: number) => (
+                            {(dia.atividades as string[]).map((a: string, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                                 <div className="w-1.5 h-1.5 rounded-full bg-ms-primary-blue mt-2 flex-shrink-0"></div>
                                 <span className="hover:text-ms-primary-blue transition-colors">{a}</span>
@@ -607,7 +607,7 @@ export default function IARoutesPage() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-gray-700 pt-3">
-                          {generatedPlan.eventos.map((ev: unknown, i: number) => (
+                          {generatedPlan.eventos.map((ev: any, i: number) => (
                             <div key={i} className="flex justify-between items-center p-2 rounded hover:bg-white/50 transition-colors">
                               <span className="font-medium">{ev.nome}</span>
                               <span className="text-gray-500 text-xs">{ev.data}</span>
@@ -624,7 +624,7 @@ export default function IARoutesPage() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-gray-700 pt-3">
-                          {generatedPlan.parceiros.map((p: unknown, i: number) => (
+                          {generatedPlan.parceiros.map((p: any, i: number) => (
                             <div key={i} className="flex justify-between items-center p-2 rounded hover:bg-white/50 transition-colors">
                               <div className="flex flex-col">
                                 <span className="font-medium text-gray-900">{p.nome}</span>

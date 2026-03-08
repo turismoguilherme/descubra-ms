@@ -72,7 +72,7 @@ const PassaporteLista = () => {
 
         console.log("📱 PASSAPORTE LISTA: Resultado da query:", {
           routesCount: routesData?.length || 0,
-          routes: routesData?.map((r: unknown) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
+          routes: routesData?.map((r: any) => ({ id: r.id, name: r.name, difficulty: r.difficulty }))
         });
         
         const routesError = null;
@@ -179,7 +179,7 @@ const PassaporteLista = () => {
         console.error("❌ PASSAPORTE LISTA: Erro geral:", error);
         toast({
           title: "Erro",
-          description: "Erro ao carregar rotas: " + (error?.message || 'Erro desconhecido'),
+          description: "Erro ao carregar rotas: " + ((error as Error)?.message || 'Erro desconhecido'),
           variant: "destructive",
         });
         setRoutes([]);

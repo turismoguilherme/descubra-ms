@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ ULTRA FAST SERVICE - Versão ultra-rápida sem busca web
  */

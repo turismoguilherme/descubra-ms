@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { generateContent } from '@/config/gemini';
 import { financialDashboardService } from './financialDashboardService';

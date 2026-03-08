@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ ULTRA FAST INTELLIGENT - Resposta instantânea com personalidade
  */

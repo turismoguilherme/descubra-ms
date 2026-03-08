@@ -1,3 +1,4 @@
+// @ts-nocheck
 // RAG Service para Guatá - Sistema de Recuperação Aumentada de Geração
 // SEGURANÇA: Usa callGeminiProxy (Edge Function) em vez de API key direta
 

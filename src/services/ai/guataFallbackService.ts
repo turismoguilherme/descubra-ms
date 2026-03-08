@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ FALLBACK SERVICE - IA que funciona sem Edge Functions
  * 

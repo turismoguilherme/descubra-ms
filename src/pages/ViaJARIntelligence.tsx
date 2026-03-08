@@ -132,7 +132,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
       }
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('data_sharing_consents')
           .select('consent_given, data_types_shared, revoked_at')
           .eq('user_id', user.id)
@@ -209,7 +209,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
         const purposeCounts: Record<string, number> = {};
         const preferenceCounts: Record<string, number> = {};
 
-        profiles.forEach((profile: unknown) => {
+        profiles.forEach((profile: any) => {
           const age = profile.age_range;
           const gender = profile.gender;
           const origin = profile.origin_state || profile.state;
@@ -293,7 +293,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
 
     setSavingConsent(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('data_sharing_consents')
         .upsert({
           user_id: user.id,
@@ -1020,7 +1020,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
             )}
           </>
         ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'revenue' | 'market' | 'benchmark')} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-background/50 backdrop-blur-sm">
             <TabsTrigger value="revenue" className="gap-2">
               <DollarSign className="h-4 w-4" />

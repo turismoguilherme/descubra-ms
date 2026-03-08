@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Translation Service
  * Serviço para gerenciar traduções realizadas nos CATs

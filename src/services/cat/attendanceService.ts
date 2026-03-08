@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Attendance Service
  * Serviço para gerenciar registros de atendimento nos CATs

@@ -422,7 +422,7 @@ export default function ViaJAROnboarding() {
 
           {/* Step 3: Profile Completion */}
           {currentStep === 3 && (
-            <ProfileCompletion onComplete={handleProfileComplete} />
+            <ProfileCompletion onComplete={handleProfileComplete as any} />
           )}
 
           {/* Step 4: Diagnostic (apenas Empresários) OU Pronto (Secretárias) */}

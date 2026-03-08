@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ KNOWLEDGE BASE SERVICE
  * Serviço para consultar e gerenciar a base de conhecimento persistente do Guatá

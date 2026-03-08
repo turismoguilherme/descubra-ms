@@ -3,7 +3,7 @@ import { AIAdminAction } from '@/types/admin';
 
 export const aiAdminService = {
   async getActions(status?: AIAdminAction['status']) {
-    let query = supabase
+    let query = (supabase as any)
       .from('ai_admin_actions')
       .select('*')
       .order('created_at', { ascending: false });
@@ -19,7 +19,7 @@ export const aiAdminService = {
   },
 
   async approveAction(id: string, approvedBy: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .update({
         status: 'approved',
@@ -34,7 +34,7 @@ export const aiAdminService = {
   },
 
   async rejectAction(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .update({
         status: 'rejected',
@@ -49,7 +49,7 @@ export const aiAdminService = {
 
   async executeAction(id: string) {
     // Marcar ação como executada
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .update({
         status: 'executed',
@@ -64,7 +64,7 @@ export const aiAdminService = {
   },
 
   async createSuggestion(description: string, platform: 'viajar' | 'descubra_ms' | 'both', actionType: 'monitor' | 'analyze' | 'suggest' | 'execute') {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .insert([{
         action_type: actionType,

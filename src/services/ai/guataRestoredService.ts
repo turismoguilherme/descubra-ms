@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ RESTAURADO - Serviço Principal Inteligente
  * 

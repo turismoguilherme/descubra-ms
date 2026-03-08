@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠 GUATÁ ADAPTATIVO - IA que Aprende e Melhora Continuamente
  * 

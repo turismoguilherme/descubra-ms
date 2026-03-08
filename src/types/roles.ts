@@ -5,6 +5,9 @@ export type UserRole =
   | 'gestor_municipal'
   | 'atendente'
   | 'cat_attendant'
+  | 'attendant'
+  | 'secretary'
+  | 'private'
   | 'user';
 
 export interface RolePermissions {

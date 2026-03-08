@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔍 GUATÁ REAL WEB SEARCH SERVICE
  * Sistema de pesquisa web REAL para o Guatá

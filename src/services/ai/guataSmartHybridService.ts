@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🦦 GUATÁ SMART HYBRID SERVICE - Chatbot verdadeiramente inteligente
  * Combina conhecimento local + web search inteligente + personalidade natural

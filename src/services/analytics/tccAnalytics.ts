@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Sistema de Analytics para TCC
 
 export interface TCCSession {

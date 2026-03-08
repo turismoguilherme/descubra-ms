@@ -4,6 +4,7 @@ interface AdminPageHeaderProps {
   title: string;
   description: string;
   helpText?: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export function AdminPageHeader({ title, description, helpText }: AdminPageHeaderProps) {
