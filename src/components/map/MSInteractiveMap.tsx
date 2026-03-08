@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { useTouristRegions } from '@/hooks/useTouristRegions';
 import { getRegionByColor, isAmbiguousPurple, isSpanningPath } from '@/data/regionColorMapping';
