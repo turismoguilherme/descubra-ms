@@ -317,8 +317,20 @@ class IntelligentWebSearchService {
       console.log('🔍 Tentando Google Custom Search ou APIs alternativas...');
       let webResults: IntelligentSearchResult[] = [];
       
-      if (this.GOOGLE_SEARCH_API_KEY) {
-        webResults = await this.searchGoogleCustom(config.query);
+      // Sempre tentar Edge Function para Google Search
+      const { callGoogleSearchProxy } = await import('@/services/ai/search/googleSearchProxy');
+      const proxyResult = await callGoogleSearchProxy(config.query, { maxResults: 5 });
+      if (proxyResult.success && proxyResult.results.length > 0) {
+        webResults = proxyResult.results.map(r => ({
+          title: r.title,
+          content: r.snippet,
+          url: r.link,
+          source: 'Google Search (Edge Function)',
+          confidence: 85,
+          category: 'web',
+          isRealTime: true,
+          lastUpdated: new Date().toISOString()
+        }));
       } else {
         webResults = await this.performAlternativeWebSearch(config.query);
       }

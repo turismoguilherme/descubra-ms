@@ -205,32 +205,9 @@ export class RegionalDataService {
             })));
           }
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            let errorData;
-            try {
-              errorData = JSON.parse(errorText);
-            } catch {
-              errorData = { error: { message: errorText || `HTTP ${response.status}` } };
-            }
-            console.warn(`⚠️ Erro ${response.status} ao buscar query "${query}":`, errorData?.error?.message || errorText);
-            continue; // Pular esta query e continuar com a próxima
-          }
-          
-          const data = await response.json();
-          
-          if (data.error) {
-            console.warn(`⚠️ Erro na resposta para query "${query}":`, data.error.message);
-            continue;
-          }
-          
-          if (data.items && data.items.length > 0) {
-            allResults.push(...data.items);
-          }
         } catch (error: unknown) {
           const err = error as { message?: string };
-          const errMsg = err?.message || (error instanceof Error ? error.message : String(error));
-          console.warn(`⚠️ Erro ao buscar query "${query}":`, errMsg);
+          console.warn(`⚠️ Erro ao buscar query "${query}":`, err?.message || String(error));
         }
       }
 

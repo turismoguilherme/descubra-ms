@@ -360,44 +360,6 @@ class GoogleSearchService {
     }
   }
   
-  async searchTourismInfo(query: string, region: string): Promise<any[]> {
-    if (!this.apiKey || !this.searchEngineId) {
-      console.warn('⚠️ Google Search API não configurada');
-      return [];
-    }
-    
-    try {
-      const searchQuery = `${query} ${region} tourism`;
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${this.searchEngineId}&q=${encodeURIComponent(searchQuery)}`
-      );
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: { message: errorText || `HTTP ${response.status}` } };
-        }
-        console.warn(`⚠️ Google Search API error ${response.status}:`, errorData?.error?.message || errorText);
-        return [];
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        console.warn(`⚠️ Google Search API error:`, data.error.message);
-        return [];
-      }
-      
-      return data.items || [];
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.warn(`⚠️ Erro ao buscar informações de turismo:`, err.message);
-      return [];
-    }
-  }
 }
 
 class GenerativeAIService {
