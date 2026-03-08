@@ -4514,6 +4514,7 @@ export type Database = {
           id: string
           latitude: number | null
           longitude: number | null
+          photo_url: string | null
           points_earned: number | null
           route_id: string | null
           stamp_type: string | null
@@ -4528,6 +4529,7 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          photo_url?: string | null
           points_earned?: number | null
           route_id?: string | null
           stamp_type?: string | null
@@ -4542,6 +4544,7 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          photo_url?: string | null
           points_earned?: number | null
           route_id?: string | null
           stamp_type?: string | null
@@ -7367,6 +7370,17 @@ export type Database = {
       update_user_points: {
         Args: { p_points: number; p_state_id: string; p_user_id: string }
         Returns: undefined
+      }
+      validate_and_stamp_checkpoint: {
+        Args: {
+          p_checkpoint_id: string
+          p_latitude: number
+          p_longitude: number
+          p_photo_url?: string
+          p_route_id: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       validate_cnpj: { Args: { cnpj_input: string }; Returns: boolean }
       validate_partner_code: {
