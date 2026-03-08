@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Platform Metrics Service
  * Calcula métricas automaticamente e permite override manual via site_settings

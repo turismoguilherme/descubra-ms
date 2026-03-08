@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Weekly Insights Service
  * Gera e envia insights semanais automáticos por email

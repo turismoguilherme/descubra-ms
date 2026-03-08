@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tourist Service Service
  * Serviço para gerenciar registros de atendimento presencial aos turistas

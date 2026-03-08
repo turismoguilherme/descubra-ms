@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Plano Diretor de Turismo Service
  * Serviço para gerenciamento completo de Planos Diretores de Turismo

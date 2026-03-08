@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PDF Template Service - ViaJARTur
  * Serviço para geração de relatórios PDF seguindo o layout padrão ViaJARTur

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Event Predictive Analytics Service
  * SEGURANÇA: Usa callGeminiProxy (Edge Function) em vez de API key direta

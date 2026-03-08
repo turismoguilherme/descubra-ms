@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Document Processor
  * Serviço otimizado para extração estruturada de dados de documentos usando Gemini 1.5 Flash

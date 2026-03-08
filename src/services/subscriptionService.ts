@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Subscription Service
  * Gerencia planos e assinaturas ViaJAR

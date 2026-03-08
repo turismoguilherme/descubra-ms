@@ -167,6 +167,63 @@ export const ROLE_CONFIG: Record<UserRole, UserRoleData> = {
     displayName: 'Usuário',
     description: 'Usuário comum',
     dashboardComponent: 'UserDashboard'
+  },
+  attendant: {
+    role: 'attendant',
+    permissions: {
+      canViewDestinations: true,
+      canEditDestinations: false,
+      canViewEvents: true,
+      canEditEvents: false,
+      canViewUsers: false,
+      canEditUsers: false,
+      canViewAnalytics: false,
+      canViewReports: false,
+      canManageCheckins: true,
+      canViewRegionalData: false,
+      canViewStateData: false,
+    },
+    displayName: 'Attendant',
+    description: 'Atendente genérico',
+    dashboardComponent: 'AtendenteDashboard'
+  },
+  private: {
+    role: 'private',
+    permissions: {
+      canViewDestinations: true,
+      canEditDestinations: false,
+      canViewEvents: true,
+      canEditEvents: false,
+      canViewUsers: false,
+      canEditUsers: false,
+      canViewAnalytics: true,
+      canViewReports: true,
+      canManageCheckins: false,
+      canViewRegionalData: false,
+      canViewStateData: false,
+    },
+    displayName: 'Privado',
+    description: 'Acesso privado empresarial',
+    dashboardComponent: 'PrivateDashboard'
+  },
+  secretary: {
+    role: 'secretary',
+    permissions: {
+      canViewDestinations: true,
+      canEditDestinations: true,
+      canViewEvents: true,
+      canEditEvents: true,
+      canViewUsers: true,
+      canEditUsers: false,
+      canViewAnalytics: true,
+      canViewReports: true,
+      canManageCheckins: false,
+      canViewRegionalData: true,
+      canViewStateData: true,
+    },
+    displayName: 'Secretário',
+    description: 'Secretário de turismo',
+    dashboardComponent: 'SecretaryDashboard'
   }
 };
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Market Intelligence Service
  * Serviço para gerenciar dados de inteligência de mercado

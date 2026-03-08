@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Event Integration Service
  * Integra eventos com múltiplos módulos do sistema

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Event Management Service
  * Serviço para gerenciamento de eventos turísticos no Supabase

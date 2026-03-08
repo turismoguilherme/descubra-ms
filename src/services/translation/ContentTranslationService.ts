@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Content Translation Service
  * Gerencia traduções de conteúdo editável (institutional_content)

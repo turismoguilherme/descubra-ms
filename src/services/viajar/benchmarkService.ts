@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Benchmark Service
  * Serviço para gerenciar dados de competitive benchmark

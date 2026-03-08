@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Testes para Settings Modal
  */

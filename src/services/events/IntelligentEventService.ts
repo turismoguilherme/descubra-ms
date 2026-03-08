@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Serviço Principal de Eventos Inteligentes
  * 

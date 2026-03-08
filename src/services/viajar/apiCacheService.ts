@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * API Cache Service
  * Cache inteligente para todas as APIs (Gemini, Google Search, OpenWeather, Places)

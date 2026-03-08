@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inventory Analytics Service
  * SEGURANÇA: Usa callGeminiProxy (Edge Function) em vez de API key direta

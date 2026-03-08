@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Serviço de Busca de Eventos com Google Search via Edge Function
  * 

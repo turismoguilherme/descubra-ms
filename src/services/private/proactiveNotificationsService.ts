@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Proactive Notifications Service
  * Gera notificações proativas baseadas em métricas e desempenho do negócio

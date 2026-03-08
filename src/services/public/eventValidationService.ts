@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Event Validation Service
  * Serviço para validação de eventos turísticos

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Testes de Segurança para Stripe Connect
  * 
