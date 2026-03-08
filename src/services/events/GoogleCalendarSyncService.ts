@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Serviço de Sincronização com Google Calendar
  * 

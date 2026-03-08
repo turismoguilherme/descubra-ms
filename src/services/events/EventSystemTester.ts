@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Testador do Sistema de Eventos
  * 

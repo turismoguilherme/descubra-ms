@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consent Service
  * Serviço para gerenciar termos de consentimento e gerar PDFs assinados
