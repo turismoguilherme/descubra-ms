@@ -1,29 +1,108 @@
 
-# Continuação do Redesign Visual (Travel Tech Identity)
 
-Parece que houve uma interrupção antes de iniciarmos a escrita do código. Como o plano geral foi aprovado, vamos iniciar a implementação prática, começando pelas fundações visuais e a página inicial.
+# Redesign Visual Completo — ViajARTur (Travel Tech Identity)
 
-## Fases de Implementação Imediata
+## Estado Atual
 
-### Fase 1: Componentes Base (Tech & IA)
-- **`TechBackground.tsx`**: Componente de fundo escuro com grid "neural", orbs em gradiente e partículas, usado em todas as páginas para consistência.
-- **`GlowCard.tsx`**: Card com efeito glassmorphism escuro (`slate-900/50`) e bordas que brilham em neon cyan ao passar o mouse.
+O site marketing da ViajARTur usa um visual genérico: Hero com fundo branco, robô pequeno (max-w-md, w-64~96), páginas internas com hero `from-viajar-slate to-slate-800` repetitivo, cards simples sem efeitos tech, navbar branca básica. Não comunica que é uma empresa de **tecnologia e IA**.
 
-### Fase 2: O Novo Hero Impactante
-- **`TravelTechRobot.tsx`**: Aumentaremos significativamente o tamanho do robô. Adicionaremos órbitas, linhas de escaneamento holográfico, partículas de dados e "badges" flutuantes com termos tech (`<AI_Core />`, `Machine Learning`).
-- **`TravelTechHero.tsx`**: Tipografia repaginada com gradientes vibrantes (ciano para azul), botões com efeitos brilhantes e integração do `TechBackground`.
+## Escopo
 
-### Fase 3: Navegação e Layout Principal
-- **`ViaJARNavbar.tsx`**: Adaptação para o estilo dark/glassmorphism, botões CTA com sombras neon.
-- **Seções da Home (`WhatViajARTurDoesSection`, `SuccessCasesSection`)**: Transição para fundos escuros (slate-950) e substituição dos cards atuais pelo novo `GlowCard`.
+**Modifica:** 13 arquivos (páginas públicas/marketing + navbar + footer + 2 componentes novos)
+**NÃO modifica:** Dashboards, autenticação, banco de dados, rotas
 
-### Fase 4: Páginas Internas e Footer
-- **Páginas**: `ViaJARSaaS.tsx`, `Solucoes.tsx`, `CasosSucesso.tsx`, `Precos.tsx`, `Sobre.tsx` e `Contato.tsx` terão seus Heros e fundos atualizados para refletir o mesmo `TechBackground` escuro.
-- **`ViaJARFooter.tsx`**: Temática alinhada, com cores contrastantes e logos brilhantes.
+---
 
-## Detalhes Técnicos de Execução
-- **Arquivos a criar**: `src/components/home/TechBackground.tsx` e `src/components/home/GlowCard.tsx`.
-- **Estilização**: Uso extensivo de Tailwind CSS com suporte de animações customizadas via tag `<style>` e efeitos de `backdrop-blur`.
-- Nenhuma alteração no CMS (Supabase) ou no roteamento. Todo o conteúdo dinâmico será perfeitamente preservado.
+## Arquivos e Mudanças
 
-Por favor, aprove este plano para que eu possa escrever os códigos imediatamente.
+### Fase 1 — Componentes Base Reutilizáveis
+
+**1. `src/components/home/TechBackground.tsx`** (NOVO)
+- Fundo `bg-slate-950` com grid neural animado (linhas finas cyan)
+- Gradient orbs pulsantes (cyan + blue blur-3xl)
+- Partículas flutuantes (pontos luminosos animados)
+- Props: `variant?: 'hero' | 'section'` para intensidade
+- Respeita `prefers-reduced-motion`
+
+**2. `src/components/home/GlowCard.tsx`** (NOVO)
+- Card glassmorphism: `bg-white/5 backdrop-blur-xl border border-white/10`
+- Hover: `border-cyan-400/40 shadow-[0_0_30px_-5px_rgba(20,184,166,0.3)]`
+- Props: `children`, `className`, `glowColor?`
+
+### Fase 2 — Hero + Robô Impactante
+
+**3. `src/components/home/TravelTechRobot.tsx`** (REESCREVER)
+- Robô **muito maior**: `w-80 sm:w-96 md:w-[28rem] lg:w-[32rem]`
+- Halo de luz cyan intenso: `w-96 h-96 bg-cyan-500/20 blur-3xl`
+- Scan lines holográficas (linhas horizontais semi-transparentes animadas)
+- Badges tech flutuantes orbitando: "IA", "Big Data", "ML", "Analytics" (com Lucide icons)
+- Partículas de dados mais densas (12+ em vez de 6)
+- Flutuação mais pronunciada (-20px)
+
+**4. `src/components/home/TravelTechHero.tsx`** (REESCREVER)
+- Fundo: `TechBackground variant="hero"` (dark, slate-950)
+- Título com gradient text: `bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent`
+- Badge: "Travel Tech | IA + Turismo"
+- Dois CTAs com glow: primário (cyan com shadow neon), secundário (outline branco)
+- Layout split-screen mantido, robô ocupa ~50% viewport
+- Preserva `platformContentService` e `getContent()`
+
+### Fase 3 — Navbar Tech
+
+**5. `src/components/layout/ViaJARNavbar.tsx`** (REFATORAR)
+- Quando scrolled: `bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/10`
+- Quando não scrolled: `bg-transparent`
+- Links: `text-white/70 hover:text-cyan-400`
+- Dropdown Soluções: `bg-slate-900/95 border border-white/10 backdrop-blur-xl`
+- Botão "Começar Agora": gradiente cyan com shimmer animation
+- Botão "Entrar": `text-white/80 hover:text-white`
+- Mobile menu: `bg-slate-950/95 backdrop-blur-xl`
+
+### Fase 4 — Seções da Home
+
+**6. `src/components/home/WhatViajARTurDoesSection.tsx`** (REFATORAR visual)
+- Fundo: `bg-slate-950` com grid neural sutil
+- Título com gradient text
+- Cards de produtos usando `GlowCard` em vez de cards simples
+- Preserva toda a lógica de carregamento do Supabase
+
+**7. `src/components/home/SuccessCasesSection.tsx`** (REFATORAR visual)
+- Fundo: `bg-slate-900`
+- Métricas com visual "digital counter" (font mono, glow)
+- Cards com overlay de scan lines sutil
+- Preserva toda a lógica CMS
+
+**8. `src/pages/ViaJARSaaS.tsx`** (AJUSTAR)
+- Container principal: `bg-slate-950` em vez de `bg-background`
+- Video section e CTA section: adaptar para dark theme
+- CTA section: manter `bg-viajar-slate` mas com glow nos botões
+
+### Fase 5 — Páginas Internas
+
+**9-12. `Solucoes.tsx`, `CasosSucesso.tsx`, `Precos.tsx`, `Sobre.tsx`, `Contato.tsx`**
+- Hero sections: substituir `bg-gradient-to-b from-viajar-slate to-slate-800` por `TechBackground`
+- Badges e títulos com gradient text cyan
+- Cards/forms: glassmorphism dark (`bg-white/5 border border-white/10`)
+- Fundo geral: `bg-slate-950` em vez de `bg-background`
+- Seções alternadas: `bg-slate-900` e `bg-slate-950`
+- Preservar 100% da lógica CMS e formulários
+
+### Fase 6 — Footer
+
+**13. `src/components/layout/ViaJARFooter.tsx`** (REFATORAR)
+- Fundo: `bg-slate-950` com grid de circuito sutil no background
+- Logo "ViajARTur" com glow no "AR"
+- Links hover: `hover:text-cyan-400` com transição suave
+- Borda superior: `border-cyan-500/20`
+
+---
+
+## Detalhes Técnicos
+
+- **CSS puro** para animações (keyframes inline via `<style>`)
+- **Framer Motion** para fade-in/slide-up nas entradas de seção
+- **0 mudanças no banco de dados ou rotas**
+- **Paleta**: Ciano (#14b8a6), Slate-950 (#020617), White/opacity
+- Todos os `getContent()` e `platformContentService` preservados integralmente
+- `prefers-reduced-motion` respeitado em todas as animações
+
