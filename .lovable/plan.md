@@ -1,138 +1,80 @@
 
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+# Auditoria de Segurança Completa — Status Atual
 
-## Contexto
+## O que JÁ está seguro ✅
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+1. **Autenticação** — `AuthProvider.tsx` usa apenas Supabase Auth real. Test users removidos do fluxo de login.
+2. **Gemini AI** — 15+ serviços migrados para `callGeminiProxy()` via Edge Function. `guataGeminiService.ts` também usa Edge Function (confirmado no código).
+3. **Passaporte Digital** — Validação de geofence server-side via `validate_and_stamp_checkpoint` (RPC com Haversine no PostgreSQL).
+4. **XSS em Políticas** — Todos os `dangerouslySetInnerHTML` de políticas passam por `policyService.markdownToHtml()` com DOMPurify. O `PoliciesEditor.tsx` também usa `DOMPurify.sanitize()` diretamente.
+5. **Email Templates** — `EmailTemplatesManager.tsx` usa `DOMPurify.sanitize()`.
+6. **Passport Service** — Usando SDK Supabase em vez de fetch manual.
+7. **Dados de Registro** — `registration_data` já migrado para `sessionStorage` nos 3 arquivos.
+8. **Roles** — Tabela `user_roles` separada com RLS. Funções `SECURITY DEFINER` para validação.
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+---
 
-## O que NAO sera alterado
+## Vulnerabilidades que AINDA existem 🔴
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+### 1. Google Search API Key exposta no client-side (ALTA)
 
-## O que sera criado
+`guataRealWebSearchService.ts` (linhas 94-115) ainda lê `VITE_GOOGLE_SEARCH_API_KEY` diretamente e faz fetch à API do Google no fallback (linha 291). A Edge Function é tentada primeiro, mas se falhar, a chave do `.env` é usada no browser.
 
-### Novo Hero Section com identidade Travel Tech
+`GoogleSearchEventService.ts` (linha 370) lê `API_CONFIG.GOOGLE.SEARCH_API_KEY` — mas esse campo **não existe mais** no `apiKeys.ts` (foi removido). Isso significa que esse serviço já está **quebrado/inofensivo** — nunca consegue fazer a requisição.
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+**Ação necessária**: Remover o fallback client-side do `guataRealWebSearchService.ts` (linhas 258-380). Se a Edge Function falhar, retornar array vazio em vez de tentar com a chave no browser.
 
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+### 2. Gemini API Key no `.env` ainda é exposta no build (ALTA)
 
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
+O arquivo `.env` contém `VITE_GEMINI_API_KEY=AIzaSy...`. Qualquer variável com prefixo `VITE_` é **incluída no bundle JavaScript** pelo Vite e visível para qualquer usuário. Mesmo que o código não leia mais essa variável, ela está presente no bundle final.
 
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
+**Ação necessária**: Remover `VITE_GEMINI_API_KEY` e `VITE_GOOGLE_SEARCH_API_KEY` do `.env`. Essas chaves devem existir apenas como Supabase Secrets (para as Edge Functions).
 
-### Componente novo: `TravelTechRobot.tsx`
+### 3. Dados financeiros em localStorage (MÉDIA)
 
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
+`BankAccountsManager.tsx` salva contas bancárias (`bank_accounts`) e fornecedores (`suppliers`) no `localStorage` como fallback quando o Supabase falha. Isso inclui nomes de banco, agência, conta. Qualquer script na página pode ler esses dados.
 
-## Estrutura de arquivos
+**Ação necessária**: Remover o fallback para localStorage. Se o Supabase falhar, mostrar erro em vez de salvar dados sensíveis no browser.
 
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
-```
+### 4. Lógica de test user residual no `planoDiretorService.ts` (MÉDIA)
 
-## Visual esperado (layout em texto)
+Linhas 619-635 e 798-806 ainda contêm lógica para converter "IDs de teste" em UUIDs determinísticos. Isso não é um bypass de autenticação (depende do Supabase), mas é código morto que confunde a manutenção.
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
+**Ação necessária**: Remover a lógica de `TEST_USER_NAMESPACE` e `isTestUserId`.
 
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
-```
+### 5. SVG sem sanitização no `MSInteractiveMap.tsx` (BAIXA)
 
-## Detalhes tecnicos
+Linha 255 renderiza `svgContent` com `dangerouslySetInnerHTML` sem DOMPurify. Se o SVG vier de uma fonte controlada (arquivo local), o risco é baixo. Mas se vier de um endpoint externo ou do banco, é XSS.
 
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
+**Ação necessária**: Verificar a origem do SVG. Se for dinâmico, aplicar DOMPurify.
 
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
+### 6. Log de mensagem enganosa no `guataGeminiService.ts` (BAIXA)
 
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
+Linha 108 ainda diz `"Verifique VITE_GEMINI_API_KEY"` — mas essa variável não deveria mais existir. Isso confunde desenvolvedores.
 
-## Sequencia de implementacao
+**Ação necessária**: Corrigir mensagem para mencionar Edge Function.
 
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+---
 
-## Notas importantes
+## Resumo em linguagem simples
 
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+Imagine sua aplicação como uma loja:
+- **A porta principal está trancada** ✅ (autenticação funciona)
+- **O cofre está protegido** ✅ (passaporte, roles, geofence)
+- **Mas tem 2 chaves penduradas na vitrine** 🔴 — as API keys do Google e Gemini no `.env` com prefixo `VITE_` são visíveis para qualquer visitante no código-fonte do site
+- **E tem um caderno com dados de contas bancárias atrás do balcão** 🟡 — o localStorage com dados financeiros
+
+---
+
+## Plano de Correção (6 ações, ~8 arquivos)
+
+| # | Ação | Risco | Arquivos |
+|---|------|-------|----------|
+| 1 | Remover `VITE_GEMINI_API_KEY` e `VITE_GOOGLE_SEARCH_API_KEY` do `.env` | ALTO | `.env` |
+| 2 | Remover fallback client-side do `guataRealWebSearchService.ts` | ALTO | 1 arquivo |
+| 3 | Remover localStorage de dados financeiros no `BankAccountsManager.tsx` | MÉDIO | 1 arquivo |
+| 4 | Limpar lógica test user do `planoDiretorService.ts` | MÉDIO | 1 arquivo |
+| 5 | Sanitizar SVG no `MSInteractiveMap.tsx` (se dinâmico) | BAIXO | 1 arquivo |
+| 6 | Corrigir mensagem de log no `guataGeminiService.ts` | BAIXO | 1 arquivo |
 
