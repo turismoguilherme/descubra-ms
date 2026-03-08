@@ -137,11 +137,8 @@ export default function BankAccountsManager() {
       if (error) throw error;
       setAccounts(data || []);
     } catch (error) {
-      console.warn('Usando localStorage para contas:', error);
-      const cached = localStorage.getItem('bank_accounts');
-      if (cached) {
-        setAccounts(JSON.parse(cached));
-      }
+      console.error('Erro ao carregar contas bancárias:', error);
+      toast({ title: 'Erro', description: 'Não foi possível carregar contas bancárias.', variant: 'destructive' });
     }
   };
 
