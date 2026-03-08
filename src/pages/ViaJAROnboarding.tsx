@@ -100,7 +100,7 @@ export default function ViaJAROnboarding() {
     const successParam = searchParams.get('success');
 
     // Carregar dados do localStorage se existirem
-    const savedData = localStorage.getItem('registration_data');
+    const savedData = sessionStorage.getItem('registration_data');
     let savedPlan: PlanTier | null = null;
     let savedBilling: BillingPeriod = 'monthly';
     
