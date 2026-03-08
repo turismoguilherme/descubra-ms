@@ -98,7 +98,7 @@ const OverflowOneLogin: React.FC = () => {
       if (loginType === 'cadastur') {
         // Buscar email pelo CADASTUR no banco
         const cleanCadastur = loginField.replace(/\D/g, '');
-        const { data: profile } = await supabase
+        const { data: profile } = await (supabase as any)
           .from('profiles')
           .select('email')
           .eq('cadastur', cleanCadastur)
