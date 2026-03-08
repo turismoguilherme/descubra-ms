@@ -142,15 +142,9 @@ serve(async (req) => {
     // Validate and limit maxResults
     const safeMaxResults = Math.max(1, Math.min(10, maxResults || 5));
 
-    // Get API keys from environment (server-side only - never exposed to client)
-    // Tentar múltiplos nomes de variáveis para compatibilidade
-    const apiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY') || 
-                   Deno.env.get('GOOGLE_API_KEY') || 
-                   Deno.env.get('VITE_GOOGLE_SEARCH_API_KEY');
-    const engineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || 
-                     Deno.env.get('GOOGLE_CSE_ID') || 
-                     Deno.env.get('VITE_GOOGLE_SEARCH_ENGINE_ID') ||
-                     'a3641e1665f7b4909'; // Fallback para engine ID hardcoded
+    // Get API keys from Supabase Secrets (server-side only)
+    const apiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
+    const engineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || Deno.env.get('GOOGLE_CSE_ID');
     
     console.log('🔵 guata-google-search-proxy: Verificando configuração...');
     console.log('   GOOGLE_SEARCH_API_KEY:', apiKey ? '✅ present' : '❌ missing');

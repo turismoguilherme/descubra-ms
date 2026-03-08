@@ -80,7 +80,7 @@ export const API_SETUP_INSTRUCTIONS = {
       '2. Crie um projeto e ative a "Custom Search API"',
       '3. Gere uma chave de API',
       '4. Crie um mecanismo de busca em: https://cse.google.com/',
-      '5. Adicione as variáveis: VITE_GOOGLE_SEARCH_API_KEY e VITE_GOOGLE_SEARCH_ENGINE_ID'
+      '5. Adicione os secrets no Supabase (Settings → Edge Functions → Secrets): GOOGLE_SEARCH_API_KEY e GOOGLE_SEARCH_ENGINE_ID'
     ],
     priority: 'Alta - Essencial para busca web real'
   },
@@ -103,7 +103,7 @@ export const API_SETUP_INSTRUCTIONS = {
     instructions: [
       '1. Acesse: https://ai.google.dev/',
       '2. Obtenha uma chave de API do Gemini',
-      '3. Adicione a variável: VITE_GEMINI_API_KEY'
+      '3. Adicione o secret no Supabase (Settings → Edge Functions → Secrets): GEMINI_API_KEY'
     ],
     priority: 'Crítica - Obrigatória para funcionamento'
   },
