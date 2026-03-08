@@ -201,7 +201,7 @@ const ProfilePageFixed: React.FC = () => {
         diet: avatar.diet || '',
         curiosities: avatar.curiosities || [],
         is_unlocked: avatar.is_unlocked ?? true,
-        rarity: avatar.rarity || 'common',
+        rarity: (avatar.rarity || 'common') as 'common' | 'epic' | 'legendary' | 'rare',
         unlock_requirement: avatar.unlock_requirement || undefined
       }));
 
