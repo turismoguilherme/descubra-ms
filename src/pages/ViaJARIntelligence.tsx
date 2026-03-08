@@ -132,7 +132,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
       }
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('data_sharing_consents')
           .select('consent_given, data_types_shared, revoked_at')
           .eq('user_id', user.id)
