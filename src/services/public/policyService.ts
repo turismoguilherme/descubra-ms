@@ -125,25 +125,10 @@ export const policyService = {
       .join('');
 
     // SECURITY: Sanitizar HTML para prevenir XSS
-    if (typeof window !== 'undefined' && window.DOMPurify) {
-      return window.DOMPurify.sanitize(rawHtml, { 
-        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'span'],
-        ALLOWED_ATTR: ['class', 'href', 'target', 'rel']
-      });
-    }
-    
-    // Fallback: usar DOMPurify importado
-    try {
-      const DOMPurify = require('dompurify');
-      return DOMPurify.sanitize(rawHtml, { 
-        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'span'],
-        ALLOWED_ATTR: ['class', 'href', 'target', 'rel']
-      });
-    } catch {
-      // Se DOMPurify não estiver disponível, strip tags perigosos manualmente
-      return rawHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                     .replace(/on\w+\s*=/gi, '');
-    }
+    return DOMPurify.sanitize(rawHtml, { 
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'span'],
+      ALLOWED_ATTR: ['class', 'href', 'target', 'rel']
+    });
   },
 };
 
