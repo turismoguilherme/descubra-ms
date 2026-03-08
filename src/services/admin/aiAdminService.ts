@@ -19,7 +19,7 @@ export const aiAdminService = {
   },
 
   async approveAction(id: string, approvedBy: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .update({
         status: 'approved',
