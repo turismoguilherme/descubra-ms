@@ -34,12 +34,8 @@ export interface IntelligentEventConfig {
 export class IntelligentEventService {
   private config: IntelligentEventConfig;
   private isInitialized: boolean = false;
-  private genAI: GoogleGenerativeAI | null = null;
 
   constructor(config: Partial<IntelligentEventConfig> = {}) {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    }
     this.config = {
       googleSearch: {
         enabled: false, // DESATIVADO - eventos manuais

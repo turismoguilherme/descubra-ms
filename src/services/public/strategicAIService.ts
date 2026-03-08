@@ -225,14 +225,10 @@ export class StrategicAIService {
     try {
       const integratedData = await this.getIntegratedData(municipalityId);
       
-      if (!this.genAI) {
-        return this.getFallbackResponse(question, integratedData.municipal);
-      }
-
       const prompt = this.buildIntegratedQuestionPrompt(question, integratedData);
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      const result = await callGeminiProxy(prompt, { temperature: 0.7, maxOutputTokens: 2000 });
+      if (!result.ok || !result.text) return this.getFallbackResponse(question, integratedData.municipal);
+      const response = result.text;
 
       const recommendations = await this.analyzeMunicipalData(municipalityId);
 

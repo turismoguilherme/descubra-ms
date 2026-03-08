@@ -39,19 +39,14 @@ export class AdaptiveDiagnosticService {
     answer: any
   ): Promise<AnswerQuality> {
     try {
-      if (!this.genAI) {
-        // Fallback: análise básica sem IA
+      const prompt = this.buildQualityAnalysisPrompt(currentAnswers, questionId, answer);
+      const result = await callGeminiProxy(prompt, { temperature: 0.5, maxOutputTokens: 1000 });
+      
+      if (!result.ok || !result.text) {
         return this.basicQualityAnalysis(currentAnswers, questionId, answer);
       }
-
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
       
-      const prompt = this.buildQualityAnalysisPrompt(currentAnswers, questionId, answer);
-      
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
-      
-      return this.parseQualityResponse(response, currentAnswers);
+      return this.parseQualityResponse(result.text, currentAnswers);
     } catch (error) {
       console.error('Erro ao analisar qualidade da resposta:', error);
       return this.basicQualityAnalysis(currentAnswers, questionId, answer);

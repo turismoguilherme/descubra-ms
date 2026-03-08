@@ -60,13 +60,6 @@ export interface Improvement {
 }
 
 export class EventAnalyticsService {
-  private genAI: GoogleGenerativeAI | null = null;
-
-  constructor() {
-    if (GEMINI_API_KEY) {
-      this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    }
-  }
 
   /**
    * Analisar completude por categoria

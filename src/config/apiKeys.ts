@@ -2,11 +2,9 @@
 // Sistema centralizado para gerenciar todas as APIs externas
 
 export const API_CONFIG = {
-  // Google Custom Search API
+  // Google Custom Search API — SEGURANÇA: Chaves movidas para Edge Function
   GOOGLE: {
-    SEARCH_API_KEY: (import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || '').trim(),
-    SEARCH_ENGINE_ID: (import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '').trim(),
-    isConfigured: () => Boolean(API_CONFIG.GOOGLE.SEARCH_API_KEY && API_CONFIG.GOOGLE.SEARCH_ENGINE_ID)
+    isConfigured: () => true // Via Edge Function
   },
 
   // OpenWeather API para clima
