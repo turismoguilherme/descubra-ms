@@ -122,17 +122,24 @@ addColors(CONE_SUL_COLORS, 'caminhos-natureza-cone-sul');
 /**
  * Set de cores roxas escuras que são ambíguas (Campo Grande vs Celeiro).
  * Para estas cores, a região correta depende da posição Y do path.
+ * Estas cores existem como GRUPOS SEPARADOS — cada um ilumina normalmente.
  */
 const AMBIGUOUS_PURPLE_SET = new Set([
-  // Roxos escuros que aparecem em ambas as regiões
   '76448E', '76438D', '76428E', '76428D',
   '75428C', '75428E', '77448E', '77448F',
-  // Roxos/lilás claros cujos paths cruzam ambas as regiões
   'BEAFC9', 'BFB2C9',
-  // Cinza-lilás que cruza Celeiro e Fronteira
   'CED1DD',
-  // Paths de transição na fronteira Campo Grande/Celeiro/Costa Leste
   'CDABB3', 'C6B2B4',
+]);
+
+/**
+ * Set de paths que CRUZAM FISICAMENTE duas regiões (um único elemento DOM abrange ambas).
+ * Estes devem permanecer visualmente neutros durante highlighting.
+ */
+const SPANNING_PATH_SET = new Set([
+  'BEAFC9', 'BFB2C9',  // Cruzam Campo Grande e Celeiro
+  'CED1DD',             // Cruza Celeiro e Fronteira
+  'CDABB3', 'C6B2B4',  // Transição Campo Grande/Celeiro/Costa Leste
 ]);
 
 /** Limiar Y para separar Campo Grande (centro) de Celeiro (sul) no SVG (viewBox 0 0 896 1152) */
@@ -154,6 +161,14 @@ export function getRegionByColor(hexColor: string): string | null {
 export function isAmbiguousPurple(hexColor: string): boolean {
   const normalized = hexColor.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
   return AMBIGUOUS_PURPLE_SET.has(normalized);
+}
+
+/**
+ * Verifica se uma cor corresponde a um path que cruza fisicamente duas regiões.
+ */
+export function isSpanningPath(hexColor: string): boolean {
+  const normalized = hexColor.replace(/[^A-Fa-f0-9]/g, '').toUpperCase();
+  return SPANNING_PATH_SET.has(normalized);
 }
 
 /**
