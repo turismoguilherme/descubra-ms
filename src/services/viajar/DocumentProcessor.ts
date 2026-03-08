@@ -35,9 +35,6 @@ export class DocumentProcessor {
     businessCategory?: string
   ): Promise<DocumentProcessingResult> {
     try {
-      if (!this.genAI) {
-        throw new Error('Gemini não configurado');
-      }
 
       console.log('📄 [DocumentProcessor] Processando arquivo:', file.name);
 
