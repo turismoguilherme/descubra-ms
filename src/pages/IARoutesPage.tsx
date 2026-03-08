@@ -234,7 +234,7 @@ export default function IARoutesPage() {
       console.error('Erro ao gerar roteiro:', error);
       toast({
         title: 'Erro ao gerar roteiro',
-        description: error.message || 'Não foi possível gerar o roteiro. Tente novamente em alguns instantes.',
+        description: (error as Error).message || 'Não foi possível gerar o roteiro. Tente novamente em alguns instantes.',
         variant: 'destructive',
       });
     } finally {
