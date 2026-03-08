@@ -134,17 +134,28 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     svgEl.setAttribute('height', '100%');
     svgEl.style.maxHeight = '850px';
 
-    // Marcar grupos com data-region (para highlighting), data-ambiguous e data-spanning
+    // Marcar grupos/paths com data-region para highlighting
     const groups = svgEl.querySelectorAll('g[fill]');
     groups.forEach(g => {
       const fill = (g.getAttribute('fill') || '').replace('#', '').toUpperCase();
-      const spanning = isSpanningPath(fill);
       if (isAmbiguousPurple(fill)) {
+        // AMBÍGUO: classificar cada path individualmente pelo seu próprio bounding box
         (g as HTMLElement).style.cursor = 'pointer';
         g.setAttribute('data-ambiguous', 'true');
-        if (spanning) g.setAttribute('data-spanning', 'true');
-        const slug = resolveRegionForGroup(g);
-        if (slug) g.setAttribute('data-region', slug);
+        // NÃO colocar data-region no <g> — colocar em cada <path>
+        const paths = g.querySelectorAll('path');
+        paths.forEach(pathEl => {
+          try {
+            const bbox = (pathEl as SVGPathElement).getBBox();
+            const centerY = bbox.y + bbox.height / 2;
+            const slug = centerY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+            pathEl.setAttribute('data-region', slug);
+          } catch {
+            // fallback: usar grupo inteiro
+            const slug = resolveRegionForGroup(g);
+            if (slug) pathEl.setAttribute('data-region', slug);
+          }
+        });
       } else {
         const slug = resolveRegionForGroup(g);
         if (slug) {
