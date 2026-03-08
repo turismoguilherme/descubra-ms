@@ -64,7 +64,7 @@ export const aiAdminService = {
   },
 
   async createSuggestion(description: string, platform: 'viajar' | 'descubra_ms' | 'both', actionType: 'monitor' | 'analyze' | 'suggest' | 'execute') {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ai_admin_actions')
       .insert([{
         action_type: actionType,

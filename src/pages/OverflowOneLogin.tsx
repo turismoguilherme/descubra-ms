@@ -114,7 +114,7 @@ const OverflowOneLogin: React.FC = () => {
       } else if (loginType === 'cnpj') {
         // Buscar email pelo CNPJ no banco
         const cleanCnpj = loginField.replace(/\D/g, '');
-        const { data: profile } = await supabase
+        const { data: profile } = await (supabase as any)
           .from('profiles')
           .select('email')
           .eq('cnpj', cleanCnpj)

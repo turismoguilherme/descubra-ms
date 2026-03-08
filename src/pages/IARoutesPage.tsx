@@ -624,7 +624,7 @@ export default function IARoutesPage() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-gray-700 pt-3">
-                          {generatedPlan.parceiros.map((p: unknown, i: number) => (
+                          {generatedPlan.parceiros.map((p: any, i: number) => (
                             <div key={i} className="flex justify-between items-center p-2 rounded hover:bg-white/50 transition-colors">
                               <div className="flex flex-col">
                                 <span className="font-medium text-gray-900">{p.nome}</span>

@@ -1020,7 +1020,7 @@ export default function ViaJARIntelligence(props: ViaJARIntelligenceProps = {}) 
             )}
           </>
         ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'revenue' | 'market' | 'benchmark')} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-background/50 backdrop-blur-sm">
             <TabsTrigger value="revenue" className="gap-2">
               <DollarSign className="h-4 w-4" />

@@ -49,16 +49,17 @@ interface Partner {
   contact_phone?: string;
   address?: string;
   partner_type?: string;
-  person_type?: string; // PF ou PJ
-  cpf?: string; // CPF se pessoa física
-  cnpj?: string; // CNPJ se pessoa jurídica
+  person_type?: string;
+  cpf?: string;
+  cnpj?: string;
   status: string;
   discount_offer?: string;
   gallery_images?: string[];
   youtube_url?: string;
-  subscription_status?: string; // pending, active, trialing, past_due, canceled, unpaid
+  subscription_status?: string;
   monthly_fee?: number;
   stripe_subscription_id?: string;
+  is_active?: boolean;
   created_at: string;
 }
 

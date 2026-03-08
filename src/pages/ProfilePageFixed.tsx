@@ -357,7 +357,7 @@ const ProfilePageFixed: React.FC = () => {
     });
   };
 
-  const handleProfileUpdate = (updatedProfile: unknown) => {
+  const handleProfileUpdate = (updatedProfile: Partial<UserProfile>) => {
     setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
   };
 

@@ -97,8 +97,8 @@ const RegiaoDetalhes = () => {
               color: dbRegion.color,
               colorHover: dbRegion.color_hover || dbRegion.color,
               description: dbRegion.description,
-              cities: Array.isArray(dbRegion.cities) ? dbRegion.cities : [],
-              highlights: Array.isArray(dbRegion.highlights) ? dbRegion.highlights : [],
+              cities: Array.isArray(dbRegion.cities) ? (dbRegion.cities as string[]) : [],
+              highlights: Array.isArray(dbRegion.highlights) ? (dbRegion.highlights as string[]) : [],
               image: dbRegion.image_url || '',
             };
             setRegiao(regionData);

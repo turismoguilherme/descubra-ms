@@ -179,7 +179,7 @@ const PassaporteLista = () => {
         console.error("❌ PASSAPORTE LISTA: Erro geral:", error);
         toast({
           title: "Erro",
-          description: "Erro ao carregar rotas: " + (error?.message || 'Erro desconhecido'),
+          description: "Erro ao carregar rotas: " + ((error as Error)?.message || 'Erro desconhecido'),
           variant: "destructive",
         });
         setRoutes([]);
