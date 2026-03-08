@@ -27,9 +27,11 @@
     "useDefineForClassFields": true
   },
   "include": [
-    "src"
+    "src",
+    "src/types"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "node_modules/gl-matrix"
   ]
 }
