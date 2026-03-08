@@ -215,7 +215,7 @@ export const financialDashboardService = {
         };
       }
 
-      const total = records.reduce((sum: number, r: any) => sum + Number(r.amount || 0), 0);
+      const total = (records as any[]).reduce((sum: number, r: any) => sum + Number(r.amount || 0), 0);
       const viajar = records
         .filter((r: any) => r.source === 'viajar_subscription')
         .reduce((sum: number, r: any) => sum + Number(r.amount || 0), 0);
