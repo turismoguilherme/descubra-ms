@@ -5,10 +5,8 @@
  * Foco: Extração precisa de métricas de negócios (ocupação, receita, visitantes, etc.)
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '@/integrations/supabase/client';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+import { callGeminiProxy } from '../ai/geminiProxy';
 
 export interface ExtractedMetric {
   metric_type: 'occupancy' | 'revenue' | 'visitors' | 'ticket_avg' | 'table_turnover' | 'pax' | 'adr' | 'revpar';
