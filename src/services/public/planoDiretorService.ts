@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { v5 as uuidv5 } from 'uuid';
+
 import { PlanoDiretorAIService } from '../ai/planoDiretorAIService';
 import { PlanoDiretorIntegrationService } from './planoDiretorIntegrationService';
 import { getErrorMessage } from '@/utils/errorUtils';
