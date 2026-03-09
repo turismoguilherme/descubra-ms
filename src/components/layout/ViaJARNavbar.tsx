@@ -335,9 +335,9 @@ const ViaJARNavbar = () => {
               </div>
             ) : (
               <>
-                <Link to="/viajar/login">
-                  <Button variant="ghost" className="text-white/80 hover:text-white">
-                    Entrar
+                  <Link to="/viajar/login">
+                    <Button variant="ghost" className="text-white/90 hover:text-white hover:bg-white/10">
+                      Entrar
                   </Button>
                 </Link>
                 <Link to="/viajar/register">
