@@ -269,7 +269,7 @@ const Contato = () => {
                 {getContent('viajar_contact_form_title', 'Vamos Conversar')}
               </h2>
               {getContent('viajar_contact_form_description', '') && (
-                <p className="text-muted-foreground mb-8 leading-relaxed">
+                <p className="text-white/70 mb-8 leading-relaxed">
                   {getContent('viajar_contact_form_description', 'Preencha o formulário ou entre em contato diretamente pelos nossos canais. Nossa equipe está pronta para atender empresários e gestores públicos.')}
                 </p>
               )}
