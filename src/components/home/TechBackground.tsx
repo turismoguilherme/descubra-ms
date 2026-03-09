@@ -13,8 +13,8 @@ const TechBackground: React.FC<TechBackgroundProps> = ({
   
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
-      {/* Base dark background */}
-      <div className="absolute inset-0 bg-slate-950" />
+      {/* Base dark background with subtle travel texture */}
+      <div className="absolute inset-0 bg-travel-tech-dark-base" />
       
       {/* Neural grid pattern */}
       <div 

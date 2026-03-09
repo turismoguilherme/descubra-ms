@@ -86,18 +86,35 @@ const WhatViajARTurDoesSection = () => {
   }
 
   return (
-    <section className="py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-gradient-to-br from-travel-tech-dark-base via-travel-tech-dark-secondary to-travel-tech-dark-base relative overflow-hidden">
+      {/* Subtle Grid Background */}
+      <div 
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `
+            linear-gradient(hsl(var(--travel-tech-turquoise) / 0.15) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--travel-tech-turquoise) / 0.15) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px'
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            {getContent('viajar_what_title', 'O que a ViajARTur faz')}
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-travel-tech-turquoise via-travel-tech-ocean-blue to-travel-tech-sunset-orange bg-clip-text text-transparent">
+              {getContent('viajar_what_title', 'O que a ViajARTur faz')}
+            </span>
           </h2>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Soluções completas de tecnologia para revolucionar a gestão do turismo
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => {
             const IconComponent = getIconComponent(product.icon_name);
-            const gradient = product.gradient_colors || 'from-purple-500 to-violet-600';
+            const gradient = product.gradient_colors || 'from-travel-tech-turquoise/20 to-travel-tech-ocean-blue/20';
             const ctaLink = product.cta_link || '/solucoes';
             const ctaText = product.cta_text || 'Saiba mais';
 
@@ -107,16 +124,17 @@ const WhatViajARTurDoesSection = () => {
                 to={ctaLink}
                 className="group block"
               >
-                <div className="relative h-[350px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
-                  {/* Gradiente de fundo (sempre presente) */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+                <div className="relative h-[380px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-travel-tech-turquoise/20 transition-all duration-500 transform hover:-translate-y-3 bg-travel-tech-dark-secondary/40 backdrop-blur-sm border border-travel-tech-turquoise/20 hover:border-travel-tech-turquoise/40">
+                  
+                  {/* Gradient Background */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-60`} />
                   
                   {/* Imagem de fundo (se disponível) */}
                   {product.image_url && (
                     <img
                       src={product.image_url}
                       alt={product.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-40"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
@@ -124,30 +142,41 @@ const WhatViajARTurDoesSection = () => {
                     />
                   )}
                   
-                  {/* Overlay escuro para contraste (apenas se tiver imagem) */}
-                  {product.image_url && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  )}
+                  {/* Dark Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-travel-tech-dark-base/90 via-travel-tech-dark-base/40 to-transparent" />
 
-                  {/* Conteúdo */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-                    {/* Ícone (se não tiver imagem ou como overlay) */}
-                    {!product.image_url && (
-                      <div className="absolute top-6 right-6">
-                        <div className={`w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                          <IconComponent className="h-8 w-8 text-white" />
-                        </div>
+                  {/* Content */}
+                  <div className="absolute inset-0 flex flex-col p-6 text-white">
+                    {/* Icon */}
+                    <div className="mb-auto">
+                      <div className="w-16 h-16 rounded-xl bg-travel-tech-turquoise/20 backdrop-blur-sm border border-travel-tech-turquoise/30 flex items-center justify-center group-hover:scale-110 group-hover:bg-travel-tech-turquoise/30 transition-all duration-300">
+                        <IconComponent className="h-8 w-8 text-travel-tech-turquoise" />
                       </div>
+                    </div>
+
+                    {/* Short Description */}
+                    {product.short_description && (
+                      <p className="text-gray-300 text-sm leading-relaxed mb-4 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                        {product.short_description}
+                      </p>
                     )}
 
-                    <h3 className="text-2xl font-bold mb-2 drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300">
+                    <h3 className="text-2xl font-bold mb-4 drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300 text-white">
                       {product.title}
                     </h3>
 
-                    <div className="flex items-center gap-2 text-white font-semibold text-sm opacity-80 group-hover:opacity-100 transition-all duration-300 mt-auto">
+                    <div className="flex items-center gap-2 text-travel-tech-turquoise font-semibold text-sm opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 mt-auto">
                       <span>{ctaText}</span>
                       <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
                     </div>
+                  </div>
+
+                  {/* Neon Glow on Hover */}
+                  <div className="absolute inset-0 rounded-2xl border border-travel-tech-turquoise/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Data Flow on Hover */}
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-travel-tech-turquoise to-transparent animate-data-flow" />
                   </div>
                 </div>
               </Link>

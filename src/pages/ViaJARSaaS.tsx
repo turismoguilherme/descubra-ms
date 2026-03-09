@@ -9,6 +9,8 @@ import { platformContentService } from '@/services/admin/platformContentService'
 import WhatViajARTurDoesSection from '@/components/home/WhatViajARTurDoesSection';
 import SuccessCasesSection from '@/components/home/SuccessCasesSection';
 import TravelTechHero from '@/components/home/TravelTechHero';
+import PlatformInActionSection from '@/components/home/PlatformInActionSection';
+import BenefitsSection from '@/components/home/BenefitsSection';
 // CommercialSection removido temporariamente
 
 const VideoSection = () => {
@@ -124,11 +126,17 @@ const ViaJARSaaS = () => {
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
-      {/* Hero Section - Travel Tech */}
+      {/* Hero Section - Travel Tech Premium Imersivo */}
       <TravelTechHero />
 
       {/* O que a ViajARTur faz - Cards visuais grandes */}
       <WhatViajARTurDoesSection />
+
+      {/* Plataforma em Ação - Dashboard interativo animado */}
+      <PlatformInActionSection />
+
+      {/* Benefícios - Grid animado com stats */}
+      <BenefitsSection />
 
       {/* Cases de Sucesso - Koda + Descubra MS */}
       <SuccessCasesSection />

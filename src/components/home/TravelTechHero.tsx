@@ -1,138 +1,197 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Zap } from 'lucide-react';
+import { Play, ArrowRight, Users, TrendingUp, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { platformContentService } from '@/services/admin/platformContentService';
 import TravelTechRobot from './TravelTechRobot';
+import FloatingTechElements from './FloatingTechElements';
 import TechBackground from './TechBackground';
-import { useIsMobile } from '@/hooks/use-mobile';
+import heroBackground from '@/assets/travel-tech-hero-bg.jpg';
 
 const TravelTechHero = () => {
   const [content, setContent] = useState<Record<string, string>>({});
-  const [mousePosition, setMousePosition] = useState({ rotateX: 0, rotateY: 0 });
-  const isMobile = useIsMobile();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadContent = async () => {
-      try {
-        const contents = await platformContentService.getContentByPrefix('viajar_');
-        const contentMap: Record<string, string> = {};
-        contents.forEach(item => {
-          contentMap[item.content_key] = item.content_value || '';
-        });
-        setContent(contentMap);
-      } catch (error) {
-        console.error('Erro ao carregar conteúdo:', error);
-      }
-    };
     loadContent();
   }, []);
 
-  const getContent = (key: string, fallback: string) => content[key] || fallback;
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const deltaX = (event.clientX - centerX) / (rect.width / 2);
-    const deltaY = (event.clientY - centerY) / (rect.height / 2);
-    
-    // Responsive parallax intensity - less intense on mobile to prevent motion sickness
-    const horizontalIntensity = isMobile ? 4 : 8; // 4° mobile, 8° desktop
-    const verticalIntensity = isMobile ? 2 : 5;   // 2° mobile, 5° desktop
-    
-    const rotateY = Math.max(-horizontalIntensity, Math.min(horizontalIntensity, deltaX * horizontalIntensity));
-    const rotateX = Math.max(-verticalIntensity, Math.min(verticalIntensity, -deltaY * verticalIntensity));
-    
-    setMousePosition({ rotateX, rotateY });
+  const loadContent = async () => {
+    try {
+      const contents = await platformContentService.getContentByPrefix('viajar_hero_');
+      const contentMap: Record<string, string> = {};
+      contents.forEach(item => {
+        contentMap[item.content_key] = item.content_value || '';
+      });
+      setContent(contentMap);
+    } catch (error) {
+      console.error('Erro ao carregar conteúdo do hero:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleMouseLeave = () => {
-    setMousePosition({ rotateX: 0, rotateY: 0 });
+  const getContent = (key: string, fallback: string = '') => {
+    return content[key] || fallback;
   };
+
+  const statsData = [
+    { 
+      icon: Users, 
+      value: getContent('viajar_hero_stat_users', '+100K'),
+      label: getContent('viajar_hero_stat_users_label', 'Usuários')
+    },
+    { 
+      icon: TrendingUp, 
+      value: getContent('viajar_hero_stat_satisfaction', '98%'),
+      label: getContent('viajar_hero_stat_satisfaction_label', 'Satisfação')
+    },
+    { 
+      icon: Zap, 
+      value: getContent('viajar_hero_stat_ai', 'IA 24/7'),
+      label: getContent('viajar_hero_stat_ai_label', 'Disponível')
+    }
+  ];
+
+  if (loading) {
+    return (
+      <section className="relative min-h-screen flex items-center justify-center bg-travel-tech-dark-base">
+        <div className="animate-pulse text-travel-tech-turquoise">
+          <div className="w-8 h-8 border-2 border-travel-tech-turquoise border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="relative overflow-hidden min-h-[100vh] flex items-center">
-      <TechBackground variant="hero" />
-      
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-          {/* Left side - Content */}
-          <div className="flex-1 text-center lg:text-left space-y-8">
-            {/* Animated tech badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 rounded-full text-cyan-100 font-medium shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-pulse-slow">
-              <Zap className="w-4 h-4" />
-              <span>🤖 Travel Tech | IA + Turismo</span>
-            </div>
+    <section className="relative min-h-screen overflow-hidden">
+      {/* Immersive Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src={heroBackground}
+          alt="Travel Tech Background"
+          className="w-full h-full object-cover"
+        />
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-travel-tech-dark-base/90 via-travel-tech-dark-base/70 to-travel-tech-dark-base/50" />
+      </div>
 
-            {/* Main title with gradient */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight">
-              <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-                {getContent('viajar_hero_title', 'Tecnologia que transforma o turismo')}
-              </span>
-            </h1>
+      {/* Tech Background Elements */}
+      <TechBackground variant="hero" className="z-10" />
 
-            {/* Subtitle */}
-            <p className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              {getContent('viajar_hero_description', 'IA, dados e automação para destinos e negócios turísticos inteligentes')}
-            </p>
+      {/* Floating Tech Elements */}
+      <FloatingTechElements variant="hero" />
 
-            {/* Dual CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link to="/viajar/login">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold px-8 h-14 text-lg rounded-lg shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:shadow-[0_0_40px_rgba(6,182,212,0.7)] hover:-translate-y-1 transition-all duration-300 relative group"
+      {/* Main Content */}
+      <div className="relative z-20 min-h-screen flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Side - Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="space-y-8"
+            >
+              {/* Travel Tech Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="inline-flex items-center px-6 py-3 rounded-full border border-travel-tech-turquoise/30 bg-travel-tech-turquoise/10 backdrop-blur-sm"
+              >
+                <span className="text-travel-tech-turquoise font-semibold text-sm tracking-wide">
+                  Travel Tech | Turismo + Inteligência Artificial
+                </span>
+              </motion.div>
+
+              {/* Main Title - Gradient */}
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
+              >
+                <span className="bg-gradient-to-r from-white via-travel-tech-turquoise to-travel-tech-ocean-blue bg-clip-text text-transparent">
+                  {getContent('viajar_hero_title', 'ViajARTur – IA que Transforma o Turismo')}
+                </span>
+              </motion.h1>
+
+              {/* Subtitle */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl"
+              >
+                {getContent('viajar_hero_subtitle', 'Analytics avançado, inteligência artificial 24/7 e big data para decisões estratégicas, destinos mais sustentáveis e experiências inesquecíveis.')}
+              </motion.p>
+
+              {/* CTA Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="flex flex-col sm:flex-row gap-4"
+              >
+                <Link
+                  to="/viajar/login"
+                  className="group inline-flex items-center justify-center px-8 py-4 rounded-xl bg-gradient-to-r from-travel-tech-turquoise to-travel-tech-ocean-blue text-white font-semibold text-lg hover:from-travel-tech-ocean-blue hover:to-travel-tech-turquoise transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-travel-tech-turquoise/30 border border-travel-tech-turquoise/20"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-lg opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300" />
-                  {getContent('viajar_hero_cta_primary', 'Acessar Plataforma')}
-                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                </Button>
-              </Link>
-              <Link to="/contato">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="border-white/30 text-white hover:bg-white/10 hover:border-cyan-400/50 font-semibold px-8 h-14 text-lg rounded-lg backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                  <span>Acessar Plataforma</span>
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </Link>
+                
+                <Link
+                  to="/contato"
+                  className="group inline-flex items-center justify-center px-8 py-4 rounded-xl border-2 border-travel-tech-turquoise/50 text-travel-tech-turquoise font-semibold text-lg hover:bg-travel-tech-turquoise hover:text-travel-tech-dark-base transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm"
                 >
-                  <Calendar className="h-5 w-5 mr-2" />
-                  {getContent('viajar_hero_cta_secondary', 'Agendar Demo')}
-                </Button>
-              </Link>
-            </div>
+                  <Play className="mr-2 h-5 w-5" />
+                  <span>Ver Demonstração</span>
+                </Link>
+              </motion.div>
 
-            {/* Mini stats */}
-            <div className="flex flex-wrap gap-6 justify-center lg:justify-start text-white/70 font-mono text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span>+100K Usuários</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                <span>98% Satisfação</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '1s' }} />
-                <span>IA 24/7</span>
-              </div>
-            </div>
-          </div>
+              {/* Mini Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.0 }}
+                className="grid grid-cols-3 gap-6 pt-8"
+              >
+                {statsData.map((stat, index) => (
+                  <div 
+                    key={index}
+                    className="text-center"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-full bg-travel-tech-turquoise/20 backdrop-blur-sm border border-travel-tech-turquoise/30">
+                      <stat.icon className="w-6 h-6 text-travel-tech-turquoise" />
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                    <div className="text-sm text-gray-400">{stat.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </motion.div>
 
-          {/* Right side - Interactive Robot */}
-          <div 
-            className="flex-1 w-full max-w-2xl lg:max-w-3xl"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-          >
-            <TravelTechRobot 
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-              rotateX={mousePosition.rotateX}
-              rotateY={mousePosition.rotateY}
-            />
+            {/* Right Side - Robot */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              className="relative h-[600px] lg:h-[700px]"
+            >
+              <TravelTechRobot />
+            </motion.div>
+            
           </div>
         </div>
+      </div>
+
+      {/* Holographic Scan Lines */}
+      <div className="absolute inset-0 pointer-events-none z-30">
+        <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-travel-tech-turquoise/30 to-transparent animate-data-flow" />
+        <div className="absolute bottom-1/3 right-0 w-full h-px bg-gradient-to-l from-transparent via-travel-tech-ocean-blue/30 to-transparent animate-data-flow-delayed" />
       </div>
     </section>
   );
