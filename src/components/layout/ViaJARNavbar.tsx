@@ -210,13 +210,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#inventario-turistico"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Inventário Turístico
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Gestão completa de atrativos
                                   </div>
                                 </Link>
@@ -224,13 +224,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#gestao-cats"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Gestão de CATs
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Controle total dos Centros de Atendimento
                                   </div>
                                 </Link>
@@ -238,13 +238,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#analytics-governamental"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Analytics Governamental
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Dados para tomada de decisão
                                   </div>
                                 </Link>
