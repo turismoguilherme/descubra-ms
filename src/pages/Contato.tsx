@@ -295,8 +295,8 @@ const Contato = () => {
                       <Phone className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1">Telefone</h3>
-                      <a href={`tel:${footerSettings.phone.replace(/\D/g, '')}`} className="text-muted-foreground hover:text-foreground">
+                      <h3 className="font-semibold text-white mb-1">Telefone</h3>
+                      <a href={`tel:${footerSettings.phone.replace(/\D/g, '')}`} className="text-white/70 hover:text-white">
                         {footerSettings.phone}
                       </a>
                     </div>
