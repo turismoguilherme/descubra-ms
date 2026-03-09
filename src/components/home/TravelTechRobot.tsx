@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import RobotSVG from './RobotSVG';
+import robotImage from '@/assets/travel-tech-robot.png';
 import { useRef, useCallback, useState, useEffect } from 'react';
 
 /* ─── Sub-components ─── */
@@ -299,7 +299,6 @@ const TravelTechRobot = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const springConfig = { stiffness: 150, damping: 20 };
   const panelX = useSpring(useTransform(mouseX, [-200, 200], [8, -8]), springConfig);
@@ -308,11 +307,8 @@ const TravelTechRobot = () => {
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    mouseX.set(x);
-    mouseY.set(y);
-    setMousePos({ x, y });
+    mouseX.set(e.clientX - rect.left - rect.width / 2);
+    mouseY.set(e.clientY - rect.top - rect.height / 2);
   }, [mouseX, mouseY]);
 
   return (
@@ -323,7 +319,6 @@ const TravelTechRobot = () => {
       onMouseLeave={() => {
         mouseX.set(0);
         mouseY.set(0);
-        setMousePos({ x: 0, y: 0 });
       }}
     >
       {/* Ambient background glow */}
@@ -335,23 +330,33 @@ const TravelTechRobot = () => {
       {/* Data streams */}
       <DataStreams />
 
-      {/* Robot SVG — articulated with independent animations */}
+      {/* Robot image — breathing + tilt + float */}
       <motion.div
         className="relative z-10"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
       >
-        <motion.div
+        <motion.img
+          src={robotImage}
+          alt="Robô IA da ViaJARTur - Travel Tech"
+          className="w-full h-auto drop-shadow-[0_20px_60px_rgba(0,255,170,0.15)] transition-all duration-500 group-hover:drop-shadow-[0_20px_80px_rgba(0,255,170,0.25)]"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 75%, transparent 98%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 98%)',
+          }}
           animate={{
             y: [0, -12, 0],
+            rotate: [-0.8, 0.8, -0.8],
+            scaleY: [1, 1.005, 1],
           }}
           transition={{
             y: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
+            rotate: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+            scaleY: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
           }}
-        >
-          <RobotSVG mouseX={mousePos.x} mouseY={mousePos.y} />
-        </motion.div>
+          draggable={false}
+        />
       </motion.div>
 
       {/* Holographic panels with parallax */}
@@ -371,6 +376,27 @@ const TravelTechRobot = () => {
         <Orbs />
       </div>
 
+      {/* Eye glow overlays — color shifting */}
+      <motion.div
+        className="absolute w-[6%] h-[6%] rounded-full blur-md z-20"
+        style={{ top: '28%', left: '52%' }}
+        animate={{
+          opacity: [0.3, 0.8, 0.3],
+          scale: [1, 1.2, 1],
+          backgroundColor: ['hsl(160 84% 60% / 0.5)', 'hsl(185 84% 60% / 0.6)', 'hsl(160 84% 60% / 0.5)'],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute w-[5%] h-[5%] rounded-full blur-md z-20"
+        style={{ top: '29%', left: '62%' }}
+        animate={{
+          opacity: [0.2, 0.7, 0.2],
+          scale: [1, 1.15, 1],
+          backgroundColor: ['hsl(160 84% 60% / 0.4)', 'hsl(185 84% 60% / 0.5)', 'hsl(160 84% 60% / 0.4)'],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+      />
 
       {/* Dual scan lines */}
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl" style={{ mixBlendMode: 'overlay' }}>
