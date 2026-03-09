@@ -357,7 +357,7 @@ const ViaJARNavbar = () => {
               variant="ghost" 
               size="icon"
               onClick={() => setIsOpen(!isOpen)} 
-              className="text-foreground"
+              className="text-white/80 hover:text-white"
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
