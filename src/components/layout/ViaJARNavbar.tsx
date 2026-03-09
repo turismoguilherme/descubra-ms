@@ -290,7 +290,7 @@ const ViaJARNavbar = () => {
               <div className="relative" ref={dropdownRef}>
                 <Button 
                   variant="ghost"
-                  className="gap-2 text-foreground hover:bg-muted/50"
+                  className="gap-2 text-white/80 hover:text-white hover:bg-white/10"
                   onClick={() => setIsDashboardOpen(!isDashboardOpen)}
                 >
                   Dashboard
