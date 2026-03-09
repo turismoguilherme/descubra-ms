@@ -1,138 +1,162 @@
 
+# Plano: Sistema de Controle de Conteúdo e Ajustes B2B para ViajARTur
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+## Problemas Identificados
 
-## Contexto
+### 1. **Falta de Sistema Toggle (Ativar/Desativar)**
+- Usuário quer controlar se seções aparecem ou não (ex: vídeo, métricas, cases)
+- Não existe sistema administrativo para isso atualmente
+- Precisa de interface admin para gerenciar visibilidade
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+### 2. **Tom de Comunicação B2C em vez de B2B**
+- Textos direcionados para turistas finais
+- ViajARTur é para empresários e gestores públicos
+- Precisa ajustar linguagem e foco
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+### 3. **Cases de Sucesso Não Atualizados**
+- Layout não reflete nova identidade visual premium
+- Precisa aplicar glassmorphism e cores travel-tech
 
-## O que NAO sera alterado
+### 4. **Métricas Falsas Problemáticas**
+- "Resultados que falam por si" com números fictícios
+- Plataforma não foi lançada ainda
+- Precisa sistema para desativar/ativar métricas
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+### 5. **Consulta Prévia Necessária**
+- Usuário quer aprovar dados/números antes da implementação
 
-## O que sera criado
+## Soluções Propostas
 
-### Novo Hero Section com identidade Travel Tech
+### 1. **Sistema de Controle de Seções (Admin)**
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
-
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
-
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
-
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
-
-### Componente novo: `TravelTechRobot.tsx`
-
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
-
-## Estrutura de arquivos
-
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
+**Nova Tabela**: `viajar_section_controls`
+```sql
+- id (uuid, primary key)
+- section_key (text, unique) -- ex: 'video_section', 'benefits_metrics', 'success_cases'
+- is_active (boolean, default false)
+- section_title (text)
+- admin_notes (text, optional)
+- updated_at (timestamp)
 ```
 
-## Visual esperado (layout em texto)
+**Seções Controláveis**:
+- Video Section (vídeo embed)
+- Benefits Section (métricas como "300% efficiency")
+- Success Cases (casos de sucesso)
+- Platform in Action (dashboard demo)
+- Specific metrics/numbers dentro das seções
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
+### 2. **Interface Admin para Controles**
 
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
+**Novo Componente**: `ViaJARSectionManager.tsx`
+- Toggle switches para cada seção
+- Preview em tempo real
+- Notas administrativas
+- Histórico de alterações
+
+**Localização**: Admin Panel → ViaJAR → Controle de Seções
+
+### 3. **Ajustes de Tom B2B**
+
+**Textos que precisam mudar**:
+- Hero: Foco em "gestão inteligente" não "experiências de viagem"
+- Benefits: ROI, eficiência operacional, insights de negócio
+- Platform in Action: Dashboards gerenciais, relatórios estratégicos
+- Cases: Resultados para secretarias e empresas
+
+**Exemplos**:
+- ❌ "Experiências inesquecíveis para turistas"  
+- ✅ "Decisões estratégicas baseadas em dados para gestores"
+
+### 4. **Sistema de Métricas Controláveis**
+
+**Nova Tabela**: `viajar_metrics_config`
+```sql
+- id (uuid, primary key)  
+- metric_key (text) -- ex: 'users_count', 'satisfaction_rate'
+- display_value (text) -- ex: "50K+", "95%"
+- is_active (boolean)
+- description (text) -- para que serve essa métrica
+- is_projected (boolean) -- se é projeção/meta vs real
+- admin_notes (text)
 ```
 
-## Detalhes tecnicos
+**Interface Admin**: Controle individual de cada número
+- Toggle ativo/inativo
+- Editar valores
+- Marcar como "Meta" ou "Projeção" vs "Resultado Real"
+- Sistema de aprovação prévia
 
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
+### 5. **Atualização Success Cases**
 
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
+**Problemas atuais**:
+- Não usa glassmorphism cards
+- Cores antigas (não travel-tech palette)
+- Layout não premium
 
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
+**Solução**: Aplicar GlassmorphismCard e nova identidade
 
-## Sequencia de implementacao
+### 6. **Workflow de Aprovação**
 
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+**Sistema de Staging**:
+- Admin pode fazer alterações em "rascunho"
+- Preview interno antes de publicar
+- Aprovação obrigatória para métricas/números
+- Log de alterações com timestamp
 
-## Notas importantes
+## Implementação
 
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+### Fase 1: Sistema de Controle
+1. Criar tabelas de controle no Supabase
+2. Implementar componentes admin
+3. Atualizar páginas públicas para ler controles
 
+### Fase 2: Ajustes de Tom B2B
+1. Revisar todos os textos hardcoded
+2. Criar versões B2B focadas em gestores
+3. Implementar sistema de content switching
+
+### Fase 3: Métricas Controláveis
+1. Sistema de gerenciamento de números
+2. Interface para ativar/desativar métricas
+3. Sistema de aprovação prévia
+
+### Fase 4: Cases Premium
+1. Aplicar nova identidade visual
+2. Glassmorphism e cores travel-tech
+3. Layout responsivo premium
+
+## Arquivos Afetados
+
+**Novo Sistema Admin**:
+- `src/components/admin/viajar/ViaJARSectionManager.tsx`
+- `src/components/admin/viajar/ViaJARMetricsManager.tsx`
+- `src/hooks/useViaJARSectionControls.ts`
+- `src/services/admin/viajarContentService.ts`
+
+**Páginas Públicas**:
+- `src/pages/ViaJARSaaS.tsx` (lógica condicional)
+- `src/components/home/BenefitsSection.tsx` (métricas controláveis)
+- `src/components/home/SuccessCasesSection.tsx` (nova identidade)
+- `src/components/home/PlatformInActionSection.tsx` (controles)
+
+**Database**:
+- Migration: criar tabelas de controle
+- RLS policies para admin access
+- Triggers para auditoria
+
+## Resultado Esperado
+
+1. **Admin pode controlar** todas as seções da landing page
+2. **Tom 100% B2B** focado em gestores e empresários  
+3. **Métricas controláveis** com sistema de aprovação
+4. **Cases com identidade premium** atualizada
+5. **Sistema de staging** para mudanças seguras
+
+## Consulta Prévia
+
+Antes de implementar, preciso confirmar:
+1. Quais seções específicas quer controlar?
+2. Que métricas/números quer manter mas tornar desativáveis?
+3. Alguma linguagem B2B específica que prefere?
+4. Quer sistema de aprovação em duas etapas ou direct toggle?
