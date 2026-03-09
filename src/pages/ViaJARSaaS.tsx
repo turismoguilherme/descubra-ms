@@ -126,11 +126,17 @@ const ViaJARSaaS = () => {
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
-      {/* Hero Section - Travel Tech */}
+      {/* Hero Section - Travel Tech Premium Imersivo */}
       <TravelTechHero />
 
       {/* O que a ViajARTur faz - Cards visuais grandes */}
       <WhatViajARTurDoesSection />
+
+      {/* Plataforma em Ação - Dashboard interativo animado */}
+      <PlatformInActionSection />
+
+      {/* Benefícios - Grid animado com stats */}
+      <BenefitsSection />
 
       {/* Cases de Sucesso - Koda + Descubra MS */}
       <SuccessCasesSection />
