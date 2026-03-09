@@ -202,8 +202,8 @@ const ViaJARNavbar = () => {
 
                           {/* Para Setor Público */}
                           <div>
-                            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-viajar-cyan" />
+                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-cyan-400" />
                               Para Setor Público
                             </h3>
                             <ul className="space-y-2">
