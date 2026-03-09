@@ -126,6 +126,54 @@ export default {
 				'pulse-slow': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.7' }
+				},
+				// Travel Tech Premium Animations
+				'float-tech': {
+					'0%, 100%': { 
+						transform: 'translate3d(0, 0, 0) rotate(0deg)',
+						opacity: '0.6' 
+					},
+					'33%': { 
+						transform: 'translate3d(30px, -30px, 0) rotate(120deg)',
+						opacity: '1' 
+					},
+					'66%': { 
+						transform: 'translate3d(-20px, 20px, 0) rotate(240deg)',
+						opacity: '0.8' 
+					}
+				},
+				'data-flow': {
+					'0%': { 
+						transform: 'translateX(-100%)',
+						opacity: '0' 
+					},
+					'50%': { 
+						transform: 'translateX(0%)',
+						opacity: '1' 
+					},
+					'100%': { 
+						transform: 'translateX(100%)',
+						opacity: '0' 
+					}
+				},
+				'neon-pulse': {
+					'0%, 100%': { 
+						boxShadow: '0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor',
+						opacity: '1'
+					},
+					'50%': { 
+						boxShadow: '0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor',
+						opacity: '0.8'
+					}
+				},
+				'holographic-scan': {
+					'0%': { transform: 'translateY(-100%)', opacity: '0' },
+					'50%': { opacity: '1' },
+					'100%': { transform: 'translateY(100%)', opacity: '0' }
+				},
+				'rotate-globe': {
+					'0%': { transform: 'rotateY(0deg)' },
+					'100%': { transform: 'rotateY(360deg)' }
 				}
 			},
 			animation: {
