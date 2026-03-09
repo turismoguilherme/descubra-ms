@@ -164,7 +164,7 @@ const ViaJARNavbar = () => {
                                   <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Revenue Optimizer
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Maximize receita com precificação inteligente
                                   </div>
                                 </Link>
