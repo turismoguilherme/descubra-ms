@@ -58,6 +58,7 @@ const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/Uni
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
 const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
 const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
+const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
 
 export default function ViaJARAdminPanel() {
   const { user, userProfile, loading } = useAuth();
