@@ -5,6 +5,7 @@ import { ArrowRight, Calendar, Zap } from 'lucide-react';
 import { platformContentService } from '@/services/admin/platformContentService';
 import TravelTechRobot from './TravelTechRobot';
 import TechBackground from './TechBackground';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TravelTechHero = () => {
   const [content, setContent] = useState<Record<string, string>>({});
