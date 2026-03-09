@@ -336,7 +336,7 @@ const ViaJARNavbar = () => {
             ) : (
               <>
                 <Link to="/viajar/login">
-                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" className="text-white/80 hover:text-white">
                     Entrar
                   </Button>
                 </Link>
