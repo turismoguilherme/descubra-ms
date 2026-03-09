@@ -11,10 +11,11 @@ interface TravelTechRobotProps {
 
 const TravelTechRobot: React.FC<TravelTechRobotProps> = ({ 
   onMouseMove, 
-  onMouseLeave,
-  rotateX = 0,
+  onMouseLeave, 
+  rotateX = 0, 
   rotateY = 0 
 }) => {
+  const [imageError, setImageError] = useState(false);
   return (
     <div 
       className="relative w-full max-w-lg lg:max-w-2xl mx-auto aspect-square flex items-center justify-center"
