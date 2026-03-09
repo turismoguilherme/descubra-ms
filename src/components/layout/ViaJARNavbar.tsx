@@ -158,10 +158,10 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#revenue-optimizer"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Revenue Optimizer
                                   </div>
                                   <div className="text-xs text-muted-foreground mt-1">
