@@ -36,11 +36,6 @@ const Contato = () => {
     loadContent();
   }, []);
 
-  // Log para debug
-  useEffect(() => {
-    console.log('📄 [Contato] Footer settings carregados:', footerSettings);
-  }, [footerSettings]);
-
   // Garantir que a página role para o topo ao carregar
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -54,7 +49,7 @@ const Contato = () => {
     organization: '',
     role: '',
     message: '',
-    requestData: false, // Nova opção: solicitar dados
+    requestData: false, 
     dataReportType: 'both' as 'explanatory' | 'raw_data' | 'both',
     dataPeriodStart: '',
     dataPeriodEnd: '',
@@ -67,21 +62,17 @@ const Contato = () => {
     setLoading(true);
     
     try {
-      // Verificar autenticação do usuário (opcional - para rastreamento)
       const { data: { user } } = await supabase.auth.getUser();
 
-      // IDs fixos da tabela leads (criados na migration)
-      const WEBSITE_SOURCE_ID = "1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a"; // Website
-      const STATUS_NEW_ID = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"; // New
-      const PRIORITY_MEDIUM_ID = "2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c"; // Medium
+      const WEBSITE_SOURCE_ID = "1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a"; 
+      const STATUS_NEW_ID = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"; 
+      const PRIORITY_MEDIUM_ID = "2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c"; 
 
-      // Montar notas com informações do formulário
       const notesLines: string[] = [];
       if (formData.role) {
         notesLines.push(`Tipo: ${formData.role === 'empresario' ? 'Empresário do setor turístico' : formData.role === 'secretaria' ? 'Secretaria de Turismo / Prefeitura' : 'Outro'}`);
       }
       
-      // DESTACAR se solicitou relatório de dados
       if (formData.requestData) {
         notesLines.push('');
         notesLines.push('🚨 SOLICITAÇÃO DE RELATÓRIO DE DADOS 🚨');
@@ -103,7 +94,6 @@ const Contato = () => {
 
       const notes = notesLines.join('\n');
 
-      // Preparar dados para inserção
       const leadData = {
         name: formData.name,
         email: formData.email,
@@ -126,7 +116,6 @@ const Contato = () => {
         ...(user?.id ? { created_by: user.id } : {}),
       };
 
-      // Salvar na tabela leads
       const { data: insertedLead, error: leadError } = await supabase
         .from('leads')
         .insert(leadData as any)
@@ -138,12 +127,10 @@ const Contato = () => {
         throw leadError;
       }
 
-      // Se o cliente solicitou dados, criar registro em data_sale_requests
       if (formData.requestData && insertedLead?.id) {
         const periodStart = formData.dataPeriodStart ? new Date(formData.dataPeriodStart) : new Date();
         const periodEnd = formData.dataPeriodEnd ? new Date(formData.dataPeriodEnd) : new Date();
         
-        // Se não especificou período, usar últimos 3 meses
         if (!formData.dataPeriodStart || !formData.dataPeriodEnd) {
           periodEnd.setTime(Date.now());
           periodStart.setTime(Date.now());
@@ -171,48 +158,29 @@ const Contato = () => {
 
         if (dataSaleError) {
           console.error('Erro ao criar solicitação de dados:', dataSaleError);
-          // Não falhar o formulário se apenas a solicitação de dados falhar
-        } else if (dataSaleRequest) {
-          // Disparar notificação para admin
-          try {
-            const { addAdminNotification } = await import('@/components/admin/notifications/AdminNotifications');
-            addAdminNotification({
-              type: 'info',
-              title: 'Nova Solicitação de Relatório de Dados',
-              message: `${formData.name} (${formData.organization || formData.email}) solicitou relatório de dados. Ver em Leads de Contato.`,
-              action: {
-                label: 'Ver Solicitação',
-                onClick: () => {
-                  window.location.href = '/viajar/admin/financial/contact-leads';
-                }
-              }
-            });
-          } catch (notifError) {
-            console.warn('Erro ao criar notificação:', notifError);
-          }
         }
       }
     
-    toast({
-      title: "✅ Mensagem enviada!",
-      description: formData.requestData 
-        ? "Sua solicitação foi recebida! Entraremos em contato em até 24 horas para aprovação e pagamento."
-        : "Entraremos em contato em até 24 horas.",
-    });
+      toast({
+        title: "✅ Mensagem enviada!",
+        description: formData.requestData 
+          ? "Sua solicitação foi recebida! Entraremos em contato em até 24 horas para aprovação e pagamento."
+          : "Entraremos em contato em até 24 horas.",
+      });
     
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      organization: '',
-      role: '',
-      message: '',
-      requestData: false,
-      dataReportType: 'both',
-      dataPeriodStart: '',
-      dataPeriodEnd: '',
-      dataCity: ''
-    });
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        organization: '',
+        role: '',
+        message: '',
+        requestData: false,
+        dataReportType: 'both',
+        dataPeriodStart: '',
+        dataPeriodEnd: '',
+        dataCity: ''
+      });
     } catch (error: unknown) {
       console.error('Erro ao enviar formulário:', error);
       toast({
@@ -221,7 +189,7 @@ const Contato = () => {
         variant: "destructive",
       });
     } finally {
-    setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -279,7 +247,7 @@ const Contato = () => {
               <div className="space-y-6 mb-10">
                 {footerSettings.email && (
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
                       <Mail className="h-6 w-6 text-white" />
                     </div>
                     <div>
@@ -322,40 +290,40 @@ const Contato = () => {
 
               {/* Business Hours */}
               {footerSettings.business_hours && (
-                <div className="bg-card rounded-2xl p-6 border border-border">
+                <GlowCard className="p-6 bg-slate-800/50">
                   <div className="flex items-center gap-3 mb-4">
-                    <Clock className="h-5 w-5 text-viajar-cyan" />
-                    <h3 className="font-semibold text-foreground">Horário de Atendimento</h3>
+                    <Clock className="h-5 w-5 text-cyan-400" />
+                    <h3 className="font-semibold text-white">Horário de Atendimento</h3>
                   </div>
-                  <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="space-y-2 text-sm text-white/70">
                     {footerSettings.business_hours.weekdays && (
                       <div className="flex justify-between">
                         <span>Segunda a Sexta</span>
-                        <span className="text-foreground">{footerSettings.business_hours.weekdays}</span>
+                        <span className="text-white">{footerSettings.business_hours.weekdays}</span>
                       </div>
                     )}
                     {footerSettings.business_hours.saturday && (
                       <div className="flex justify-between">
                         <span>Sábado</span>
-                        <span className="text-foreground">{footerSettings.business_hours.saturday}</span>
+                        <span className="text-white">{footerSettings.business_hours.saturday}</span>
                       </div>
                     )}
                     {footerSettings.business_hours.sunday && (
                       <div className="flex justify-between">
                         <span>Domingo</span>
-                        <span className="text-muted-foreground">{footerSettings.business_hours.sunday}</span>
+                        <span className="text-white/60">{footerSettings.business_hours.sunday}</span>
                       </div>
                     )}
                     {!footerSettings.business_hours.weekdays && !footerSettings.business_hours.saturday && !footerSettings.business_hours.sunday && (
-                      <p className="text-muted-foreground">Não informado</p>
+                      <p className="text-white/60">Não informado</p>
                     )}
                   </div>
-                </div>
+                </GlowCard>
               )}
             </div>
 
             {/* Contact Form */}
-            <GlowCard className="p-8 bg-slate-800/50">  
+            <GlowCard className="p-8 bg-slate-800/50">
               <h3 className="text-xl font-semibold text-white mb-6">Envie sua mensagem</h3>
               
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -371,13 +339,13 @@ const Contato = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Seu nome"
-                    className="h-12"
+                    className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                    <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
                       Email *
                     </label>
                     <Input
@@ -388,11 +356,11 @@ const Contato = () => {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="seu@email.com"
-                      className="h-12"
+                      className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
+                    <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">
                       Telefone
                     </label>
                     <Input
@@ -402,13 +370,13 @@ const Contato = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="(00) 00000-0000"
-                      className="h-12"
+                      className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="organization" className="block text-sm font-medium text-white mb-2">
                     Organização / Empresa
                   </label>
                   <Input
@@ -417,23 +385,23 @@ const Contato = () => {
                     type="text"
                     value={formData.organization}
                     onChange={handleChange}
-                    placeholder="Nome da empresa ou órgão"
-                    className="h-12"
+                    placeholder="Nome da empresa ou organização"
+                    className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-foreground mb-2">
-                    Você é
+                  <label htmlFor="role" className="block text-sm font-medium text-white mb-2">
+                    Você é:
                   </label>
                   <select
                     id="role"
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="w-full h-12 px-3 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-viajar-cyan focus:border-transparent"
+                    className="w-full h-12 px-3 bg-slate-700/50 border border-slate-600 rounded-md text-white"
                   >
-                    <option value="">Selecione</option>
+                    <option value="">Selecione uma opção</option>
                     <option value="empresario">Empresário do setor turístico</option>
                     <option value="secretaria">Secretaria de Turismo / Prefeitura</option>
                     <option value="outro">Outro</option>
@@ -441,130 +409,29 @@ const Contato = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
-                    Mensagem *
+                  <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
+                    Mensagem
                   </label>
                   <Textarea
                     id="message"
                     name="message"
-                    required
+                    rows={4}
                     value={formData.message}
                     onChange={handleChange}
-                    placeholder="Como podemos ajudar?"
-                    className="min-h-[120px] resize-none"
+                    placeholder="Conte-nos sobre suas necessidades..."
+                    className="bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
                   />
-                </div>
-
-                {/* Opção para solicitar dados */}
-                <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                  <div className="flex items-start gap-3 mb-4">
-                    <input
-                      type="checkbox"
-                      id="requestData"
-                      name="requestData"
-                      checked={formData.requestData}
-                      onChange={(e) => setFormData({ ...formData, requestData: e.target.checked })}
-                      className="mt-1 h-4 w-4 rounded border-gray-300 text-viajar-cyan focus:ring-viajar-cyan"
-                    />
-                    <div className="flex-1">
-                      <label htmlFor="requestData" className="block text-sm font-medium text-foreground cursor-pointer">
-                        Solicitar Relatório de Dados de Turismo
-                      </label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Para <strong>secretarias de turismo</strong> e <strong>empresários do setor turístico</strong>: 
-                        relatórios com dados agregados e anonimizados do Descubra MS. 
-                        <Link 
-                          to="/dados-turismo" 
-                          className="text-viajar-cyan hover:text-viajar-cyan/80 font-medium underline underline-offset-2 hover:underline-offset-4 transition-all ml-1 inline-flex items-center gap-1"
-                        >
-                          Saiba mais sobre os dados disponíveis
-                          <ArrowRight className="h-3 w-3 inline" />
-                        </Link>
-                      </p>
-                    </div>
-                  </div>
-
-                  {formData.requestData && (
-                    <div className="space-y-4 mt-4 pl-7">
-                      <div>
-                        <label htmlFor="dataReportType" className="block text-sm font-medium text-foreground mb-2">
-                          Tipo de Relatório
-                        </label>
-                        <select
-                          id="dataReportType"
-                          name="dataReportType"
-                          value={formData.dataReportType}
-                          onChange={handleChange}
-                          className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-viajar-cyan focus:border-transparent"
-                        >
-                          <option value="explanatory">Apenas Dados Tratados (Explicativo)</option>
-                          <option value="raw_data">Apenas Dados Brutos</option>
-                          <option value="both">Ambos (Tratados + Brutos)</option>
-                        </select>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label htmlFor="dataPeriodStart" className="block text-sm font-medium text-foreground mb-2">
-                            Período Inicial
-                          </label>
-                          <Input
-                            id="dataPeriodStart"
-                            name="dataPeriodStart"
-                            type="date"
-                            value={formData.dataPeriodStart}
-                            onChange={handleChange}
-                            className="h-10"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="dataPeriodEnd" className="block text-sm font-medium text-foreground mb-2">
-                            Período Final
-                          </label>
-                          <Input
-                            id="dataPeriodEnd"
-                            name="dataPeriodEnd"
-                            type="date"
-                            value={formData.dataPeriodEnd}
-                            onChange={handleChange}
-                            className="h-10"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor="dataCity" className="block text-sm font-medium text-foreground mb-2">
-                          Cidade/Região de Interesse (opcional)
-                        </label>
-                        <Input
-                          id="dataCity"
-                          name="dataCity"
-                          type="text"
-                          value={formData.dataCity}
-                          onChange={handleChange}
-                          placeholder="Ex: Campo Grande, Bonito, etc."
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                        <p className="text-xs text-blue-900 dark:text-blue-200">
-                          <strong>Importante:</strong> O pagamento será solicitado após a aprovação da solicitação. 
-                          Os dados são reais, verificados e respeitam a LGPD (apenas dados com consentimento).
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <Button 
                   type="submit" 
-                  size="lg" 
-                  className="w-full h-14 bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold text-lg gap-2"
                   disabled={loading}
+                  className="w-full h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:-translate-y-1"
                 >
                   {loading ? (
-                    <>Enviando...</>
+                    <>
+                      Enviando...
+                    </>
                   ) : (
                     <>
                       <Send className="h-5 w-5" />
@@ -574,76 +441,12 @@ const Contato = () => {
                 </Button>
               </form>
             </GlowCard>
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Planos rápidos */}
-      <section className="py-20 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Soluções para Cada Necessidade
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Escolha o plano ideal para você
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-card rounded-2xl p-8 border border-border hover:border-viajar-cyan/30 transition-colors">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Para Empresários</h3>
-                  <p className="text-sm text-muted-foreground">Hotéis, pousadas, agências</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-sm mb-4">
-                Guilherme IA, Revenue Optimizer, Market Intelligence e mais.
-              </p>
-              <div className="text-2xl font-bold text-foreground mb-4">R$ 199<span className="text-sm text-muted-foreground">/mês</span></div>
-            </div>
-
-            <div className="bg-card rounded-2xl p-8 border border-border hover:border-emerald-500/30 transition-colors">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <Landmark className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Para Secretarias</h3>
-                  <p className="text-sm text-muted-foreground">Prefeituras e órgãos públicos</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-sm mb-4">
-                Dashboard completo, Gestão de CATs, Analytics avançado.
-              </p>
-              <div className="text-2xl font-bold text-foreground mb-4">R$ 2.000<span className="text-sm text-muted-foreground">/mês</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-viajar-slate">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Prefere agendar uma demonstração?
-          </h2>
-          <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-            Veja a plataforma em ação com uma demo personalizada para sua necessidade.
-          </p>
-          <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
-            Agendar Demo
-            <ArrowRight className="h-5 w-5" />
-          </Button>
         </div>
       </section>
 
       <ViaJARFooter />
+    </div>
   );
 };
 
