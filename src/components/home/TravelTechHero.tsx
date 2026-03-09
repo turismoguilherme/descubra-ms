@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const TravelTechHero = () => {
   const [content, setContent] = useState<Record<string, string>>({});
   const [mousePosition, setMousePosition] = useState({ rotateX: 0, rotateY: 0 });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadContent = async () => {
