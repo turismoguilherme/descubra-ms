@@ -86,6 +86,15 @@ export default {
 					'guavira-purple': 'hsl(var(--ms-guavira-purple))',
 					'rivers-blue': 'hsl(var(--ms-rivers-blue))',
 					'accent-orange': 'hsl(var(--ms-accent-orange))'
+				},
+				// Travel Tech Premium 2025/2026
+				'travel-tech': {
+					'turquoise': 'hsl(var(--travel-tech-turquoise))',
+					'ocean-blue': 'hsl(var(--travel-tech-ocean-blue))',
+					'sunset-orange': 'hsl(var(--travel-tech-sunset-orange))',
+					'dark-base': 'hsl(var(--travel-tech-dark-base))',
+					'dark-secondary': 'hsl(var(--travel-tech-dark-secondary))',
+					'neon-glow': 'hsl(var(--travel-tech-neon-glow))'
 				}
 			},
 			borderRadius: {
