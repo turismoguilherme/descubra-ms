@@ -115,10 +115,10 @@ const ViaJARNavbar = () => {
   ];
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+    <nav className={`sticky top-0 z-50 transition-all duration-500 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-border/50' 
-        : 'bg-white/80 backdrop-blur-md border-b border-transparent'
+        ? 'bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/10' 
+        : 'bg-transparent border-b border-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
