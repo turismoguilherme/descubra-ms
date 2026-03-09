@@ -272,10 +272,10 @@ const ViaJARNavbar = () => {
               <Link 
                 key={item.name} 
                 to={item.path} 
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                   isActivePath(item.path) 
-                    ? "text-viajar-cyan bg-viajar-cyan/10" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "text-cyan-400 bg-cyan-400/10" 
+                    : "text-white/70 hover:text-cyan-400 hover:bg-white/10"
                 }`}
               >
                 {item.name}
