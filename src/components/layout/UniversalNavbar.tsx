@@ -159,7 +159,7 @@ const UniversalNavbar = () => {
                     Regiões Turísticas
                     <ChevronDown className="h-4 w-4" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64 max-h-[400px] overflow-y-auto">
+                  <DropdownMenuContent align="start" className="w-64 max-h-[400px] overflow-y-auto z-[1100]">
                     {touristRegions2025.slice(0, 4).map(region => (
                       <DropdownMenuItem key={region.slug} asChild>
                         <Link 
