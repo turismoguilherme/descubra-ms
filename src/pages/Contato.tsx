@@ -353,7 +353,7 @@ const Contato = () => {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-card rounded-2xl p-8 border border-border shadow-lg">
+            <GlowCard className="p-8 bg-slate-800/50">  
               <h3 className="text-xl font-semibold text-foreground mb-6">Envie sua mensagem</h3>
               
               <form onSubmit={handleSubmit} className="space-y-5">
