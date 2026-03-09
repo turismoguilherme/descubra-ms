@@ -571,6 +571,7 @@ const Contato = () => {
                   )}
                 </Button>
               </form>
+            </GlowCard>
             </div>
           </div>
         </div>
