@@ -341,7 +341,8 @@ const ViaJARNavbar = () => {
                   </Button>
                 </Link>
                 <Link to="/viajar/register">
-                  <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
+                  <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white gap-2 relative group shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300" />
                     Começar Agora
                     <ArrowRight className="h-4 w-4" />
                   </Button>
