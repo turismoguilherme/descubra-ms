@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Building2, Landmark, ArrowRight, Sparkles } from 'lucide-react';
+import { Check, Building2, Landmark, ArrowRight, Sparkles, Zap } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { supabase } from '@/integrations/supabase/client';
 import type { PlanTier } from '@/services/subscriptionService';
+import TechBackground from '@/components/home/TechBackground';
+import GlowCard from '@/components/home/GlowCard';
 
 const Precos = () => {
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ const Precos = () => {
       ],
       cta: "Assinar Agora",
       highlighted: false,
-      gradient: "from-viajar-cyan to-viajar-blue"
+      gradient: "from-cyan-500 to-cyan-600"
     },
     {
       name: "Governo",
@@ -87,31 +89,24 @@ const Precos = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-950">
       <ViaJARNavbar />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-20">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-            backgroundSize: '40px 40px'
-          }} />
-        </div>
+      {/* Hero Section with Tech Background */}
+      <section className="relative overflow-hidden min-h-[60vh] flex items-center">
+        <TechBackground variant="hero" />
         
-        {/* Gradient Orbs */}
-        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
-              <Sparkles className="h-4 w-4 text-viajar-cyan" />
-              <span className="text-sm text-white/90 font-medium">Planos para cada necessidade</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 mb-6 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+              <Sparkles className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm text-cyan-100 font-medium">💰 Planos para cada necessidade</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Escolha o Plano Ideal
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+                Escolha o Plano Ideal
+              </span>
             </h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto">
               Soluções completas para empresários do setor turístico e gestores públicos
@@ -121,21 +116,22 @@ const Precos = () => {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-20 -mt-10">
+      <section className="py-20 bg-slate-900">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {plans.map((plan, index) => (
-              <div 
-                key={index} 
-                className={`relative rounded-2xl p-8 transition-all duration-300 ${
+              <GlowCard 
+                key={index}
+                className={`p-8 transition-all duration-300 ${
                   plan.highlighted 
-                    ? 'bg-viajar-slate text-white shadow-2xl shadow-emerald-500/20 scale-105 z-10' 
-                    : 'bg-card border border-border hover:border-viajar-cyan/30 hover:shadow-lg'
+                    ? 'bg-slate-800/80 scale-105 z-10' 
+                    : 'bg-slate-800/50'
                 }`}
+                glowColor={plan.highlighted ? 'rgba(52, 211, 153, 0.3)' : 'rgba(20, 184, 166, 0.3)'}
               >
                 {plan.highlighted && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="px-4 py-1 bg-emerald-500 text-white text-sm font-semibold rounded-full">
+                    <div className="px-4 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold rounded-full shadow-[0_0_15px_rgba(52,211,153,0.4)]">
                       Mais Completo
                     </div>
                   </div>
@@ -147,16 +143,16 @@ const Precos = () => {
                     <plan.icon className="h-7 w-7 text-white" />
                   </div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className={`text-2xl font-bold ${plan.highlighted ? 'text-white' : 'text-foreground'}`}>
+                    <h3 className="text-2xl font-bold text-white">
                       {plan.name}
                     </h3>
                     <span className={`text-sm px-2 py-1 rounded-full ${
-                      plan.highlighted ? 'bg-white/20 text-white' : 'bg-viajar-cyan/10 text-viajar-cyan'
+                      plan.highlighted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'
                     }`}>
                       {plan.subtitle}
                     </span>
                   </div>
-                  <p className={`text-sm ${plan.highlighted ? 'text-white/70' : 'text-muted-foreground'}`}>
+                  <p className="text-sm text-white/60">
                     {plan.description}
                   </p>
                 </div>
@@ -164,10 +160,10 @@ const Precos = () => {
                 {/* Price */}
                 <div className="mb-8">
                   <div className="flex items-baseline gap-1">
-                    <span className={`text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-foreground'}`}>
+                    <span className="text-4xl font-bold text-white">
                       {plan.price}
                     </span>
-                    <span className={`text-sm ${plan.highlighted ? 'text-white/60' : 'text-muted-foreground'}`}>
+                    <span className="text-sm text-white/60">
                       {plan.period}
                     </span>
                   </div>
@@ -178,9 +174,9 @@ const Precos = () => {
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                        plan.highlighted ? 'text-emerald-400' : 'text-viajar-cyan'
+                        plan.highlighted ? 'text-emerald-400' : 'text-cyan-400'
                       }`} />
-                      <span className={`text-sm ${plan.highlighted ? 'text-white/90' : 'text-muted-foreground'}`}>
+                      <span className="text-sm text-white/80">
                         {feature}
                       </span>
                     </li>
@@ -188,35 +184,40 @@ const Precos = () => {
                 </ul>
 
                 {/* CTA */}
-                  <Button 
+                <Button 
                   onClick={() => handleSelectPlan(plan.planId)}
-                    className={`w-full h-12 font-semibold gap-2 ${
-                      plan.highlighted 
-                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
-                        : 'bg-viajar-slate hover:bg-viajar-slate/90 text-white'
-                    }`}
-                  >
-                    {plan.cta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-              </div>
+                  className={`w-full h-12 font-semibold gap-2 transition-all duration-300 hover:-translate-y-1 ${
+                    plan.highlighted 
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(52,211,153,0.4)]' 
+                      : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                  }`}
+                >
+                  {plan.cta}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </GlowCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* FAQ ou Info adicional */}
-      <section className="py-20 bg-muted/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
+      <section className="py-20 bg-slate-950 relative overflow-hidden">
+        <TechBackground variant="section" className="opacity-30" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/20 backdrop-blur-sm border border-yellow-400/30 mb-6 shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+            <Zap className="h-4 w-4 text-yellow-400" />
+            <span className="text-sm text-yellow-100 font-medium">Solução Personalizada</span>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">
             Precisa de uma solução personalizada?
           </h2>
-          <p className="text-lg text-muted-foreground mb-8">
+          <p className="text-lg text-white/70 mb-8">
             Entre em contato com nossos especialistas e descubra como podemos atender 
             às necessidades específicas da sua organização.
           </p>
           <Link to="/contato">
-            <Button size="lg" className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2 h-14 px-8 text-lg">
+            <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white gap-2 h-14 px-8 text-lg font-semibold shadow-[0_0_30px_rgba(234,179,8,0.4)] hover:shadow-[0_0_40px_rgba(234,179,8,0.6)] hover:-translate-y-1 transition-all duration-300">
               Falar com Especialista
               <ArrowRight className="h-5 w-5" />
             </Button>

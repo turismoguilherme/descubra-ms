@@ -115,10 +115,10 @@ const ViaJARNavbar = () => {
   ];
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+    <nav className={`sticky top-0 z-50 transition-all duration-500 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-border/50' 
-        : 'bg-white/80 backdrop-blur-md border-b border-transparent'
+        ? 'bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/10' 
+        : 'bg-transparent border-b border-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -135,10 +135,10 @@ const ViaJARNavbar = () => {
                   <div key={item.name} className="relative" ref={solutionsDropdownRef}>
                     <button
                       onClick={() => setSolutionsDropdownOpen(!solutionsDropdownOpen)}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1 ${
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 flex items-center gap-1 ${
                         isActivePath(item.path) 
-                          ? "text-viajar-cyan bg-viajar-cyan/10" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ? "text-cyan-400 bg-cyan-400/10" 
+                          : "text-white/70 hover:text-cyan-400 hover:bg-white/10"
                       }`}
                     >
                       {item.name}
@@ -146,25 +146,25 @@ const ViaJARNavbar = () => {
                     </button>
                     
                     {solutionsDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-[600px] bg-white rounded-xl shadow-xl border border-border/50 py-4 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                      <div className="absolute top-full left-0 mt-2 w-[600px] bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/10 py-4 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                         <div className="grid grid-cols-2 gap-6 px-4">
                           {/* Para Empresários */}
                           <div>
-                            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-viajar-cyan" />
+                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-cyan-400" />
                               Para Empresários
                             </h3>
                             <ul className="space-y-2">
                               <li>
                                 <Link 
                                   to="/solucoes#revenue-optimizer"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Revenue Optimizer
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Maximize receita com precificação inteligente
                                   </div>
                                 </Link>
@@ -172,13 +172,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#market-intelligence"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Market Intelligence
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Entenda seu mercado e concorrentes
                                   </div>
                                 </Link>
@@ -202,8 +202,8 @@ const ViaJARNavbar = () => {
 
                           {/* Para Setor Público */}
                           <div>
-                            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-viajar-cyan" />
+                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-cyan-400" />
                               Para Setor Público
                             </h3>
                             <ul className="space-y-2">
@@ -272,10 +272,10 @@ const ViaJARNavbar = () => {
               <Link 
                 key={item.name} 
                 to={item.path} 
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                   isActivePath(item.path) 
-                    ? "text-viajar-cyan bg-viajar-cyan/10" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "text-cyan-400 bg-cyan-400/10" 
+                    : "text-white/70 hover:text-cyan-400 hover:bg-white/10"
                 }`}
               >
                 {item.name}
@@ -290,7 +290,7 @@ const ViaJARNavbar = () => {
               <div className="relative" ref={dropdownRef}>
                 <Button 
                   variant="ghost"
-                  className="gap-2 text-foreground hover:bg-muted/50"
+                  className="gap-2 text-white/80 hover:text-white hover:bg-white/10"
                   onClick={() => setIsDashboardOpen(!isDashboardOpen)}
                 >
                   Dashboard
@@ -336,12 +336,13 @@ const ViaJARNavbar = () => {
             ) : (
               <>
                 <Link to="/viajar/login">
-                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" className="text-white/80 hover:text-white">
                     Entrar
                   </Button>
                 </Link>
                 <Link to="/viajar/register">
-                  <Button className="bg-viajar-slate hover:bg-viajar-slate/90 text-white gap-2">
+                  <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white gap-2 relative group shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300" />
                     Começar Agora
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -356,7 +357,7 @@ const ViaJARNavbar = () => {
               variant="ghost" 
               size="icon"
               onClick={() => setIsOpen(!isOpen)} 
-              className="text-foreground"
+              className="text-white/80 hover:text-white"
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -365,7 +366,7 @@ const ViaJARNavbar = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-border/50 animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden py-4 bg-slate-950/95 backdrop-blur-xl border-t border-cyan-500/10 animate-in slide-in-from-top-2 duration-200">
             <div className="space-y-1">
               {navigationItems.map(item => {
                 if (item.hasDropdown && item.name === "Soluções") {
