@@ -150,8 +150,8 @@ const ViaJARNavbar = () => {
                         <div className="grid grid-cols-2 gap-6 px-4">
                           {/* Para Empresários */}
                           <div>
-                            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-viajar-cyan" />
+                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-cyan-400" />
                               Para Empresários
                             </h3>
                             <ul className="space-y-2">
