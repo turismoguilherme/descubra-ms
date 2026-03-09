@@ -179,7 +179,15 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 3s ease-in-out infinite'
+				'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
+				// Travel Tech Premium Animations
+				'float-tech': 'float-tech 8s ease-in-out infinite',
+				'float-tech-delayed': 'float-tech 12s ease-in-out infinite 2s',
+				'data-flow': 'data-flow 3s ease-in-out infinite',
+				'data-flow-delayed': 'data-flow 4s ease-in-out infinite 1s',
+				'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
+				'holographic-scan': 'holographic-scan 3s linear infinite',
+				'rotate-globe': 'rotate-globe 20s linear infinite'
 			},
 			backgroundImage: {
 				'gradient-ms': 'linear-gradient(to right, #003087, #2E7D32)',
