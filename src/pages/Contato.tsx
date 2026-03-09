@@ -281,8 +281,8 @@ const Contato = () => {
                       <Mail className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                      <a href={`mailto:${footerSettings.email}`} className="text-viajar-cyan hover:underline">
+                      <h3 className="font-semibold text-white mb-1">Email</h3>
+                      <a href={`mailto:${footerSettings.email}`} className="text-cyan-400 hover:underline">
                         {footerSettings.email}
                       </a>
                     </div>
