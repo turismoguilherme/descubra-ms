@@ -358,7 +358,7 @@ const Contato = () => {
               
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
                     Nome Completo *
                   </label>
                   <Input
