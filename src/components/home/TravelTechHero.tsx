@@ -38,8 +38,12 @@ const TravelTechHero = () => {
     const deltaX = (event.clientX - centerX) / (rect.width / 2);
     const deltaY = (event.clientY - centerY) / (rect.height / 2);
     
-    const rotateY = deltaX * 8; // max 8 degrees horizontal
-    const rotateX = -deltaY * 5; // max 5 degrees vertical
+    // Responsive parallax intensity - less intense on mobile to prevent motion sickness
+    const horizontalIntensity = isMobile ? 4 : 8; // 4° mobile, 8° desktop
+    const verticalIntensity = isMobile ? 2 : 5;   // 2° mobile, 5° desktop
+    
+    const rotateY = Math.max(-horizontalIntensity, Math.min(horizontalIntensity, deltaX * horizontalIntensity));
+    const rotateX = Math.max(-verticalIntensity, Math.min(verticalIntensity, -deltaY * verticalIntensity));
     
     setMousePosition({ rotateX, rotateY });
   };
