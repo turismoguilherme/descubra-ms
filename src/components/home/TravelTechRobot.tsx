@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { Brain, BarChart3, Database, Zap, Clock } from 'lucide-react';
-import robotImg from '@/assets/travel-tech-robot.png';
+
+// Try different import paths for the robot image
+let robotImg;
+try {
+  robotImg = require('@/assets/travel-tech-robot.png');
+} catch {
+  try {
+    robotImg = require('../../../assets/travel-tech-robot.png');
+  } catch {
+    try {
+      robotImg = require('/src/assets/travel-tech-robot.png');
+    } catch {
+      robotImg = null;
+    }
+  }
+}
 
 interface TravelTechRobotProps {
   onMouseMove?: (event: React.MouseEvent<HTMLDivElement>) => void;
