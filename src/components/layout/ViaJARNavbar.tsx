@@ -146,7 +146,7 @@ const ViaJARNavbar = () => {
                     </button>
                     
                     {solutionsDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-[600px] bg-white rounded-xl shadow-xl border border-border/50 py-4 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                      <div className="absolute top-full left-0 mt-2 w-[600px] bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/10 py-4 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                         <div className="grid grid-cols-2 gap-6 px-4">
                           {/* Para Empresários */}
                           <div>
