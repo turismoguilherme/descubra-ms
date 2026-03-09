@@ -6893,6 +6893,48 @@ export type Database = {
         }
         Relationships: []
       }
+      viajar_metrics_config: {
+        Row: {
+          admin_notes: string | null
+          display_order: number
+          display_value: string
+          id: string
+          is_active: boolean
+          is_projected: boolean
+          label: string
+          metric_key: string
+          section_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          display_order?: number
+          display_value: string
+          id?: string
+          is_active?: boolean
+          is_projected?: boolean
+          label: string
+          metric_key: string
+          section_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          display_order?: number
+          display_value?: string
+          id?: string
+          is_active?: boolean
+          is_projected?: boolean
+          label?: string
+          metric_key?: string
+          section_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       viajar_products: {
         Row: {
           created_at: string | null
@@ -6941,6 +6983,36 @@ export type Database = {
           title?: string
           updated_at?: string | null
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      viajar_section_controls: {
+        Row: {
+          admin_notes: string | null
+          id: string
+          is_active: boolean
+          section_key: string
+          section_title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          id?: string
+          is_active?: boolean
+          section_key: string
+          section_title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          id?: string
+          is_active?: boolean
+          section_key?: string
+          section_title?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

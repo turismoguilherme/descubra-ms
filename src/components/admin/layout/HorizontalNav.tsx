@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
       { label: 'Funcionários', path: '/viajar/admin/viajar/employees' },
       { label: 'Clientes', path: '/viajar/admin/viajar/clients' },
       { label: 'Assinaturas', path: '/viajar/admin/viajar/subscriptions' },
+      { label: 'Controle de Seções', path: '/viajar/admin/viajar/sections' },
       { label: 'Páginas', path: '/viajar/admin/viajar/pages' },
       { label: 'Configurações', path: '/viajar/admin/viajar/settings' },
     ],
