@@ -186,13 +186,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#ia-conversacional"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     IA Conversacional
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Assistente inteligente para seu negócio
                                   </div>
                                 </Link>
