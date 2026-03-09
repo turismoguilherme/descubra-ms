@@ -96,6 +96,14 @@
     --viajar-emerald: 160 84% 39%;
     --viajar-amber: 38 92% 50%;
     
+    /* Travel Tech Premium 2025/2026 */
+    --travel-tech-turquoise: 166 100% 37%; /* #06d6a0 - Verde tropical neon */
+    --travel-tech-ocean-blue: 193 85% 31%; /* #118ab2 - Azul oceano */
+    --travel-tech-sunset-orange: 14 100% 59%; /* #ff6b35 - Laranja pôr do sol */
+    --travel-tech-dark-base: 222 47% 11%; /* #0f172a - Base escura */
+    --travel-tech-dark-secondary: 215 28% 17%; /* #1e293b - Secundária escura */
+    --travel-tech-neon-glow: 180 100% 50%; /* #00ffff - Brilho neon */
+    
     /* Cores da marca MS */
     --ms-primary-blue: 220 91% 29%;
     --ms-secondary-yellow: 48 96% 55%;
