@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import CookieConsentBanner from '@/components/cookies/CookieConsentBanner';
 import { platformContentService } from '@/services/admin/platformContentService';
+import { useViaJARSectionControls } from '@/hooks/useViaJARSectionControls';
 import WhatViajARTurDoesSection from '@/components/home/WhatViajARTurDoesSection';
 import SuccessCasesSection from '@/components/home/SuccessCasesSection';
 import TravelTechHero from '@/components/home/TravelTechHero';
 import PlatformInActionSection from '@/components/home/PlatformInActionSection';
 import BenefitsSection from '@/components/home/BenefitsSection';
-// CommercialSection removido temporariamente
 
 const VideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -36,15 +36,11 @@ const VideoSection = () => {
 
   const getYouTubeEmbedUrl = (url: string) => {
     if (!url) return null;
-    
-    // Extrair ID do YouTube de diferentes formatos
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(regex);
-    
     if (match && match[1]) {
       return `https://www.youtube.com/embed/${match[1]}`;
     }
-    
     return null;
   };
 
@@ -78,26 +74,22 @@ const VideoSection = () => {
 };
 
 const ViaJARSaaS = () => {
-  // Estados para conteúdos editáveis
   const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const { isSectionActive, loading: controlsLoading } = useViaJARSectionControls();
 
-  // Scroll para o topo quando a página carregar
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  // Carregar conteúdos do banco
   useEffect(() => {
     const loadContent = async () => {
       try {
         const contents = await platformContentService.getContentByPrefix('viajar_');
         const contentMap: Record<string, string> = {};
-        
         contents.forEach(item => {
           contentMap[item.content_key] = item.content_value || '';
         });
-        
         setContent(contentMap);
       } catch (error) {
         console.error('Erro ao carregar conteúdo:', error);
@@ -105,87 +97,79 @@ const ViaJARSaaS = () => {
         setLoading(false);
       }
     };
-    
     loadContent();
   }, []);
 
-  // Helper para obter conteúdo com fallback
   const getContent = (key: string, fallback: string = '') => {
     return content[key] || fallback;
   };
-
-  // Stats removidos - podem ser reativados via admin futuramente
-  // const stats = [
-  //   { value: "50K+", label: "Usuários Ativos" },
-  //   { value: "95%", label: "Satisfação" },
-  //   { value: "27", label: "Estados" },
-  //   { value: "500+", label: "Parceiros" },
-  // ];
 
   return (
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
-      {/* Hero Section - Travel Tech Premium Imersivo */}
+      {/* Hero Section */}
       <TravelTechHero />
 
-      {/* O que a ViajARTur faz - Cards visuais grandes */}
-      <WhatViajARTurDoesSection />
+      {/* O que a ViajARTur faz */}
+      {isSectionActive('what_we_do') && <WhatViajARTurDoesSection />}
 
-      {/* Plataforma em Ação - Dashboard interativo animado */}
-      <PlatformInActionSection />
+      {/* Plataforma em Ação */}
+      {isSectionActive('platform_in_action') && <PlatformInActionSection />}
 
-      {/* Benefícios - Grid animado com stats */}
-      <BenefitsSection />
+      {/* Benefícios */}
+      {isSectionActive('benefits') && <BenefitsSection />}
 
-      {/* Cases de Sucesso - Koda + Descubra MS */}
-      <SuccessCasesSection />
+      {/* Cases de Sucesso */}
+      {isSectionActive('success_cases') && <SuccessCasesSection />}
 
       {/* Video Section */}
-      <section className="py-24 bg-background">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {getContent('viajar_video_title', 'Veja a Plataforma em Ação')}
-            </h2>
-            {getContent('viajar_video_description') && (
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                {getContent('viajar_video_description', 'Descubra como a ViajARTur pode transformar a gestão do turismo na sua região')}
-            </p>
-            )}
+      {isSectionActive('video_section') && (
+        <section className="py-24 bg-background">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                {getContent('viajar_video_title', 'Veja a Plataforma em Ação')}
+              </h2>
+              {getContent('viajar_video_description') && (
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  {getContent('viajar_video_description', 'Descubra como a ViajARTur pode transformar a gestão do turismo na sua região')}
+                </p>
+              )}
+            </div>
+            <VideoSection />
           </div>
-          
-          {/* Video Container */}
-          <VideoSection />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
-      <section className="py-24 bg-viajar-slate">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            {getContent('viajar_cta_title', 'Pronto para Transformar seu Turismo?')}
-          </h2>
-          {getContent('viajar_cta_description') && (
-          <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-              {getContent('viajar_cta_description', 'Junte-se a empresas e órgãos públicos que já confiam na ViajARTur.')}
-          </p>
-          )}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contato">
-              <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
-                {getContent('viajar_cta_button_primary', 'Solicitar Demonstração')}
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
-            <Link to="/precos">
-              <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
-                {getContent('viajar_cta_button_secondary', 'Ver Planos')}
-              </Button>
-            </Link>
+      {isSectionActive('cta_section') && (
+        <section className="py-24 bg-viajar-slate">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              {getContent('viajar_cta_title', 'Pronto para Transformar a Gestão Turística?')}
+            </h2>
+            {getContent('viajar_cta_description') && (
+              <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
+                {getContent('viajar_cta_description', 'Junte-se a secretarias de turismo e empresários que confiam na ViajARTur para decisões estratégicas.')}
+              </p>
+            )}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/contato">
+                <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 h-14 text-lg gap-2">
+                  {getContent('viajar_cta_button_primary', 'Solicitar Demonstração')}
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/precos">
+                <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-8 h-14 text-lg backdrop-blur-sm">
+                  {getContent('viajar_cta_button_secondary', 'Ver Planos')}
+                </Button>
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <ViaJARFooter />
       <CookieConsentBanner platform="viajar" />

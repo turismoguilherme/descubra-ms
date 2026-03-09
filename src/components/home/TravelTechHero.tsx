@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Play, ArrowRight, Users, TrendingUp, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { platformContentService } from '@/services/admin/platformContentService';
+import { useViaJARSectionControls } from '@/hooks/useViaJARSectionControls';
 import TravelTechRobot from './TravelTechRobot';
 import FloatingTechElements from './FloatingTechElements';
 import TechBackground from './TechBackground';
@@ -11,6 +12,7 @@ import heroBackground from '@/assets/travel-tech-hero-bg.jpg';
 const TravelTechHero = () => {
   const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const { isSectionActive, getActiveMetrics, loading: controlsLoading } = useViaJARSectionControls();
 
   useEffect(() => {
     loadContent();
@@ -35,25 +37,16 @@ const TravelTechHero = () => {
     return content[key] || fallback;
   };
 
-  const statsData = [
-    { 
-      icon: Users, 
-      value: getContent('viajar_hero_stat_users', '+100K'),
-      label: getContent('viajar_hero_stat_users_label', 'Usuários')
-    },
-    { 
-      icon: TrendingUp, 
-      value: getContent('viajar_hero_stat_satisfaction', '98%'),
-      label: getContent('viajar_hero_stat_satisfaction_label', 'Satisfação')
-    },
-    { 
-      icon: Zap, 
-      value: getContent('viajar_hero_stat_ai', 'IA 24/7'),
-      label: getContent('viajar_hero_stat_ai_label', 'Disponível')
-    }
-  ];
+  const showStats = isSectionActive('hero_stats');
+  const activeStats = getActiveMetrics('hero_stats');
 
-  if (loading) {
+  const statIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+    hero_users: Users,
+    hero_satisfaction: TrendingUp,
+    hero_ai: Zap
+  };
+
+  if (loading || controlsLoading) {
     return (
       <section className="relative min-h-screen flex items-center justify-center bg-travel-tech-dark-base">
         <div className="animate-pulse text-travel-tech-turquoise">
@@ -72,14 +65,10 @@ const TravelTechHero = () => {
           alt="Travel Tech Background"
           className="w-full h-full object-cover"
         />
-        {/* Dark Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-travel-tech-dark-base/90 via-travel-tech-dark-base/70 to-travel-tech-dark-base/50" />
       </div>
 
-      {/* Tech Background Elements */}
       <TechBackground variant="hero" className="z-10" />
-
-      {/* Floating Tech Elements */}
       <FloatingTechElements variant="hero" />
 
       {/* Main Content */}
@@ -102,11 +91,11 @@ const TravelTechHero = () => {
                 className="inline-flex items-center px-6 py-3 rounded-full border border-travel-tech-turquoise/30 bg-travel-tech-turquoise/10 backdrop-blur-sm"
               >
                 <span className="text-travel-tech-turquoise font-semibold text-sm tracking-wide">
-                  Travel Tech | Turismo + Inteligência Artificial
+                  Travel Tech | Plataforma para Gestores de Turismo
                 </span>
               </motion.div>
 
-              {/* Main Title - Gradient */}
+              {/* Main Title */}
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -114,18 +103,18 @@ const TravelTechHero = () => {
                 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
               >
                 <span className="bg-gradient-to-r from-white via-travel-tech-turquoise to-travel-tech-ocean-blue bg-clip-text text-transparent">
-                  {getContent('viajar_hero_title', 'ViajARTur – IA que Transforma o Turismo')}
+                  {getContent('viajar_hero_title', 'ViajARTur – IA que Transforma a Gestão do Turismo')}
                 </span>
               </motion.h1>
 
-              {/* Subtitle */}
+              {/* Subtitle - B2B focused */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
                 className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl"
               >
-                {getContent('viajar_hero_subtitle', 'Analytics avançado, inteligência artificial 24/7 e big data para decisões estratégicas, destinos mais sustentáveis e experiências inesquecíveis.')}
+                {getContent('viajar_hero_subtitle', 'Plataforma de inteligência artificial para secretarias de turismo, empresários e gestores públicos. Dashboards estratégicos, previsão de demanda e analytics em tempo real.')}
               </motion.p>
 
               {/* CTA Buttons */}
@@ -148,30 +137,35 @@ const TravelTechHero = () => {
                   className="group inline-flex items-center justify-center px-8 py-4 rounded-xl border-2 border-travel-tech-turquoise/50 text-travel-tech-turquoise font-semibold text-lg hover:bg-travel-tech-turquoise hover:text-travel-tech-dark-base transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm"
                 >
                   <Play className="mr-2 h-5 w-5" />
-                  <span>Ver Demonstração</span>
+                  <span>Solicitar Demonstração</span>
                 </Link>
               </motion.div>
 
-              {/* Mini Stats */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.0 }}
-                className="grid grid-cols-3 gap-6 pt-8"
-              >
-                {statsData.map((stat, index) => (
-                  <div 
-                    key={index}
-                    className="text-center"
-                  >
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-full bg-travel-tech-turquoise/20 backdrop-blur-sm border border-travel-tech-turquoise/30">
-                      <stat.icon className="w-6 h-6 text-travel-tech-turquoise" />
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-                    <div className="text-sm text-gray-400">{stat.label}</div>
-                  </div>
-                ))}
-              </motion.div>
+              {/* Mini Stats - Controlável via admin */}
+              {showStats && activeStats.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.0 }}
+                  className="grid grid-cols-3 gap-6 pt-8"
+                >
+                  {activeStats.map((stat) => {
+                    const StatIcon = statIcons[stat.metric_key] || TrendingUp;
+                    return (
+                      <div key={stat.metric_key} className="text-center">
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-full bg-travel-tech-turquoise/20 backdrop-blur-sm border border-travel-tech-turquoise/30">
+                          <StatIcon className="w-6 h-6 text-travel-tech-turquoise" />
+                        </div>
+                        <div className="text-2xl font-bold text-white mb-1">{stat.display_value}</div>
+                        <div className="text-sm text-gray-400">{stat.label}</div>
+                        {stat.is_projected && (
+                          <div className="text-[10px] text-amber-400/60">*Projeção</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Right Side - Robot */}

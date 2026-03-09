@@ -128,6 +128,11 @@ export default function ViaJARAdminPanel() {
                 <TeamMembersManager />
               </Suspense>
             } />
+            <Route path="viajar/sections" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ViaJARSectionManager />
+              </Suspense>
+            } />
             
             {/* Descubra MS Routes */}
             <Route path="descubra-ms/cats" element={
