@@ -1,14 +1,12 @@
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import robotImage from '@/assets/travel-tech-robot.png';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 
 /* ─── Sub-components ─── */
 
 const HolographicPedestal = () => (
   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] h-32 pointer-events-none">
-    {/* Ground glow */}
     <div className="absolute inset-0 rounded-[50%] bg-emerald-500/20 blur-3xl scale-y-50" />
-    {/* Spinning rings */}
     {[0, 1, 2].map((i) => (
       <motion.div
         key={i}
@@ -24,7 +22,6 @@ const HolographicPedestal = () => (
         transition={{ duration: 12 + i * 4, repeat: Infinity, ease: 'linear' }}
       />
     ))}
-    {/* Grid lines (perspective) */}
     <div
       className="absolute inset-0 opacity-10"
       style={{
@@ -52,43 +49,65 @@ const HoloPanel = ({
   <motion.div
     className={`absolute backdrop-blur-md bg-emerald-950/30 border border-emerald-400/25 rounded-lg p-2 shadow-[0_0_15px_rgba(0,255,170,0.08)] ${className}`}
     initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.6, delay, ease: 'easeOut' }}
+    animate={{
+      opacity: [0, 1, 1, 0.88, 1],
+      scale: 1,
+    }}
+    transition={{
+      opacity: { duration: 4, delay, repeat: Infinity, repeatType: 'loop', times: [0, 0.15, 0.7, 0.85, 1] },
+      scale: { duration: 0.6, delay, ease: 'easeOut' },
+    }}
   >
     {children}
   </motion.div>
 );
 
-/* Bar chart panel */
-const BarChartPanel = () => (
-  <HoloPanel className="top-[8%] right-[-8%] w-28 h-20 md:w-32 md:h-24" delay={0.3}>
-    <p className="text-[8px] md:text-[9px] text-emerald-400/80 font-mono mb-1 tracking-wider">ANALYTICS</p>
-    <div className="flex items-end gap-1 h-[60%]">
-      {[40, 65, 50, 80, 60, 90, 75].map((h, i) => (
-        <motion.div
-          key={i}
-          className="flex-1 rounded-sm bg-gradient-to-t from-emerald-500/60 to-emerald-300/80"
-          initial={{ height: 0 }}
-          animate={{ height: `${h}%` }}
-          transition={{ duration: 0.8, delay: 0.5 + i * 0.08, ease: 'easeOut' }}
-        />
-      ))}
-    </div>
-  </HoloPanel>
-);
+/* Bar chart panel — bars continuously change height */
+const BarChartPanel = () => {
+  const [bars, setBars] = useState([40, 65, 50, 80, 60, 90, 75]);
 
-/* AI Neural panel */
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBars(prev => prev.map(h => {
+        const delta = (Math.random() - 0.5) * 30;
+        return Math.max(20, Math.min(95, h + delta));
+      }));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <HoloPanel className="top-[8%] right-[-8%] w-28 h-20 md:w-32 md:h-24" delay={0.3}>
+      <p className="text-[8px] md:text-[9px] text-emerald-400/80 font-mono mb-1 tracking-wider">ANALYTICS</p>
+      <div className="flex items-end gap-1 h-[60%]">
+        {bars.map((h, i) => (
+          <motion.div
+            key={i}
+            className="flex-1 rounded-sm bg-gradient-to-t from-emerald-500/60 to-emerald-300/80"
+            animate={{ height: `${h}%` }}
+            transition={{ duration: 1.2, ease: 'easeInOut' }}
+          />
+        ))}
+      </div>
+    </HoloPanel>
+  );
+};
+
+/* AI Neural panel — faster synapses */
 const AIPanel = () => (
   <HoloPanel className="top-[18%] left-[-10%] w-24 h-20 md:w-28 md:h-24" delay={0.5}>
     <div className="flex items-center gap-1 mb-1">
       <motion.div
-        className="w-3 h-3 rounded-full bg-emerald-400/80"
-        animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 2, repeat: Infinity }}
+        className="w-3 h-3 rounded-full"
+        animate={{
+          scale: [1, 1.4, 1],
+          opacity: [0.6, 1, 0.6],
+          backgroundColor: ['hsl(160 84% 60%)', 'hsl(180 84% 60%)', 'hsl(160 84% 60%)'],
+        }}
+        transition={{ duration: 1.2, repeat: Infinity }}
       />
       <span className="text-[10px] md:text-xs font-bold text-emerald-300 font-mono">AI</span>
     </div>
-    {/* Neural lines */}
     <svg viewBox="0 0 60 30" className="w-full h-8 opacity-70">
       {[0, 1, 2].map((row) =>
         [0, 1, 2, 3].map((col) => (
@@ -98,22 +117,31 @@ const AIPanel = () => (
             cy={6 + row * 10}
             r="2"
             fill="hsl(160 84% 60% / 0.7)"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.5, repeat: Infinity, delay: (row + col) * 0.2 }}
+            animate={{ opacity: [0.2, 1, 0.2], r: [1.5, 2.5, 1.5] }}
+            transition={{ duration: 0.8 + Math.random() * 0.6, repeat: Infinity, delay: (row + col) * 0.15 }}
           />
         ))
       )}
-      {/* connections */}
-      <motion.line x1="8" y1="6" x2="24" y2="16" stroke="hsl(160 84% 60% / 0.3)" strokeWidth="0.5" />
-      <motion.line x1="24" y1="16" x2="40" y2="6" stroke="hsl(160 84% 60% / 0.3)" strokeWidth="0.5" />
-      <motion.line x1="40" y1="6" x2="56" y2="16" stroke="hsl(160 84% 60% / 0.3)" strokeWidth="0.5" />
-      <motion.line x1="8" y1="16" x2="24" y2="26" stroke="hsl(160 84% 60% / 0.3)" strokeWidth="0.5" />
-      <motion.line x1="24" y1="6" x2="40" y2="16" stroke="hsl(160 84% 60% / 0.3)" strokeWidth="0.5" />
+      {/* Synapse connections with pulsing opacity */}
+      {[
+        [8, 6, 24, 16], [24, 16, 40, 6], [40, 6, 56, 16],
+        [8, 16, 24, 26], [24, 6, 40, 16], [40, 16, 56, 26],
+        [8, 26, 24, 16], [56, 6, 40, 16],
+      ].map(([x1, y1, x2, y2], i) => (
+        <motion.line
+          key={i}
+          x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke="hsl(160 84% 60%)"
+          strokeWidth="0.5"
+          animate={{ opacity: [0.1, 0.6, 0.1] }}
+          transition={{ duration: 0.6 + Math.random() * 0.8, repeat: Infinity, delay: i * 0.2 }}
+        />
+      ))}
     </svg>
   </HoloPanel>
 );
 
-/* Trend line panel */
+/* Trend line panel — redraws in loop */
 const TrendPanel = () => (
   <HoloPanel className="bottom-[18%] right-[-6%] w-28 h-16 md:w-32 md:h-20" delay={0.7}>
     <p className="text-[8px] md:text-[9px] text-emerald-400/80 font-mono mb-0.5 tracking-wider">TREND</p>
@@ -124,17 +152,25 @@ const TrendPanel = () => (
         stroke="hsl(160 84% 60% / 0.8)"
         strokeWidth="1.5"
         strokeLinecap="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 2, delay: 1, ease: 'easeOut' }}
+        animate={{ pathLength: [0, 1, 1, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', times: [0, 0.4, 0.8, 1] }}
       />
       <motion.path
         d="M0,20 Q10,18 20,15 T40,10 T60,6 T80,2 V24 H0 Z"
         fill="url(#trendGrad)"
-        opacity="0.2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.2 }}
-        transition={{ delay: 2 }}
+        animate={{ opacity: [0, 0.2, 0.2, 0] }}
+        transition={{ duration: 4, repeat: Infinity, times: [0, 0.4, 0.8, 1] }}
+      />
+      {/* Moving dot on the line */}
+      <motion.circle
+        r="2"
+        fill="hsl(160 84% 60%)"
+        animate={{
+          cx: [0, 20, 40, 60, 80],
+          cy: [20, 15, 10, 6, 2],
+          opacity: [0, 1, 1, 1, 0],
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
       <defs>
         <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
@@ -146,69 +182,55 @@ const TrendPanel = () => (
   </HoloPanel>
 );
 
-/* KPI panel */
-const KPIPanel = () => (
-  <HoloPanel className="bottom-[30%] left-[-8%] w-24 h-14 md:w-28 md:h-16" delay={0.9}>
-    <p className="text-[7px] md:text-[8px] text-emerald-400/60 font-mono">SATISFAÇÃO</p>
-    <motion.p
-      className="text-lg md:text-xl font-bold text-emerald-300 font-mono"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 1.2 }}
-    >
-      <CountUp target={98.5} />%
-    </motion.p>
-  </HoloPanel>
-);
+/* KPI panel — oscillating value */
+const KPIPanel = () => {
+  const [value, setValue] = useState(98.5);
 
-/* Simple count-up */
-const CountUp = ({ target }: { target: number }) => {
-  const ref = useRef<HTMLSpanElement>(null);
-  const hasRun = useRef(false);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setValue(98.2 + Math.random() * 0.6);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const startAnimation = useCallback(
-    (node: HTMLSpanElement | null) => {
-      if (!node || hasRun.current) return;
-      hasRun.current = true;
-      ref.current = node;
-      let start = 0;
-      const duration = 1500;
-      const t0 = performance.now();
-      const step = (now: number) => {
-        const progress = Math.min((now - t0) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        start = target * eased;
-        if (ref.current) ref.current.textContent = start.toFixed(1);
-        if (progress < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    },
-    [target]
+  return (
+    <HoloPanel className="bottom-[30%] left-[-8%] w-24 h-14 md:w-28 md:h-16" delay={0.9}>
+      <p className="text-[7px] md:text-[8px] text-emerald-400/60 font-mono">SATISFAÇÃO</p>
+      <motion.p
+        className="text-lg md:text-xl font-bold text-emerald-300 font-mono"
+        key={value.toFixed(1)}
+        initial={{ opacity: 0.7 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {value.toFixed(1)}%
+      </motion.p>
+    </HoloPanel>
   );
-
-  return <span ref={startAnimation}>0</span>;
 };
 
-/* Floating particles */
+/* Floating particles — more density + varied sizes */
 const Particles = () => (
   <>
-    {Array.from({ length: 10 }).map((_, i) => (
+    {Array.from({ length: 16 }).map((_, i) => (
       <motion.div
         key={i}
-        className="absolute w-1 h-1 rounded-full bg-emerald-400/70"
+        className="absolute rounded-full bg-emerald-400/70"
         style={{
-          left: `${10 + Math.random() * 80}%`,
+          left: `${8 + Math.random() * 84}%`,
           bottom: '10%',
+          width: `${2 + Math.random() * 3}px`,
+          height: `${2 + Math.random() * 3}px`,
         }}
         animate={{
-          y: [0, -(80 + Math.random() * 120)],
+          y: [0, -(80 + Math.random() * 140)],
           opacity: [0, 0.8, 0],
           scale: [0.3, 1, 0.3],
         }}
         transition={{
-          duration: 2.5 + Math.random() * 2,
+          duration: 2 + Math.random() * 2.5,
           repeat: Infinity,
-          delay: Math.random() * 3,
+          delay: Math.random() * 4,
           ease: 'easeOut',
         }}
       />
@@ -216,28 +238,59 @@ const Particles = () => (
   </>
 );
 
-/* Energy orbs */
+/* Energy orbs with trail effect */
 const Orbs = () => (
   <>
     {[0, 1, 2].map((i) => (
-      <motion.div
-        key={i}
-        className="absolute w-2 h-2 rounded-full bg-emerald-400/50 blur-sm"
-        style={{ top: '45%', left: '50%' }}
-        animate={{
-          x: [0, Math.cos((i * 2 * Math.PI) / 3) * 100, 0],
-          y: [0, Math.sin((i * 2 * Math.PI) / 3) * 60, 0],
-          opacity: [0.2, 0.7, 0.2],
-        }}
-        transition={{
-          duration: 4 + i,
-          repeat: Infinity,
-          delay: i * 1.3,
-          ease: 'easeInOut',
-        }}
-      />
+      <div key={i}>
+        {/* Main orb */}
+        <motion.div
+          className="absolute w-2.5 h-2.5 rounded-full bg-emerald-400/50 blur-sm"
+          style={{ top: '45%', left: '50%' }}
+          animate={{
+            x: [0, Math.cos((i * 2 * Math.PI) / 3) * 110, 0],
+            y: [0, Math.sin((i * 2 * Math.PI) / 3) * 70, 0],
+            opacity: [0.2, 0.8, 0.2],
+          }}
+          transition={{ duration: 3.5 + i * 0.8, repeat: Infinity, delay: i * 1.1, ease: 'easeInOut' }}
+        />
+        {/* Trail */}
+        <motion.div
+          className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400/25 blur-sm"
+          style={{ top: '45%', left: '50%' }}
+          animate={{
+            x: [0, Math.cos((i * 2 * Math.PI) / 3) * 110, 0],
+            y: [0, Math.sin((i * 2 * Math.PI) / 3) * 70, 0],
+            opacity: [0.1, 0.4, 0.1],
+          }}
+          transition={{ duration: 3.5 + i * 0.8, repeat: Infinity, delay: i * 1.1 + 0.15, ease: 'easeInOut' }}
+        />
+      </div>
     ))}
   </>
+);
+
+/* Data streams connecting robot to panels */
+const DataStreams = () => (
+  <svg className="absolute inset-0 w-full h-full z-15 pointer-events-none" viewBox="0 0 400 400">
+    {[
+      { path: 'M200,180 Q280,120 350,80', delay: 0 },
+      { path: 'M200,180 Q120,140 60,100', delay: 0.6 },
+      { path: 'M200,250 Q300,260 360,280', delay: 1.2 },
+      { path: 'M200,250 Q120,260 60,240', delay: 1.8 },
+    ].map(({ path, delay }, i) => (
+      <motion.path
+        key={i}
+        d={path}
+        fill="none"
+        stroke="hsl(160 84% 60% / 0.15)"
+        strokeWidth="1"
+        strokeDasharray="4 8"
+        animate={{ strokeDashoffset: [0, -48] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'linear', delay }}
+      />
+    ))}
+  </svg>
 );
 
 /* ─── Main Component ─── */
@@ -251,12 +304,12 @@ const TravelTechRobot = () => {
   const panelX = useSpring(useTransform(mouseX, [-200, 200], [8, -8]), springConfig);
   const panelY = useSpring(useTransform(mouseY, [-200, 200], [6, -6]), springConfig);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     mouseX.set(e.clientX - rect.left - rect.width / 2);
     mouseY.set(e.clientY - rect.top - rect.height / 2);
-  };
+  }, [mouseX, mouseY]);
 
   return (
     <div
@@ -274,7 +327,10 @@ const TravelTechRobot = () => {
       {/* Pedestal */}
       <HolographicPedestal />
 
-      {/* Robot image with mask blend */}
+      {/* Data streams */}
+      <DataStreams />
+
+      {/* Robot image — breathing + tilt + float */}
       <motion.div
         className="relative z-10"
         initial={{ opacity: 0, y: 30 }}
@@ -289,8 +345,16 @@ const TravelTechRobot = () => {
             maskImage: 'linear-gradient(to bottom, black 75%, transparent 98%)',
             WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 98%)',
           }}
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{
+            y: [0, -12, 0],
+            rotate: [-0.8, 0.8, -0.8],
+            scaleY: [1, 1.005, 1],
+          }}
+          transition={{
+            y: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
+            rotate: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+            scaleY: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+          }}
           draggable={false}
         />
       </motion.div>
@@ -312,26 +376,39 @@ const TravelTechRobot = () => {
         <Orbs />
       </div>
 
-      {/* Eye glow overlays */}
+      {/* Eye glow overlays — color shifting */}
       <motion.div
-        className="absolute w-[6%] h-[6%] rounded-full bg-emerald-400/50 blur-md z-20"
+        className="absolute w-[6%] h-[6%] rounded-full blur-md z-20"
         style={{ top: '28%', left: '52%' }}
-        animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        animate={{
+          opacity: [0.3, 0.8, 0.3],
+          scale: [1, 1.2, 1],
+          backgroundColor: ['hsl(160 84% 60% / 0.5)', 'hsl(185 84% 60% / 0.6)', 'hsl(160 84% 60% / 0.5)'],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute w-[5%] h-[5%] rounded-full bg-emerald-400/40 blur-md z-20"
+        className="absolute w-[5%] h-[5%] rounded-full blur-md z-20"
         style={{ top: '29%', left: '62%' }}
-        animate={{ opacity: [0.2, 0.7, 0.2], scale: [1, 1.15, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+        animate={{
+          opacity: [0.2, 0.7, 0.2],
+          scale: [1, 1.15, 1],
+          backgroundColor: ['hsl(160 84% 60% / 0.4)', 'hsl(185 84% 60% / 0.5)', 'hsl(160 84% 60% / 0.4)'],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
       />
 
-      {/* Scan line */}
+      {/* Dual scan lines */}
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl" style={{ mixBlendMode: 'overlay' }}>
         <motion.div
           className="w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent absolute"
           animate={{ top: ['0%', '100%', '0%'] }}
           transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.div
+          className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent absolute"
+          animate={{ top: ['100%', '0%', '100%'] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
         />
       </div>
     </div>
