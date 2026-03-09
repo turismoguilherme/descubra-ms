@@ -1,6 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import TechBackground from '@/components/home/TechBackground';
+import GlowCard from '@/components/home/GlowCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
