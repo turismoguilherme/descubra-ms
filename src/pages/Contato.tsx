@@ -642,7 +642,6 @@ const Contato = () => {
       </section>
 
       <ViaJARFooter />
-    </div>
   );
 };
 
