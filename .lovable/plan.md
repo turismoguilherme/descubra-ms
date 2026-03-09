@@ -1,138 +1,96 @@
 
+# Correção: Menu Invisível + Robô Invisível + Melhorar Parallax
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+## Problemas Identificados
 
-## Contexto
+1. **Menu Invisível**: 
+   - Navbar usa `text-white/70` quando `bg-transparent` 
+   - Se Hero não carregar fundo escuro, links ficam invisíveis sobre fundo claro
+   - Dropdown do Soluções tem cores mistas (branco/muted)
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+2. **Robô Invisível**:
+   - Import do `travel-tech-robot.png` pode estar falhando
+   - Imagem existe em `src/assets/` mas pode ter problema de resolução do alias `@/assets`
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+3. **Parallax do Mouse**:
+   - Está implementado mas pode não funcionar se robô não aparecer
+   - Precisa melhorar responsividade do efeito
 
-## O que NAO sera alterado
+## Soluções
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+### 1. Corrigir Menu - Gradual Visibility
+**Arquivo**: `ViaJARNavbar.tsx`
 
-## O que sera criado
+- **Problema atual**: `bg-transparent` + `text-white/70` = invisível
+- **Solução**: Navbar sempre com fundo semi-transparente sutil
+- **Mudanças**:
+  ```typescript
+  // ANTES:
+  bg-transparent
+  
+  // DEPOIS: 
+  bg-slate-900/20 backdrop-blur-sm border-b border-white/5
+  
+  // Quando scrolled: bg-slate-950/90 (atual está correto)
+  ```
 
-### Novo Hero Section com identidade Travel Tech
+- **Links**: Melhorar contraste para sempre visível
+  ```typescript
+  // ANTES: text-white/70
+  // DEPOIS: text-white/90 hover:text-cyan-300
+  ```
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+- **Dropdown Soluções**: Padronizar cores dark em todos os itens (remover `text-muted-foreground`)
 
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+### 2. Corrigir Robô - Asset Loading
+**Arquivo**: `TravelTechRobot.tsx`
 
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
+- **Testar import direto**: Substituir `@/assets/travel-tech-robot.png` por caminho absoluto
+- **Adicionar fallback**: SVG inline caso imagem não carregue  
+- **Error handling**: `onError` na `<img>` para debug
 
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
+**Mudanças**:
+```typescript
+// Tentar caminhos alternativos:
+import robotImg from '../../../assets/travel-tech-robot.png';
+// ou
+import robotImg from '/src/assets/travel-tech-robot.png';
 
-### Componente novo: `TravelTechRobot.tsx`
-
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
-
-## Estrutura de arquivos
-
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
+// Adicionar fallback SVG se imagem falhar
+const [imageError, setImageError] = useState(false);
 ```
 
-## Visual esperado (layout em texto)
+### 3. Melhorar Parallax - Responsividade
+**Arquivo**: `TravelTechHero.tsx` + `TravelTechRobot.tsx`
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
+- **Reduzir intensidade mobile**: Parallax muito forte em tela pequena causa tontura
+- **Smooth transitions**: Melhorar suavidade do retorno ao centro
+- **Bounds checking**: Limitar rotação máxima
 
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
+**Mudanças**:
+```typescript
+// Mobile: rotação reduzida
+const isMobile = window.innerWidth < 768;
+const rotateY = deltaX * (isMobile ? 4 : 8); // 4° mobile, 8° desktop
+const rotateX = -deltaY * (isMobile ? 2 : 5); // 2° mobile, 5° desktop
 ```
 
-## Detalhes tecnicos
+### 4. Debug Visual - Loading States
+- **Navbar**: Indicador visual quando menu está carregando
+- **Robô**: Loading placeholder enquanto imagem não carrega  
+- **Console logs**: Para debug de assets
 
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
+## Sequência de Implementação
 
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
+1. **Corrigir Navbar** - Fundo sempre visível + cores consistentes
+2. **Corrigir import do Robô** - Testar caminhos + fallback
+3. **Melhorar Parallax** - Responsivo + suave
+4. **Testar no browser** - Verificar visibilidade em diferentes telas
 
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
+## Arquivos a Modificar
 
-## Sequencia de implementacao
+1. `src/components/layout/ViaJARNavbar.tsx` - Fundo + cores
+2. `src/components/home/TravelTechRobot.tsx` - Import + fallback  
+3. `src/components/home/TravelTechHero.tsx` - Parallax responsivo
 
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
-
-## Notas importantes
-
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
-
+**Resultado esperado**: Menu sempre visível, robô carregando com parallax suave que segue o mouse.
