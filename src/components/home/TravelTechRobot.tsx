@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { Brain, BarChart3, Database, Zap, Clock } from 'lucide-react';
-import robotImg from '@/assets/travel-tech-robot.png';
+
+// Try different import paths for the robot image
+let robotImg;
+try {
+  robotImg = require('@/assets/travel-tech-robot.png');
+} catch {
+  try {
+    robotImg = require('../../../assets/travel-tech-robot.png');
+  } catch {
+    try {
+      robotImg = require('/src/assets/travel-tech-robot.png');
+    } catch {
+      robotImg = null;
+    }
+  }
+}
 
 interface TravelTechRobotProps {
   onMouseMove?: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -11,10 +26,11 @@ interface TravelTechRobotProps {
 
 const TravelTechRobot: React.FC<TravelTechRobotProps> = ({ 
   onMouseMove, 
-  onMouseLeave,
-  rotateX = 0,
+  onMouseLeave, 
+  rotateX = 0, 
   rotateY = 0 
 }) => {
+  const [imageError, setImageError] = useState(false);
   return (
     <div 
       className="relative w-full max-w-lg lg:max-w-2xl mx-auto aspect-square flex items-center justify-center"
@@ -83,12 +99,56 @@ const TravelTechRobot: React.FC<TravelTechRobotProps> = ({
           <div className="scan-line scan-line-4" />
         </div>
         
-        <img
-          src={robotImg}
-          alt="Robô ViajARTur - Travel Tech AI"
-          className="w-72 sm:w-96 md:w-[28rem] lg:w-[34rem] h-auto drop-shadow-2xl"
-          loading="eager"
-        />
+        {!imageError && robotImg ? (
+          <img
+            src={robotImg}
+            alt="Robô ViajARTur - Travel Tech AI"
+            className="w-72 sm:w-96 md:w-[28rem] lg:w-[34rem] h-auto drop-shadow-2xl"
+            loading="eager"
+            onError={() => {
+              console.log('Failed to load robot image, switching to SVG fallback');
+              setImageError(true);
+            }}
+          />
+        ) : (
+          // SVG Fallback Robot
+          <div className="w-72 sm:w-96 md:w-[28rem] lg:w-[34rem] h-auto drop-shadow-2xl">
+            <svg 
+              viewBox="0 0 400 400" 
+              className="w-full h-auto"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Robot Body */}
+              <rect x="150" y="200" width="100" height="120" rx="15" fill="url(#robotGradient)" stroke="#06b6d4" strokeWidth="2"/>
+              
+              {/* Robot Head */}
+              <circle cx="200" cy="150" r="40" fill="url(#robotGradient)" stroke="#06b6d4" strokeWidth="2"/>
+              
+              {/* Eyes */}
+              <circle cx="185" cy="140" r="8" fill="#06b6d4" className="animate-pulse"/>
+              <circle cx="215" cy="140" r="8" fill="#06b6d4" className="animate-pulse"/>
+              
+              {/* Chest Display */}
+              <rect x="170" y="220" width="60" height="40" rx="8" fill="#0f172a" stroke="#06b6d4" strokeWidth="1"/>
+              <circle cx="200" cy="240" r="15" fill="none" stroke="#06b6d4" strokeWidth="2" className="animate-spin" style={{animationDuration: '3s'}}/>
+              
+              {/* Arms */}
+              <rect x="120" y="210" width="25" height="60" rx="12" fill="url(#robotGradient)" stroke="#06b6d4" strokeWidth="1"/>
+              <rect x="255" y="210" width="25" height="60" rx="12" fill="url(#robotGradient)" stroke="#06b6d4" strokeWidth="1"/>
+              
+              {/* Legs */}
+              <rect x="165" y="325" width="25" height="60" rx="12" fill="url(#robotGradient)" stroke="#06b6d4" strokeWidth="1"/>
+              <rect x="210" y="325" width="25" height="60" rx="12" fill="url(#robotGradient)" stroke="#06b6d4" strokeWidth="1"/>
+              
+              <defs>
+                <linearGradient id="robotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#64748b"/>
+                  <stop offset="100%" stopColor="#334155"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        )}
       </div>
 
       <style>{`

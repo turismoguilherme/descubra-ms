@@ -118,7 +118,7 @@ const ViaJARNavbar = () => {
     <nav className={`sticky top-0 z-50 transition-all duration-500 ${
       isScrolled 
         ? 'bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/10' 
-        : 'bg-transparent border-b border-transparent'
+        : 'bg-slate-900/20 backdrop-blur-sm border-b border-white/5'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -138,7 +138,7 @@ const ViaJARNavbar = () => {
                       className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 flex items-center gap-1 ${
                         isActivePath(item.path) 
                           ? "text-cyan-400 bg-cyan-400/10" 
-                          : "text-white/70 hover:text-cyan-400 hover:bg-white/10"
+                          : "text-white/90 hover:text-cyan-300 hover:bg-white/10"
                       }`}
                     >
                       {item.name}
@@ -186,13 +186,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#ia-conversacional"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     IA Conversacional
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Assistente inteligente para seu negócio
                                   </div>
                                 </Link>
@@ -210,13 +210,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#inventario-turistico"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Inventário Turístico
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Gestão completa de atrativos
                                   </div>
                                 </Link>
@@ -224,13 +224,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#gestao-cats"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Gestão de CATs
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Controle total dos Centros de Atendimento
                                   </div>
                                 </Link>
@@ -238,13 +238,13 @@ const ViaJARNavbar = () => {
                               <li>
                                 <Link 
                                   to="/solucoes#analytics-governamental"
-                                  className="block p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                   onClick={() => setSolutionsDropdownOpen(false)}
                                 >
-                                  <div className="font-semibold text-sm text-foreground group-hover:text-viajar-cyan transition-colors">
+                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
                                     Analytics Governamental
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-xs text-white/60 mt-1">
                                     Dados para tomada de decisão
                                   </div>
                                 </Link>
@@ -275,7 +275,7 @@ const ViaJARNavbar = () => {
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                   isActivePath(item.path) 
                     ? "text-cyan-400 bg-cyan-400/10" 
-                    : "text-white/70 hover:text-cyan-400 hover:bg-white/10"
+                    : "text-white/90 hover:text-cyan-300 hover:bg-white/10"
                 }`}
               >
                 {item.name}
@@ -290,7 +290,7 @@ const ViaJARNavbar = () => {
               <div className="relative" ref={dropdownRef}>
                 <Button 
                   variant="ghost"
-                  className="gap-2 text-white/80 hover:text-white hover:bg-white/10"
+                  className="gap-2 text-white/90 hover:text-white hover:bg-white/10"
                   onClick={() => setIsDashboardOpen(!isDashboardOpen)}
                 >
                   Dashboard
@@ -335,9 +335,9 @@ const ViaJARNavbar = () => {
               </div>
             ) : (
               <>
-                <Link to="/viajar/login">
-                  <Button variant="ghost" className="text-white/80 hover:text-white">
-                    Entrar
+                  <Link to="/viajar/login">
+                    <Button variant="ghost" className="text-white/90 hover:text-white hover:bg-white/10">
+                      Entrar
                   </Button>
                 </Link>
                 <Link to="/viajar/register">
