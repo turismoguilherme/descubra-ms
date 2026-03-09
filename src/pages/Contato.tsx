@@ -265,7 +265,7 @@ const Contato = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">
+              <h2 className="text-3xl font-bold text-white mb-6">
                 {getContent('viajar_contact_form_title', 'Vamos Conversar')}
               </h2>
               {getContent('viajar_contact_form_description', '') && (
