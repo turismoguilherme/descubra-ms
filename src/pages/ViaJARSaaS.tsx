@@ -9,6 +9,8 @@ import { platformContentService } from '@/services/admin/platformContentService'
 import WhatViajARTurDoesSection from '@/components/home/WhatViajARTurDoesSection';
 import SuccessCasesSection from '@/components/home/SuccessCasesSection';
 import TravelTechHero from '@/components/home/TravelTechHero';
+import PlatformInActionSection from '@/components/home/PlatformInActionSection';
+import BenefitsSection from '@/components/home/BenefitsSection';
 // CommercialSection removido temporariamente
 
 const VideoSection = () => {
