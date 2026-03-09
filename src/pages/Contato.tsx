@@ -234,28 +234,21 @@ const Contato = () => {
     <div className="min-h-screen bg-background">
       <ViaJARNavbar />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-20">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-            backgroundSize: '40px 40px'
-          }} />
-        </div>
+      {/* Hero Section with Tech Background */}
+      <section className="relative overflow-hidden min-h-[60vh] flex items-center">
+        <TechBackground variant="hero" />
         
-        {/* Gradient Orbs */}
-        <div className="absolute top-20 left-1/4 w-96 h-96 bg-viajar-cyan/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-viajar-blue/20 rounded-full blur-3xl" />
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
-              <MessageSquare className="h-4 w-4 text-viajar-cyan" />
-              <span className="text-sm text-white/90 font-medium">Fale Conosco</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 mb-6 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+              <MessageSquare className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm text-cyan-100 font-medium">💬 Fale Conosco</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              {getContent('viajar_contact_hero_title', 'Entre em Contato')}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+                {getContent('viajar_contact_hero_title', 'Entre em Contato')}
+              </span>
             </h1>
             {getContent('viajar_contact_hero_subtitle', '') && (
               <p className="text-xl text-white/70">
