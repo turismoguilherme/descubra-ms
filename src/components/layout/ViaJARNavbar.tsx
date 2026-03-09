@@ -366,7 +366,7 @@ const ViaJARNavbar = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-border/50 animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden py-4 bg-slate-950/95 backdrop-blur-xl border-t border-cyan-500/10 animate-in slide-in-from-top-2 duration-200">
             <div className="space-y-1">
               {navigationItems.map(item => {
                 if (item.hasDropdown && item.name === "Soluções") {
