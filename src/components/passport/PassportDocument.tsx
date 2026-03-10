@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { usePassport } from '@/hooks/usePassport';
 import { TrendingUp, ArrowRight, Puzzle, MapPin, Award, Gift } from 'lucide-react';
 import PassportRouteView from './PassportRouteView';
-import OfflineIndicator from './OfflineIndicator';
 
 interface PassportDocumentProps {
   routeId?: string;
@@ -16,21 +15,6 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
   const routeIdFromState = (location.state as any)?.routeId;
   const routeId = routeIdProp || routeIdFromState;
   const { passport, activeRoute, progress, loading, error, loadRoute } = usePassport();
-
-  // Debug
-  React.useEffect(() => {
-    console.log('🔍 [PassportDocument] ========== RENDER ==========');
-    console.log('🔍 [PassportDocument] Props e State:', {
-      routeIdProp,
-      routeIdFromState,
-      routeIdFinal: routeId,
-      locationState: location.state,
-      hasPassport: !!passport,
-      activeRoute: activeRoute ? { id: activeRoute.id, name: activeRoute.name } : null,
-      loading,
-      error
-    });
-  }, [routeIdProp, routeIdFromState, routeId, passport, activeRoute, loading, error, location.state]);
 
   React.useEffect(() => {
     console.log('🔍 [PassportDocument] useEffect - routeId mudou:', {
