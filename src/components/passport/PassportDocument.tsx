@@ -90,7 +90,7 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
                 </p>
               </div>
             </div>
-            <OfflineIndicator />
+            {/* Indicador de status removido - offline sync deprecated */}
           </div>
         </div>
         <CardContent className="p-6">
