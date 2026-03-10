@@ -17,16 +17,8 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
   const { passport, activeRoute, progress, loading, error, loadRoute } = usePassport();
 
   React.useEffect(() => {
-    console.log('🔍 [PassportDocument] useEffect - routeId mudou:', {
-      routeId,
-      hasRouteId: !!routeId
-    });
-    
     if (routeId) {
-      console.log('✅ [PassportDocument] RouteId fornecido, chamando loadRoute:', routeId);
       loadRoute(routeId);
-    } else {
-      console.warn('⚠️ [PassportDocument] Nenhum routeId fornecido');
     }
   }, [routeId, loadRoute]);
 
