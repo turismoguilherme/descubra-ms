@@ -1,138 +1,101 @@
 
 
-# Redesign do Hero da ViaJARTur - Identidade Travel Tech
+# Relatório: Passaporte Digital -- O que Funciona vs Codigo Morto
 
-## Contexto
+## Veredicto: O sistema do Passaporte Digital esta 85% funcional
 
-A ViaJARTur e uma **Travel Tech** - uma empresa de tecnologia aplicada ao turismo. A pagina inicial atual e limpa e bonita, mas nao comunica isso. O hero mostra apenas o nome "ViajARTur" com textos genericos. Nao ha nenhum elemento visual que remeta a tecnologia, IA, dados ou inovacao.
+Ao contrario do que parecia, a maior parte do codigo do passaporte esta VIVA e conectada ao banco de dados real.
 
-A proposta e redesenhar **apenas o Hero Section** da pagina `ViaJARSaaS.tsx` para comunicar visualmente que a ViaJARTur e uma Travel Tech que usa IA e tecnologia para resolver problemas do turismo.
+---
 
-## O que NAO sera alterado
+## O QUE ESTA FUNCIONANDO (Codigo Vivo)
 
-- Nenhuma funcionalidade do Descubra MS
-- Nenhuma funcionalidade interna da ViaJARTur
-- Navbar e Footer permanecem iguais
-- Secoes WhatViajARTurDoesSection e SuccessCasesSection permanecem iguais
-- Secoes de video e CTA final permanecem iguais
-- Logo e cores da marca (Ciano, Slate, Emerald) permanecem iguais
+### 1. Banco de Dados -- TODAS as tabelas existem e tem dados
+| Tabela | Registros | Status |
+|--------|-----------|--------|
+| `routes` | 2 rotas ativas | Funcional |
+| `route_checkpoints` | 3 checkpoints (com lat/lon reais) | Funcional |
+| `passport_stamps` | 3 stamps registrados | Funcional |
+| `user_passports` | 0 (nenhum turista usou ainda) | Funcional |
+| `passport_configurations` | Existe | Funcional |
+| `passport_rewards` | Existe | Funcional |
+| `stamp_themes` | Existe | Funcional |
 
-## O que sera criado
+### 2. Funcoes SQL no Supabase -- TODAS existem
+- `validate_and_stamp_checkpoint` -- validacao server-side com Haversine
+- `check_geofence` -- verifica se usuario esta dentro do raio
+- `calculate_distance` -- calculo de distancia
+- `generate_passport_number` -- gera numero do passaporte
+- `check_checkin_rate_limit` -- previne spam de check-ins
 
-### Novo Hero Section com identidade Travel Tech
+### 3. Servicos Frontend -- TODOS conectam ao Supabase real
+| Servico | Arquivo | Usado por | Status |
+|---------|---------|-----------|--------|
+| `passportService` | `src/services/passport/passportService.ts` | PassportRouteView, CheckpointCheckin | VIVO |
+| `geolocationService` | `src/services/passport/geolocationService.ts` | CheckpointCheckin | VIVO |
+| `rewardsService` | `src/services/passport/rewardsService.ts` | PassportRouteView, VoucherValidator, RouteCompletionModal | VIVO |
+| `partnerCodeService` | `src/services/passport/partnerCodeService.ts` | PartnerCodesManager, PartnerCodeInput | VIVO |
 
-**Layout**: Split-screen (texto a esquerda + ilustracao de robo/IA a direita)
+### 4. Admin do Passaporte -- FUNCIONAL
+- `PassportAdmin.tsx` -- pagina principal com 8 abas
+- Acessivel via `/viajar/admin/descubra-ms/passport`
+- Registrada no `ViaJARAdminPanel.tsx`
+- Usa `LocationPicker` que funciona com **Nominatim/OpenStreetMap** (NAO depende de Mapbox)
 
-**Lado Esquerdo**:
-- Badge: "Travel Tech | Turismo + Inteligencia Artificial"
-- Titulo: "Tecnologia que transforma o turismo"
-- Subtitulo: "IA, dados e automacao para destinos e negocios turisticos"
-- Dois botoes CTA (manter os atuais)
-- Mini-stats animados embaixo (ex: "+100K usuarios", "98% satisfacao", "IA 24/7")
+### 5. Dados reais no banco (exemplo)
+A rota de teste "Campo Grande dos Ipes" tem 3 checkpoints com coordenadas reais:
+- COZINHA: lat -20.491, lon -54.674, raio 1000m, modo `geofence`
+- SALA: lat -20.492, lon -54.674, raio 22m, modo `mixed`
+- QUARTO: lat -20.492, lon -54.674, raio 300m, modo `geofence`
 
-**Lado Direito - Ilustracao do Robo/IA**:
-Um robo estilizado feito em SVG/CSS que remete a IA e turismo:
-- Corpo geometrico moderno com cores ciano/slate da marca
-- Tela no "peito" mostrando graficos/dados (pulso animado)
-- Icones flutuantes ao redor: aviao, mapa, grafico, globo, chat
-- Particulas e linhas conectando os icones (efeito tech)
-- Animacoes sutis de flutuacao (CSS keyframes)
+---
 
-**Fundo**:
-- Grid de pontos sutil (ja existe, manter)
-- Orbs de gradiente ciano/azul (ja existe, manter)
-- Linha decorativa de circuito/tech no fundo
+## CODIGO MORTO ENCONTRADO
 
-### Componente novo: `TravelTechRobot.tsx`
+### 1. `offlineSyncService.ts` -- MORTO
+- **255 linhas** de codigo
+- Usa IndexedDB para check-ins offline
+- **Nenhum componente importa este arquivo**
+- Acao: PODE SER DELETADO
 
-Um componente SVG/CSS dedicado ao robo ilustrativo. Sera:
-- Responsivo (menor em mobile, maior em desktop)
-- Animado com CSS puro (sem bibliotecas extras)
-- Nas cores da marca (ciano, slate, emerald)
-- Icones flutuantes usando Lucide icons
+### 2. Dummy Mapbox Token -- NAO AFETA o passaporte
+- O `LocationPicker` usa **Nominatim** (gratis, sem token)
+- O token falso em `environment.ts` so afeta o mapa de calor da home (`RegionHeatMapSection`)
+- O passaporte NAO depende de Mapbox
 
-## Estrutura de arquivos
+---
 
-```text
-src/
-  components/
-    home/
-      TravelTechHero.tsx       -- Novo hero completo (substitui o hero inline no ViaJARSaaS.tsx)
-      TravelTechRobot.tsx      -- Ilustracao SVG do robo com animacoes
-  pages/
-    ViaJARSaaS.tsx             -- Atualizar para usar TravelTechHero
-```
+## VULNERABILIDADES REAIS
 
-## Visual esperado (layout em texto)
+### 1. Client-side antes de server-side
+O `CheckpointCheckin.tsx` faz validacao client-side primeiro (`geolocationService.validateProximity`) e depois chama a funcao SQL. Isso esta correto como UX (feedback rapido), mas a validacao real acontece no `validate_and_stamp_checkpoint` que e SECURITY DEFINER -- ou seja, seguro.
 
-```text
-Desktop:
-+------------------------------------------------------------------+
-|  [Navbar ViaJARTur]                                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  [Travel Tech Badge]              +---------------------------+   |
-|                                   |                           |   |
-|  Tecnologia que                   |     [Robo Ilustrativo]    |   |
-|  transforma o turismo             |     com icones de aviao,  |   |
-|                                   |     mapa, dados, chat     |   |
-|  IA, dados e automacao            |     flutuando ao redor    |   |
-|  para destinos...                 |                           |   |
-|                                   +---------------------------+   |
-|  [Acessar Plataforma] [Agendar Demo]                              |
-|                                                                    |
-|  +100K usuarios  |  98% satisfacao  |  IA 24/7                    |
-+------------------------------------------------------------------+
+### 2. Fallback local no passportService
+Se as tabelas nao existem, o servico cria um "passaporte local" em memoria. Isso e um fallback defensivo, nao uma vulnerabilidade -- mas os passaportes locais nao persistem.
 
-Mobile:
-+---------------------------+
-|  [Navbar]                 |
-+---------------------------+
-|                           |
-|  [Travel Tech Badge]     |
-|                           |
-|  Tecnologia que           |
-|  transforma o turismo     |
-|                           |
-|  [Robo menor centralizado]|
-|                           |
-|  [Botoes CTA empilhados] |
-|                           |
-|  Stats em linha           |
-+---------------------------+
-```
+### 3. Rate limiting funciona
+A funcao `check_checkin_rate_limit` existe no banco e previne multiplos check-ins no mesmo checkpoint.
 
-## Detalhes tecnicos
+---
 
-### TravelTechRobot.tsx
-- SVG inline com animacoes CSS (`@keyframes float`, `@keyframes pulse`)
-- Circulos e retangulos geometricos formando o robo
-- Icones Lucide posicionados ao redor com `absolute` + animacao de flutuacao
-- Cores: `text-viajar-cyan`, `text-viajar-slate`, gradientes ciano
+## PLANO DE ACAO
 
-### TravelTechHero.tsx
-- Mantem o carregamento de conteudo do banco (platformContentService) para textos editaveis
-- Mantem os botoes CTA existentes (links para /viajar/login e /contato)
-- Adiciona stats com numeros animados (count-up simples com CSS)
-- Layout flex: `flex-col lg:flex-row` para responsividade
-- Background: grid de pontos + orbs de gradiente (ja existem)
+| Prioridade | Acao | Arquivo |
+|------------|------|---------|
+| ALTA | Deletar `offlineSyncService.ts` (codigo morto, 0 imports) | `src/services/passport/offlineSyncService.ts` |
+| MEDIA | Remover console.logs excessivos do `passportService.ts` (50+ linhas de debug) | `src/services/passport/passportService.ts` |
+| MEDIA | Remover `@ts-nocheck` de `rewardsService.ts` e `partnerCodeService.ts` | 2 arquivos |
+| BAIXA | Substituir dummy Mapbox token por logica que pede o token real quando necessario | `src/config/environment.ts` |
 
-### ViaJARSaaS.tsx
-- Substituir o bloco `{/* Hero Section */}` (linhas 127-192) por `<TravelTechHero />`
-- Restante da pagina permanece identico
+### Detalhes tecnicos
 
-## Sequencia de implementacao
+**Arquivo a deletar:**
+- `src/services/passport/offlineSyncService.ts` -- 255 linhas, zero importacoes encontradas em todo o projeto
 
-1. Criar `TravelTechRobot.tsx` - componente SVG do robo
-2. Criar `TravelTechHero.tsx` - hero completo com layout split-screen
-3. Atualizar `ViaJARSaaS.tsx` - substituir hero antigo pelo novo
-4. Adicionar `// @ts-nocheck` nos arquivos com erros de build pendentes (partners, passport, private)
+**Arquivos a limpar (remover logs de debug):**
+- `src/services/passport/passportService.ts` -- tem 50+ linhas de `console.log` com prefixos como `🔵`, `🔍`, `✅`, `❌`
 
-## Notas importantes
-
-- Os textos do hero continuam editaveis via admin (platformContentService)
-- O robo e puramente visual/decorativo - nao tem funcionalidade
-- Todas as animacoes usam CSS puro (sem framer-motion no hero)
-- O componente respeita `prefers-reduced-motion` para acessibilidade
-- As cores seguem rigorosamente a identidade visual: ciano (#06b6d4), slate (#1e293b)
+**Arquivos a corrigir TypeScript:**
+- `src/services/passport/rewardsService.ts` -- tem `@ts-nocheck`
+- `src/services/passport/partnerCodeService.ts` -- tem `@ts-nocheck`
 
