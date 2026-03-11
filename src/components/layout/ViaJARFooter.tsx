@@ -283,9 +283,35 @@ const ViaJARFooter: React.FC = () => {
             </ul>
           </div>
 
-          {/* Coluna 4 - Legal */}
+          {/* Coluna 4 - Newsletter + Legal */}
           <div className="text-center lg:text-left">
-            <h3 className="text-sm font-bold mb-6 text-white">Legal</h3>
+            <h3 className="text-sm font-bold mb-4 text-white">Newsletter</h3>
+            <p className="text-white/60 text-xs mb-3">Receba novidades da ViaJARTur</p>
+            <form onSubmit={handleNewsletterSubmit} className="mb-6">
+              <div className="flex flex-col gap-2">
+                <Input
+                  type="email"
+                  placeholder="Seu e-mail..."
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  className="bg-white/5 border-cyan-500/20 text-white placeholder:text-white/40 focus:border-cyan-400/50 focus:bg-white/10 h-9 text-sm"
+                />
+                <Button
+                  type="submit"
+                  disabled={newsletterLoading}
+                  className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold w-full h-9 text-sm"
+                >
+                  {newsletterLoading ? 'Enviando...' : (
+                    <>
+                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                      Inscrever
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            <h3 className="text-sm font-bold mb-4 text-white">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <Link 

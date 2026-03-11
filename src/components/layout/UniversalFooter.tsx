@@ -159,15 +159,36 @@ const UniversalFooter = () => {
     }
 
     setNewsletterLoading(true);
-    // TODO: Integrar com backend quando disponível
-    setTimeout(() => {
-      toast({
-        title: "Inscrição realizada!",
-        description: "Você receberá nossas novidades em breve.",
-      });
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers' as any)
+        .insert({ email: newsletterEmail.trim().toLowerCase(), platform: 'descubra_ms' } as any);
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Já inscrito!",
+            description: "Este email já está cadastrado na nossa newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Inscrição realizada!",
+          description: "Você receberá nossas novidades em breve.",
+        });
+      }
       setNewsletterEmail('');
+    } catch (error) {
+      toast({
+        title: "Erro ao inscrever",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
       setNewsletterLoading(false);
-    }, 1000);
+    }
   };
 
   return (

@@ -204,7 +204,7 @@ const CasosSucesso = () => {
       {/* CTA */}
       <section className="relative py-16 overflow-hidden">
         <TechBackground variant="section" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
             Quer ser nosso próximo case?
           </h2>
