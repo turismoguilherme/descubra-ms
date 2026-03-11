@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, ArrowRight, CheckCircle2, Bot, Sparkles, Award } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import TechBackground from '@/components/home/TechBackground';
 import { platformContentService } from '@/services/admin/platformContentService';
 
 const CasosSucesso = () => {
