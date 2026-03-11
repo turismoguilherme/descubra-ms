@@ -56,10 +56,7 @@ const UniversalFooter = () => {
     }
   }, [isOverflowOne]);
   
-  // Log para debug
-  useEffect(() => {
-    console.log('📄 [UniversalFooter] Settings do MS carregados:', msSettings);
-  }, [msSettings]);
+
 
   const getContent = (key: string, fallback: string) => footerContent[key] || fallback;
 
