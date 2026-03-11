@@ -1,16 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical, Send } from 'lucide-react';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ViaJARFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { settings, loading } = useFooterSettings('viajar');
-  
-  // Log para debug
-  React.useEffect(() => {
-    console.log('📄 [ViaJARFooter] Settings do ViaJAR carregados:', settings);
-  }, [settings]);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setNewsletterLoading(true);
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers' as any)
+        .insert({ email: newsletterEmail.trim().toLowerCase(), platform: 'viajar' } as any);
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Já inscrito!",
+            description: "Este email já está cadastrado na nossa newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Inscrição realizada!",
+          description: "Você receberá nossas novidades da ViaJARTur.",
+        });
+      }
+      setNewsletterEmail('');
+    } catch (error) {
+      toast({
+        title: "Erro ao inscrever",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   // Função para fazer scroll para o topo ao clicar em links
   const handleLinkClick = () => {
