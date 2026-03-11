@@ -202,7 +202,8 @@ const CasosSucesso = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-viajar-slate">
+      <section className="relative py-16 overflow-hidden">
+        <TechBackground variant="section" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
             Quer ser nosso próximo case?
