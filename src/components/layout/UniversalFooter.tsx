@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { platformContentService } from '@/services/admin/platformContentService';
+import { supabase } from '@/integrations/supabase/client';
 
 const UniversalFooter = () => {
   const location = useLocation();
@@ -55,10 +56,7 @@ const UniversalFooter = () => {
     }
   }, [isOverflowOne]);
   
-  // Log para debug
-  useEffect(() => {
-    console.log('📄 [UniversalFooter] Settings do MS carregados:', msSettings);
-  }, [msSettings]);
+
 
   const getContent = (key: string, fallback: string) => footerContent[key] || fallback;
 
@@ -161,15 +159,36 @@ const UniversalFooter = () => {
     }
 
     setNewsletterLoading(true);
-    // TODO: Integrar com backend quando disponível
-    setTimeout(() => {
-      toast({
-        title: "Inscrição realizada!",
-        description: "Você receberá nossas novidades em breve.",
-      });
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers' as any)
+        .insert({ email: newsletterEmail.trim().toLowerCase(), platform: 'descubra_ms' } as any);
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Já inscrito!",
+            description: "Este email já está cadastrado na nossa newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Inscrição realizada!",
+          description: "Você receberá nossas novidades em breve.",
+        });
+      }
       setNewsletterEmail('');
+    } catch (error) {
+      toast({
+        title: "Erro ao inscrever",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
       setNewsletterLoading(false);
-    }, 1000);
+    }
   };
 
   return (

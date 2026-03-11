@@ -1,16 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical, Send } from 'lucide-react';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ViaJARFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { settings, loading } = useFooterSettings('viajar');
-  
-  // Log para debug
-  React.useEffect(() => {
-    console.log('📄 [ViaJARFooter] Settings do ViaJAR carregados:', settings);
-  }, [settings]);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setNewsletterLoading(true);
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers' as any)
+        .insert({ email: newsletterEmail.trim().toLowerCase(), platform: 'viajar' } as any);
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Já inscrito!",
+            description: "Este email já está cadastrado na nossa newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Inscrição realizada!",
+          description: "Você receberá nossas novidades da ViaJARTur.",
+        });
+      }
+      setNewsletterEmail('');
+    } catch (error) {
+      toast({
+        title: "Erro ao inscrever",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   // Função para fazer scroll para o topo ao clicar em links
   const handleLinkClick = () => {
@@ -237,9 +283,35 @@ const ViaJARFooter: React.FC = () => {
             </ul>
           </div>
 
-          {/* Coluna 4 - Legal */}
+          {/* Coluna 4 - Newsletter + Legal */}
           <div className="text-center lg:text-left">
-            <h3 className="text-sm font-bold mb-6 text-white">Legal</h3>
+            <h3 className="text-sm font-bold mb-4 text-white">Newsletter</h3>
+            <p className="text-white/60 text-xs mb-3">Receba novidades da ViaJARTur</p>
+            <form onSubmit={handleNewsletterSubmit} className="mb-6">
+              <div className="flex flex-col gap-2">
+                <Input
+                  type="email"
+                  placeholder="Seu e-mail..."
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  className="bg-white/5 border-cyan-500/20 text-white placeholder:text-white/40 focus:border-cyan-400/50 focus:bg-white/10 h-9 text-sm"
+                />
+                <Button
+                  type="submit"
+                  disabled={newsletterLoading}
+                  className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold w-full h-9 text-sm"
+                >
+                  {newsletterLoading ? 'Enviando...' : (
+                    <>
+                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                      Inscrever
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            <h3 className="text-sm font-bold mb-4 text-white">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <Link 
