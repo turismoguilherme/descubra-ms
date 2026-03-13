@@ -1,0 +1,102 @@
+import { supabase } from '@/integrations/supabase/client';
+import { touristRegions2025 } from '@/data/touristRegions2025';
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  subtitle?: string;
+  category: 'destino' | 'evento' | 'regiao' | 'parceiro';
+  path: string;
+}
+
+export async function searchAll(query: string): Promise<SearchResult[]> {
+  if (!query || query.length < 2) return [];
+
+  const searchTerm = `%${query}%`;
+  const results: SearchResult[] = [];
+
+  // Buscar em paralelo
+  const [destinationsRes, eventsRes, partnersRes] = await Promise.all([
+    supabase
+      .from('destinations')
+      .select('id, name, location')
+      .ilike('name', searchTerm)
+      .limit(5),
+    supabase
+      .from('events')
+      .select('id, name, location')
+      .eq('is_visible', true)
+      .ilike('name', searchTerm)
+      .limit(5),
+    supabase
+      .from('commercial_partners')
+      .select('id, company_name, city')
+      .eq('status', 'approved')
+      .ilike('company_name', searchTerm)
+      .limit(5),
+  ]);
+
+  // Destinos
+  destinationsRes.data?.forEach(d => {
+    results.push({
+      id: d.id,
+      title: d.name,
+      subtitle: d.location || undefined,
+      category: 'destino',
+      path: `/ms/destinos/${d.id}`,
+    });
+  });
+
+  // Eventos
+  eventsRes.data?.forEach(e => {
+    results.push({
+      id: e.id,
+      title: e.name,
+      subtitle: e.location || undefined,
+      category: 'evento',
+      path: `/ms/eventos/${e.id}`,
+    });
+  });
+
+  // Parceiros
+  partnersRes.data?.forEach(p => {
+    results.push({
+      id: p.id,
+      title: p.company_name,
+      subtitle: p.city || undefined,
+      category: 'parceiro',
+      path: `/ms/parceiros/${p.id}`,
+    });
+  });
+
+  // Regiões turísticas (dados locais)
+  const lowerQuery = query.toLowerCase();
+  touristRegions2025
+    .filter(r => r.name.toLowerCase().includes(lowerQuery) || r.cities.some(c => c.toLowerCase().includes(lowerQuery)))
+    .slice(0, 5)
+    .forEach(r => {
+      results.push({
+        id: r.id,
+        title: r.name,
+        subtitle: r.cities.slice(0, 3).join(', '),
+        category: 'regiao',
+        path: `/ms/regioes/${r.slug}`,
+      });
+    });
+
+  return results;
+}
+
+export const categoryLabels: Record<SearchResult['category'], string> = {
+  destino: 'Destinos',
+  evento: 'Eventos',
+  regiao: 'Regiões Turísticas',
+  parceiro: 'Parceiros',
+};
+
+export const categoryIcons: Record<SearchResult['category'], string> = {
+  destino: 'MapPin',
+  evento: 'Calendar',
+  regiao: 'Globe',
+  parceiro: 'Building2',
+};
