@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronDown } from "lucide-react";
+import HeroSearchBar from "@/components/search/HeroSearchBar";
 
 // Componente de loading otimizado
 const HeroLoadingSkeleton = () => (
@@ -535,17 +536,17 @@ const UniversalHero = () => {
           }}
         ></div>
       
-      {/* Borda decorativa ondulada - transição minimalista */}
+      {/* Borda decorativa ondulada premium - onda alta e orgânica */}
       <div className="absolute bottom-0 left-0 w-full z-[20] pointer-events-none" style={{ transform: 'translateY(1px)' }}>
         <svg 
-          viewBox="0 0 1440 80" 
+          viewBox="0 0 1440 120" 
           preserveAspectRatio="none" 
-          className="w-full h-auto block"
-          style={{ height: '40px', display: 'block' }}
+          className="w-full block"
+          style={{ height: '120px', display: 'block' }}
           xmlns="http://www.w3.org/2000/svg"
         >
           <path 
-            d="M0,40 Q180,10 360,40 T720,40 T1080,40 T1440,40 L1440,80 L0,80 Z" 
+            d="M0,80 C120,100 240,50 360,60 C480,70 600,100 720,90 C840,80 960,40 1080,50 C1200,60 1320,90 1440,70 L1440,120 L0,120 Z" 
             fill="white" 
             stroke="none"
           />
@@ -594,9 +595,12 @@ const UniversalHero = () => {
           </span>
         </h1>
         
-        <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-10 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+        <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
           {subtitle}
         </p>
+
+        {/* Buscador */}
+        {isMS && <HeroSearchBar />}
         
         {/* Buttons melhorados */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
