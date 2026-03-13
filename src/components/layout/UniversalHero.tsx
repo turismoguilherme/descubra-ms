@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronDown } from "lucide-react";
+import HeroSearchBar from "@/components/search/HeroSearchBar";
 
 // Componente de loading otimizado
 const HeroLoadingSkeleton = () => (
