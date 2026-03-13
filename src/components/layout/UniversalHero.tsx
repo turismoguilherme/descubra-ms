@@ -595,9 +595,12 @@ const UniversalHero = () => {
           </span>
         </h1>
         
-        <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-10 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+        <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
           {subtitle}
         </p>
+
+        {/* Buscador */}
+        {isMS && <HeroSearchBar />}
         
         {/* Buttons melhorados */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
