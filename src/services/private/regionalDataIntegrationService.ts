@@ -117,8 +117,9 @@ export class RegionalDataIntegrationService {
       const query = `turismo ${state} Brasil dados estatísticos pesquisa acadêmica`;
       
       // Usar Google Custom Search API se disponível
-      const googleApiKey = import.meta.env.VITE_GOOGLE_CSE_API_KEY;
-      const googleCx = import.meta.env.VITE_GOOGLE_CSE_ID;
+      // Padronizado para VITE_GOOGLE_SEARCH_* mas mantém fallback para nomes antigos
+      const googleApiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || import.meta.env.VITE_GOOGLE_CSE_API_KEY;
+      const googleCx = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || import.meta.env.VITE_GOOGLE_CSE_ID;
       
       if (googleApiKey && googleCx) {
         try {

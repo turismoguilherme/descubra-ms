@@ -12,8 +12,9 @@ export interface WebSearchResult {
 }
 
 export class RealWebSearchService {
-  private readonly GOOGLE_CSE_API_KEY = import.meta.env.VITE_GOOGLE_CSE_API_KEY;
-  private readonly GOOGLE_CSE_ID = import.meta.env.VITE_GOOGLE_CSE_ID;
+  // Padronizado para VITE_GOOGLE_SEARCH_* mas mantém fallback para nomes antigos
+  private readonly GOOGLE_CSE_API_KEY = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || import.meta.env.VITE_GOOGLE_CSE_API_KEY;
+  private readonly GOOGLE_CSE_ID = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || import.meta.env.VITE_GOOGLE_CSE_ID;
   
   // Sites oficiais para busca direta
   private readonly OFFICIAL_SITES = [

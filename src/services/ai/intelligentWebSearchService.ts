@@ -23,6 +23,9 @@ export interface SearchConfig {
 
 class IntelligentWebSearchService {
   // Google Search keys protegidas via Edge Function (guata-google-search-proxy)
+  // Também suporta variáveis de ambiente do frontend como fallback
+  private readonly GOOGLE_SEARCH_API_KEY = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY || import.meta.env.VITE_GOOGLE_CSE_API_KEY;
+  private readonly GOOGLE_SEARCH_ENGINE_ID = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || import.meta.env.VITE_GOOGLE_CSE_ID;
   
   // Base de conhecimento inteligente e expansiva
   private readonly KNOWLEDGE_BASE = {
