@@ -1,11 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MapPin, Search, Navigation, Target, Copy } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { MapPin, Search, Navigation, Target, Copy, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import InteractiveMapPicker from './InteractiveMapPicker';
 
 interface NominatimResult {
   display_name: string;
@@ -19,11 +22,15 @@ interface LocationPickerProps {
     longitude: number;
     address?: string;
     name?: string;
+    observations?: string;
+    geofenceRadius?: number;
   }) => void;
   initialLocation?: {
     latitude: number;
     longitude: number;
     address?: string;
+    observations?: string;
+    geofenceRadius?: number;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -39,7 +46,19 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [selectedLocation, setSelectedLocation] = useState(initialLocation || null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  const [geofenceRadius, setGeofenceRadius] = useState(initialLocation?.geofenceRadius || 100);
+  const [observations, setObservations] = useState(initialLocation?.observations || '');
+  const [searchWarning, setSearchWarning] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Atualizar localização quando initialLocation mudar
+  useEffect(() => {
+    if (initialLocation) {
+      setSelectedLocation(initialLocation);
+      setGeofenceRadius(initialLocation.geofenceRadius || 100);
+      setObservations(initialLocation.observations || '');
+    }
+  }, [initialLocation]);
 
   // Locais pré-definidos populares em MS
   const predefinedLocations = [
@@ -139,14 +158,41 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       if (response.ok) {
         const data = await response.json();
-        const results = (data as NominatimResult[]).map((item) => ({
-          name: item.display_name.split(',')[0] || searchQuery,
-          address: item.display_name,
-          latitude: parseFloat(item.lat),
-          longitude: parseFloat(item.lon),
-          type: 'busca'
-        }));
+        
+        // Verificar se a busca original tinha número mas os resultados não
+        const originalHasNumber = /\d+/.test(searchQuery);
+        let foundNumberInResults = false;
+        
+        const results = (data as NominatimResult[]).map((item) => {
+          // Extrair número da casa se existir
+          const addressParts = item.display_name.split(',');
+          const firstPart = addressParts[0] || searchQuery;
+          // Tentar encontrar número no primeiro segmento (ex: "Rua X, 123" ou "Rua X 123")
+          const numberMatch = firstPart.match(/\s+(\d+)/);
+          const streetName = numberMatch ? firstPart.replace(/\s+\d+.*$/, '').trim() : firstPart;
+          const houseNumber = numberMatch ? numberMatch[1] : null;
+          
+          if (houseNumber) foundNumberInResults = true;
+          
+          return {
+            name: streetName,
+            address: item.display_name, // Endereço completo
+            addressShort: houseNumber ? `${streetName}, ${houseNumber}` : streetName, // Nome + número destacado
+            houseNumber: houseNumber,
+            latitude: parseFloat(item.lat),
+            longitude: parseFloat(item.lon),
+            type: 'busca'
+          };
+        });
+        
         setSearchResults(results);
+        
+        // Avisar se número não foi encontrado
+        if (originalHasNumber && !foundNumberInResults && results.length > 0) {
+          setSearchWarning('⚠️ O número da casa não foi encontrado. O resultado mostra apenas a rua. Use o mapa para ajustar o local exato arrastando o marcador.');
+        } else {
+          setSearchWarning(null);
+        }
       } else {
         // Fallback para resultado mockado se API falhar
         setSearchResults([{
@@ -174,11 +220,30 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleLocationSelect = (location) => {
     setSelectedLocation(location);
+    setSearchWarning(null); // Limpar aviso ao selecionar
+  };
+
+  const handleMapLocationChange = (lat: number, lng: number) => {
+    if (selectedLocation) {
+      setSelectedLocation({
+        ...selectedLocation,
+        latitude: lat,
+        longitude: lng,
+      });
+    }
+  };
+
+  const handleRadiusChange = (newRadius: number) => {
+    setGeofenceRadius(newRadius);
   };
 
   const confirmSelection = () => {
     if (selectedLocation) {
-      onLocationSelect(selectedLocation);
+      onLocationSelect({
+        ...selectedLocation,
+        observations: observations.trim() || undefined,
+        geofenceRadius: geofenceRadius,
+      });
       onClose();
       toast({
         title: "Localização selecionada",
@@ -254,20 +319,39 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                   </Button>
                 </div>
                 
+                {searchWarning && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-yellow-800">{searchWarning}</p>
+                    </div>
+                  </div>
+                )}
+                
                 {searchResults.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Resultados:</p>
                     {searchResults.map((result, index) => (
                       <div
                         key={index}
-                        className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                        className="p-3 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
                         onClick={() => handleLocationSelect(result)}
                       >
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <p className="font-medium text-sm">{result.name}</p>
-                            <p className="text-xs text-gray-600">{result.address}</p>
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-gray-900">
+                              {result.addressShort || result.name}
+                              {result.houseNumber && (
+                                <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
+                                  #{result.houseNumber}
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{result.address}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              📍 {result.latitude.toFixed(6)}, {result.longitude.toFixed(6)}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -334,41 +418,30 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
           {/* Painel Direito - Localização Selecionada */}
           <div className="space-y-6">
-            {/* Mapa Simulado */}
+            {/* Mapa Interativo */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Pré-visualização</CardTitle>
+                <CardTitle className="text-lg">Mapa Interativo</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-gradient-to-br from-green-100 to-blue-100 rounded-lg flex items-center justify-center relative overflow-hidden">
-                  {selectedLocation ? (
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                        <MapPin className="h-8 w-8 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-gray-800">
-                        {'address' in selectedLocation ? (selectedLocation.address || 'Local Selecionado') : 'Local Selecionado'}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {selectedLocation.address}
-                      </p>
-                    </div>
-                  ) : (
+                {selectedLocation ? (
+                  <InteractiveMapPicker
+                    latitude={selectedLocation.latitude}
+                    longitude={selectedLocation.longitude}
+                    radius={geofenceRadius}
+                    onLocationChange={handleMapLocationChange}
+                    onRadiusChange={handleRadiusChange}
+                    height="400px"
+                  />
+                ) : (
+                  <div className="aspect-video bg-gradient-to-br from-green-100 to-blue-100 rounded-lg flex items-center justify-center border-2 border-gray-200">
                     <div className="text-center text-gray-500">
                       <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Selecione uma localização</p>
-                    </div>
-                  )}
-                  
-                  {/* Grid de fundo para simular mapa */}
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="grid grid-cols-6 grid-rows-4 h-full w-full">
-                      {Array.from({ length: 24 }).map((_, i) => (
-                        <div key={i} className="border border-gray-300"></div>
-                      ))}
+                      <p className="font-medium">Selecione uma localização</p>
+                      <p className="text-xs mt-1">O mapa aparecerá aqui</p>
                     </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -385,8 +458,28 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Endereço:</label>
-                    <p className="text-sm">{selectedLocation.address || 'Não especificado'}</p>
+                    <label className="text-sm font-medium text-gray-700">Endereço Completo:</label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {'addressShort' in selectedLocation && selectedLocation.addressShort ? (
+                        <>
+                          <span className="font-semibold">{selectedLocation.addressShort}</span>
+                          {'houseNumber' in selectedLocation && selectedLocation.houseNumber && (
+                            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold">
+                              Nº {selectedLocation.houseNumber}
+                            </span>
+                          )}
+                          <br />
+                          <span className="text-xs text-gray-600 mt-1 block">
+                            {selectedLocation.address}
+                          </span>
+                        </>
+                      ) : (
+                        selectedLocation.address || 'Não especificado'
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      💡 Este será o ponto exato onde os usuários devem fazer check-in
+                    </p>
                   </div>
                   
                   <div>
@@ -403,6 +496,33 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                         <Copy className="h-3 w-3" />
                       </Button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Raio de Geofence:</label>
+                    <p className="text-sm text-gray-900 mt-1">
+                      <span className="font-semibold text-blue-600">{geofenceRadius}m</span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        (Usuários precisam estar dentro deste raio para fazer check-in)
+                      </span>
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="observations" className="text-sm font-medium text-gray-700">
+                      Observações sobre o Local (Opcional)
+                    </Label>
+                    <Textarea
+                      id="observations"
+                      value={observations}
+                      onChange={(e) => setObservations(e.target.value)}
+                      placeholder="Ex: Entrada principal do atrativo, portão azul, próximo ao estacionamento..."
+                      className="mt-1 text-sm"
+                      rows={3}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Descreva detalhes que ajudem a identificar o local exato (cor da fachada, pontos de referência, etc.)
+                    </p>
                   </div>
                 </CardContent>
               </Card>

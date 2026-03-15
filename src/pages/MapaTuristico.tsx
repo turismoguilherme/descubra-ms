@@ -16,10 +16,19 @@ const MapaTuristico: React.FC = () => {
 
   // Scroll para o topo quando a página carregar
   useEffect(() => {
+    console.log('🗺️ [MapaTuristico] Página carregada, fazendo scroll para o topo');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  console.log(`🔄 [MapaTuristico] Render - selectedRegion: ${selectedRegion?.slug || 'null'}`);
+  useEffect(() => {
+    console.log(`🔄 [MapaTuristico] Estado atualizado:`, {
+      regionsLoading,
+      regionsCount: touristRegions.length,
+      selectedRegion: selectedRegion?.slug || 'null'
+    });
+  }, [regionsLoading, touristRegions.length, selectedRegion]);
+
+  console.log(`🔄 [MapaTuristico] Render - selectedRegion: ${selectedRegion?.slug || 'null'}, regionsLoading: ${regionsLoading}, regionsCount: ${touristRegions.length}`);
 
   const handleRegionClick = (region: TouristRegion2025) => {
     console.log(`🗺️ [Mapa] Clique em: ${region.name} (${region.slug})`);

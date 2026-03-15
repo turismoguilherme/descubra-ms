@@ -174,24 +174,42 @@ const PassportCheckpointManager: React.FC = () => {
     }
   };
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; address?: string }) => {
+  const handleLocationSelect = (location: { 
+    latitude: number; 
+    longitude: number; 
+    address?: string;
+    observations?: string;
+    geofenceRadius?: number;
+  }) => {
     console.log('🔵 [PassportCheckpointManager] ========== handleLocationSelect ==========');
     console.log('🔵 [PassportCheckpointManager] Location selecionada:', location);
     console.log('🔵 [PassportCheckpointManager] locationPickerFor:', locationPickerFor);
     
     if (locationPickerFor === 'create') {
       console.log('🔵 [PassportCheckpointManager] Atualizando formulário de criação');
+      const updatedDescription = location.observations 
+        ? `${newCheckpointForm.description || ''}\n\n📍 Observações do Local: ${location.observations}`.trim()
+        : newCheckpointForm.description;
+      
       setNewCheckpointForm({
         ...newCheckpointForm,
         latitude: location.latitude,
         longitude: location.longitude,
+        geofence_radius: location.geofenceRadius || newCheckpointForm.geofence_radius,
+        description: updatedDescription,
       });
     } else if (locationPickerFor === 'edit') {
       console.log('🔵 [PassportCheckpointManager] Atualizando formulário de edição');
+      const updatedDescription = location.observations 
+        ? `${editCheckpointForm.description || ''}\n\n📍 Observações do Local: ${location.observations}`.trim()
+        : editCheckpointForm.description;
+      
       setEditCheckpointForm({
         ...editCheckpointForm,
         latitude: location.latitude,
         longitude: location.longitude,
+        geofence_radius: location.geofenceRadius || editCheckpointForm.geofence_radius,
+        description: updatedDescription,
       });
     }
     setShowLocationPicker(false);
@@ -1203,12 +1221,14 @@ const PassportCheckpointManager: React.FC = () => {
               ? {
                   latitude: newCheckpointForm.latitude,
                   longitude: newCheckpointForm.longitude,
+                  geofenceRadius: newCheckpointForm.geofence_radius,
                 }
               : undefined
             : editCheckpointForm.latitude && editCheckpointForm.longitude
             ? {
                 latitude: editCheckpointForm.latitude,
                 longitude: editCheckpointForm.longitude,
+                geofenceRadius: editCheckpointForm.geofence_radius,
               }
             : undefined
         }

@@ -2,17 +2,30 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import RouteHeroSection from './RouteHeroSection';
 import AnimalStampGrid from './AnimalStampGrid';
 import RewardsOverview from './RewardsOverview';
 import PassportMap from './PassportMap';
 import CheckpointList from './CheckpointList';
 import RouteCompletionModal from './RouteCompletionModal';
-import { MapPin, TrendingUp, WifiOff, KeyRound, Puzzle, Target, Gift, CheckCircle2 } from 'lucide-react';
+import { MapPin, TrendingUp, WifiOff, KeyRound, Puzzle, Target, Gift, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
 import { passportService } from '@/services/passport/passportService';
 import { rewardsService } from '@/services/passport/rewardsService';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface PassportRouteViewProps {
   route: RouteExtended;
@@ -25,6 +38,9 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [rewardsUnlocked, setRewardsUnlocked] = useState<any[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const { toast } = useToast();
   
   // Determine animal theme from configuration or default
   const theme = (route.configuration?.stamp_theme || 'onca') as 'onca' | 'tuiuiu' | 'jacare' | 'arara' | 'capivara';
@@ -60,6 +76,38 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
     
     if (onProgressUpdate) {
       onProgressUpdate();
+    }
+  };
+
+  const handleResetRoute = async () => {
+    if (!user?.id || !route.id) return;
+
+    setIsResetting(true);
+    try {
+      const { data, error } = await supabase.rpc('reset_user_route_progress', {
+        p_user_id: user.id,
+        p_route_id: route.id,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: '✅ Progresso resetado',
+        description: `Você pode começar a rota "${route.name}" novamente do zero. Suas recompensas já ganhas foram mantidas.`,
+      });
+
+      setShowResetDialog(false);
+      handleProgressUpdate(); // Atualizar progresso na tela
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao resetar progresso:', err);
+      toast({
+        title: '❌ Erro',
+        description: err.message || 'Não foi possível resetar o progresso. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResetting(false);
     }
   };
   
@@ -263,6 +311,35 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
         </div>
       </div>
 
+      {/* Botão Refazer Rota - aparece quando completo */}
+      {progress?.completion_percentage === 100 && (
+        <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900">Rota Concluída!</h3>
+                  <p className="text-sm text-gray-600">
+                    Você completou todos os checkpoints desta rota. Deseja refazer?
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowResetDialog(true)}
+                className="border-green-300 text-green-700 hover:bg-green-100"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Refazer Rota
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Modal de Conclusão */}
       <RouteCompletionModal
         isOpen={showCompletionModal}
@@ -273,6 +350,42 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
         theme={theme}
         onContinue={handleProgressUpdate}
       />
+
+      {/* Dialog de Confirmação para Resetar */}
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Refazer Rota?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Você está prestes a resetar seu progresso na rota <strong>"{route.name}"</strong>.
+              </p>
+              <p className="font-semibold text-amber-600">
+                ⚠️ Todos os seus carimbos (stamps) desta rota serão removidos.
+              </p>
+              <p className="text-green-600">
+                ✅ Suas recompensas já ganhas (vouchers, pontos) serão mantidas.
+              </p>
+              <p>
+                Você poderá começar a rota novamente do zero e coletar todos os carimbos novamente.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetRoute}
+              disabled={isResetting}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {isResetting ? 'Resetando...' : 'Sim, Refazer Rota'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

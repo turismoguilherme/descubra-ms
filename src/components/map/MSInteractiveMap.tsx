@@ -71,15 +71,33 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
   // Buscar SVG como texto
   useEffect(() => {
+    console.log('🗺️ [MSInteractiveMap] Iniciando carregamento do SVG...');
     fetch('/images/mapa-ms-regioes.svg')
-      .then(res => res.text())
+      .then(res => {
+        console.log('🗺️ [MSInteractiveMap] Resposta do fetch:', res.status, res.statusText);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.text();
+      })
       .then(text => {
+        console.log('🗺️ [MSInteractiveMap] SVG carregado com sucesso, tamanho:', text.length, 'caracteres');
+        if (!text || text.trim().length === 0) {
+          throw new Error('SVG está vazio');
+        }
         setSvgContent(text);
         setIsLoading(false);
       })
       .catch(err => {
-        console.error('Erro ao carregar SVG do mapa:', err);
+        console.error('❌ [MSInteractiveMap] Erro ao carregar SVG do mapa:', err);
+        console.error('❌ [MSInteractiveMap] Erro completo:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
         setIsLoading(false);
+        // Manter svgContent como null para mostrar estado de erro
+        setSvgContent(null);
       });
   }, []);
 
@@ -125,51 +143,22 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
   // Attach event handlers ao SVG inline
   useEffect(() => {
-    if (!svgContent || !svgContainerRef.current || eventHandlersAttached.current) return;
-    if (touristRegions.length === 0) return;
+    if (!svgContent || !svgContainerRef.current) {
+      console.log('⚠️ [MSInteractiveMap] Não anexando handlers - svgContent:', !!svgContent, 'container:', !!svgContainerRef.current);
+      return;
+    }
+    if (touristRegions.length === 0) {
+      console.log('⚠️ [MSInteractiveMap] Não anexando handlers - sem regiões');
+      return;
+    }
 
-    const svgEl = svgContainerRef.current.querySelector('svg') as SVGSVGElement | null;
-    if (!svgEl) return;
-
-    svgEl.setAttribute('width', '100%');
-    svgEl.setAttribute('height', '100%');
-    svgEl.style.maxHeight = '850px';
-
-    // Marcar grupos/paths com data-region para highlighting
-    const groups = svgEl.querySelectorAll('g[fill]');
-    groups.forEach(g => {
-      const fill = (g.getAttribute('fill') || '').replace('#', '').toUpperCase();
-      if (isAmbiguousPurple(fill)) {
-        // AMBÍGUO: classificar cada path individualmente pelo seu próprio bounding box
-        (g as HTMLElement).style.cursor = 'pointer';
-        g.setAttribute('data-ambiguous', 'true');
-        // NÃO colocar data-region no <g> — colocar em cada <path>
-        const paths = g.querySelectorAll('path');
-        paths.forEach(pathEl => {
-          try {
-            const bbox = (pathEl as SVGPathElement).getBBox();
-            const centerY = bbox.y + bbox.height / 2;
-            const slug = centerY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
-            pathEl.setAttribute('data-region', slug);
-          } catch {
-            // fallback: usar grupo inteiro
-            const slug = resolveRegionForGroup(g);
-            if (slug) pathEl.setAttribute('data-region', slug);
-          }
-        });
-      } else {
-        const slug = resolveRegionForGroup(g);
-        if (slug) {
-          (g as HTMLElement).style.cursor = 'pointer';
-          g.setAttribute('data-region', slug);
-        }
-      }
-    });
-
+    // Definir handlers fora do timeout para poder removê-los no cleanup
+    let svgElRef: SVGSVGElement | null = null;
     const handleClick = (e: Event) => {
+      if (!svgElRef) return;
       const me = e as MouseEvent;
       const target = me.target as Element;
-      const svgCoords = clientToSvgCoords(svgEl, me.clientX, me.clientY);
+      const svgCoords = clientToSvgCoords(svgElRef, me.clientX, me.clientY);
       const slug = getRegionSlugFromElement(target, svgCoords?.y);
       if (slug) {
         e.stopPropagation();
@@ -179,10 +168,10 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     };
 
     const handleMouseOver = (e: Event) => {
-      if (selectedRegion) return;
+      if (selectedRegion || !svgElRef) return;
       const me = e as MouseEvent;
       const target = me.target as Element;
-      const svgCoords = clientToSvgCoords(svgEl, me.clientX, me.clientY);
+      const svgCoords = clientToSvgCoords(svgElRef, me.clientX, me.clientY);
       const slug = getRegionSlugFromElement(target, svgCoords?.y);
       if (slug && slug !== hoveredRegion) {
         setHoveredRegion(slug);
@@ -192,11 +181,11 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     };
 
     const handleMouseOut = (e: Event) => {
-      if (selectedRegion) return;
+      if (selectedRegion || !svgElRef) return;
       const relatedTarget = (e as MouseEvent).relatedTarget as Element | null;
-      if (relatedTarget && svgEl.contains(relatedTarget)) {
+      if (relatedTarget && svgElRef.contains(relatedTarget)) {
         const me = e as MouseEvent;
-        const svgCoords = clientToSvgCoords(svgEl, me.clientX, me.clientY);
+        const svgCoords = clientToSvgCoords(svgElRef, me.clientX, me.clientY);
         const newSlug = getRegionSlugFromElement(relatedTarget, svgCoords?.y);
         if (newSlug) return;
       }
@@ -204,16 +193,126 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       onRegionHover?.(null);
     };
 
-    svgEl.addEventListener('click', handleClick);
-    svgEl.addEventListener('mouseover', handleMouseOver);
-    svgEl.addEventListener('mouseout', handleMouseOut);
-    eventHandlersAttached.current = true;
+    // Usar MutationObserver para detectar quando o SVG é inserido no DOM
+    const observer = new MutationObserver((mutations, obs) => {
+      const svgEl = svgContainerRef.current?.querySelector('svg') as SVGSVGElement | null;
+      if (svgEl) {
+        console.log('✅ [MSInteractiveMap] SVG detectado no DOM via MutationObserver');
+        obs.disconnect(); // Parar de observar
+        attachHandlers(svgEl);
+      }
+    });
+
+    // Iniciar observação
+    if (svgContainerRef.current) {
+      observer.observe(svgContainerRef.current, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // Fallback: tentar após um delay também
+    const timeoutId = setTimeout(() => {
+      const svgEl = svgContainerRef.current?.querySelector('svg') as SVGSVGElement | null;
+      if (!svgEl) {
+        console.warn('⚠️ [MSInteractiveMap] SVG não encontrado no DOM após timeout, tentando novamente...');
+        // Tentar novamente após mais tempo
+        setTimeout(() => {
+          const svgEl2 = svgContainerRef.current?.querySelector('svg') as SVGSVGElement | null;
+          if (svgEl2) {
+            console.log('✅ [MSInteractiveMap] SVG encontrado na segunda tentativa');
+            attachHandlers(svgEl2);
+          } else {
+            console.error('❌ [MSInteractiveMap] SVG nunca foi encontrado no DOM');
+          }
+        }, 500);
+        return;
+      }
+      
+      observer.disconnect(); // Parar observação se já encontrou
+      attachHandlers(svgEl);
+    }, 200);
+
+    // Função auxiliar para anexar handlers
+    function attachHandlers(svgEl: SVGSVGElement) {
+      
+      svgElRef = svgEl;
+      console.log('✅ [MSInteractiveMap] SVG encontrado no DOM, anexando handlers...');
+      
+      // Se já foram anexados, remover primeiro
+      if (eventHandlersAttached.current) {
+        console.log('⚠️ [MSInteractiveMap] Handlers já anexados, removendo e reanexando...');
+        svgEl.removeEventListener('click', handleClick);
+        svgEl.removeEventListener('mouseover', handleMouseOver);
+        svgEl.removeEventListener('mouseout', handleMouseOut);
+        eventHandlersAttached.current = false;
+      }
+
+      svgEl.setAttribute('width', '100%');
+      svgEl.setAttribute('height', '100%');
+      svgEl.style.maxHeight = '850px';
+      svgEl.style.display = 'block'; // Garantir que está visível
+      svgEl.style.visibility = 'visible'; // Garantir visibilidade
+      
+      console.log('✅ [MSInteractiveMap] SVG configurado:', {
+        width: svgEl.getAttribute('width'),
+        height: svgEl.getAttribute('height'),
+        display: svgEl.style.display,
+        visibility: svgEl.style.visibility,
+        clientWidth: svgEl.clientWidth,
+        clientHeight: svgEl.clientHeight
+      });
+
+      // Marcar grupos/paths com data-region para highlighting
+      const groups = svgEl.querySelectorAll('g[fill]');
+      console.log(`✅ [MSInteractiveMap] Encontrados ${groups.length} grupos com fill`);
+      groups.forEach(g => {
+        const fill = (g.getAttribute('fill') || '').replace('#', '').toUpperCase();
+        if (isAmbiguousPurple(fill)) {
+          // AMBÍGUO: classificar cada path individualmente pelo seu próprio bounding box
+          (g as HTMLElement).style.cursor = 'pointer';
+          g.setAttribute('data-ambiguous', 'true');
+          // NÃO colocar data-region no <g> — colocar em cada <path>
+          const paths = g.querySelectorAll('path');
+          paths.forEach(pathEl => {
+            try {
+              const bbox = (pathEl as SVGPathElement).getBBox();
+              const centerY = bbox.y + bbox.height / 2;
+              const slug = centerY > CAMPO_GRANDE_CELEIRO_Y_THRESHOLD ? 'celeiro-ms' : 'campo-grande-ipes';
+              pathEl.setAttribute('data-region', slug);
+            } catch {
+              // fallback: usar grupo inteiro
+              const slug = resolveRegionForGroup(g);
+              if (slug) pathEl.setAttribute('data-region', slug);
+            }
+          });
+        } else {
+          const slug = resolveRegionForGroup(g);
+          if (slug) {
+            (g as HTMLElement).style.cursor = 'pointer';
+            g.setAttribute('data-region', slug);
+          }
+        }
+      });
+
+      svgEl.addEventListener('click', handleClick);
+      svgEl.addEventListener('mouseover', handleMouseOver);
+      svgEl.addEventListener('mouseout', handleMouseOut);
+      eventHandlersAttached.current = true;
+      
+      console.log('✅ [MSInteractiveMap] Event handlers anexados com sucesso');
+    }
 
     return () => {
-      svgEl.removeEventListener('click', handleClick);
-      svgEl.removeEventListener('mouseover', handleMouseOver);
-      svgEl.removeEventListener('mouseout', handleMouseOut);
-      eventHandlersAttached.current = false;
+      observer.disconnect();
+      clearTimeout(timeoutId);
+      if (svgElRef && eventHandlersAttached.current) {
+        svgElRef.removeEventListener('click', handleClick);
+        svgElRef.removeEventListener('mouseover', handleMouseOver);
+        svgElRef.removeEventListener('mouseout', handleMouseOut);
+        eventHandlersAttached.current = false;
+        console.log('🧹 [MSInteractiveMap] Event handlers removidos');
+      }
     };
   }, [svgContent, touristRegions, selectedRegion, hoveredRegion, onRegionClick, onRegionHover, findRegionBySlug, getRegionSlugFromElement]);
 
@@ -245,21 +344,38 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   const activeSlug = selectedRegion || hoveredRegion;
   const activeRegion = activeSlug ? findRegionBySlug(activeSlug) : null;
 
+  console.log('🔄 [MSInteractiveMap] Render - svgContent:', !!svgContent, 'isLoading:', isLoading, 'regions:', touristRegions.length);
+
   return (
     <div className={`relative ${className}`}>
       <div className="relative w-full h-full">
-        {svgContent && (
+        {svgContent ? (
           <div
             ref={svgContainerRef}
             className="w-full h-full"
-            style={{ maxHeight: '850px' }}
+            style={{ maxHeight: '850px', minHeight: '400px' }}
             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['use'] }) }}
+            onLoad={() => {
+              console.log('✅ [MSInteractiveMap] SVG renderizado no DOM');
+            }}
           />
-        )}
+        ) : !isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <div className="text-center p-6">
+              <div className="text-4xl text-gray-400 mb-3">🗺️</div>
+              <p className="text-gray-600 font-medium">Erro ao carregar o mapa</p>
+              <p className="text-gray-400 text-sm mt-2">O arquivo SVG não pôde ser carregado</p>
+              <p className="text-gray-400 text-xs mt-1">Verifique o console para mais detalhes</p>
+            </div>
+          </div>
+        ) : null}
 
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-ms-primary-blue border-t-transparent"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-ms-primary-blue border-t-transparent mx-auto"></div>
+              <p className="text-gray-600 text-sm mt-4">Carregando mapa...</p>
+            </div>
           </div>
         )}
       </div>

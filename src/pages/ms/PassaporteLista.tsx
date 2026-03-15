@@ -50,7 +50,7 @@ const PassaporteLista = () => {
         console.log("📱 PASSAPORTE LISTA: Fazendo fetch direto na API REST...");
         
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/routes?is_active=eq.true&order=name`,
+          `${SUPABASE_URL}/rest/v1/routes?is_published=eq.true&is_active=eq.true&order=name`,
           {
             headers: {
               'apikey': SUPABASE_KEY,

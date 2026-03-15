@@ -8,11 +8,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Loader2, X, MapPin, Power, PowerOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, X, MapPin, Power, PowerOff, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Route {
   id: string;
@@ -21,6 +31,8 @@ interface Route {
   passport_number_prefix?: string;
   map_image_url?: string;
   is_active?: boolean;
+  is_published?: boolean;
+  checkpoints_count?: number;
   [key: string]: unknown;
 }
 
@@ -44,6 +56,15 @@ const PassportRouteManager: React.FC = () => {
   const [mapImageFile, setMapImageFile] = useState<File | null>(null);
   const [mapImagePreview, setMapImagePreview] = useState<string | null>(null);
   const [uploadingMapImage, setUploadingMapImage] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<Route | null>(null);
+  const [deletingRoute, setDeletingRoute] = useState(false);
+  const [deleteDependencies, setDeleteDependencies] = useState<{
+    stamps: number;
+    configurations: number;
+    rewards: number;
+    checkpoints: number;
+  } | null>(null);
   const { toast } = useToast();
   
   const BUCKET_NAME = 'tourism-images';
@@ -63,6 +84,17 @@ const PassportRouteManager: React.FC = () => {
         .from('routes')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      // Contar checkpoints para cada rota
+      if (data) {
+        for (const route of data) {
+          const { count } = await supabase
+            .from('route_checkpoints')
+            .select('*', { count: 'exact', head: true })
+            .eq('route_id', route.id);
+          route.checkpoints_count = count || 0;
+        }
+      }
 
       if (error) {
         console.error('Erro ao carregar rotas:', error);
@@ -124,33 +156,308 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
-  const handleDeleteRoute = async (route: Route) => {
-    if (!window.confirm(`Tem certeza que deseja excluir a rota "${route.name}"? Esta ação não pode ser desfeita.`)) {
-      return;
-    }
-
+  const publishRoute = async (route: Route) => {
     try {
+      // Verificar se tem checkpoints
+      const { count, error: countError } = await supabase
+        .from('route_checkpoints')
+        .select('*', { count: 'exact', head: true })
+        .eq('route_id', route.id);
+
+      if (countError) throw countError;
+
+      if (!count || count === 0) {
+        toast({
+          title: "⚠️ Não é possível publicar",
+          description: "A rota precisa ter pelo menos um checkpoint ativo para ser publicada.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('routes')
-        .delete()
+        .update({
+          is_published: true,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', route.id);
 
       if (error) throw error;
 
       toast({
-        title: "🗑️ Rota excluída",
-        description: `A rota ${route.name} foi excluída permanentemente.`,
+        title: "✅ Rota publicada",
+        description: `A rota "${route.name}" está agora disponível para usuários finais.`,
       });
 
       loadRoutes();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao excluir rota:', err);
+      console.error('Erro ao publicar rota:', err);
       toast({
-        title: "❌ Erro ao excluir",
+        title: "❌ Erro",
         description: err.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const unpublishRoute = async (route: Route) => {
+    try {
+      const { error } = await supabase
+        .from('routes')
+        .update({
+          is_published: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', route.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "📝 Rota despublicada",
+        description: `A rota "${route.name}" foi movida para rascunho e não aparecerá mais para usuários finais.`,
+      });
+
+      loadRoutes();
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao despublicar rota:', err);
+      toast({
+        title: "❌ Erro",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const checkRouteDependencies = async (routeId: string) => {
+    try {
+      console.log('🔍 [PassportRouteManager] Verificando dependências para routeId:', routeId);
+      
+      // Verificar passport_stamps (sem CASCADE - pode bloquear exclusão)
+      const { count: stampsCount, error: stampsError } = await supabase
+        .from('passport_stamps')
+        .select('*', { count: 'exact', head: true })
+        .eq('route_id', routeId);
+      
+      if (stampsError) {
+        console.error('❌ [PassportRouteManager] Erro ao verificar passport_stamps:', stampsError);
+      } else {
+        console.log('✅ [PassportRouteManager] passport_stamps:', stampsCount || 0);
+      }
+
+      // Verificar passport_configurations (com CASCADE - será deletado automaticamente)
+      const { count: configsCount, error: configsError } = await supabase
+        .from('passport_configurations')
+        .select('*', { count: 'exact', head: true })
+        .eq('route_id', routeId);
+      
+      if (configsError) {
+        console.error('❌ [PassportRouteManager] Erro ao verificar passport_configurations:', configsError);
+      } else {
+        console.log('✅ [PassportRouteManager] passport_configurations:', configsCount || 0);
+      }
+
+      // Verificar passport_rewards (com CASCADE - será deletado automaticamente)
+      const { count: rewardsCount, error: rewardsError } = await supabase
+        .from('passport_rewards')
+        .select('*', { count: 'exact', head: true })
+        .eq('route_id', routeId);
+      
+      if (rewardsError) {
+        console.error('❌ [PassportRouteManager] Erro ao verificar passport_rewards:', rewardsError);
+      } else {
+        console.log('✅ [PassportRouteManager] passport_rewards:', rewardsCount || 0);
+      }
+
+      // Verificar route_checkpoints (com CASCADE - será deletado automaticamente)
+      const { count: checkpointsCount, error: checkpointsError } = await supabase
+        .from('route_checkpoints')
+        .select('*', { count: 'exact', head: true })
+        .eq('route_id', routeId);
+      
+      if (checkpointsError) {
+        console.error('❌ [PassportRouteManager] Erro ao verificar route_checkpoints:', checkpointsError);
+      } else {
+        console.log('✅ [PassportRouteManager] route_checkpoints:', checkpointsCount || 0);
+      }
+
+      const result = {
+        stamps: stampsCount || 0,
+        configurations: configsCount || 0,
+        rewards: rewardsCount || 0,
+        checkpoints: checkpointsCount || 0,
+      };
+      
+      console.log('📊 [PassportRouteManager] Resultado final das dependências:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ [PassportRouteManager] Erro ao verificar dependências:', error);
+      throw error; // Re-lançar para que handleDeleteClick possa tratar
+    }
+  };
+
+  const handleDeleteClick = async (route: Route) => {
+    console.log('🗑️ [PassportRouteManager] handleDeleteClick chamado para rota:', route.name, route.id);
+    setRouteToDelete(route);
+    setDeletingRoute(false);
+    
+    try {
+      // Verificar dependências antes de abrir o dialog
+      console.log('🔍 [PassportRouteManager] Verificando dependências...');
+      const dependencies = await checkRouteDependencies(route.id);
+      console.log('📊 [PassportRouteManager] Dependências encontradas:', dependencies);
+      setDeleteDependencies(dependencies);
+      
+      // Sempre permitir exclusão, mas avisar sobre dependências
+      console.log('✅ [PassportRouteManager] Abrindo dialog de confirmação');
+      setDeleteDialogOpen(true);
+    } catch (error) {
+      console.error('❌ [PassportRouteManager] Erro ao verificar dependências:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível verificar as dependências da rota. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteRoute = async () => {
+    if (!routeToDelete) {
+      console.error('❌ [PassportRouteManager] handleDeleteRoute chamado sem routeToDelete');
+      return;
+    }
+
+    console.log('🗑️ [PassportRouteManager] Iniciando exclusão da rota:', routeToDelete.name, routeToDelete.id);
+
+    try {
+      setDeletingRoute(true);
+
+      // Se houver carimbos, excluir primeiro (já que não tem CASCADE)
+      if (deleteDependencies && deleteDependencies.stamps > 0) {
+        console.log('🗑️ [PassportRouteManager] Excluindo carimbos primeiro...');
+        
+        // Tentar usar a função RPC primeiro (bypassa RLS)
+        try {
+          const { data: deletedCount, error: rpcError } = await supabase.rpc(
+            'delete_passport_stamps_by_route',
+            { p_route_id: routeToDelete.id }
+          );
+
+          if (rpcError) {
+            console.warn('⚠️ [PassportRouteManager] Erro ao usar RPC, tentando método direto:', rpcError);
+            // Fallback: tentar exclusão direta
+            const { data: deletedStamps, error: stampsError } = await supabase
+              .from('passport_stamps')
+              .delete()
+              .eq('route_id', routeToDelete.id)
+              .select();
+
+            if (stampsError) {
+              console.error('❌ [PassportRouteManager] Erro ao excluir carimbos:', stampsError);
+              console.error('❌ [PassportRouteManager] Erro completo:', {
+                code: stampsError.code,
+                message: stampsError.message,
+                details: stampsError.details,
+                hint: stampsError.hint
+              });
+              
+              // Se for erro de RLS/permissão
+              if (stampsError.code === '42501' || stampsError.message?.includes('policy') || stampsError.message?.includes('permission')) {
+                throw new Error('Você não tem permissão para excluir carimbos de outros usuários. A função RPC não está disponível. Entre em contato com o administrador do sistema.');
+              }
+              
+              throw new Error(`Erro ao excluir carimbos: ${stampsError.message}`);
+            }
+            
+            console.log('✅ [PassportRouteManager] Carimbos excluídos (método direto):', deletedStamps?.length || 0);
+          } else {
+            console.log('✅ [PassportRouteManager] Carimbos excluídos via RPC:', deletedCount || 0);
+          }
+        } catch (rpcError: unknown) {
+          const err = rpcError instanceof Error ? rpcError : new Error(String(rpcError));
+          console.error('❌ [PassportRouteManager] Erro ao excluir carimbos:', err);
+          throw err;
+        }
+        
+        // Verificar se realmente foram excluídos
+        const { count: remainingStamps } = await supabase
+          .from('passport_stamps')
+          .select('*', { count: 'exact', head: true })
+          .eq('route_id', routeToDelete.id);
+        
+        if (remainingStamps && remainingStamps > 0) {
+          console.warn(`⚠️ [PassportRouteManager] Ainda há ${remainingStamps} carimbo(s) restante(s). Aguardando e verificando novamente...`);
+          // Aguardar um pouco mais e verificar novamente
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const { count: finalCheck } = await supabase
+            .from('passport_stamps')
+            .select('*', { count: 'exact', head: true })
+            .eq('route_id', routeToDelete.id);
+          
+          if (finalCheck && finalCheck > 0) {
+            throw new Error(`Não foi possível excluir todos os carimbos. Ainda restam ${finalCheck} carimbo(s).`);
+          }
+        }
+        
+        // Pequeno delay para garantir que a transação foi commitada
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('✅ [PassportRouteManager] Carimbos excluídos com sucesso e verificação concluída');
+      }
+
+      console.log('🗑️ [PassportRouteManager] Enviando requisição de exclusão da rota...');
+      const { data, error } = await supabase
+        .from('routes')
+        .delete()
+        .eq('id', routeToDelete.id)
+        .select();
+
+      if (error) {
+        console.error('❌ [PassportRouteManager] Erro ao excluir rota:', error);
+        console.error('❌ [PassportRouteManager] Error code:', error.code);
+        console.error('❌ [PassportRouteManager] Error message:', error.message);
+        console.error('❌ [PassportRouteManager] Error details:', error.details);
+        console.error('❌ [PassportRouteManager] Error hint:', error.hint);
+        
+        // Verificar se é erro de constraint
+        if (error.code === '23503' || error.message?.includes('foreign key')) {
+          throw new Error('Esta rota possui dependências que impedem a exclusão. Verifique se há carimbos de passaporte, configurações ou recompensas associadas.');
+        }
+        throw error;
+      }
+
+      console.log('✅ [PassportRouteManager] Rota excluída com sucesso:', data);
+
+      toast({
+        title: "🗑️ Rota excluída",
+        description: `A rota "${routeToDelete.name}" foi excluída permanentemente.${deleteDependencies && deleteDependencies.stamps > 0 ? ` ${deleteDependencies.stamps} carimbo(s) também foram excluídos.` : ''}`,
+      });
+
+      setDeleteDialogOpen(false);
+      setRouteToDelete(null);
+      setDeleteDependencies(null);
+      await loadRoutes();
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('❌ [PassportRouteManager] Erro completo ao excluir rota:', err);
+      
+      let errorMessage = err.message;
+      if (errorMessage.includes('foreign key') || errorMessage.includes('constraint')) {
+        errorMessage = 'Esta rota possui dependências que impedem a exclusão. Verifique se há carimbos de passaporte, configurações ou recompensas associadas.';
+      } else if (!errorMessage || errorMessage === 'Error') {
+        errorMessage = 'Ocorreu um erro ao excluir a rota. Verifique o console para mais detalhes.';
+      }
+      
+      toast({
+        title: "❌ Erro ao excluir",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000,
+      });
+    } finally {
+      setDeletingRoute(false);
     }
   };
 
@@ -368,6 +675,7 @@ const PassportRouteManager: React.FC = () => {
         region: newRouteForm.region || null,
         difficulty: dbDifficulty,
         is_active: true,
+        is_published: false, // Nova rota começa como rascunho
       }).select();
 
       if (error) {
@@ -488,6 +796,14 @@ const PassportRouteManager: React.FC = () => {
                           <Badge variant={route.is_active ? "default" : "secondary"}>
                             {route.is_active ? "Ativa" : "Inativa"}
                           </Badge>
+                          <Badge variant={route.is_published ? "default" : "outline"} className={route.is_published ? "bg-green-500" : ""}>
+                            {route.is_published ? "✅ Publicada" : "📝 Rascunho"}
+                          </Badge>
+                          {route.checkpoints_count !== undefined && (
+                            <Badge variant="outline">
+                              {route.checkpoints_count} checkpoint{route.checkpoints_count !== 1 ? 's' : ''}
+                            </Badge>
+                          )}
                         </div>
                         {route.description && (
                           <p className="text-sm text-muted-foreground mt-1">
@@ -525,6 +841,28 @@ const PassportRouteManager: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
+                        {!route.is_published ? (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => publishRoute(route)}
+                            title="Publicar rota para usuários finais"
+                            disabled={!route.checkpoints_count || route.checkpoints_count === 0}
+                          >
+                            <Power className="h-4 w-4 mr-2" />
+                            Publicar
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => unpublishRoute(route)}
+                            title="Despublicar rota (mover para rascunho)"
+                          >
+                            <PowerOff className="h-4 w-4 mr-2" />
+                            Despublicar
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -548,7 +886,7 @@ const PassportRouteManager: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteRoute(route)}
+                          onClick={() => handleDeleteClick(route)}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -767,6 +1105,97 @@ const PassportRouteManager: React.FC = () => {
         </Card>
         );
       })()}
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                <AlertDialogDescription className="mt-2">
+                  Tem certeza que deseja excluir a rota <strong>"{routeToDelete?.name}"</strong>?
+                  <br />
+                  <span className="text-destructive font-medium">Esta ação não pode ser desfeita.</span>
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+          
+          {deleteDependencies && (
+            <div className={`rounded-lg border p-4 ${
+              deleteDependencies.stamps > 0 
+                ? 'border-red-200 bg-red-50' 
+                : 'border-yellow-200 bg-yellow-50'
+            }`}>
+              <p className={`text-sm font-medium mb-2 ${
+                deleteDependencies.stamps > 0 
+                  ? 'text-red-800' 
+                  : 'text-yellow-800'
+              }`}>
+              {deleteDependencies.stamps > 0 
+                ? '⚠️ ATENÇÃO: Itens que serão excluídos permanentemente:'
+                : '⚠️ Itens que serão excluídos automaticamente:'
+              }
+              </p>
+              <ul className={`text-sm space-y-1 ml-4 list-disc ${
+                deleteDependencies.stamps > 0 
+                  ? 'text-red-700' 
+                  : 'text-yellow-700'
+              }`}>
+                {deleteDependencies.stamps > 0 && (
+                  <li className="font-semibold">
+                    {deleteDependencies.stamps} carimbo(s) de passaporte (serão excluídos permanentemente)
+                  </li>
+                )}
+                {deleteDependencies.configurations > 0 && (
+                  <li>{deleteDependencies.configurations} configuração(ões) de passaporte</li>
+                )}
+                {deleteDependencies.rewards > 0 && (
+                  <li>{deleteDependencies.rewards} recompensa(s)</li>
+                )}
+                {deleteDependencies.checkpoints > 0 && (
+                  <li>{deleteDependencies.checkpoints} checkpoint(s)</li>
+                )}
+                {deleteDependencies.configurations === 0 && 
+                 deleteDependencies.rewards === 0 && 
+                 deleteDependencies.checkpoints === 0 &&
+                 deleteDependencies.stamps === 0 && (
+                  <li className={deleteDependencies.stamps > 0 ? 'text-red-600' : 'text-yellow-600'}>
+                    Nenhum item associado
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingRoute}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRoute}
+              disabled={deletingRoute}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingRoute ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir permanentemente
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
