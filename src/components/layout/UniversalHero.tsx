@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronDown } from "lucide-react";
-import HeroSearchBar from "@/components/search/HeroSearchBar";
+import { useSearchOverlay } from "@/context/SearchOverlayContext";
 
 // Componente de loading otimizado
 const HeroLoadingSkeleton = () => (
@@ -29,6 +29,7 @@ const UniversalHero = () => {
   const { config, isMS } = useBrand();
   const { t } = useTranslation('pages');
   const { language } = useLanguage();
+  const { open: openSearch } = useSearchOverlay();
   const [msContent, setMsContent] = useState<Record<string, string>>({});
   
   // Log inicial para debug
@@ -599,20 +600,18 @@ const UniversalHero = () => {
           {subtitle}
         </p>
 
-        {/* Buscador */}
-        {isMS && <HeroSearchBar />}
-        
         {/* Buttons melhorados */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-          <Link 
-            to={config.hero.buttons.primary.path}
+          <button
+            type="button"
+            onClick={openSearch}
             className="group bg-ms-secondary-yellow text-gray-900 font-bold px-8 py-4 rounded-xl hover:bg-ms-secondary-yellow/95 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-ms-secondary-yellow/50"
           >
             {isMS 
               ? t('hero.button1', { defaultValue: getContent('ms_hero_universal_button_1', config.hero.buttons.primary.text) })
               : config.hero.buttons.primary.text
             }
-          </Link>
+          </button>
           <Link 
             to={config.hero.buttons.secondary.path}
             className="group bg-ms-pantanal-green text-white font-semibold px-8 py-4 rounded-xl hover:bg-ms-pantanal-green/95 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-ms-pantanal-green/50"

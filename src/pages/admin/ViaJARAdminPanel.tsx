@@ -65,23 +65,39 @@ export default function ViaJARAdminPanel() {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    console.log('🧭 [ViaJARAdminPanel] Estado de auth atualizado:', {
+      loading,
+      hasUser: !!user,
+      userId: user?.id,
+      hasUserProfile: !!userProfile,
+      userRole: userProfile?.role,
+    });
+
     if (!loading) {
       if (user && userProfile) {
         const role = userProfile?.role || 'user';
         const allowedRoles = ['admin', 'master_admin', 'tech'];
+
+        const authorized = allowedRoles.includes(role);
+        console.log('🧭 [ViaJARAdminPanel] Verificando permissão para admin:', {
+          role,
+          allowedRoles,
+          authorized,
+        });
         
-        if (allowedRoles.includes(role)) {
-          setIsAuthorized(true);
-        } else {
-          setIsAuthorized(false);
-        }
+        setIsAuthorized(authorized);
       } else {
+        console.log('🧭 [ViaJARAdminPanel] Usuário ou perfil ausente, não autorizado.', {
+          hasUser: !!user,
+          hasUserProfile: !!userProfile,
+        });
         setIsAuthorized(false);
       }
     }
   }, [user, userProfile, loading]);
 
   if (loading) {
+    console.log('🧭 [ViaJARAdminPanel] Renderizando tela de carregamento (loading === true)');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -94,6 +110,10 @@ export default function ViaJARAdminPanel() {
 
   // Se não estiver autenticado ou não for admin, mostrar login
   if (!user || !isAuthorized) {
+    console.log('🧭 [ViaJARAdminPanel] Redirecionando para AdminLogin', {
+      hasUser: !!user,
+      isAuthorized,
+    });
     return <AdminLogin />;
   }
 

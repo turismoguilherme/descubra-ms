@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("👤 [AuthProvider] Buscando perfil/roles para usuário:", userId);
       // Buscar role via Supabase SDK (respeitando RLS)
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Criar perfil com role
+      console.log("👤 [AuthProvider] Dados de role recebidos:", roleData);
       const profile: UserProfile = {
         user_id: userId,
         full_name: '',
@@ -66,7 +68,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (session?.user) {
           console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
-          await fetchUserProfile(session.user.id);
+          // Não bloquear o fluxo de loading pelo fetch do perfil
+          fetchUserProfile(session.user.id).catch((error) => {
+            console.error("❌ [AuthProvider] Erro ao buscar perfil (onAuthStateChange):", error);
+          });
           
           // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
@@ -99,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUserProfile(null);
         }
 
+        console.log("⏱️ [AuthProvider] Finalizando onAuthStateChange, setLoading(false)");
         setLoading(false);
       }
     );
@@ -108,8 +114,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         setSession(session);
         setUser(session.user);
-        await fetchUserProfile(session.user.id);
+        // Não bloquear o fluxo de loading pelo fetch do perfil
+        fetchUserProfile(session.user.id).catch((error) => {
+          console.error("❌ [AuthProvider] Erro ao buscar perfil (getSession):", error);
+        });
       }
+      console.log("⏱️ [AuthProvider] Finalizando getSession inicial, setLoading(false)");
       setLoading(false);
     });
 

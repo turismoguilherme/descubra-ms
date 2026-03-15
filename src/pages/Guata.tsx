@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import GuataHeader from "@/components/guata/GuataHeader";
@@ -16,6 +16,7 @@ const Guata = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isConnected, connectionChecking } = useGuataConnection();
 
   // Estados para o Guatá Simple
@@ -39,19 +40,6 @@ const Guata = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  // Mensagem de boas-vindas inicial
-  useEffect(() => {
-    if (mensagens.length === 0 && (forceLoad || !authLoading)) {
-      const mensagemBoasVindas = {
-        id: 1,
-        text: "🦦 Olá! Eu sou o Guatá, sua capivara guia de turismo de Mato Grosso do Sul! Estou aqui para te ajudar a descobrir as maravilhas do nosso estado. Como posso te ajudar hoje?",
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMensagens([mensagemBoasVindas]);
-    }
-  }, [mensagens.length, forceLoad, authLoading]);
 
   const enviarMensagem = async (mensagem?: string) => {
     const mensagemParaEnviar = mensagem || inputMensagem;
@@ -156,6 +144,71 @@ const Guata = () => {
       setIsLoading(false);
     }
   };
+
+  // PRIORIDADE 1: Consumir ?q= da URL (pergunta vinda da busca) e enviar como primeira mensagem
+  // Este useEffect deve rodar ANTES da mensagem de boas-vindas
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:169',message:'useEffect ?q= triggered',data:{locationSearch:location.search,forceLoad,authLoading,mensagensLength:mensagens.length,isLoading},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    const canProceed = forceLoad || !authLoading;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:172',message:'Auth check result',data:{canProceed},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    if (!canProceed) return; // Aguardar autenticação
+    
+    const params = new URLSearchParams(location.search);
+    const pergunta = params.get("q");
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:176',message:'URL param check',data:{pergunta,hasPergunta:!!pergunta,mensagensLength:mensagens.length,isLoading},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+
+    // Se veio pergunta da busca, enviar automaticamente
+    if (pergunta && mensagens.length === 0 && !isLoading) {
+      console.log("🦦 [Guata] Recebendo pergunta da busca:", pergunta);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:181',message:'Sending question automatically',data:{pergunta},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      
+      // Enviar a pergunta automaticamente
+      enviarMensagem(pergunta);
+
+      // Limpar o parâmetro da URL sem recarregar a página
+      params.delete("q");
+      const newSearch = params.toString();
+      navigate(
+        {
+          pathname: location.pathname,
+          search: newSearch ? `?${newSearch}` : "",
+        },
+        { replace: true }
+      );
+      
+      return; // Não mostrar boas-vindas se veio pergunta
+    }
+  }, [location.search, mensagens.length, isLoading, enviarMensagem, navigate, location.pathname, forceLoad, authLoading]);
+
+  // PRIORIDADE 2: Mensagem de boas-vindas inicial (apenas se não veio pergunta da busca)
+  useEffect(() => {
+    if (!(forceLoad || !authLoading)) return; // Aguardar autenticação
+    
+    // Verificar se já tem mensagens (incluindo se foi enviada pergunta automática)
+    if (mensagens.length > 0) return;
+    
+    // Verificar se veio pergunta na URL (mesmo que já tenha sido processada)
+    const params = new URLSearchParams(location.search);
+    const pergunta = params.get("q");
+    if (pergunta) return; // Não mostrar boas-vindas se ainda tem ?q= na URL
+
+    // Só mostrar boas-vindas se não veio pergunta e não tem mensagens
+    const mensagemBoasVindas = {
+      id: 1,
+      text: "🦦 Olá! Eu sou o Guatá, sua capivara guia de turismo de Mato Grosso do Sul! Estou aqui para te ajudar a descobrir as maravilhas do nosso estado. Como posso te ajudar hoje?",
+      isUser: false,
+      timestamp: new Date()
+    };
+    setMensagens([mensagemBoasVindas]);
+  }, [mensagens.length, forceLoad, authLoading, location.search]);
 
   const handleLimparConversa = () => {
     setMensagens([]);

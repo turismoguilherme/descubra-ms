@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Search as SearchIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrand } from "@/context/BrandContext";
 import UserMenu from "./UserMenu";
@@ -13,10 +13,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { touristRegions2025 } from "@/data/touristRegions2025";
+import { useSearchOverlay } from "@/context/SearchOverlayContext";
 
 const UniversalNavbar = () => {
 
   const [isOpen, setIsOpen] = useState(false);
+  const { open: openSearch } = useSearchOverlay();
   
   // Verificar se o AuthProvider está disponível
   let auth = null;
@@ -227,10 +229,18 @@ const UniversalNavbar = () => {
             </div>
           )}
 
-          {/* Desktop Auth */}
+          {/* Desktop Auth + Busca */}
           {/* Esconder botões de autenticação quando estiver em /eventos ou veio de /eventos */}
           {!shouldShowOnlyEventos && (
             <div className="hidden md:flex items-center space-x-4">
+              <button
+                type="button"
+                onClick={openSearch}
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-600 hover:text-ms-primary-blue transition-colors"
+                aria-label="Buscar destinos, eventos e regiões"
+              >
+                <SearchIcon className="h-5 w-5" />
+              </button>
               <LanguageSelector />
               {user ? (
                 <>

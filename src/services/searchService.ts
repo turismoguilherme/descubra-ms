@@ -10,6 +10,9 @@ export interface SearchResult {
 }
 
 export async function searchAll(query: string): Promise<SearchResult[]> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'searchService.ts:12',message:'searchAll called',data:{query},timestamp:Date.now(),hypothesisId:'F'})}).catch(()=>{});
+  // #endregion
   if (!query || query.length < 2) return [];
 
   const searchTerm = `%${query}%`;
@@ -81,9 +84,12 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
         subtitle: r.cities.slice(0, 3).join(', '),
         category: 'regiao',
         path: `/ms/regioes/${r.slug}`,
-      });
     });
+  });
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'searchService.ts:87',message:'searchAll returning results',data:{query,resultsCount:results.length,results:results.map(r=>({id:r.id,title:r.title,category:r.category}))},timestamp:Date.now(),hypothesisId:'F'})}).catch(()=>{});
+  // #endregion
   return results;
 }
 
@@ -100,3 +106,39 @@ export const categoryIcons: Record<SearchResult['category'], string> = {
   regiao: 'Globe',
   parceiro: 'Building2',
 };
+
+export function isNaturalLanguageQuery(rawQuery: string): boolean {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'searchService.ts:104',message:'isNaturalLanguageQuery called',data:{rawQuery},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  if (!rawQuery) return false;
+
+  const query = rawQuery.toLowerCase().trim();
+  if (!query) return false;
+
+  // Palavras que indicam perguntas
+  const questionStarters = ['o que', 'onde', 'como', 'qual', 'quando', 'por que', 'porque', 'pra que', 'quem', 'quantos', 'quantas'];
+
+  // Se começa com palavra de pergunta, é pergunta
+  if (questionStarters.some((start) => query.startsWith(start + ' '))) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'searchService.ts:114',message:'Detected question starter',data:{query,matched:true},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    return true;
+  }
+
+  // Se termina com ?, é pergunta
+  if (query.endsWith('?')) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'searchService.ts:119',message:'Detected question mark',data:{query,matched:true},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    return true;
+  }
+
+  // Não considerar apenas número de palavras - isso era muito permissivo
+  // Exemplo: "hotel em bonito campo grande" (4 palavras) não é pergunta
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'searchService.ts:125',message:'Not a question',data:{query,matched:false},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  return false;
+}

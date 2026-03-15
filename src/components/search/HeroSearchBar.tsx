@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar, Globe, Building2, X } from 'lucide-react';
-import { searchAll, SearchResult, categoryLabels } from '@/services/searchService';
+import { Search, MapPin, Calendar, Globe, Building2, X, MessageCircle } from 'lucide-react';
+import { searchAll, SearchResult, categoryLabels, isNaturalLanguageQuery } from '@/services/searchService';
 
 const categoryIconMap = {
   destino: MapPin,
@@ -21,6 +21,16 @@ const HeroSearchBar = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const showAskGuata = isNaturalLanguageQuery(query);
+
+  const handleAskGuata = () => {
+    if (!query.trim()) return;
+    const params = new URLSearchParams({ q: query.trim() });
+    setIsOpen(false);
+    setResults([]);
+    navigate(`/descubrams/guata?${params.toString()}`);
+  };
 
   const handleSearch = useCallback(async (term: string) => {
     if (term.length < 2) {
@@ -62,9 +72,17 @@ const HeroSearchBar = () => {
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setActiveIndex(i => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter' && activeIndex >= 0) {
+    } else if (e.key === 'Enter') {
       e.preventDefault();
-      selectResult(results[activeIndex]);
+      if (showAskGuata && activeIndex === 0) {
+        handleAskGuata();
+      } else if (activeIndex >= 0) {
+        const adjustedIndex = showAskGuata ? activeIndex - 1 : activeIndex;
+        const result = results[adjustedIndex];
+        if (result) {
+          selectResult(result);
+        }
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
     }
@@ -121,6 +139,25 @@ const HeroSearchBar = () => {
       {isOpen && (
         <div className="absolute top-full mt-2 w-full bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-[2000] animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="max-h-[360px] overflow-y-auto py-2">
+            {showAskGuata && (
+              <button
+                onClick={handleAskGuata}
+                className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-gray-100 transition-colors ${
+                  activeIndex === 0 ? 'bg-blue-50' : 'hover:bg-gray-50'
+                }`}
+              >
+                <MessageCircle className="w-4 h-4 text-blue-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    Perguntar ao Guatá
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {query}
+                  </div>
+                </div>
+              </button>
+            )}
+
             {Object.entries(grouped).map(([cat, items]) => {
               const Icon = categoryIconMap[cat as SearchResult['category']];
               return (
@@ -130,7 +167,8 @@ const HeroSearchBar = () => {
                     {categoryLabels[cat as SearchResult['category']]}
                   </div>
                   {items.map((item) => {
-                    const globalIdx = results.indexOf(item);
+                    const baseIndex = results.indexOf(item);
+                    const globalIdx = showAskGuata ? baseIndex + 1 : baseIndex;
                     return (
                       <button
                         key={item.id}

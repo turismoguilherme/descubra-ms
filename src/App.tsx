@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SearchOverlayProvider } from "@/context/SearchOverlayContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
@@ -394,7 +395,9 @@ function App() {
                           v7_relativeSplatPath: true,
                         }}
                       >
-                        <AppRoutes />
+                        <SearchOverlayProvider>
+                          <AppRoutes />
+                        </SearchOverlayProvider>
                       </BrowserRouter>
                     </TooltipProvider>
                   </LanguageProvider>
