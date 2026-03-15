@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import UniversalLayout from "@/components/layout/UniversalLayout";
 import { Compass, MapPin, ArrowRight, Globe } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { useTouristRegions } from "@/hooks/useTouristRegions";
 import { useBrand } from "@/context/BrandContext";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
+import { supabase } from "@/integrations/supabase/client";
 
 const Destinos = () => {
   const navigate = useNavigate();
@@ -15,8 +16,54 @@ const Destinos = () => {
   const { language } = useLanguage();
   // useTouristRegions já busca traduções automaticamente baseado no idioma atual
   const { regions: touristRegions = [], error: regionsError, loading: regionsLoading } = useTouristRegions(language);
+  const [regionCoverImages, setRegionCoverImages] = useState<Record<string, string>>({});
   
   const regiaoSlug = searchParams.get('regiao');
+
+  // Buscar imagens de capa com fallback para primeira da galeria
+  useEffect(() => {
+    if (touristRegions.length === 0) return;
+
+    const fetchCoverImages = async () => {
+      const imagesMap: Record<string, string> = {};
+
+      await Promise.all(
+        touristRegions.map(async (regiao) => {
+          // Se já tem imagem, usar ela
+          if (regiao.image) {
+            imagesMap[regiao.slug] = regiao.image;
+            return;
+          }
+
+          // Se não tem imagem e tem dbId, buscar primeira da galeria
+          if (regiao.dbId) {
+            try {
+              const { data: details } = await supabase
+                .from('destination_details')
+                .select('image_gallery')
+                .eq('tourist_region_id', regiao.dbId)
+                .single();
+
+              if (details?.image_gallery && Array.isArray(details.image_gallery) && details.image_gallery.length > 0) {
+                imagesMap[regiao.slug] = details.image_gallery[0];
+              }
+            } catch (error) {
+              console.error(`Erro ao buscar imagem de capa para ${regiao.slug}:`, error);
+            }
+          }
+        })
+      );
+
+      setRegionCoverImages(imagesMap);
+    };
+
+    fetchCoverImages();
+  }, [touristRegions.length, touristRegions.map(r => `${r.slug}-${r.dbId || ''}`).join(',')]);
+
+  // Função para obter a imagem de capa com fallback
+  const getCoverImage = (regiao: typeof touristRegions[0]) => {
+    return regionCoverImages[regiao.slug] || regiao.image || null;
+  };
 
   // Se houver filtro de região, redirecionar para a página de detalhes da região
   React.useEffect(() => {
@@ -91,9 +138,9 @@ const Destinos = () => {
                       className="h-64 relative overflow-hidden"
                       style={{ backgroundColor: regiao.color }}
                     >
-                      {regiao.image && (
+                      {getCoverImage(regiao) && (
                         <img
-                          src={regiao.image}
+                          src={getCoverImage(regiao)!}
                           alt={regiao.name}
                           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                           onError={(e) => {

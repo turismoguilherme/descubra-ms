@@ -3,7 +3,8 @@
 // Manual Informativo Regionalização do Turismo MS 2025
 
 export interface TouristRegion2025 {
-  id: string;
+  id: string; // slug usado para paths SVG e navegação
+  dbId?: string; // ID real do banco de dados (UUID) - usado para buscar detalhes
   name: string;
   slug: string;
   color: string;

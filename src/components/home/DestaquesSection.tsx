@@ -6,6 +6,7 @@ import { platformContentService } from '@/services/admin/platformContentService'
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTouristRegions } from "@/hooks/useTouristRegions";
+import { supabase } from "@/integrations/supabase/client";
 
 // Usar regiões turísticas do banco de dados com sincronização automática
 
@@ -14,6 +15,7 @@ const DestaquesSection = () => {
   const { language } = useLanguage();
   const { regions: touristRegions, loading: regionsLoading } = useTouristRegions();
   const [content, setContent] = useState<Record<string, string>>({});
+  const [regionCoverImages, setRegionCoverImages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadContent = async () => {
@@ -44,7 +46,52 @@ const DestaquesSection = () => {
     ? touristRegions.slice(0, 6)
     : [];
 
+  // Buscar imagens de capa com fallback para primeira da galeria
+  useEffect(() => {
+    if (regioesDestaque.length === 0) return;
+
+    const fetchCoverImages = async () => {
+      const imagesMap: Record<string, string> = {};
+
+      await Promise.all(
+        regioesDestaque.map(async (regiao) => {
+          // Se já tem imagem, usar ela
+          if (regiao.image) {
+            imagesMap[regiao.slug] = regiao.image;
+            return;
+          }
+
+          // Se não tem imagem e tem dbId, buscar primeira da galeria
+          if (regiao.dbId) {
+            try {
+              const { data: details } = await supabase
+                .from('destination_details')
+                .select('image_gallery')
+                .eq('tourist_region_id', regiao.dbId)
+                .single();
+
+              if (details?.image_gallery && Array.isArray(details.image_gallery) && details.image_gallery.length > 0) {
+                imagesMap[regiao.slug] = details.image_gallery[0];
+              }
+            } catch (error) {
+              console.error(`Erro ao buscar imagem de capa para ${regiao.slug}:`, error);
+            }
+          }
+        })
+      );
+
+      setRegionCoverImages(imagesMap);
+    };
+
+    fetchCoverImages();
+  }, [regioesDestaque.length, regioesDestaque.map(r => `${r.slug}-${r.dbId || ''}`).join(',')]);
+
   const getContent = (key: string, fallback: string) => content[key] || fallback;
+  
+  // Função para obter a imagem de capa com fallback
+  const getCoverImage = (regiao: typeof regioesDestaque[0]) => {
+    return regionCoverImages[regiao.slug] || regiao.image || null;
+  };
 
   const handleRegionClick = (regiao: typeof regioesDestaque[0]) => {
     InteractionTracker.track({
@@ -97,9 +144,9 @@ const DestaquesSection = () => {
                     className="absolute inset-0 w-full h-full"
                     style={{ backgroundColor: regiao.color }}
                   >
-                    {regiao.image && (
+                    {getCoverImage(regiao) && (
                       <img
-                        src={regiao.image}
+                        src={getCoverImage(regiao)!}
                         alt={regiao.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {

@@ -21,18 +21,19 @@ export interface TouristRegion {
 }
 
 // Converter região do banco para formato esperado pelo componente
-// CRÍTICO: Usar slug como id para consistência com paths SVG
+// CRÍTICO: Usar slug como id para consistência com paths SVG, mas preservar dbId para buscar detalhes
 const convertDbRegionToComponent = (dbRegion: Record<string, unknown>): TouristRegion2025 => {
   return {
-    id: dbRegion.slug, // Usar slug como id para consistência com paths SVG
-    name: dbRegion.name,
-    slug: dbRegion.slug,
-    color: dbRegion.color,
-    colorHover: dbRegion.color_hover || dbRegion.color,
-    description: dbRegion.description,
-    cities: Array.isArray(dbRegion.cities) ? dbRegion.cities : [],
-    highlights: Array.isArray(dbRegion.highlights) ? dbRegion.highlights : [],
-    image: dbRegion.image_url || '',
+    id: dbRegion.slug as string, // Usar slug como id para consistência com paths SVG
+    dbId: dbRegion.id as string, // ID real do banco (UUID) - usado para buscar destination_details
+    name: dbRegion.name as string,
+    slug: dbRegion.slug as string,
+    color: dbRegion.color as string,
+    colorHover: (dbRegion.color_hover || dbRegion.color) as string,
+    description: dbRegion.description as string,
+    cities: Array.isArray(dbRegion.cities) ? dbRegion.cities as string[] : [],
+    highlights: Array.isArray(dbRegion.highlights) ? dbRegion.highlights as string[] : [],
+    image: (dbRegion.image_url || '') as string,
   };
 };
 

@@ -60,6 +60,10 @@ export default function TouristRegionsManager() {
   const [newCity, setNewCity] = useState('');
   const [highlights, setHighlights] = useState<string[]>([]);
   const [newHighlight, setNewHighlight] = useState('');
+  
+  // Estados para upload de imagem de capa
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
   // Estados para gerenciar detalhes da região
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -174,6 +178,8 @@ export default function TouristRegionsManager() {
     setHighlights([]);
     setNewCity('');
     setNewHighlight('');
+    setCoverImageFile(null);
+    setCoverImagePreview(null);
     setDialogOpen(true);
   };
 
@@ -193,6 +199,8 @@ export default function TouristRegionsManager() {
     setHighlights([...region.highlights]);
     setNewCity('');
     setNewHighlight('');
+    setCoverImageFile(null);
+    setCoverImagePreview(region.image_url || null);
     setDialogOpen(true);
   };
 
@@ -217,6 +225,44 @@ export default function TouristRegionsManager() {
 
     setSaving(true);
     try {
+      // Upload da imagem de capa se houver arquivo selecionado
+      let imageUrl = formData.image_url.trim() || null;
+      
+      // Se estiver editando, fazer upload antes de atualizar
+      if (coverImageFile && editingRegion) {
+        try {
+          const fileExt = coverImageFile.name.split('.').pop();
+          const fileName = `regions/${editingRegion.id}/cover/${uuidv4()}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(fileName, coverImageFile, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) {
+            if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+              console.warn('⚠️ Bucket não encontrado, usando URL manual');
+            } else {
+              throw uploadError;
+            }
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from(BUCKET_NAME)
+              .getPublicUrl(fileName);
+            imageUrl = publicUrl;
+          }
+        } catch (uploadErr) {
+          console.error('Erro no upload da imagem de capa:', uploadErr);
+          toast({
+            title: 'Aviso',
+            description: 'Erro ao fazer upload da imagem. Usando URL manual se fornecida.',
+            variant: 'default',
+          });
+        }
+      }
+
       const payload = {
         name: formData.name.trim(),
         slug: formData.slug.trim().toLowerCase().replace(/\s+/g, '-'),
@@ -225,7 +271,7 @@ export default function TouristRegionsManager() {
         description: formData.description.trim(),
         cities: cities,
         highlights: highlights,
-        image_url: formData.image_url.trim() || null,
+        image_url: imageUrl,
         order_index: formData.order_index,
         is_active: formData.is_active,
         updated_by: user.id,
@@ -245,7 +291,7 @@ export default function TouristRegionsManager() {
           description: 'Região atualizada com sucesso!',
         });
       } else {
-        // Criar
+        // Criar primeiro (para obter o ID)
         const { data: newRegion, error } = await supabase
           .from('tourist_regions')
           .insert(payload)
@@ -253,6 +299,36 @@ export default function TouristRegionsManager() {
           .single();
 
         if (error) throw error;
+
+        // Se houver arquivo de imagem e região foi criada, fazer upload agora
+        if (coverImageFile && newRegion) {
+          try {
+            const fileExt = coverImageFile.name.split('.').pop();
+            const fileName = `regions/${newRegion.id}/cover/${uuidv4()}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from(BUCKET_NAME)
+              .upload(fileName, coverImageFile, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (!uploadError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(fileName);
+              
+              // Atualizar a região com a URL da imagem
+              await supabase
+                .from('tourist_regions')
+                .update({ image_url: publicUrl })
+                .eq('id', newRegion.id);
+            }
+          } catch (uploadErr) {
+            console.error('Erro no upload da imagem de capa após criar:', uploadErr);
+            // Não bloquear o fluxo se o upload falhar
+          }
+        }
 
         toast({
           title: 'Sucesso',
@@ -314,6 +390,8 @@ export default function TouristRegionsManager() {
       }
 
       setDialogOpen(false);
+      setCoverImageFile(null);
+      setCoverImagePreview(null);
       loadRegions();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -326,6 +404,36 @@ export default function TouristRegionsManager() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Arquivo inválido',
+        description: 'Por favor, selecione uma imagem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'A imagem deve ter no máximo 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCoverImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCoverImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDelete = async (region: TouristRegion) => {
@@ -1140,18 +1248,67 @@ export default function TouristRegionsManager() {
               </div>
             </div>
 
-            {/* Imagem */}
+            {/* Imagem de Capa */}
             <div>
-              <Label htmlFor="image_url" className="flex items-center gap-2">
+              <Label htmlFor="cover_image" className="flex items-center gap-2">
                 <ImageIcon className="h-4 w-4" />
-                URL da Imagem
+                Imagem de Capa *
               </Label>
-              <Input
-                id="image_url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://images.unsplash.com/..."
-              />
+              <p className="text-sm text-muted-foreground mb-2">
+                Esta imagem será exibida na home e na página da região. Se não for definida, será usada a primeira imagem da galeria.
+              </p>
+              
+              {/* Upload de arquivo */}
+              <div className="mb-2">
+                <Input
+                  id="cover_image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverImageSelect}
+                  className="mb-2"
+                />
+                {(coverImagePreview || formData.image_url) && (
+                  <div className="relative mt-2">
+                    <img
+                      src={coverImagePreview || formData.image_url}
+                      alt="Preview da capa"
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                    {coverImageFile && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          setCoverImageFile(null);
+                          setCoverImagePreview(formData.image_url || null);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Ou URL manual */}
+              <div className="mt-2">
+                <Label htmlFor="image_url" className="text-sm text-muted-foreground">
+                  Ou cole uma URL de imagem:
+                </Label>
+                <Input
+                  id="image_url"
+                  value={formData.image_url}
+                  onChange={(e) => {
+                    setFormData({ ...formData, image_url: e.target.value });
+                    if (!coverImageFile) {
+                      setCoverImagePreview(e.target.value || null);
+                    }
+                  }}
+                  placeholder="https://images.unsplash.com/..."
+                  disabled={!!coverImageFile}
+                />
+              </div>
             </div>
 
             {/* Cidades */}

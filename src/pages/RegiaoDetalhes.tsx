@@ -75,7 +75,29 @@ const RegiaoDetalhes = () => {
     
     if (regionFromHook) {
       setRegiao(regionFromHook);
-      setRegionDbId(regionFromHook.id);
+      // Usar dbId se disponível (ID real do banco), senão buscar pelo slug
+      if (regionFromHook.dbId) {
+        setRegionDbId(regionFromHook.dbId);
+      } else {
+        // Fallback: buscar ID do banco pelo slug
+        const fetchRegionId = async () => {
+          try {
+            const { data: dbRegion } = await supabase
+              .from('tourist_regions')
+              .select('id')
+              .eq('slug', slug)
+              .eq('is_active', true)
+              .single();
+            
+            if (dbRegion) {
+              setRegionDbId(dbRegion.id);
+            }
+          } catch (error) {
+            console.error('Erro ao buscar ID da região:', error);
+          }
+        };
+        fetchRegionId();
+      }
       setLoading(false);
     } else {
       // Fallback: buscar direto do banco se não estiver no hook
@@ -91,7 +113,8 @@ const RegiaoDetalhes = () => {
 
           if (dbRegion && !error) {
             const regionData: TouristRegion2025 = {
-              id: dbRegion.id,
+              id: dbRegion.slug,
+              dbId: dbRegion.id,
               name: dbRegion.name,
               slug: dbRegion.slug,
               color: dbRegion.color,
@@ -130,30 +153,45 @@ const RegiaoDetalhes = () => {
 
     const fetchDetails = async () => {
       try {
-        // Buscar detalhes da região
-        const { data: detailsData } = await supabase
+        console.log('🔍 [RegiaoDetalhes] Buscando detalhes para regionDbId:', regionDbId);
+        
+        // Buscar detalhes da região (sem cache para garantir dados atualizados)
+        const { data: detailsData, error: detailsError } = await supabase
           .from('destination_details')
           .select('*')
           .eq('tourist_region_id', regionDbId)
           .single();
         
-        if (detailsData) {
+        if (detailsError && detailsError.code !== 'PGRST116') {
+          console.error('❌ [RegiaoDetalhes] Erro ao buscar detalhes:', detailsError);
+        } else if (detailsData) {
+          console.log('✅ [RegiaoDetalhes] Detalhes carregados:', {
+            hasVideo: !!detailsData.video_url,
+            galleryCount: detailsData.image_gallery?.length || 0,
+            updatedAt: detailsData.updated_at
+          });
           setDetails(detailsData as RegionDetails);
+        } else {
+          console.log('ℹ️ [RegiaoDetalhes] Nenhum detalhe encontrado para esta região');
+          setDetails(null);
         }
 
         // Buscar cidades da região com detalhes
-        const { data: citiesData } = await supabase
+        const { data: citiesData, error: citiesError } = await supabase
           .from('region_cities')
           .select('*')
           .eq('tourist_region_id', regionDbId)
           .eq('is_active', true)
           .order('order_index', { ascending: true });
 
-        if (citiesData) {
+        if (citiesError) {
+          console.error('❌ [RegiaoDetalhes] Erro ao buscar cidades:', citiesError);
+        } else if (citiesData) {
+          console.log('✅ [RegiaoDetalhes] Cidades carregadas:', citiesData.length);
           setRegionCities(citiesData);
         }
       } catch (error) {
-        console.error('Erro ao buscar detalhes:', error);
+        console.error('❌ [RegiaoDetalhes] Erro ao buscar detalhes:', error);
       }
     };
 
@@ -170,7 +208,8 @@ const RegiaoDetalhes = () => {
           table: 'destination_details',
           filter: `tourist_region_id=eq.${regionDbId}`,
         },
-        () => {
+        (payload) => {
+          console.log('🔄 [RegiaoDetalhes] Mudança detectada em destination_details:', payload);
           fetchDetails();
         }
       )
@@ -182,11 +221,14 @@ const RegiaoDetalhes = () => {
           table: 'region_cities',
           filter: `tourist_region_id=eq.${regionDbId}`,
         },
-        () => {
+        (payload) => {
+          console.log('🔄 [RegiaoDetalhes] Mudança detectada em region_cities:', payload);
           fetchDetails();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [RegiaoDetalhes] Status do Realtime:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -198,10 +240,17 @@ const RegiaoDetalhes = () => {
     return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : url;
   };
 
-  // Imagens: usar galeria se existir, senão usar imagem principal da região
-  const allImages = details?.image_gallery && details.image_gallery.length > 0
-    ? details.image_gallery
-    : (regiao?.image ? [regiao.image] : []);
+  // Imagens: priorizar imagem de capa (image_url), depois galeria
+  // Se houver image_url, ela é a primeira; depois vêm as da galeria (sem duplicar)
+  const coverImage = regiao?.image;
+  const galleryImages = details?.image_gallery && Array.isArray(details.image_gallery) ? details.image_gallery : [];
+  
+  // Combinar: imagem de capa primeiro (se existir), depois galeria (sem duplicar a capa)
+  const allImages = coverImage
+    ? [coverImage, ...galleryImages.filter(img => img !== coverImage)]
+    : galleryImages.length > 0
+    ? galleryImages
+    : [];
 
   // Slideshow automático do hero (troca a cada 5 segundos)
   useEffect(() => {
