@@ -22,24 +22,55 @@ function sanitizeInput(input: string, maxLength: number = 500): string {
 }
 
 /**
- * Validate request origin
+ * Validate request origin - verifica tanto Origin quanto Referer
  */
-function validateOrigin(origin: string | null): boolean {
-  if (!origin) return false;
+function validateOrigin(origin: string | null, referer: string | null): boolean {
+  console.log('🔍 [validateOrigin] Verificando:', { origin: origin || '(null)', referer: referer || '(null)' });
   
-  // Allow any localhost origin (any port) for development
-  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+  // Extrair origem do referer se não houver origin header
+  let effectiveOrigin = origin;
+  if (!effectiveOrigin && referer) {
+    try {
+      const refererUrl = new URL(referer);
+      effectiveOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
+      console.log('📌 [validateOrigin] Origin extraída do Referer:', effectiveOrigin);
+    } catch (e) {
+      console.warn('⚠️ [validateOrigin] Erro ao extrair origin do Referer:', e);
+    }
+  }
+  
+  // SEMPRE permitir localhost (qualquer porta) - para desenvolvimento
+  if (effectiveOrigin && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(effectiveOrigin)) {
+    console.log('✅ [validateOrigin] Localhost permitido:', effectiveOrigin);
     return true;
   }
   
+  // Permitir requisições sem origin/referer (pode ser requisição interna do Supabase)
+  if (!effectiveOrigin) {
+    console.log('⚠️ [validateOrigin] Sem origin/referer - permitindo (pode ser requisição interna do Supabase)');
+    return true; // Mais permissivo - permitir requisições internas
+  }
+  
+  // Origins permitidas em produção
   const allowedOrigins = [
     'https://www.viajartur.com',
     'https://viajartur.com',
+    'https://descubrams.com',
+    'https://www.descubrams.com',
     'https://descubra-ms.vercel.app'
   ];
   
-  // Check exact match or Vercel subdomain
-  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+  // Verificar match exato ou subdomínio Vercel
+  const isAllowed = allowedOrigins.includes(effectiveOrigin) || effectiveOrigin.endsWith('.vercel.app');
+  
+  if (isAllowed) {
+    console.log('✅ [validateOrigin] Origin permitida:', effectiveOrigin);
+  } else {
+    console.log('❌ [validateOrigin] Origin NÃO permitida:', effectiveOrigin);
+    console.log('   Origins permitidas:', allowedOrigins);
+  }
+  
+  return isAllowed;
 }
 
 interface GoogleSearchRequest {
@@ -59,34 +90,51 @@ interface GoogleSearchResult {
 
 serve(async (req) => {
   const origin = req.headers.get('origin');
+  const referer = req.headers.get('referer');
+  const userAgent = req.headers.get('user-agent');
+  
+  console.log('📥 [guata-google-search-proxy] Request recebida:', {
+    method: req.method,
+    url: req.url,
+    origin: origin || '(null)',
+    referer: referer || '(null)',
+    userAgent: userAgent?.substring(0, 50) || '(null)',
+    allHeaders: Object.fromEntries(req.headers.entries())
+  });
+  
   const corsHeaders = getCorsHeaders(origin);
   
-  // Validate origin for security (mais permissivo para debug)
-  if (req.method !== 'OPTIONS' && !validateOrigin(origin)) {
-    console.warn('⚠️ guata-google-search-proxy: Origin não permitida:', origin);
-    console.warn('   Origins permitidas:', [
-      'https://www.viajartur.com',
-      'https://viajartur.com',
-      'https://descubra-ms.vercel.app',
-      'http://localhost:*',
-      '*.vercel.app'
-    ]);
-    // Em desenvolvimento, permitir mesmo com origem inválida (mas logar)
-    const isDev = Deno.env.get('ENVIRONMENT') === 'development' || !origin;
-    if (!isDev) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Origin not allowed', 
-          message: `Origin "${origin}" não está na lista de permitidas`,
-          results: [],
-          success: false
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+  // Validate origin for security (passa tanto origin quanto referer)
+  if (req.method !== 'OPTIONS' && !validateOrigin(origin, referer)) {
+    console.error('🚫 [guata-google-search-proxy] Origin bloqueada:', origin);
+    console.error('   Referer:', referer);
+    console.error('   User-Agent:', userAgent);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Origin not allowed', 
+        message: `Origin "${origin || 'null'}" não está na lista de permitidas`,
+        debug: {
+          origin,
+          referer,
+          allowedOrigins: [
+            'http://localhost:*',
+            'https://www.viajartur.com',
+            'https://viajartur.com',
+            'https://descubrams.com',
+            'https://www.descubrams.com',
+            'https://descubra-ms.vercel.app',
+            '*.vercel.app'
+          ]
+        },
+        results: [],
+        success: false
+      }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
   
-  console.log("🔵 guata-google-search-proxy: request received", { method: req.method, url: req.url, origin });
+  console.log("✅ [guata-google-search-proxy] Origin validada, processando request");
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -211,13 +259,44 @@ serve(async (req) => {
       
       // Handle specific errors
       if (response.status === 403) {
+        let errorDetails = '';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetails = errorJson.error?.message || errorText;
+        } catch {
+          errorDetails = errorText;
+        }
+        
+        console.error('❌ Google Search API 403 - Detalhes:', errorDetails);
+        
+        // Verificar tipo de erro 403
+        let errorType = 'API_NOT_ENABLED';
+        let errorMessage = 'API não habilitada ou chave inválida';
+        
+        if (errorDetails.includes('API key not valid') || errorDetails.includes('invalid API key')) {
+          errorType = 'INVALID_API_KEY';
+          errorMessage = 'Chave de API inválida. Verifique se a chave está correta no Google Cloud Console.';
+        } else if (errorDetails.includes('API has not been used') || errorDetails.includes('not enabled')) {
+          errorType = 'API_NOT_ENABLED';
+          errorMessage = 'Custom Search API não está habilitada. Ative em: Google Cloud Console → APIs & Services → Library → Custom Search API';
+        } else if (errorDetails.includes('leaked') || errorDetails.includes('vazada')) {
+          errorType = 'API_KEY_LEAKED';
+          errorMessage = 'API key foi reportada como vazada. Gere uma nova chave no Google Cloud Console.';
+        } else if (errorDetails.includes('invalid cx') || errorDetails.includes('invalid search engine')) {
+          errorType = 'INVALID_ENGINE_ID';
+          errorMessage = 'Search Engine ID inválido. Verifique se o ID está correto: a1a3bd0b75c7d46bf';
+        }
+        
         return new Response(
           JSON.stringify({ 
-            error: 'API_KEY_LEAKED',
-            message: 'API key foi reportada como vazada',
-            results: []
+            error: errorType,
+            message: errorMessage,
+            details: errorDetails,
+            results: [],
+            success: false,
+            help: 'Verifique: 1) Se a Custom Search API está habilitada no Google Cloud Console, 2) Se a API Key está correta, 3) Se o Engine ID está correto'
           }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       

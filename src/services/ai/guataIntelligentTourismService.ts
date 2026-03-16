@@ -187,20 +187,94 @@ class GuataIntelligentTourismService {
       const category = this.detectQuestionCategory(question);
       // Log removido para reduzir verbosidade
 
-      // 3. SEMPRE fazer pesquisa web PRIMEIRO (antes de tudo)
-      const webSearchQuery: RealWebSearchQuery = {
-        question: question,
-        location: query.userLocation || 'Mato Grosso do Sul',
-        category: category,
-        maxResults: 5
+      // 3. PRIMEIRO: Buscar no banco de dados via guata-web-rag (FTS + Embeddings + PSE)
+      // Isso busca informações da plataforma primeiro, depois usa Google Search se necessário
+      let webSearchResponse: RealWebSearchResponse = {
+        results: [],
+        tourismData: {},
+        confidence: 0,
+        sources: [],
+        processingTime: 0,
+        usedRealSearch: false,
+        searchMethod: 'tourism_apis'
       };
-      
-      const webSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
+
+      let webRagResults: any[] = [];
+      let webRagAnswer: string | null = null;
+
+      try {
+        console.log('📚 Buscando no banco de dados primeiro via guata-web-rag...');
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: ragData, error: ragError } = await supabase.functions.invoke("guata-web-rag", {
+          body: {
+            question: question,
+            state_code: 'MS',
+            max_results: 5,
+            include_sources: true
+          }
+        });
+
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guataIntelligentTourismService.ts:210','message':'RAG response received','data':{hasError:!!ragError,hasData:!!ragData,sourcesCount:ragData?.sources?.length||0,hasAnswer:!!ragData?.answer,answerPreview:ragData?.answer?.substring(0,200)||'null',answerIsGeneric:ragData?.answer?.includes('Não encontrei informações específicas')||false},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+
+        if (!ragError && ragData) {
+          webRagResults = ragData.sources || [];
+          webRagAnswer = ragData.answer;
+          console.log(`✅ guata-web-rag: ${webRagResults.length} resultados do banco encontrados`);
+          
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guataIntelligentTourismService.ts:220','message':'RAG data processed','data':{webRagResultsCount:webRagResults.length,webRagAnswerLength:webRagAnswer?.length||0,willUseRagAnswer:!!webRagAnswer&&webRagAnswer.length>0},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
+          
+          // Converter resultados do RAG para formato do webSearchResponse
+          webSearchResponse.results = webRagResults.map((result: any) => ({
+            title: result.title || 'Fonte',
+            snippet: result.snippet || result.content || '',
+            url: result.link || result.url || '',
+            source: result.source || 'database',
+            confidence: result.confidence || 0.8,
+            timestamp: new Date()
+          }));
+          webSearchResponse.sources = webRagResults.map((r: any) => r.source || 'database');
+          webSearchResponse.confidence = 0.9;
+          webSearchResponse.usedRealSearch = true;
+          webSearchResponse.searchMethod = 'database';
+        } else {
+          console.warn('⚠️ guata-web-rag não retornou resultados ou teve erro:', ragError);
+        }
+      } catch (webRagError) {
+        console.warn('⚠️ Erro ao buscar no banco via guata-web-rag:', webRagError);
+      }
+
+      // 4. SE não encontrou no banco ou precisa de mais informações, usar Google Search
+      if (webRagResults.length === 0 || webRagResults.length < 3) {
+        console.log('🔍 Banco não retornou resultados suficientes, usando Google Search...');
+        const webSearchQuery: RealWebSearchQuery = {
+          question: question,
+          location: query.userLocation || 'Mato Grosso do Sul',
+          category: category,
+          maxResults: 5
+        };
+        
+        const googleSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
+        
+        // Combinar resultados: priorizar banco, adicionar Google Search
+        if (googleSearchResponse.results.length > 0) {
+          webSearchResponse.results = [...webSearchResponse.results, ...googleSearchResponse.results];
+          webSearchResponse.sources = [...webSearchResponse.sources, ...googleSearchResponse.sources];
+          webSearchResponse.tourismData = googleSearchResponse.tourismData;
+          webSearchResponse.usedRealSearch = googleSearchResponse.usedRealSearch || webSearchResponse.usedRealSearch;
+          webSearchResponse.searchMethod = webRagResults.length > 0 ? 'hybrid' : googleSearchResponse.searchMethod;
+          webSearchResponse.confidence = Math.max(webSearchResponse.confidence, googleSearchResponse.confidence);
+        }
+      }
       
       // 4. VERIFICAR PARCEIROS (após pesquisa web)
       const partnersResult = await this.checkPartners(question, category);
       
       // 5. Gerar resposta inteligente combinando IA + dados reais + parceiros
+      // Passar também a resposta do RAG se disponível (já processada pelo Gemini na Edge Function)
       const intelligentAnswer = await this.generateIntelligentAnswer(
         question,
         webSearchResponse,
@@ -210,7 +284,8 @@ class GuataIntelligentTourismService {
         query.userId,
         query.sessionId,
         query.isTotemVersion,
-        query.isFirstUserMessage
+        query.isFirstUserMessage,
+        webRagAnswer // Passar resposta do RAG se disponível
       );
 
       // 4. Personalizar resposta com Machine Learning
@@ -1084,9 +1159,25 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     userId?: string,
     sessionId?: string,
     isTotemVersion?: boolean,
-    isFirstUserMessage?: boolean
+    isFirstUserMessage?: boolean,
+    webRagAnswer?: string | null
   ): Promise<string> {
     let answer = "";
+
+    // SE O RAG JÁ RETORNOU UMA RESPOSTA PROCESSADA PELO GEMINI, USAR ELA PRIMEIRO
+    // (O guata-web-rag já processa com Gemini na Edge Function)
+    if (webRagAnswer && webRagAnswer.trim().length > 0) {
+      console.log('✅ Usando resposta do RAG (já processada pelo Gemini na Edge Function)');
+      answer = webRagAnswer;
+      
+      // Adicionar parceiros se houver
+      if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+        answer += "\n\n🤝 Parceiros recomendados:\n";
+        answer += this.formatPartnersResponse(partnersResult, question);
+      }
+      
+      return answer;
+    }
 
     // PRIORIZAR PARCEIROS SE HOUVER
     if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {

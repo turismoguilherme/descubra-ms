@@ -44,6 +44,8 @@ function validateOrigin(origin: string | null): boolean {
   const allowedOrigins = [
     'https://www.viajartur.com',
     'https://viajartur.com',
+    'https://descubrams.com',
+    'https://www.descubrams.com',
     'https://descubra-ms.vercel.app'
   ];
   
@@ -728,29 +730,45 @@ function rankResults(results: SearchResult[], question: string): SearchResult[] 
 }
 
 function buildContext(results: SearchResult[]): string {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:730','message':'buildContext called','data':{resultsCount:results.length,results:results.slice(0,3).map(r=>({title:r.title,source:r.source}))},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
   if (results.length === 0) {
-    return "NO_CONTEXT" // força política no-source na geração
+    const noContext = "NO_CONTEXT";
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:732','message':'buildContext returning NO_CONTEXT','data':{reason:'no results'},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    return noContext; // força política no-source na geração
   }
   
-  return results.map(r => 
+  const context = results.map(r => 
     `Fonte: ${r.title}\nInformação: ${r.snippet}\nLink: ${r.link}`
-  ).join('\n\n')
+  ).join('\n\n');
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:738','message':'buildContext returning context','data':{contextLength:context.length,contextPreview:context.substring(0,200)},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
+  return context;
 }
 
 async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<string> {
-  // Política MUITO mais permissiva: usar qualquer fonte disponível
-  const hasOfficial = sources.some(s => s.link.includes('.ms.gov.br') || s.link.includes('turismo.ms.gov.br') || s.link.includes('campogrande.ms.gov.br'))
-  const distinctDomains = new Set(sources.map(s => { try { return new URL(s.link).hostname } catch { return s.link } }))
-  const hasConsensus = distinctDomains.size >= 2
-  const hasAnySource = sources.length > 0
-  const hasWebContent = context && context.length > 50 // Se há conteúdo web significativo
-
-  // Se não há fontes, usar fallback mais inteligente
-  if (!hasAnySource && !hasWebContent) {
-    return "Não encontrei informações específicas sobre isso agora, mas posso te ajudar com outras informações sobre Mato Grosso do Sul! Que tal falarmos sobre destinos como Bonito, Pantanal ou Campo Grande? O que te interessa mais?"
-  }
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:754','message':'generateResponse called','data':{question,contextLength:context?.length||0,contextPreview:context?.substring(0,200)||'null',sourcesCount:sources.length,contextIsNoContext:context==='NO_CONTEXT'},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   
-  const prompt = `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
+  const hasAnySource = sources.length > 0
+  const hasWebContent = context && context.length > 50 && context !== "NO_CONTEXT"
+  const hasContext = hasWebContent && context !== "NO_CONTEXT"
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:760','message':'generateResponse checks','data':{hasAnySource,hasWebContent,contextLength:context?.length||0,hasContext,willCallGemini:true},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+
+  // SEMPRE chamar Gemini, mesmo sem contexto - ele tem conhecimento local sobre MS
+  const prompt = hasContext 
+    ? `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
 
 PERSONALIDADE HUMANA:
 - Fale como um humano real, não como um chatbot
@@ -758,34 +776,123 @@ PERSONALIDADE HUMANA:
 - Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
 - Faça perguntas de acompanhamento naturais
 - Demonstre conhecimento local e paixão por MS
-- Seja específico e detalhado quando possível
+- Seja ESPECÍFICO e DETALHADO - sempre extraia informações concretas do contexto
 
-INSTRUÇÕES:
-- Baseie-se no CONTEXTO abaixo para informações atualizadas
-- Se não souber algo específico, seja honesto mas útil
+⚠️⚠️⚠️ INSTRUÇÕES CRÍTICAS SOBRE O CONTEXTO FORNECIDO:
+
+1. LEIA ATENTAMENTE todo o CONTEXTO abaixo - ele contém informações REAIS encontradas na web e no banco de dados
+2. EXTRAIA informações ESPECÍFICAS do contexto: nomes, lugares, datas, números, detalhes
+3. USE essas informações para responder de forma DETALHADA e ESPECÍFICA
+4. NUNCA diga "não encontrei" ou "não tenho informações" se há contexto disponível acima
+5. Se o contexto menciona algo relacionado à pergunta, USE essa informação na resposta
+6. Seja ESPECÍFICO: mencione nomes, lugares, detalhes extraídos do contexto
+7. NUNCA seja genérico - sempre extraia e use informações concretas do contexto
+
+EXEMPLO DE COMO USAR O CONTEXTO:
+Se a pergunta é "quem é Lidia Baís" e o contexto contém:
+"Fonte: Lidia Baís - Artista
+Informação: Lidia Baís foi uma artista plástica de Campo Grande, nascida em 1919..."
+
+Você DEVE responder:
+"🦦 Que alegria te contar sobre Lidia Baís! Ela foi uma artista plástica de Campo Grande, nascida em 1919. [mais detalhes do contexto]"
+
+NÃO responda:
+"🦦 Não encontrei informações específicas sobre isso agora..."
+
+REGRAS ABSOLUTAS:
+- Se há CONTEXTO acima, você DEVE usar essas informações na resposta
+- EXTRAIA nomes, lugares, datas, detalhes do contexto
+- Seja ESPECÍFICO e DETALHADO
+- NUNCA diga "não encontrei" se há contexto disponível
+- NUNCA seja genérico - sempre use informações do contexto
+- NUNCA mencione sites, URLs ou fontes - responda diretamente com as informações
+- Se não souber algo específico que NÃO está no contexto, seja honesto mas útil
 - Faça perguntas de acompanhamento relevantes
-- Use conhecimento local quando apropriado
 - Mantenha o tom conversacional e amigável
 - NÃO se apresente como chatbot
 - NÃO mostre fontes ou links
 
-CONHECIMENTO LOCAL MS:
-- Bonito: Capital do Ecoturismo, águas cristalinas, Rio Sucuri, Gruta do Lago Azul
-- Pantanal: Maior área úmida do planeta, biodiversidade, jacarés, onças-pintadas
-- Campo Grande: Cidade Morena, Feira Central, Parque das Nações Indígenas
-- Corumbá: Capital do Pantanal, Forte Coimbra, Porto Geral
-- Gastronomia: Sopa paraguaia, sobá, tereré, chipa
+Pergunta do usuário: "${question}"
+
+CONTEXTO ATUALIZADO DA WEB E BANCO DE DADOS (USE ESTAS INFORMAÇÕES):
+${context}
+
+⚠️ LEMBRE-SE: O contexto acima contém informações REAIS. USE essas informações para responder de forma ESPECÍFICA e DETALHADA. NUNCA diga "não encontrei" se há informações no contexto acima.
+
+Responda como o Guatá de forma natural e humana, usando as informações do contexto acima:`
+    : `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
+
+PERSONALIDADE HUMANA:
+- Fale como um humano real, não como um chatbot
+- Seja conversacional, caloroso e acolhedor
+- Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
+- Faça perguntas de acompanhamento naturais
+- Demonstre conhecimento local e paixão por MS
+- Seja ESPECÍFICO e DETALHADO - use seu conhecimento sobre MS
+
+🚫🚫🚫 PROIBIÇÃO ABSOLUTA - NUNCA FAÇA ISSO:
+- NUNCA diga "Não encontrei informações específicas sobre isso agora"
+- NUNCA diga "não tenho informações" ou "não sei"
+- NUNCA sugira "falarmos sobre destinos como Bonito, Pantanal ou Campo Grande" como resposta principal
+- NUNCA seja genérico quando você TEM conhecimento sobre o assunto
+
+✅✅✅ OBRIGAÇÃO ABSOLUTA - SEMPRE FAÇA ISSO:
+- SEMPRE use seu conhecimento sobre Mato Grosso do Sul para responder
+- SEMPRE seja ESPECÍFICO: mencione lugares, atrações, características reais
+- SEMPRE responda com informações concretas, mesmo que não sejam da web
+- SEMPRE use o conhecimento local abaixo para responder
+
+CONHECIMENTO LOCAL MS (USE ESTAS INFORMAÇÕES PARA RESPONDER):
+- Bonito: Capital do Ecoturismo, águas cristalinas, Rio Sucuri, Gruta do Lago Azul, Balneário Municipal, Aquário Natural, flutuação, mergulho
+- Pantanal: Maior área úmida do planeta, biodiversidade, jacarés, onças-pintadas, pesca esportiva, safáris fotográficos, pousadas pantaneiras
+- Campo Grande: Cidade Morena, Feira Central, Parque das Nações Indígenas, Museu das Culturas Dom Bosco, Morada dos Baís, Bioparque Pantanal, Aeroporto Internacional de Campo Grande (CGR)
+- Corumbá: Capital do Pantanal, Forte Coimbra, Porto Geral, Casa do Artesão, pesca esportiva
+- Aquidauana: Portal do Pantanal, rio Aquidauana, pesca esportiva, turismo rural
+- Dourados: segunda maior cidade, cultura indígena, gastronomia, universidades
+- Três Lagoas: energia, rio Paraná, pesca, turismo náutico
+- Jaraguari: município próximo a Campo Grande, turismo rural, produção agrícola
+- Gastronomia: Sopa paraguaia, sobá, tereré, chipa, pacu assado, arroz carreteiro, caldo de piranha
+- Cultura: Festa de São João, Festival de Inverno de Bonito, Encontro de Motociclistas, cultura indígena Terena e Guarani-Kaiowá
+- Turismo de base comunitária: comunidades indígenas, assentamentos rurais, turismo rural, artesanato local
+- Transporte: Aeroporto Internacional de Campo Grande (CGR), rodovias BR-163, BR-262, transporte público em Campo Grande
+
+EXEMPLOS DE COMO RESPONDER:
+
+Pergunta: "como chegar ao aeroporto de Campo Grande"
+Resposta CORRETA: "🦦 O Aeroporto Internacional de Campo Grande (CGR) fica na região sul da cidade. Você pode chegar de carro pela BR-163 ou BR-262, ou usar transporte público. Há linhas de ônibus que passam próximo ao aeroporto. Se estiver vindo do centro, é cerca de 15-20 minutos de carro. Quer que eu detalhe alguma rota específica?"
+
+Resposta ERRADA: "Não encontrei informações específicas sobre isso agora, mas posso te ajudar com outras informações sobre Mato Grosso do Sul! Que tal falarmos sobre destinos como Bonito, Pantanal ou Campo Grande?"
+
+Pergunta: "Jaraguari"
+Resposta CORRETA: "🦦 Jaraguari é um município próximo a Campo Grande, conhecido pelo turismo rural e produção agrícola. É uma região tranquila, ideal para quem busca contato com a natureza e a vida no campo. Quer saber mais sobre o que fazer por lá?"
+
+Resposta ERRADA: "Não encontrei informações específicas sobre isso agora..."
+
+REGRAS ABSOLUTAS:
+- SEMPRE responda com informações específicas sobre MS
+- NUNCA diga "não encontrei" - use seu conhecimento local
+- Seja ESPECÍFICO: mencione nomes de lugares, atrações, características
+- Se não souber algo específico, seja honesto mas útil - sugira alternativas
+- Faça perguntas de acompanhamento relevantes
+- Mantenha o tom conversacional e amigável
+- NÃO se apresente como chatbot
+- NÃO mostre fontes ou links
 
 Pergunta do usuário: "${question}"
 
-CONTEXTO ATUALIZADO DA WEB:
-${context}
+⚠️⚠️⚠️ CRÍTICO: Você TEM conhecimento sobre Mato Grosso do Sul. USE esse conhecimento para responder de forma ESPECÍFICA e ÚTIL. 
+- Se a pergunta é sobre algo que você conhece de MS, responda com DETALHES
+- Se não souber algo específico, seja honesto mas útil - sugira alternativas relacionadas
+- NUNCA diga "não encontrei" - sempre responda com o que você sabe sobre MS
+- NUNCA use a frase "Não encontrei informações específicas sobre isso agora, mas posso te ajudar com outras informações sobre Mato Grosso do Sul! Que tal falarmos sobre destinos como Bonito, Pantanal ou Campo Grande?"
 
-Responda como o Guatá de forma natural e humana:`
+Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre Mato Grosso do Sul:`
 
   try {
     console.log('🔑 Gemini API Key:', Deno.env.get('GEMINI_API_KEY') ? '✅ Configurada' : '❌ Não configurada')
     console.log('📝 Prompt length:', prompt.length)
+    console.log('📝 Has context:', hasContext)
+    console.log('📝 Prompt preview (first 500 chars):', prompt.substring(0, 500))
     
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
@@ -800,12 +907,19 @@ Responda como o Guatá de forma natural e humana:`
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.25,
-        maxOutputTokens: 500
+        temperature: hasContext ? 0.3 : 0.5, // Mais criatividade quando não há contexto
+        maxOutputTokens: hasContext ? 800 : 1200, // Mais tokens quando usa conhecimento local
+        topP: 0.95,
+        topK: 40
       }
     }
     
-    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2))
+    console.log('📤 Request body config:', {
+      temperature: requestBody.generationConfig.temperature,
+      maxOutputTokens: requestBody.generationConfig.maxOutputTokens,
+      hasContext,
+      promptLength: prompt.length
+    })
     
     const response = await fetch(url, {
       method: 'POST',
@@ -826,15 +940,46 @@ Responda como o Guatá de forma natural e humana:`
     }
     
     const data = await response.json()
-    console.log('📡 Gemini Response Data:', JSON.stringify(data, null, 2))
+    console.log('📡 Gemini Response Status:', response.status)
+    console.log('📡 Gemini Response OK:', response.ok)
+    console.log('📡 Gemini Response Data (simplified):', {
+      hasCandidates: !!data.candidates,
+      candidatesCount: data.candidates?.length || 0,
+      hasText: !!data.candidates?.[0]?.content?.parts?.[0]?.text,
+      finishReason: data.candidates?.[0]?.finishReason
+    })
     
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text
     
+    // Verificar se a resposta é genérica (não desejada)
+    const isGenericResponse = generatedText?.toLowerCase().includes('não encontrei informações específicas') ||
+                             generatedText?.toLowerCase().includes('não encontrei') ||
+                             generatedText?.toLowerCase().includes('que tal falarmos sobre destinos como bonito')
+    
+    console.log('📊 Análise da resposta:', {
+      hasText: !!generatedText,
+      textLength: generatedText?.length || 0,
+      isGeneric: isGenericResponse,
+      hasContext,
+      textPreview: generatedText?.substring(0, 200) || 'null'
+    })
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:915','message':'Gemini response received','data':{hasText:!!generatedText,textLength:generatedText?.length||0,textPreview:generatedText?.substring(0,200)||'null',isGeneric:isGenericResponse,contextWasUsed:!isGenericResponse,hasContext},timestamp:Date.now(),runId:'debug1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
     if (generatedText) {
-      console.log('✅ Generated text:', generatedText.substring(0, 100) + '...')
+      // Se a resposta for genérica mesmo com o prompt melhorado, adicionar aviso
+      if (isGenericResponse && !hasContext) {
+        console.warn('⚠️ Gemini retornou resposta genérica mesmo com prompt melhorado. Isso pode indicar que o modelo não está seguindo as instruções.')
+        console.warn('⚠️ Resposta recebida:', generatedText.substring(0, 300))
+      }
+      
+      console.log('✅ Generated text:', generatedText.substring(0, 150) + '...')
       return generatedText
     } else {
       console.log('❌ No text generated from Gemini')
+      console.log('❌ Full response data:', JSON.stringify(data, null, 2))
       return "Não consegui gerar uma resposta adequada. Por favor, consulte as fontes oficiais."
     }
            

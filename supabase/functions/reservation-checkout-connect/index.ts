@@ -118,6 +118,8 @@ serve(async (req) => {
           'descubra-ms.vercel.app',
           'viajartur.com',
           'www.viajartur.com',
+          'descubrams.com',
+          'www.descubrams.com',
           supabaseUrl.replace('https://', '').replace('.supabase.co', '')
         ];
         const hostname = parsed.hostname.replace(/^www\./, '');

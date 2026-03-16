@@ -37,6 +37,8 @@ function validateOrigin(origin: string | null): boolean {
   const allowedOrigins = [
     'https://www.viajartur.com',
     'https://viajartur.com',
+    'https://descubrams.com',
+    'https://www.descubrams.com',
     'https://descubra-ms.vercel.app'
   ];
   
