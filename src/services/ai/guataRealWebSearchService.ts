@@ -93,6 +93,12 @@ class GuataRealWebSearchService {
   // Cache de resultados para evitar chamadas repetidas
   private searchCache: Map<string, { results: WebSearchResult[]; timestamp: number }> = new Map();
   private readonly SEARCH_CACHE_DURATION = 30 * 60 * 1000; // 30 minutos
+  
+  // Google Search sempre disponível via Edge Function (chaves no servidor)
+  private readonly isConfigured: boolean = true;
+  
+  // SerpAPI (opcional, fallback)
+  private readonly serpApiKey: string | undefined = import.meta.env.VITE_SERPAPI_KEY;
 
   constructor() {
     // Todas as buscas passam pela Edge Function (chaves protegidas no servidor)
@@ -125,6 +131,11 @@ class GuataRealWebSearchService {
       const { supabase } = await import('@/integrations/supabase/client');
       
       try {
+        if (isDev) {
+          console.log('[Web Search] 🔵 Invocando Edge Function guata-google-search-proxy...');
+          console.log('[Web Search] 📤 Payload:', { query, maxResults, location: 'Mato Grosso do Sul' });
+        }
+
         const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
           body: {
             query,
@@ -133,24 +144,44 @@ class GuataRealWebSearchService {
           }
         });
 
-        // Log completo da resposta para debug
-        if (isDev) {
-          console.log('[Web Search] Resposta completa da Edge Function:', {
-            hasError: !!error,
-            hasData: !!data,
-            error: error,
-            data: data
-          });
-        }
+        // Log completo da resposta para debug (SEMPRE logar, não só em dev)
+        console.log('[Web Search] 📥 Resposta completa da Edge Function:', {
+          hasError: !!error,
+          hasData: !!data,
+          error: error,
+          data: data,
+          dataString: JSON.stringify(data, null, 2)
+        });
 
         // Verificar se há erro na resposta (mesmo com status 200)
         if (data?.error || !data?.success) {
-          console.error('[Web Search] ❌ Edge Function retornou erro:', {
-            error: data?.error,
-            message: data?.message,
-            help: data?.help,
-            fullData: data
-          });
+          console.error('🔴 [Web Search] ❌ Edge Function retornou erro:');
+          console.error('   Error:', data?.error);
+          console.error('   Message:', data?.message);
+          console.error('   Details:', data?.details);
+          console.error('   Help:', data?.help);
+          console.error('   Full Data:', JSON.stringify(data, null, 2));
+          
+          // Log específico para erros 403
+          if (data?.error === 'API_NOT_ENABLED' || data?.error === 'INVALID_API_KEY' || data?.error === 'INVALID_ENGINE_ID') {
+            console.error('');
+            console.error('🔴🔴🔴 [Web Search] PROBLEMA DE CONFIGURAÇÃO DETECTADO 🔴🔴🔴');
+            console.error('   Tipo de erro:', data.error);
+            console.error('   Mensagem:', data.message);
+            console.error('   Detalhes:', data.details);
+            console.error('   Ajuda:', data.help);
+            console.error('');
+            console.error('   💡 Acesse o Supabase Dashboard → Edge Functions → Secrets e verifique:');
+            console.error('      - GOOGLE_SEARCH_API_KEY está correto?');
+            console.error('      - GOOGLE_SEARCH_ENGINE_ID está correto? (deve ser: a1a3bd0b75c7d46bf)');
+            console.error('');
+            console.error('   💡 No Google Cloud Console, verifique:');
+            console.error('      - Custom Search API está habilitada?');
+            console.error('      - A API Key tem permissão para Custom Search API?');
+            console.error('      - O Engine ID está correto e ativo?');
+            console.error('');
+          }
+          
           // Continuar para fallback
         } else if (!error && data?.results && Array.isArray(data.results) && data.results.length > 0) {
           // Salvar no cache
@@ -171,35 +202,34 @@ class GuataRealWebSearchService {
             ? (error as { message?: string; status?: number; context?: unknown })
             : null;
           
-          console.error('[Web Search] ❌ Edge Function falhou:', {
-            message: errorObj?.message || getErrorMessage(error),
-            status: errorObj?.status,
-            context: errorObj?.context,
-            data: data,
-            error: error
-          });
+          console.error('🔴 [Web Search] ❌ Edge Function falhou com error object:');
+          console.error('   Message:', errorObj?.message || getErrorMessage(error));
+          console.error('   Status:', errorObj?.status);
+          console.error('   Context:', errorObj?.context);
+          console.error('   Data recebida:', data);
+          console.error('   Error completo:', error);
           
           // Tentar extrair detalhes do erro se disponível
           if (data && typeof data === 'object') {
-            console.error('[Web Search] Detalhes do erro da Edge Function:', JSON.stringify(data, null, 2));
+            console.error('🔴 [Web Search] Detalhes do erro da Edge Function:', JSON.stringify(data, null, 2));
           }
         } else if (data) {
           // Edge Function retornou dados mas sem resultados válidos
-          console.warn('[Web Search] Edge Function retornou dados inválidos:', {
-            hasResults: !!data.results,
-            resultsType: Array.isArray(data.results) ? 'array' : typeof data.results,
-            resultsLength: Array.isArray(data.results) ? data.results.length : 'N/A',
-            success: data.success,
-            error: data.error,
-            message: data.message,
-            fullData: data
-          });
+          console.warn('⚠️ [Web Search] Edge Function retornou dados mas sem resultados válidos:');
+          console.warn('   hasResults:', !!data.results);
+          console.warn('   resultsType:', Array.isArray(data.results) ? 'array' : typeof data.results);
+          console.warn('   resultsLength:', Array.isArray(data.results) ? data.results.length : 'N/A');
+          console.warn('   success:', data.success);
+          console.warn('   error:', data.error);
+          console.warn('   message:', data.message);
+          console.warn('   fullData:', JSON.stringify(data, null, 2));
           
           if (data.error) {
-            console.error('[Web Search] Erro na resposta:', data.error, data.message);
+            console.error('🔴 [Web Search] Erro na resposta:', data.error, data.message);
           }
         } else {
-          console.warn('[Web Search] Edge Function retornou resposta vazia (sem data e sem error)');
+          console.warn('⚠️ [Web Search] Edge Function retornou resposta vazia (sem data e sem error)');
+          console.warn('   Isso pode indicar que a Edge Function não está configurada ou não está respondendo');
         }
       } catch (invokeError: unknown) {
         if (isDev) {
