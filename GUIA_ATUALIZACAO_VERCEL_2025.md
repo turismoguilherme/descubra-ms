@@ -6,6 +6,46 @@ Este guia explica como garantir que o Vercel sempre atualize automaticamente qua
 
 ---
 
+## 🔀 Dois Repositórios: Por quê e Como Atualizar
+
+O projeto usa **dois repositórios Git no GitHub**:
+
+| Remote   | Repositório GitHub              | Uso |
+|----------|----------------------------------|-----|
+| **origin** | `turismoguilherme/descubra-ms`   | Repositório principal (trabalho, backup, colaboração) |
+| **vercel** | `guilhermearevalo/descubrams`    | Repositório **conectado ao Vercel** — o deploy usa só este |
+
+**Importante:** O Vercel está conectado apenas ao repositório `guilhermearevalo/descubrams`. Por isso:
+
+- Push só em `origin` **não** atualiza o site no Vercel.
+- Para o site atualizar, é necessário fazer push também para o remote **vercel** (ou usar o script que faz os dois).
+
+**Workflow recomendado (após cada commit):**
+```bash
+# Usar o script que envia para origin E vercel
+push_vercel.bat
+```
+
+Ou manualmente:
+```bash
+git push origin main
+git push vercel main
+```
+
+**Verificar remotes:**
+```bash
+git remote -v
+# origin  https://github.com/turismoguilherme/descubra-ms.git
+# vercel  https://github.com/guilhermearevalo/descubrams.git
+```
+
+Se o remote `vercel` não existir:
+```bash
+git remote add vercel https://github.com/guilhermearevalo/descubrams.git
+```
+
+---
+
 ## ✅ Verificações Iniciais (Ordem de Prioridade)
 
 ### **1. Verificar Integração Git no Vercel** 🔴 **CRÍTICO**
@@ -233,9 +273,10 @@ vercel --force
 Execute na ordem para identificar o problema:
 
 - [ ] **1. Verificar remotes Git locais** (`git remote -v`)
-  - Deve ter `vercel` apontando para `guilhermearevalo/descubrams`
+  - `origin` → `turismoguilherme/descubra-ms`
+  - `vercel` → `guilhermearevalo/descubrams` (este é o que o Vercel usa)
   
-- [ ] **2. Verificar se commits estão no GitHub** 
+- [ ] **2. Verificar se commits estão no repositório do Vercel** 
   - Acesse: https://github.com/guilhermearevalo/descubrams
   - Último commit deve estar na branch `main`
   
@@ -266,12 +307,14 @@ Execute na ordem para identificar o problema:
 
 ---
 
-## 📝 Informações do Projeto
+## 📝 Informações do Projeto (Dois Repositórios)
 
-- **Repositório do Vercel:** `guilhermearevalo/descubrams`
+- **Repositório conectado ao Vercel (deploy):** `guilhermearevalo/descubrams` → remote **vercel**
+- **Repositório principal (trabalho):** `turismoguilherme/descubra-ms` → remote **origin**
 - **Branch de produção:** `main`
-- **Remote Git:** `vercel` → `https://github.com/guilhermearevalo/descubrams.git`
-- **Remote Origin:** `origin` → `https://github.com/turismoguilherme/descubra-ms.git`
+- **URLs dos remotes:**
+  - `vercel` → `https://github.com/guilhermearevalo/descubrams.git`
+  - `origin` → `https://github.com/turismoguilherme/descubra-ms.git`
 
 ---
 
@@ -367,8 +410,9 @@ git push vercel main
 
 ---
 
-**Última atualização:** 27/01/2025  
-**Status:** ✅ Guia atualizado com base na documentação oficial do Vercel
+**Última atualização:** 17/03/2025  
+**Status:** ✅ Guia atualizado com cenário de dois repositórios e documentação oficial do Vercel
+
 
 
 

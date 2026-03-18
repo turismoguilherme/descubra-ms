@@ -11,9 +11,31 @@ export default function PartnerSuccessPage() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [partnerStatus, setPartnerStatus] = useState<'active' | 'pending' | null>(null);
+  const [resolvedPartnerId, setResolvedPartnerId] = useState<string | null>(null);
   const sessionId = searchParams.get('session_id');
   const partnerId = searchParams.get('partner_id');
   const hasRedirected = useRef(false);
+  const resolvedPartnerIdRef = useRef<string | null>(null);
+
+  // Limite máximo: se a verificação demorar mais que isso, redirecionar mesmo assim
+  const MAX_WAIT_MS = 12000;
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (resolvedPartnerIdRef.current && !hasRedirected.current) {
+        hasRedirected.current = true;
+        setLoading(false);
+        setPartnerStatus('pending');
+        navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${resolvedPartnerIdRef.current}`);
+      } else if (partnerId && partnerId !== '{PARTNER_ID}' && partnerId.trim() !== '' && !hasRedirected.current) {
+        hasRedirected.current = true;
+        setLoading(false);
+        setPartnerStatus('pending');
+        navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${partnerId}`);
+      }
+    }, MAX_WAIT_MS);
+    return () => clearTimeout(timeoutId);
+  }, [partnerId, navigate]);
 
   useEffect(() => {
     checkPartnerStatus();
@@ -46,6 +68,8 @@ export default function PartnerSuccessPage() {
           if (!emailError && partnerData) {
             console.log('✅ [PartnerSuccessPage] Parceiro encontrado por email:', partnerData.id);
             partnerIdToUse = partnerData.id;
+            resolvedPartnerIdRef.current = partnerData.id;
+            setResolvedPartnerId(partnerData.id);
           } else {
             console.warn('⚠️ [PartnerSuccessPage] Nenhum parceiro encontrado com email:', user.email);
           }
@@ -65,6 +89,8 @@ export default function PartnerSuccessPage() {
       return;
     }
 
+    resolvedPartnerIdRef.current = partnerIdToUse;
+    setResolvedPartnerId(partnerIdToUse);
     console.log('🔍 [PartnerSuccessPage] Verificando status do parceiro:', { partnerId: partnerIdToUse, sessionId });
 
     try {
@@ -92,7 +118,7 @@ export default function PartnerSuccessPage() {
           console.log('🔄 [PartnerSuccessPage] Redirecionando para continuar cadastro no Step 4');
           setTimeout(() => {
             navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${partnerIdToUse}`);
-          }, 2000); // Aguardar 2 segundos para mostrar a mensagem de sucesso
+          }, 800); // Breve pausa para o usuário ver a mensagem, depois redireciona
         }
       } else {
         console.warn('⚠️ [PartnerSuccessPage] Parceiro não encontrado com ID:', partnerIdToUse);
@@ -141,6 +167,32 @@ export default function PartnerSuccessPage() {
                 Acessar Dashboard
               </Button>
             </>
+          ) : partnerId === '{PARTNER_ID}' ? (
+            <>
+              <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+              <CardTitle className="text-2xl font-bold text-gray-800 mb-2">
+                Pagamento recebido
+              </CardTitle>
+              <p className="text-gray-600 mb-4">
+                Não foi possível identificar seu cadastro automaticamente. Faça login com o e-mail usado no pagamento e acesse a página de parceiros para continuar.
+              </p>
+              <div className="flex flex-col gap-3 w-full">
+                <Button
+                  className="w-full bg-ms-primary-blue hover:bg-ms-discovery-teal text-white"
+                  onClick={() => navigate('/descubrams/partner/login')}
+                  size="lg"
+                >
+                  Fazer login e continuar cadastro
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full border-ms-primary-blue text-ms-primary-blue"
+                  onClick={() => navigate('/descubrams/seja-um-parceiro')}
+                >
+                  Ir para Seja um Parceiro
+                </Button>
+              </div>
+            </>
           ) : (
             <>
               <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
@@ -150,8 +202,20 @@ export default function PartnerSuccessPage() {
               <p className="text-gray-600 mb-6">
                 Seu pagamento foi recebido com sucesso. Redirecionando para continuar o cadastro...
               </p>
-              <div className="flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
                 <Loader2 className="w-6 h-6 animate-spin text-ms-primary-blue" />
+                {(resolvedPartnerId || (partnerId && partnerId !== '{PARTNER_ID}')) && (
+                  <Button
+                    variant="outline"
+                    className="w-full border-ms-primary-blue text-ms-primary-blue hover:bg-ms-primary-blue/10"
+                    onClick={() => {
+                      const id = resolvedPartnerId || partnerId;
+                      if (id) navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${id}`);
+                    }}
+                  >
+                    Continuar cadastro agora
+                  </Button>
+                )}
               </div>
             </>
           )}

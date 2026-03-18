@@ -84,23 +84,27 @@ export default function PartnerPaymentStep({
       return;
     }
 
+    const isInvalidPartnerId = !partnerId || typeof partnerId !== 'string' || partnerId.trim() === '' || partnerId === '{PARTNER_ID}';
+    if (isInvalidPartnerId) {
+      toast({
+        title: 'Não foi possível iniciar o pagamento',
+        description: 'Seu cadastro não foi identificado. Volte ao passo anterior, recarregue a página e tente novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Construir URL de sucesso com partner_id real
-      const successUrl = `${window.location.origin}/descubrams/seja-um-parceiro/success?partner_id=${partnerId}&session_id={CHECKOUT_SESSION_ID}`;
-      
-      // Adicionar URL de redirecionamento ao Payment Link
-      // O Stripe aceita o parâmetro after_completion[redirect][url] na URL do Payment Link
+      const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+      const successBaseUrl = (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com')
+        ? 'https://descubrams.com'
+        : window.location.origin;
+      const successUrl = `${successBaseUrl}/descubrams/seja-um-parceiro/success?partner_id=${partnerId}&session_id={CHECKOUT_SESSION_ID}`;
+
       const separator = paymentLink.includes('?') ? '&' : '?';
       const paymentLinkWithRedirect = `${paymentLink}${separator}after_completion[redirect][url]=${encodeURIComponent(successUrl)}`;
-      
-      console.log('🔗 [PartnerPaymentStep] Redirecionando para Payment Link com URL de sucesso:', {
-        paymentLink,
-        successUrl,
-        paymentLinkWithRedirect,
-      });
-      
-      // Redirecionar para o Payment Link com URL de sucesso configurada
+
       window.location.href = paymentLinkWithRedirect;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

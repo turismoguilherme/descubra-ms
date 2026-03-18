@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -430,19 +430,22 @@ export default function PartnersManagement() {
   };
 
   const deletePartner = async (partnerId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este parceiro?')) return;
+    if (!confirm('Tem certeza que deseja excluir este parceiro? A conta de acesso será removida para permitir novo cadastro com o mesmo e-mail (exceto se for usuário ViajarTur ou admin).')) return;
 
     try {
-      const { error } = await supabase
-        .from('institutional_partners')
-        .delete()
-        .eq('id', partnerId);
+      const { data, error } = await supabase.functions.invoke('delete-partner-and-auth', {
+        body: { partnerId },
+      });
 
       if (error) throw error;
+      const payload = data as { error?: string; success?: boolean; authDeleted?: boolean } | undefined;
+      if (payload?.error) throw new Error(payload.error);
 
       toast({
         title: 'Parceiro excluído',
-        description: 'O parceiro foi removido permanentemente.',
+        description: payload?.authDeleted
+          ? 'Parceiro e conta de acesso removidos. O e-mail poderá ser usado em um novo cadastro.'
+          : 'O parceiro foi removido permanentemente.',
       });
       loadPartners();
     } catch (error: unknown) {

@@ -55,3 +55,4 @@ CREATE POLICY "Allow authenticated users to manage region_translations"
 
 
 
+

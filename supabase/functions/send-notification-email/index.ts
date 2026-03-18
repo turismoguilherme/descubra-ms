@@ -18,7 +18,8 @@ type NotificationType =
   | 'system_alert'
   | 'data_report_ready'
   | 'data_report_approved'
-  | 'partner_notification';
+  | 'partner_notification'
+  | 'inactive_account_warning';
 
 interface EmailRequest {
   type: NotificationType;
@@ -372,6 +373,32 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
     `;
     },
   },
+  inactive_account_warning: {
+    subject: 'Faça login para manter sua conta - Descubra MS',
+    html: (data: any) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Descubra MS</h1>
+        </div>
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #1e3a5f;">Sua conta está inativa</h2>
+          <p>Olá!</p>
+          <p>Percebemos que você não acessa sua conta no <strong>Descubra Mato Grosso do Sul</strong> há bastante tempo.</p>
+          <div style="background: #fff3e0; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; color: #92400e;"><strong>Para manter sua conta ativa</strong>, faça login nos próximos <strong>${data.daysToAct || 30} dias</strong>. Caso contrário, sua conta será encerrada e os dados removidos, em conformidade com nossa política de privacidade.</p>
+          </div>
+          <a href="${data.loginUrl || 'https://descubramatogrossodosul.com.br/descubrams/login'}" 
+             style="display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+            Fazer login agora
+          </a>
+          <p style="margin-top: 25px; color: #666; font-size: 14px;">Se você não deseja manter a conta, não é necessário fazer nada. Após o prazo, ela será removida automaticamente.</p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>Descubra Mato Grosso do Sul - Turismo e Cultura</p>
+        </div>
+      </div>
+    `,
+  },
   partner_welcome: {
     subject: '🎉 Bem-vindo ao Descubra Mato Grosso do Sul!',
     html: (data: any) => `
@@ -556,6 +583,7 @@ async function getTemplateFromDatabase(
       data_report_approved: 'Data Report Approved',
       data_report_ready: 'Data Report Ready',
       partner_notification: 'Partner Notification',
+      inactive_account_warning: 'Inactive Account Warning',
       stripe_connect_complete: 'Stripe Connect Complete',
       reservation_payment_received: 'Reservation Payment Received',
       event_refunded: 'Event Refunded',

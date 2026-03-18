@@ -191,9 +191,9 @@ const UniversalNavbar = () => {
               {/* Links principais - Eventos, Parceiros e Guatá */}
               {navigationItems
                 .filter(item => {
-                  // Mostrar apenas Eventos e Parceiros no menu principal (para MS)
+                  // Mostrar Mapa Turístico, Eventos e Parceiros no menu principal (para MS)
                   if (isMS) {
-                    return ['Eventos', 'Parceiros'].includes(item.name);
+                    return ['Mapa Turístico', 'Eventos', 'Parceiros'].includes(item.name);
                   }
                   return true;
                 })
@@ -347,7 +347,7 @@ const UniversalNavbar = () => {
                   {navigationItems
                     .filter(item => {
                       if (isMS) {
-                        return ['Eventos', 'Parceiros'].includes(item.name);
+                        return ['Mapa Turístico', 'Eventos', 'Parceiros'].includes(item.name);
                       }
                       return true;
                     })

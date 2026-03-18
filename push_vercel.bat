@@ -1,10 +1,12 @@
 @echo off
-REM Script para fazer push para ambos os remotes (origin e vercel)
-REM Garante que o Vercel sempre receba as atualizações
+REM Script para fazer push para AMBOS os repositórios (origin + vercel)
+REM - origin = turismoguilherme/descubra-ms (repositório principal)
+REM - vercel = guilhermearevalo/descubrams (repositório conectado ao Vercel)
+REM O Vercel só atualiza quando há push no repositório "vercel". Use este script após cada commit.
 
 echo.
 echo ========================================
-echo   🚀 Push para Remotes Origin e Vercel
+echo   Push para os 2 repos (Origin + Vercel)
 echo ========================================
 echo.
 

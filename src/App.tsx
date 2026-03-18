@@ -316,6 +316,7 @@ function AppRoutes() {
                                 <Route path="/descubrams/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
                                 <Route path="/descubrams/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
                                 <Route path="/descubrams/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
+                                <Route path="/descubrams/seja_um_parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
                                 <Route path="/descubrams/partner/login" element={<PartnerLoginPage />} />
                                 <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
                                 <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />

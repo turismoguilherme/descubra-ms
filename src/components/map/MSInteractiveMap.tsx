@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import DOMPurify from 'dompurify';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { TouristRegion2025 } from '@/data/touristRegions2025';
 import { useTouristRegions } from '@/hooks/useTouristRegions';
 import { getRegionByColor, isAmbiguousPurple, isSpanningPath } from '@/data/regionColorMapping';
@@ -68,6 +67,11 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const eventHandlersAttached = useRef(false);
+  const onRegionClickRef = useRef(onRegionClick);
+  const onRegionHoverRef = useRef(onRegionHover);
+  const findRegionBySlugRef = useRef<(slug: string) => TouristRegion2025 | undefined>(() => undefined);
+  const selectedRegionRef = useRef(selectedRegion);
+  const hoveredRegionRef = useRef(hoveredRegion);
 
   // Buscar SVG como texto
   useEffect(() => {
@@ -105,6 +109,12 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     return touristRegions.find(r => r.slug === slug);
   }, [touristRegions]);
 
+  onRegionClickRef.current = onRegionClick;
+  onRegionHoverRef.current = onRegionHover;
+  findRegionBySlugRef.current = findRegionBySlug;
+  selectedRegionRef.current = selectedRegion;
+  hoveredRegionRef.current = hoveredRegion;
+
   /**
    * Determina região a partir de um elemento, subindo na hierarquia.
    * Primeiro verifica data-region no próprio elemento ou ancestrais (path ou group).
@@ -141,18 +151,26 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
     return null;
   }, []);
 
-  // Attach event handlers ao SVG inline
-  useEffect(() => {
+  // Encontrar o elemento SVG no container (suporta innerHTML já aplicado ou primeiro filho)
+  const findSvgInContainer = useCallback((): SVGSVGElement | null => {
+    const container = svgContainerRef.current;
+    if (!container) return null;
+    const byQuery = container.querySelector('svg');
+    if (byQuery) return byQuery as SVGSVGElement;
+    const first = container.firstElementChild;
+    if (first?.tagName === 'svg') return first as SVGSVGElement;
+    return null;
+  }, []);
+
+  // Attach event handlers ao SVG inline (useLayoutEffect para rodar após o DOM estar atualizado)
+  useLayoutEffect(() => {
     if (!svgContent || !svgContainerRef.current) {
-      console.log('⚠️ [MSInteractiveMap] Não anexando handlers - svgContent:', !!svgContent, 'container:', !!svgContainerRef.current);
       return;
     }
     if (touristRegions.length === 0) {
-      console.log('⚠️ [MSInteractiveMap] Não anexando handlers - sem regiões');
       return;
     }
 
-    // Definir handlers fora do timeout para poder removê-los no cleanup
     let svgElRef: SVGSVGElement | null = null;
     const handleClick = (e: Event) => {
       if (!svgElRef) return;
@@ -162,26 +180,26 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
       const slug = getRegionSlugFromElement(target, svgCoords?.y);
       if (slug) {
         e.stopPropagation();
-        const region = findRegionBySlug(slug);
-        if (region) onRegionClick(region);
+        const region = findRegionBySlugRef.current(slug);
+        if (region) onRegionClickRef.current(region);
       }
     };
 
     const handleMouseOver = (e: Event) => {
-      if (selectedRegion || !svgElRef) return;
+      if (selectedRegionRef.current || !svgElRef) return;
       const me = e as MouseEvent;
       const target = me.target as Element;
       const svgCoords = clientToSvgCoords(svgElRef, me.clientX, me.clientY);
       const slug = getRegionSlugFromElement(target, svgCoords?.y);
-      if (slug && slug !== hoveredRegion) {
+      if (slug && slug !== hoveredRegionRef.current) {
         setHoveredRegion(slug);
-        const region = findRegionBySlug(slug);
-        if (region) onRegionHover?.(region);
+        const region = findRegionBySlugRef.current(slug);
+        if (region) onRegionHoverRef.current?.(region);
       }
     };
 
     const handleMouseOut = (e: Event) => {
-      if (selectedRegion || !svgElRef) return;
+      if (selectedRegionRef.current || !svgElRef) return;
       const relatedTarget = (e as MouseEvent).relatedTarget as Element | null;
       if (relatedTarget && svgElRef.contains(relatedTarget)) {
         const me = e as MouseEvent;
@@ -190,48 +208,46 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
         if (newSlug) return;
       }
       setHoveredRegion(null);
-      onRegionHover?.(null);
+      onRegionHoverRef.current?.(null);
     };
 
-    // Usar MutationObserver para detectar quando o SVG é inserido no DOM
-    const observer = new MutationObserver((mutations, obs) => {
-      const svgEl = svgContainerRef.current?.querySelector('svg') as SVGSVGElement | null;
+    const observer = new MutationObserver(() => {
+      const svgEl = findSvgInContainer();
       if (svgEl) {
-        console.log('✅ [MSInteractiveMap] SVG detectado no DOM via MutationObserver');
-        obs.disconnect(); // Parar de observar
+        observer.disconnect();
         attachHandlers(svgEl);
       }
     });
 
-    // Iniciar observação
     if (svgContainerRef.current) {
-      observer.observe(svgContainerRef.current, {
-        childList: true,
-        subtree: true
-      });
+      observer.observe(svgContainerRef.current, { childList: true, subtree: true });
     }
 
-    // Fallback: tentar após um delay também
-    const timeoutId = setTimeout(() => {
-      const svgEl = svgContainerRef.current?.querySelector('svg') as SVGSVGElement | null;
-      if (!svgEl) {
-        console.warn('⚠️ [MSInteractiveMap] SVG não encontrado no DOM após timeout, tentando novamente...');
-        // Tentar novamente após mais tempo
-        setTimeout(() => {
-          const svgEl2 = svgContainerRef.current?.querySelector('svg') as SVGSVGElement | null;
-          if (svgEl2) {
-            console.log('✅ [MSInteractiveMap] SVG encontrado na segunda tentativa');
-            attachHandlers(svgEl2);
-          } else {
-            console.error('❌ [MSInteractiveMap] SVG nunca foi encontrado no DOM');
-          }
-        }, 500);
-        return;
+    // Tentar encontrar o SVG em vários momentos (DOM pode não estar pronto no primeiro tick)
+    const tryAttach = () => {
+      const svgEl = findSvgInContainer();
+      if (svgEl) {
+        observer.disconnect();
+        attachHandlers(svgEl);
+        return true;
       }
-      
-      observer.disconnect(); // Parar observação se já encontrou
-      attachHandlers(svgEl);
-    }, 200);
+      return false;
+    };
+
+    if (tryAttach()) return;
+
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+    const rafIds: number[] = [];
+    const rafId = requestAnimationFrame(() => {
+      if (tryAttach()) return;
+      const t1 = setTimeout(() => {
+        if (tryAttach()) return;
+        const t2 = setTimeout(() => tryAttach(), 150);
+        timeoutIds.push(t2);
+      }, 50);
+      timeoutIds.push(t1);
+    });
+    rafIds.push(rafId);
 
     // Função auxiliar para anexar handlers
     function attachHandlers(svgEl: SVGSVGElement) {
@@ -305,16 +321,16 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
 
     return () => {
       observer.disconnect();
-      clearTimeout(timeoutId);
+      rafIds.forEach(id => cancelAnimationFrame(id));
+      timeoutIds.forEach(id => clearTimeout(id));
       if (svgElRef && eventHandlersAttached.current) {
         svgElRef.removeEventListener('click', handleClick);
         svgElRef.removeEventListener('mouseover', handleMouseOver);
         svgElRef.removeEventListener('mouseout', handleMouseOut);
         eventHandlersAttached.current = false;
-        console.log('🧹 [MSInteractiveMap] Event handlers removidos');
       }
     };
-  }, [svgContent, touristRegions, selectedRegion, hoveredRegion, onRegionClick, onRegionHover, findRegionBySlug, getRegionSlugFromElement]);
+  }, [svgContent, touristRegions.length, findSvgInContainer, getRegionSlugFromElement]);
 
   // Aplicar destaque visual
   useEffect(() => {
@@ -354,10 +370,7 @@ const MSInteractiveMap: React.FC<MSInteractiveMapProps> = ({
             ref={svgContainerRef}
             className="w-full h-full"
             style={{ maxHeight: '850px', minHeight: '400px' }}
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['use'] }) }}
-            onLoad={() => {
-              console.log('✅ [MSInteractiveMap] SVG renderizado no DOM');
-            }}
+            dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         ) : !isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">

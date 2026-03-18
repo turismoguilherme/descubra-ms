@@ -1,10 +1,11 @@
 @echo off
-REM Script para atualizar o Vercel forçando um novo deployment
-REM Baseado na documentação oficial do Vercel
+REM Atualizar o Vercel (repositório guilhermearevalo/descubrams).
+REM Como existem 2 repos: use push_vercel.bat para enviar para origin + vercel.
+REM Este script envia só para "vercel" e, se não houver commits novos, cria um commit vazio para forçar deploy.
 
 echo.
 echo ========================================
-echo   🚀 Atualizar Vercel - Forçar Deploy
+echo   Atualizar Vercel - Forçar Deploy
 echo ========================================
 echo.
 
@@ -106,6 +107,7 @@ echo 📚 Documentação: GUIA_ATUALIZACAO_VERCEL_2025.md
 echo.
 
 exit /b 0
+
 
 
 

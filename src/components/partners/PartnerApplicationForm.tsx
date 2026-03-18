@@ -26,9 +26,11 @@ import {
   EyeOff,
   Lock,
   User,
-  Briefcase
+  Briefcase,
+  AlertCircle
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Função para criar schema dinâmico baseado em includePassword
 const createPartnerSchema = (includePassword: boolean) => {
@@ -156,6 +158,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   console.log('📋 [PartnerApplicationForm] Componente renderizado', { includePassword, hasOnComplete: !!onComplete });
 
@@ -308,6 +311,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
     
     setIsSubmitting(true);
     setUploadProgress(0);
+    setSubmitError(null);
 
     try {
       console.log('📝 [PartnerApplicationForm] Iniciando processo de cadastro...');
@@ -484,12 +488,14 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
+      const message = err.message || 'Tente novamente mais tarde.';
       console.error('❌ [PartnerApplicationForm] Erro ao enviar solicitação:', err);
       console.error('❌ [PartnerApplicationForm] Stack trace:', err.stack);
       console.error('❌ [PartnerApplicationForm] Erro completo:', error);
+      setSubmitError(message);
       toast({
         title: 'Erro ao enviar',
-        description: err.message || 'Tente novamente mais tarde.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -538,6 +544,25 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-8">
+      {submitError && (
+        <Alert variant="destructive" className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <AlertTitle className="text-base">Não foi possível enviar</AlertTitle>
+            <AlertDescription className="mt-1 text-sm">{submitError}</AlertDescription>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => setSubmitError(null)}
+            aria-label="Fechar aviso"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </Alert>
+      )}
       {/* Dados da Empresa */}
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-ms-primary-blue">
