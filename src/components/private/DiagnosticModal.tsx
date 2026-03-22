@@ -75,8 +75,19 @@ const DiagnosticModal: React.FC<DiagnosticModalProps> = ({
     setAnalysisResult(null);
   };
 
+  const canDeferClose =
+    !!onClose && (currentStep === 'questionnaire' || currentStep === 'analysis');
+
   return (
     <div className="space-y-6">
+      {canDeferClose && (
+        <div className="flex justify-end">
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+            Agora não
+          </Button>
+        </div>
+      )}
+
       {/* Tabs de Navegação */}
       <Tabs value={currentStep} onValueChange={(value) => setCurrentStep(value as DiagnosticStep)}>
         <TabsList className="grid w-full grid-cols-4">

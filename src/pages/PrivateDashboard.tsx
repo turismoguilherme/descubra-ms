@@ -102,7 +102,42 @@ const PrivateDashboard = () => {
   const [hasMissingData, setHasMissingData] = useState(false);
   const [autoFillingProfile, setAutoFillingProfile] = useState(false);
   const [isFirstAccess, setIsFirstAccess] = useState(false);
-  
+  const DIAGNOSTIC_BANNER_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+  const [diagnosticSnoozeUntil, setDiagnosticSnoozeUntil] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setDiagnosticSnoozeUntil(0);
+      return;
+    }
+    const raw = localStorage.getItem(`diagnostic_banner_snooze_until_${user.id}`);
+    setDiagnosticSnoozeUntil(raw ? parseInt(raw, 10) || 0 : 0);
+  }, [user?.id]);
+
+  const clearDiagnosticSnooze = () => {
+    if (!user?.id) return;
+    localStorage.removeItem(`diagnostic_banner_snooze_until_${user.id}`);
+    setDiagnosticSnoozeUntil(0);
+  };
+
+  const snoozeDiagnosticBanner = () => {
+    if (!user?.id) return;
+    const until = Date.now() + DIAGNOSTIC_BANNER_SNOOZE_MS;
+    localStorage.setItem(`diagnostic_banner_snooze_until_${user.id}`, String(until));
+    setDiagnosticSnoozeUntil(until);
+    toast({
+      title: 'Combinado',
+      description:
+        'Lembraremos em até 7 dias. Você pode iniciar o diagnóstico a qualquer momento pelo painel.',
+    });
+  };
+
+  const showDiagnosticPendingBanner =
+    !!user?.id &&
+    !isLoading &&
+    !analysisResult &&
+    !diagnosticAnswers &&
+    Date.now() >= diagnosticSnoozeUntil;
 
   // Verificar se deve abrir configurações com aba específica
   useEffect(() => {
@@ -155,8 +190,8 @@ const PrivateDashboard = () => {
           } else {
             setIsFirstAccess(false);
           }
-          // Se não houver diagnóstico, mostrar o modal automaticamente
-          setShowDiagnosticSection(true);
+          // Diagnóstico opcional: não abrir modal automaticamente (banner na visão geral orienta)
+          setShowDiagnosticSection(false);
           setIsDiagnosticMinimized(false);
         }
 
@@ -245,6 +280,7 @@ const PrivateDashboard = () => {
   }, [user]);
 
   const handleRetakeDiagnostic = () => {
+    clearDiagnosticSnooze();
     setShowDiagnosticSection(true);
     setIsDiagnosticMinimized(false);
     setAnalysisResult(null);
@@ -254,7 +290,7 @@ const PrivateDashboard = () => {
 
   const handleDiagnosticComplete = async (answers: QuestionnaireAnswers) => {
     setDiagnosticAnswers(answers);
-    setShowDiagnostic(false);
+    setShowDiagnosticSection(false);
     
     if (!user?.id) {
       toast({
@@ -273,6 +309,7 @@ const PrivateDashboard = () => {
       // Salvar no Supabase
       try {
         await diagnosticService.saveDiagnosticResult(user.id, answers, analysis);
+        clearDiagnosticSnooze();
         toast({
           title: 'Sucesso',
           description: 'Diagnóstico salvo com sucesso'
@@ -442,6 +479,7 @@ const PrivateDashboard = () => {
   }
 
   const handleDiagnosticSectionComplete = async (result: AnalysisResult, answers: QuestionnaireAnswers) => {
+    clearDiagnosticSnooze();
     setAnalysisResult(result);
     setDiagnosticAnswers(answers);
     // Manter a seção visível, mas minimizada após completar
@@ -744,6 +782,38 @@ const PrivateDashboard = () => {
                           </>
                         )}
                       </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {showDiagnosticPendingBanner && (
+                <Alert className="border-amber-200 bg-amber-50/90">
+                  <AlertCircle className="h-4 w-4 text-amber-700" />
+                  <AlertDescription className="text-amber-950">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <strong className="text-amber-900">Diagnóstico pendente</strong>
+                        <p className="text-sm mt-1 text-amber-900/90">
+                          Recomendamos o diagnóstico inteligente para personalizar métricas, recomendações e o Guilherme IA ao seu negócio.
+                          Não é obrigatório — faça quando for melhor para você.
+                        </p>
+                      </div>
+                      <div className="flex flex-shrink-0 flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          className="bg-amber-600 hover:bg-amber-700 text-white"
+                          onClick={() => {
+                            setShowDiagnosticSection(true);
+                            setIsDiagnosticMinimized(false);
+                          }}
+                        >
+                          Iniciar diagnóstico
+                        </Button>
+                        <Button type="button" variant="outline" onClick={snoozeDiagnosticBanner}>
+                          Lembrar depois
+                        </Button>
+                      </div>
                     </div>
                   </AlertDescription>
                 </Alert>
@@ -1097,11 +1167,12 @@ const PrivateDashboard = () => {
                     <SectionWrapper 
                       variant="default" 
                       title="Bem-vindo ao ViajARTur"
-                      subtitle="Complete o diagnóstico para receber recomendações personalizadas"
+                      subtitle="Explore o painel; o diagnóstico deixa tudo mais personalizado quando você quiser"
                     >
                       <CardBox className="mb-6">
                         <p className="text-gray-600 mb-4">
-                          Complete o diagnóstico para receber recomendações personalizadas para o seu negócio.
+                          Quando fizer o diagnóstico inteligente, você recebe recomendações e scores alinhados ao seu negócio.
+                          Enquanto isso, use normalmente todas as áreas do dashboard.
                         </p>
                         <Button 
                           onClick={() => {
@@ -1110,7 +1181,7 @@ const PrivateDashboard = () => {
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                          Iniciar Diagnóstico
+                          Iniciar diagnóstico (opcional)
                         </Button>
                       </CardBox>
                     </SectionWrapper>
@@ -1120,7 +1191,7 @@ const PrivateDashboard = () => {
                   <SectionWrapper 
                     variant="default" 
                     title="Visão Geral do Negócio"
-                    subtitle={isFirstAccess ? "Complete o diagnóstico para ver seus dados" : "Resumo executivo das principais métricas"}
+                    subtitle={isFirstAccess ? "Após o diagnóstico, scores e recomendações aparecem aqui" : "Resumo executivo das principais métricas"}
                   >
 
                     {/* Cards de Métricas Principais - Mesmo layout, mas sem dados */}
@@ -1134,7 +1205,7 @@ const PrivateDashboard = () => {
                           --
                         </div>
                         <div className="text-xs text-slate-500">
-                          Complete o diagnóstico
+                          Disponível após o diagnóstico
                         </div>
                       </CardBox>
                       
@@ -1173,7 +1244,7 @@ const PrivateDashboard = () => {
                           --
                         </div>
                         <div className="text-xs text-slate-500">
-                          Complete o diagnóstico
+                          Disponível após o diagnóstico
                         </div>
                       </CardBox>
 
@@ -1186,7 +1257,7 @@ const PrivateDashboard = () => {
                           --
                         </div>
                         <div className="text-xs text-slate-500">
-                          Complete o diagnóstico
+                          Disponível após o diagnóstico
                         </div>
                       </CardBox>
                     </div>
@@ -1273,7 +1344,7 @@ const PrivateDashboard = () => {
           <DialogHeader>
             <DialogTitle>Diagnóstico Inteligente</DialogTitle>
             <DialogDescription>
-              Avalie a maturidade do seu negócio e receba recomendações personalizadas
+              Opcional: avalie a maturidade do seu negócio e receba recomendações personalizadas. Você pode fechar e fazer depois.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">

@@ -1,6 +1,6 @@
 /**
  * ViaJAR Onboarding Page
- * Fluxo: Pagamento → Termo → Perfil → Diagnóstico (apenas Empresários) → Dashboard
+ * Fluxo: Pagamento → Termo → Perfil → Diagnóstico opcional (Empresários) → Dashboard
  * O plano já vem selecionado da página de preços/cadastro
  */
 
@@ -217,6 +217,15 @@ export default function ViaJAROnboarding() {
     setCurrentStep(5); // Vai para sucesso
   };
 
+  const handleDiagnosticSkip = () => {
+    setOnboardingData(prev => ({ ...prev, diagnostic: null }));
+    setCurrentStep(5);
+    toast({
+      title: 'Diagnóstico pendente',
+      description: 'Você pode completar o diagnóstico quando quiser no dashboard.',
+    });
+  };
+
   const handleFinish = () => {
     // Limpar dados temporários
     sessionStorage.removeItem('registration_data');
@@ -430,12 +439,25 @@ export default function ViaJAROnboarding() {
             <>
               {/* Empresários: Diagnóstico */}
               {!isGovernmentPlan && (
-                <DiagnosticQuestionnaire
-                  onComplete={handleDiagnosticComplete}
-                  onProgress={(progress) => {
-                    // Progress callback se necessário
-                  }}
-                />
+                <div className="space-y-6">
+                  <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+                    Recomendamos preencher agora para personalizar sua experiência. Se preferir, continue e faça depois no painel — fica como pendente.
+                  </p>
+                  <DiagnosticQuestionnaire
+                    onComplete={handleDiagnosticComplete}
+                    onProgress={(progress) => {
+                      // Progress callback se necessário
+                    }}
+                  />
+                  <div className="flex flex-col items-center gap-2 pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={handleDiagnosticSkip}>
+                      Fazer depois
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      O diagnóstico continuará disponível no seu dashboard
+                    </span>
+                  </div>
+                </div>
               )}
               
               {/* Secretárias: Tela final (sem diagnóstico) */}
@@ -534,7 +556,11 @@ export default function ViaJAROnboarding() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Acompanhar seu diagnóstico inicial</span>
+                        <span>
+                          {onboardingData.diagnostic
+                            ? 'Acompanhar seu diagnóstico inicial'
+                            : 'Completar o diagnóstico inteligente quando quiser (pendente no painel)'}
+                        </span>
                       </li>
                     </ul>
                   </div>
@@ -549,7 +575,9 @@ export default function ViaJAROnboarding() {
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Você pode refazer o diagnóstico a qualquer momento
+                      {onboardingData.diagnostic
+                        ? 'Você pode refazer o diagnóstico a qualquer momento'
+                        : 'O diagnóstico opcional fica disponível no dashboard'}
                     </p>
                   </div>
                 </div>
