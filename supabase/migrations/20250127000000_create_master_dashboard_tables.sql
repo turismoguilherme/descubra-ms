@@ -26,6 +26,12 @@ CREATE TABLE IF NOT EXISTS master_clients (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- FK master_deals(hubspot_contact_id) exige que master_clients(hubspot_contact_id)
+-- seja referenciável por chave única. Como a tabela pode já existir sem essa constraint,
+-- criamos um UNIQUE INDEX de forma idempotente antes de criar o FK.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_master_clients_hubspot_contact_id_unique
+  ON master_clients(hubspot_contact_id);
+
 -- Tabela de deals/negociações
 CREATE TABLE IF NOT EXISTS master_deals (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -165,22 +171,27 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers para atualizar updated_at automaticamente
+DROP TRIGGER IF EXISTS update_master_clients_updated_at ON master_clients;
 CREATE TRIGGER update_master_clients_updated_at 
   BEFORE UPDATE ON master_clients 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_master_deals_updated_at ON master_deals;
 CREATE TRIGGER update_master_deals_updated_at 
   BEFORE UPDATE ON master_deals 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_master_financial_records_updated_at ON master_financial_records;
 CREATE TRIGGER update_master_financial_records_updated_at 
   BEFORE UPDATE ON master_financial_records 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_master_support_tickets_updated_at ON master_support_tickets;
 CREATE TRIGGER update_master_support_tickets_updated_at 
   BEFORE UPDATE ON master_support_tickets 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_master_platform_config_updated_at ON master_platform_config;
 CREATE TRIGGER update_master_platform_config_updated_at 
   BEFORE UPDATE ON master_platform_config 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

@@ -6,6 +6,14 @@ import { UserProfile } from "@/types/auth";
 import { AuthContext, AuthContextType } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/utils/logger";
+import { getCurrentTestUser } from "@/services/auth/TestUsers";
+import {
+  isViajarTestLoginEnabled,
+  simulatedUserFromTestUser,
+  readLegacyStoredTestLogin,
+  tryStaticTestSignIn,
+  clearSimulatedTestSessionMarkers,
+} from "@/utils/viajarTestLogin";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -58,27 +66,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    if (!isViajarTestLoginEnabled()) return;
+
+    const syncFromTestStorage = () => {
+      void supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) return;
+        const tu = getCurrentTestUser();
+        if (tu) {
+          const { user: su, profile } = simulatedUserFromTestUser(tu);
+          setUser(su);
+          setUserProfile(profile);
+          setSession(null);
+          return;
+        }
+        const leg = readLegacyStoredTestLogin();
+        if (leg) {
+          setUser(leg.user);
+          setUserProfile(leg.profile);
+          setSession(null);
+        }
+      });
+    };
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'test_user_id' || e.key === 'test_user_data' || e.key === 'test-user-data') {
+        syncFromTestStorage();
+      }
+    };
+
+    const id = window.setInterval(syncFromTestStorage, 400);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.clearInterval(id);
+    };
+  }, []);
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         logger.dev("🔄 AuthProvider: onAuthStateChange disparado. Evento:", event);
         
-        // Usar dados reais do Supabase
-        setSession(session);
-        setUser(session?.user ?? null);
-
         if (session?.user) {
+          if (isViajarTestLoginEnabled()) {
+            clearSimulatedTestSessionMarkers();
+          }
+          setSession(session);
+          setUser(session.user);
+
           console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
-          // Não bloquear o fluxo de loading pelo fetch do perfil
           fetchUserProfile(session.user.id).catch((error) => {
             console.error("❌ [AuthProvider] Erro ao buscar perfil (onAuthStateChange):", error);
           });
           
-          // Se foi um login OAuth (SIGNED_IN), redirecionar para a página correta
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
             console.log('🔄 [AuthProvider] ========== OAUTH REDIRECT DETECTADO ==========');
             const currentHostname = window.location.hostname.toLowerCase();
             
-            const { getOAuthCallbackRedirectPath, isDescubraMSContext } = await import('@/utils/authRedirect');
+            const { getOAuthCallbackRedirectPath } = await import('@/utils/authRedirect');
             
             let redirectPath = getOAuthCallbackRedirectPath();
             
@@ -100,8 +145,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }, 100);
           }
         } else {
-          console.log("🔄 AuthProvider: Usuário deslogado, resetando perfil.");
-          setUserProfile(null);
+          console.log("🔄 AuthProvider: Sem sessão Supabase.");
+          setSession(null);
+
+          let appliedTest = false;
+          if (isViajarTestLoginEnabled()) {
+            const tu = getCurrentTestUser();
+            if (tu) {
+              const { user: su, profile } = simulatedUserFromTestUser(tu);
+              setUser(su);
+              setUserProfile(profile);
+              appliedTest = true;
+            } else {
+              const leg = readLegacyStoredTestLogin();
+              if (leg) {
+                setUser(leg.user);
+                setUserProfile(leg.profile);
+                appliedTest = true;
+              }
+            }
+          }
+
+          if (!appliedTest) {
+            setUser(null);
+            setUserProfile(null);
+          }
         }
 
         console.log("⏱️ [AuthProvider] Finalizando onAuthStateChange, setLoading(false)");
@@ -109,15 +177,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Carregar sessão inicial
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setSession(session);
         setUser(session.user);
-        // Não bloquear o fluxo de loading pelo fetch do perfil
         fetchUserProfile(session.user.id).catch((error) => {
           console.error("❌ [AuthProvider] Erro ao buscar perfil (getSession):", error);
         });
+      } else if (isViajarTestLoginEnabled()) {
+        const tu = getCurrentTestUser();
+        if (tu) {
+          const { user: su, profile } = simulatedUserFromTestUser(tu);
+          setSession(null);
+          setUser(su);
+          setUserProfile(profile);
+        } else {
+          const leg = readLegacyStoredTestLogin();
+          if (leg) {
+            setSession(null);
+            setUser(leg.user);
+            setUserProfile(leg.profile);
+          }
+        }
       }
       console.log("⏱️ [AuthProvider] Finalizando getSession inicial, setLoading(false)");
       setLoading(false);
@@ -210,13 +291,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Login real no Supabase — sem test users
+      if (isViajarTestLoginEnabled()) {
+        const st = tryStaticTestSignIn(email, password);
+        if (st) {
+          setUser(st.user);
+          setUserProfile(st.profile);
+          setSession(null);
+          toast({
+            title: "Login realizado com sucesso!",
+            description: `Bem-vindo, ${st.profile.full_name}!`,
+          });
+          return { data: { user: st.user }, error: null };
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
+
+      if (isViajarTestLoginEnabled()) {
+        clearSimulatedTestSessionMarkers();
+      }
 
       return { data, error: null };
     } catch (error: unknown) {

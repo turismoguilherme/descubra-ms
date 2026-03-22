@@ -45,21 +45,12 @@ const GlobalSearchCommand: React.FC = () => {
 
     const runSearch = async () => {
       setLoading(true);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:46',message:'Starting search',data:{query},timestamp:Date.now(),hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
       try {
         const data = await searchAll(query);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:49',message:'Search results received',data:{query,resultsCount:data.length,results:data},timestamp:Date.now(),hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
         if (!cancelled) {
           setResults(data);
         }
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:54',message:'Search error',data:{query,error:error?.toString()},timestamp:Date.now(),hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
         if (!cancelled) {
           setResults([]);
         }
@@ -84,15 +75,9 @@ const GlobalSearchCommand: React.FC = () => {
   };
 
   const handleAskGuata = () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:77',message:'handleAskGuata called',data:{query:query.trim()},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (!query.trim()) return;
     const params = new URLSearchParams({ q: query.trim() });
     const targetUrl = `/descubrams/guata?${params.toString()}`;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:81',message:'Navigating to Guata',data:{targetUrl},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     close();
     navigate(targetUrl);
   };
@@ -104,22 +89,6 @@ const GlobalSearchCommand: React.FC = () => {
 
   const showAskGuata = isNaturalLanguageQuery(query);
   const hasResults = Object.keys(grouped).length > 0;
-  
-  // #region agent log
-  useEffect(() => {
-    if (query.length >= 2) {
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:89',message:'Query state check',data:{query,showAskGuata,hasResults,loading,resultsCount:results.length},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-    }
-  }, [query, showAskGuata, hasResults, loading, results.length]);
-  // #endregion
-
-  // #region agent log
-  useEffect(() => {
-    if (isOpen) {
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearchCommand.tsx:116',message:'Render check',data:{isOpen,query,showAskGuata,hasResults,loading,resultsCount:results.length,willRenderGuata:!loading && showAskGuata && query.length >= 2},timestamp:Date.now(),hypothesisId:'G'})}).catch(()=>{});
-    }
-  }, [isOpen, query, showAskGuata, hasResults, loading, results.length]);
-  // #endregion
 
   return (
     <CommandDialog open={isOpen} onOpenChange={(open) => !open && close()}>

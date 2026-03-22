@@ -148,27 +148,15 @@ const Guata = () => {
   // PRIORIDADE 1: Consumir ?q= da URL (pergunta vinda da busca) e enviar como primeira mensagem
   // Este useEffect deve rodar ANTES da mensagem de boas-vindas
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:169',message:'useEffect ?q= triggered',data:{locationSearch:location.search,forceLoad,authLoading,mensagensLength:mensagens.length,isLoading},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     const canProceed = forceLoad || !authLoading;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:172',message:'Auth check result',data:{canProceed},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     if (!canProceed) return; // Aguardar autenticação
     
     const params = new URLSearchParams(location.search);
     const pergunta = params.get("q");
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:176',message:'URL param check',data:{pergunta,hasPergunta:!!pergunta,mensagensLength:mensagens.length,isLoading},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     // Se veio pergunta da busca, enviar automaticamente
     if (pergunta && mensagens.length === 0 && !isLoading) {
       console.log("🦦 [Guata] Recebendo pergunta da busca:", pergunta);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Guata.tsx:181',message:'Sending question automatically',data:{pergunta},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       
       // Enviar a pergunta automaticamente
       enviarMensagem(pergunta);

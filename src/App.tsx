@@ -32,6 +32,7 @@ import "@/services/events/IntelligentEventActivator";
 import { safeLog } from "@/utils/safeLog";
 import { initSupabaseInterceptor } from "@/utils/supabaseInterceptor";
 import { useDomainValidation } from "@/hooks/useDomainValidation";
+import { isViajarTestLoginEnabled } from "@/utils/viajarTestLogin";
 
 // Inicializar interceptor do Supabase para renovação automática de tokens
 initSupabaseInterceptor();
@@ -62,7 +63,7 @@ const ViaJAROnboarding = lazy(() => import("@/pages/ViaJAROnboarding"));
 const ViaJARPricing = lazy(() => import("@/pages/ViaJARPricing"));
 const DiagnosticPage = lazy(() => import("@/pages/DiagnosticPage"));
 const SmartOnboarding = lazy(() => import("@/pages/SmartOnboarding"));
-// TestLogin removido por segurança — autenticação apenas via Supabase Auth
+const TestLogin = lazy(() => import("@/pages/TestLogin"));
 const CATDashboard = lazy(() => import("@/pages/CATDashboard"));
 const AttendantCheckIn = lazy(() => import("@/pages/AttendantCheckIn"));
 const SecretaryDashboard = lazy(() => import("@/components/secretary/SecretaryDashboard"));
@@ -216,7 +217,16 @@ function AppRoutes() {
                                 <Route path="/viajar/termos" element={<ViaJARTermosUso />} />
                                 <Route path="/viajar/cookies" element={<ViaJARCookies />} />
 
-                                {/* /test-login removido por segurança */}
+                                {isViajarTestLoginEnabled() && (
+                                  <Route
+                                    path="/test-login"
+                                    element={
+                                      <Suspense fallback={<LoadingFallback />}>
+                                        <TestLogin />
+                                      </Suspense>
+                                    }
+                                  />
+                                )}
 
                                 {/* Dashboard Routes Específicos */}
                                 <Route path="/secretary-dashboard" element={

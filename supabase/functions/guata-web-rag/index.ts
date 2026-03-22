@@ -124,6 +124,16 @@ const responseCache = new Map<string, { data: any; timestamp: number; ttl: numbe
 const DEFAULT_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (eventos)
 
+/** Modelo Gemini (secret opcional GEMINI_MODEL; padrão flash recente) */
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.0-flash'
+/** Similaridade mínima chunk↔pergunta; pode afinar com GUATA_EMBEDDING_SIM_MIN */
+const EMBEDDING_SIMILARITY_MIN = parseFloat(Deno.env.get('GUATA_EMBEDDING_SIM_MIN') ?? '0.25')
+
+export interface GenerateResponseResult {
+  answer: string
+  meta?: { gemini_status: string; gemini_http_status?: number }
+}
+
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -230,20 +240,27 @@ serve(async (req) => {
     // 6. Build context for Gemini
     console.log('\n📝 === CONSTRUINDO CONTEXTO PARA GEMINI ===')
     const topResults = rankedResults.slice(0, 8)
-const context = buildContext(topResults)
+    const context = buildContext(topResults)
     console.log(`📝 Contexto length: ${context.length} caracteres`)
-    
-// 6.1 Se a pergunta for de eventos, tentar parser rápido por regex
-let quickAgenda: string | null = null
-if (/evento|agenda|programa[çc][aã]o|show|shows/i.test(question)) {
-  // janela dinâmica: padrão 30 dias
-  const windowDays = /hoje|amanh[ãa]|fim de semana/i.test(question) ? 3 : 30
-  quickAgenda = tryParseEvents(topResults, windowDays)
-}
-    
-// 7. Generate response with Gemini (ou usar agenda rápida quando fizer sentido)
+
+    // 6.1 Se a pergunta for de eventos, tentar parser rápido por regex
+    let quickAgenda: string | null = null
+    if (/evento|agenda|programa[çc][aã]o|show|shows/i.test(question)) {
+      const windowDays = /hoje|amanh[ãa]|fim de semana/i.test(question) ? 3 : 30
+      quickAgenda = tryParseEvents(topResults, windowDays)
+    }
+
+    // 7. Generate response with Gemini (ou usar agenda rápida quando fizer sentido)
     console.log('\n🤖 === GERANDO RESPOSTA COM GEMINI ===')
-const response = quickAgenda ? `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?` : await generateResponse(question, context, topResults)
+    let response: string
+    let guataAiMeta: GenerateResponseResult['meta'] | undefined
+    if (quickAgenda) {
+      response = `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?`
+    } else {
+      const gen = await generateResponse(question, context, topResults)
+      response = gen.answer
+      guataAiMeta = gen.meta
+    }
     console.log(`🤖 Resposta gerada: ${response.substring(0, 100)}...`)
     
     // 8. Aplicar aprendizado contínuo
@@ -268,7 +285,8 @@ const response = quickAgenda ? `${quickAgenda}\n\nQuer que eu detalhe horários 
       confidence: calculateConfidence(rankedResults),
       total_sources: allResults.length,
       learning_applied: learningData.query_type !== 'unknown',
-      processing_time_ms: Date.now() - Date.now() // Simulado
+      processing_time_ms: Date.now() - Date.now(), // Simulado
+      ...(guataAiMeta ? { guata_ai_meta: guataAiMeta } : {})
     }
     
     const ttl = learningData.query_type === 'event' ? EVENT_CACHE_TTL : DEFAULT_CACHE_TTL
@@ -346,7 +364,7 @@ async function performEmbeddingSearch(question: string, state_code: string): Pro
       if (chunk.embedding) {
         const similarity = calculateCosineSimilarity(questionEmbedding, chunk.embedding)
         
-        if (similarity > 0.3) { // Threshold de similaridade
+        if (similarity > EMBEDDING_SIMILARITY_MIN) {
           results.push({
             title: chunk.metadata?.title || 'Documento oficial',
             snippet: chunk.content.substring(0, 200) + '...',
@@ -730,41 +748,18 @@ function rankResults(results: SearchResult[], question: string): SearchResult[] 
 }
 
 function buildContext(results: SearchResult[]): string {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:730','message':'buildContext called','data':{resultsCount:results.length,results:results.slice(0,3).map(r=>({title:r.title,source:r.source}))},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
   if (results.length === 0) {
-    const noContext = "NO_CONTEXT";
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:732','message':'buildContext returning NO_CONTEXT','data':{reason:'no results'},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    return noContext; // força política no-source na geração
+    return 'NO_CONTEXT';
   }
-  
-  const context = results.map(r => 
+
+  return results.map(r =>
     `Fonte: ${r.title}\nInformação: ${r.snippet}\nLink: ${r.link}`
   ).join('\n\n');
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:738','message':'buildContext returning context','data':{contextLength:context.length,contextPreview:context.substring(0,200)},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
-  return context;
 }
 
-async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<string> {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:754','message':'generateResponse called','data':{question,contextLength:context?.length||0,contextPreview:context?.substring(0,200)||'null',sourcesCount:sources.length,contextIsNoContext:context==='NO_CONTEXT'},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
-  const hasAnySource = sources.length > 0
-  const hasWebContent = context && context.length > 50 && context !== "NO_CONTEXT"
-  const hasContext = hasWebContent && context !== "NO_CONTEXT"
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:760','message':'generateResponse checks','data':{hasAnySource,hasWebContent,contextLength:context?.length||0,hasContext,willCallGemini:true},timestamp:Date.now(),runId:'debug1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
+async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<GenerateResponseResult> {
+  const hasWebContent = context && context.length > 50 && context !== 'NO_CONTEXT'
+  const hasContext = hasWebContent && context !== 'NO_CONTEXT'
 
   // SEMPRE chamar Gemini, mesmo sem contexto - ele tem conhecimento local sobre MS
   const prompt = hasContext 
@@ -897,11 +892,15 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
       console.log('❌ API Key não configurada')
-      return "Não consegui gerar uma resposta adequada. Por favor, consulte as fontes oficiais."
+      return {
+        answer:
+          '🦦 O serviço de linguagem do Guatá não está configurado no servidor (falta o secret **GEMINI_API_KEY** no Supabase). Enquanto isso, use **turismo.ms.gov.br** e o mapa de destinos no Descubra MS. Se quiser testar de novo, peça ao administrador para configurar a chave da API Google AI.',
+        meta: { gemini_status: 'no_api_key' },
+      }
     }
-    
-    // CORREÇÃO: Usar API key como parâmetro da URL ao invés de Bearer token
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`
+    console.log('📤 Gemini model:', GEMINI_MODEL)
     console.log('📤 URL da API:', url.replace(apiKey, 'API_KEY_HIDDEN'))
     
     const requestBody = {
@@ -936,7 +935,18 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
     if (!response.ok) {
       const errorText = await response.text()
       console.log('❌ Gemini Error response:', errorText)
-      return "Não consegui gerar uma resposta adequada. Por favor, consulte as fontes oficiais."
+      let hint = ''
+      try {
+        const errJson = JSON.parse(errorText) as { error?: { message?: string } }
+        if (errJson?.error?.message) hint = ` Detalhe: ${errJson.error.message}`
+      } catch {
+        /* ignore */
+      }
+      return {
+        answer:
+          `🦦 Não consegui contatar a inteligência artificial agora (HTTP ${response.status}).${hint} Verifique **GEMINI_API_KEY**, o modelo (**GEMINI_MODEL**=${GEMINI_MODEL}) e cota da API Google. Dados oficiais: **turismo.ms.gov.br**.`,
+        meta: { gemini_status: 'http_error', gemini_http_status: response.status },
+      }
     }
     
     const data = await response.json()
@@ -964,28 +974,31 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       textPreview: generatedText?.substring(0, 200) || 'null'
     })
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guata-web-rag/index.ts:915','message':'Gemini response received','data':{hasText:!!generatedText,textLength:generatedText?.length||0,textPreview:generatedText?.substring(0,200)||'null',isGeneric:isGenericResponse,contextWasUsed:!isGenericResponse,hasContext},timestamp:Date.now(),runId:'debug1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    
     if (generatedText) {
-      // Se a resposta for genérica mesmo com o prompt melhorado, adicionar aviso
       if (isGenericResponse && !hasContext) {
         console.warn('⚠️ Gemini retornou resposta genérica mesmo com prompt melhorado. Isso pode indicar que o modelo não está seguindo as instruções.')
         console.warn('⚠️ Resposta recebida:', generatedText.substring(0, 300))
       }
-      
+
       console.log('✅ Generated text:', generatedText.substring(0, 150) + '...')
-      return generatedText
-    } else {
-      console.log('❌ No text generated from Gemini')
-      console.log('❌ Full response data:', JSON.stringify(data, null, 2))
-      return "Não consegui gerar uma resposta adequada. Por favor, consulte as fontes oficiais."
+      return { answer: generatedText, meta: { gemini_status: 'ok' } }
     }
-           
+
+    console.log('❌ No text generated from Gemini')
+    console.log('❌ Full response data:', JSON.stringify(data, null, 2))
+    const finishReason = data.candidates?.[0]?.finishReason
+    return {
+      answer:
+        `🦦 A IA não devolveu texto nesta rodada${finishReason ? ` (motivo: ${finishReason})` : ''}. Tente uma pergunta mais curta ou reformule. Fontes oficiais: **turismo.ms.gov.br** e o conteúdo de destinos aqui no site.`,
+      meta: { gemini_status: 'empty_response' },
+    }
   } catch (error: unknown) {
     console.error('❌ Gemini API error:', error)
-    return "Desculpe, tive um problema técnico. Baseado nas fontes encontradas, recomendo consultar diretamente turismo.ms.gov.br para informações atualizadas."
+    return {
+      answer:
+        '🦦 Tive um problema técnico ao gerar a resposta. Tente de novo em instantes. Para informações oficiais e atualizadas: **turismo.ms.gov.br**.',
+      meta: { gemini_status: 'exception' },
+    }
   }
 }
 

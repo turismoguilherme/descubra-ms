@@ -4,15 +4,11 @@ import { useMultiTenant } from '../hooks/useMultiTenant';
 import { platformContentService } from '@/services/admin/platformContentService';
 import logoDescubraMS from '@/assets/images/logo-descubra-ms-v2.png';
 
-// Flag para logs de debug locais
 const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
 const safeLog = (payload: any) => {
   if (!enableDebugLogs) return;
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, timestamp: Date.now(), sessionId: 'debug-session', runId: payload?.runId || 'run1' })
-  }).catch(() => {});
+  // eslint-disable-next-line no-console
+  console.debug('[BrandContext]', payload);
 };
 
 export interface BrandConfig {
@@ -188,19 +184,8 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   // Função para detectar o tenant baseado no path atual
   const detectTenantFromPath = (pathname: string): 'ms' | 'overflow-one' => {
     const path = pathname.toLowerCase();
-const enableDebugLogs = import.meta.env.VITE_DEBUG_LOGS === 'true';
-
-const safeLog = (payload: any) => {
-  if (!enableDebugLogs) return;
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, timestamp: Date.now(), sessionId: 'debug-session' })
-  }).catch(() => {});
-};
 
     if (path.startsWith('/descubrams') || path.startsWith('/descubramatogrossodosul') || path.startsWith('/ms') || path.startsWith('/partner')) {
-    
       return 'ms';
     }
     

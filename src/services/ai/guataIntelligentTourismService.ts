@@ -214,18 +214,14 @@ class GuataIntelligentTourismService {
           }
         });
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guataIntelligentTourismService.ts:210','message':'RAG response received','data':{hasError:!!ragError,hasData:!!ragData,sourcesCount:ragData?.sources?.length||0,hasAnswer:!!ragData?.answer,answerPreview:ragData?.answer?.substring(0,200)||'null',answerIsGeneric:ragData?.answer?.includes('Não encontrei informações específicas')||false},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-
         if (!ragError && ragData) {
           webRagResults = ragData.sources || [];
           webRagAnswer = ragData.answer;
+          const meta = ragData.guata_ai_meta as { gemini_status?: string } | undefined;
+          if (import.meta.env.DEV && meta?.gemini_status && meta.gemini_status !== 'ok') {
+            console.info('[Guatá RAG] Estado do Gemini na Edge:', meta);
+          }
           console.log(`✅ guata-web-rag: ${webRagResults.length} resultados do banco encontrados`);
-          
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'guataIntelligentTourismService.ts:220','message':'RAG data processed','data':{webRagResultsCount:webRagResults.length,webRagAnswerLength:webRagAnswer?.length||0,willUseRagAnswer:!!webRagAnswer&&webRagAnswer.length>0},timestamp:Date.now(),runId:'debug1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
           
           // Converter resultados do RAG para formato do webSearchResponse
           webSearchResponse.results = webRagResults.map((result: any) => ({

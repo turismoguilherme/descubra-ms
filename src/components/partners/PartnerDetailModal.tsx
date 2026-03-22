@@ -13,21 +13,9 @@ interface PartnerDetailModalProps {
 }
 
 export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModalProps) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:14',message:'Component render start',data:{hasPartner:!!partner,partnerId:partner?.id,open},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:16',message:'useState hook 1 called',data:{hasPartner:!!partner},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:18',message:'useState hook 2 called',data:{hasPartner:!!partner},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const [videoPlaying, setVideoPlaying] = useState(false);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:20',message:'useState hook 3 called',data:{hasPartner:!!partner},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   
   // Compute values that depend on partner (safe to compute even when partner is null)
   const allImages = partner ? [
@@ -60,9 +48,6 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
   const youtubeVideoId = partner?.youtube_url ? getYouTubeVideoId(partner.youtube_url) : null;
 
   // Resetar estado do vídeo quando o modal é fechado ou reaberto
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:46',message:'useEffect hook 1 about to be called',data:{hasPartner:!!partner},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   useEffect(() => {
     if (!open) {
       setVideoPlaying(false);
@@ -70,17 +55,11 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
   }, [open]);
 
   // Log quando videoPlaying muda (após youtubeVideoId ser definido)
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:54',message:'useEffect hook 2 about to be called',data:{hasPartner:!!partner},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   useEffect(() => {
     // Empty effect - can safely run even when partner is null
   }, [videoPlaying, youtubeVideoId]);
 
   // Navegação por teclado no lightbox
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:60',message:'useEffect hook 3 about to be called',data:{hasPartner:!!partner},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   useEffect(() => {
     if (!lightboxOpen) return;
 
@@ -102,13 +81,7 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
   }, [lightboxOpen, allImages.length]);
 
   // Early return após todos os hooks para evitar avisos do React
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:78',message:'Checking partner before early return',data:{hasPartner:!!partner,willReturnEarly:!partner,hooksCalledSoFar:6},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   if (!partner) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:81',message:'Early return - partner is null',data:{hooksCalledSoFar:6},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     return null;
   }
 
@@ -291,17 +264,8 @@ export function PartnerDetailModal({ partner, open, onClose }: PartnerDetailModa
                   size="lg"
                   className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 rounded-full flex-1"
                   onClick={() => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:261',message:'onClick - Reservar Agora button clicked',data:{partnerId:partner?.id,partnerName:partner?.name,hasPartnerId:!!partner?.id},timestamp:Date.now(),runId:'debug-2',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
                     const reservationUrl = `/descubrams/parceiros/${partner.id}/reservar`;
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:263',message:'onClick - reservationUrl constructed',data:{reservationUrl,partnerId:partner.id},timestamp:Date.now(),runId:'debug-2',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
-                    const newWindow = window.open(reservationUrl, '_blank');
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/e9b66640-dbd2-4546-ba6c-00c5465b68fe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PartnerDetailModal.tsx:265',message:'onClick - window.open called',data:{reservationUrl,newWindowOpened:!!newWindow},timestamp:Date.now(),runId:'debug-2',hypothesisId:'A'})}).catch(()=>{});
-                    // #endregion
+                    window.open(reservationUrl, '_blank');
                   }}
                 >
                   Reservar Agora

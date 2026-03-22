@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import ModernAdminLayout from '@/components/admin/layout/ModernAdminLayout';
@@ -15,6 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { isViajarTestLoginEnabled } from '@/utils/viajarTestLogin';
+import { getTestUser, autoLoginTestUser } from '@/services/auth/TestUsers';
 
 // Lazy load components
 const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
@@ -60,9 +62,39 @@ const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMemb
 const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
 
+const ADMIN_ROLES = ['admin', 'master_admin', 'tech'] as const;
+
 export default function ViaJARAdminPanel() {
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, session } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [testBootExpired, setTestBootExpired] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!isViajarTestLoginEnabled() || loading) return;
+    if (session) return;
+    const hasAdminAccess =
+      user && userProfile && ADMIN_ROLES.includes(userProfile.role as (typeof ADMIN_ROLES)[number]);
+    if (hasAdminAccess) return;
+    const admin = getTestUser('admin-1');
+    if (admin) {
+      autoLoginTestUser('admin-1');
+    }
+  }, [loading, session, user, userProfile]);
+
+  useEffect(() => {
+    if (!isViajarTestLoginEnabled()) return;
+    const hasAdmin =
+      user && userProfile && ADMIN_ROLES.includes(userProfile.role as (typeof ADMIN_ROLES)[number]);
+    if (session || hasAdmin) {
+      setTestBootExpired(false);
+      return;
+    }
+    if (!user) {
+      const t = window.setTimeout(() => setTestBootExpired(true), 4000);
+      return () => window.clearTimeout(t);
+    }
+    setTestBootExpired(true);
+  }, [session, user, userProfile]);
 
   useEffect(() => {
     console.log('🧭 [ViaJARAdminPanel] Estado de auth atualizado:', {
@@ -76,7 +108,7 @@ export default function ViaJARAdminPanel() {
     if (!loading) {
       if (user && userProfile) {
         const role = userProfile?.role || 'user';
-        const allowedRoles = ['admin', 'master_admin', 'tech'];
+        const allowedRoles = [...ADMIN_ROLES];
 
         const authorized = allowedRoles.includes(role);
         console.log('🧭 [ViaJARAdminPanel] Verificando permissão para admin:', {
@@ -106,6 +138,25 @@ export default function ViaJARAdminPanel() {
         </div>
       </div>
     );
+  }
+
+  const testMode = isViajarTestLoginEnabled();
+  const hasAdminRole =
+    user && userProfile && ADMIN_ROLES.includes(userProfile.role as (typeof ADMIN_ROLES)[number]);
+
+  // Modo teste sem sessão Supabase: spinner só sem user; com user sem admin → AdminLogin (evita spinner infinito)
+  if (testMode && !session && !hasAdminRole) {
+    if (!user && !testBootExpired) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4" />
+            <p className="text-gray-600">Abrindo painel de teste (admin)…</p>
+          </div>
+        </div>
+      );
+    }
+    return <AdminLogin />;
   }
 
   // Se não estiver autenticado ou não for admin, mostrar login
