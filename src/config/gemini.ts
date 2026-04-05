@@ -43,7 +43,7 @@ export async function generateContent(
     const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
       body: {
         prompt: fullPrompt,
-        model: 'gemini-2.0-flash-exp', // Modelo que funciona na Edge Function
+        model: 'gemini-2.5-flash-preview-04-17',
         temperature: 0.7,
         maxOutputTokens: 2000
       }
