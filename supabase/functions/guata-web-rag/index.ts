@@ -126,7 +126,7 @@ const DEFAULT_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (eventos)
 
 /** Modelo Gemini (secret opcional GEMINI_MODEL; padrão flash recente) */
-const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.0-flash'
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash-preview-04-17'
 /** Similaridade mínima chunk↔pergunta; pode afinar com GUATA_EMBEDDING_SIM_MIN */
 const EMBEDDING_SIMILARITY_MIN = parseFloat(Deno.env.get('GUATA_EMBEDDING_SIM_MIN') ?? '0.25')
 

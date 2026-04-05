@@ -136,8 +136,8 @@ serve(async (req) => {
     }
     
     // Validate model name to prevent injection
-    const allowedModels = ['gemini-2.0-flash-exp', 'gemini-2.0-flash', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.0-flash-exp';
+    const allowedModels = ['gemini-2.5-flash-preview-04-17', 'gemini-2.0-flash-exp', 'gemini-2.0-flash', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.5-flash-preview-04-17';
     
     // Validate temperature and maxOutputTokens
     const safeTemperature = Math.max(0, Math.min(1, temperature || 0.3));
