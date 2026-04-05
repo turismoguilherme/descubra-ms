@@ -577,6 +577,36 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage: {
+        Row: {
+          created_at: string | null
+          date: string
+          gemini_calls: number | null
+          google_search_calls: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          gemini_calls?: number | null
+          google_search_calls?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          gemini_calls?: number | null
+          google_search_calls?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendant_allowed_locations: {
         Row: {
           address: string | null
@@ -1872,80 +1902,6 @@ export type Database = {
         }
         Relationships: []
       }
-      event_details: {
-        Row: {
-          auto_hide: boolean | null
-          cover_image_url: string | null
-          created_at: string | null
-          detailed_description: string | null
-          event_id: string
-          event_type: string | null
-          exact_location: string | null
-          extra_info: string | null
-          id: string
-          is_free: boolean | null
-          map_latitude: number | null
-          map_longitude: number | null
-          official_name: string | null
-          registration_link: string | null
-          schedule_info: string | null
-          updated_at: string | null
-          updated_by: string | null
-          video_url: string | null
-          visibility_end_date: string | null
-        }
-        Insert: {
-          auto_hide?: boolean | null
-          cover_image_url?: string | null
-          created_at?: string | null
-          detailed_description?: string | null
-          event_id: string
-          event_type?: string | null
-          exact_location?: string | null
-          extra_info?: string | null
-          id?: string
-          is_free?: boolean | null
-          map_latitude?: number | null
-          map_longitude?: number | null
-          official_name?: string | null
-          registration_link?: string | null
-          schedule_info?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-          video_url?: string | null
-          visibility_end_date?: string | null
-        }
-        Update: {
-          auto_hide?: boolean | null
-          cover_image_url?: string | null
-          created_at?: string | null
-          detailed_description?: string | null
-          event_id?: string
-          event_type?: string | null
-          exact_location?: string | null
-          extra_info?: string | null
-          id?: string
-          is_free?: boolean | null
-          map_latitude?: number | null
-          map_longitude?: number | null
-          official_name?: string | null
-          registration_link?: string | null
-          schedule_info?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-          video_url?: string | null
-          visibility_end_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_details_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       event_translations: {
         Row: {
           category: string | null
@@ -1980,154 +1936,94 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "event_translations_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       events: {
         Row: {
-          approval_status: string | null
-          auto_hide: boolean | null
-          category: string | null
-          city_id: string | null
+          categoria: string | null
+          cidade: string | null
+          confiabilidade: number | null
+          contato_email: string | null
+          contato_telefone: string | null
           created_at: string | null
-          created_by: string | null
-          description: string | null
-          end_date: string | null
-          end_time: string | null
-          galeria_imagens: string[] | null
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          estado: string | null
+          external_id: string
+          fonte: string | null
           id: string
-          image_url: string | null
-          is_sponsored: boolean | null
-          is_visible: boolean | null
-          location: string | null
-          logo_evento: string | null
-          name: string
-          organizador_email: string | null
-          organizador_empresa: string | null
-          organizador_nome: string | null
-          organizador_telefone: string | null
-          return_domain: string | null
+          imagem_principal: string | null
+          link_inscricao: string | null
+          local: string | null
+          organizador: string | null
+          processado_por_ia: boolean | null
+          publico_alvo: string | null
           site_oficial: string | null
-          sponsor_amount: number | null
-          sponsor_end_date: string | null
-          sponsor_payment_status: string | null
-          sponsor_start_date: string | null
-          sponsor_tier: string | null
-          start_date: string
-          start_time: string | null
-          state_id: string | null
-          stripe_payment_link_url: string | null
-          tourist_region_id: string | null
+          tags: string[] | null
+          tipo_entrada: string | null
+          titulo: string
+          ultima_atualizacao: string | null
           updated_at: string | null
-          video_url: string | null
-          visibility_end_date: string | null
+          video_promocional: string | null
         }
         Insert: {
-          approval_status?: string | null
-          auto_hide?: boolean | null
-          category?: string | null
-          city_id?: string | null
+          categoria?: string | null
+          cidade?: string | null
+          confiabilidade?: number | null
+          contato_email?: string | null
+          contato_telefone?: string | null
           created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          end_date?: string | null
-          end_time?: string | null
-          galeria_imagens?: string[] | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          estado?: string | null
+          external_id: string
+          fonte?: string | null
           id?: string
-          image_url?: string | null
-          is_sponsored?: boolean | null
-          is_visible?: boolean | null
-          location?: string | null
-          logo_evento?: string | null
-          name: string
-          organizador_email?: string | null
-          organizador_empresa?: string | null
-          organizador_nome?: string | null
-          organizador_telefone?: string | null
-          return_domain?: string | null
+          imagem_principal?: string | null
+          link_inscricao?: string | null
+          local?: string | null
+          organizador?: string | null
+          processado_por_ia?: boolean | null
+          publico_alvo?: string | null
           site_oficial?: string | null
-          sponsor_amount?: number | null
-          sponsor_end_date?: string | null
-          sponsor_payment_status?: string | null
-          sponsor_start_date?: string | null
-          sponsor_tier?: string | null
-          start_date: string
-          start_time?: string | null
-          state_id?: string | null
-          stripe_payment_link_url?: string | null
-          tourist_region_id?: string | null
+          tags?: string[] | null
+          tipo_entrada?: string | null
+          titulo: string
+          ultima_atualizacao?: string | null
           updated_at?: string | null
-          video_url?: string | null
-          visibility_end_date?: string | null
+          video_promocional?: string | null
         }
         Update: {
-          approval_status?: string | null
-          auto_hide?: boolean | null
-          category?: string | null
-          city_id?: string | null
+          categoria?: string | null
+          cidade?: string | null
+          confiabilidade?: number | null
+          contato_email?: string | null
+          contato_telefone?: string | null
           created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          end_date?: string | null
-          end_time?: string | null
-          galeria_imagens?: string[] | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          estado?: string | null
+          external_id?: string
+          fonte?: string | null
           id?: string
-          image_url?: string | null
-          is_sponsored?: boolean | null
-          is_visible?: boolean | null
-          location?: string | null
-          logo_evento?: string | null
-          name?: string
-          organizador_email?: string | null
-          organizador_empresa?: string | null
-          organizador_nome?: string | null
-          organizador_telefone?: string | null
-          return_domain?: string | null
+          imagem_principal?: string | null
+          link_inscricao?: string | null
+          local?: string | null
+          organizador?: string | null
+          processado_por_ia?: boolean | null
+          publico_alvo?: string | null
           site_oficial?: string | null
-          sponsor_amount?: number | null
-          sponsor_end_date?: string | null
-          sponsor_payment_status?: string | null
-          sponsor_start_date?: string | null
-          sponsor_tier?: string | null
-          start_date?: string
-          start_time?: string | null
-          state_id?: string | null
-          stripe_payment_link_url?: string | null
-          tourist_region_id?: string | null
+          tags?: string[] | null
+          tipo_entrada?: string | null
+          titulo?: string
+          ultima_atualizacao?: string | null
           updated_at?: string | null
-          video_url?: string | null
-          visibility_end_date?: string | null
+          video_promocional?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "events_state_id_fkey"
-            columns: ["state_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "events_tourist_region_id_fkey"
-            columns: ["tourist_region_id"]
-            isOneToOne: false
-            referencedRelation: "tourist_regions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       expenses: {
         Row: {
@@ -2629,6 +2525,75 @@ export type Database = {
           },
         ]
       }
+      guata_events: {
+        Row: {
+          city: string | null
+          contact_info: Json | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          end_time: string | null
+          event_type: string | null
+          id: string
+          is_active: boolean | null
+          is_recurring: boolean | null
+          last_verified: string | null
+          location: string | null
+          price_info: string | null
+          recurrence_pattern: Json | null
+          source: string | null
+          start_date: string | null
+          start_time: string | null
+          title: string
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          last_verified?: string | null
+          location?: string | null
+          price_info?: string | null
+          recurrence_pattern?: Json | null
+          source?: string | null
+          start_date?: string | null
+          start_time?: string | null
+          title: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          last_verified?: string | null
+          location?: string | null
+          price_info?: string | null
+          recurrence_pattern?: Json | null
+          source?: string | null
+          start_date?: string | null
+          start_time?: string | null
+          title?: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       guata_feedback: {
         Row: {
           answer: string | null
@@ -2671,6 +2636,63 @@ export type Database = {
           source_title?: string | null
           url?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      guata_itineraries: {
+        Row: {
+          accommodation_suggestions: string | null
+          attractions: Json | null
+          created_at: string | null
+          daily_schedule: Json | null
+          description: string | null
+          difficulty_level: string | null
+          duration_days: number
+          id: string
+          is_featured: boolean | null
+          season_recommendation: string | null
+          target_audience: string | null
+          tips: string | null
+          title: string
+          total_cost_estimate: number | null
+          transportation_info: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accommodation_suggestions?: string | null
+          attractions?: Json | null
+          created_at?: string | null
+          daily_schedule?: Json | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_days: number
+          id?: string
+          is_featured?: boolean | null
+          season_recommendation?: string | null
+          target_audience?: string | null
+          tips?: string | null
+          title: string
+          total_cost_estimate?: number | null
+          transportation_info?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accommodation_suggestions?: string | null
+          attractions?: Json | null
+          created_at?: string | null
+          daily_schedule?: Json | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_days?: number
+          id?: string
+          is_featured?: boolean | null
+          season_recommendation?: string | null
+          target_audience?: string | null
+          tips?: string | null
+          title?: string
+          total_cost_estimate?: number | null
+          transportation_info?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2788,6 +2810,126 @@ export type Database = {
         }
         Relationships: []
       }
+      guata_search_stats: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          query: string
+          query_category: string | null
+          response_time_ms: number | null
+          results_count: number | null
+          session_id: string | null
+          sources_used: Json | null
+          user_id: string | null
+          user_satisfaction: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          query: string
+          query_category?: string | null
+          response_time_ms?: number | null
+          results_count?: number | null
+          session_id?: string | null
+          sources_used?: Json | null
+          user_id?: string | null
+          user_satisfaction?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          query?: string
+          query_category?: string | null
+          response_time_ms?: number | null
+          results_count?: number | null
+          session_id?: string | null
+          sources_used?: Json | null
+          user_id?: string | null
+          user_satisfaction?: string | null
+        }
+        Relationships: []
+      }
+      guata_tourist_attractions: {
+        Row: {
+          accessibility_info: string | null
+          address: string | null
+          average_price: number | null
+          best_time_to_visit: string | null
+          category: string
+          city: string
+          coordinates: unknown
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          images: Json | null
+          is_active: boolean | null
+          last_verified: string | null
+          location: string
+          name: string
+          official_source: string | null
+          opening_hours: Json | null
+          phone: string | null
+          state: string | null
+          tags: string[] | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          accessibility_info?: string | null
+          address?: string | null
+          average_price?: number | null
+          best_time_to_visit?: string | null
+          category: string
+          city: string
+          coordinates?: unknown
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          last_verified?: string | null
+          location: string
+          name: string
+          official_source?: string | null
+          opening_hours?: Json | null
+          phone?: string | null
+          state?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          accessibility_info?: string | null
+          address?: string | null
+          average_price?: number | null
+          best_time_to_visit?: string | null
+          category?: string
+          city?: string
+          coordinates?: unknown
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          last_verified?: string | null
+          location?: string
+          name?: string
+          official_source?: string | null
+          opening_hours?: Json | null
+          phone?: string | null
+          state?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       guata_user_memory: {
         Row: {
           created_at: string | null
@@ -2821,6 +2963,84 @@ export type Database = {
           session_id?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      guata_verified_partners: {
+        Row: {
+          business_name: string
+          business_type: string | null
+          city: string | null
+          contact_info: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          location: string | null
+          pricing_info: string | null
+          rating: number | null
+          review_count: number | null
+          services: Json | null
+          updated_at: string | null
+          verification_date: string | null
+          verification_status: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          business_name: string
+          business_type?: string | null
+          city?: string | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          pricing_info?: string | null
+          rating?: number | null
+          review_count?: number | null
+          services?: Json | null
+          updated_at?: string | null
+          verification_date?: string | null
+          verification_status?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          business_name?: string
+          business_type?: string | null
+          city?: string | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          pricing_info?: string | null
+          rating?: number | null
+          review_count?: number | null
+          services?: Json | null
+          updated_at?: string | null
+          verification_date?: string | null
+          verification_status?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      inactive_account_warnings: {
+        Row: {
+          created_at: string
+          user_id: string
+          warned_at: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          warned_at?: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          warned_at?: string
         }
         Relationships: []
       }
@@ -3588,6 +3808,200 @@ export type Database = {
           },
         ]
       }
+      master_activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: unknown
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      master_ai_feedback: {
+        Row: {
+          context_data: Json | null
+          context_type: string | null
+          created_at: string | null
+          feedback_type: string
+          id: string
+          user_comment: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context_data?: Json | null
+          context_type?: string | null
+          created_at?: string | null
+          feedback_type: string
+          id?: string
+          user_comment?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context_data?: Json | null
+          context_type?: string | null
+          created_at?: string | null
+          feedback_type?: string
+          id?: string
+          user_comment?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      master_clients: {
+        Row: {
+          auto_renewal: boolean | null
+          client_name: string
+          company_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contract_end_date: string | null
+          contract_start_date: string | null
+          created_at: string | null
+          deal_amount: number | null
+          deal_stage: string | null
+          hubspot_contact_id: string | null
+          id: string
+          last_activity: string | null
+          monthly_fee: number | null
+          state_name: string
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_plan: string | null
+          updated_at: string | null
+          users_count: number | null
+        }
+        Insert: {
+          auto_renewal?: boolean | null
+          client_name: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          deal_amount?: number | null
+          deal_stage?: string | null
+          hubspot_contact_id?: string | null
+          id?: string
+          last_activity?: string | null
+          monthly_fee?: number | null
+          state_name: string
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_plan?: string | null
+          updated_at?: string | null
+          users_count?: number | null
+        }
+        Update: {
+          auto_renewal?: boolean | null
+          client_name?: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string | null
+          deal_amount?: number | null
+          deal_stage?: string | null
+          hubspot_contact_id?: string | null
+          id?: string
+          last_activity?: string | null
+          monthly_fee?: number | null
+          state_name?: string
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_plan?: string | null
+          updated_at?: string | null
+          users_count?: number | null
+        }
+        Relationships: []
+      }
+      master_deals: {
+        Row: {
+          close_date: string | null
+          created_at: string | null
+          deal_amount: number | null
+          deal_name: string
+          deal_stage: string | null
+          hubspot_contact_id: string | null
+          hubspot_deal_id: string | null
+          id: string
+          notes: string | null
+          probability: number | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          close_date?: string | null
+          created_at?: string | null
+          deal_amount?: number | null
+          deal_name: string
+          deal_stage?: string | null
+          hubspot_contact_id?: string | null
+          hubspot_deal_id?: string | null
+          id?: string
+          notes?: string | null
+          probability?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          close_date?: string | null
+          created_at?: string | null
+          deal_amount?: number | null
+          deal_name?: string
+          deal_stage?: string | null
+          hubspot_contact_id?: string | null
+          hubspot_deal_id?: string | null
+          id?: string
+          notes?: string | null
+          probability?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_deals_hubspot_contact_id_fkey"
+            columns: ["hubspot_contact_id"]
+            isOneToOne: false
+            referencedRelation: "master_clients"
+            referencedColumns: ["hubspot_contact_id"]
+          },
+        ]
+      }
       master_financial_records: {
         Row: {
           amount: number
@@ -3636,6 +4050,122 @@ export type Database = {
           stripe_invoice_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      master_platform_config: {
+        Row: {
+          config_key: string
+          config_type: string | null
+          config_value: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          config_key: string
+          config_type?: string | null
+          config_value?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_type?: string | null
+          config_value?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      master_support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          client_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          priority: string | null
+          resolution: string | null
+          resolved_at: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          client_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          priority?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          client_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          priority?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_support_tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "master_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_system_metrics: {
+        Row: {
+          category: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number
+          recorded_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_unit?: string | null
+          metric_value: number
+          recorded_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number
+          recorded_at?: string | null
         }
         Relationships: []
       }
@@ -5725,6 +6255,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_published: boolean | null
           map_image_url: string | null
           name: string
           passport_number_prefix: string | null
@@ -5745,6 +6276,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_published?: boolean | null
           map_image_url?: string | null
           name: string
           passport_number_prefix?: string | null
@@ -5765,6 +6297,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_published?: boolean | null
           map_image_url?: string | null
           name?: string
           passport_number_prefix?: string | null
@@ -6566,13 +7099,6 @@ export type Database = {
             referencedRelation: "destinations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_interactions_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_levels: {
@@ -7247,6 +7773,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      delete_passport_stamps_by_route: {
+        Args: { p_route_id: string }
+        Returns: number
+      }
       detect_suspicious_activity: {
         Args: { check_user_id: string }
         Returns: Json
@@ -7442,6 +7972,10 @@ export type Database = {
       promote_user_to_role: {
         Args: { p_email: string; p_role: string }
         Returns: boolean
+      }
+      reset_user_route_progress: {
+        Args: { p_route_id: string; p_user_id: string }
+        Returns: number
       }
       secure_ai_consultant_operation: {
         Args: {
