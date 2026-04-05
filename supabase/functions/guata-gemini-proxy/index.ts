@@ -106,7 +106,7 @@ serve(async (req) => {
       );
     }
 
-    const { prompt: rawPrompt, model = 'gemini-2.0-flash-exp', temperature = 0.3, maxOutputTokens = 2000 } = body;
+    const { prompt: rawPrompt, model = 'gemini-2.5-flash-preview-04-17', temperature = 0.3, maxOutputTokens = 2000 } = body;
     
     if (!rawPrompt) {
       console.error('❌ guata-gemini-proxy: Missing prompt field');
