@@ -46,6 +46,9 @@ class GuataIntelligentTourismService {
     emotions: ["interessado", "prestativo", "confiável", "orgulhoso", "curioso", "empolgado"]
   };
 
+  private readonly webDisclaimerFooter =
+    '\n\n—\nEssas sugestões da web não são parceiros cadastrados na plataforma; confira valores e disponibilidade nos sites ou diretamente com os estabelecimentos.';
+
   /**
    * Processa pergunta com IA + Pesquisa Web Real
    */
@@ -430,7 +433,9 @@ class GuataIntelligentTourismService {
       'restaurante', 'comer', 'comida', 'gastronomia', 'lanchonete', 'onde comer',
       'passeio', 'tour', 'excursão', 'agência', 'operadora', 'onde fazer',
       'tem hotel', 'tem restaurante', 'tem pousada', 'tem passeio',
-      'melhor restaurante', 'melhor hotel', 'melhor pousada', 'melhor passeio'
+      'melhor restaurante', 'melhor hotel', 'melhor pousada', 'melhor passeio',
+      'barato', 'econôm', 'econom', 'simples', 'luxo', 'centro', 'perto', 'próximo', 'proximo',
+      'qual melhor', 'o melhor', 'a melhor', 'me indica', 'indica um'
     ];
     
     // Perguntas que NÃO devem ter parceiros (conceitos gerais)
@@ -1148,6 +1153,109 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     return 'general';
   }
 
+  /** Roteiros/história = resposta pode ser longa; demais = curta (alinhado ao Gemini max tokens). */
+  private inferResponseDepth(question: string): 'quick' | 'deep' {
+    const q = question.toLowerCase();
+    const deepMarkers = [
+      'roteiro', 'itinerário', 'itinerario', 'história', 'historia',
+      'conte sobre', 'me explica', 'detalhad', 'planejar', 'planejamento',
+      'quantos dias', ' dias em ', 'viagem de ', 'cronograma', 'passo a passo'
+    ];
+    if (deepMarkers.some((m) => q.includes(m))) return 'deep';
+    return 'quick';
+  }
+
+  /** True se há resultados claramente vindos de busca na internet (Google/PSE/híbrido), não só FTS do banco. */
+  private hasWebDerivedResults(webSearchResponse: RealWebSearchResponse): boolean {
+    const m = webSearchResponse.searchMethod;
+    if (m === 'google' || m === 'hybrid' || m === 'serpapi') return true;
+    return (webSearchResponse.results || []).some((r: any) => {
+      const s = String(r.source || '').toLowerCase();
+      return s === 'pse' || s === 'google' || s.includes('google');
+    });
+  }
+
+  /**
+   * Combina resposta do RAG (Edge) com parceiros e rótulos honestos (parceiro vs web).
+   */
+  private composeRagAnswerWithTransparency(
+    webRagAnswer: string,
+    partnersResult: any,
+    question: string,
+    webSearchResponse: RealWebSearchResponse,
+    isServiceQuestion: boolean
+  ): string {
+    const ragText = String(webRagAnswer || '').trim();
+    const partnersCount = partnersResult?.partnersFound?.length ?? 0;
+    const hasWeb = this.hasWebDerivedResults(webSearchResponse);
+
+    if (partnersCount > 0) {
+      let out = this.formatPartnersResponse(partnersResult, question);
+      out +=
+        '\n\n🌐 Além dos parceiros da plataforma, usei também informações encontradas na busca na web para complementar (não são parceiros cadastrados):\n\n';
+      out += ragText;
+      if (hasWeb) out += this.webDisclaimerFooter;
+      return out;
+    }
+
+    if (isServiceQuestion) {
+      let out =
+        '🦦 No momento não temos um parceiro cadastrado na plataforma que corresponda exatamente ao que você pediu.\n\n';
+      if (hasWeb && ragText) {
+        out +=
+          '🌐 Na busca na web apareceram algumas referências para você pesquisar por conta própria (não são parceiros da plataforma):\n\n';
+        out += ragText;
+        out += this.webDisclaimerFooter;
+        return out;
+      }
+      if (ragText) {
+        out +=
+          '📚 Com base no acervo e fontes consultadas por aqui (não são parceiros cadastrados na plataforma), segue o que encontrei:\n\n';
+        out += ragText;
+        out +=
+          '\n\n—\nConfirme valores e disponibilidade diretamente com o estabelecimento ou nos canais oficiais.';
+        return out;
+      }
+      out +=
+        'Você pode usar buscadores ou sites de reserva e conferir opções na região que combinou na conversa. Informações oficiais sobre turismo no estado: turismo.ms.gov.br.';
+      return out;
+    }
+
+    if (hasWeb && ragText) {
+      return (
+        '🌐 Com base no que encontrei na busca na web (não são parceiros cadastrados na plataforma):\n\n' +
+        ragText +
+        this.webDisclaimerFooter
+      );
+    }
+
+    return ragText;
+  }
+
+  /** Fallback sem Gemini: envolve texto já formatado com honestidade parceiro/web. */
+  private wrapFallbackWebAnswer(
+    question: string,
+    formattedBody: string,
+    webSearchResponse: RealWebSearchResponse,
+    hasPartners: boolean
+  ): string {
+    if (hasPartners) return formattedBody;
+    const isSvc = this.isServiceRelatedQuestion(question);
+    const hw = this.hasWebDerivedResults(webSearchResponse);
+    let out = '';
+    if (isSvc) {
+      out =
+        '🦦 No momento não temos um parceiro cadastrado na plataforma que corresponda exatamente ao que você pediu.\n\n';
+      if (hw) {
+        out +=
+          '🌐 Na busca na web apareceram referências para você pesquisar (não são parceiros da plataforma):\n\n';
+      }
+    }
+    out += formattedBody;
+    if (hw) out += this.webDisclaimerFooter;
+    return out;
+  }
+
   /**
    * Gera resposta inteligente combinando IA + dados reais
    */
@@ -1169,15 +1277,14 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     // (O guata-web-rag já processa com Gemini na Edge Function)
     if (webRagAnswer && webRagAnswer.trim().length > 0) {
       console.log('✅ Usando resposta do RAG (já processada pelo Gemini na Edge Function)');
-      answer = webRagAnswer;
-      
-      // Adicionar parceiros se houver
-      if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
-        answer += "\n\n🤝 Parceiros recomendados:\n";
-        answer += this.formatPartnersResponse(partnersResult, question);
-      }
-      
-      return answer;
+      const isSvc = this.isServiceRelatedQuestion(question);
+      return this.composeRagAnswerWithTransparency(
+        webRagAnswer,
+        partnersResult,
+        question,
+        webSearchResponse,
+        isSvc
+      );
     }
 
     // PRIORIZAR PARCEIROS SE HOUVER
@@ -1187,8 +1294,14 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       
       // Adicionar pesquisa web como complemento
       if (webSearchResponse.results.length > 0) {
-        answer += "\n\n🌐 Outras opções encontradas:\n";
+        const webIntro = this.hasWebDerivedResults(webSearchResponse)
+          ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
+          : '\n\n🌐 Complemento com outras referências encontradas:\n';
+        answer += webIntro;
         answer += this.formatWebSearchResults(webSearchResponse.results, question);
+        if (this.hasWebDerivedResults(webSearchResponse)) {
+          answer += this.webDisclaimerFooter;
+        }
       }
     } else {
       // USAR GEMINI + PESQUISA WEB + PARCEIROS PARA RESPOSTA DINÂMICA
@@ -1199,6 +1312,7 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           console.log('[Guatá] Preparando resposta com Gemini + pesquisa web');
         }
         
+        const isSvc = this.isServiceRelatedQuestion(question);
         const geminiQuery: any = {
           question,
           context: `Localização: Mato Grosso do Sul`,
@@ -1206,7 +1320,14 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           searchResults: webSearchResponse.results,
           conversationHistory: conversationHistory,
           isTotemVersion: isTotemVersion ?? true,
-          isFirstUserMessage: isFirstUserMessage ?? false
+          isFirstUserMessage: isFirstUserMessage ?? false,
+          guataPolicy: {
+            responseDepth: this.inferResponseDepth(question),
+            isServiceQuestion: isSvc,
+            partnersCount: partnersResult?.partnersFound?.length ?? 0,
+            webResultsCount: webSearchResponse.results.length,
+            hasWebDerived: this.hasWebDerivedResults(webSearchResponse)
+          }
         };
         
         // Passar informações de parceiros para o Gemini
@@ -1241,11 +1362,18 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
             // Priorizar parceiros se houver
             if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
               answer = this.formatPartnersResponse(partnersResult, question);
-              answer += "\n\n🌐 Outras informações encontradas:\n\n";
+              answer += this.hasWebDerivedResults(webSearchResponse)
+                ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n\n'
+                : '\n\n🌐 Complemento com outras referências encontradas:\n\n';
               answer += this.formatWebSearchResults(webSearchResponse.results, question);
+              if (this.hasWebDerivedResults(webSearchResponse)) answer += this.webDisclaimerFooter;
             } else {
-              // Usar apenas pesquisa web formatada de forma inteligente
-              answer = this.formatWebSearchResults(webSearchResponse.results, question);
+              answer = this.wrapFallbackWebAnswer(
+                question,
+                this.formatWebSearchResults(webSearchResponse.results, question),
+                webSearchResponse,
+                false
+              );
             }
           } else {
             // Se não há resultados de pesquisa web, usar conhecimento local
@@ -1263,10 +1391,18 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           // Usar pesquisa web como fallback principal
           if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
             answer = this.formatPartnersResponse(partnersResult, question);
-            answer += "\n\n🌐 Outras opções encontradas:\n";
+            answer += this.hasWebDerivedResults(webSearchResponse)
+              ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
+              : '\n\n🌐 Complemento com outras referências encontradas:\n';
             answer += this.formatWebSearchResults(webSearchResponse.results, question);
+            if (this.hasWebDerivedResults(webSearchResponse)) answer += this.webDisclaimerFooter;
           } else if (webSearchResponse.results.length > 0) {
-            answer = this.formatWebSearchResults(webSearchResponse.results, question);
+            answer = this.wrapFallbackWebAnswer(
+              question,
+              this.formatWebSearchResults(webSearchResponse.results, question),
+              webSearchResponse,
+              false
+            );
           } else {
             // Último fallback: conhecimento local
             answer = this.generateLocalKnowledgeResponse(question);
@@ -1279,10 +1415,20 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           }
           if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
             answer = this.formatPartnersResponse(partnersResult, question);
-            answer += "\n\n🌐 Outras opções encontradas:\n";
+            answer += this.hasWebDerivedResults(webSearchResponse)
+              ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
+              : '\n\n🌐 Complemento com outras referências encontradas:\n';
             answer += this.formatWebSearchResults(webSearchResponse.results, question);
+            if (this.hasWebDerivedResults(webSearchResponse)) answer += this.webDisclaimerFooter;
+          } else if (webSearchResponse.results.length > 0) {
+            answer = this.wrapFallbackWebAnswer(
+              question,
+              this.formatWebSearchResults(webSearchResponse.results, question),
+              webSearchResponse,
+              false
+            );
           } else {
-            answer = this.formatWebSearchResults(webSearchResponse.results, question);
+            answer = this.generateLocalKnowledgeResponse(question);
           }
         }
       }

@@ -12,6 +12,15 @@ import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 import { getErrorMessage } from "@/utils/errorUtils";
 import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
 
+/** Política de transparência (parceiros vs web) e tamanho da resposta — preenchido pelo fluxo Guatá. */
+export interface GuataGeminiPolicy {
+  responseDepth: 'quick' | 'deep';
+  isServiceQuestion: boolean;
+  partnersCount: number;
+  webResultsCount: number;
+  hasWebDerived: boolean;
+}
+
 export interface GeminiQuery {
   question: string;
   context?: string;
@@ -20,6 +29,8 @@ export interface GeminiQuery {
   searchResults?: any[];
   isTotemVersion?: boolean;
   isFirstUserMessage?: boolean;
+  /** Metadados para instruções obrigatórias de parceiro/web e brevidade */
+  guataPolicy?: GuataGeminiPolicy;
 }
 
 export interface GeminiResponse {
@@ -223,7 +234,7 @@ class GuataGeminiService {
           console.log('[Guatá] Primeiros 500 caracteres do prompt:', prompt.substring(0, 500));
         }
         
-        const geminiAnswer = await this.callGeminiAPI(prompt);
+        const geminiAnswer = await this.callGeminiAPI(prompt, query);
         
         // Salvar no cache persistente compartilhado (para reutilização por outros usuários)
         await guataResponseCacheService.saveToSharedCache(query.question, geminiAnswer);
@@ -328,7 +339,7 @@ class GuataGeminiService {
       const prompt = await this.buildPrompt(query);
       console.log('🧠 Tentando API em background...');
       
-      const response = await this.callGeminiAPI(prompt);
+      const response = await this.callGeminiAPI(prompt, query);
       console.log('✅ API respondeu em background, atualizando cache');
 
       // Salvar no cache compartilhado (perguntas comuns)
@@ -905,12 +916,10 @@ Guatá: "🦦 O Pantanal é o maior santuário ecológico do mundo! É incrível
 Usuário: "e bonito?"
 Guatá: "Ah, você quer comparar Pantanal e Bonito? Ambos são destinos únicos! O Pantanal é mais focado em observação de animais, enquanto Bonito é mais sobre ecoturismo e águas cristalinas..."
 
-SOBRE PARCEIROS OFICIAIS:
-- Se houver parceiros oficiais da plataforma, SEMPRE mencione PRIMEIRO
-- Especifique claramente: "parceiros oficiais da plataforma Descubra Mato Grosso do Sul"
-- Liste os parceiros com destaque (nome, cidade, descrição, contatos)
-- Depois, mencione outras opções da pesquisa web
-- Se NÃO houver parceiros: NUNCA mencione que não tem parceiros. NUNCA diga "embora eu não tenha parceiros", "não tenho parceiros específicos", "não há parceiros" ou qualquer variação. Simplesmente sugira normalmente baseado na pesquisa web de forma natural e positiva, como se fosse uma recomendação normal.
+SOBRE PARCEIROS OFICIAIS E BUSCA NA WEB:
+- Siga SEMPRE o bloco "POLÍTICA DE RESPOSTA (OBRIGATÓRIO)" que aparece mais abaixo no prompt quando fornecido; ele prevalece sobre frases genéricas desta seção.
+- Parceiros = empresas cadastradas e aprovadas na plataforma. Ao falar deles, deixe claro que são parceiros da plataforma.
+- Sugestões obtidas de resultados de busca na internet (não parceiros) devem ser apresentadas com transparência: diga que vieram da "busca na web" ou "encontrado na web" e que não são parceiros cadastrados.
 
 LIMITAÇÕES E ESCOPO:
 - Você APENAS responde perguntas relacionadas a TURISMO em Mato Grosso do Sul
@@ -931,9 +940,9 @@ LIMITAÇÕES E ESCOPO:
 REGRAS CRÍTICAS:
 - NUNCA invente informações - use apenas as informações fornecidas abaixo
 - Seja honesto se não souber algo específico
-- NUNCA mencione que "pesquisou" ou "encontrou" - responda como se já soubesse
-- NUNCA mencione sites, URLs, fontes ou "o site X diz", "segundo Y", "o site Acqua Viagens", etc. - responda diretamente com as informações
-- NUNCA diga "o site X dá dicas" ou "você encontra no site Y" - use as informações para responder diretamente
+- Quando a POLÍTICA DE RESPOSTA pedir transparência sobre parceiros ou sobre conteúdo da busca na web, você DEVE cumprir (incluindo mencionar "busca na web" / "parceiros da plataforma" conforme o caso)
+- Nos demais casos, evite listar URLs longas no meio do texto; use os dados dos resultados de forma conversacional
+- NUNCA invente preços, vagas, disponibilidade ou valores de diária — oriente a confirmar no site ou com o estabelecimento
 - Varie sempre a forma de expressar - nunca repita estruturas ou palavras exatas
 - Entenda o contexto COMPLETO: se perguntam "onde fica X", responda sobre X, não sobre outros lugares
 - Se perguntam algo específico (roteiro de 3 dias, hotel perto do centro), responda EXATAMENTE isso
@@ -986,12 +995,13 @@ PERGUNTA DO USUÁRIO: ${question}`;
       });
       prompt += `\n⚠️ IMPORTANTE: Se a pergunta for sobre serviços (hotéis, restaurantes, passeios), SEMPRE mencione os parceiros acima PRIMEIRO, especificando que são "parceiros oficiais da plataforma Descubra Mato Grosso do Sul". Depois, mencione outras opções da pesquisa web.`;
     } else {
-      // NÃO HÁ PARCEIROS - Instrução crítica
-      prompt += `\n\n⚠️ ATENÇÃO CRÍTICA: NÃO há parceiros oficiais disponíveis para esta pergunta. NUNCA mencione que "não tem parceiros", "não há parceiros", "embora eu não tenha parceiros" ou qualquer variação disso. Simplesmente sugira normalmente baseado na pesquisa web, como se fosse uma recomendação natural. Responda de forma positiva e entusiasmada, SEM mencionar a ausência de parceiros.`;
+      if (!query.guataPolicy) {
+        prompt += `\n\n⚠️ Nenhum parceiro oficial listado acima para esta pergunta. Sugira com base nos resultados de busca ou conhecimento geral, de forma natural.`;
+      }
     }
 
     if (searchResults && searchResults.length > 0) {
-      prompt += `\n\n🌐 INFORMAÇÕES DA PESQUISA WEB (USE APENAS ESTAS INFORMAÇÕES REAIS - NUNCA MENCIONE SITES OU URLS):\n`;
+      prompt += `\n\n🌐 RESULTADOS DE BUSCA / SNIPPETS (use para extrair nomes e detalhes; quando a POLÍTICA DE RESPOSTA pedir transparência, indique se o complemento veio da busca na web):\n`;
       searchResults.forEach((result, index) => {
         const snippet = result.snippet || result.description || '';
         // NÃO incluir URL/fonte - apenas título e informações
@@ -1023,8 +1033,8 @@ Você DEVE extrair e listar:
 REGRAS ABSOLUTAS:
 - NUNCA diga apenas "encontrei opções" ou "há várias opções" sem listar os nomes específicos
 - NUNCA seja genérico - sempre extraia e liste os nomes específicos dos resultados
-- NUNCA mencione sites, URLs, fontes ou "o site X diz" na sua resposta
-- Responda diretamente como se você já soubesse essas informações
+- Evite colar URLs longas; quando a POLÍTICA DE RESPOSTA exigir, você DEVE deixar claro que o trecho veio da **busca na web** e não é parceiro cadastrado
+- Use os dados dos snippets de forma conversacional
 - Se a pergunta é sobre hotéis próximos ao aeroporto, liste os hotéis com nomes e distâncias do aeroporto
 - Se a pergunta é sobre restaurantes, liste os restaurantes com nomes e tipos de comida
 - Se algo não estiver nos resultados, NÃO invente. Seja honesto se não souber algo específico`;
@@ -1058,6 +1068,8 @@ REGRAS ABSOLUTAS:
 - Se o usuário já pediu explicitamente tudo, lista completa ou máximo de detalhe, pode responder mais longo; nesse caso o convite final é opcional.
 - NUNCA mencione botões da interface (ex.: "Ver mais"); a tela já oferece isso ao usuário.`;
 
+    prompt = this.appendGuataPolicyBlock(prompt, query);
+
     prompt += `\n\n🎯 INSTRUÇÕES FINAIS CRÍTICAS (SIGA RIGOROSAMENTE):
 - ⚠️ CRÍTICO: Se a pergunta menciona uma cidade específica (Campo Grande, Bonito, Corumbá, etc.), você DEVE responder diretamente sobre aquela cidade. NUNCA peça esclarecimento.
 - ⚠️ CRÍTICO: Se a pergunta menciona "aeroporto" sem cidade, assuma que é o Aeroporto Internacional de Campo Grande (CGR)
@@ -1078,23 +1090,20 @@ REGRAS ABSOLUTAS:
   * Outras informações relevantes (avaliação, preço, transfer, etc.)
 - ⚠️ CRÍTICO: Se a pergunta é sobre guias de turismo, você DEVE se apresentar como o Guatá e mencionar que pode ajudar com roteiros, recomendações, etc.
 - ⚠️ CRÍTICO ABSOLUTO: NUNCA diga apenas "encontrei opções" ou "há várias opções" - SEMPRE liste os nomes específicos extraídos dos resultados da pesquisa web
-- ⚠️ CRÍTICO ABSOLUTO: NUNCA mencione sites, URLs, fontes ou "o site X diz" na sua resposta. Use as informações para responder diretamente, como se você já soubesse. Exemplos do que NÃO fazer:
-  * ❌ "o site Acqua Viagens dá dicas"
-  * ❌ "segundo o site X"
-  * ❌ "você encontra no site Y"
-  * ❌ "encontrei diversas opções" (sem listar)
-  * ✅ "Para hospedagem próxima ao aeroporto de Campo Grande, encontrei algumas opções:\n\n1. Hotel MS Executive\n   📍 Localizado a 5km do aeroporto\n   ✈️ Oferece transfer gratuito\n\n2. Hotel Nacional\n   📍 Localizado a 7km do aeroporto\n   ..."
+- ⚠️ CRÍTICO ABSOLUTO: Não liste URLs longas no meio do texto. Se a POLÍTICA DE RESPOSTA exigir transparência, você DEVE mencionar que as sugestões vieram da **busca na web** e não são parceiros cadastrados (isso prevalece sobre "não citar fontes").
+  * ❌ "encontrei diversas opções" (sem listar nomes)
+  * ✅ Listar nomes concretos extraídos dos snippets, com distância/local quando existir
 - Responda de forma natural, conversacional e inteligente (como ChatGPT/Gemini)
 - Entenda o contexto completo da pergunta - seja ESPECÍFICO e personalizado
 - Se a pergunta pede algo específico (hotel perto do aeroporto, restaurante no centro), responda EXATAMENTE isso com informações detalhadas extraídas dos resultados da pesquisa
 - EXTRAIA e LISTE nomes específicos dos resultados - não seja genérico
-- Se não houver parceiros, sugira normalmente baseado na pesquisa web ou conhecimento local
+- Se não houver parceiros, siga a POLÍTICA DE RESPOSTA (frase honesta + busca na web ou orientação genérica)
 - Se não tiver informações específicas sobre o que foi pedido, seja honesto mas ainda ofereça alternativas relacionadas
 - Seja honesto, entusiasmado e útil
 - Varie sempre - nunca repita estruturas ou palavras exatas
 - NUNCA use formatação markdown (asteriscos, negrito, etc.) na resposta - apenas texto puro com emojis
-- Responda como se já soubesse tudo - não mencione que "pesquisou", "encontrou" ou que "o site X diz"
-- Use os resultados da pesquisa web para fornecer nomes, endereços, avaliações e outras informações específicas quando disponíveis, mas SEM mencionar de onde vieram`;
+- Use os resultados para nomes, endereços e detalhes; quando a política pedir, diga explicitamente **busca na web** para o que não for parceiro
+- NUNCA invente preço, diária, vagas ou disponibilidade`;
 
     // Regra especial: versão do site não deve usar "Olá" após primeira mensagem
     // Na versão /guata (website), já há uma mensagem de boas-vindas inicial, então a primeira mensagem do usuário já tem contexto
@@ -1115,8 +1124,50 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
     return prompt;
   }
 
-  private async callGeminiAPI(prompt: string): Promise<string> {
+  /** Instruções obrigatórias alinhadas ao produto: parceiros vs web, honestidade, brevidade. */
+  private appendGuataPolicyBlock(prompt: string, query: GeminiQuery): string {
+    const pol = query.guataPolicy;
+    if (!pol) return prompt;
+
+    let block = `\n\n🤝 POLÍTICA DE RESPOSTA (OBRIGATÓRIO — PREVALE SOBRE INSTRUÇÕES GENÉRICAS DO PROMPT):\n`;
+
+    if (pol.responseDepth === 'quick') {
+      block += `- Modo breve: no máximo ~10–14 linhas úteis (intro mínima + até 3 itens numerados com 1–2 linhas cada, se for lista + 1 pergunta de continuidade). Sem parágrafos longos de “encanto”.\n`;
+    } else {
+      block += `- Modo detalhado: pode ser mais completo (roteiros, história, explicações), sem redundância.\n`;
+    }
+
+    const pc = pol.partnersCount;
+    const wc = pol.webResultsCount;
+    const svc = pol.isServiceQuestion;
+    const hw = pol.hasWebDerived;
+
+    if (pc > 0 && wc > 0) {
+      block += `- Há parceiros da plataforma E há snippets de busca: apresente PRIMEIRO os parceiros (bloco PARCEIROS acima) como **parceiros cadastrados na plataforma**. Depois, em seção separada, diga que o complemento veio da **busca na web** e **não são parceiros cadastrados**.\n`;
+      block += `- Encerre a parte da web com UMA linha: confirme valores e disponibilidade nos sites ou com os estabelecimentos.\n`;
+    } else if (pc > 0 && wc === 0) {
+      block += `- Há apenas parceiros listados: foque neles; não invente estabelecimentos que não estejam no prompt.\n`;
+    } else if (pc === 0 && svc && wc > 0) {
+      if (hw) {
+        block += `- Pergunta de serviço (hospedagem, comida, passeio, etc.) e **sem parceiro** cadastrado: comece com UMA frase curta e honesta (ex.: não temos parceiro cadastrado na plataforma para esse pedido).\n`;
+        block += `- Em seguida diga que as sugestões seguintes vêm da **busca na web** e **não são parceiros**. Use os snippets; **não invente** preço nem disponibilidade.\n`;
+      } else {
+        block += `- Pergunta de serviço e **sem parceiro** cadastrado: comece com UMA frase honesta sobre não haver parceiro cadastrado para esse pedido.\n`;
+        block += `- Use os snippets abaixo como **complemento informativo (não são parceiros cadastrados)**. Se não forem de internet ao vivo, não diga “Google”; diga “fontes consultadas nesta resposta” ou similar.\n`;
+      }
+      block += `- Feche com UMA linha lembrando de confirmar valores e disponibilidade diretamente com o estabelecimento ou no site.\n`;
+    } else if (pc === 0 && svc && wc === 0) {
+      block += `- Pergunta de serviço, sem parceiro e sem snippets: diga honestamente que não há parceiro cadastrado para esse filtro; ofereça orientação genérica (bairros/regiões, como pesquisar, turismo.ms.gov.br). **Não invente** preços nem disponibilidade.\n`;
+    } else if (pc === 0 && !svc && wc > 0 && hw) {
+      block += `- Indique que o complemento informativo veio da **busca na web** quando usar os snippets; não são parceiros cadastrados. Uma linha final sobre confirmar nos sites.\n`;
+    }
+
+    return prompt + block;
+  }
+
+  private async callGeminiAPI(prompt: string, query?: GeminiQuery): Promise<string> {
     const isDev = import.meta.env.DEV;
+    const maxOutputTokens = query?.guataPolicy?.responseDepth === 'quick' ? 900 : 2048;
 
     // NOVO: Tentar usar Edge Function primeiro (chaves protegidas no servidor)
     try {
@@ -1129,7 +1180,7 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
           prompt,
           model: 'gemini-2.5-flash',
           temperature: 0.3, // Reduzido para 0.3 - mais determinístico e focado em seguir instruções rigorosamente
-          maxOutputTokens: 2048
+          maxOutputTokens
         }
       });
 
