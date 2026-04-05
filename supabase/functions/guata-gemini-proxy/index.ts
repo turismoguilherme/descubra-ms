@@ -106,7 +106,7 @@ serve(async (req) => {
       );
     }
 
-    const { prompt: rawPrompt, model = 'gemini-2.5-flash-preview-04-17', temperature = 0.3, maxOutputTokens = 2000 } = body;
+    const { prompt: rawPrompt, model = 'gemini-2.5-flash', temperature = 0.3, maxOutputTokens = 2048 } = body;
     
     if (!rawPrompt) {
       console.error('❌ guata-gemini-proxy: Missing prompt field');
@@ -136,12 +136,21 @@ serve(async (req) => {
     }
     
     // Validate model name to prevent injection
-    const allowedModels = ['gemini-2.5-flash-preview-04-17', 'gemini-2.0-flash-exp', 'gemini-2.0-flash', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.5-flash-preview-04-17';
+    const allowedModels = [
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-flash-preview-04-17',
+      'gemini-2.0-flash-exp',
+      'gemini-2.0-flash',
+      'gemini-pro',
+      'gemini-1.5-pro',
+      'gemini-1.5-flash',
+    ];
+    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.5-flash';
     
     // Validate temperature and maxOutputTokens
     const safeTemperature = Math.max(0, Math.min(1, temperature || 0.3));
-    const safeMaxOutputTokens = Math.max(1, Math.min(8192, maxOutputTokens || 2000));
+    const safeMaxOutputTokens = Math.max(1, Math.min(8192, maxOutputTokens || 2048));
 
     // Get API key from environment (server-side only - never exposed to client)
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -242,7 +251,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const parts = (data.candidates?.[0]?.content?.parts ?? []) as Array<{ text?: string }>;
+    const generatedText = parts.map((p) => p.text ?? '').join('').trim() || undefined;
 
     if (!generatedText) {
       console.error('❌ Nenhum texto gerado pelo Gemini');

@@ -722,10 +722,14 @@ class GuataGeminiService {
       prompt += `\n\n${dbPrompts.disclaimer}`;
     }
 
-    // Adicionar contexto dinâmico (histórico, localização, parceiros, etc.)
-    prompt = this.addDynamicContext(prompt, query);
+    // Adicionar contexto dinâmico (histórico, localização, parceiros, pesquisa, idioma)
+    return await this.addDynamicContext(prompt, query);
+  }
 
-    return prompt;
+  /** Prompts do admin (banco) + mesmos blocos dinâmicos de buildPromptFromCode */
+  private async addDynamicContext(basePrompt: string, query: GeminiQuery): Promise<string> {
+    const withQuestion = `${basePrompt}\n\nPERGUNTA DO USUÁRIO: ${query.question}`;
+    return this.appendGuataDynamicBlocks(withQuestion, query);
   }
 
   /**
@@ -937,6 +941,14 @@ REGRAS CRÍTICAS:
 
 PERGUNTA DO USUÁRIO: ${question}`;
 
+    return await this.appendGuataDynamicBlocks(prompt, query);
+  }
+
+  /** Histórico, localização, parceiros, resultados de busca e instruções finais (compartilhado por prompts do código e do banco). */
+  private async appendGuataDynamicBlocks(prompt: string, query: GeminiQuery): Promise<string> {
+    const { question, context, userLocation, searchResults } = query;
+    const partnersInfo = (query as any).partnersInfo;
+
     // NOVO: Adicionar histórico de conversa se existir (melhora contexto e continuidade)
     if (query.conversationHistory && query.conversationHistory.length > 0) {
       prompt += `\n\n💬 HISTÓRICO DA CONVERSA (use este contexto para entender perguntas ambíguas ou de follow-up):\n`;
@@ -961,7 +973,6 @@ PERGUNTA DO USUÁRIO: ${question}`;
     }
 
     // Adicionar informações sobre parceiros PRIMEIRO (se disponíveis)
-    const partnersInfo = (query as any).partnersInfo;
     if (partnersInfo && partnersInfo.length > 0) {
       prompt += `\n\n🤝 PARCEIROS OFICIAIS DA PLATAFORMA DESCUBRA MATO GROSSO DO SUL (SEMPRE MENCIONAR PRIMEIRO):\n`;
       partnersInfo.forEach((partner: any, index: number) => {
@@ -1040,6 +1051,13 @@ REGRAS ABSOLUTAS:
 - Não peça esclarecimento se o contexto anterior já deixar claro do que o usuário está falando
 - Responda de forma natural e conversacional, como se estivesse tendo uma conversa real com o usuário`;
 
+    prompt += `\n\n📏 BREVIDADE E CONVITE (OBRIGATÓRIO NA MAIORIA DAS RESPOSTAS):
+- Entregue primeiro a resposta principal em poucas frases (cerca de 2 a 5), claras e úteis.
+- Se a pergunta exigir listar vários hotéis, restaurantes ou passeios, cumpra as regras de listagem abaixo, mas sem introduções longas; depois da lista, uma linha curta convidando a aprofundar.
+- Termine com UMA frase curta convidando a saber mais, no tom amigável do Guatá (pode usar 🦦): pergunte se a pessoa quer roteiro, preços, como chegar, mais opções ou detalhes — adapte ao tema da pergunta. Use a mesma língua da pergunta do usuário.
+- Se o usuário já pediu explicitamente tudo, lista completa ou máximo de detalhe, pode responder mais longo; nesse caso o convite final é opcional.
+- NUNCA mencione botões da interface (ex.: "Ver mais"); a tela já oferece isso ao usuário.`;
+
     prompt += `\n\n🎯 INSTRUÇÕES FINAIS CRÍTICAS (SIGA RIGOROSAMENTE):
 - ⚠️ CRÍTICO: Se a pergunta menciona uma cidade específica (Campo Grande, Bonito, Corumbá, etc.), você DEVE responder diretamente sobre aquela cidade. NUNCA peça esclarecimento.
 - ⚠️ CRÍTICO: Se a pergunta menciona "aeroporto" sem cidade, assuma que é o Aeroporto Internacional de Campo Grande (CGR)
@@ -1087,34 +1105,12 @@ REGRAS ABSOLUTAS:
       prompt += `\n\n⚠️ IMPORTANTE: Esta NÃO é a primeira mensagem da conversa. NÃO comece sua resposta com "Olá", "Oi" ou outros cumprimentos. Responda diretamente à pergunta de forma natural e entusiasmada, mas sem cumprimentos iniciais.`;
     }
 
-    // Detectar idioma da pergunta do usuário
-    try {
-      const { languageDetectionService } = await import('./languageDetectionService');
-      const languageDetection = languageDetectionService.detectLanguage(question);
-      const detectedLanguage = languageDetection.language;
-      
-      // Adicionar instrução de idioma baseado na detecção
-      const languageInstructions: Record<string, string> = {
-        pt: 'português brasileiro',
-        en: 'English',
-        es: 'español',
-        fr: 'français',
-        it: 'italiano',
-        de: 'Deutsch'
-      };
-      
-      const targetLanguage = languageInstructions[detectedLanguage] || 'português brasileiro';
-      
-      // Se detectou outro idioma além de português, instruir a responder nesse idioma
-      if (detectedLanguage !== 'pt' && languageDetection.confidence > 0.6) {
-        prompt += `\n\n⚠️ IMPORTANTE: O usuário escreveu em ${languageDetectionService.getLanguageName(detectedLanguage)}. Responda APENAS em ${targetLanguage}, mantendo o mesmo idioma da pergunta do usuário.`;
-      } else {
-        prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
-      }
-    } catch (error: unknown) {
-      // Se houver erro na detecção, usar português como padrão
-      prompt += `\n\nResponda em português brasileiro de forma natural, inteligente e conversacional, SEM formatação markdown:`;
-    }
+    prompt += `\n\n🌐 IDIOMA DA RESPOSTA (OBRIGATÓRIO):
+- Leia a PERGUNTA DO USUÁRIO acima e responda no MESMO idioma em que ela foi escrita (inglês → inglês, espanhol → espanhol, português → português brasileiro, etc.).
+- Se a pergunta for ambígua, muito curta sem palavras claras ou só símbolos/emojis, use português brasileiro.
+- O conteúdo continua sendo turismo em Mato Grosso do Sul.
+
+Responda de forma natural e conversacional, SEM formatação markdown:`;
 
     return prompt;
   }
@@ -1131,9 +1127,9 @@ REGRAS ABSOLUTAS:
       const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
         body: {
           prompt,
-          model: 'gemini-2.0-flash-exp', // Usar modelo que funciona
+          model: 'gemini-2.5-flash',
           temperature: 0.3, // Reduzido para 0.3 - mais determinístico e focado em seguir instruções rigorosamente
-          maxOutputTokens: 2000
+          maxOutputTokens: 2048
         }
       });
 

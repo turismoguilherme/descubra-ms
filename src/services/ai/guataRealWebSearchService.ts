@@ -163,22 +163,25 @@ class GuataRealWebSearchService {
           console.error('   Full Data:', JSON.stringify(data, null, 2));
           
           // Log específico para erros 403
-          if (data?.error === 'API_NOT_ENABLED' || data?.error === 'INVALID_API_KEY' || data?.error === 'INVALID_ENGINE_ID') {
+          if (
+            data?.error === 'API_NOT_ENABLED' ||
+            data?.error === 'INVALID_API_KEY' ||
+            data?.error === 'INVALID_ENGINE_ID' ||
+            data?.error === 'WEB_SEARCH_NOT_CONFIGURED' ||
+            data?.error === 'NO_RESULTS'
+          ) {
             console.error('');
-            console.error('🔴🔴🔴 [Web Search] PROBLEMA DE CONFIGURAÇÃO DETECTADO 🔴🔴🔴');
+            console.error('🔴🔴🔴 [Web Search] PROBLEMA DE CONFIGURAÇÃO OU PROVEDOR 🔴🔴🔴');
             console.error('   Tipo de erro:', data.error);
             console.error('   Mensagem:', data.message);
             console.error('   Detalhes:', data.details);
             console.error('   Ajuda:', data.help);
+            console.error('   Fontes usadas:', data.sourcesUsed);
             console.error('');
-            console.error('   💡 Acesse o Supabase Dashboard → Edge Functions → Secrets e verifique:');
-            console.error('      - GOOGLE_SEARCH_API_KEY está correto?');
-            console.error('      - GOOGLE_SEARCH_ENGINE_ID está correto? (deve ser: a1a3bd0b75c7d46bf)');
-            console.error('');
-            console.error('   💡 No Google Cloud Console, verifique:');
-            console.error('      - Custom Search API está habilitada?');
-            console.error('      - A API Key tem permissão para Custom Search API?');
-            console.error('      - O Engine ID está correto e ativo?');
+            console.error('   💡 Supabase → Edge Functions → Secrets (guata-google-search-proxy):');
+            console.error('      - GEMINI_API_KEY (busca com grounding Google Search — recomendado)');
+            console.error('      - GOOGLE_SERVICE_ACCOUNT_JSON + GOOGLE_CLOUD_PROJECT + VERTEX_SEARCH_* (Vertex AI Search)');
+            console.error('      - Opcional legado: GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_ENGINE_ID (CSE, muitos projetos novos não têm acesso)');
             console.error('');
           }
           

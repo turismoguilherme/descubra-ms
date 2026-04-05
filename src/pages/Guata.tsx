@@ -26,6 +26,7 @@ const Guata = () => {
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
   const [userPreferences, setUserPreferences] = useState<any>({});
   const [learningInsights, setLearningInsights] = useState<any[]>([]);
+  const [sessionId, setSessionId] = useState(() => getGuataSessionId());
 
   // Carrega a base de conhecimento e informações do usuário
   const knowledgeBase = getInitialKnowledgeBase();
@@ -68,7 +69,7 @@ const Guata = () => {
       const response = await guataTrueApiService.processQuestion({
         question: mensagemParaEnviar,
         userId: user?.id || 'convidado',
-        sessionId: `session-${Date.now()}`,
+        sessionId,
         userLocation: 'Mato Grosso do Sul',
         conversationHistory: conversationHistory,
         userPreferences: userPreferences,
@@ -202,7 +203,8 @@ const Guata = () => {
     setMensagens([]);
     setConversationHistory([]);
     setLearningInsights([]);
-    // Manter preferências do usuário para continuar aprendendo
+    resetGuataSessionId();
+    setSessionId(getGuataSessionId());
   };
 
   const enviarFeedback = (positivo: boolean) => {

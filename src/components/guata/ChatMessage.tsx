@@ -6,7 +6,11 @@ import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { platformContentService } from "@/services/admin/platformContentService";
-import { ENV } from "@/config/environment";
+import { stripChatMarkdown } from "@/utils/stripChatMarkdown";
+import { truncateForPreview } from "@/utils/truncateForPreview";
+
+/** Acima disso, mostra "Ver mais" (texto já sem markdown). */
+const GUATA_COLLAPSED_CHAR_LIMIT = 520;
 
 interface ChatMessageProps {
   message: AIMessage;
@@ -54,6 +58,10 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
     };
   }, [isGuata]);
 
+  useEffect(() => {
+    setExpanded(false);
+  }, [message.id, message.text]);
+
   return (
     <motion.div 
       className={cn("flex items-start gap-3 mb-4", isGuata ? "justify-start" : "justify-end")}
@@ -87,7 +95,18 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
           </div>
         ) : (
           <>
-            <p className="whitespace-pre-line">{message.text}</p>
+            <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
+              {displayText}
+            </p>
+            {needsCollapse && (
+              <button
+                type="button"
+                onClick={() => setExpanded((e) => !e)}
+                className="mt-2 text-xs font-medium text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline"
+              >
+                {expanded ? "Ver menos" : "Ver mais"}
+              </button>
+            )}
             {message.timestamp && (
               <div className={cn(
                 "text-xs mt-1",

@@ -217,9 +217,14 @@ class GuataIntelligentTourismService {
         if (!ragError && ragData) {
           webRagResults = ragData.sources || [];
           webRagAnswer = ragData.answer;
-          const meta = ragData.guata_ai_meta as { gemini_status?: string } | undefined;
+          const meta = ragData.guata_ai_meta as { gemini_status?: string; gemini_http_status?: number } | undefined;
           if (import.meta.env.DEV && meta?.gemini_status && meta.gemini_status !== 'ok') {
             console.info('[Guatá RAG] Estado do Gemini na Edge:', meta);
+          }
+          // Não exibir ao usuário o texto de fallback de erro do RAG: deixa o fluxo usar Gemini no cliente / pesquisa.
+          const ragGeminiOk = !meta?.gemini_status || meta.gemini_status === 'ok';
+          if (!ragGeminiOk) {
+            webRagAnswer = null;
           }
           console.log(`✅ guata-web-rag: ${webRagResults.length} resultados do banco encontrados`);
           

@@ -125,8 +125,8 @@ const responseCache = new Map<string, { data: any; timestamp: number; ttl: numbe
 const DEFAULT_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (eventos)
 
-/** Modelo Gemini (secret opcional GEMINI_MODEL; padrão flash recente) */
-const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash-preview-04-17'
+/** Modelo Gemini (secret opcional GEMINI_MODEL; padrão estável 2.5; override p.ex. preview via env) */
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash'
 /** Similaridade mínima chunk↔pergunta; pode afinar com GUATA_EMBEDDING_SIM_MIN */
 const EMBEDDING_SIMILARITY_MIN = parseFloat(Deno.env.get('GUATA_EMBEDDING_SIM_MIN') ?? '0.25')
 
@@ -758,6 +758,14 @@ function buildContext(results: SearchResult[]): string {
   ).join('\n\n');
 }
 
+/** Respostas longas (história, roteiros) + turistas em outros idiomas */
+const GUATA_RESPONSE_LANGUAGE_RULE = `
+🌐 IDIOMA DA RESPOSTA (OBRIGATÓRIO):
+- Responda no MESMO idioma em que o usuário escreveu a pergunta (inglês → inglês, espanhol → espanhol, português → português brasileiro, etc.).
+- Se não for possível identificar o idioma com clareza (mensagem ambígua, só emojis ou números), use português brasileiro.
+- O tema continua sendo turismo e Mato Grosso do Sul; nomes de lugares podem ficar como costumam ser escritos.
+`
+
 async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<GenerateResponseResult> {
   const hasWebContent = context && context.length > 50 && context !== 'NO_CONTEXT'
   const hasContext = hasWebContent && context !== 'NO_CONTEXT'
@@ -773,7 +781,7 @@ PERSONALIDADE HUMANA:
 - Faça perguntas de acompanhamento naturais
 - Demonstre conhecimento local e paixão por MS
 - Seja ESPECÍFICO e DETALHADO - sempre extraia informações concretas do contexto
-
+${GUATA_RESPONSE_LANGUAGE_RULE}
 ⚠️⚠️⚠️ INSTRUÇÕES CRÍTICAS SOBRE O CONTEXTO FORNECIDO:
 
 1. LEIA ATENTAMENTE todo o CONTEXTO abaixo - ele contém informações REAIS encontradas na web e no banco de dados
@@ -825,7 +833,7 @@ PERSONALIDADE HUMANA:
 - Faça perguntas de acompanhamento naturais
 - Demonstre conhecimento local e paixão por MS
 - Seja ESPECÍFICO e DETALHADO - use seu conhecimento sobre MS
-
+${GUATA_RESPONSE_LANGUAGE_RULE}
 🚫🚫🚫 PROIBIÇÃO ABSOLUTA - NUNCA FAÇA ISSO:
 - NUNCA diga "Não encontrei informações específicas sobre isso agora"
 - NUNCA diga "não tenho informações" ou "não sei"
@@ -908,7 +916,7 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: hasContext ? 0.3 : 0.5, // Mais criatividade quando não há contexto
-        maxOutputTokens: hasContext ? 800 : 1200, // Mais tokens quando usa conhecimento local
+        maxOutputTokens: 2048,
         topP: 0.95,
         topK: 40
       }
@@ -962,7 +970,8 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       finishReason: data.candidates?.[0]?.finishReason
     })
     
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text
+    const parts = (data.candidates?.[0]?.content?.parts ?? []) as Array<{ text?: string }>
+    const generatedText = parts.map((p) => p.text ?? '').join('').trim() || undefined
     
     // Verificar se a resposta é genérica (não desejada)
     const isGenericResponse = generatedText?.toLowerCase().includes('não encontrei informações específicas') ||

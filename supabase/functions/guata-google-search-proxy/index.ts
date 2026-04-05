@@ -1,6 +1,28 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { runGuataWebSearchPipeline } from "../_shared/guataWebSearchPipeline.ts";
+
+const SEARCH_CACHE_MS = 30 * 60 * 1000;
+const SEARCH_CACHE_MAX = 80;
+const searchCache = new Map<string, { at: number; body: string }>();
+
+function cacheGet(key: string): string | null {
+  const e = searchCache.get(key);
+  if (!e || Date.now() - e.at > SEARCH_CACHE_MS) {
+    if (e) searchCache.delete(key);
+    return null;
+  }
+  return e.body;
+}
+
+function cacheSet(key: string, body: string) {
+  if (searchCache.size >= SEARCH_CACHE_MAX) {
+    const first = searchCache.keys().next().value;
+    if (first) searchCache.delete(first);
+  }
+  searchCache.set(key, { at: Date.now(), body });
+}
 
 /**
  * Sanitize input to prevent injection attacks
@@ -145,8 +167,8 @@ serve(async (req) => {
   }
 
   try {
-    // Parse body
-    let body: GoogleSearchRequest;
+    // Parse request JSON
+    let requestBody: GoogleSearchRequest;
     try {
       const raw = await req.text();
       if (!raw) {
@@ -155,7 +177,7 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      body = JSON.parse(raw);
+      requestBody = JSON.parse(raw);
     } catch (parseError) {
       console.error('❌ guata-google-search-proxy: JSON parse error:', parseError);
       return new Response(
@@ -164,7 +186,8 @@ serve(async (req) => {
       );
     }
 
-    const { query: rawQuery, maxResults = 5, location: rawLocation = 'Mato Grosso do Sul' } = body;
+    const { query: rawQuery, maxResults = 5, location: rawLocation = 'Mato Grosso do Sul' } =
+      requestBody;
     
     if (!rawQuery || typeof rawQuery !== 'string') {
       return new Response(
@@ -190,175 +213,108 @@ serve(async (req) => {
     // Validate and limit maxResults
     const safeMaxResults = Math.max(1, Math.min(10, maxResults || 5));
 
-    // Get API keys from Supabase Secrets (server-side only)
-    const apiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
-    const engineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || Deno.env.get('GOOGLE_CSE_ID');
-    
-    console.log('🔵 guata-google-search-proxy: Verificando configuração...');
-    console.log('   GOOGLE_SEARCH_API_KEY:', apiKey ? '✅ present' : '❌ missing');
-    console.log('   GOOGLE_SEARCH_ENGINE_ID:', engineId ? '✅ present' : '❌ missing');
-    
-    if (!apiKey) {
-      console.error('❌ Google Search API Key não configurada no Supabase');
-      console.error('💡 Configure o secret: GOOGLE_SEARCH_API_KEY');
-      console.error('   Dashboard → Settings → Edge Functions → Secrets');
-      // Retornar status 200 com erro para que o cliente possa ver os detalhes
-      return new Response(
-        JSON.stringify({ 
-          error: 'API keys not configured',
-          message: 'GOOGLE_SEARCH_API_KEY não está configurada nas variáveis de ambiente do Supabase. Configure em: Settings → Edge Functions → Secrets',
-          results: [],
-          success: false,
-          help: 'Acesse o Supabase Dashboard → Settings → Edge Functions → Secrets e adicione GOOGLE_SEARCH_API_KEY'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (!engineId) {
-      console.error('❌ Google Search Engine ID não configurado no Supabase');
-      console.error('💡 Configure o secret: GOOGLE_SEARCH_ENGINE_ID');
-      return new Response(
-        JSON.stringify({ 
-          error: 'Engine ID not configured',
-          message: 'GOOGLE_SEARCH_ENGINE_ID não está configurado. Usando fallback.',
-          results: [],
-          success: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const cacheKey =
+      `${query.toLowerCase().trim()}|${location.toLowerCase().trim()}|${safeMaxResults}`;
+    const cachedBody = cacheGet(cacheKey);
+    if (cachedBody) {
+      console.log('🔄 guata-google-search-proxy: cache hit');
+      return new Response(cachedBody, {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log("🔵 guata-google-search-proxy: searching for:", query);
+    const geminiKey = Deno.env.get('GEMINI_API_KEY');
+    const saJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
+    const gcpProject = Deno.env.get('GOOGLE_CLOUD_PROJECT') || Deno.env.get('GCP_PROJECT_ID');
+    const vertexLocation = Deno.env.get('VERTEX_SEARCH_LOCATION') || 'global';
+    const vertexServingFull = Deno.env.get('VERTEX_SEARCH_SERVING_CONFIG') || undefined;
+    const vertexDataStoreId = Deno.env.get('VERTEX_SEARCH_DATA_STORE_ID') || undefined;
+    const vertexEngineId = Deno.env.get('VERTEX_SEARCH_ENGINE_ID') || undefined;
+    const vertexServingConfigId = Deno.env.get('VERTEX_SEARCH_SERVING_CONFIG_ID') ||
+      undefined;
+    const geminiModel =
+      Deno.env.get('GUATA_WEB_SEARCH_GEMINI_MODEL') || 'gemini-2.5-flash';
+    const vertexMin = Math.max(
+      1,
+      Math.min(
+        10,
+        Number(Deno.env.get('GUATA_WEB_SEARCH_VERTEX_MIN_BEFORE_GEMINI') || '3') || 3,
+      ),
+    );
 
-    // Build search query with location context (already sanitized)
-    const searchQuery = `${query} ${location} turismo`;
-    
-    // Call Google Custom Search API
-    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${encodeURIComponent(searchQuery)}&num=${safeMaxResults}`;
+    const legacyApiKey =
+      Deno.env.get('GOOGLE_SEARCH_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
+    const legacyEngineId =
+      Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || Deno.env.get('GOOGLE_CSE_ID');
 
-    console.log('🔵 guata-google-search-proxy: Calling Google Search API with URL:', url.replace(apiKey, '***'));
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    console.log('🔵 guata-google-search-proxy: provedores');
+    console.log('   GEMINI_API_KEY:', geminiKey ? 'present' : 'missing');
+    console.log('   GOOGLE_SERVICE_ACCOUNT_JSON:', saJson ? 'present' : 'missing');
+    console.log('   GOOGLE_CLOUD_PROJECT:', gcpProject ? 'present' : 'missing');
+    console.log('   VERTEX_SEARCH_SERVING_CONFIG / DATA_STORE / ENGINE:', {
+      full: !!vertexServingFull,
+      dataStore: !!vertexDataStoreId,
+      engine: !!vertexEngineId,
+    });
+    console.log('   Legacy CSE key+cx:', {
+      key: !!legacyApiKey,
+      cx: !!legacyEngineId,
     });
 
-    console.log('🔵 guata-google-search-proxy: Google Search API response status:', response.status);
+    console.log('🔵 guata-google-search-proxy: searching for:', query);
 
-    if (!response.ok) {
-      let errorText = '';
-      try {
-        errorText = await response.text();
-      } catch (e) {
-        errorText = 'Unable to read error response';
-      }
-      console.error('❌ Google Search API error:', response.status, errorText);
-      
-      // Handle specific errors
-      if (response.status === 403) {
-        let errorDetails = '';
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetails = errorJson.error?.message || errorText;
-        } catch {
-          errorDetails = errorText;
-        }
-        
-        console.error('❌ Google Search API 403 - Detalhes:', errorDetails);
-        
-        // Verificar tipo de erro 403
-        let errorType = 'API_NOT_ENABLED';
-        let errorMessage = 'API não habilitada ou chave inválida';
-        
-        if (errorDetails.includes('API key not valid') || errorDetails.includes('invalid API key')) {
-          errorType = 'INVALID_API_KEY';
-          errorMessage = 'Chave de API inválida. Verifique se a chave está correta no Google Cloud Console.';
-        } else if (errorDetails.includes('API has not been used') || errorDetails.includes('not enabled')) {
-          errorType = 'API_NOT_ENABLED';
-          errorMessage = 'Custom Search API não está habilitada. Ative em: Google Cloud Console → APIs & Services → Library → Custom Search API';
-        } else if (errorDetails.includes('leaked') || errorDetails.includes('vazada')) {
-          errorType = 'API_KEY_LEAKED';
-          errorMessage = 'API key foi reportada como vazada. Gere uma nova chave no Google Cloud Console.';
-        } else if (errorDetails.includes('invalid cx') || errorDetails.includes('invalid search engine')) {
-          errorType = 'INVALID_ENGINE_ID';
-          errorMessage = 'Search Engine ID inválido. Verifique se o ID está correto: a1a3bd0b75c7d46bf';
-        }
-        
-        return new Response(
-          JSON.stringify({ 
-            error: errorType,
-            message: errorMessage,
-            details: errorDetails,
-            results: [],
-            success: false,
-            help: 'Verifique: 1) Se a Custom Search API está habilitada no Google Cloud Console, 2) Se a API Key está correta, 3) Se o Engine ID está correto'
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'RATE_LIMIT_EXCEEDED',
-            message: 'Limite de requisições excedido',
-            results: []
-          }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          error: 'Google Search API error',
-          status: response.status,
-          message: errorText,
-          results: []
-        }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (jsonError) {
-      console.error('❌ guata-google-search-proxy: Failed to parse JSON response:', jsonError);
-      // Retornar status 200 com erro para que o cliente possa ver os detalhes
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid JSON response from Google Search API',
-          message: String(jsonError),
-          results: [],
-          success: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Transform Google Search results to our format (sanitize all fields)
-    const results: GoogleSearchResult[] = (data.items || []).map((item: any) => ({
-      title: sanitizeInput(item.title || '', 200),
-      snippet: sanitizeInput(item.snippet || item.htmlSnippet || '', 500),
-      url: sanitizeInput(item.link || '', 500),
-      source: 'google',
-      description: sanitizeInput(item.snippet || '', 500)
-    }));
-
-    console.log('✅ Google Search results:', results.length, 'results found');
-    
-    return new Response(
-      JSON.stringify({ 
-        results,
-        totalResults: data.searchInformation?.totalResults || results.length,
-        searchTime: data.searchInformation?.searchTime || 0,
-        success: true
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    const pipelineResult = await runGuataWebSearchPipeline(
+      query,
+      location,
+      safeMaxResults,
+      sanitizeInput,
+      {
+        geminiApiKey: geminiKey || undefined,
+        geminiModel,
+        vertexMinBeforeSkipGemini: vertexMin,
+        serviceAccountJson: saJson || undefined,
+        gcpProject: gcpProject || undefined,
+        vertexLocation,
+        vertexServingConfigResource: vertexServingFull,
+        vertexDataStoreId,
+        vertexEngineId,
+        vertexServingConfigId,
+        legacyApiKey: legacyApiKey || undefined,
+        legacyEngineId: legacyEngineId || undefined,
+      },
     );
+
+    const payload = {
+      results: pipelineResult.results as GoogleSearchResult[],
+      success: pipelineResult.success,
+      sourcesUsed: pipelineResult.sourcesUsed,
+      ...(pipelineResult.error
+        ? {
+          error: pipelineResult.error,
+          message: pipelineResult.message,
+          help: pipelineResult.help,
+        }
+        : {
+          totalResults: pipelineResult.results.length,
+          searchTime: 0,
+        }),
+    };
+
+    const jsonBody = JSON.stringify(payload);
+    if (pipelineResult.success && pipelineResult.results.length > 0) {
+      cacheSet(cacheKey, jsonBody);
+    }
+
+    console.log(
+      '✅ guata-google-search-proxy:',
+      pipelineResult.results.length,
+      'results | sources:',
+      pipelineResult.sourcesUsed.join(',') || '(none)',
+    );
+
+    return new Response(jsonBody, {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error: any) {
     console.error('❌ guata-google-search-proxy: handler error:', { 

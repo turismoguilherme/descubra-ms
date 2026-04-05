@@ -7,6 +7,7 @@ import { useGuataInput } from "@/hooks/useGuataInput";
 import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
 import { guataTrueApiService } from "@/services/ai";
 import { guataMLService } from "@/services/ai/ml/guataMLService";
+import { getGuataSessionId, resetGuataSessionId } from "@/utils/guataSession";
 
 const ChatGuata = () => {
   const location = useLocation();
@@ -22,6 +23,7 @@ const ChatGuata = () => {
   const [learningInsights, setLearningInsights] = useState<any[]>([]);
   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState(() => getGuataSessionId());
 
   // Mensagem de boas-vindas inicial
   useEffect(() => {
@@ -59,7 +61,7 @@ const ChatGuata = () => {
       const response = await guataTrueApiService.processQuestion({
         question: mensagemParaEnviar,
         userId: 'publico',
-        sessionId: `session-${Date.now()}`,
+        sessionId,
         userLocation: 'Mato Grosso do Sul',
         // Enviar histórico completo (perguntas e respostas) para melhor contexto
         conversationHistory: conversationHistory,
@@ -161,7 +163,7 @@ const ChatGuata = () => {
 
       const feedback = {
         userId: 'publico',
-        sessionId: `session-${Date.now()}`,
+        sessionId,
         questionId: currentQuestionId,
         question: question,
         answer: currentAnswer,
