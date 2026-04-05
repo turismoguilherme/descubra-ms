@@ -46,11 +46,12 @@ function validateOrigin(origin: string | null): boolean {
     'https://viajartur.com',
     'https://descubrams.com',
     'https://www.descubrams.com',
-    'https://descubra-ms.vercel.app'
+    'https://descubra-ms.vercel.app',
+    'https://descubra-ms.lovable.app'
   ];
   
-  // Check exact match or Vercel subdomain
-  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+  // Check exact match, Vercel subdomain, or Lovable preview
+  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.lovable.app');
 }
 
 function checkRateLimit(key: string): { ok: boolean; reason?: string } {
@@ -125,7 +126,7 @@ const DEFAULT_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 const EVENT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (eventos)
 
 /** Modelo Gemini (secret opcional GEMINI_MODEL; padrão flash recente) */
-const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.0-flash'
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash-preview-04-17'
 /** Similaridade mínima chunk↔pergunta; pode afinar com GUATA_EMBEDDING_SIM_MIN */
 const EMBEDDING_SIMILARITY_MIN = parseFloat(Deno.env.get('GUATA_EMBEDDING_SIM_MIN') ?? '0.25')
 
@@ -506,11 +507,11 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
 
 async function performPSESearch(question: string, state_code: string): Promise<SearchResult[]> {
   console.log('🌐 Iniciando busca web PSE...')
-  const pseApiKey = Deno.env.get('PSE_API_KEY')
-  const pseCx = Deno.env.get('PSE_CX')
+  const pseApiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY') || Deno.env.get('PSE_API_KEY')
+  const pseCx = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || Deno.env.get('PSE_CX')
   
-  if (!pseApiKey) console.warn('⚠️ PSE_API_KEY não configurada em guata-web-rag.');
-  if (!pseCx) console.warn('⚠️ PSE_CX não configurada em guata-web-rag.');
+  if (!pseApiKey) console.warn('⚠️ GOOGLE_SEARCH_API_KEY não configurada em guata-web-rag.');
+  if (!pseCx) console.warn('⚠️ GOOGLE_SEARCH_ENGINE_ID não configurada em guata-web-rag.');
   
   if (!pseApiKey || !pseCx) {
     console.log('🌐 PSE não configurado. Para garantir veracidade, não serão simulados resultados. Retornando vazio.')
@@ -942,9 +943,11 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       } catch {
         /* ignore */
       }
+      const friendlyMessage = response.status === 429
+        ? '🦦 Estou com muitas consultas no momento. Tente novamente em alguns instantes!'
+        : '🦦 Estou com dificuldades técnicas no momento. Enquanto isso, consulte turismo.ms.gov.br para informações oficiais.'
       return {
-        answer:
-          `🦦 Não consegui contatar a inteligência artificial agora (HTTP ${response.status}).${hint} Verifique **GEMINI_API_KEY**, o modelo (**GEMINI_MODEL**=${GEMINI_MODEL}) e cota da API Google. Dados oficiais: **turismo.ms.gov.br**.`,
+        answer: friendlyMessage,
         meta: { gemini_status: 'http_error', gemini_http_status: response.status },
       }
     }

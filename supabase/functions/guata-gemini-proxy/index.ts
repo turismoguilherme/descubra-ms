@@ -39,11 +39,12 @@ function validateOrigin(origin: string | null): boolean {
     'https://viajartur.com',
     'https://descubrams.com',
     'https://www.descubrams.com',
-    'https://descubra-ms.vercel.app'
+    'https://descubra-ms.vercel.app',
+    'https://descubra-ms.lovable.app'
   ];
   
-  // Check exact match or Vercel subdomain
-  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+  // Check exact match, Vercel subdomain, or Lovable preview
+  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.lovable.app');
 }
 
 interface GeminiRequest {
@@ -105,7 +106,7 @@ serve(async (req) => {
       );
     }
 
-    const { prompt: rawPrompt, model = 'gemini-2.0-flash-exp', temperature = 0.3, maxOutputTokens = 2000 } = body;
+    const { prompt: rawPrompt, model = 'gemini-2.5-flash-preview-04-17', temperature = 0.3, maxOutputTokens = 2000 } = body;
     
     if (!rawPrompt) {
       console.error('❌ guata-gemini-proxy: Missing prompt field');
@@ -135,8 +136,8 @@ serve(async (req) => {
     }
     
     // Validate model name to prevent injection
-    const allowedModels = ['gemini-2.0-flash-exp', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.0-flash-exp';
+    const allowedModels = ['gemini-2.5-flash-preview-04-17', 'gemini-2.0-flash-exp', 'gemini-2.0-flash', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+    const safeModel = allowedModels.includes(model) ? model : 'gemini-2.5-flash-preview-04-17';
     
     // Validate temperature and maxOutputTokens
     const safeTemperature = Math.max(0, Math.min(1, temperature || 0.3));
@@ -217,13 +218,26 @@ serve(async (req) => {
         );
       }
 
+      // Handle rate limit / quota exceeded with friendly message
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'QUOTA_EXCEEDED',
+            message: 'Estou com muitas consultas no momento. Tente novamente em alguns instantes.',
+            success: false
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ 
           error: 'Gemini API error',
           status: response.status,
-          message: errorText
+          message: 'Erro temporário no serviço de IA. Tente novamente.',
+          success: false
         }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
