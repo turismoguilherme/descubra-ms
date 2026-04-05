@@ -46,11 +46,12 @@ function validateOrigin(origin: string | null): boolean {
     'https://viajartur.com',
     'https://descubrams.com',
     'https://www.descubrams.com',
-    'https://descubra-ms.vercel.app'
+    'https://descubra-ms.vercel.app',
+    'https://descubra-ms.lovable.app'
   ];
   
-  // Check exact match or Vercel subdomain
-  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+  // Check exact match, Vercel subdomain, or Lovable preview
+  return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.lovable.app');
 }
 
 function checkRateLimit(key: string): { ok: boolean; reason?: string } {
