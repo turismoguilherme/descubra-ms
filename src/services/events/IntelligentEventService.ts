@@ -292,8 +292,8 @@ export class IntelligentEventService {
     // Buscar eventos expirados
     const { data: expiredEvents, error: fetchError } = await supabase
       .from('events')
-      .select('id, name, end_date, start_date')
-      .or(`end_date.lt.${now.toISOString()},and(end_date.is.null,start_date.lt.${now.toISOString()})`);
+      .select('id, titulo, data_fim, data_inicio')
+      .or(`data_fim.lt.${now.toISOString()},and(data_fim.is.null,data_inicio.lt.${now.toISOString()})`);
 
     if (fetchError) {
       throw new Error(`Erro ao buscar eventos: ${fetchError.message}`);
@@ -315,7 +315,7 @@ export class IntelligentEventService {
             .eq('id', event.id);
 
           if (error) throw error;
-          console.log(`🧹 INTELLIGENT EVENTS: Evento arquivado: ${event.name}`);
+          console.log(`🧹 INTELLIGENT EVENTS: Evento arquivado: ${event.titulo}`);
         } catch (error) {
           console.error(`❌ INTELLIGENT EVENTS: Erro ao arquivar evento:`, error);
         }

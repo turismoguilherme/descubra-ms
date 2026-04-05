@@ -84,8 +84,8 @@ export class EventCleanupService {
       // 1. Buscar eventos que já terminaram
       const { data: expiredEvents, error: fetchError } = await supabase
         .from('events')
-        .select('id, name, end_date, start_date')
-        .or(`end_date.lt.${now.toISOString()},and(end_date.is.null,start_date.lt.${now.toISOString()})`);
+        .select('id, titulo, data_fim, data_inicio')
+        .or(`data_fim.lt.${now.toISOString()},and(data_fim.is.null,data_inicio.lt.${now.toISOString()})`);
 
       if (fetchError) {
         throw new Error(`Erro ao buscar eventos: ${fetchError.message}`);
@@ -113,10 +113,10 @@ export class EventCleanupService {
               .eq('id', event.id);
 
             if (archiveError) {
-              result.errors.push(`Erro ao arquivar evento ${event.name}: ${archiveError.message}`);
+              result.errors.push(`Erro ao arquivar evento ${event.titulo}: ${archiveError.message}`);
             } else {
               result.eventsArchived++;
-              console.log(`🧹 EVENTOS: Evento arquivado: ${event.name}`);
+              console.log(`🧹 EVENTOS: Evento arquivado: ${event.titulo}`);
             }
           } else {
             // Remover evento completamente
@@ -126,14 +126,14 @@ export class EventCleanupService {
               .eq('id', event.id);
 
             if (deleteError) {
-              result.errors.push(`Erro ao remover evento ${event.name}: ${deleteError.message}`);
+              result.errors.push(`Erro ao remover evento ${event.titulo}: ${deleteError.message}`);
             } else {
               result.eventsRemoved++;
-              console.log(`🧹 EVENTOS: Evento removido: ${event.name}`);
+              console.log(`🧹 EVENTOS: Evento removido: ${event.titulo}`);
             }
           }
         } catch (eventError) {
-          result.errors.push(`Erro ao processar evento ${event.name}: ${eventError}`);
+          result.errors.push(`Erro ao processar evento ${event.titulo}: ${eventError}`);
         }
       }
 

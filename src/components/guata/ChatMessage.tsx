@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
@@ -20,6 +20,17 @@ interface ChatMessageProps {
 const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   const isGuata = !message.isUser;
   const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
+  const [expanded, setExpanded] = useState(false);
+
+  const plain = useMemo(
+    () => stripChatMarkdown(message.text ?? ""),
+    [message.text]
+  );
+  const needsCollapse = plain.length > GUATA_COLLAPSED_CHAR_LIMIT;
+  const displayText =
+    expanded || !needsCollapse
+      ? plain
+      : truncateForPreview(plain, GUATA_COLLAPSED_CHAR_LIMIT);
 
   useEffect(() => {
     if (!isGuata) return;
