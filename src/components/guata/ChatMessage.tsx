@@ -27,10 +27,6 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
     [message.text]
   );
   const needsCollapse = plain.length > GUATA_COLLAPSED_CHAR_LIMIT;
-  const displayText =
-    expanded || !needsCollapse
-      ? plain
-      : truncateForPreview(plain, GUATA_COLLAPSED_CHAR_LIMIT);
 
   useEffect(() => {
     if (!isGuata) return;
@@ -107,7 +103,9 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
         ) : (
           <>
             <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
-              {displayText}
+              {expanded || !needsCollapse
+                ? plain
+                : truncateForPreview(plain, GUATA_COLLAPSED_CHAR_LIMIT)}
             </p>
             {needsCollapse && (
               <button
