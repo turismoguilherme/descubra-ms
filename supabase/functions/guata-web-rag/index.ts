@@ -507,11 +507,11 @@ async function performFTSSearch(question: string, state_code: string): Promise<S
 
 async function performPSESearch(question: string, state_code: string): Promise<SearchResult[]> {
   console.log('🌐 Iniciando busca web PSE...')
-  const pseApiKey = Deno.env.get('PSE_API_KEY')
-  const pseCx = Deno.env.get('PSE_CX')
+  const pseApiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY') || Deno.env.get('PSE_API_KEY')
+  const pseCx = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || Deno.env.get('PSE_CX')
   
-  if (!pseApiKey) console.warn('⚠️ PSE_API_KEY não configurada em guata-web-rag.');
-  if (!pseCx) console.warn('⚠️ PSE_CX não configurada em guata-web-rag.');
+  if (!pseApiKey) console.warn('⚠️ GOOGLE_SEARCH_API_KEY não configurada em guata-web-rag.');
+  if (!pseCx) console.warn('⚠️ GOOGLE_SEARCH_ENGINE_ID não configurada em guata-web-rag.');
   
   if (!pseApiKey || !pseCx) {
     console.log('🌐 PSE não configurado. Para garantir veracidade, não serão simulados resultados. Retornando vazio.')
