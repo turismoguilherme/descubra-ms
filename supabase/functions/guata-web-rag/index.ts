@@ -943,9 +943,11 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       } catch {
         /* ignore */
       }
+      const friendlyMessage = response.status === 429
+        ? '🦦 Estou com muitas consultas no momento. Tente novamente em alguns instantes!'
+        : '🦦 Estou com dificuldades técnicas no momento. Enquanto isso, consulte turismo.ms.gov.br para informações oficiais.'
       return {
-        answer:
-          `🦦 Não consegui contatar a inteligência artificial agora (HTTP ${response.status}).${hint} Verifique **GEMINI_API_KEY**, o modelo (**GEMINI_MODEL**=${GEMINI_MODEL}) e cota da API Google. Dados oficiais: **turismo.ms.gov.br**.`,
+        answer: friendlyMessage,
         meta: { gemini_status: 'http_error', gemini_http_status: response.status },
       }
     }

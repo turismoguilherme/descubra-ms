@@ -462,10 +462,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                     <p className="text-sm text-gray-900 mt-1">
                       {'addressShort' in selectedLocation && selectedLocation.addressShort ? (
                         <>
-                          <span className="font-semibold">{selectedLocation.addressShort}</span>
+                          <span className="font-semibold">{selectedLocation.addressShort as string}</span>
                           {'houseNumber' in selectedLocation && selectedLocation.houseNumber && (
                             <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold">
-                              Nº {selectedLocation.houseNumber}
+                              Nº {selectedLocation.houseNumber as string}
                             </span>
                           )}
                           <br />

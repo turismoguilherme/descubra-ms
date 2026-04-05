@@ -218,13 +218,26 @@ serve(async (req) => {
         );
       }
 
+      // Handle rate limit / quota exceeded with friendly message
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'QUOTA_EXCEEDED',
+            message: 'Estou com muitas consultas no momento. Tente novamente em alguns instantes.',
+            success: false
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ 
           error: 'Gemini API error',
           status: response.status,
-          message: errorText
+          message: 'Erro temporário no serviço de IA. Tente novamente.',
+          success: false
         }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
