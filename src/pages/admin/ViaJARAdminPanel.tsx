@@ -110,7 +110,7 @@ export default function ViaJARAdminPanel() {
         const role = userProfile?.role || 'user';
         const allowedRoles = [...ADMIN_ROLES];
 
-        const authorized = allowedRoles.includes(role);
+        const authorized = allowedRoles.includes(role as typeof ADMIN_ROLES[number]);
         console.log('🧭 [ViaJARAdminPanel] Verificando permissão para admin:', {
           role,
           allowedRoles,

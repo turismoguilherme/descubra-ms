@@ -196,27 +196,24 @@ export const EventSubmissionForm: React.FC = () => {
       // Detectar automaticamente a região turística baseada na cidade
       const touristRegionId = await detectTouristRegion(data.cidade);
 
-      const eventData = {
-        name: data.titulo,
-        description: data.descricao,
-        category: data.categoria, // Adicionar categoria
-        start_date: data.data_inicio,
-        end_date: data.data_fim || data.data_inicio,
-        start_time: data.horario_inicio,
-        end_time: data.horario_fim,
-        location: `${data.local}, ${data.cidade}`,
+      const eventData: Record<string, any> = {
+        external_id: `submission-${Date.now()}`,
+        titulo: data.titulo,
+        descricao: data.descricao,
+        categoria: data.categoria,
+        data_inicio: data.data_inicio,
+        data_fim: data.data_fim || data.data_inicio,
+        local: `${data.local}, ${data.cidade}`,
+        cidade: data.cidade,
         site_oficial: data.site_oficial || null,
-        video_url: data.video_promocional || null,
-        image_url: data.logo_evento || null, // Usar image_url ao invés de logo_evento
-        logo_evento: data.logo_evento || null, // Manter para compatibilidade
-        organizador_nome: data.organizador_nome,
-        organizador_email: data.organizador_email,
-        organizador_telefone: data.organizador_telefone,
-        tourist_region_id: touristRegionId, // Nova coluna
-        is_visible: false, // Precisa de aprovação
+        video_promocional: data.video_promocional || null,
+        imagem_principal: data.logo_evento || null,
+        organizador: data.organizador_nome,
+        contato_email: data.organizador_email,
+        contato_telefone: data.organizador_telefone,
+        is_visible: false,
         is_sponsored: data.tipo === "destaque",
         sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
-        sponsor_amount: data.tipo === "destaque" ? sponsorPrice : null,
       };
 
       // Criar evento no banco
@@ -248,15 +245,13 @@ export const EventSubmissionForm: React.FC = () => {
         // Pequeno delay para mostrar o toast
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Verificar se há um link de pagamento configurado no evento
-        const { data: eventData } = await supabase
+        const { data: createdEventData } = await supabase
           .from('events')
           .select('stripe_payment_link_url')
           .eq('id', eventId)
           .single();
 
-        // Buscar link padrão se evento não tiver link próprio
-        let paymentLink = eventData?.stripe_payment_link_url;
+        let paymentLink = (createdEventData as any)?.stripe_payment_link_url;
         if (!paymentLink) {
           const { data: defaultLink } = await supabase
             .from('site_settings')
@@ -279,7 +274,7 @@ export const EventSubmissionForm: React.FC = () => {
           const returnDomain = window.location.origin;
           await supabase
             .from('events')
-            .update({ return_domain: returnDomain })
+            .update({ return_domain: returnDomain } as any)
             .eq('id', eventId);
 
           const paymentUrl = `${paymentLink}${paymentLink.includes('?') ? '&' : '?'}prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
