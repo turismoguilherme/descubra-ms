@@ -316,13 +316,6 @@ export default function ViaJARAdminPanel() {
           </Suspense>
         } />
         
-        {/* Gerenciador de Banco de Dados */}
-        <Route path="database" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <DatabaseManager />
-          </Suspense>
-        } />
-        
         {/* Settings Routes */}
         <Route path="settings/policies" element={
           <Suspense fallback={<LoadingFallback />}>
@@ -336,11 +329,6 @@ export default function ViaJARAdminPanel() {
         } />
             
             {/* System Routes */}
-            <Route path="system/fallback" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <FallbackConfig />
-              </Suspense>
-            } />
             <Route path="system/monitoring" element={
               <Suspense fallback={<LoadingFallback />}>
                 <SystemMonitoring />
@@ -351,33 +339,8 @@ export default function ViaJARAdminPanel() {
                 <AuditLogs />
               </Suspense>
             } />
-        <Route path="system/settings" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <FallbackConfig />
-              </Suspense>
-            } />
             
             {/* AI Routes */}
-            <Route path="ai/suggestions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AISuggestions />
-              </Suspense>
-            } />
-            <Route path="ai/actions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AIActionsQueue />
-              </Suspense>
-            } />
-            <Route path="ai/agent" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AutonomousAIAgent />
-              </Suspense>
-            } />
-            <Route path="ai/tasks" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AutonomousAIAgent />
-              </Suspense>
-            } />
             <Route path="ai/knowledge-base" element={
               <Suspense fallback={<LoadingFallback />}>
                 <KnowledgeBaseAdmin />
