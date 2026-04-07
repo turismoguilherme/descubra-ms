@@ -81,7 +81,8 @@ const navItems: NavItem[] = [
     icon: Bot,
     children: [
       { label: 'Chat', path: '/viajar/admin/ai/chat' },
-      { label: 'Sugestões', path: '/viajar/admin/ai/suggestions' },
+      { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base' },
+      { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts' },
     ],
   },
 ];

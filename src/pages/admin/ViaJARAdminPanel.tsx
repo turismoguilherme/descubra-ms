@@ -37,7 +37,6 @@ const FinancialReports = lazy(() => import('@/components/admin/financial/Financi
 const FinancialManagement = lazy(() => import('@/components/admin/financial/FinancialManagement'));
 const ModernFinancialDashboard = lazy(() => import('@/components/admin/financial/ModernFinancialDashboard'));
 const BillsManager = lazy(() => import('@/components/admin/financial/BillsManager'));
-const FallbackConfig = lazy(() => import('@/components/admin/system/FallbackConfig'));
 const SystemMonitoring = lazy(() => import('@/components/admin/system/SystemMonitoring'));
 const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
@@ -93,39 +92,18 @@ export default function ViaJARAdminPanel() {
   }, [session, user, userProfile]);
 
   useEffect(() => {
-    console.log('🧭 [ViaJARAdminPanel] Estado de auth atualizado:', {
-      loading,
-      hasUser: !!user,
-      userId: user?.id,
-      hasUserProfile: !!userProfile,
-      userRole: userProfile?.role,
-    });
-
     if (!loading) {
       if (user && userProfile) {
         const role = userProfile?.role || 'user';
-        const allowedRoles = [...ADMIN_ROLES];
-
-        const authorized = allowedRoles.includes(role as typeof ADMIN_ROLES[number]);
-        console.log('🧭 [ViaJARAdminPanel] Verificando permissão para admin:', {
-          role,
-          allowedRoles,
-          authorized,
-        });
-        
+        const authorized = ADMIN_ROLES.includes(role as (typeof ADMIN_ROLES)[number]);
         setIsAuthorized(authorized);
       } else {
-        console.log('🧭 [ViaJARAdminPanel] Usuário ou perfil ausente, não autorizado.', {
-          hasUser: !!user,
-          hasUserProfile: !!userProfile,
-        });
         setIsAuthorized(false);
       }
     }
   }, [user, userProfile, loading]);
 
   if (loading) {
-    console.log('🧭 [ViaJARAdminPanel] Renderizando tela de carregamento (loading === true)');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -155,12 +133,7 @@ export default function ViaJARAdminPanel() {
     return <AdminLogin />;
   }
 
-  // Se não estiver autenticado ou não for admin, mostrar login
   if (!user || !isAuthorized) {
-    console.log('🧭 [ViaJARAdminPanel] Redirecionando para AdminLogin', {
-      hasUser: !!user,
-      isAuthorized,
-    });
     return <AdminLogin />;
   }
 
@@ -341,6 +314,11 @@ export default function ViaJARAdminPanel() {
             } />
             
             {/* AI Routes */}
+            <Route path="ai/chat" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <AIAdminChat />
+              </Suspense>
+            } />
             <Route path="ai/knowledge-base" element={
               <Suspense fallback={<LoadingFallback />}>
                 <KnowledgeBaseAdmin />
@@ -438,7 +416,6 @@ function DashboardOverview() {
           .from('events')
           .select('id')
           .eq('is_visible', false);
-        setPendingEvents(eventsData?.length || 0);
         setPendingEvents(eventsData?.length || 0);
       } catch (error) {
         console.error('Erro ao buscar eventos pendentes:', error);

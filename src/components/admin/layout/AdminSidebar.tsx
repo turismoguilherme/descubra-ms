@@ -15,8 +15,6 @@ import {
   Activity,
   FileCheck,
   Bot,
-  Lightbulb,
-  ListChecks,
   ChevronDown,
   Calendar,
   Users2,
@@ -88,7 +86,6 @@ const sidebarItems: SidebarItem[] = [
     path: '/viajar/admin/system',
     icon: Shield,
     children: [
-      { label: 'Fallback', path: '/viajar/admin/system/fallback', icon: Activity },
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', icon: Activity },
       { label: 'Auditoria', path: '/viajar/admin/system/logs', icon: FileCheck },
     ],
@@ -99,8 +96,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Bot,
     children: [
       { label: 'Chat', path: '/viajar/admin/ai/chat', icon: Bot },
-      { label: 'Sugestões', path: '/viajar/admin/ai/suggestions', icon: Lightbulb },
-      { label: 'Ações Pendentes', path: '/viajar/admin/ai/actions', icon: ListChecks },
       { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base', icon: FileText },
       { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts', icon: Bot },
     ],

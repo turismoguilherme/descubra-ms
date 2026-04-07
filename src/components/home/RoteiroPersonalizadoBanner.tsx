@@ -63,13 +63,19 @@ const RoteiroPersonalizadoBanner = () => {
         }
       });
 
-      // Carregar imagem do Guatá do admin
-      const contents = await platformContentService.getContentByPrefix('ms_guata_roteiro_image_url');
-      const guataContent = contents.find(c => c.content_key === 'ms_guata_roteiro_image_url');
-      if (guataContent?.content_value) {
-        setGuataImageUrl(guataContent.content_value);
+      const [bannerRows, guataRows] = await Promise.all([
+        platformContentService.getContentByPrefix('ms_roteiro_banner'),
+        platformContentService.getContentByPrefix('ms_guata_roteiro'),
+      ]);
+      const customBanner = bannerRows.find((c) => c.content_key === 'ms_roteiro_banner_image');
+      const guataContent = guataRows.find((c) => c.content_key === 'ms_guata_roteiro_image_url');
+      const customUrl = customBanner?.content_value?.trim();
+      const guataUrl = guataContent?.content_value?.trim();
+      if (customUrl) {
+        setGuataImageUrl(customUrl);
+      } else if (guataUrl) {
+        setGuataImageUrl(guataUrl);
       } else {
-        // Fallback para imagem local se não houver no admin
         setGuataImageUrl('/images/publicimagesguata-roteiro.png');
       }
     } catch (error) {

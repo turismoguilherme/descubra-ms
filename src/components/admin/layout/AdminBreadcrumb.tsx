@@ -23,13 +23,12 @@ const routeLabels: Record<string, string> = {
   '/viajar/admin/financial/payments': 'Pagamentos',
   '/viajar/admin/financial/reports': 'Relatórios',
   '/viajar/admin/system': 'Sistema',
-  '/viajar/admin/system/fallback': 'Fallback',
   '/viajar/admin/system/monitoring': 'Monitoramento',
   '/viajar/admin/system/logs': 'Auditoria',
   '/viajar/admin/ai': 'IA Administradora',
   '/viajar/admin/ai/chat': 'Chat',
-  '/viajar/admin/ai/suggestions': 'Sugestões',
-  '/viajar/admin/ai/actions': 'Ações Pendentes',
+  '/viajar/admin/ai/knowledge-base': 'Base de Conhecimento',
+  '/viajar/admin/ai/prompts': 'Editor de Prompts',
 };
 
 export default function AdminBreadcrumb() {

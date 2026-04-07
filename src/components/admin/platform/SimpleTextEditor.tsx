@@ -152,6 +152,7 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     
     // Banner Roteiro Personalizado
     { key: 'ms_roteiro_banner_enabled', label: 'Ativar Banner de Roteiros Personalizados', type: 'toggle', section: 'Banner Roteiro Personalizado' },
+    { key: 'ms_roteiro_banner_image', label: 'Imagem do Banner (lateral)', type: 'image', placeholder: 'URL ou upload da imagem ao lado do texto', section: 'Banner Roteiro Personalizado' },
     { key: 'ms_roteiro_contact_type', label: 'Tipo de Contato', type: 'select', section: 'Banner Roteiro Personalizado', options: [
       { value: 'whatsapp', label: 'Apenas WhatsApp' },
       { value: 'link', label: 'Apenas Link Externo' },
@@ -239,6 +240,7 @@ const getHelpText = (key: string, type: string): string => {
     'ms_hero_video_url': 'Link do YouTube para o vídeo de fundo do hero',
     'ms_hero_video_placeholder_image_url': 'Imagem exibida enquanto o vídeo carrega',
     'ms_guata_roteiro_image_url': 'Imagem do Guatá para o banner "Montamos seu roteiro"',
+    'ms_roteiro_banner_image': 'Imagem lateral do banner de roteiros; se vazia, usa a imagem do Guatá (campo acima no Hero) ou o padrão do site.',
     
     // Descubra MS - Destinos
     'ms_destinations_title': 'Título da seção de destinos em destaque',
