@@ -437,8 +437,8 @@ function DashboardOverview() {
         const { data: eventsData } = await supabase
           .from('events')
           .select('id')
-          .eq('is_visible', false)
-          .is('is_visible', null);
+          .eq('is_visible', false);
+        setPendingEvents(eventsData?.length || 0);
         setPendingEvents(eventsData?.length || 0);
       } catch (error) {
         console.error('Erro ao buscar eventos pendentes:', error);

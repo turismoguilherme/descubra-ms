@@ -455,14 +455,6 @@ export const adminModulesConfig: AdminModule[] = [
     platform: 'system',
     children: [
       {
-        id: 'database',
-        label: 'Banco de Dados',
-        icon: Database,
-        path: '/viajar/admin/database',
-        permission: 'database',
-        platform: 'system',
-      },
-      {
         id: 'emails',
         label: 'Gestão de Emails',
         icon: Mail,
@@ -479,7 +471,6 @@ export const adminModulesConfig: AdminModule[] = [
         platform: 'system',
         title: 'Monitoramento do Sistema',
         description: 'Status e saúde dos sistemas em tempo real',
-        helpText: 'Visualize métricas de performance e saúde do sistema em tempo real.',
       },
       {
         id: 'system-logs',
@@ -490,7 +481,6 @@ export const adminModulesConfig: AdminModule[] = [
         platform: 'system',
         title: 'Auditoria',
         description: 'Histórico completo de ações administrativas no sistema',
-        helpText: 'Veja logs de ações realizadas pelos administradores para rastreabilidade.',
       },
       {
         id: 'system-health',
@@ -501,15 +491,12 @@ export const adminModulesConfig: AdminModule[] = [
         platform: 'system',
       },
       {
-        id: 'system-fallback',
-        label: 'Fallback',
-        icon: Shield,
-        path: '/viajar/admin/system/fallback',
-        permission: 'system',
+        id: 'settings-policies',
+        label: 'Configurações - Políticas',
+        icon: FileText,
+        path: '/viajar/admin/settings/policies',
+        permission: 'settings',
         platform: 'system',
-        title: 'Configuração de Fallback',
-        description: 'Configure sistema de fallback e monitoramento',
-        helpText: 'Configure o modo de manutenção e mensagens de indisponibilidade da plataforma.',
       },
       {
         id: 'settings-policies',
