@@ -1,6 +1,5 @@
 /**
  * Página Intermediária - Redirecionamento de Pagamento de Eventos
- * Recebe o retorno do Stripe e redireciona para o domínio correto
  */
 
 import React, { useEffect, useState } from 'react';
@@ -26,7 +25,6 @@ export default function EventPaymentReturn() {
       }
 
       try {
-        // 1. Buscar informações da sessão do Stripe
         const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-stripe-session', {
           body: { session_id: sessionId },
         });
@@ -36,47 +34,30 @@ export default function EventPaymentReturn() {
         }
 
         const eventId = sessionData.session?.client_reference_id;
-        if (!eventId) {
-          throw new Error('ID do evento não encontrado na sessão');
-        }
+        if (!eventId) throw new Error('ID do evento não encontrado na sessão');
 
-        // 2. Buscar return_domain do evento no banco
         const { data: eventData, error: eventError } = await supabase
           .from('events')
-          .select('return_domain, name')
+          .select('return_domain, titulo')
           .eq('id', eventId)
           .single();
 
-        if (eventError) {
-          console.error('Erro ao buscar evento:', eventError);
-          // Continuar com fallback
-        }
+        if (eventError) console.error('Erro ao buscar evento:', eventError);
 
-        // 3. Determinar domínio de retorno
-        let returnDomain = eventData?.return_domain;
+        let returnDomain = (eventData as any)?.return_domain;
         
-        // Se não encontrou return_domain, usar fallback
         if (!returnDomain) {
-          // Verificar se estamos em descubrams.com ou viajartur.com
           const currentHostname = window.location.hostname.toLowerCase();
-          if (currentHostname.includes('viajartur')) {
-            returnDomain = 'https://viajartur.com';
-          } else {
-            returnDomain = 'https://descubrams.com';
-          }
+          returnDomain = currentHostname.includes('viajartur') ? 'https://viajartur.com' : 'https://descubrams.com';
         }
 
-        // Garantir que o domínio tenha protocolo
         if (!returnDomain.startsWith('http://') && !returnDomain.startsWith('https://')) {
           returnDomain = `https://${returnDomain}`;
         }
 
-        // 4. Redirecionar para página de sucesso no domínio correto
         const successUrl = `${returnDomain}/descubrams/eventos/payment-success?session_id=${sessionId}`;
         window.location.href = successUrl;
-
       } catch (err: unknown) {
-        console.error('Erro ao processar retorno do pagamento:', err);
         setError(getErrorMessage(err, 'Erro ao processar pagamento'));
         setLoading(false);
       }
@@ -98,14 +79,9 @@ export default function EventPaymentReturn() {
                 <h2 className="text-2xl font-bold text-gray-900">Erro ao processar pagamento</h2>
                 <p className="text-gray-600">{error}</p>
               </div>
-              <div className="space-y-3">
-                <a
-                  href="/descubrams/eventos"
-                  className="block w-full px-4 py-2 bg-ms-primary-blue text-white rounded-lg hover:bg-ms-primary-blue/90 text-center"
-                >
-                  Voltar para Eventos
-                </a>
-              </div>
+              <a href="/descubrams/eventos" className="block w-full px-4 py-2 bg-ms-primary-blue text-white rounded-lg hover:bg-ms-primary-blue/90 text-center">
+                Voltar para Eventos
+              </a>
             </div>
           </CardContent>
         </Card>
@@ -121,9 +97,7 @@ export default function EventPaymentReturn() {
             <Loader2 className="h-12 w-12 animate-spin text-ms-primary-blue mx-auto" />
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Processando pagamento...</h2>
-              <p className="text-gray-600 mt-2">
-                Aguarde enquanto redirecionamos você para a página de confirmação
-              </p>
+              <p className="text-gray-600 mt-2">Aguarde enquanto redirecionamos você</p>
             </div>
           </div>
         </CardContent>
@@ -131,4 +105,3 @@ export default function EventPaymentReturn() {
     </div>
   );
 }
-

@@ -31,47 +31,29 @@ const EventosDestaqueSection = () => {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      // Buscar eventos aprovados e visíveis, apenas futuros
       const today = new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select('id, titulo, descricao, data_inicio, data_fim, local, imagem_principal, is_visible, is_sponsored, sponsor_payment_status')
         .eq('is_visible', true)
-        .eq('approval_status', 'approved')
-        .gte('start_date', today)
-        .order('start_date', { ascending: true })
-        .limit(20); // Buscar mais para poder filtrar melhor
+        .gte('data_inicio', today)
+        .order('data_inicio', { ascending: true })
+        .limit(20);
 
       if (error) {
         console.error("Erro na query de eventos:", error);
         throw error;
       }
 
-      console.log("Eventos encontrados:", data?.length || 0);
-
-      const eventsList: EventItem[] = (data || []).map((event: {
-        id: string;
-        name?: string | null;
-        description?: string | null;
-        start_date: string;
-        end_date?: string | null;
-        start_time?: string | null;
-        location?: string | null;
-        image_url?: string | null;
-        logo_evento?: string | null;
-        is_sponsored?: boolean | null;
-        sponsor_payment_status?: string | null;
-      }) => ({
+      const eventsList: EventItem[] = (data || []).map((event: any) => ({
         id: event.id,
-        name: event.name || '',
-        description: event.description || '',
-        start_date: event.start_date,
-        end_date: event.end_date || undefined,
-        start_time: event.start_time || undefined,
-        location: event.location || '',
-        image_url: event.image_url || undefined,
-        logo_evento: event.logo_evento || undefined,
+        name: event.titulo || '',
+        description: event.descricao || '',
+        start_date: event.data_inicio,
+        end_date: event.data_fim || undefined,
+        location: event.local || '',
+        image_url: event.imagem_principal || undefined,
         is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status),
         sponsor_payment_status: event.sponsor_payment_status || undefined,
       }));
@@ -83,9 +65,6 @@ const EventosDestaqueSection = () => {
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       });
 
-      console.log("Eventos processados:", eventsList.length);
-
-      // Pegar apenas os 3 primeiros para layout mais visual
       setEvents(eventsList.slice(0, 3));
     } catch (error) {
       console.error("Erro ao carregar eventos:", error);
@@ -130,15 +109,9 @@ const EventosDestaqueSection = () => {
     );
   }
 
-  // Mostrar seção mesmo sem eventos para debug (remover depois)
-  // if (events.length === 0) {
-  //   return null; // Não mostrar seção se não houver eventos
-  // }
-
   return (
     <section className="py-24 bg-gradient-to-br from-white via-orange-50/30 to-amber-50/30">
       <div className="ms-container">
-        {/* Header */}
         <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex justify-center mb-6">
             <div className="bg-gradient-to-r from-ms-cerrado-orange to-ms-secondary-yellow p-4 rounded-full shadow-lg transform hover:scale-110 transition-transform duration-300">
@@ -153,7 +126,6 @@ const EventosDestaqueSection = () => {
           </p>
         </div>
 
-        {/* Grid de Eventos - Layout visual melhorado (3 eventos em destaque) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {events.map((event, index) => (
             <Link
@@ -163,7 +135,6 @@ const EventosDestaqueSection = () => {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 h-full border border-gray-100 hover:border-ms-cerrado-orange/30">
-                {/* Badge Patrocinado */}
                 {event.is_sponsored && (
                   <div className="absolute top-4 right-4 z-10 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                     <Star size={14} className="fill-white" />
@@ -171,11 +142,9 @@ const EventosDestaqueSection = () => {
                   </div>
                 )}
 
-                {/* Imagem - Maior para melhor visualização */}
                 <div className="h-72 overflow-hidden relative">
                   {(() => {
-                    const imageUrl = event.logo_evento || event.image_url;
-                    
+                    const imageUrl = event.image_url;
                     const optimizedUrl = imageUrl ? optimizeEventCardImage(imageUrl) : '';
                     const finalUrl = optimizedUrl || imageUrl || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800";
 
@@ -184,12 +153,8 @@ const EventosDestaqueSection = () => {
                         src={finalUrl}
                         alt={event.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        onLoad={(e) => {
-                          
-                        }}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          
                           if (target.src !== "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800") {
                             target.src = "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800";
                           }
@@ -200,7 +165,6 @@ const EventosDestaqueSection = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
 
-                {/* Conteúdo */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-ms-primary-blue mb-3 group-hover:text-ms-cerrado-orange transition-colors duration-300 line-clamp-2">
                     {event.name}
@@ -210,7 +174,6 @@ const EventosDestaqueSection = () => {
                     {event.description}
                   </p>
 
-                  {/* Informações */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-gray-700">
                       <Calendar size={16} className="text-ms-cerrado-orange flex-shrink-0" />
@@ -237,7 +200,6 @@ const EventosDestaqueSection = () => {
                     )}
                   </div>
 
-                  {/* Link */}
                   <div className="flex items-center gap-2 text-ms-cerrado-orange font-semibold text-sm group-hover:gap-3 transition-all duration-300 pt-4 border-t border-gray-100">
                     <span>{t('home.events.seeMore', { defaultValue: 'Ver detalhes' })}</span>
                     <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
@@ -248,7 +210,6 @@ const EventosDestaqueSection = () => {
           ))}
         </div>
 
-        {/* Botão Ver Todos */}
         <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
           <Link
             to="/descubrams/eventos"
@@ -264,4 +225,3 @@ const EventosDestaqueSection = () => {
 };
 
 export default EventosDestaqueSection;
-

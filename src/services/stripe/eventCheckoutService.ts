@@ -14,15 +14,10 @@ interface CheckoutResponse {
   error?: string;
 }
 
-/**
- * Cria uma sessão de checkout do Stripe para evento "Em Destaque"
- * Preço: R$ 499,90
- */
 export async function createEventCheckout(params: EventCheckoutParams): Promise<CheckoutResponse> {
   try {
     const { eventId, eventName, organizerEmail, organizerName } = params;
 
-    // Chamar Edge Function
     const { data, error } = await supabase.functions.invoke('event-checkout', {
       body: {
         eventId,
@@ -35,42 +30,22 @@ export async function createEventCheckout(params: EventCheckoutParams): Promise<
     });
 
     if (error) {
-      console.error('Erro ao criar checkout:', error);
-      return {
-        success: false,
-        error: error.message || 'Erro ao criar sessão de pagamento',
-      };
+      return { success: false, error: error.message || 'Erro ao criar sessão de pagamento' };
     }
 
     if (data?.checkoutUrl) {
-      return {
-        success: true,
-        checkoutUrl: data.checkoutUrl,
-        sessionId: data.sessionId,
-      };
+      return { success: true, checkoutUrl: data.checkoutUrl, sessionId: data.sessionId };
     }
 
-    return {
-      success: false,
-      error: 'URL de checkout não retornada',
-    };
-
+    return { success: false, error: 'URL de checkout não retornada' };
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error('Erro no checkout de evento:', err);
-    return {
-      success: false,
-      error: err.message || 'Erro inesperado',
-    };
+    return { success: false, error: err.message || 'Erro inesperado' };
   }
 }
 
-/**
- * Redireciona para o checkout do Stripe
- */
 export async function redirectToEventCheckout(params: EventCheckoutParams): Promise<void> {
   const result = await createEventCheckout(params);
-
   if (result.success && result.checkoutUrl) {
     window.location.href = result.checkoutUrl;
   } else {
@@ -78,9 +53,6 @@ export async function redirectToEventCheckout(params: EventCheckoutParams): Prom
   }
 }
 
-/**
- * Verifica status do pagamento de um evento
- */
 export async function checkEventPaymentStatus(eventId: string): Promise<{
   isPaid: boolean;
   status: string;
@@ -94,17 +66,12 @@ export async function checkEventPaymentStatus(eventId: string): Promise<{
 
     if (error) throw error;
 
+    const eventData = data as any;
     return {
-      isPaid: data?.sponsor_payment_status === 'paid',
-      status: data?.sponsor_payment_status || 'unknown',
+      isPaid: eventData?.sponsor_payment_status === 'paid',
+      status: eventData?.sponsor_payment_status || 'unknown',
     };
-
-  } catch (error) {
-    console.error('Erro ao verificar pagamento:', error);
-    return {
-      isPaid: false,
-      status: 'error',
-    };
+  } catch {
+    return { isPaid: false, status: 'error' };
   }
 }
-
