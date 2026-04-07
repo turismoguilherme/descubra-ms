@@ -15,7 +15,6 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
   const searchTerm = `%${query}%`;
   const results: SearchResult[] = [];
 
-  // Buscar em paralelo
   const [destinationsRes, eventsRes, partnersRes] = await Promise.all([
     supabase
       .from('destinations')
@@ -24,9 +23,9 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
       .limit(5),
     supabase
       .from('events')
-      .select('id, name, location')
+      .select('id, titulo, local')
       .eq('is_visible', true)
-      .ilike('name', searchTerm)
+      .ilike('titulo', searchTerm)
       .limit(5),
     supabase
       .from('commercial_partners')
@@ -36,7 +35,6 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
       .limit(5),
   ]);
 
-  // Destinos
   destinationsRes.data?.forEach(d => {
     results.push({
       id: d.id,
@@ -47,18 +45,16 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
     });
   });
 
-  // Eventos
-  eventsRes.data?.forEach(e => {
+  (eventsRes.data as any[] || []).forEach((e: any) => {
     results.push({
       id: e.id,
-      title: e.name,
-      subtitle: e.location || undefined,
+      title: e.titulo,
+      subtitle: e.local || undefined,
       category: 'evento',
       path: `/ms/eventos/${e.id}`,
     });
   });
 
-  // Parceiros
   partnersRes.data?.forEach(p => {
     results.push({
       id: p.id,
@@ -69,7 +65,6 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
     });
   });
 
-  // Regiões turísticas (dados locais)
   const lowerQuery = query.toLowerCase();
   touristRegions2025
     .filter(r => r.name.toLowerCase().includes(lowerQuery) || r.cities.some(c => c.toLowerCase().includes(lowerQuery)))
@@ -106,20 +101,15 @@ export function isNaturalLanguageQuery(rawQuery: string): boolean {
   const query = rawQuery.toLowerCase().trim();
   if (!query) return false;
 
-  // Palavras que indicam perguntas
   const questionStarters = ['o que', 'onde', 'como', 'qual', 'quando', 'por que', 'porque', 'pra que', 'quem', 'quantos', 'quantas'];
 
-  // Se começa com palavra de pergunta, é pergunta
   if (questionStarters.some((start) => query.startsWith(start + ' '))) {
     return true;
   }
 
-  // Se termina com ?, é pergunta
   if (query.endsWith('?')) {
     return true;
   }
 
-  // Não considerar apenas número de palavras - isso era muito permissivo
-  // Exemplo: "hotel em bonito campo grande" (4 palavras) não é pergunta
   return false;
 }

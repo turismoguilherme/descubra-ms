@@ -41,17 +41,13 @@ const FallbackConfig = lazy(() => import('@/components/admin/system/FallbackConf
 const SystemMonitoring = lazy(() => import('@/components/admin/system/SystemMonitoring'));
 const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
-const AISuggestions = lazy(() => import('@/components/admin/ai/AISuggestions'));
-const AIActionsQueue = lazy(() => import('@/components/admin/ai/AIActionsQueue'));
 const KnowledgeBaseAdmin = lazy(() => import('@/components/admin/ai/KnowledgeBaseAdmin'));
 const AIPromptEditor = lazy(() => import('@/components/admin/ai/AIPromptEditor'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
 const BankAccountsManager = lazy(() => import('@/components/admin/financial/BankAccountsManager'));
-const DatabaseManager = lazy(() => import('@/components/admin/database/DatabaseManager'));
 const SystemHealthMonitor = lazy(() => import('@/components/admin/system/SystemHealthMonitor'));
 const TranslationManager = lazy(() => import('@/components/admin/TranslationManager'));
-const AutonomousAIAgent = lazy(() => import('@/components/admin/ai/AutonomousAIAgent'));
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
 const RefundManagement = lazy(() => import('@/components/admin/financial/RefundManagement'));
@@ -110,7 +106,7 @@ export default function ViaJARAdminPanel() {
         const role = userProfile?.role || 'user';
         const allowedRoles = [...ADMIN_ROLES];
 
-        const authorized = allowedRoles.includes(role);
+        const authorized = allowedRoles.includes(role as typeof ADMIN_ROLES[number]);
         console.log('🧭 [ViaJARAdminPanel] Verificando permissão para admin:', {
           role,
           allowedRoles,
@@ -320,13 +316,6 @@ export default function ViaJARAdminPanel() {
           </Suspense>
         } />
         
-        {/* Gerenciador de Banco de Dados */}
-        <Route path="database" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <DatabaseManager />
-          </Suspense>
-        } />
-        
         {/* Settings Routes */}
         <Route path="settings/policies" element={
           <Suspense fallback={<LoadingFallback />}>
@@ -340,11 +329,6 @@ export default function ViaJARAdminPanel() {
         } />
             
             {/* System Routes */}
-            <Route path="system/fallback" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <FallbackConfig />
-              </Suspense>
-            } />
             <Route path="system/monitoring" element={
               <Suspense fallback={<LoadingFallback />}>
                 <SystemMonitoring />
@@ -355,33 +339,8 @@ export default function ViaJARAdminPanel() {
                 <AuditLogs />
               </Suspense>
             } />
-        <Route path="system/settings" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <FallbackConfig />
-              </Suspense>
-            } />
             
             {/* AI Routes */}
-            <Route path="ai/suggestions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AISuggestions />
-              </Suspense>
-            } />
-            <Route path="ai/actions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AIActionsQueue />
-              </Suspense>
-            } />
-            <Route path="ai/agent" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AutonomousAIAgent />
-              </Suspense>
-            } />
-            <Route path="ai/tasks" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AutonomousAIAgent />
-              </Suspense>
-            } />
             <Route path="ai/knowledge-base" element={
               <Suspense fallback={<LoadingFallback />}>
                 <KnowledgeBaseAdmin />
@@ -478,8 +437,8 @@ function DashboardOverview() {
         const { data: eventsData } = await supabase
           .from('events')
           .select('id')
-          .eq('is_visible', false)
-          .is('is_visible', null);
+          .eq('is_visible', false);
+        setPendingEvents(eventsData?.length || 0);
         setPendingEvents(eventsData?.length || 0);
       } catch (error) {
         console.error('Erro ao buscar eventos pendentes:', error);

@@ -1940,6 +1940,7 @@ export type Database = {
       }
       events: {
         Row: {
+          approval_status: string | null
           categoria: string | null
           cidade: string | null
           confiabilidade: number | null
@@ -1954,12 +1955,17 @@ export type Database = {
           fonte: string | null
           id: string
           imagem_principal: string | null
+          is_sponsored: boolean | null
+          is_visible: boolean | null
           link_inscricao: string | null
           local: string | null
           organizador: string | null
           processado_por_ia: boolean | null
           publico_alvo: string | null
+          return_domain: string | null
           site_oficial: string | null
+          sponsor_payment_status: string | null
+          stripe_payment_link_url: string | null
           tags: string[] | null
           tipo_entrada: string | null
           titulo: string
@@ -1968,6 +1974,7 @@ export type Database = {
           video_promocional: string | null
         }
         Insert: {
+          approval_status?: string | null
           categoria?: string | null
           cidade?: string | null
           confiabilidade?: number | null
@@ -1982,12 +1989,17 @@ export type Database = {
           fonte?: string | null
           id?: string
           imagem_principal?: string | null
+          is_sponsored?: boolean | null
+          is_visible?: boolean | null
           link_inscricao?: string | null
           local?: string | null
           organizador?: string | null
           processado_por_ia?: boolean | null
           publico_alvo?: string | null
+          return_domain?: string | null
           site_oficial?: string | null
+          sponsor_payment_status?: string | null
+          stripe_payment_link_url?: string | null
           tags?: string[] | null
           tipo_entrada?: string | null
           titulo: string
@@ -1996,6 +2008,7 @@ export type Database = {
           video_promocional?: string | null
         }
         Update: {
+          approval_status?: string | null
           categoria?: string | null
           cidade?: string | null
           confiabilidade?: number | null
@@ -2010,12 +2023,17 @@ export type Database = {
           fonte?: string | null
           id?: string
           imagem_principal?: string | null
+          is_sponsored?: boolean | null
+          is_visible?: boolean | null
           link_inscricao?: string | null
           local?: string | null
           organizador?: string | null
           processado_por_ia?: boolean | null
           publico_alvo?: string | null
+          return_domain?: string | null
           site_oficial?: string | null
+          sponsor_payment_status?: string | null
+          stripe_payment_link_url?: string | null
           tags?: string[] | null
           tipo_entrada?: string | null
           titulo?: string

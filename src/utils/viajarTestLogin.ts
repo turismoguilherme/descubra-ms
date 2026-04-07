@@ -4,7 +4,6 @@ import type { UserProfile } from '@/types/auth';
 
 const LEGACY_TEST_TOKEN = 'test-token';
 
-/** Ativo em `npm run dev` ou se `VITE_ENABLE_TEST_LOGIN=true` no build (ex.: preview de homologação). */
 export function isViajarTestLoginEnabled(): boolean {
   if (import.meta.env.DEV) return true;
   return import.meta.env.VITE_ENABLE_TEST_LOGIN === 'true';
@@ -21,13 +20,8 @@ export function simulatedUserFromTestUser(testUser: TestUser): { user: User; pro
     user_id: testUser.id,
     full_name: testUser.name,
     role: testUser.role,
-    city_id:
-      testUser.role === 'gestor_municipal'
-        ? 'campo-grande'
-        : testUser.role === 'gestor_igr'
-          ? 'dourados'
-          : 'campo-grande',
-    region_id: testUser.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
+    city_id: testUser.role === 'gestor_municipal' ? 'campo-grande' : 'campo-grande',
+    region_id: 'regiao-pantanal',
   };
 
   return { user, profile };
@@ -48,13 +42,8 @@ export function readLegacyStoredTestLogin(): { user: User; profile: UserProfile 
       user_id: testData.id,
       full_name: testData.name,
       role: testData.role,
-      city_id:
-        testData.role === 'gestor_municipal'
-          ? 'campo-grande'
-          : testData.role === 'gestor_igr'
-            ? 'dourados'
-            : 'campo-grande',
-      region_id: testData.role === 'gestor_igr' ? 'igr-grande-dourados' : 'regiao-pantanal',
+      city_id: testData.role === 'gestor_municipal' ? 'campo-grande' : 'campo-grande',
+      region_id: 'regiao-pantanal',
     };
     return { user, profile };
   } catch {
@@ -88,12 +77,10 @@ function cityRegionForStaticEmail(email: string): Pick<UserProfile, 'city_id' | 
             : email.includes('cat-bonito')
               ? 'bonito'
               : null,
-    region_id:
-      email.includes('ms') || email.includes('cat') ? 'regiao-pantanal' : null,
+    region_id: email.includes('ms') || email.includes('cat') ? 'regiao-pantanal' : null,
   };
 }
 
-/** Login por email/senha fixos (apenas quando test login está habilitado). */
 export function tryStaticTestSignIn(email: string, password: string): { user: User; profile: UserProfile } | null {
   const key = email.trim().toLowerCase();
   const row = STATIC_TEST_ACCOUNTS[key];
@@ -136,10 +123,8 @@ export function clearSimulatedTestSessionMarkers(): void {
   localStorage.removeItem('supabase.auth.token');
 }
 
-/** Senha comum às contas estáticas de teste. */
 export const VIAJAR_TEST_PASSWORD = '123456';
 
-/** Admin de teste exibido no AdminLogin (dev / VITE_ENABLE_TEST_LOGIN). */
 export const VIAJAR_ADMIN_TEST_DISPLAY = {
   email: 'admin@viajar.com',
   password: VIAJAR_TEST_PASSWORD,
