@@ -51,9 +51,6 @@ const TranslationManager = lazy(() => import('@/components/admin/TranslationMana
 const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
 const RefundManagement = lazy(() => import('@/components/admin/financial/RefundManagement'));
-const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
-const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
-const RefundManagement = lazy(() => import('@/components/admin/financial/RefundManagement'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
