@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,12 +18,7 @@ import {
   Percent,
   Image as ImageIcon,
   Video,
-  Settings,
   ExternalLink,
-  CreditCard,
-  Link2,
-  Save,
-  Loader2,
   AlertTriangle,
   CheckCircle2
 } from 'lucide-react';
@@ -74,15 +70,11 @@ interface PartnerUpdateData {
 }
 
 export default function PartnersManagement() {
+  const navigate = useNavigate();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [activeTab, setActiveTab] = useState('pending');
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [stripeConnectLink, setStripeConnectLink] = useState<string>('');
-  const [paymentLink, setPaymentLink] = useState<string>('');
-  const [commissionRate, setCommissionRate] = useState<string>('10.00');
-  const [savingSettings, setSavingSettings] = useState(false);
   const { toast } = useToast();
 
   const loadPartners = async () => {
@@ -110,130 +102,7 @@ export default function PartnersManagement() {
 
   useEffect(() => {
     loadPartners();
-    loadSettings();
   }, []);
-
-  const loadSettings = async () => {
-    try {
-      // Carregar link do Stripe Connect
-      const { data: connectData, error: connectError } = await supabase
-        .from('site_settings')
-        .select('setting_value')
-        .eq('platform', 'ms')
-        .eq('setting_key', 'partner_stripe_connect_link')
-        .maybeSingle();
-
-      if (!connectError && connectData?.setting_value) {
-        setStripeConnectLink(String(connectData.setting_value || ''));
-      }
-
-      // Carregar link de pagamento
-      const { data: paymentData, error: paymentError } = await supabase
-        .from('site_settings')
-        .select('setting_value')
-        .eq('platform', 'ms')
-        .eq('setting_key', 'partner_payment_link')
-        .maybeSingle();
-
-      if (!paymentError && paymentData?.setting_value) {
-        setPaymentLink(String(paymentData.setting_value || ''));
-      }
-
-      // Carregar percentual de comissão
-      const { data: commissionData, error: commissionError } = await supabase
-        .from('site_settings')
-        .select('setting_value')
-        .eq('platform', 'ms')
-        .eq('setting_key', 'partner_commission_rate')
-        .maybeSingle();
-
-      if (!commissionError && commissionData?.setting_value) {
-        const rate = typeof commissionData.setting_value === 'string' 
-          ? commissionData.setting_value 
-          : String(commissionData.setting_value);
-        setCommissionRate(rate);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
-    }
-  };
-
-  const handleSaveSettings = async () => {
-    // Validar comissão
-    const commissionValue = parseFloat(commissionRate);
-    if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
-      toast({
-        title: 'Percentual inválido',
-        description: 'O percentual de comissão deve ser entre 0 e 100',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setSavingSettings(true);
-    try {
-      // Salvar link do Stripe Connect
-      const { error: connectError } = await supabase
-        .from('site_settings')
-        .upsert({
-          platform: 'ms',
-          setting_key: 'partner_stripe_connect_link',
-          setting_value: stripeConnectLink,
-          description: 'Link do Stripe Connect para parceiros conectarem e receberem pagamentos',
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'platform,setting_key',
-        });
-
-      if (connectError) throw connectError;
-
-      // Salvar link de pagamento
-      const { error: paymentError } = await supabase
-        .from('site_settings')
-        .upsert({
-          platform: 'ms',
-          setting_key: 'partner_payment_link',
-          setting_value: paymentLink,
-          description: 'Link de pagamento mensal para parceiros (Stripe Payment Link)',
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'platform,setting_key',
-        });
-
-      if (paymentError) throw paymentError;
-
-      // Salvar percentual de comissão
-      const { error: commissionError } = await supabase
-        .from('site_settings')
-        .upsert({
-          platform: 'ms',
-          setting_key: 'partner_commission_rate',
-          setting_value: commissionRate,
-          description: 'Percentual de comissão sobre reservas de parceiros (0-100)',
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'platform,setting_key',
-        });
-
-      if (commissionError) throw commissionError;
-
-      toast({
-        title: 'Configurações salvas!',
-        description: `Links e comissão (${parseFloat(commissionRate).toFixed(2)}%) foram atualizados com sucesso.`,
-      });
-      setShowSettingsModal(false);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao salvar configurações:', err);
-      toast({
-        title: 'Erro ao salvar',
-        description: err.message || 'Não foi possível salvar as configurações',
-        variant: 'destructive',
-      });
-    } finally {
-      setSavingSettings(false);
-    }
-  };
 
   const handleManualPaymentWriteOff = async (partnerId: string) => {
     try {
@@ -624,17 +493,27 @@ export default function PartnersManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <AdminPageHeader
-          title="Parceiros"
-          description="Gerencie estabelecimentos parceiros que oferecem serviços turísticos na plataforma."
-          helpText="Gerencie estabelecimentos parceiros que oferecem serviços turísticos na plataforma."
+          title="Lista e aprovações"
+          description="Aprove, suspenda ou exclua parceiros. Taxas, comissão e cancelamento estão nas outras abas desta página."
+          helpText="Use as abas acima para configurar mensalidade, links Stripe e política de reembolso ao cancelar reserva."
         />
-        <div className="flex gap-2">
-          <Button onClick={() => setShowSettingsModal(true)} variant="outline">
-            <Settings className="w-4 h-4 mr-2" />
-            Configurações
+        <div className="flex flex-wrap gap-2 justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/viajar/admin/descubra-ms/partners?tab=fees')}
+          >
+            Ir para taxas e links
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/viajar/admin/descubra-ms/partners?tab=cancellation')}
+          >
+            Ir para cancelamento
           </Button>
           <Button onClick={loadPartners} variant="outline">
-            Atualizar Lista
+            Atualizar lista
           </Button>
         </div>
       </div>
@@ -1007,130 +886,6 @@ export default function PartnersManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Configurações */}
-      <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Configurações de Parceiros
-            </DialogTitle>
-            <DialogDescription>
-              Configure os links do Stripe Connect e de pagamento mensal para parceiros
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="stripe_connect_link" className="flex items-center gap-2">
-                <Link2 className="w-4 h-4" />
-                Link do Stripe Connect
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="stripe_connect_link"
-                  type="url"
-                  value={stripeConnectLink}
-                  onChange={(e) => setStripeConnectLink(e.target.value)}
-                  placeholder="https://connect.stripe.com/..."
-                  className="flex-1"
-                />
-                {stripeConnectLink && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => window.open(stripeConnectLink, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">
-                Link para parceiros conectarem sua conta Stripe e receberem pagamentos
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="payment_link" className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                Link de Pagamento Mensal
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="payment_link"
-                  type="url"
-                  value={paymentLink}
-                  onChange={(e) => setPaymentLink(e.target.value)}
-                  placeholder="https://buy.stripe.com/..."
-                  className="flex-1"
-                />
-                {paymentLink && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => window.open(paymentLink, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">
-                Link de pagamento mensal criado no Stripe Dashboard (Payment Link)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="commission_rate" className="flex items-center gap-2">
-                <Percent className="w-4 h-4" />
-                Percentual de Comissão sobre Reservas (%)
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="commission_rate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={commissionRate}
-                  onChange={(e) => setCommissionRate(e.target.value)}
-                  placeholder="10.00"
-                  className="flex-1"
-                />
-                <span className="text-gray-500">%</span>
-              </div>
-              <p className="text-xs text-gray-500">
-                Percentual de comissão calculado automaticamente sobre cada reserva paga. Você pode alterar este valor a qualquer momento.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => setShowSettingsModal(false)}
-                disabled={savingSettings}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSaveSettings}
-                disabled={savingSettings}
-                className="bg-ms-primary-blue hover:bg-ms-discovery-teal text-white"
-              >
-                {savingSettings ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Salvar Configurações
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

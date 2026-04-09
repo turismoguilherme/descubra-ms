@@ -187,9 +187,11 @@ export const adminModulesConfig: AdminModule[] = [
             path: '/viajar/admin/descubra-ms/partners',
             permission: 'partners',
             platform: 'descubra-ms',
-            title: 'Gerenciamento de Parceiros',
-            description: 'Gerencie estabelecimentos parceiros que oferecem serviços turísticos na plataforma',
-            helpText: 'Gerencie estabelecimentos parceiros que oferecem serviços turísticos na plataforma. Aprove, edite ou remova parceiros.',
+            title: 'Parceiros',
+            description:
+              'Lista e aprovações, mensalidade e comissão, links Stripe e política de cancelamento/reembolso das reservas',
+            helpText:
+              'Três abas: Lista (cadastros), Taxas e links (valores globais e Stripe), Cancelamento (percentuais de reembolso ao turista). A fila para processar reembolsos no cartão fica em Financeiro → Reembolsos pendentes.',
           },
           {
             id: 'avatars',
@@ -290,14 +292,15 @@ export const adminModulesConfig: AdminModule[] = [
           },
           {
             id: 'platform-settings',
-            label: 'Configurações da Plataforma',
+            label: 'Conteúdo e opções do site',
             icon: Settings,
             path: '/viajar/admin/descubra-ms/platform-settings',
             permission: 'settings',
             platform: 'descubra-ms',
-            title: 'Configurações da Plataforma',
-            description: 'Configure informações gerais, funcionalidades e contatos da plataforma Descubra MS',
-            helpText: 'Configure informações gerais, funcionalidades e contatos da plataforma Descubra MS.',
+            title: 'Conteúdo e opções do site (Descubra MS)',
+            description: 'Textos, seções e preferências gerais da experiência pública do Descubra MS',
+            helpText:
+              'Diferente de Parceiros: aqui são ajustes do site/conteúdo, não taxas nem política de reservas.',
           },
         ],
       },
@@ -393,11 +396,15 @@ export const adminModulesConfig: AdminModule[] = [
       },
       {
         id: 'refunds',
-        label: 'Reembolsos',
+        label: 'Reembolsos pendentes',
         icon: RefreshCw,
         path: '/viajar/admin/financial/refunds',
         permission: 'financial',
         platform: 'system',
+        title: 'Fila de reembolsos',
+        description: 'Processar devoluções no Stripe após cancelamento de reservas (operacional)',
+        helpText:
+          'Aqui você executa o reembolso no cartão. As regras de percentual por antecedência ficam em Parceiros → aba Cancelamento.',
       },
       {
         id: 'contact-leads',

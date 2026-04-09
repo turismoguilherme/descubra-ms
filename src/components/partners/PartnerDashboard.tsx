@@ -23,7 +23,6 @@ import { format, subDays, startOfMonth } from 'date-fns';
 import PartnerBusinessEditor from './PartnerBusinessEditor';
 import PartnerPricingEditor from './PartnerPricingEditor';
 import PartnerAvailabilityEditor from './PartnerAvailabilityEditor';
-import PartnerCancellationPolicyEditor from './PartnerCancellationPolicyEditor';
 import { PartnerMetricCard } from './PartnerMetricCard';
 import { PartnerReservationsTable } from './PartnerReservationsTable';
 import { PartnerCancellationDialog } from './PartnerCancellationDialog';
@@ -88,7 +87,7 @@ export default function PartnerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedReservationForChat, setSelectedReservationForChat] = useState<string | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState<Record<string, number>>({});
-  const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing' | 'availability' | 'policies'>('info');
+  const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing' | 'availability'>('info');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -694,12 +693,11 @@ export default function PartnerDashboard() {
                   <PartnerTransactionHistory partnerId={partner.id} />
                 ) : activeTab === 'business' ? (
                   <div className="space-y-6">
-                    <Tabs value={businessSubTab} onValueChange={(v) => setBusinessSubTab(v as 'info' | 'pricing' | 'availability' | 'policies')}>
+                    <Tabs value={businessSubTab} onValueChange={(v) => setBusinessSubTab(v as 'info' | 'pricing' | 'availability')}>
                       <TabsList>
                         <TabsTrigger value="info">Informações</TabsTrigger>
                         <TabsTrigger value="pricing">Preços</TabsTrigger>
                         <TabsTrigger value="availability">Disponibilidade</TabsTrigger>
-                        <TabsTrigger value="policies">Políticas</TabsTrigger>
                       </TabsList>
                       <TabsContent value="info">
                         <PartnerBusinessEditor
@@ -715,12 +713,6 @@ export default function PartnerDashboard() {
                       </TabsContent>
                       <TabsContent value="availability">
                         <PartnerAvailabilityEditor
-                          partnerId={partner.id}
-                          onUpdate={loadPartnerData}
-                        />
-                      </TabsContent>
-                      <TabsContent value="policies">
-                        <PartnerCancellationPolicyEditor
                           partnerId={partner.id}
                           onUpdate={loadPartnerData}
                         />

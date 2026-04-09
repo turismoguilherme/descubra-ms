@@ -31,12 +31,14 @@ const searchItems: SearchItem[] = [
   { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', category: 'Descubra MS' },
   { label: 'Conteúdo Descubra MS', path: '/viajar/admin/descubra-ms/content', category: 'Descubra MS' },
   { label: 'Usuários Descubra MS', path: '/viajar/admin/descubra-ms/users', category: 'Descubra MS' },
-  { label: 'Configurações Descubra MS', path: '/viajar/admin/descubra-ms/settings', category: 'Descubra MS' },
+  { label: 'Parceiros (taxas e cancelamento)', path: '/viajar/admin/descubra-ms/partners?tab=fees', category: 'Descubra MS' },
+  { label: 'Política de cancelamento (reservas)', path: '/viajar/admin/descubra-ms/partners?tab=cancellation', category: 'Descubra MS' },
   
   // Financeiro
   { label: 'Gestão Financeira', path: '/viajar/admin/financial', category: 'Financeiro' },
   { label: 'Pagamentos', path: '/viajar/admin/financial/payments', category: 'Financeiro' },
   { label: 'Relatórios Financeiros', path: '/viajar/admin/financial/reports', category: 'Financeiro' },
+  { label: 'Reembolsos pendentes (Stripe)', path: '/viajar/admin/financial/refunds', category: 'Financeiro' },
   
   // Sistema
   { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', category: 'Sistema' },

@@ -201,6 +201,19 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
         { key: 'ms_footer_copyright', label: 'Copyright', type: 'text' },
       ]
     },
+    {
+      id: 'guata_chat',
+      name: 'Guatá (chat — sugestões)',
+      fields: [
+        {
+          key: 'guata_chat_suggestion_questions',
+          label: 'Perguntas sugeridas (balões)',
+          type: 'json',
+          description:
+            'Array JSON de textos, ex.: ["Pergunta 1?", "Pergunta 2?"]. Cada item vira um botão em /guata e /chatguata.',
+        },
+      ],
+    },
   ],
 };
 

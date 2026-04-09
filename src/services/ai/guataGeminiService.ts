@@ -11,6 +11,7 @@ import { logger } from "@/utils/logger";
 import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 import { getErrorMessage } from "@/utils/errorUtils";
 import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
+import { GUATA_DEFAULT_SUGGESTION_QUESTIONS } from "@/components/guata/guataSuggestionDefaults";
 
 /** Política de transparência (parceiros vs web) e tamanho da resposta — preenchido pelo fluxo Guatá. */
 export interface GuataGeminiPolicy {
@@ -82,14 +83,7 @@ class GuataGeminiService {
   private readonly COMMON_QUESTIONS_CACHE_DURATION = 48 * 60 * 60 * 1000;
   private readonly SIMILARITY_THRESHOLD = 0.75;
   
-  private readonly SUGGESTION_QUESTIONS = [
-    "Quais são os melhores passeios em Bonito?",
-    "Melhor época para visitar o Pantanal?",
-    "Me conte sobre a comida típica de MS",
-    "O que fazer em Corumbá?",
-    "O que fazer em Campo Grande?",
-    "Quais são os principais pontos turísticos de Campo Grande?"
-  ];
+  private readonly SUGGESTION_QUESTIONS = GUATA_DEFAULT_SUGGESTION_QUESTIONS;
   private readonly SUGGESTION_SHARED_CACHE_DURATION = 3 * 60 * 60 * 1000;
   private readonly SUGGESTION_INDIVIDUAL_CACHE_DURATION = 5 * 60 * 1000;
   

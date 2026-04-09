@@ -25,9 +25,8 @@ const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/Sub
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
 const WhatsAppSettingsManager = lazy(() => import('@/components/admin/descubra_ms/WhatsAppSettingsManager'));
 const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
-const PartnersManagement = lazy(() => import('@/components/admin/descubra_ms/PartnersManagement'));
+const PartnersAdminModule = lazy(() => import('@/components/admin/descubra_ms/PartnersAdminModule'));
 const PartnerTermsAcceptances = lazy(() => import('@/components/admin/descubra_ms/PartnerTermsAcceptances'));
-const PartnerSettingsManager = lazy(() => import('@/components/admin/PartnerSettingsManager'));
 const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
@@ -203,7 +202,7 @@ export default function ViaJARAdminPanel() {
             } />
             <Route path="descubra-ms/partners" element={
               <Suspense fallback={<LoadingFallback />}>
-                <PartnersManagement />
+                <PartnersAdminModule />
               </Suspense>
             } />
             <Route path="descubra-ms/partner-terms" element={
@@ -211,11 +210,18 @@ export default function ViaJARAdminPanel() {
                 <PartnerTermsAcceptances />
               </Suspense>
             } />
-            <Route path="descubra-ms/partner-settings" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PartnerSettingsManager />
-              </Suspense>
-            } />
+            <Route
+              path="descubra-ms/settings"
+              element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=fees" replace />}
+            />
+            <Route
+              path="descubra-ms/partner-settings"
+              element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=fees" replace />}
+            />
+            <Route
+              path="descubra-ms/cancellation-policy"
+              element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=cancellation" replace />}
+            />
             <Route path="descubra-ms/whatsapp" element={
               <Suspense fallback={<LoadingFallback />}>
                 <WhatsAppSettingsManager />

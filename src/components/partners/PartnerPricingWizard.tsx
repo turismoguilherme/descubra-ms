@@ -96,10 +96,9 @@ export default function PartnerPricingWizard({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [skipAvailability, setSkipAvailability] = useState(false);
   
-  // Etapa 3: Política de Cancelamento
-  const [defaultPolicy, setDefaultPolicy] = useState<CancellationPolicy | null>(null);
-  const [customPolicy, setCustomPolicy] = useState<CancellationPolicy | null>(null);
-  const [activePolicy, setActivePolicy] = useState<CancellationPolicy | null>(null);
+  // Etapa 3: política de cancelamento (somente a padrão da plataforma)
+  const [platformCancellationPolicy, setPlatformCancellationPolicy] =
+    useState<CancellationPolicy | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -138,32 +137,15 @@ export default function PartnerPricingWizard({
 
   const loadDefaultPolicy = async () => {
     try {
-      // Verificar se parceiro tem política personalizada
-      const { data: custom } = await supabase
+      const { data: defaultData } = await supabase
         .from('partner_cancellation_policies')
         .select('*')
-        .eq('partner_id', partnerId)
+        .is('partner_id', null)
+        .eq('is_default', true)
         .eq('is_active', true)
         .maybeSingle();
-      
-      if (custom) {
-        setCustomPolicy(custom);
-        setActivePolicy(custom);
-      } else {
-        // Buscar política padrão
-        const { data: defaultData } = await supabase
-          .from('partner_cancellation_policies')
-          .select('*')
-          .is('partner_id', null)
-          .eq('is_default', true)
-          .eq('is_active', true)
-          .maybeSingle();
-        
-        if (defaultData) {
-          setDefaultPolicy(defaultData);
-          setActivePolicy(defaultData);
-        }
-      }
+
+      setPlatformCancellationPolicy(defaultData ?? null);
     } catch (error) {
       console.error('Erro ao carregar políticas:', error);
     }
@@ -371,7 +353,7 @@ export default function PartnerPricingWizard({
               <DialogDescription className="mt-2">
                 {currentStep === 1 && 'Informações básicas do produto/serviço'}
                 {currentStep === 2 && 'Configure a disponibilidade por data'}
-                {currentStep === 3 && 'Defina a política de cancelamento (opcional)'}
+                {currentStep === 3 && 'Política de cancelamento da plataforma'}
               </DialogDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -808,7 +790,10 @@ export default function PartnerPricingWizard({
                       <HelpCircle className="w-4 h-4 text-gray-400" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p>A política de cancelamento é aplicada automaticamente. Se você tiver uma política personalizada, ela será usada. Caso contrário, a política padrão da plataforma será aplicada automaticamente.</p>
+                      <p>
+                        Todas as reservas seguem a política de cancelamento definida pela plataforma. O percentual de
+                        reembolso depende de quantos dias faltam para a data da reserva.
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -820,58 +805,49 @@ export default function PartnerPricingWizard({
                   <div>
                     <p className="font-semibold text-green-900 mb-1">Aplicação Automática</p>
                     <p className="text-sm text-green-800">
-                      A política de cancelamento será aplicada automaticamente quando um cliente cancelar uma reserva. Você pode personalizar sua política na aba "Políticas" do dashboard.
+                      Quando um cliente cancelar uma reserva, aplicam-se automaticamente as regras de reembolso da
+                      plataforma (abaixo). O parceiro não altera esses percentuais pelo painel.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {activePolicy && (
+              {platformCancellationPolicy && (
                 <div className="border rounded-lg p-4 bg-white">
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    Política que será aplicada:
-                    {customPolicy ? (
-                      <Badge variant="default" className="bg-ms-primary-blue">Personalizada</Badge>
-                    ) : (
-                      <Badge variant="secondary">Padrão da Plataforma</Badge>
-                    )}
+                    Regras da plataforma
+                    <Badge variant="secondary">Única política em uso</Badge>
                   </h4>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="text-center p-3 bg-green-50 rounded">
                       <p className="text-xs text-gray-600 mb-1">7+ dias antes</p>
                       <p className="text-xl font-bold text-green-700">
-                        {activePolicy.days_before_7_refund_percent}%
+                        {platformCancellationPolicy.days_before_7_refund_percent}%
                       </p>
                     </div>
                     <div className="text-center p-3 bg-yellow-50 rounded">
                       <p className="text-xs text-gray-600 mb-1">1-2 dias antes</p>
                       <p className="text-xl font-bold text-yellow-700">
-                        {activePolicy.days_before_1_2_refund_percent}%
+                        {platformCancellationPolicy.days_before_1_2_refund_percent}%
                       </p>
                     </div>
                     <div className="text-center p-3 bg-red-50 rounded">
                       <p className="text-xs text-gray-600 mb-1">No dia ou após</p>
                       <p className="text-xl font-bold text-red-700">
-                        {activePolicy.days_before_0_refund_percent}%
+                        {platformCancellationPolicy.days_before_0_refund_percent}%
                       </p>
                     </div>
                   </div>
-                  {customPolicy && (
-                    <p className="text-xs text-gray-500 mt-3 text-center">
-                      Esta é sua política personalizada. Para editar, vá na aba "Políticas".
-                    </p>
-                  )}
-                  {!customPolicy && (
-                    <p className="text-xs text-gray-500 mt-3 text-center">
-                      Esta é a política padrão da plataforma. Você pode criar uma personalizada na aba "Políticas".
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    Dúvidas ou exceções: fale com o suporte da plataforma.
+                  </p>
                 </div>
               )}
 
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-800 text-center">
-                  💡 <strong>Dica:</strong> Você pode personalizar sua política de cancelamento a qualquer momento na aba "Políticas" do dashboard.
+                  Os percentuais são definidos pela equipe Descubra MS. Alterações aparecem aqui quando a política
+                  padrão for atualizada no sistema.
                 </p>
               </div>
             </div>

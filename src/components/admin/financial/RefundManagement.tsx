@@ -249,9 +249,10 @@ export default function RefundManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gerenciamento de Reembolsos</h1>
-          <p className="text-muted-foreground mt-1">
-            Processe reembolsos de reservas canceladas manualmente
+          <h1 className="text-3xl font-bold">Reembolsos pendentes</h1>
+          <p className="text-muted-foreground mt-1 text-sm max-w-2xl">
+            Fila operacional: processar devoluções no Stripe. As regras de percentual por antecedência estão em{' '}
+            <span className="font-medium text-foreground">Parceiros → Cancelamento</span>.
           </p>
         </div>
         <Button onClick={loadRefunds} variant="outline" disabled={loading}>

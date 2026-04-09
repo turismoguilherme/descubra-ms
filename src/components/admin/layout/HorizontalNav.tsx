@@ -46,11 +46,9 @@ const navItems: NavItem[] = [
       { label: 'Destinos', path: '/viajar/admin/descubra-ms/destinations' },
       { label: 'Eventos', path: '/viajar/admin/descubra-ms/events' },
       { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners' },
-      { label: 'Configurações de Parceiros', path: '/viajar/admin/descubra-ms/partner-settings' },
       { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport' },
       { label: 'Conteúdo', path: '/viajar/admin/descubra-ms/content' },
       { label: 'Usuários', path: '/viajar/admin/descubra-ms/users' },
-      { label: 'Configurações', path: '/viajar/admin/descubra-ms/settings' },
     ],
   },
   {
