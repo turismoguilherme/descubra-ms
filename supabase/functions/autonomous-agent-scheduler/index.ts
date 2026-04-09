@@ -617,6 +617,13 @@ Seja rigoroso mas justo. Conteúdo de turismo deve ser profissional e adequado p
   }
 }
 
+// Texto do evento para moderação (schema PT + aliases EN legados)
+function eventTextForModeration(event: any): string {
+  const title = [event.titulo, event.name, event.title].filter(Boolean).join(' ').trim();
+  const desc = (event.descricao || event.description || '').trim();
+  return [title, desc].filter(Boolean).join('\n\n');
+}
+
 // Função para moderar evento
 // NOVA LÓGICA: Aceita por padrão, rejeita apenas se detectar problemas graves
 async function moderateEvent(event: any): Promise<{
@@ -625,12 +632,7 @@ async function moderateEvent(event: any): Promise<{
   reason?: string;
   needsHumanReview: boolean;
 }> {
-  const contentParts: string[] = [];
-  if (event.name) contentParts.push(event.name);
-  if (event.title) contentParts.push(event.title);
-  if (event.description) contentParts.push(event.description);
-
-  const fullContent = contentParts.join(' ');
+  const fullContent = eventTextForModeration(event);
 
   // Verificações básicas - problemas graves que causam rejeição
   const hasProfanity = checkProfanity(fullContent);
@@ -673,10 +675,11 @@ async function executeAutoApproveEvents(supabase: any) {
   try {
     console.log('🔍 [AutoApproveEvents] Iniciando verificação de eventos pendentes...');
 
-    // Buscar eventos pendentes (gratuitos e pagos)
     const { data: pendingEvents, error } = await supabase
       .from('events')
-      .select('id, name, title, description, start_date, is_free, price, approval_status')
+      .select(
+        'id, titulo, descricao, data_inicio, tipo_entrada, approval_status, name, title, description, start_date, is_free, price'
+      )
       .eq('approval_status', 'pending')
       .limit(50);
 
@@ -686,24 +689,40 @@ async function executeAutoApproveEvents(supabase: any) {
     const rejectedEvents: any[] = [];
     const needsReviewEvents: any[] = [];
     const today = new Date();
-    // REMOVIDO: Exigência de 7 dias no futuro - agora aceita eventos a partir de hoje
     const minDate = new Date(today);
-    minDate.setHours(0, 0, 0, 0); // Aceitar eventos a partir de hoje (00:00)
+    minDate.setHours(0, 0, 0, 0);
 
     for (const event of pendingEvents || []) {
-      const startDate = event.start_date ? new Date(event.start_date) : null;
-      const isFree = event.is_free === true || event.price === 0 || event.price === null;
-      // Aceitar eventos a partir de hoje (sem exigir 7 dias)
-      const hasValidDate = startDate && startDate >= minDate;
-      const hasRequiredFields = event.name || event.title;
+      const startRaw = event.data_inicio ?? event.start_date;
+      const startDate = startRaw ? new Date(startRaw) : null;
+      const isFree =
+        event.tipo_entrada === 'gratuito' ||
+        event.is_free === true ||
+        event.price === 0 ||
+        event.price === null;
+      const hasValidDate = Boolean(startDate && startDate >= minDate);
+      const hasRequiredFields = Boolean(
+        (event.titulo && String(event.titulo).trim()) || event.name || event.title
+      );
 
-      // Verificações básicas: apenas campos obrigatórios e data válida (a partir de hoje)
       if (!hasValidDate || !hasRequiredFields) {
-        rejectedEvents.push({
-          event,
-          reason: !hasValidDate ? 'Data inválida ou no passado' :
-                 !hasRequiredFields ? 'Campos obrigatórios faltando (nome/título)' : 'Outro motivo',
-        });
+        const failReason = !hasValidDate
+          ? 'Data inválida ou no passado'
+          : !hasRequiredFields
+            ? 'Campos obrigatórios faltando (título)'
+            : 'Outro motivo';
+        rejectedEvents.push({ event, reason: failReason });
+        const nowIso = new Date().toISOString();
+        await supabase
+          .from('events')
+          .update({
+            approval_status: 'rejected',
+            is_visible: false,
+            rejection_reason: `[auto] ${failReason}`,
+            moderation_decision_source: 'system',
+            moderated_at: nowIso,
+          })
+          .eq('id', event.id);
         continue;
       }
 
@@ -711,13 +730,16 @@ async function executeAutoApproveEvents(supabase: any) {
       const moderation = await moderateEvent(event);
 
       if (moderation.approved) {
-        // Aprovar automaticamente
+        const nowIso = new Date().toISOString();
         const { error: updateError } = await supabase
           .from('events')
           .update({
             approval_status: 'approved',
             is_visible: true,
-            approved_at: new Date().toISOString(),
+            approved_at: nowIso,
+            rejection_reason: null,
+            moderation_decision_source: 'system',
+            moderated_at: nowIso,
           })
           .eq('id', event.id);
 
@@ -742,22 +764,28 @@ async function executeAutoApproveEvents(supabase: any) {
             event_data: event,
           });
 
-          console.log(`✅ [AutoApproveEvents] Evento aprovado automaticamente: ${event.name || event.title}`);
+          console.log(
+            `✅ [AutoApproveEvents] Evento aprovado automaticamente: ${event.titulo || event.name || event.title}`
+          );
         }
       } else {
-        // Rejeitar apenas se detectar problemas graves (palavrões, apologia, spam ou conteúdo falso)
-        // Rejeitar automaticamente
         rejectedEvents.push({
           event,
           reason: moderation.reason || 'Conteúdo inadequado',
           score: moderation.score,
         });
 
+        const nowIso = new Date().toISOString();
         const { error: updateError } = await supabase
           .from('events')
           .update({
             approval_status: 'rejected',
-            rejection_reason: moderation.reason || 'Conteúdo contém palavrões, apologia, spam ou foi identificado como falso/inadequado',
+            is_visible: false,
+            rejection_reason:
+              moderation.reason ||
+              'Conteúdo contém palavrões, apologia, spam ou foi identificado como falso/inadequado',
+            moderation_decision_source: 'system',
+            moderated_at: nowIso,
           })
           .eq('id', event.id);
 
@@ -776,7 +804,9 @@ async function executeAutoApproveEvents(supabase: any) {
             event_data: event,
           });
 
-          console.log(`❌ [AutoApproveEvents] Evento rejeitado: ${event.name || event.title} - Motivo: ${moderation.reason}`);
+          console.log(
+            `❌ [AutoApproveEvents] Evento rejeitado: ${event.titulo || event.name || event.title} - Motivo: ${moderation.reason}`
+          );
         }
       }
     }

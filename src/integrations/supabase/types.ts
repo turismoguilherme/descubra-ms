@@ -1972,6 +1972,10 @@ export type Database = {
           ultima_atualizacao: string | null
           updated_at: string | null
           video_promocional: string | null
+          approved_at: string | null
+          rejection_reason: string | null
+          moderation_decision_source: string | null
+          moderated_at: string | null
         }
         Insert: {
           approval_status?: string | null
@@ -2006,6 +2010,10 @@ export type Database = {
           ultima_atualizacao?: string | null
           updated_at?: string | null
           video_promocional?: string | null
+          approved_at?: string | null
+          rejection_reason?: string | null
+          moderation_decision_source?: string | null
+          moderated_at?: string | null
         }
         Update: {
           approval_status?: string | null
@@ -2040,6 +2048,10 @@ export type Database = {
           ultima_atualizacao?: string | null
           updated_at?: string | null
           video_promocional?: string | null
+          approved_at?: string | null
+          rejection_reason?: string | null
+          moderation_decision_source?: string | null
+          moderated_at?: string | null
         }
         Relationships: []
       }

@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,6 +80,44 @@ interface Event {
   approval_status?: string; // pending, approved, rejected
   stripe_payment_link_url?: string | null;
   created_at: string;
+  rejection_reason?: string | null;
+  moderation_decision_source?: string | null;
+  moderated_at?: string | null;
+}
+
+/** Mapeia linha do Supabase (PT) para o modelo usado na UI */
+function normalizeEventFromDb(row: Record<string, unknown>): Event {
+  const r = row as Record<string, unknown>;
+  return {
+    id: r.id as string,
+    name: String((r.titulo ?? r.name) || ''),
+    description: String((r.descricao ?? r.description) || ''),
+    location: String((r.local ?? r.location) || ''),
+    start_date: String((r.data_inicio ?? r.start_date) || ''),
+    end_date: String((r.data_fim ?? r.end_date) || ''),
+    start_time: (r.start_time as string) || undefined,
+    end_time: (r.end_time as string) || undefined,
+    image_url: (r.imagem_principal ?? r.image_url) as string | undefined,
+    logo_evento: (r.logo_evento as string) || undefined,
+    site_oficial: (r.site_oficial as string) || undefined,
+    video_url: (r.video_promocional ?? r.video_url) as string | undefined,
+    is_visible: Boolean(r.is_visible),
+    is_sponsored: Boolean(r.is_sponsored),
+    sponsor_tier: r.sponsor_tier as string | undefined,
+    sponsor_payment_status: r.sponsor_payment_status as string | undefined,
+    sponsor_amount: r.sponsor_amount as number | undefined,
+    organizador_nome: (r.organizador_nome ?? r.organizador) as string | undefined,
+    organizador_email: r.organizador_email as string | undefined,
+    organizador_telefone: r.organizador_telefone as string | undefined,
+    organizador_empresa: r.organizador_empresa as string | undefined,
+    category: (r.categoria ?? r.category) as string | undefined,
+    approval_status: (r.approval_status as string) || undefined,
+    stripe_payment_link_url: (r.stripe_payment_link_url as string) || null,
+    created_at: String(r.created_at || ''),
+    rejection_reason: (r.rejection_reason as string) || null,
+    moderation_decision_source: (r.moderation_decision_source as string) || null,
+    moderated_at: (r.moderated_at as string) || null,
+  };
 }
 
 export default function EventsManagement() {
@@ -101,7 +138,6 @@ export default function EventsManagement() {
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -110,30 +146,14 @@ export default function EventsManagement() {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('events')
-        .select('*');
-      
-      // Se não mostrar arquivados, filtrar apenas visíveis
-      if (!showArchived) {
-        query = query.eq('is_visible', true);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      console.log('📥 Eventos carregados:', data?.length || 0);
-      if (data && data.length > 0) {
-        console.log('📊 Exemplo de evento:', {
-          id: data[0].id,
-          name: data[0].name,
-          is_visible: data[0].is_visible,
-          approval_status: (data[0] as Event & { approval_status?: string }).approval_status,
-        });
-      }
-      
-      setEvents(data || []);
+
+      setEvents((data || []).map((row) => normalizeEventFromDb(row as Record<string, unknown>)));
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao carregar eventos:', err);
@@ -337,10 +357,15 @@ export default function EventsManagement() {
       const isPaid = paymentStatus === 'paid';
       
       // Atualizar evento: tornar visível e marcar como aprovado
-      const updateData: unknown = {
+      const nowIso = new Date().toISOString();
+      const updateData: Record<string, unknown> = {
         is_visible: true,
         approval_status: 'approved',
-        updated_at: new Date().toISOString(),
+        updated_at: nowIso,
+        rejection_reason: null,
+        moderation_decision_source: 'admin',
+        moderated_at: nowIso,
+        approved_at: nowIso,
       };
 
       // Se o evento foi pago, marcar como patrocinado
@@ -398,10 +423,17 @@ export default function EventsManagement() {
       console.log('✅ Evento atualizado com sucesso:', updatedEvent);
 
       // Atualizar estado local imediatamente para feedback visual instantâneo
-      setEvents(prevEvents => 
-        prevEvents.map(e => 
-          e.id === eventId 
-            ? { ...e, is_visible: true, approval_status: 'approved' }
+      setEvents(prevEvents =>
+        prevEvents.map((e) =>
+          e.id === eventId
+            ? {
+                ...e,
+                is_visible: true,
+                approval_status: 'approved',
+                rejection_reason: null,
+                moderation_decision_source: 'admin',
+                moderated_at: nowIso,
+              }
             : e
         )
       );
@@ -533,18 +565,16 @@ export default function EventsManagement() {
         }
       }
 
-      // Marcar como rejeitado - atualizar apenas campos que existem na tabela
-      const updateData: unknown = {
+      const nowIso = new Date().toISOString();
+      const rejectionText = reason || 'Rejeitado pelo administrador';
+      const updateData: Record<string, unknown> = {
         is_visible: false,
-        updated_at: new Date().toISOString(),
+        updated_at: nowIso,
+        approval_status: 'rejected',
+        rejection_reason: rejectionText,
+        moderation_decision_source: 'admin',
+        moderated_at: nowIso,
       };
-
-      // Tentar adicionar approval_status (pode não existir na tabela ainda)
-      // Se der erro, será ignorado e apenas is_visible será atualizado
-      updateData.approval_status = 'rejected';
-      
-      // Não adicionar approved_by, approved_at ou rejection_reason pois podem não existir
-      // Esses campos serão adicionados apenas se as migrações estiverem aplicadas
 
       console.log('🔄 Atualizando evento com dados:', updateData);
 
@@ -873,28 +903,25 @@ export default function EventsManagement() {
       // Usar nomes de campos baseados na estrutura real da tabela descoberta
       // Usar campos baseados na estrutura real da tabela descoberta via debug
       updateData = {
-        name: editingEvent.name,
-        description: editingEvent.description,
-        start_date: editingEvent.start_date,
-        organizador_nome: editingEvent.organizador_nome || editingEvent.organizador,
-        image_url: imageUrl,
-        video_url: editingEvent.video_url,
+        titulo: editingEvent.name,
+        descricao: editingEvent.description,
+        data_inicio: editingEvent.start_date,
+        data_fim: editingEvent.end_date || null,
+        local: editingEvent.location,
+        categoria: editingEvent.category,
+        organizador: editingEvent.organizador_nome || editingEvent.organizador,
+        imagem_principal: imageUrl,
+        video_promocional: editingEvent.video_url,
         updated_at: new Date().toISOString(),
       };
 
-      // Adicionar campos opcionais que existem na tabela
-
-      // Adicionar campos opcionais que existem na tabela real
       const optionalFields = [
-        { tableField: 'end_date', formField: 'end_date' },
-        { tableField: 'location', formField: 'location' },
         { tableField: 'organizador_telefone', formField: 'organizador_telefone' },
         { tableField: 'organizador_email', formField: 'organizador_email' },
         { tableField: 'site_oficial', formField: 'site_oficial' },
         { tableField: 'start_time', formField: 'start_time' },
         { tableField: 'end_time', formField: 'end_time' },
-        { tableField: 'category', formField: 'category' },
-        { tableField: 'approval_status', formField: 'approval_status' }
+        { tableField: 'approval_status', formField: 'approval_status' },
       ];
 
       for (const mapping of optionalFields) {
@@ -1022,9 +1049,13 @@ export default function EventsManagement() {
   });
   const approvedEvents = events.filter(e => e.is_visible && !e.is_sponsored);
   const sponsoredEvents = events.filter(e => e.is_sponsored);
-  const rejectedEvents = events.filter(e => {
+  const rejectedSystemEvents = events.filter((e) => {
     const approvalStatus = (e as Event & { approval_status?: string }).approval_status;
-    return approvalStatus === 'rejected';
+    return approvalStatus === 'rejected' && e.moderation_decision_source === 'system';
+  });
+  const rejectedManualEvents = events.filter((e) => {
+    const approvalStatus = (e as Event & { approval_status?: string }).approval_status;
+    return approvalStatus === 'rejected' && e.moderation_decision_source !== 'system';
   });
 
   // Função para extrair ID do YouTube
@@ -1123,6 +1154,13 @@ export default function EventsManagement() {
                     Rejeitado
                   </Badge>
                 )}
+                {(event as Event & { approval_status?: string }).approval_status === 'rejected' &&
+                  event.moderation_decision_source === 'system' && (
+                    <Badge variant="outline" className="border-amber-500 text-amber-800 bg-amber-50">
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      Sistema
+                    </Badge>
+                  )}
                 {!event.is_visible && (event as Event & { approval_status?: string }).approval_status !== 'rejected' && (
                   <Badge variant="secondary">
                     <Clock className="w-3 h-3 mr-1" />
@@ -1143,6 +1181,12 @@ export default function EventsManagement() {
                 {event.organizador_nome}
                 {event.organizador_empresa && ` - ${event.organizador_empresa}`}
               </div>
+            )}
+
+            {event.rejection_reason && (
+              <p className="mt-2 text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-2 py-1.5">
+                <strong>Motivo:</strong> {event.rejection_reason}
+              </p>
             )}
 
             {showActions && (
@@ -1169,7 +1213,11 @@ export default function EventsManagement() {
                     ) : (
                       <Check className="w-4 h-4 mr-1" />
                     )}
-                    {approvingEventId === event.id ? 'Reativando...' : 'Reativar'}
+                    {approvingEventId === event.id
+                      ? 'Publicando...'
+                      : event.moderation_decision_source === 'system'
+                        ? 'Aprovar e publicar'
+                        : 'Reativar'}
                   </Button>
                 )}
                 
@@ -1253,19 +1301,7 @@ export default function EventsManagement() {
           helpText="Aprove, edite ou remova eventos cadastrados por parceiros e organizadores."
         />
         <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="show-archived"
-              checked={showArchived}
-              onCheckedChange={(checked) => {
-                setShowArchived(checked as boolean);
-              }}
-            />
-            <Label htmlFor="show-archived" className="cursor-pointer">
-              Mostrar arquivados
-            </Label>
-          </div>
-          <Button           onClick={loadEvents} variant="outline">
+          <Button onClick={loadEvents} variant="outline">
             Atualizar Lista
           </Button>
         </div>
@@ -1543,7 +1579,7 @@ export default function EventsManagement() {
       </Card>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-yellow-800">Pendentes</CardTitle>
@@ -1551,6 +1587,16 @@ export default function EventsManagement() {
           <CardContent>
             <div className="text-3xl font-bold text-yellow-900">{pendingEvents.length}</div>
             <p className="text-xs text-yellow-600">Aguardando aprovação</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-amber-900">Revisar (automático)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-amber-950">{rejectedSystemEvents.length}</div>
+            <p className="text-xs text-amber-800">Rejeitados pelo sistema — você pode aprovar</p>
           </CardContent>
         </Card>
 
@@ -1576,11 +1622,11 @@ export default function EventsManagement() {
 
         <Card className="border-red-200 bg-red-50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">Rejeitados</CardTitle>
+            <CardTitle className="text-sm font-medium text-red-800">Rejeitados (manual)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-900">{rejectedEvents.length}</div>
-            <p className="text-xs text-red-600">Eventos rejeitados</p>
+            <div className="text-3xl font-bold text-red-900">{rejectedManualEvents.length}</div>
+            <p className="text-xs text-red-600">Rejeição pelo admin ou legado</p>
           </CardContent>
         </Card>
       </div>
@@ -1592,6 +1638,10 @@ export default function EventsManagement() {
             <Clock className="w-4 h-4" />
             Pendentes ({pendingEvents.length})
           </TabsTrigger>
+          <TabsTrigger value="reject-system" className="gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Revisar automático ({rejectedSystemEvents.length})
+          </TabsTrigger>
           <TabsTrigger value="approved" className="gap-2">
             <Check className="w-4 h-4" />
             Aprovados ({approvedEvents.length})
@@ -1602,7 +1652,7 @@ export default function EventsManagement() {
           </TabsTrigger>
           <TabsTrigger value="rejected" className="gap-2">
             <X className="w-4 h-4" />
-            Rejeitados ({rejectedEvents.length})
+            Rejeitados manual ({rejectedManualEvents.length})
           </TabsTrigger>
         </TabsList>
 
@@ -1645,14 +1695,12 @@ export default function EventsManagement() {
         </TabsContent>
 
         <TabsContent value="rejected" className="space-y-4 mt-4">
-          {rejectedEvents.length === 0 ? (
+          {rejectedManualEvents.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              Nenhum evento rejeitado
+              Nenhum evento rejeitado manualmente
             </div>
           ) : (
-            rejectedEvents.map(event => (
-              <EventCard key={event.id} event={event} />
-            ))
+            rejectedManualEvents.map((event) => <EventCard key={event.id} event={event} />)
           )}
         </TabsContent>
       </Tabs>

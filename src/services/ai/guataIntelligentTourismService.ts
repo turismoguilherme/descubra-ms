@@ -443,7 +443,8 @@ class GuataIntelligentTourismService {
       'rota bioceânica', 'rota bioceanica', 'bioceanica',
       'o que é', 'como funciona', 'quando', 'onde fica (localização)',
       'história', 'cultura', 'turismo (conceito)', 'destino (conceito)',
-      'roteiro (planejamento)', 'itinerário (planejamento)', 'dias', 'moto', 'viagem (planejamento)'
+      'roteiro (planejamento)', 'itinerário (planejamento)', 'dias', 'moto', 'viagem (planejamento)',
+      'impacto', 'impactos', 'efeitos', 'vamos conversar', 'conversar sobre'
     ];
     
     // Se contém conceitos gerais, não usar parceiros
@@ -1191,10 +1192,11 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
 
     if (partnersCount > 0) {
       let out = this.formatPartnersResponse(partnersResult, question);
-      out +=
-        '\n\n🌐 Além dos parceiros da plataforma, usei também informações encontradas na busca na web para complementar (não são parceiros cadastrados):\n\n';
+      out += isServiceQuestion
+        ? '\n\n🌐 Além dos parceiros da plataforma, usei também informações encontradas na busca na web para complementar (não são parceiros cadastrados):\n\n'
+        : '\n\n🌐 Complemento informativo:\n\n';
       out += ragText;
-      if (hasWeb) out += this.webDisclaimerFooter;
+      if (hasWeb && isServiceQuestion) out += this.webDisclaimerFooter;
       return out;
     }
 
@@ -1221,12 +1223,9 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       return out;
     }
 
+    // Temático / informativo: sem prefixo nem rodapé de "sugestões de estabelecimentos"
     if (hasWeb && ragText) {
-      return (
-        '🌐 Com base no que encontrei na busca na web (não são parceiros cadastrados na plataforma):\n\n' +
-        ragText +
-        this.webDisclaimerFooter
-      );
+      return ragText;
     }
 
     return ragText;
@@ -1252,7 +1251,7 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       }
     }
     out += formattedBody;
-    if (hw) out += this.webDisclaimerFooter;
+    if (hw && isSvc) out += this.webDisclaimerFooter;
     return out;
   }
 
@@ -1291,15 +1290,19 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
       console.log('🤝 Usando parceiros encontrados:', partnersResult.partnersFound.length);
       answer = this.formatPartnersResponse(partnersResult, question);
-      
+      const isSvcQ = this.isServiceRelatedQuestion(question);
+
       // Adicionar pesquisa web como complemento
       if (webSearchResponse.results.length > 0) {
-        const webIntro = this.hasWebDerivedResults(webSearchResponse)
-          ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
-          : '\n\n🌐 Complemento com outras referências encontradas:\n';
+        const webIntro =
+          !isSvcQ
+            ? '\n\n🌐 Complemento informativo:\n'
+            : this.hasWebDerivedResults(webSearchResponse)
+              ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
+              : '\n\n🌐 Complemento com outras referências encontradas:\n';
         answer += webIntro;
         answer += this.formatWebSearchResults(webSearchResponse.results, question);
-        if (this.hasWebDerivedResults(webSearchResponse)) {
+        if (this.hasWebDerivedResults(webSearchResponse) && isSvcQ) {
           answer += this.webDisclaimerFooter;
         }
       }
@@ -1361,12 +1364,15 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           if (webSearchResponse.results && webSearchResponse.results.length > 0) {
             // Priorizar parceiros se houver
             if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+              const isSvcQ = this.isServiceRelatedQuestion(question);
               answer = this.formatPartnersResponse(partnersResult, question);
-              answer += this.hasWebDerivedResults(webSearchResponse)
-                ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n\n'
-                : '\n\n🌐 Complemento com outras referências encontradas:\n\n';
+              answer += !isSvcQ
+                ? '\n\n🌐 Complemento informativo:\n\n'
+                : this.hasWebDerivedResults(webSearchResponse)
+                  ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n\n'
+                  : '\n\n🌐 Complemento com outras referências encontradas:\n\n';
               answer += this.formatWebSearchResults(webSearchResponse.results, question);
-              if (this.hasWebDerivedResults(webSearchResponse)) answer += this.webDisclaimerFooter;
+              if (this.hasWebDerivedResults(webSearchResponse) && isSvcQ) answer += this.webDisclaimerFooter;
             } else {
               answer = this.wrapFallbackWebAnswer(
                 question,
@@ -1390,12 +1396,15 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
           }
           // Usar pesquisa web como fallback principal
           if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+            const isSvcQ = this.isServiceRelatedQuestion(question);
             answer = this.formatPartnersResponse(partnersResult, question);
-            answer += this.hasWebDerivedResults(webSearchResponse)
-              ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
-              : '\n\n🌐 Complemento com outras referências encontradas:\n';
+            answer += !isSvcQ
+              ? '\n\n🌐 Complemento informativo:\n'
+              : this.hasWebDerivedResults(webSearchResponse)
+                ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
+                : '\n\n🌐 Complemento com outras referências encontradas:\n';
             answer += this.formatWebSearchResults(webSearchResponse.results, question);
-            if (this.hasWebDerivedResults(webSearchResponse)) answer += this.webDisclaimerFooter;
+            if (this.hasWebDerivedResults(webSearchResponse) && isSvcQ) answer += this.webDisclaimerFooter;
           } else if (webSearchResponse.results.length > 0) {
             answer = this.wrapFallbackWebAnswer(
               question,
@@ -1414,12 +1423,15 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
             console.warn('[Guatá] Erro no Gemini, usando pesquisa web:', error.message);
           }
           if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
+            const isSvcQ = this.isServiceRelatedQuestion(question);
             answer = this.formatPartnersResponse(partnersResult, question);
-            answer += this.hasWebDerivedResults(webSearchResponse)
-              ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
-              : '\n\n🌐 Complemento com outras referências encontradas:\n';
+            answer += !isSvcQ
+              ? '\n\n🌐 Complemento informativo:\n'
+              : this.hasWebDerivedResults(webSearchResponse)
+                ? '\n\n🌐 Além dos parceiros, encontrei na busca na web informações que podem ajudar (não são parceiros cadastrados na plataforma):\n'
+                : '\n\n🌐 Complemento com outras referências encontradas:\n';
             answer += this.formatWebSearchResults(webSearchResponse.results, question);
-            if (this.hasWebDerivedResults(webSearchResponse)) answer += this.webDisclaimerFooter;
+            if (this.hasWebDerivedResults(webSearchResponse) && isSvcQ) answer += this.webDisclaimerFooter;
           } else if (webSearchResponse.results.length > 0) {
             answer = this.wrapFallbackWebAnswer(
               question,
