@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -6,9 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Shield, CheckCircle2, Info, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { FileText, Shield, CheckCircle2, Info, ArrowLeft, Loader2, Upload, Download } from 'lucide-react';
 import { policyService } from '@/services/public/policyService';
 import { generatePartnerTermsPDF, savePartnerTermsAcceptance } from '@/services/partners/partnerTermsService';
+import { supabase } from '@/integrations/supabase/client';
+import SignatureCanvas from './SignatureCanvas';
 
 interface PartnerTermsAcceptanceProps {
   partnerId: string;
@@ -30,8 +32,11 @@ export default function PartnerTermsAcceptance({
   const [saving, setSaving] = useState(false);
   const [hasReadTerms, setHasReadTerms] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
-  const [termsContent, setTermsContent] = useState<string>('');
-  const [termsVersion, setTermsVersion] = useState<number>(1);
+  const [termsContent, setTermsContent] = useState('');
+  const [termsVersion, setTermsVersion] = useState(1);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [uploadedPdf, setUploadedPdf] = useState<File | null>(null);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadTerms();
@@ -48,101 +53,104 @@ export default function PartnerTermsAcceptance({
       }
     } catch (error) {
       console.error('Erro ao carregar termo:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar o termo de parceria',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Não foi possível carregar o termo de parceria', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSignatureChange = useCallback((dataUrl: string | null) => {
+    setSignatureDataUrl(dataUrl);
+  }, []);
+
+  const handlePdfUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      setUploadedPdf(file);
+    } else {
+      toast({ title: 'Arquivo inválido', description: 'Por favor, envie um arquivo PDF', variant: 'destructive' });
+    }
+  }, [toast]);
+
+  const uploadSignatureImage = async (): Promise<string> => {
+    if (!signatureDataUrl) return '';
+    try {
+      const res = await fetch(signatureDataUrl);
+      const blob = await res.blob();
+      const fileName = `signatures/sig-${partnerId}-${Date.now()}.png`;
+      const { error } = await supabase.storage.from('documents').upload(fileName, blob, { contentType: 'image/png' });
+      if (error) {
+        console.error('Erro upload assinatura:', error);
+        return '';
+      }
+      const { data } = supabase.storage.from('documents').getPublicUrl(fileName);
+      return data?.publicUrl || '';
+    } catch (err) {
+      console.error('Erro upload assinatura:', err);
+      return '';
+    }
+  };
+
+  const uploadPhysicalPdf = async (): Promise<string> => {
+    if (!uploadedPdf) return '';
+    try {
+      const fileName = `partner-terms-uploaded/${partnerId}-${Date.now()}.pdf`;
+      const { error } = await supabase.storage.from('documents').upload(fileName, uploadedPdf, { contentType: 'application/pdf' });
+      if (error) {
+        console.error('Erro upload PDF:', error);
+        return '';
+      }
+      const { data } = supabase.storage.from('documents').getPublicUrl(fileName);
+      return data?.publicUrl || '';
+    } catch (err) {
+      console.error('Erro upload PDF:', err);
+      return '';
+    }
+  };
+
   const handleAcceptTerms = async () => {
     if (!hasReadTerms) {
-      toast({
-        title: 'Leia os termos',
-        description: 'Por favor, leia e aceite o termo de parceria para continuar',
-        variant: 'destructive',
-      });
+      toast({ title: 'Leia os termos', description: 'Por favor, leia e aceite o termo de parceria para continuar', variant: 'destructive' });
+      return;
+    }
+    if (!signatureDataUrl) {
+      toast({ title: 'Assinatura obrigatória', description: 'Por favor, desenhe sua assinatura digital para continuar', variant: 'destructive' });
       return;
     }
 
     setSaving(true);
     try {
-      // Obter IP do usuário (se disponível)
       let ipAddress: string | null = null;
       try {
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipResponse.json();
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
         ipAddress = ipData.ip;
-      } catch (error) {
-        console.log('Não foi possível obter IP');
-      }
+      } catch { /* ignore */ }
 
-      // Gerar PDF do termo assinado
+      // Upload signature image
+      const sigUrl = await uploadSignatureImage();
+
+      // Upload physical PDF if provided
+      const uploadedPdfUrl = await uploadPhysicalPdf();
+
+      // Generate digital PDF
       let pdfUrl = '';
       try {
-        pdfUrl = await generatePartnerTermsPDF(
-          partnerId,
-          partnerName,
-          partnerEmail,
-          termsVersion,
-          ipAddress
-        );
-      } catch (pdfError) {
-        console.error('Erro ao gerar PDF:', pdfError);
-        // Continuar mesmo se o PDF falhar
+        pdfUrl = await generatePartnerTermsPDF(partnerId, partnerName, partnerEmail, termsVersion, ipAddress, signatureDataUrl);
+        setGeneratedPdfUrl(pdfUrl);
+      } catch (pdfErr) {
+        console.error('Erro ao gerar PDF:', pdfErr);
       }
 
-      // Salvar aceite do termo
-      const result = await savePartnerTermsAcceptance(
-        partnerId,
-        partnerName,
-        partnerEmail,
-        termsVersion,
-        pdfUrl,
-        ipAddress
-      );
+      // Save acceptance
+      await savePartnerTermsAcceptance(partnerId, partnerName, partnerEmail, termsVersion, pdfUrl, ipAddress, sigUrl, uploadedPdfUrl);
 
-      // Verificar se PDF foi salvo
-      if (!result.pdfSaved) {
-        console.warn('⚠️ [PartnerTermsAcceptance] PDF não foi salvo. Verifique configuração do bucket "documents" no Supabase.');
-        // Notificar admin (será implementado no admin)
-        toast({
-          title: 'Aviso',
-          description: 'O termo foi aceito, mas houve um problema ao salvar o PDF. Entre em contato com o suporte se necessário.',
-          variant: 'destructive',
-          duration: 5000,
-        });
-      }
-
-      // Se houver erro mas não for crítico (ex: campos não existem), continuar
-      if (!result.success && result.error?.includes('column') && result.error?.includes('not found')) {
-        console.warn('Campos de termo não disponíveis. Continuando sem salvar metadados do termo.');
-        // Continuar mesmo assim - o importante é o parceiro ter aceitado
-      } else if (!result.success) {
-        console.warn('Erro ao salvar aceite do termo (não crítico):', result.error);
-        // Continuar mesmo se houver erro não crítico
-      }
-
-      toast({
-        title: 'Termo aceito!',
-        description: 'Você aceitou o termo de parceria. Prosseguindo para o pagamento...',
-      });
-
-      onComplete({
-        termsAccepted: true,
-        termsVersion,
-      });
+      toast({ title: 'Termo aceito!', description: 'Você aceitou o termo de parceria. Prosseguindo...' });
+      onComplete({ termsAccepted: true, termsVersion });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao aceitar termo:', err);
-      toast({
-        title: 'Erro',
-        description: err.message || 'Não foi possível processar o aceite do termo',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: err.message || 'Não foi possível processar o aceite do termo', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -151,153 +159,143 @@ export default function PartnerTermsAcceptance({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-primary-blue mx-auto mb-4"></div>
-        <p className="text-gray-600">Carregando termo de parceria...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">Carregando termo de parceria...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Termo de Parceria */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-ms-primary-blue" />
+            <Shield className="w-5 h-5 text-primary" />
             Termo de Parceria
           </CardTitle>
-          <CardDescription>
-            Leia atentamente o termo de parceria antes de aceitar
-          </CardDescription>
+          <CardDescription>Leia atentamente o termo de parceria antes de aceitar</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Preview do termo */}
-          <div className="border rounded-lg p-4 bg-gray-50 max-h-64 overflow-y-auto">
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{
-                __html: policyService.markdownToHtml(termsContent.substring(0, 500) + '...'),
-              }}
-            />
+          {/* Preview */}
+          <div className="border rounded-lg p-4 bg-muted/50 max-h-64 overflow-y-auto">
+            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent.substring(0, 500) + '...') }} />
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => setShowTermsDialog(true)}
-            className="w-full"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Ler Termo Completo
+          <Button variant="outline" onClick={() => setShowTermsDialog(true)} className="w-full">
+            <FileText className="w-4 h-4 mr-2" /> Ler Termo Completo
           </Button>
 
-          {/* Aceite do termo */}
-          <div className="border rounded-lg p-4 bg-blue-50">
+          {/* Aceite */}
+          <div className="border rounded-lg p-4 bg-primary/5">
             <div className="flex items-start space-x-4">
               <Checkbox
                 id="read_terms"
                 checked={hasReadTerms}
-                onCheckedChange={(checked) => setHasReadTerms(checked as boolean)}
-                className="h-6 w-6 border-2 data-[state=checked]:bg-ms-primary-blue data-[state=checked]:border-ms-primary-blue mt-1"
+                onCheckedChange={(c) => setHasReadTerms(c as boolean)}
+                className="h-6 w-6 border-2 mt-1"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <Label htmlFor="read_terms" className="cursor-pointer text-base font-semibold text-gray-900">
+                  <Label htmlFor="read_terms" className="cursor-pointer text-base font-semibold">
                     Li e aceito o{' '}
-                    <button
-                      type="button"
-                      onClick={() => setShowTermsDialog(true)}
-                      className="text-ms-primary-blue hover:text-ms-discovery-teal hover:underline font-bold"
-                    >
+                    <button type="button" onClick={() => setShowTermsDialog(true)} className="text-primary hover:underline font-bold">
                       Termo de Parceria
                     </button>
                   </Label>
                   <Badge variant="destructive" className="ml-2">OBRIGATÓRIO</Badge>
                 </div>
-                <p className="text-sm text-gray-700 mt-1">
-                  Ao aceitar, você está <strong>assinando eletronicamente</strong> este termo. 
-                  Um PDF será gerado automaticamente com sua assinatura.
+                <p className="text-sm text-muted-foreground mt-1">
+                  Ao aceitar, você está <strong>assinando eletronicamente</strong> este termo.
                 </p>
-                <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
-                  <Info className="h-3 w-3" />
-                  <span>Você pode revisar o termo completo clicando no botão acima</span>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Assinatura eletrônica */}
+          {/* Assinatura Digital */}
           {hasReadTerms && (
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <h4 className="font-semibold mb-2">Assinatura Eletrônica</h4>
-              <p className="text-sm text-muted-foreground mb-2">
-                Nome: <strong>{partnerName}</strong>
-              </p>
-              <p className="text-sm text-muted-foreground mb-2">
-                Email: <strong>{partnerEmail}</strong>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Ao confirmar, você declara que leu, compreendeu e concorda com todos os termos acima.
-                Esta assinatura eletrônica tem validade legal conforme a LGPD.
-              </p>
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/50 border rounded-lg">
+                <h4 className="font-semibold mb-1">Dados da Assinatura</h4>
+                <p className="text-sm text-muted-foreground">Nome: <strong>{partnerName}</strong></p>
+                <p className="text-sm text-muted-foreground">Email: <strong>{partnerEmail}</strong></p>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">Assinatura Digital <Badge variant="destructive" className="ml-2 text-xs">OBRIGATÓRIO</Badge></h4>
+                <p className="text-sm text-muted-foreground mb-3">Desenhe sua assinatura no campo abaixo (mouse ou toque):</p>
+                <SignatureCanvas onSignatureChange={handleSignatureChange} />
+              </div>
+
+              {/* Upload PDF opcional */}
+              <div className="p-4 border rounded-lg border-dashed">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Upload className="w-4 h-4" /> Enviar Termo Assinado em PDF
+                  <Badge variant="secondary" className="text-xs">OPCIONAL</Badge>
+                </h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Se preferir, baixe o termo, assine fisicamente e envie o PDF digitalizado.
+                </p>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handlePdfUpload}
+                  className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                />
+                {uploadedPdf && (
+                  <p className="text-sm text-green-600 mt-2">✅ {uploadedPdf.name} selecionado</p>
+                )}
+              </div>
             </div>
           )}
 
           {/* Ações */}
           <div className="flex gap-4 pt-4">
-            <Button
-              variant="outline"
-              onClick={onBack}
-              className="flex-1"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+            <Button variant="outline" onClick={onBack} className="flex-1">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
             </Button>
             <Button
               onClick={handleAcceptTerms}
-              disabled={saving || !hasReadTerms}
-              className="flex-1 bg-ms-primary-blue hover:bg-ms-discovery-teal text-white"
+              disabled={saving || !hasReadTerms || !signatureDataUrl}
+              className="flex-1"
               size="lg"
             >
               {saving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processando...
-                </>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processando...</>
               ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Aceitar e Continuar
-                </>
+                <><CheckCircle2 className="w-4 h-4 mr-2" /> Aceitar e Continuar</>
               )}
             </Button>
           </div>
 
           {!hasReadTerms && (
-            <p className="text-center text-sm text-red-600 font-medium">
-              ⚠️ Você deve ler e aceitar os termos para continuar
-            </p>
+            <p className="text-center text-sm text-destructive font-medium">⚠️ Você deve ler e aceitar os termos para continuar</p>
           )}
         </CardContent>
       </Card>
 
-      {/* Dialog com termo completo */}
+      {/* Dialog termo completo */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Termo de Parceria - Versão {termsVersion}</DialogTitle>
-            <DialogDescription>
-              Leia atentamente todos os termos e condições
-            </DialogDescription>
+            <DialogDescription>Leia atentamente todos os termos e condições</DialogDescription>
           </DialogHeader>
-          <div
-            className="prose prose-sm max-w-none mt-4"
-            dangerouslySetInnerHTML={{
-              __html: policyService.markdownToHtml(termsContent),
-            }}
-          />
+          <div className="prose prose-sm max-w-none mt-4" dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent) }} />
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => {
+              const blob = new Blob([termsContent], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `termo-parceria-v${termsVersion}.txt`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}>
+              <Download className="w-4 h-4 mr-2" /> Baixar Termo
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-

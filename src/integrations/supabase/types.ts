@@ -4840,35 +4840,53 @@ export type Database = {
       partner_terms_acceptances: {
         Row: {
           created_at: string
+          digital_signature_url: string | null
           document_hash: string
           id: string
           ip_address: string | null
           partner_id: string
           pdf_url: string | null
+          review_notes: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           signed_at: string
           terms_version: number
+          uploaded_pdf_url: string | null
           user_agent: string | null
         }
         Insert: {
           created_at?: string
+          digital_signature_url?: string | null
           document_hash: string
           id?: string
           ip_address?: string | null
           partner_id: string
           pdf_url?: string | null
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           signed_at?: string
           terms_version: number
+          uploaded_pdf_url?: string | null
           user_agent?: string | null
         }
         Update: {
           created_at?: string
+          digital_signature_url?: string | null
           document_hash?: string
           id?: string
           ip_address?: string | null
           partner_id?: string
           pdf_url?: string | null
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           signed_at?: string
           terms_version?: number
+          uploaded_pdf_url?: string | null
           user_agent?: string | null
         }
         Relationships: [
