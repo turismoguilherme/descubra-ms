@@ -59,9 +59,9 @@ export default function PartnerTermsReview() {
       if (partnerIds.length > 0) {
         const { data: partners } = await supabase
           .from('institutional_partners')
-          .select('id, company_name')
+          .select('id, name')
           .in('id', partnerIds);
-        partnerMap = (partners || []).reduce((acc, p) => ({ ...acc, [p.id]: p.company_name }), {} as Record<string, string>);
+        partnerMap = (partners || []).reduce((acc, p) => ({ ...acc, [p.id]: p.name }), {} as Record<string, string>);
       }
 
       setTerms((data || []).map(t => ({ ...t, partner_name: partnerMap[t.partner_id] || 'Parceiro desconhecido' })));
