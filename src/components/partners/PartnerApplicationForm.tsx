@@ -908,7 +908,7 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
             Enviando...
           </>
         ) : (
-          'Enviar Solicitação de Parceria'
+          'Próximo'
         )}
       </Button>
 
