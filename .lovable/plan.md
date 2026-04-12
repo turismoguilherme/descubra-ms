@@ -1,108 +1,84 @@
 
 
-# Plano: Corrigir Admin + Limpar Código Morto + Fix Build Errors
+# Plano: Corrigir Guatá (Tela Branca) + Parceiros (Botão + PDF + Assinatura Digital + Admin)
 
-## Problemas Identificados
+## 1. Guatá - Tela Branca
 
-### 1. "Editar Textos" não salva de verdade
-**Causa raiz**: A política RLS (Row Level Security) da tabela `institutional_content` e `site_settings` só permite `admin` e `tech`, mas o papel `master_admin` não está incluído. Se o usuário logado tem role `master_admin`, a operação de UPDATE é bloqueada silenciosamente pelo Supabase.
+**Causa raiz**: `Guata.tsx` usa `getGuataSessionId` e `resetGuataSessionId` mas nunca importa essas funções. O `@ts-nocheck` esconde o erro, causando crash em runtime.
 
-**Solução**: Migration SQL para atualizar as políticas RLS adicionando `master_admin` à lista de roles autorizados em ambas as tabelas.
+**Fix**: Adicionar import na linha 1-13:
+```ts
+import { getGuataSessionId, resetGuataSessionId } from "@/utils/guataSession";
+```
 
-### 2. Banner Personalizado sem upload de imagem
-**Causa raiz**: O `SimpleTextEditor.tsx` só mostra botão de upload para campos com `type: 'image'`. Os campos do banner personalizado (`ms_roteiro_banner_enabled`, etc.) são `toggle`, `select` e `text` — nenhum tem tipo `image`. Falta um campo de imagem para o banner.
+## 2. Build Error - `npm:jose@5.9.6`
 
-**Solução**: Adicionar campo `ms_roteiro_banner_image` com `type: 'image'` na definição de campos do `SimpleTextEditor.tsx`, na seção "Banner Roteiro Personalizado".
+**Causa raiz**: `supabase/functions/_shared/googleServiceAccountToken.ts` importa `npm:jose@5.9.6` mas nao ha `deno.json` com essa dependencia na raiz do functions.
 
-### 3. Módulos desnecessários a remover
+**Fix**: Criar `supabase/functions/deno.json` com:
+```json
+{
+  "imports": {
+    "npm:jose@5.9.6": "npm:jose@5.9.6"
+  }
+}
+```
 
-Com base no pedido do usuário:
+## 3. Botão do Formulário de Parceiros
 
-| Módulo | Motivo da remoção |
-|--------|-------------------|
-| **Banco de Dados** (`DatabaseManager.tsx`) | Expõe tabelas raw — perigoso e redundante com Supabase dashboard |
-| **Fallback** (`FallbackConfig.tsx`) | Modo manutenção sem implementação real conectada |
-| **Análises** (dentro de IA: `AISuggestions.tsx`, `AIActionsQueue.tsx`) | Não funcional, não conectado a dados reais |
-| **Agente Autônomo / Tarefas Automáticas** (`AutonomousAIAgent.tsx`) | 1679 linhas de código com `@ts-nocheck`, não funcional — simulação local sem backend real |
+**Problema**: O botão do Step 1 diz "Enviar Solicitação de Parceria" quando deveria dizer "Próximo" (ja que existem mais 3 etapas).
 
-**Arquivos a deletar**: 4 componentes + suas referências em rotas e config de navegação.
+**Fix**: Em `PartnerApplicationForm.tsx` (linha 911), trocar texto de "Enviar Solicitação de Parceria" por "Próximo".
 
-### 4. Build Errors — Tabela `events` com colunas em português
+## 4. Sistema de Assinatura + PDF + Admin (Funcionalidade Nova)
 
-A tabela `events` usa colunas em português (`titulo`, `descricao`, `data_inicio`, `local`, `imagem_principal`) mas ~10 arquivos referenciam colunas em inglês (`name`, `description`, `start_date`, `location`, `image_url`, `stripe_payment_link_url`, `return_domain`, `is_visible`, `approval_status`, `is_sponsored`, `sponsor_payment_status`).
+A ideia do usuario e excelente e nao e "muita coisa" -- faz parte do fluxo natural de parceria. O sistema ja tem `partnerTermsService.ts` com `generatePartnerTermsPDF`, entao a base existe.
 
-**Colunas inexistentes no DB**:
-- `name` → deve ser `titulo`
-- `description` → `descricao`
-- `start_date` → `data_inicio`
-- `end_date` → `data_fim`
-- `location` → `local`
-- `image_url` → `imagem_principal`
-- `stripe_payment_link_url` → não existe
-- `return_domain` → não existe
-- `is_visible` → não existe
-- `approval_status` → não existe
-- `is_sponsored` → não existe
-- `sponsor_payment_status` → não existe
+### O que sera implementado:
 
-**Solução**: Corrigir cada arquivo para usar os nomes reais das colunas. Para colunas que não existem no banco (`stripe_payment_link_url`, `return_domain`, `is_visible`, `approval_status`, `is_sponsored`, `sponsor_payment_status`), criar migration SQL para adicioná-las, pois são funcionalidades ativas (pagamento de eventos, visibilidade, patrocínio).
+**A) Assinatura Digital no Wizard (Step 2)**
+- Adicionar canvas de assinatura digital (desenhar com mouse/touch) no `PartnerTermsAcceptance.tsx`
+- Salvar imagem da assinatura no Supabase Storage (bucket `documents`)
+- Incluir assinatura no PDF gerado
 
-### 5. Outros build errors
-- `viajarTestLogin.ts`: referencia role `gestor_igr` que não existe no tipo — remover essa comparação
-- `ViaJARAdminPanel.tsx` (linha 113): `role` como string vs union type — usar type assertion
+**B) Download do Termo em PDF**
+- Botao "Baixar Termo" para o parceiro baixar o PDF com sua assinatura digital
+- PDF gerado com dados do parceiro + assinatura + data/hora/IP
 
----
+**C) Upload de Termo Assinado Fisicamente**
+- Apos Step 2, opcao adicional: "Enviar termo assinado em PDF"
+- Upload de arquivo PDF para Supabase Storage
+- Salvar referencia na tabela `partner_terms_acceptances`
 
-## Plano de Execução
+**D) Painel Admin - Gestao de Termos**
+- Nova aba/secao no admin de parceiros para listar termos enviados
+- Status: "Pendente", "Aprovado", "Rejeitado"
+- Visualizar PDF digital e PDF fisico enviado
+- Botao "Marcar como OK" e "Marcar como Pendente"
+- Filtros por status
 
-### Fase 1: Migration SQL
-1. Atualizar RLS de `institutional_content` e `site_settings` para incluir `master_admin`
-2. Adicionar colunas faltantes na tabela `events`: `is_visible`, `approval_status`, `is_sponsored`, `sponsor_payment_status`, `stripe_payment_link_url`, `return_domain`, `name` (alias/generated), `start_date` (alias), `image_url` (alias)
+### Migration SQL necessaria:
+- Garantir tabela `partner_terms_acceptances` tenha colunas: `digital_signature_url`, `uploaded_pdf_url`, `review_status` (pending/approved/rejected), `reviewed_by`, `reviewed_at`, `review_notes`
 
-### Fase 2: Fix Build Errors (10+ arquivos)
-Corrigir referências de colunas em:
-- `EventosDestaqueSection.tsx`
-- `EventPaymentConfig.tsx`
-- `EventSubmissionForm.tsx`
-- `EventPaymentReturn.tsx`
-- `EventPaymentSuccess.tsx`
-- `EventCleanupService.ts`
-- `GeminiEventProcessorService.ts`
-- `searchService.ts`
-- `eventCheckoutService.ts`
-- `viajarTestLogin.ts`
-- `ViaJARAdminPanel.tsx`
+## Arquivos Afetados
 
-### Fase 3: Adicionar campo de imagem ao Banner
-- Adicionar `ms_roteiro_banner_image` com type `image` no `SimpleTextEditor.tsx`
-
-### Fase 4: Remover código morto
-- Deletar `DatabaseManager.tsx`, `FallbackConfig.tsx`, `AISuggestions.tsx`, `AIActionsQueue.tsx`, `AutonomousAIAgent.tsx`
-- Remover imports lazy e rotas correspondentes em `ViaJARAdminPanel.tsx`
-- Remover entradas de navegação em `adminModulesConfig.ts`
-- Limpar console.logs excessivos de debug em `ViaJARAdminPanel.tsx`
-
-### Arquivos Afetados
-
-| Arquivo | Ação |
+| Arquivo | Acao |
 |---------|------|
-| Migration SQL | RLS + colunas events |
-| `src/components/home/EventosDestaqueSection.tsx` | Fix colunas |
-| `src/components/admin/EventPaymentConfig.tsx` | Fix colunas |
-| `src/components/events/EventSubmissionForm.tsx` | Fix colunas |
-| `src/pages/ms/EventPaymentReturn.tsx` | Fix colunas |
-| `src/pages/ms/EventPaymentSuccess.tsx` | Fix colunas |
-| `src/services/events/EventCleanupService.ts` | Fix colunas |
-| `src/services/events/GeminiEventProcessorService.ts` | Fix colunas |
-| `src/services/searchService.ts` | Fix colunas |
-| `src/services/stripe/eventCheckoutService.ts` | Fix colunas |
-| `src/utils/viajarTestLogin.ts` | Fix tipo role |
-| `src/pages/admin/ViaJARAdminPanel.tsx` | Fix tipo + remover rotas mortas + limpar logs |
-| `src/config/adminModulesConfig.ts` | Remover módulos mortos |
-| `src/components/admin/platform/SimpleTextEditor.tsx` | Adicionar campo imagem banner |
-| `src/components/admin/database/DatabaseManager.tsx` | Deletar |
-| `src/components/admin/system/FallbackConfig.tsx` | Deletar |
-| `src/components/admin/ai/AISuggestions.tsx` | Deletar |
-| `src/components/admin/ai/AIActionsQueue.tsx` | Deletar |
-| `src/components/admin/ai/AutonomousAIAgent.tsx` | Deletar |
+| `src/pages/Guata.tsx` | Fix: adicionar import getGuataSessionId/resetGuataSessionId |
+| `supabase/functions/deno.json` | Criar: resolver build error jose |
+| `src/components/partners/PartnerApplicationForm.tsx` | Fix: botao "Proximo" |
+| `src/components/partners/PartnerTermsAcceptance.tsx` | Adicionar canvas assinatura digital + download PDF + upload PDF |
+| `src/components/partners/SignatureCanvas.tsx` | Criar: componente de assinatura digital |
+| `src/services/partners/partnerTermsService.ts` | Atualizar: incluir assinatura no PDF + upload PDF fisico |
+| `src/components/admin/partners/PartnerTermsReview.tsx` | Criar: painel admin de revisao de termos |
+| `src/components/admin/descubra_ms/PartnersAdminModule.tsx` | Adicionar aba "Termos" |
+| Migration SQL | Adicionar colunas de revisao na tabela |
+
+## Resultado
+
+- Guata abre normalmente (sem tela branca)
+- Build sem erros
+- Formulario de parceiros com botao "Proximo" no Step 1
+- Assinatura digital + download PDF + upload PDF fisico
+- Admin pode revisar e aprovar/rejeitar termos assinados
 
