@@ -238,7 +238,7 @@ export default function PartnerTermsReview() {
                   size="sm"
                   onClick={() => updateStatus(selectedTerm.id, 'approved')}
                   disabled={updating}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {updating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
                   Aprovar
