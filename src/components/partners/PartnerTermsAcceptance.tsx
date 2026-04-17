@@ -215,7 +215,7 @@ export default function PartnerTermsAcceptance({
               className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
             {uploadedPdf && (
-              <p className="text-sm text-green-600 mt-2">✅ {uploadedPdf.name} selecionado</p>
+              <p className="text-sm text-primary mt-2 font-medium">✅ {uploadedPdf.name} selecionado</p>
             )}
           </div>
 
