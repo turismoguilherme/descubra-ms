@@ -14,6 +14,39 @@ export interface Policy {
   terms_pdf_url?: string | null;
 }
 
+function normalizePolicyRow(data: Record<string, unknown>): Policy {
+  return {
+    ...data,
+    last_updated:
+      (data as { last_updated?: string }).last_updated ||
+      (data as { updated_at?: string }).updated_at ||
+      new Date().toISOString(),
+  } as Policy;
+}
+
+/**
+ * Entre várias linhas publicadas (ex.: descubra_ms + both), prefere a da plataforma pedida,
+ * depois "both"; em empate de versão, prefere quem tem terms_pdf_url.
+ */
+function pickPublishedPolicyForPlatform(
+  rows: Policy[],
+  targetPlatform: 'viajar' | 'descubra_ms'
+): Policy | null {
+  if (!rows?.length) return null;
+  const sortCandidates = (list: Policy[]) =>
+    [...list].sort((a, b) => {
+      const va = a.version || 0;
+      const vb = b.version || 0;
+      if (vb !== va) return vb - va;
+      const pa = a.terms_pdf_url ? 1 : 0;
+      const pb = b.terms_pdf_url ? 1 : 0;
+      return pb - pa;
+    });
+  const exact = sortCandidates(rows.filter((r) => r.platform === targetPlatform));
+  const bothOnly = sortCandidates(rows.filter((r) => r.platform === 'both'));
+  return exact[0] || bothOnly[0] || null;
+}
+
 export const policyService = {
   /**
    * Busca uma política publicada do banco de dados
@@ -26,15 +59,12 @@ export const policyService = {
     platform: 'viajar' | 'descubra_ms'
   ): Promise<Policy | null> {
     try {
-      const { data, error } = await supabase
+      const { data: rows, error } = await supabase
         .from('platform_policies')
         .select('*')
         .eq('key', policyKey)
         .eq('is_published', true)
-        .or(`platform.eq.${platform},platform.eq.both`)
-        .order('version', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .or(`platform.eq.${platform},platform.eq.both`);
 
       if (error && error.code !== 'PGRST116') {
         console.warn('Erro ao buscar política do banco:', error);
@@ -42,13 +72,10 @@ export const policyService = {
         return this.getPublishedPolicyFromLocalStorage(policyKey, platform);
       }
 
-      if (data) {
-        // Normalizar campo de data (pode vir como updated_at do banco)
-        const normalizedData = {
-          ...data,
-          last_updated: (data as any).last_updated || (data as any).updated_at || new Date().toISOString(),
-        };
-        return normalizedData as Policy;
+      const list = (rows || []) as Policy[];
+      const picked = pickPublishedPolicyForPlatform(list, platform);
+      if (picked) {
+        return normalizePolicyRow(picked as unknown as Record<string, unknown>);
       }
 
       // Se não encontrou no banco, tentar localStorage
@@ -87,10 +114,7 @@ export const policyService = {
 
       if (matchingPolicies.length === 0) return null;
 
-      // Ordenar por versão (maior primeiro) e retornar a mais recente
-      matchingPolicies.sort((a, b) => (b.version || 0) - (a.version || 0));
-      
-      return matchingPolicies[0];
+      return pickPublishedPolicyForPlatform(matchingPolicies, platform);
     } catch (error) {
       console.warn('Erro ao buscar política do localStorage:', error);
       
@@ -103,9 +127,10 @@ export const policyService = {
    * Suporta: # títulos, ## subtítulos, ### subtítulos, **negrito**, *itálico*
    */
   markdownToHtml(markdown: string): string {
-    if (!markdown) return '';
+    const md = (markdown || '').trim();
+    if (!md) return '';
 
-    const rawHtml = markdown
+    const rawHtml = md
       // Títulos
       .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mt-6 mb-4">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>')

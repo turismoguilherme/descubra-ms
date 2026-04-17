@@ -41,9 +41,9 @@ export default function PartnerTermsResubmit({
       try {
         const policy = await policyService.getPublishedPolicy('partner_terms', 'descubra_ms');
         if (policy) {
-          setTermsContent(policy.content || '');
+          setTermsContent((policy.content || '').trim());
           setTermsVersion(policy.version || 1);
-          setTermsPdfUrl(policy.terms_pdf_url || null);
+          setTermsPdfUrl(policy.terms_pdf_url?.trim() || null);
         }
         const { data: last } = await supabase
           .from('partner_terms_acceptances')
@@ -152,6 +152,8 @@ export default function PartnerTermsResubmit({
     );
   }
 
+  const termsHtml = termsContent.trim() ? policyService.markdownToHtml(termsContent) : '';
+
   return (
     <Card className="border-orange-200 bg-orange-50/40">
       <CardHeader>
@@ -174,11 +176,8 @@ export default function PartnerTermsResubmit({
             <a href={termsPdfUrl} className="text-primary font-medium underline" target="_blank" rel="noreferrer">
               Abrir / baixar PDF do termo
             </a>
-          ) : termsContent ? (
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent) }}
-            />
+          ) : termsHtml ? (
+            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: termsHtml }} />
           ) : (
             <p className="text-muted-foreground flex items-center gap-2">
               <AlertCircle className="w-4 h-4" /> Termo indisponível. Contate o suporte.

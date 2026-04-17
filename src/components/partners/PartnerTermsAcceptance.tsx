@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Shield, CheckCircle2, ArrowLeft, Loader2, Upload, Download, AlertCircle } from 'lucide-react';
+import { FileText, Shield, CheckCircle2, ArrowLeft, Loader2, Upload, Download, AlertCircle, ExternalLink } from 'lucide-react';
 import { policyService } from '@/services/public/policyService';
 import {
   generatePartnerTermsPDF,
@@ -47,9 +47,9 @@ export default function PartnerTermsAcceptance({
     try {
       const policy = await policyService.getPublishedPolicy('partner_terms', 'descubra_ms');
       if (policy) {
-        setTermsContent(policy.content || '');
+        setTermsContent((policy.content || '').trim());
         setTermsVersion(policy.version || 1);
-        setTermsPdfUrl(policy.terms_pdf_url || null);
+        setTermsPdfUrl(policy.terms_pdf_url?.trim() || null);
       } else {
         setTermsContent('Termo de Parceria - Descubra Mato Grosso do Sul\n\nConteúdo do termo será configurado pelo administrador.');
       }
@@ -148,6 +148,9 @@ export default function PartnerTermsAcceptance({
     );
   }
 
+  const hasTextBody = termsContent.trim().length > 0;
+  const termsHtml = hasTextBody ? policyService.markdownToHtml(termsContent) : '';
+
   return (
     <div className="space-y-6">
       <Card>
@@ -169,17 +172,24 @@ export default function PartnerTermsAcceptance({
                 Passo 1: Leia o Termo de Parceria
               </h4>
               {termsPdfUrl ? (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={termsPdfUrl} download target="_blank" rel="noopener noreferrer">
-                    <Download className="w-4 h-4 mr-2" /> Baixar PDF para Assinar
-                  </a>
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={termsPdfUrl} download target="_blank" rel="noopener noreferrer">
+                      <Download className="w-4 h-4 mr-2" /> Baixar PDF para Assinar
+                    </a>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild className="text-primary">
+                    <a href={termsPdfUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
+                    </a>
+                  </Button>
+                </div>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
                   type="button"
-                  disabled={downloadingTemplate || !termsContent}
+                  disabled={downloadingTemplate || !hasTextBody}
                   onClick={async () => {
                     setDownloadingTemplate(true);
                     try {
@@ -204,20 +214,22 @@ export default function PartnerTermsAcceptance({
             </div>
 
             {termsPdfUrl ? (
-              <div className="border rounded-lg overflow-hidden bg-muted/30">
-                <iframe
-                  src={`${termsPdfUrl}#toolbar=1&navpanes=0`}
-                  title="Termo de Parceria"
-                  className="w-full h-[500px]"
-                />
+              <div className="space-y-2">
+                <div className="border rounded-lg overflow-hidden bg-muted/30">
+                  <iframe
+                    src={`${termsPdfUrl}#toolbar=1&navpanes=0`}
+                    title="Termo de Parceria"
+                    className="w-full h-[500px]"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Se o PDF não aparecer aqui, use <strong>Abrir em nova aba</strong> acima.
+                </p>
               </div>
             ) : (
               <div className="border rounded-lg p-4 bg-muted/50 max-h-96 overflow-y-auto">
-                {termsContent ? (
-                  <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent) }}
-                  />
+                {termsHtml ? (
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: termsHtml }} />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
                     <AlertCircle className="w-8 h-8" />
