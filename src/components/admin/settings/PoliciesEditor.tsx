@@ -540,6 +540,45 @@ export default function PoliciesEditor() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6 max-h-[calc(100vh-320px)] overflow-y-auto min-h-0">
+                    {/* Upload de PDF oficial do termo */}
+                    <div className="mb-4 p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50/50">
+                      <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                        <div>
+                          <h4 className="font-semibold text-sm text-blue-900 flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            PDF oficial do documento
+                          </h4>
+                          <p className="text-xs text-blue-700 mt-1">
+                            Suba o PDF oficial. Os usuários verão este PDF embutido e poderão baixá-lo para assinar.
+                          </p>
+                        </div>
+                        {currentPolicy.terms_pdf_url && (
+                          <Badge className="bg-green-100 text-green-700 border-green-300">PDF carregado</Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 mt-3">
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={handleUploadTermsPdf}
+                          disabled={uploadingPdf}
+                          className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
+                        />
+                        {currentPolicy.terms_pdf_url && (
+                          <>
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={currentPolicy.terms_pdf_url} target="_blank" rel="noopener noreferrer">
+                                <Eye className="h-3 w-3 mr-1" /> Ver
+                              </a>
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={handleRemoveTermsPdf} className="text-red-600 hover:text-red-700">
+                              Remover
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
                     {editMode ? (
                       <div className="space-y-4">
                         {currentPolicy.platform === 'both' && (
