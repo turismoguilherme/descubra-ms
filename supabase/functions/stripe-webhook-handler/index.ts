@@ -536,24 +536,39 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
 
     // Se for assinatura de parceiro, atualizar institutional_partners
     if (isPartnerSubscription && customerEmail) {
+      const { data: existingPartner, error: loadPartnerErr } = await supabase
+        .from('institutional_partners')
+        .select('id, status')
+        .eq('contact_email', customerEmail)
+        .maybeSingle();
+
+      if (loadPartnerErr) {
+        console.error('Erro ao buscar parceiro por email:', loadPartnerErr);
+      }
+
+      const subOk = subscription.status === 'active' || subscription.status === 'trialing';
+      const partnerRejected = existingPartner?.status === 'rejected';
+
+      const updatePayload: Record<string, unknown> = {
+        stripe_customer_id: subscription.customer as string,
+        stripe_subscription_id: subscription.id,
+        subscription_status: subscription.status === 'trialing' ? 'trialing' : subscription.status,
+        monthly_fee: monthlyAmount,
+        subscription_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
+        subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
+        // Aprovação para aparecer no Descubra MS é só via admin; aqui só liberamos dashboard quando pago.
+        is_active: !partnerRejected && subOk,
+      };
+
       const { error: partnerError } = await supabase
         .from('institutional_partners')
-        .update({
-          stripe_customer_id: subscription.customer as string,
-          stripe_subscription_id: subscription.id,
-          subscription_status: subscription.status === 'trialing' ? 'trialing' : subscription.status,
-          monthly_fee: monthlyAmount,
-          subscription_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
-          subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
-          status: subscription.status === 'active' || subscription.status === 'trialing' ? 'approved' : 'pending',
-          is_active: subscription.status === 'active' || subscription.status === 'trialing',
-        })
+        .update(updatePayload)
         .eq('contact_email', customerEmail);
 
       if (partnerError) {
         console.error('Erro ao atualizar parceiro:', partnerError);
       } else {
-        console.log('Parceiro atualizado com sucesso');
+        console.log('Parceiro atualizado com sucesso (assinatura; status de listagem não alterado pelo Stripe)');
       }
       return; // Não processar como cliente ViaJAR
     }
@@ -863,7 +878,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supa
     if (isPartnerSubscription) {
       const { data: partner, error: partnerError } = await supabase
         .from('institutional_partners')
-        .select('id, name, contact_email')
+        .select('id, name, contact_email, status')
         .eq('stripe_subscription_id', subscription.id)
         .single();
 
@@ -875,14 +890,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supa
       const subscriptionEndDate = new Date(subscription.current_period_end * 1000);
       const daysUntilExpiry = Math.ceil((subscriptionEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
+      const subOk = subscription.status === 'active' || subscription.status === 'trialing';
+      const partnerRejected = partner.status === 'rejected';
+
       const { error: updateError } = await supabase
         .from('institutional_partners')
         .update({
           subscription_status: subscription.status,
           monthly_fee: monthlyAmount,
           subscription_end_date: subscriptionEndDate.toISOString(),
-          status: subscription.status === 'active' || subscription.status === 'trialing' ? 'approved' : 'pending',
-          is_active: subscription.status === 'active' || subscription.status === 'trialing',
+          is_active: !partnerRejected && subOk,
         })
         .eq('stripe_subscription_id', subscription.id);
 
@@ -1401,6 +1418,20 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
       console.error('Erro ao cancelar assinatura:', error);
     } else {
       console.log('Assinatura cancelada com sucesso');
+    }
+
+    // Parceiros institucionais (Descubra MS): encerrar acesso quando a assinatura Stripe some
+    const { error: ipErr } = await supabase
+      .from('institutional_partners')
+      .update({
+        subscription_status: 'canceled',
+        is_active: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('stripe_subscription_id', subscription.id);
+
+    if (ipErr) {
+      console.warn('Aviso: institutional_partners não atualizado em subscription.deleted:', ipErr.message);
     }
   } catch (error) {
     console.error('Erro ao processar cancelamento da assinatura:', error);

@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle2, XCircle, Clock, Eye, FileText, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-type ReviewStatus = 'pending' | 'approved' | 'rejected';
+type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'revision_requested';
 
 interface TermAcceptance {
   id: string;
@@ -31,6 +31,7 @@ const statusConfig: Record<ReviewStatus, { label: string; color: string; icon: R
   pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   approved: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
   rejected: { label: 'Rejeitado', color: 'bg-red-100 text-red-800', icon: XCircle },
+  revision_requested: { label: 'Ajuste solicitado', color: 'bg-orange-100 text-orange-900', icon: Clock },
 };
 
 export default function PartnerTermsReview() {
@@ -78,6 +79,17 @@ export default function PartnerTermsReview() {
   const updateStatus = async (id: string, status: ReviewStatus) => {
     setUpdating(true);
     try {
+      const termRow = terms.find(t => t.id === id) || selectedTerm;
+
+      if (termRow?.partner_id && status === 'rejected') {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
+          body: { partnerId: termRow.partner_id },
+        });
+        if (fnError) throw fnError;
+        const payload = fnData as { error?: string } | undefined;
+        if (payload?.error) throw new Error(payload.error);
+      }
+
       const { error } = await supabase
         .from('partner_terms_acceptances')
         .update({
@@ -89,7 +101,25 @@ export default function PartnerTermsReview() {
         .eq('id', id);
 
       if (error) throw error;
-      toast({ title: 'Sucesso', description: `Termo ${status === 'approved' ? 'aprovado' : 'rejeitado'} com sucesso` });
+
+      if (termRow?.partner_id && status === 'revision_requested') {
+        await supabase
+          .from('institutional_partners')
+          .update({
+            status: 'revision_requested',
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', termRow.partner_id);
+      }
+
+      const desc =
+        status === 'approved'
+          ? 'aprovado com sucesso'
+          : status === 'revision_requested'
+            ? 'marcado para ajuste; o parceiro pode reenviar o PDF.'
+            : 'rejeitado';
+      toast({ title: 'Sucesso', description: `Termo ${desc}` });
       setSelectedTerm(null);
       setReviewNotes('');
       loadTerms();
@@ -115,14 +145,14 @@ export default function PartnerTermsReview() {
     <div className="space-y-4">
       {/* Filtros */}
       <div className="flex gap-2 flex-wrap">
-        {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
+        {(['all', 'pending', 'approved', 'revision_requested', 'rejected'] as const).map(f => (
           <Button
             key={f}
             variant={filter === f ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'Todos' : statusConfig[f].label}
+            {f === 'all' ? 'Todos' : (statusConfig[f]?.label ?? f)}
           </Button>
         ))}
       </div>
@@ -231,15 +261,33 @@ export default function PartnerTermsReview() {
                 />
               </div>
 
-              <div className="flex gap-2 justify-end">
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateStatus(selectedTerm.id, 'revision_requested')}
+                  disabled={updating}
+                >
+                  {updating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Clock className="w-4 h-4 mr-1" />}
+                  Solicitar ajuste
+                </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => updateStatus(selectedTerm.id, 'rejected')}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        'Reprovação definitiva: cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro. Continuar?',
+                      )
+                    ) {
+                      return;
+                    }
+                    updateStatus(selectedTerm.id, 'rejected');
+                  }}
                   disabled={updating}
                 >
                   {updating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <XCircle className="w-4 h-4 mr-1" />}
-                  Rejeitar
+                  Reprovar (definitivo)
                 </Button>
                 <Button
                   size="sm"
@@ -248,7 +296,7 @@ export default function PartnerTermsReview() {
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {updating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
-                  Aprovar
+                  Aprovar termo
                 </Button>
               </div>
             </div>

@@ -185,9 +185,11 @@ export default function PartnersManagement() {
     }
   };
 
+  const partnerDashboardAccess = (s: string) =>
+    s === 'approved' || s === 'revision_requested';
+
   const updatePartnerStatus = async (partnerId: string, status: string) => {
     try {
-      // Buscar dados do parceiro para o email
       const partner = partners.find(p => p.id === partnerId);
 
       if (!partner) {
@@ -199,18 +201,53 @@ export default function PartnersManagement() {
         return;
       }
 
+      if (status === 'rejected') {
+        const ok = window.confirm(
+          'Reprovação definitiva: o parceiro perde o acesso, a assinatura no Stripe será cancelada e será tentado o reembolso integral da última fatura paga. Deseja continuar?',
+        );
+        if (!ok) return;
+
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
+          body: { partnerId },
+        });
+        if (fnError) throw fnError;
+        const payload = fnData as { error?: string; success?: boolean; stripeMessage?: string | null } | undefined;
+        if (payload?.error) throw new Error(payload.error);
+
+        if (partner.contact_email) {
+          notifyPartnerRejected({
+            partnerEmail: partner.contact_email,
+            partnerName: partner.name,
+          }).catch(err => {
+            console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
+          });
+        }
+
+        toast({
+          title: 'Parceiro reprovado',
+          description: payload?.stripeMessage
+            ? `Processado com aviso Stripe: ${payload.stripeMessage}`
+            : 'Assinatura cancelada e reembolso solicitado quando aplicável.',
+        });
+        await loadPartners();
+        return;
+      }
+
       console.log(`🔄 [PartnersManagement] Atualizando parceiro ${partnerId} para status: ${status}`);
-      
+
       const updateData: PartnerUpdateData = {
         status,
-        is_active: status === 'approved',
         updated_at: new Date().toISOString(),
       };
 
-      // Se estiver aprovando, adicionar timestamp de aprovação
+      if (status === 'approved' || status === 'revision_requested') {
+        updateData.is_active = true;
+      } else if (status === 'suspended' || status === 'pending') {
+        updateData.is_active = false;
+      }
+
       if (status === 'approved') {
         updateData.approved_at = new Date().toISOString();
-        // Buscar usuário atual para registrar quem aprovou
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           updateData.approved_by = user.id;
@@ -226,12 +263,6 @@ export default function PartnersManagement() {
 
       if (error) {
         console.error('❌ [PartnersManagement] Erro ao atualizar parceiro:', error);
-        console.error('❌ [PartnersManagement] Detalhes:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
         throw error;
       }
 
@@ -239,54 +270,44 @@ export default function PartnersManagement() {
         throw new Error('Nenhum parceiro foi atualizado. Verifique se você tem permissão.');
       }
 
-      console.log('✅ [PartnersManagement] Parceiro atualizado com sucesso:', updatedPartner);
-
-      // Enviar email de notificação (não bloqueia a ação se falhar)
-      if (partner?.contact_email) {
-        if (status === 'approved') {
-          notifyPartnerApproved({
-            partnerEmail: partner.contact_email,
-            partnerName: partner.name,
-          }).catch(err => {
-            console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
-          });
-        } else if (status === 'rejected') {
-          notifyPartnerRejected({
-            partnerEmail: partner.contact_email,
-            partnerName: partner.name,
-          }).catch(err => {
-            console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
-          });
-        }
+      if (partner.contact_email && status === 'approved') {
+        notifyPartnerApproved({
+          partnerEmail: partner.contact_email,
+          partnerName: partner.name,
+        }).catch(err => {
+          console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
+        });
       }
 
       const messages: Record<string, { title: string; description: string }> = {
         approved: {
           title: 'Parceiro aprovado!',
-          description: 'O parceiro agora está visível na plataforma. Email de notificação enviado.',
+          description: 'O parceiro passa a aparecer no Descubra MS. Email de notificação enviado.',
         },
-        rejected: {
-          title: 'Parceiro rejeitado',
-          description: 'A solicitação foi rejeitada. Email de notificação enviado.',
+        revision_requested: {
+          title: 'Devolvido para ajuste',
+          description: 'O parceiro mantém acesso ao painel para corrigir documentos ou dados. A assinatura permanece ativa.',
         },
         suspended: {
           title: 'Parceiro suspenso',
           description: 'O parceiro foi temporariamente suspenso.',
         },
+        pending: {
+          title: 'Status atualizado',
+          description: 'Cadastro marcado como pendente.',
+        },
       };
 
       toast(messages[status] || { title: 'Status atualizado', description: '' });
-      
-      // Atualizar estado local imediatamente para feedback visual instantâneo
-      setPartners(prevPartners => 
-        prevPartners.map(p => 
-          p.id === partnerId 
-            ? { ...p, status, is_active: status === 'approved' }
-            : p
-        )
+
+      setPartners(prevPartners =>
+        prevPartners.map(p =>
+          p.id === partnerId
+            ? { ...p, status, is_active: partnerDashboardAccess(status) }
+            : p,
+        ),
       );
-      
-      // Recarregar lista completa do banco para garantir sincronização
+
       await loadPartners();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -327,9 +348,11 @@ export default function PartnersManagement() {
     }
   };
 
-  const pendingPartners = partners.filter(p => p.status === 'pending');
+  const pendingPartners = partners.filter(p => p.status === 'pending' || p.status === 'revision_requested');
   const approvedPartners = partners.filter(p => p.status === 'approved');
-  const rejectedPartners = partners.filter(p => p.status === 'rejected' || p.status === 'suspended');
+  const rejectedPartners = partners.filter(
+    p => p.status === 'rejected' || p.status === 'suspended' || p.status === 'cancelled',
+  );
   const overduePartners = partners.filter(p => 
     p.subscription_status === 'past_due' || 
     p.subscription_status === 'unpaid' ||
@@ -373,7 +396,7 @@ export default function PartnersManagement() {
                     partner.subscription_status === 'past_due' ? 'destructive' :
                     partner.subscription_status === 'unpaid' ? 'destructive' :
                     partner.subscription_status === 'active' && partner.is_active ? 'default' :
-                    partner.status === 'pending' ? 'secondary' : 
+                    partner.status === 'pending' || partner.status === 'revision_requested' ? 'secondary' : 
                     'destructive'
                   }
                   className={
@@ -386,7 +409,9 @@ export default function PartnersManagement() {
                   {partner.subscription_status === 'past_due' ? '⚠️ Pagamento Atrasado' :
                    partner.subscription_status === 'unpaid' ? '❌ Não Pago' :
                    partner.subscription_status === 'active' && partner.is_active ? '✅ Ativo' :
+                   partner.status === 'revision_requested' ? '📝 Ajuste solicitado' :
                    partner.status === 'pending' ? '⏳ Pendente' : 
+                   partner.status === 'cancelled' ? '⏹️ Cancelado' :
                    '❌ Rejeitado'}
                 </Badge>
                 {partner.subscription_status && (
@@ -433,7 +458,7 @@ export default function PartnersManagement() {
                 Ver Detalhes
               </Button>
               
-              {partner.status === 'pending' && (
+              {(partner.status === 'pending' || partner.status === 'revision_requested') && (
                 <>
                   <Button
                     size="sm"
@@ -442,6 +467,14 @@ export default function PartnersManagement() {
                   >
                     <Check className="w-4 h-4 mr-1" />
                     Aprovar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => updatePartnerStatus(partner.id, 'revision_requested')}
+                    title="Parceiro continua com assinatura ativa e acesso ao painel para corrigir envios"
+                  >
+                    Devolver p/ ajuste
                   </Button>
                   <Button
                     size="sm"
@@ -458,7 +491,7 @@ export default function PartnersManagement() {
                     onClick={() => updatePartnerStatus(partner.id, 'rejected')}
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Rejeitar
+                    Reprovar (definitivo)
                   </Button>
                 </>
               )}
@@ -473,7 +506,9 @@ export default function PartnersManagement() {
                 </Button>
               )}
 
-              {(partner.status === 'rejected' || partner.status === 'suspended') && (
+              {(partner.status === 'rejected' ||
+                partner.status === 'suspended' ||
+                partner.status === 'cancelled') && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -814,7 +849,7 @@ export default function PartnersManagement() {
               )}
 
               <div className="flex gap-2 pt-4 border-t flex-wrap">
-                {selectedPartner.status === 'pending' && (
+                {(selectedPartner.status === 'pending' || selectedPartner.status === 'revision_requested') && (
                   <>
                     <Button
                       className="bg-green-600 hover:bg-green-700"
@@ -825,6 +860,15 @@ export default function PartnersManagement() {
                     >
                       <Check className="w-4 h-4 mr-2" />
                       Aprovar Parceiro
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        updatePartnerStatus(selectedPartner.id, 'revision_requested');
+                        setSelectedPartner(null);
+                      }}
+                    >
+                      Devolver p/ ajuste
                     </Button>
                     <Button
                       className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -844,7 +888,7 @@ export default function PartnersManagement() {
                       }}
                     >
                       <X className="w-4 h-4 mr-2" />
-                      Rejeitar
+                      Reprovar (definitivo)
                     </Button>
                   </>
                 )}

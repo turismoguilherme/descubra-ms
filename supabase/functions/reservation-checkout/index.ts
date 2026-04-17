@@ -89,6 +89,19 @@ serve(async (req) => {
       partner_name: partner.name,
     });
     
+    if (partner.status !== 'approved') {
+      return new Response(
+        JSON.stringify({
+          error:
+            'Este parceiro ainda não está liberado para reservas públicas (cadastro em análise ou não aprovado no Descubra MS).',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        },
+      );
+    }
+
     if (!partner.is_active || partner.subscription_status !== 'active') {
       const reasons = [];
       if (!partner.is_active) reasons.push('parceiro não está marcado como ativo');

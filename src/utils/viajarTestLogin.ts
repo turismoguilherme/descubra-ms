@@ -81,6 +81,13 @@ function cityRegionForStaticEmail(email: string): Pick<UserProfile, 'city_id' | 
   };
 }
 
+/** Credenciais que coincidem com STATIC_TEST_ACCOUNTS (para tentar Supabase Auth antes da sessão simulada). */
+export function matchesStaticTestAccount(email: string, password: string): boolean {
+  const key = email.trim().toLowerCase();
+  const row = STATIC_TEST_ACCOUNTS[key];
+  return !!(row && row.password === password);
+}
+
 export function tryStaticTestSignIn(email: string, password: string): { user: User; profile: UserProfile } | null {
   const key = email.trim().toLowerCase();
   const row = STATIC_TEST_ACCOUNTS[key];

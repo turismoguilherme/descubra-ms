@@ -164,3 +164,51 @@ export async function savePartnerTermsAcceptance(
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Gera no navegador um PDF modelo do termo (mesmo texto da versão publicada) para assinatura offline.
+ */
+export async function downloadPartnerTermsPdfTemplate(
+  partnerName: string,
+  partnerEmail: string,
+  termsVersion: number,
+): Promise<void> {
+  const policy = await policyService.getPublishedPolicy('partner_terms', 'descubra_ms');
+  const termsContent = policy?.content || 'Termo de Parceria - Descubra Mato Grosso do Sul';
+
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  const maxWidth = pageWidth - margin * 2;
+  let y = margin;
+
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TERMO DE PARCERIA (MODELO PARA ASSINATURA)', margin, y, { maxWidth });
+  y += 10;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Descubra Mato Grosso do Sul', margin, y, { maxWidth });
+  y += 6;
+  doc.text(`Versão ${termsVersion}`, margin, y, { maxWidth });
+  y += 6;
+  doc.text(`Parceiro: ${partnerName} (${partnerEmail})`, margin, y, { maxWidth });
+  y += 12;
+
+  doc.setFontSize(10);
+  const sections = termsContent.split('\n\n').filter((s) => s.trim());
+  for (const section of sections) {
+    const isTitle = section.match(/^#+\s/) || section.match(/^\d+\./);
+    doc.setFont('helvetica', isTitle ? 'bold' : 'normal');
+    const text = isTitle ? section.replace(/^#+\s/, '') : section;
+    const lines = doc.splitTextToSize(text, maxWidth);
+    if (y > 270) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(lines, margin, y, { maxWidth });
+    y += lines.length * (isTitle ? 5 : 4) + 4;
+  }
+
+  doc.save(`termo-parceria-descubra-ms-v${termsVersion}-modelo.pdf`);
+}

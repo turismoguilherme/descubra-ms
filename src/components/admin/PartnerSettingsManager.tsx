@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ export default function PartnerSettingsManager() {
   const [commissionRate, setCommissionRate] = useState<string>('10.00');
   const [stripeConnectLink, setStripeConnectLink] = useState<string>('');
   const [paymentLink, setPaymentLink] = useState<string>('');
+  const [voluntaryRefundPercentIfApproved, setVoluntaryRefundPercentIfApproved] = useState<string>('0');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -78,6 +79,17 @@ export default function PartnerSettingsManager() {
       if (!paymentError && paymentData?.setting_value) {
         setPaymentLink(String(paymentData.setting_value || ''));
       }
+
+      const { data: refundPct, error: refundErr } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_voluntary_cancel_refund_percent_if_approved')
+        .maybeSingle();
+
+      if (!refundErr && refundPct?.setting_value !== undefined && refundPct?.setting_value !== null) {
+        setVoluntaryRefundPercentIfApproved(String(refundPct.setting_value));
+      }
     } catch (error) {
       console.error('Erro ao carregar settings:', error);
     } finally {
@@ -101,6 +113,16 @@ export default function PartnerSettingsManager() {
       toast({
         title: 'Percentual inválido',
         description: 'O percentual de comissão deve ser entre 0 e 100',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const voluntaryPct = parseInt(voluntaryRefundPercentIfApproved, 10);
+    if (isNaN(voluntaryPct) || voluntaryPct < 0 || voluntaryPct > 100) {
+      toast({
+        title: 'Percentual inválido',
+        description: 'O reembolso parcial no cancelamento voluntário (parceiro já aprovado) deve ser entre 0 e 100.',
         variant: 'destructive',
       });
       return;
@@ -168,9 +190,25 @@ export default function PartnerSettingsManager() {
 
       if (paymentError) throw paymentError;
 
+      const { error: refundSaveErr } = await supabase
+        .from('site_settings')
+        .upsert(
+          {
+            platform: 'ms',
+            setting_key: 'partner_voluntary_cancel_refund_percent_if_approved',
+            setting_value: String(voluntaryPct),
+            description:
+              'Percentual (0–100) da última fatura paga a reembolsar quando parceiro JÁ APROVADO pede cancelamento voluntário (0 = sem reembolso automático parcial).',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'platform,setting_key' },
+        );
+
+      if (refundSaveErr) throw refundSaveErr;
+
       toast({
         title: 'Salvo com sucesso!',
-        description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}%`,
+        description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}% | Reembolso parcial cancel. voluntário (aprovado): ${voluntaryPct}%`,
       });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -273,6 +311,27 @@ export default function PartnerSettingsManager() {
           </div>
           <p className="text-xs text-gray-500">
             Link para parceiros conectarem sua conta Stripe e receberem pagamentos
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="voluntary_refund_pct">Reembolso parcial — cancelamento voluntário (parceiro já aprovado) (%)</Label>
+          <div className="flex items-center gap-2 max-w-xs">
+            <Input
+              id="voluntary_refund_pct"
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              value={voluntaryRefundPercentIfApproved}
+              onChange={(e) => setVoluntaryRefundPercentIfApproved(e.target.value)}
+            />
+            <span className="text-gray-500">%</span>
+          </div>
+          <p className="text-xs text-gray-500">
+            Aplicado sobre a <strong>última fatura paga</strong> quando o parceiro pede cancelamento e já estava
+            aprovado no Descubra MS (renovação desativada, acesso até o fim do período). Use <strong>0</strong> para não
+            reembolsar automaticamente.
           </p>
         </div>
 

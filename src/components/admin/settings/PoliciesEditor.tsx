@@ -105,6 +105,24 @@ const DEFAULT_POLICIES: Omit<PolicyDocument, 'id' | 'last_updated'>[] = [
   },
 ];
 
+const POLICY_PDF_LOG = '[PoliciesEditor PDF]';
+
+/** Log detalhado de erros do Storage (campos variam entre versões do SDK). */
+function logStorageUploadFailure(upErr: unknown) {
+  const e = upErr as Record<string, unknown>;
+  const snapshot: Record<string, unknown> = {};
+  for (const k of ['message', 'name', 'statusCode', 'status', 'error']) {
+    if (e[k] !== undefined) snapshot[k] = e[k];
+  }
+  console.error(`${POLICY_PDF_LOG} storage.upload rejeitado (resumo)`, snapshot);
+  console.error(`${POLICY_PDF_LOG} storage.upload rejeitado (objeto)`, upErr);
+  try {
+    console.error(`${POLICY_PDF_LOG} storage.upload rejeitado (JSON)`, JSON.stringify(snapshot));
+  } catch {
+    /* ignore */
+  }
+}
+
 const POLICY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   terms_of_use: Scale,
   privacy_policy: Shield,
@@ -114,6 +132,15 @@ const POLICY_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
   partner_terms: FileText,
   event_terms: FileText,
 };
+
+function isPdfFile(file: File) {
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.pdf')) return false;
+  if (file.type === 'application/pdf') return true;
+  if (file.type === 'application/octet-stream') return true;
+  if (!file.type || file.type === '') return true;
+  return false;
+}
 
 export default function PoliciesEditor() {
   const { toast } = useToast();
@@ -127,11 +154,29 @@ export default function PoliciesEditor() {
   const [previewMode, setPreviewMode] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
 
+  const upsertPolicyToDatabase = async (row: PolicyDocument) => {
+    if (String(row.id || '').startsWith('local-')) return { error: null as null };
+    const updatedAt = row.last_updated || (row as { updated_at?: string }).updated_at || new Date().toISOString();
+    return supabase.from('platform_policies').upsert(
+      {
+        key: row.key,
+        title: row.title,
+        content: row.content ?? '',
+        platform: row.platform,
+        is_published: row.is_published,
+        version: row.version,
+        updated_at: updatedAt,
+        terms_pdf_url: row.terms_pdf_url ?? null,
+      },
+      { onConflict: 'key,platform' }
+    );
+  };
+
   const handleUploadTermsPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== 'application/pdf') {
-      toast({ title: 'Arquivo inválido', description: 'Envie apenas PDF', variant: 'destructive' });
+    if (!isPdfFile(file)) {
+      toast({ title: 'Arquivo inválido', description: 'Envie apenas ficheiros .pdf', variant: 'destructive' });
       e.target.value = '';
       return;
     }
@@ -141,15 +186,48 @@ export default function PoliciesEditor() {
       return;
     }
     const policyIndex = policies.findIndex(p => p.key === activePolicy);
-    if (policyIndex === -1) return;
+    if (policyIndex === -1) {
+      toast({
+        title: 'Não foi possível anexar',
+        description: 'Selecione um documento na lista antes de enviar o PDF.',
+        variant: 'destructive',
+      });
+      e.target.value = '';
+      return;
+    }
 
     setUploadingPdf(true);
     try {
       const fileName = `policy-pdfs/${activePolicy}-${Date.now()}.pdf`;
-      const { error: upErr } = await supabase.storage.from('documents').upload(fileName, file, { contentType: 'application/pdf' });
-      if (upErr) throw upErr;
+      const row = policies[policyIndex];
+
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      console.groupCollapsed(`${POLICY_PDF_LOG} upload — início`);
+      console.info(`${POLICY_PDF_LOG} storage`, { bucket: 'documents', objectPath: fileName });
+      console.info(`${POLICY_PDF_LOG} ficheiro`, { name: file.name, size: file.size, type: file.type });
+      console.info(`${POLICY_PDF_LOG} política`, { activePolicy, key: row?.key, platform: row?.platform, policyId: row?.id });
+      console.info(`${POLICY_PDF_LOG} sessão Supabase`, {
+        getSessionError: sessionErr?.message ?? null,
+        hasSession: !!sessionData?.session,
+        userId: sessionData?.session?.user?.id ?? null,
+        email: sessionData?.session?.user?.email ?? null,
+        expiresAt: sessionData?.session?.expires_at ?? null,
+      });
+      console.groupEnd();
+
+      const { error: upErr } = await supabase.storage.from('documents').upload(fileName, file, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+      if (upErr) {
+        logStorageUploadFailure(upErr);
+        throw upErr;
+      }
+      console.info(`${POLICY_PDF_LOG} storage.upload OK`, { objectPath: fileName });
+
       const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
       const newUrl = urlData?.publicUrl || '';
+      if (!newUrl) throw new Error('URL pública do PDF vazia');
 
       const newPolicies = [...policies];
       newPolicies[policyIndex] = {
@@ -160,25 +238,90 @@ export default function PoliciesEditor() {
       setPolicies(newPolicies);
       localStorage.setItem('platform_policies', JSON.stringify(newPolicies));
 
-      toast({ title: 'PDF enviado!', description: 'Documento oficial atualizado.' });
+      const { error: dbErr } = await upsertPolicyToDatabase(newPolicies[policyIndex]);
+      if (dbErr) {
+        console.error(`${POLICY_PDF_LOG} platform_policies upsert falhou`, {
+          message: dbErr.message,
+          code: dbErr.code,
+          details: dbErr.details,
+          hint: dbErr.hint,
+        });
+        toast({
+          title: 'PDF enviado (local)',
+          description: 'O ficheiro foi guardado no Storage, mas não foi possível gravar o link na base de dados. Verifique a migração e permissões.',
+          variant: 'destructive',
+        });
+      } else {
+        console.info(`${POLICY_PDF_LOG} platform_policies upsert OK`, { key: newPolicies[policyIndex].key });
+        toast({ title: 'PDF enviado!', description: 'Documento oficial atualizado e guardado.' });
+      }
     } catch (err) {
-      console.error('Erro upload PDF política:', err);
-      toast({ title: 'Erro', description: 'Não foi possível enviar o PDF', variant: 'destructive' });
+      const msg = typeof err?.message === 'string' ? err.message : String(err);
+      const bucketMissing = /bucket not found/i.test(msg);
+      const rlsBlocked =
+        /row-level security|rls policy|violates row-level security|new row violates/i.test(msg);
+      const duplicateObject = /duplicate|already exists|resource already exists/i.test(msg);
+
+      console.groupCollapsed(`${POLICY_PDF_LOG} upload — erro`);
+      console.error(`${POLICY_PDF_LOG} exceção`, err);
+      if (err && typeof err === 'object') {
+        const o = err as { message?: string; name?: string; statusCode?: number };
+        console.error(`${POLICY_PDF_LOG} campos`, { message: o.message, name: o.name, statusCode: o.statusCode });
+      }
+      if (rlsBlocked) {
+        console.warn(`${POLICY_PDF_LOG} diagnóstico RLS`, {
+          hint: 'INSERT em storage.objects foi bloqueado. Política esperada: role authenticated + bucket_id = documents. Confirme sessão Supabase (hasSession: true no grupo "upload — início") ou faça login com utilizador real no Supabase Auth.',
+        });
+      }
+      if (duplicateObject) {
+        console.warn(`${POLICY_PDF_LOG} diagnóstico duplicado`, {
+          hint: 'Caminho já existia no bucket; upload usa upsert. Se persistir, verifique políticas UPDATE no Storage.',
+        });
+      }
+      console.groupEnd();
+
+      toast({
+        title: 'Erro ao enviar PDF',
+        description: bucketMissing
+          ? 'O bucket Storage "documents" não existe neste projeto Supabase. Corra as migrations (ex.: supabase db push) ou crie o bucket "documents" em Storage no Dashboard.'
+          : rlsBlocked
+            ? 'Permissão negada no Storage (RLS). Abra o grupo [PoliciesEditor PDF] no consola e confirme hasSession: true; caso contrário faça login de novo (sessão Supabase real).'
+            : duplicateObject
+              ? 'O ficheiro já existe neste caminho no Storage. Tente outra vez ou renomeie o PDF.'
+              : msg || 'Não foi possível enviar o PDF.',
+        variant: 'destructive',
+      });
     } finally {
       setUploadingPdf(false);
       e.target.value = '';
     }
   };
 
-  const handleRemoveTermsPdf = () => {
+  const handleRemoveTermsPdf = async () => {
     const policyIndex = policies.findIndex(p => p.key === activePolicy);
-    if (policyIndex === -1) return;
-    const newPolicies = [...policies];
-    newPolicies[policyIndex] = {
-      ...newPolicies[policyIndex],
+    if (policyIndex === -1) {
+      toast({ title: 'Erro', description: 'Documento não selecionado.', variant: 'destructive' });
+      return;
+    }
+    const nextRow: PolicyDocument = {
+      ...policies[policyIndex],
       terms_pdf_url: null,
       last_updated: new Date().toISOString(),
     };
+
+    const { error: dbErr } = await upsertPolicyToDatabase(nextRow);
+    if (dbErr) {
+      console.error('Erro ao remover PDF no servidor:', dbErr);
+      toast({
+        title: 'Não foi possível remover',
+        description: 'Tente novamente ou verifique permissões.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newPolicies = [...policies];
+    newPolicies[policyIndex] = nextRow;
     setPolicies(newPolicies);
     localStorage.setItem('platform_policies', JSON.stringify(newPolicies));
     toast({ title: 'PDF removido', description: 'O documento PDF oficial foi removido.' });
@@ -225,7 +368,12 @@ export default function PoliciesEditor() {
         setPolicies(defaultData);
         localStorage.setItem('platform_policies', JSON.stringify(defaultData));
       } else if (data && data.length > 0) {
-        setPolicies(data);
+        setPolicies(
+          data.map((row: PolicyDocument & { updated_at?: string }) => ({
+            ...row,
+            last_updated: row.last_updated || row.updated_at || new Date().toISOString(),
+          }))
+        );
       } else {
         const defaultData = DEFAULT_POLICIES.map((p, index) => ({
           ...p,
@@ -281,15 +429,19 @@ export default function PoliciesEditor() {
       try {
         const { error } = await supabase
           .from('platform_policies')
-          .upsert({
-            key: updatedPolicy.key,
-            title: updatedPolicy.title,
-            content: updatedPolicy.content,
-            platform: updatedPolicy.platform,
-            is_published: updatedPolicy.is_published,
-            version: updatedPolicy.version,
-            updated_at: updatedPolicy.last_updated,
-          }, { onConflict: 'key' });
+          .upsert(
+            {
+              key: updatedPolicy.key,
+              title: updatedPolicy.title,
+              content: updatedPolicy.content,
+              platform: updatedPolicy.platform,
+              is_published: updatedPolicy.is_published,
+              version: updatedPolicy.version,
+              updated_at: updatedPolicy.last_updated,
+              terms_pdf_url: updatedPolicy.terms_pdf_url ?? null,
+            },
+            { onConflict: 'key,platform' }
+          );
 
         if (error) throw error;
       } catch (dbError) {

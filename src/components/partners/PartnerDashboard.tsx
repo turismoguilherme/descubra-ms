@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -33,6 +34,7 @@ import { ReservationMessageService } from '@/services/partners/reservationMessag
 import UniversalLayout from '@/components/layout/UniversalLayout';
 import PartnerRewardsManager from './PartnerRewardsManager';
 import PendingApprovalBanner from './PendingApprovalBanner';
+import PartnerTermsResubmit from './PartnerTermsResubmit';
 import StripeConnectBanner from './StripeConnectBanner';
 import BlockedPartnerBanner from './BlockedPartnerBanner';
 import WelcomeModal from './WelcomeModal';
@@ -72,6 +74,7 @@ interface Partner {
   is_active: boolean;
   stripe_account_id?: string;
   stripe_connect_status?: 'pending' | 'connected' | 'restricted' | 'disabled';
+  voluntary_cancel_access_until?: string | null;
 }
 
 export default function PartnerDashboard() {
@@ -90,6 +93,7 @@ export default function PartnerDashboard() {
   const [businessSubTab, setBusinessSubTab] = useState<'info' | 'pricing' | 'availability'>('info');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [latestTermReview, setLatestTermReview] = useState<string | null>(null);
 
   // Verificar se veio do onboarding (welcome=true)
   useEffect(() => {
@@ -116,6 +120,23 @@ export default function PartnerDashboard() {
   useEffect(() => {
     loadPartnerData();
   }, []);
+
+  const listingApproved = partner?.status === 'approved';
+
+  useEffect(() => {
+    if (!partner) return;
+    if (!listingApproved && (activeTab === 'reservations' || activeTab === 'transactions' || activeTab === 'rewards')) {
+      setActiveTab('business');
+    }
+  }, [partner?.status, listingApproved, activeTab]);
+
+  const toastListingLocked = () => {
+    toast({
+      title: 'Disponível após aprovação',
+      description:
+        'Reservas, transações e recompensas ficam ativas quando seu cadastro for aprovado no Descubra MS. Enquanto isso, use Meu Negócio para completar seu perfil.',
+    });
+  };
 
   const loadPartnerData = async () => {
     try {
@@ -148,6 +169,15 @@ export default function PartnerDashboard() {
       }
 
       setPartner(partnerData);
+
+      const { data: termRow } = await supabase
+        .from('partner_terms_acceptances')
+        .select('review_status')
+        .eq('partner_id', partnerData.id)
+        .order('signed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setLatestTermReview(termRow?.review_status ?? null);
 
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('partner_reservations')
@@ -376,6 +406,11 @@ export default function PartnerDashboard() {
       <nav className="flex-1 p-4 space-y-2">
         <button
           onClick={() => {
+            if (!listingApproved) {
+              toastListingLocked();
+              if (isMobile) setSidebarOpen(false);
+              return;
+            }
             setActiveTab('reservations');
             if (isMobile) setSidebarOpen(false);
           }}
@@ -383,7 +418,8 @@ export default function PartnerDashboard() {
             'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3',
             activeTab === 'reservations'
               ? 'bg-ms-primary-blue text-white shadow-md'
-              : 'text-gray-700 hover:bg-gray-100'
+              : 'text-gray-700 hover:bg-gray-100',
+            !listingApproved && 'opacity-60',
           )}
         >
           <Calendar className={cn('w-5 h-5', activeTab === 'reservations' ? 'text-white' : 'text-gray-500')} />
@@ -419,6 +455,11 @@ export default function PartnerDashboard() {
 
         <button
           onClick={() => {
+            if (!listingApproved) {
+              toastListingLocked();
+              if (isMobile) setSidebarOpen(false);
+              return;
+            }
             setActiveTab('transactions');
             if (isMobile) setSidebarOpen(false);
           }}
@@ -426,7 +467,8 @@ export default function PartnerDashboard() {
             'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3',
             activeTab === 'transactions'
               ? 'bg-ms-primary-blue text-white shadow-md'
-              : 'text-gray-700 hover:bg-gray-100'
+              : 'text-gray-700 hover:bg-gray-100',
+            !listingApproved && 'opacity-60',
           )}
         >
           <DollarSign className={cn('w-5 h-5', activeTab === 'transactions' ? 'text-white' : 'text-gray-500')} />
@@ -440,6 +482,11 @@ export default function PartnerDashboard() {
 
         <button
           onClick={() => {
+            if (!listingApproved) {
+              toastListingLocked();
+              if (isMobile) setSidebarOpen(false);
+              return;
+            }
             setActiveTab('rewards');
             if (isMobile) setSidebarOpen(false);
           }}
@@ -447,7 +494,8 @@ export default function PartnerDashboard() {
             'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3',
             activeTab === 'rewards'
               ? 'bg-ms-primary-blue text-white shadow-md'
-              : 'text-gray-700 hover:bg-gray-100'
+              : 'text-gray-700 hover:bg-gray-100',
+            !listingApproved && 'opacity-60',
           )}
         >
           <TrendingUp className={cn('w-5 h-5', activeTab === 'rewards' ? 'text-white' : 'text-gray-500')} />
@@ -526,6 +574,31 @@ export default function PartnerDashboard() {
           <div className="flex-1 ms-container py-8">
             {/* Banners de Status */}
             <div className="space-y-4 mb-6">
+              {partner?.status === 'cancelled' &&
+                (partner.subscription_status === 'active' ||
+                  partner.subscription_status === 'trialing') &&
+                partner.voluntary_cancel_access_until && (
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <AlertTitle className="text-amber-900">Parceria cancelada por você</AlertTitle>
+                    <AlertDescription className="text-amber-900">
+                      A renovação foi desativada. Acesso ao painel até{' '}
+                      {new Date(partner.voluntary_cancel_access_until).toLocaleString('pt-BR')}. Você já não aparece
+                      na listagem pública do Descubra MS.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+              {!listingApproved &&
+                partner &&
+                (partner.status === 'revision_requested' || latestTermReview === 'revision_requested') && (
+                  <PartnerTermsResubmit
+                    partnerId={partner.id}
+                    partnerName={partner.name}
+                    partnerEmail={partner.contact_email}
+                    onComplete={() => loadPartnerData()}
+                  />
+                )}
+
               {/* Banner: Parceiro Bloqueado (Inadimplente) */}
               {partner && (
                 (!partner.is_active || 
@@ -538,12 +611,25 @@ export default function PartnerDashboard() {
                 )
               )}
 
-              {/* Banner: Aguardando Aprovação */}
-              {partner.status === 'pending' && !partner.is_active && 
-               partner.subscription_status !== 'past_due' && 
-               partner.subscription_status !== 'unpaid' && (
-                <PendingApprovalBanner />
-              )}
+              {/* Banner: Aguardando aprovação para listagem pública */}
+              {!listingApproved &&
+                partner &&
+                partner.status === 'revision_requested' &&
+                partner.subscription_status !== 'past_due' &&
+                partner.subscription_status !== 'unpaid' && (
+                  <PendingApprovalBanner variant="revision" />
+                )}
+
+              {!listingApproved &&
+                partner &&
+                partner.status === 'pending' &&
+                (partner.is_active ||
+                  partner.subscription_status === 'active' ||
+                  partner.subscription_status === 'trialing') &&
+                partner.subscription_status !== 'past_due' &&
+                partner.subscription_status !== 'unpaid' && (
+                  <PendingApprovalBanner variant="default" />
+                )}
 
               {/* Banner: Stripe Connect não configurado */}
               {partner.stripe_connect_status !== 'connected' && (

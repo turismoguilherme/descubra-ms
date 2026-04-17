@@ -3132,6 +3132,9 @@ export type Database = {
           stripe_connect_status: string | null
           stripe_connected_at: string | null
           updated_at: string
+          voluntary_cancel_access_until: string | null
+          voluntary_cancel_at: string | null
+          voluntary_cancel_reason: string | null
           website_url: string | null
           youtube_url: string | null
         }
@@ -3159,6 +3162,9 @@ export type Database = {
           stripe_connect_status?: string | null
           stripe_connected_at?: string | null
           updated_at?: string
+          voluntary_cancel_access_until?: string | null
+          voluntary_cancel_at?: string | null
+          voluntary_cancel_reason?: string | null
           website_url?: string | null
           youtube_url?: string | null
         }
@@ -3186,6 +3192,9 @@ export type Database = {
           stripe_connect_status?: string | null
           stripe_connected_at?: string | null
           updated_at?: string
+          voluntary_cancel_access_until?: string | null
+          voluntary_cancel_at?: string | null
+          voluntary_cancel_reason?: string | null
           website_url?: string | null
           youtube_url?: string | null
         }

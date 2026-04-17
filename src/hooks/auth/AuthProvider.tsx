@@ -13,6 +13,7 @@ import {
   readLegacyStoredTestLogin,
   tryStaticTestSignIn,
   clearSimulatedTestSessionMarkers,
+  matchesStaticTestAccount,
 } from "@/utils/viajarTestLogin";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -291,6 +292,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Em dev: credenciais estáticas de teste tentam primeiro o Supabase Auth real (JWT → Storage RLS).
+      // Se não existir utilizador no projeto ou password diferente, cai na sessão simulada (sem Storage).
+      if (isViajarTestLoginEnabled() && matchesStaticTestAccount(email, password)) {
+        const normalizedEmail = email.trim().toLowerCase();
+        const { data: pwData, error: pwError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+        if (!pwError && pwData?.session) {
+          clearSimulatedTestSessionMarkers();
+          setSession(pwData.session);
+          setUser(pwData.user);
+          await fetchUserProfile(pwData.user.id);
+          toast({
+            title: "Login realizado com sucesso!",
+            description: `Bem-vindo, ${pwData.user.email}!`,
+          });
+          return { data: pwData, error: null };
+        }
+        logger.dev(
+          "[Auth] Login estático: Supabase signInWithPassword falhou; a usar sessão simulada (uploads Storage exigem utilizador real no Auth).",
+          pwError?.message,
+        );
+      }
+
       if (isViajarTestLoginEnabled()) {
         const st = tryStaticTestSignIn(email, password);
         if (st) {

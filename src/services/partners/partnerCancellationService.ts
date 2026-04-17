@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { addAdminNotification } from '@/components/admin/notifications/AdminNotifications';
 
@@ -10,67 +9,80 @@ interface CancelPartnershipParams {
 }
 
 /**
- * Serviço para cancelamento de parceria
- * Atualiza o status do parceiro e notifica o admin
+ * Cancelamento voluntário: chama edge (Stripe + regras de reembolso) e notifica o admin.
  */
 export async function cancelPartnership(params: CancelPartnershipParams) {
   try {
-    // 1. Atualizar status do parceiro
-    const { error: updateError } = await supabase
-      .from('institutional_partners')
-      .update({
-        status: 'cancelled',
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', params.partnerId);
+    const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-voluntary-cancel', {
+      body: {
+        partnerId: params.partnerId,
+        reason: params.reason?.trim() || null,
+      },
+    });
 
-    if (updateError) {
-      throw new Error(`Erro ao atualizar parceiro: ${updateError.message}`);
+    if (fnError) {
+      throw new Error(fnError.message || 'Erro ao processar cancelamento');
     }
 
-    // 2. Criar notificação para admin
+    const payload = fnData as {
+      error?: string;
+      success?: boolean;
+      mode?: string;
+      accessUntil?: string;
+      refundNote?: string | null;
+      refundId?: string | null;
+    } | undefined;
+
+    if (payload?.error) {
+      throw new Error(payload.error);
+    }
+
     addAdminNotification({
       type: 'warning',
-      title: 'Parceiro Solicitou Cancelamento',
-      message: `${params.partnerName} (${params.partnerEmail}) solicitou o cancelamento da parceria.${params.reason ? ` Motivo: ${params.reason}` : ''}`,
+      title: 'Parceiro solicitou cancelamento',
+      message: `${params.partnerName} (${params.partnerEmail}) iniciou cancelamento voluntário.${
+        params.reason ? ` Motivo: ${params.reason}` : ''
+      }${payload?.mode === 'end_of_period' && payload.accessUntil ? ` Acesso até ${new Date(payload.accessUntil).toLocaleDateString('pt-BR')}.` : ''}`,
       action: {
         label: 'Ver Parceiros',
         onClick: () => {
           window.location.href = '/admin/partners';
-        }
-      }
+        },
+      },
     });
 
-    // 3. Tentar criar registro no banco (se houver tabela de notificações)
     try {
-      const { error: notificationError } = await supabase
-        .from('admin_notifications')
-        .insert({
-          type: 'partner_cancellation',
-          title: 'Parceiro Solicitou Cancelamento',
-          message: `${params.partnerName} (${params.partnerEmail}) solicitou o cancelamento da parceria.${params.reason ? ` Motivo: ${params.reason}` : ''}`,
-          metadata: {
-            partner_id: params.partnerId,
-            partner_name: params.partnerName,
-            partner_email: params.partnerEmail,
-            reason: params.reason,
-            timestamp: new Date().toISOString()
-          },
-          created_at: new Date().toISOString()
-        });
-
-      if (notificationError) {
-        console.warn('Não foi possível salvar notificação no banco (não crítico):', notificationError);
-      }
+      await supabase.from('admin_notifications').insert({
+        type: 'partner_cancellation',
+        title: 'Parceiro solicitou cancelamento',
+        message: `${params.partnerName} (${params.partnerEmail}) — modo ${payload?.mode || '?'}.${params.reason ? ` Motivo: ${params.reason}` : ''}`,
+        metadata: {
+          partner_id: params.partnerId,
+          partner_name: params.partnerName,
+          partner_email: params.partnerEmail,
+          reason: params.reason,
+          access_until: payload?.accessUntil ?? null,
+          timestamp: new Date().toISOString(),
+        },
+        created_at: new Date().toISOString(),
+      });
     } catch (dbError) {
-      console.warn('Tabela de notificações pode não existir (não crítico):', dbError);
+      console.warn('Não foi possível salvar notificação no banco (não crítico):', dbError);
     }
 
-    return { success: true, error: null };
+    return {
+      success: true,
+      error: null as string | null,
+      payload: {
+        mode: payload?.mode,
+        accessUntil: payload?.accessUntil,
+        refundNote: payload?.refundNote ?? null,
+        refundId: payload?.refundId ?? null,
+      },
+    };
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     console.error('Erro ao cancelar parceria:', err);
-    return { success: false, error: err.message || 'Erro ao cancelar parceria' };
+    return { success: false, error: err.message || 'Erro ao cancelar parceria', payload: undefined };
   }
 }

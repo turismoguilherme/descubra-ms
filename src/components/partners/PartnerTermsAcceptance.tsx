@@ -7,7 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Shield, CheckCircle2, ArrowLeft, Loader2, Upload, Download, AlertCircle } from 'lucide-react';
 import { policyService } from '@/services/public/policyService';
-import { generatePartnerTermsPDF, savePartnerTermsAcceptance } from '@/services/partners/partnerTermsService';
+import {
+  generatePartnerTermsPDF,
+  savePartnerTermsAcceptance,
+  downloadPartnerTermsPdfTemplate,
+} from '@/services/partners/partnerTermsService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PartnerTermsAcceptanceProps {
@@ -33,6 +37,7 @@ export default function PartnerTermsAcceptance({
   const [termsVersion, setTermsVersion] = useState(1);
   const [termsPdfUrl, setTermsPdfUrl] = useState<string | null>(null);
   const [uploadedPdf, setUploadedPdf] = useState<File | null>(null);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
 
   useEffect(() => {
     loadTerms();
@@ -163,11 +168,37 @@ export default function PartnerTermsAcceptance({
                 <FileText className="w-4 h-4 text-primary" />
                 Passo 1: Leia o Termo de Parceria
               </h4>
-              {termsPdfUrl && (
+              {termsPdfUrl ? (
                 <Button variant="outline" size="sm" asChild>
                   <a href={termsPdfUrl} download target="_blank" rel="noopener noreferrer">
                     <Download className="w-4 h-4 mr-2" /> Baixar PDF para Assinar
                   </a>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  disabled={downloadingTemplate || !termsContent}
+                  onClick={async () => {
+                    setDownloadingTemplate(true);
+                    try {
+                      await downloadPartnerTermsPdfTemplate(partnerName, partnerEmail, termsVersion);
+                      toast({ title: 'Download iniciado', description: 'Salve o PDF, assine e envie abaixo.' });
+                    } catch (e) {
+                      console.error(e);
+                      toast({ title: 'Erro', description: 'Não foi possível gerar o PDF.', variant: 'destructive' });
+                    } finally {
+                      setDownloadingTemplate(false);
+                    }
+                  }}
+                >
+                  {downloadingTemplate ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  Baixar modelo PDF
                 </Button>
               )}
             </div>
