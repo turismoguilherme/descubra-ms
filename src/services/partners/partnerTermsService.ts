@@ -28,8 +28,7 @@ export async function generatePartnerTermsPDF(
   partnerName: string,
   partnerEmail: string,
   termsVersion: number,
-  ipAddress?: string | null,
-  signatureDataUrl?: string | null
+  ipAddress?: string | null
 ): Promise<string> {
   try {
     const policy = await policyService.getPublishedPolicy('partner_terms', 'descubra_ms');
@@ -87,18 +86,6 @@ export async function generatePartnerTermsPDF(
     doc.text(`Data e Hora: ${signedDate}`, margin, y); y += 6;
     if (ipAddress) { doc.text(`IP: ${ipAddress}`, margin, y); y += 6; }
     doc.text(`Hash: ${documentHash}`, margin, y); y += 10;
-
-    // Incluir imagem da assinatura digital
-    if (signatureDataUrl) {
-      if (y > 230) { doc.addPage(); y = margin; }
-      doc.text('Assinatura:', margin, y); y += 5;
-      try {
-        doc.addImage(signatureDataUrl, 'PNG', margin, y, 80, 30);
-        y += 35;
-      } catch (imgErr) {
-        console.error('Erro ao adicionar assinatura ao PDF:', imgErr);
-      }
-    }
 
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);
