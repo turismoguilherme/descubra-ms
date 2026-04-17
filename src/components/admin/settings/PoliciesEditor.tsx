@@ -125,6 +125,65 @@ export default function PoliciesEditor() {
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+
+  const handleUploadTermsPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      toast({ title: 'Arquivo inválido', description: 'Envie apenas PDF', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: 'Arquivo muito grande', description: 'Máximo 10MB', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    const policyIndex = policies.findIndex(p => p.key === activePolicy);
+    if (policyIndex === -1) return;
+
+    setUploadingPdf(true);
+    try {
+      const fileName = `policy-pdfs/${activePolicy}-${Date.now()}.pdf`;
+      const { error: upErr } = await supabase.storage.from('documents').upload(fileName, file, { contentType: 'application/pdf' });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
+      const newUrl = urlData?.publicUrl || '';
+
+      const newPolicies = [...policies];
+      newPolicies[policyIndex] = {
+        ...newPolicies[policyIndex],
+        terms_pdf_url: newUrl,
+        last_updated: new Date().toISOString(),
+      };
+      setPolicies(newPolicies);
+      localStorage.setItem('platform_policies', JSON.stringify(newPolicies));
+
+      toast({ title: 'PDF enviado!', description: 'Documento oficial atualizado.' });
+    } catch (err) {
+      console.error('Erro upload PDF política:', err);
+      toast({ title: 'Erro', description: 'Não foi possível enviar o PDF', variant: 'destructive' });
+    } finally {
+      setUploadingPdf(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveTermsPdf = () => {
+    const policyIndex = policies.findIndex(p => p.key === activePolicy);
+    if (policyIndex === -1) return;
+    const newPolicies = [...policies];
+    newPolicies[policyIndex] = {
+      ...newPolicies[policyIndex],
+      terms_pdf_url: null,
+      last_updated: new Date().toISOString(),
+    };
+    setPolicies(newPolicies);
+    localStorage.setItem('platform_policies', JSON.stringify(newPolicies));
+    toast({ title: 'PDF removido', description: 'O documento PDF oficial foi removido.' });
+  };
+
 
   useEffect(() => {
     loadPolicies();
