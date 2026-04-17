@@ -43,6 +43,7 @@ interface PolicyDocument {
   version: number;
   last_updated: string;
   updated_by?: string;
+  terms_pdf_url?: string | null;
 }
 
 const DEFAULT_POLICIES: Omit<PolicyDocument, 'id' | 'last_updated'>[] = [
