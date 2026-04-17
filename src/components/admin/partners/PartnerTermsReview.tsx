@@ -190,28 +190,35 @@ export default function PartnerTermsReview() {
                 <div><strong>Status:</strong> <StatusBadge status={selectedTerm.review_status} /></div>
               </div>
 
-              {selectedTerm.digital_signature_url && (
-                <div>
-                  <p className="text-sm font-semibold mb-1">Assinatura Digital:</p>
-                  <img src={selectedTerm.digital_signature_url} alt="Assinatura" className="border rounded max-h-24" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="border rounded-lg p-3 bg-muted/30">
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-1">
+                    <FileText className="w-4 h-4" /> PDF Digital (gerado)
+                  </p>
+                  {selectedTerm.pdf_url ? (
+                    <Button variant="outline" size="sm" asChild className="w-full">
+                      <a href={selectedTerm.pdf_url} target="_blank" rel="noopener noreferrer">
+                        Visualizar / Baixar
+                      </a>
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Não disponível</p>
+                  )}
                 </div>
-              )}
-
-              <div className="flex gap-2">
-                {selectedTerm.pdf_url && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={selectedTerm.pdf_url} target="_blank" rel="noopener noreferrer">
-                      <FileText className="w-4 h-4 mr-1" /> PDF Digital
-                    </a>
-                  </Button>
-                )}
-                {selectedTerm.uploaded_pdf_url && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={selectedTerm.uploaded_pdf_url} target="_blank" rel="noopener noreferrer">
-                      <FileText className="w-4 h-4 mr-1" /> PDF Enviado
-                    </a>
-                  </Button>
-                )}
+                <div className="border rounded-lg p-3 bg-primary/5">
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-1">
+                    <FileText className="w-4 h-4 text-primary" /> PDF Físico (assinado)
+                  </p>
+                  {selectedTerm.uploaded_pdf_url ? (
+                    <Button variant="outline" size="sm" asChild className="w-full">
+                      <a href={selectedTerm.uploaded_pdf_url} target="_blank" rel="noopener noreferrer">
+                        Visualizar / Baixar
+                      </a>
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-destructive">Não enviado</p>
+                  )}
+                </div>
               </div>
 
               <div>
