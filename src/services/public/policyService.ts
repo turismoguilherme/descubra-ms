@@ -11,6 +11,7 @@ export interface Policy {
   is_published: boolean;
   version: number;
   last_updated: string;
+  terms_pdf_url?: string | null;
 }
 
 export const policyService = {

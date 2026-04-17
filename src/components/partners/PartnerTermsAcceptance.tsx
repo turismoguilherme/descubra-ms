@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Shield, CheckCircle2, ArrowLeft, Loader2, Upload, Download } from 'lucide-react';
+import { FileText, Shield, CheckCircle2, ArrowLeft, Loader2, Upload, Download, AlertCircle } from 'lucide-react';
 import { policyService } from '@/services/public/policyService';
 import { generatePartnerTermsPDF, savePartnerTermsAcceptance } from '@/services/partners/partnerTermsService';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,9 +29,9 @@ export default function PartnerTermsAcceptance({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasReadTerms, setHasReadTerms] = useState(false);
-  const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [termsContent, setTermsContent] = useState('');
   const [termsVersion, setTermsVersion] = useState(1);
+  const [termsPdfUrl, setTermsPdfUrl] = useState<string | null>(null);
   const [uploadedPdf, setUploadedPdf] = useState<File | null>(null);
 
   useEffect(() => {
@@ -45,6 +44,7 @@ export default function PartnerTermsAcceptance({
       if (policy) {
         setTermsContent(policy.content || '');
         setTermsVersion(policy.version || 1);
+        setTermsPdfUrl(policy.terms_pdf_url || null);
       } else {
         setTermsContent('Termo de Parceria - Descubra Mato Grosso do Sul\n\nConteúdo do termo será configurado pelo administrador.');
       }
@@ -59,39 +59,44 @@ export default function PartnerTermsAcceptance({
   const handlePdfUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
-    if (allowed.includes(file.type)) {
-      setUploadedPdf(file);
-    } else {
-      toast({ title: 'Arquivo inválido', description: 'Envie um arquivo PDF, JPG ou PNG', variant: 'destructive' });
+    if (file.type !== 'application/pdf') {
+      toast({ title: 'Arquivo inválido', description: 'Envie apenas arquivos PDF (assinado por gov.br ou outro certificador).', variant: 'destructive' });
+      e.target.value = '';
+      return;
     }
+    // Limite de 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: 'Arquivo muito grande', description: 'O PDF deve ter no máximo 10MB.', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    setUploadedPdf(file);
   }, [toast]);
 
-  const uploadPhysicalPdf = async (): Promise<string> => {
+  const uploadSignedPdf = async (): Promise<string> => {
     if (!uploadedPdf) return '';
     try {
-      const ext = uploadedPdf.name.split('.').pop() || 'pdf';
-      const fileName = `partner-terms-uploaded/${partnerId}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('documents').upload(fileName, uploadedPdf, { contentType: uploadedPdf.type });
+      const fileName = `partner-terms-uploaded/${partnerId}-${Date.now()}.pdf`;
+      const { error } = await supabase.storage.from('documents').upload(fileName, uploadedPdf, { contentType: 'application/pdf' });
       if (error) {
-        console.error('Erro upload PDF físico:', error);
+        console.error('Erro upload PDF assinado:', error);
         return '';
       }
       const { data } = supabase.storage.from('documents').getPublicUrl(fileName);
       return data?.publicUrl || '';
     } catch (err) {
-      console.error('Erro upload PDF físico:', err);
+      console.error('Erro upload PDF assinado:', err);
       return '';
     }
   };
 
   const handleAcceptTerms = async () => {
     if (!hasReadTerms) {
-      toast({ title: 'Leia os termos', description: 'Você deve ler e aceitar o termo de parceria', variant: 'destructive' });
+      toast({ title: 'Aceite obrigatório', description: 'Você deve marcar que leu e aceita o termo.', variant: 'destructive' });
       return;
     }
     if (!uploadedPdf) {
-      toast({ title: 'Upload obrigatório', description: 'Envie o termo assinado fisicamente (PDF/JPG/PNG)', variant: 'destructive' });
+      toast({ title: 'Upload obrigatório', description: 'Envie o termo assinado em PDF.', variant: 'destructive' });
       return;
     }
 
@@ -104,21 +109,21 @@ export default function PartnerTermsAcceptance({
         ipAddress = ipData.ip;
       } catch { /* ignore */ }
 
-      const uploadedPdfUrl = await uploadPhysicalPdf();
+      const uploadedPdfUrl = await uploadSignedPdf();
       if (!uploadedPdfUrl) {
-        throw new Error('Falha ao enviar o documento físico. Tente novamente.');
+        throw new Error('Falha ao enviar o PDF assinado. Tente novamente.');
       }
 
       let pdfUrl = '';
       try {
         pdfUrl = await generatePartnerTermsPDF(partnerId, partnerName, partnerEmail, termsVersion, ipAddress);
       } catch (pdfErr) {
-        console.error('Erro ao gerar PDF digital:', pdfErr);
+        console.error('Erro ao gerar PDF de aceite:', pdfErr);
       }
 
       await savePartnerTermsAcceptance(partnerId, partnerName, partnerEmail, termsVersion, pdfUrl, ipAddress, undefined, uploadedPdfUrl);
 
-      toast({ title: 'Termo aceito!', description: 'Aceite registrado e documento enviado para revisão.' });
+      toast({ title: 'Termo aceito!', description: 'Aceite registrado e documento assinado enviado para revisão.' });
       onComplete({ termsAccepted: true, termsVersion });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -127,16 +132,6 @@ export default function PartnerTermsAcceptance({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleDownloadBlankTerm = () => {
-    const blob = new Blob([termsContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `termo-parceria-v${termsVersion}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -156,25 +151,58 @@ export default function PartnerTermsAcceptance({
             <Shield className="w-5 h-5 text-primary" />
             Termo de Parceria
           </CardTitle>
-          <CardDescription>Leia, baixe para assinar fisicamente, depois aceite e envie</CardDescription>
+          <CardDescription>
+            Leia o termo, baixe para assinar (gov.br ou outro), depois aceite e envie o PDF assinado.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Passo 1: Ler */}
-          <div className="border rounded-lg p-4 bg-muted/50 max-h-64 overflow-y-auto">
-            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent.substring(0, 500) + '...') }} />
+        <CardContent className="space-y-6">
+          {/* Passo 1: Visualizador PDF embutido */}
+          <div>
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+              <h4 className="font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Passo 1: Leia o Termo de Parceria
+              </h4>
+              {termsPdfUrl && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={termsPdfUrl} download target="_blank" rel="noopener noreferrer">
+                    <Download className="w-4 h-4 mr-2" /> Baixar PDF para Assinar
+                  </a>
+                </Button>
+              )}
+            </div>
+
+            {termsPdfUrl ? (
+              <div className="border rounded-lg overflow-hidden bg-muted/30">
+                <iframe
+                  src={`${termsPdfUrl}#toolbar=1&navpanes=0`}
+                  title="Termo de Parceria"
+                  className="w-full h-[500px]"
+                />
+              </div>
+            ) : (
+              <div className="border rounded-lg p-4 bg-muted/50 max-h-96 overflow-y-auto">
+                {termsContent ? (
+                  <div
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent) }}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
+                    <AlertCircle className="w-8 h-8" />
+                    <p>O termo de parceria ainda não foi configurado pelo administrador.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setShowTermsDialog(true)} className="flex-1">
-              <FileText className="w-4 h-4 mr-2" /> Ler Termo Completo
-            </Button>
-            <Button variant="outline" onClick={handleDownloadBlankTerm} className="flex-1">
-              <Download className="w-4 h-4 mr-2" /> Baixar Termo para Assinar
-            </Button>
-          </div>
-
-          {/* Passo 2: Aceite digital */}
+          {/* Passo 2: Aceite eletrônico */}
           <div className="border rounded-lg p-4 bg-primary/5">
+            <h4 className="font-semibold mb-3 flex items-center gap-2 flex-wrap">
+              Passo 2: Aceite Eletrônico
+              <Badge variant="destructive" className="text-xs">OBRIGATÓRIO</Badge>
+            </h4>
             <div className="flex items-start space-x-4">
               <Checkbox
                 id="read_terms"
@@ -183,34 +211,28 @@ export default function PartnerTermsAcceptance({
                 className="h-6 w-6 border-2 mt-1"
               />
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <Label htmlFor="read_terms" className="cursor-pointer text-base font-semibold">
-                    Li e aceito o{' '}
-                    <button type="button" onClick={() => setShowTermsDialog(true)} className="text-primary hover:underline font-bold">
-                      Termo de Parceria
-                    </button>
-                  </Label>
-                  <Badge variant="destructive">OBRIGATÓRIO</Badge>
-                </div>
+                <Label htmlFor="read_terms" className="cursor-pointer text-base font-semibold block mb-1">
+                  Li e aceito o Termo de Parceria
+                </Label>
                 <p className="text-sm text-muted-foreground">
-                  Ao aceitar, você está <strong>assinando eletronicamente</strong> este termo (registramos nome, email, IP e data/hora).
+                  Ao marcar, você está <strong>aceitando eletronicamente</strong> este termo. Registramos nome, email, IP e data/hora.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Passo 3: Upload físico obrigatório */}
+          {/* Passo 3: Upload PDF assinado */}
           <div className="p-4 border-2 rounded-lg border-dashed border-primary/50">
             <h4 className="font-semibold mb-2 flex items-center gap-2 flex-wrap">
-              <Upload className="w-4 h-4" /> Enviar Termo Assinado Fisicamente
+              <Upload className="w-4 h-4" /> Passo 3: Enviar PDF Assinado
               <Badge variant="destructive" className="text-xs">OBRIGATÓRIO</Badge>
             </h4>
             <p className="text-sm text-muted-foreground mb-3">
-              Imprima o termo, assine à mão, escaneie ou fotografe e faça upload aqui (PDF, JPG ou PNG).
+              Baixe o termo acima, assine digitalmente (gov.br, certificado digital, etc.) ou imprima e assine à mão (depois escaneie em PDF), e envie aqui. <strong>Apenas arquivos .pdf</strong> são aceitos.
             </p>
             <input
               type="file"
-              accept="application/pdf,image/jpeg,image/png"
+              accept="application/pdf"
               onChange={handlePdfUpload}
               className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
@@ -240,26 +262,11 @@ export default function PartnerTermsAcceptance({
 
           {(!hasReadTerms || !uploadedPdf) && (
             <p className="text-center text-sm text-destructive font-medium">
-              ⚠️ Aceite o termo e envie o documento assinado para finalizar
+              ⚠️ Aceite o termo e envie o PDF assinado para finalizar
             </p>
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Termo de Parceria - Versão {termsVersion}</DialogTitle>
-            <DialogDescription>Leia atentamente todos os termos e condições</DialogDescription>
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none mt-4" dangerouslySetInnerHTML={{ __html: policyService.markdownToHtml(termsContent) }} />
-          <div className="mt-4 flex justify-end">
-            <Button variant="outline" onClick={handleDownloadBlankTerm}>
-              <Download className="w-4 h-4 mr-2" /> Baixar Termo
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
