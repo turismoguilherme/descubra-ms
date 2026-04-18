@@ -78,7 +78,6 @@ import MSIndex from "@/pages/MSIndex";
 import Destinos from "@/pages/Destinos";
 import Partners from "@/pages/Partners";
 import Guata from "@/pages/Guata";
-import GuataTest from "@/pages/GuataTest";
 import ChatGuata from "@/pages/ChatGuata";
 import Eventos from "@/pages/Eventos";
 import Koda from "@/pages/Koda";
@@ -334,7 +333,6 @@ function AppRoutes() {
                                 <Route path="/descubrams/sobre" element={<SobreMS />} />
                                 <Route path="/descubrams/guata" element={<Guata />} />
                                 <Route path="/descubrams/chatguata" element={<ChatGuata />} />
-                                <Route path="/descubrams/guata-test" element={<GuataTest />} />
                                 <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
                                 <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                                 <Route path="/descubrams/profile" element={<ProfilePageFixed />} />

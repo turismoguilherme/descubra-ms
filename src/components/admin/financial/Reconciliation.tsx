@@ -39,15 +39,13 @@ export default function Reconciliation() {
   const handleAutoReconcile = async () => {
     setReconciling(true);
     try {
-      // Sincronizar pagamentos do Stripe
       await financialService.syncStripePayments();
-      
-      // Buscar pagamentos atualizados
       await fetchPayments();
-      
+
       toast({
-        title: 'Sucesso',
-        description: 'Pagamentos sincronizados e reconciliados automaticamente',
+        title: 'Lista atualizada',
+        description:
+          'Dados recarregados do banco. Não há sincronização dedicada com Stripe nesta versão (a function não está no projeto).',
       });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

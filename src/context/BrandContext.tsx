@@ -103,7 +103,7 @@ const msConfig: BrandConfig = {
     title: 'Descubra Mato Grosso do Sul',
     subtitle: 'Do Pantanal ao Cerrado, explore paisagens únicas e biodiversidade no coração da América do Sul',
     buttons: {
-      primary: { text: 'Descubra Agora', path: '/descubrams/welcome' },
+      primary: { text: 'Descubra Agora', path: '/descubrams' },
       secondary: { text: 'Passaporte Digital', path: '/descubrams/passaporte' },
       tertiary: { text: 'Converse com o Guatá', path: '/descubrams/guata' }
     }

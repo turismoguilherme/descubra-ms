@@ -40,19 +40,12 @@ export const financialService = {
     return data;
   },
 
-  async syncStripePayments() {
-    try {
-      // Chamar edge function para sincronizar pagamentos do Stripe
-      const { data, error } = await supabase.functions.invoke('stripe-sync-payments', {
-        body: {},
-      });
-
-      if (error) throw error;
-      return data;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      throw new Error(`Erro ao sincronizar pagamentos: ${err.message}`);
-    }
+  /**
+   * Não há edge function `stripe-sync-payments` versionada no repositório.
+   * Pagamentos entram via webhooks/outros fluxos; a UI admin deve só recarregar do banco.
+   */
+  async syncStripePayments(): Promise<{ skipped: true }> {
+    return { skipped: true };
   },
 
   async getFinancialSummary(startDate?: string, endDate?: string) {
