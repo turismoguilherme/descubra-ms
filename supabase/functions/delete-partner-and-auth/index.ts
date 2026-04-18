@@ -80,7 +80,7 @@ serve(async (req: Request) => {
     let authUserId: string | null = partner.created_by ?? null;
 
     if (!authUserId && partner.contact_email) {
-      const { data: listData } = await supabaseAdmin.auth.admin.listUsers({ per_page: 1000 });
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       const found = listData?.users?.find((u) => u.email?.toLowerCase() === (partner.contact_email as string).toLowerCase());
       if (found) authUserId = found.id;
     }

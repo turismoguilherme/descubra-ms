@@ -153,6 +153,8 @@ export default function PoliciesEditor() {
   const [editedContent, setEditedContent] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [selectedPdfName, setSelectedPdfName] = useState<string | null>(null);
+  const [pdfInputKey, setPdfInputKey] = useState(0);
 
   const upsertPolicyToDatabase = async (row: PolicyDocument) => {
     if (String(row.id || '').startsWith('local-')) return { error: null as null };
@@ -176,15 +178,18 @@ export default function PoliciesEditor() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!isPdfFile(file)) {
+      setSelectedPdfName(null);
       toast({ title: 'Arquivo inválido', description: 'Envie apenas ficheiros .pdf', variant: 'destructive' });
-      e.target.value = '';
+      setPdfInputKey((key) => key + 1);
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
+      setSelectedPdfName(null);
       toast({ title: 'Arquivo muito grande', description: 'Máximo 10MB', variant: 'destructive' });
-      e.target.value = '';
+      setPdfInputKey((key) => key + 1);
       return;
     }
+    setSelectedPdfName(file.name);
     const policyIndex = policies.findIndex(p => p.key === activePolicy);
     if (policyIndex === -1) {
       toast({
@@ -192,7 +197,8 @@ export default function PoliciesEditor() {
         description: 'Selecione um documento na lista antes de enviar o PDF.',
         variant: 'destructive',
       });
-      e.target.value = '';
+      setSelectedPdfName(null);
+      setPdfInputKey((key) => key + 1);
       return;
     }
 
@@ -293,7 +299,7 @@ export default function PoliciesEditor() {
       });
     } finally {
       setUploadingPdf(false);
-      e.target.value = '';
+      setPdfInputKey((key) => key + 1);
     }
   };
 
@@ -323,6 +329,8 @@ export default function PoliciesEditor() {
     const newPolicies = [...policies];
     newPolicies[policyIndex] = nextRow;
     setPolicies(newPolicies);
+    setSelectedPdfName(null);
+    setPdfInputKey((key) => key + 1);
     localStorage.setItem('platform_policies', JSON.stringify(newPolicies));
     toast({ title: 'PDF removido', description: 'O documento PDF oficial foi removido.' });
   };
@@ -348,6 +356,11 @@ export default function PoliciesEditor() {
       }
     }
   }, [activePlatform, policies]);
+
+  useEffect(() => {
+    setSelectedPdfName(null);
+    setPdfInputKey((key) => key + 1);
+  }, [activePolicy, activePlatform]);
 
   const loadPolicies = async () => {
     setLoading(true);
@@ -710,12 +723,18 @@ export default function PoliciesEditor() {
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-3">
                         <input
+                          key={`descubra-${activePolicy}-${pdfInputKey}`}
                           type="file"
                           accept="application/pdf"
                           onChange={handleUploadTermsPdf}
                           disabled={uploadingPdf}
                           className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
                         />
+                        {selectedPdfName && (
+                          <span className="text-xs text-blue-800 truncate max-w-[240px]">
+                            {uploadingPdf ? `Enviando: ${selectedPdfName}` : `Selecionado: ${selectedPdfName}`}
+                          </span>
+                        )}
                         {currentPolicy.terms_pdf_url && (
                           <>
                             <Button variant="outline" size="sm" asChild>
@@ -957,12 +976,18 @@ export default function PoliciesEditor() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <input
+                      key={`viajar-${activePolicy}-${pdfInputKey}`}
                       type="file"
                       accept="application/pdf"
                       onChange={handleUploadTermsPdf}
                       disabled={uploadingPdf}
                       className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
                     />
+                    {selectedPdfName && (
+                      <span className="text-xs text-blue-800 truncate max-w-[240px]">
+                        {uploadingPdf ? `Enviando: ${selectedPdfName}` : `Selecionado: ${selectedPdfName}`}
+                      </span>
+                    )}
                     {currentPolicy.terms_pdf_url && (
                       <>
                         <Button variant="outline" size="sm" asChild>
