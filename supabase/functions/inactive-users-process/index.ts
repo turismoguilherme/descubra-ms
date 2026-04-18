@@ -60,8 +60,8 @@ serve(async (req: Request) => {
 
     while (true) {
       const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-        page: String(page),
-        per_page: String(perPage),
+        page,
+        perPage,
       });
       if (listError) throw listError;
       const users = listData?.users ?? [];

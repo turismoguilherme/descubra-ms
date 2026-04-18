@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Database, ExternalLink, Loader2 } from 'lucide-react';
+import { Database as DatabaseIcon, ExternalLink, Loader2 } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 import SupabaseDataLoader from '@/components/admin/SupabaseDataLoader';
 import { Button } from '@/components/ui/button';
@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
-type PublicTable = keyof Database['public']['Tables'];
+type PublicTable = Extract<keyof SupabaseDatabase['public']['Tables'], string>;
 
 const PRESET_TABLES: { value: PublicTable; label: string }[] = [
   { value: 'platform_policies', label: 'platform_policies' },
@@ -53,7 +53,7 @@ export default function DatabaseManager() {
     setLoading(true);
     setRowsJson('');
     try {
-      const { data, error } = await supabase.from(table).select('*').limit(50);
+      const { data, error } = await (supabase as any).from(table).select('*').limit(50);
       if (error) {
         toast.error(error.message || 'Não foi possível ler a tabela');
         return;
@@ -78,7 +78,7 @@ export default function DatabaseManager() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Database className="h-5 w-5" />
+            <DatabaseIcon className="h-5 w-5" />
             Supabase Studio
           </CardTitle>
           <CardDescription>

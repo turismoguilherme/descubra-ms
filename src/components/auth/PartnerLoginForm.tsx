@@ -84,7 +84,7 @@ const PartnerLoginForm = () => {
         // Primeira tentativa: email exato
         const { data: partnerData1, error: error1 } = await supabase
           .from('institutional_partners')
-          .select('id, name, contact_email, is_active, status, subscription_status, voluntary_cancel_access_until')
+          .select('id, name, contact_email, is_active, status')
           .eq('contact_email', sanitizedData.email)
           .maybeSingle();
 
@@ -168,33 +168,11 @@ const PartnerLoginForm = () => {
             return;
           }
 
-          if (partner.status === 'cancelled') {
-            const until = partner.voluntary_cancel_access_until
-              ? new Date(partner.voluntary_cancel_access_until).getTime()
-              : 0;
-            const inGrace = until > Date.now();
-            const subOk =
-              partner.subscription_status === 'active' ||
-              partner.subscription_status === 'trialing';
-            if (!inGrace && !subOk) {
-              toast({
-                title: "Parceria encerrada",
-                description: "Seu cancelamento já foi concluído e o prazo de acesso expirou. Entre em contato se precisar de algo.",
-                variant: "destructive",
-                duration: 8000,
-              });
-              return;
-            }
-          }
-
-          const subOk =
-            partner.subscription_status === 'active' ||
-            partner.subscription_status === 'trialing';
-          if (!partner.is_active && !subOk) {
+          if (partner.status === 'cancelled' || !partner.is_active) {
             console.log("⚠️ Parceiro encontrado mas inativo");
             toast({
               title: "Acesso negado",
-              description: "Sua conta de parceiro está inativa ou aguardando pagamento da assinatura. Entre em contato conosco se precisar de ajuda.",
+              description: "Sua conta de parceiro está inativa. Entre em contato conosco se precisar de ajuda.",
               variant: "destructive",
               duration: 5000,
             });
