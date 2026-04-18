@@ -105,7 +105,7 @@ export default function DatabaseManager() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="min-w-[220px] flex-1 space-y-2">
-              <span className="text-sm font-medium text-gray-700">Tabela</span>
+              <span className="text-sm font-medium text-foreground">Tabela</span>
               <Select
                 value={table}
                 onValueChange={(v) => setTable(v as PublicTable)}
@@ -135,7 +135,7 @@ export default function DatabaseManager() {
           </div>
           {rowsJson ? (
             <ScrollArea className="h-[min(420px,50vh)] w-full rounded-md border bg-muted/30 p-3">
-              <pre className="whitespace-pre-wrap break-all text-xs font-mono text-gray-800">
+              <pre className="whitespace-pre-wrap break-all text-xs font-mono text-foreground">
                 {rowsJson}
               </pre>
             </ScrollArea>
