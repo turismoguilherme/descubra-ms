@@ -99,7 +99,7 @@ const PartnerLoginForm = () => {
           console.log("🔍 Tentando busca com email em lowercase...");
           const { data: partnerData2, error: error2 } = await supabase
             .from('institutional_partners')
-            .select('id, name, contact_email, is_active, status, subscription_status, voluntary_cancel_access_until')
+            .select('id, name, contact_email, is_active, status')
             .ilike('contact_email', sanitizedData.email)
             .maybeSingle();
           
@@ -114,7 +114,7 @@ const PartnerLoginForm = () => {
             console.log("🔍 Tentando busca ampla...");
             const { data: allPartners, error: error3 } = await supabase
               .from('institutional_partners')
-              .select('id, name, contact_email, is_active, status, subscription_status, voluntary_cancel_access_until');
+              .select('id, name, contact_email, is_active, status');
             
             if (error3) {
               console.error('❌ Erro ao buscar todos os parceiros:', error3);
