@@ -5905,6 +5905,48 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_policies: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          key: string
+          platform: string
+          terms_pdf_url: string | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+          version: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          key: string
+          platform: string
+          terms_pdf_url?: string | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+          version?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          key?: string
+          platform?: string
+          terms_pdf_url?: string | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       rag_query_logs: {
         Row: {
           confidence: number | null
