@@ -57,7 +57,6 @@ const TestLogin: React.FC = () => {
       agency: 'agency-owner-1',
       restaurant: 'restaurant-owner-1',
       attraction: 'attraction-owner-1',
-      admin: 'admin-1',
       municipal: 'municipal-1',
       attendant: 'attendant-1',
       cat_attendant: 'cat-attendant-1',
@@ -126,15 +125,6 @@ const TestLogin: React.FC = () => {
               <h3 className="font-semibold">Atração Turística</h3>
               <p className="text-sm text-muted-foreground">Ana Costa - Parque das Cachoeiras</p>
               <Badge variant="secondary">Sistema de Ingressos</Badge>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleQuickLogin('admin')}>
-            <CardContent className="p-6 text-center space-y-3">
-              <div className="text-4xl">👨‍💼</div>
-              <h3 className="font-semibold">Administrador</h3>
-              <p className="text-sm text-muted-foreground">Carlos Admin - ViajARTur Admin</p>
-              <Badge variant="secondary">Painel Administrativo</Badge>
             </CardContent>
           </Card>
 

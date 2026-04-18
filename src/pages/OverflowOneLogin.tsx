@@ -258,7 +258,6 @@ const OverflowOneLogin: React.FC = () => {
                       { id: 'municipal-1', title: 'Gestor municipal', sub: 'Secretaria Bonito', icon: '🏛️' },
                       { id: 'attendant-1', title: 'Atendente CAT', sub: 'CAT Centro', icon: '👩‍💼' },
                       { id: 'cat-attendant-1', title: 'Atendente CAT', sub: 'CAT Aeroporto', icon: '👨‍💼' },
-                      { id: 'admin-1', title: 'Admin plataforma', sub: 'ViajARTur', icon: '⚙️' },
                     ].map((c) => (
                       <button
                         key={c.id}

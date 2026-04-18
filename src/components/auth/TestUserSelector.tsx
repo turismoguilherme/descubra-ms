@@ -45,7 +45,7 @@ const TestUserSelector: React.FC<TestUserSelectorProps> = ({
   const [currentUser, setCurrentUser] = useState<TestUser | null>(null);
 
   useEffect(() => {
-    const allUsers = getAllTestUsers();
+    const allUsers = getAllTestUsers().filter((u) => u.role !== 'admin');
     setUsers(allUsers);
     setFilteredUsers(allUsers);
 
@@ -214,7 +214,6 @@ const TestUserSelector: React.FC<TestUserSelectorProps> = ({
               >
                 <option value="all">Todas as funções</option>
                 <option value="user">Usuário</option>
-                <option value="admin">Administrador</option>
                 <option value="gestor_municipal">Gestor Municipal</option>
                 <option value="atendente">Atendente</option>
                 <option value="cat_attendant">Atendente CAT</option>
