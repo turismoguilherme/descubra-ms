@@ -26,7 +26,6 @@ import {
   Video,
   Link as LinkIcon,
   Search,
-  Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
@@ -87,7 +86,6 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', icon: Activity },
       { label: 'Auditoria', path: '/viajar/admin/system/logs', icon: FileCheck },
-      { label: 'Banco de dados', path: '/viajar/admin/database', icon: Database },
     ],
   },
   {
@@ -97,7 +95,6 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { label: 'Chat', path: '/viajar/admin/ai/chat', icon: Bot },
       { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base', icon: FileText },
-      { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts', icon: Bot },
     ],
   },
 ];

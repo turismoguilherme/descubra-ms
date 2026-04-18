@@ -46,7 +46,6 @@ const searchItems: SearchItem[] = [
   
   { label: 'Chat IA', path: '/viajar/admin/ai/chat', category: 'IA' },
   { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base', category: 'IA' },
-  { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts', category: 'IA' },
 ];
 
 export default function GlobalSearch() {

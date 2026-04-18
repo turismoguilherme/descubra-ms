@@ -70,8 +70,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring' },
       { label: 'Auditoria', path: '/viajar/admin/system/logs' },
-      { label: 'Banco de dados', path: '/viajar/admin/database' },
-      { label: 'Configurações', path: '/viajar/admin/system/settings' },
+      { label: 'Políticas', path: '/viajar/admin/settings/policies' },
     ],
   },
   {
@@ -81,7 +80,6 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Chat', path: '/viajar/admin/ai/chat' },
       { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base' },
-      { label: 'Editor de Prompts', path: '/viajar/admin/ai/prompts' },
     ],
   },
 ];

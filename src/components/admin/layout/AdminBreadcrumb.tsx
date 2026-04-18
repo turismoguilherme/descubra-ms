@@ -30,7 +30,6 @@ const routeLabels: Record<string, string> = {
   '/viajar/admin/ai': 'IA Administradora',
   '/viajar/admin/ai/chat': 'Chat',
   '/viajar/admin/ai/knowledge-base': 'Base de Conhecimento',
-  '/viajar/admin/ai/prompts': 'Editor de Prompts',
 };
 
 export default function AdminBreadcrumb() {

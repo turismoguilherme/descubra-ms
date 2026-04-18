@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import ModernAdminLayout from '@/components/admin/layout/ModernAdminLayout';
@@ -15,9 +15,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { isViajarTestLoginEnabled } from '@/utils/viajarTestLogin';
-import { getTestUser, autoLoginTestUser } from '@/services/auth/TestUsers';
-
 // Lazy load components
 const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
 const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
@@ -40,13 +37,9 @@ const SystemMonitoring = lazy(() => import('@/components/admin/system/SystemMoni
 const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
 const KnowledgeBaseAdmin = lazy(() => import('@/components/admin/ai/KnowledgeBaseAdmin'));
-const AIPromptEditor = lazy(() => import('@/components/admin/ai/AIPromptEditor'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
 const BankAccountsManager = lazy(() => import('@/components/admin/financial/BankAccountsManager'));
-const SystemHealthMonitor = lazy(() => import('@/components/admin/system/SystemHealthMonitor'));
-const TranslationManager = lazy(() => import('@/components/admin/TranslationManager'));
-const TeamManagement = lazy(() => import('@/components/admin/team/TeamManagement'));
 const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
 const RefundManagement = lazy(() => import('@/components/admin/financial/RefundManagement'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
@@ -55,41 +48,12 @@ const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTur
 const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
 const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
-const DatabaseManager = lazy(() => import('@/components/admin/database/DatabaseManager'));
 
 const ADMIN_ROLES = ['admin', 'master_admin', 'tech'] as const;
 
 export default function ViaJARAdminPanel() {
-  const { user, userProfile, loading, session } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [testBootExpired, setTestBootExpired] = useState(false);
-
-  useLayoutEffect(() => {
-    if (!isViajarTestLoginEnabled() || loading) return;
-    if (session) return;
-    const hasAdminAccess =
-      user && userProfile && ADMIN_ROLES.includes(userProfile.role as (typeof ADMIN_ROLES)[number]);
-    if (hasAdminAccess) return;
-    const admin = getTestUser('admin-1');
-    if (admin) {
-      autoLoginTestUser('admin-1');
-    }
-  }, [loading, session, user, userProfile]);
-
-  useEffect(() => {
-    if (!isViajarTestLoginEnabled()) return;
-    const hasAdmin =
-      user && userProfile && ADMIN_ROLES.includes(userProfile.role as (typeof ADMIN_ROLES)[number]);
-    if (session || hasAdmin) {
-      setTestBootExpired(false);
-      return;
-    }
-    if (!user) {
-      const t = window.setTimeout(() => setTestBootExpired(true), 4000);
-      return () => window.clearTimeout(t);
-    }
-    setTestBootExpired(true);
-  }, [session, user, userProfile]);
 
   useEffect(() => {
     if (!loading) {
@@ -112,25 +76,6 @@ export default function ViaJARAdminPanel() {
         </div>
       </div>
     );
-  }
-
-  const testMode = isViajarTestLoginEnabled();
-  const hasAdminRole =
-    user && userProfile && ADMIN_ROLES.includes(userProfile.role as (typeof ADMIN_ROLES)[number]);
-
-  // Modo teste sem sessão Supabase: spinner só sem user; com user sem admin → AdminLogin (evita spinner infinito)
-  if (testMode && !session && !hasAdminRole) {
-    if (!user && !testBootExpired) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4" />
-            <p className="text-gray-600">Abrindo painel de teste (admin)…</p>
-          </div>
-        </div>
-      );
-    }
-    return <AdminLogin />;
   }
 
   if (!user || !isAuthorized) {
@@ -331,49 +276,6 @@ export default function ViaJARAdminPanel() {
                 <KnowledgeBaseAdmin />
               </Suspense>
             } />
-            <Route path="ai/prompts" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AIPromptEditor />
-              </Suspense>
-            } />
-            
-            {/* Team Routes */}
-            <Route path="team/members" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <TeamManagement />
-              </Suspense>
-            } />
-            <Route path="team/activities" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <TeamManagement />
-              </Suspense>
-            } />
-            <Route path="team/permissions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <TeamManagement />
-              </Suspense>
-            } />
-            
-            {/* System Health */}
-            <Route path="system/health" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <SystemHealthMonitor />
-              </Suspense>
-            } />
-
-            {/* Translation Management */}
-            <Route path="system/translations" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <TranslationManager />
-              </Suspense>
-            } />
-
-            <Route path="database" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <DatabaseManager />
-              </Suspense>
-            } />
-            <Route path="system/database" element={<Navigate to="/viajar/admin/database" replace />} />
 
             {/* Email Management */}
             <Route path="communication/emails" element={

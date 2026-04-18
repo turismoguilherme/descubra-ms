@@ -3,13 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Mail, Lock, AlertCircle, FlaskConical } from 'lucide-react';
+import { Shield, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  isViajarTestLoginEnabled,
-  VIAJAR_ADMIN_TEST_DISPLAY,
-  VIAJAR_TEST_PASSWORD,
-} from '@/utils/viajarTestLogin';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -18,7 +13,6 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const { signIn } = useAuth();
   const { toast } = useToast();
-  const testMode = isViajarTestLoginEnabled();
 
   const runSignIn = async (e: string, p: string) => {
     setError('');
@@ -58,12 +52,6 @@ export default function AdminLogin() {
     await runSignIn(email, password);
   };
 
-  const fillAdminTestAndLogin = async () => {
-    setEmail(VIAJAR_ADMIN_TEST_DISPLAY.email);
-    setPassword(VIAJAR_ADMIN_TEST_DISPLAY.password);
-    await runSignIn(VIAJAR_ADMIN_TEST_DISPLAY.email, VIAJAR_ADMIN_TEST_DISPLAY.password);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -75,32 +63,6 @@ export default function AdminLogin() {
             <h1 className="text-2xl font-bold text-gray-900">Área Administrativa</h1>
             <p className="text-sm text-gray-500 mt-2">ViajARTur & Descubra MS</p>
           </div>
-
-          {testMode && (
-            <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-              <div className="flex items-center gap-2 font-semibold mb-2">
-                <FlaskConical className="h-4 w-4 shrink-0" />
-                Login de teste (homologação / dev)
-              </div>
-              <p className="text-sm mb-2">
-                <strong>Email:</strong>{' '}
-                <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">{VIAJAR_ADMIN_TEST_DISPLAY.email}</code>
-              </p>
-              <p className="text-sm mb-3">
-                <strong>Senha:</strong>{' '}
-                <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">{VIAJAR_TEST_PASSWORD}</code>
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-amber-300 bg-white hover:bg-amber-100/50"
-                disabled={isLoading}
-                onClick={() => void fillAdminTestAndLogin()}
-              >
-                Entrar como admin de teste
-              </Button>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
