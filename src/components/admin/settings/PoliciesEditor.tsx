@@ -497,6 +497,17 @@ export default function PoliciesEditor() {
     setPolicies(newPolicies);
     localStorage.setItem('platform_policies', JSON.stringify(newPolicies));
 
+    const { error: dbErr } = await upsertPolicyToDatabase(newPolicies[policyIndex]);
+    if (dbErr) {
+      console.error('Erro ao publicar/despublicar no banco:', dbErr);
+      toast({
+        title: 'Não foi possível salvar no banco',
+        description: dbErr.message || 'Verifique permissões. A alteração ficou apenas local.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     toast({
       title: newPolicies[policyIndex].is_published ? 'Publicado' : 'Despublicado',
       description: `${newPolicies[policyIndex].title} foi ${newPolicies[policyIndex].is_published ? 'publicado' : 'despublicado'}`,
