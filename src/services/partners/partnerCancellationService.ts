@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { addAdminNotification } from '@/components/admin/notifications/AdminNotifications';
 

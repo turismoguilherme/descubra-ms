@@ -1,4 +1,4 @@
-import * as jose from "npm:jose@5.9.6";
+import * as jose from "https://deno.land/x/jose@v5.9.6/index.ts";
 
 const DEFAULT_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
