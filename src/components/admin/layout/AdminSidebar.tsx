@@ -25,7 +25,8 @@ import {
   Image,
   Video,
   Link as LinkIcon,
-  Search
+  Search,
+  Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
@@ -86,6 +87,7 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', icon: Activity },
       { label: 'Auditoria', path: '/viajar/admin/system/logs', icon: FileCheck },
+      { label: 'Banco de dados', path: '/viajar/admin/database', icon: Database },
     ],
   },
   {

@@ -45,6 +45,7 @@ import {
   Mail,
   TrendingUp,
   MessageCircle,
+  Database,
 } from 'lucide-react';
 import { ComponentType } from 'react';
 
@@ -494,6 +495,17 @@ export const adminModulesConfig: AdminModule[] = [
         path: '/viajar/admin/system/health',
         permission: 'system',
         platform: 'system',
+      },
+      {
+        id: 'system-database',
+        label: 'Banco de dados',
+        icon: Database,
+        path: '/viajar/admin/database',
+        permission: 'system',
+        platform: 'system',
+        title: 'Banco de dados',
+        description: 'Visualização de dados Supabase e atalho para o Studio',
+        helpText: 'Pré-visualização de tabelas (até 50 linhas) e ferramenta de JSON de turismo; schema e RLS no Supabase Studio.',
       },
       {
         id: 'settings-policies',

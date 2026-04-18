@@ -55,6 +55,7 @@ const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTur
 const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
 const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
+const DatabaseManager = lazy(() => import('@/components/admin/database/DatabaseManager'));
 
 const ADMIN_ROLES = ['admin', 'master_admin', 'tech'] as const;
 
@@ -366,6 +367,13 @@ export default function ViaJARAdminPanel() {
                 <TranslationManager />
               </Suspense>
             } />
+
+            <Route path="database" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <DatabaseManager />
+              </Suspense>
+            } />
+            <Route path="system/database" element={<Navigate to="/viajar/admin/database" replace />} />
 
             {/* Email Management */}
             <Route path="communication/emails" element={

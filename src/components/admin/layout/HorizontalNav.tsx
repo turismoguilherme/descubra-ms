@@ -70,6 +70,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Monitoramento', path: '/viajar/admin/system/monitoring' },
       { label: 'Auditoria', path: '/viajar/admin/system/logs' },
+      { label: 'Banco de dados', path: '/viajar/admin/database' },
       { label: 'Configurações', path: '/viajar/admin/system/settings' },
     ],
   },
