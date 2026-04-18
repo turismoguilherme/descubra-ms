@@ -73,7 +73,7 @@ const OverflowOneLogin: React.FC = () => {
     window.setTimeout(() => navigateAfterTestUser(u), 450);
   };
 
-  const detectLoginType = (value: string): 'cadastur' | 'cnpj' | 'email' | 'unknown' => {
+  const detectLoginType = (value: string): 'cadastur' | 'cnpj' | 'email' => {
     const digitsOnly = value.replace(/\D/g, '');
 
     if (value.includes('@')) {
@@ -88,7 +88,7 @@ const OverflowOneLogin: React.FC = () => {
       return 'cnpj';
     }
 
-    return 'unknown';
+    return 'email';
   };
 
   const handleInputChange = (value: string) => {
@@ -258,6 +258,7 @@ const OverflowOneLogin: React.FC = () => {
                       { id: 'municipal-1', title: 'Gestor municipal', sub: 'Secretaria Bonito', icon: '🏛️' },
                       { id: 'attendant-1', title: 'Atendente CAT', sub: 'CAT Centro', icon: '👩‍💼' },
                       { id: 'cat-attendant-1', title: 'Atendente CAT', sub: 'CAT Aeroporto', icon: '👨‍💼' },
+                      { id: 'admin-1', title: 'Admin plataforma', sub: 'ViajARTur', icon: '⚙️' },
                     ].map((c) => (
                       <button
                         key={c.id}
@@ -276,18 +277,27 @@ const OverflowOneLogin: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              <p className="text-center text-xs text-muted-foreground mt-6">
+                Ativo em desenvolvimento; em produção use{' '}
+                <code className="rounded bg-muted px-1">VITE_ENABLE_TEST_LOGIN=true</code>
+              </p>
             </div>
           )}
 
           <Card className="shadow-xl">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold text-gray-900">Entrar na ViajARTur</CardTitle>
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                {testLoginEnabled ? 'Ou entre com credenciais' : 'Entrar na ViajARTur'}
+              </CardTitle>
               <p className="text-sm text-gray-600 mt-2">
-                CNPJ, CADASTUR, e-mail e senha da sua conta empresarial
+                {testLoginEnabled
+                  ? 'CNPJ, CADASTUR, e-mail e senha da sua conta real'
+                  : 'Acesse sua conta empresarial'}
               </p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate={testLoginEnabled}>
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
@@ -305,7 +315,7 @@ const OverflowOneLogin: React.FC = () => {
                       value={loginField}
                       onChange={(e) => handleInputChange(e.target.value)}
                       className="pl-10"
-                      required
+                      required={!testLoginEnabled}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -314,7 +324,7 @@ const OverflowOneLogin: React.FC = () => {
                       const digitsOnly = loginField.replace(/\D/g, '');
 
                       if (loginType === 'email') {
-                        return 'E-mail detectado';
+                        return 'Email detectado';
                       }
                       if (loginType === 'cnpj' && digitsOnly.length === 14) {
                         return 'CNPJ detectado (14 dígitos)';
@@ -328,7 +338,7 @@ const OverflowOneLogin: React.FC = () => {
                       if (digitsOnly.length > 14 && digitsOnly.length < 15) {
                         return 'Digite o CADASTUR completo (15 dígitos)';
                       }
-                      return 'Digite seu CNPJ, CADASTUR ou e-mail de cadastro';
+                      return 'Digite seu CNPJ, CADASTUR ou email de cadastro';
                     })()}
                   </p>
                 </div>
@@ -344,7 +354,7 @@ const OverflowOneLogin: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10"
-                      required
+                      required={!testLoginEnabled}
                     />
                     <Button
                       type="button"
