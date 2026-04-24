@@ -1048,9 +1048,9 @@ export default function PartnersManagement() {
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedPartner.gallery_images.map((img, idx) => (
-                      <img 
+                      <img
                         key={idx}
-                        src={img} 
+                        src={img}
                         alt={`Foto ${idx + 1}`}
                         className="w-full h-24 object-cover rounded-lg"
                       />
@@ -1059,6 +1059,125 @@ export default function PartnersManagement() {
                 </div>
               )}
 
+              {/* SEÇÃO: Termo de Parceria */}
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4" />
+                  Termo de Parceria
+                </h4>
+                {(() => {
+                  const t = terms[selectedPartner.id];
+                  if (!t) {
+                    return (
+                      <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-md">
+                        Este parceiro ainda não enviou o termo de parceria assinado.
+                      </p>
+                    );
+                  }
+                  const labels: Record<string, { text: string; cls: string }> = {
+                    pending: { text: 'Aguardando revisão', cls: 'bg-yellow-100 text-yellow-800' },
+                    approved: { text: 'Aprovado', cls: 'bg-green-100 text-green-800' },
+                    rejected: { text: 'Rejeitado', cls: 'bg-red-100 text-red-800' },
+                    revision_requested: { text: 'Em ajuste', cls: 'bg-orange-100 text-orange-800' },
+                  };
+                  const l = labels[t.review_status] || labels.pending;
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <Badge className={l.cls}>{l.text}</Badge>
+                        <span className="text-gray-600">
+                          Versão {t.terms_version} • assinado em {new Date(t.signed_at).toLocaleString('pt-BR')}
+                        </span>
+                        {t.ip_address && <span className="text-gray-500 text-xs">IP: {t.ip_address}</span>}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="border rounded-lg p-3 bg-gray-50">
+                          <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                            <FileText className="w-3 h-3" /> PDF gerado pelo sistema
+                          </p>
+                          {t.pdf_url ? (
+                            <Button variant="outline" size="sm" asChild className="w-full">
+                              <a href={t.pdf_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3 mr-1" /> Visualizar
+                              </a>
+                            </Button>
+                          ) : (
+                            <p className="text-xs text-gray-500">Não disponível</p>
+                          )}
+                        </div>
+                        <div className="border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
+                          <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-primary" /> PDF assinado pelo parceiro
+                          </p>
+                          {t.uploaded_pdf_url ? (
+                            <Button variant="default" size="sm" asChild className="w-full">
+                              <a href={t.uploaded_pdf_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3 mr-1" /> Visualizar
+                              </a>
+                            </Button>
+                          ) : (
+                            <p className="text-xs text-red-600 font-medium">Ainda não enviado</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs">Notas de revisão (opcional)</Label>
+                        <Textarea
+                          value={reviewNotes}
+                          onChange={(e) => setReviewNotes(e.target.value)}
+                          placeholder="Observações para o parceiro ou para o histórico interno..."
+                          className="mt-1 text-sm"
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={updatingTerm}
+                          onClick={() => updateTermStatus(selectedPartner.id, 'approved')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {updatingTerm ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+                          Aprovar termo
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={updatingTerm}
+                          onClick={() => updateTermStatus(selectedPartner.id, 'revision_requested')}
+                        >
+                          {updatingTerm ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Clock className="w-4 h-4 mr-1" />}
+                          Pedir reenvio
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={updatingTerm}
+                          onClick={() =>
+                            setConfirmDialog({
+                              title: 'Rejeitar termo e cancelar assinatura?',
+                              description:
+                                'Isso vai cancelar a assinatura no Stripe, tentar reembolso e encerrar o acesso do parceiro. Não tem volta automática.',
+                              confirmLabel: 'Rejeitar definitivamente',
+                              destructive: true,
+                              onConfirm: () => updateTermStatus(selectedPartner.id, 'rejected'),
+                            })
+                          }
+                        >
+                          {updatingTerm ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <X className="w-4 h-4 mr-1" />}
+                          Rejeitar termo
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* AÇÕES DO CADASTRO */}
               <div className="flex gap-2 pt-4 border-t flex-wrap">
                 {(selectedPartner.status === 'pending' || selectedPartner.status === 'revision_requested') && (
                   <>
@@ -1070,7 +1189,8 @@ export default function PartnersManagement() {
                       }}
                     >
                       <Check className="w-4 h-4 mr-2" />
-                      Aprovar Parceiro
+                      Aprovar cadastro
+                      <HelpHint text={ACTION_HELP.approve} />
                     </Button>
                     <Button
                       variant="secondary"
@@ -1079,40 +1199,60 @@ export default function PartnersManagement() {
                         setSelectedPartner(null);
                       }}
                     >
-                      Devolver p/ ajuste
+                      Pedir ajuste
+                      <HelpHint text={ACTION_HELP.revision} />
                     </Button>
                     <Button
                       className="bg-purple-600 hover:bg-purple-700 text-white"
-                      onClick={() => {
-                        handleManualPaymentWriteOff(selectedPartner.id);
-                      }}
-                      title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                      onClick={() =>
+                        setConfirmDialog({
+                          title: 'Liberar acesso grátis (cortesia)?',
+                          description: `O parceiro "${selectedPartner.name}" será aprovado e a assinatura ficará ATIVA sem cobrança no Stripe. Use só para promoções.`,
+                          confirmLabel: 'Sim, liberar grátis',
+                          onConfirm: () => handleManualPaymentWriteOff(selectedPartner.id),
+                        })
+                      }
                     >
-                      <Check className="w-4 h-4 mr-2" />
-                      Dar Baixa Manual (Promoção)
+                      <Gift className="w-4 h-4 mr-2" />
+                      Liberar grátis (cortesia)
+                      <HelpHint text={ACTION_HELP.manualWriteOff} />
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={() => {
-                        updatePartnerStatus(selectedPartner.id, 'rejected');
-                        setSelectedPartner(null);
-                      }}
+                      onClick={() =>
+                        setConfirmDialog({
+                          title: 'Reprovar e cancelar assinatura?',
+                          description: `Cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro "${selectedPartner.name}". Não tem volta automática.`,
+                          confirmLabel: 'Sim, reprovar definitivamente',
+                          destructive: true,
+                          onConfirm: () => {
+                            updatePartnerStatus(selectedPartner.id, 'rejected');
+                            setSelectedPartner(null);
+                          },
+                        })
+                      }
                     >
                       <X className="w-4 h-4 mr-2" />
-                      Reprovar (definitivo)
+                      Reprovar e cancelar
+                      <HelpHint text={ACTION_HELP.finalReject} />
                     </Button>
                   </>
                 )}
                 {(selectedPartner.subscription_status === 'pending' || selectedPartner.subscription_status === 'unpaid') && selectedPartner.status === 'approved' && (
                   <Button
                     className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => {
-                      handleManualPaymentWriteOff(selectedPartner.id);
-                    }}
-                    title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Liberar acesso grátis (cortesia)?',
+                        description: `Marca a assinatura do parceiro "${selectedPartner.name}" como ATIVA sem cobrar nada no Stripe.`,
+                        confirmLabel: 'Sim, liberar grátis',
+                        onConfirm: () => handleManualPaymentWriteOff(selectedPartner.id),
+                      })
+                    }
                   >
-                    <Check className="w-4 h-4 mr-2" />
-                    Dar Baixa Manual (Promoção)
+                    <Gift className="w-4 h-4 mr-2" />
+                    Liberar grátis (cortesia)
+                    <HelpHint text={ACTION_HELP.manualWriteOff} />
                   </Button>
                 )}
                 {selectedPartner.status === 'approved' && (
@@ -1123,23 +1263,60 @@ export default function PartnersManagement() {
                       setSelectedPartner(null);
                     }}
                   >
-                    Suspender Parceiro
+                    Suspender
+                    <HelpHint text={ACTION_HELP.suspend} />
                   </Button>
                 )}
                 <Button
                   variant="destructive"
-                  onClick={() => {
-                    deletePartner(selectedPartner.id);
-                    setSelectedPartner(null);
-                  }}
+                  onClick={() =>
+                    setConfirmDialog({
+                      title: 'Apagar parceiro do banco de dados?',
+                      description: `Remove o parceiro "${selectedPartner.name}" e a conta de login dele. NÃO tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.`,
+                      confirmLabel: 'Sim, apagar permanentemente',
+                      destructive: true,
+                      onConfirm: () => {
+                        deletePartner(selectedPartner.id);
+                        setSelectedPartner(null);
+                      },
+                    })
+                  }
                 >
-                  Excluir Permanentemente
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Apagar do banco (irreversível)
+                  <HelpHint text={ACTION_HELP.delete} />
                 </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog global para confirmações destrutivas */}
+      <AlertDialog
+        open={!!confirmDialog}
+        onOpenChange={(open) => { if (!open) setConfirmDialog(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmDialog?.destructive ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : undefined}
+              onClick={async () => {
+                const fn = confirmDialog?.onConfirm;
+                setConfirmDialog(null);
+                if (fn) await fn();
+              }}
+            >
+              {confirmDialog?.confirmLabel || 'Confirmar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
