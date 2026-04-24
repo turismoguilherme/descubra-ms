@@ -403,9 +403,9 @@ export default function PartnersManagement() {
 
       if (status === 'approved') {
         updateData.approved_at = new Date().toISOString();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          updateData.approved_by = user.id;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          updateData.approved_by = authUser.id;
         }
       }
 
