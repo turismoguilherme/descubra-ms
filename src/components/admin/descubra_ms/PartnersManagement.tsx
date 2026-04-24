@@ -24,7 +24,6 @@ import {
   FileText,
   HelpCircle,
   Trash2,
-  Gift,
   Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -87,10 +86,11 @@ const HelpHint = ({ text }: { text: string }) => (
 
 // Texto explicativo de cada ação destrutiva/sensível
 const ACTION_HELP = {
-  approve: 'Marca o cadastro como aprovado. O parceiro só passa a aparecer publicamente quando a assinatura no Stripe estiver paga (ou após "Liberar acesso grátis").',
+  approve:
+    'Marca o cadastro como aprovado para seguir o fluxo normal (pagamento / assinatura no Stripe). A vitrine pública segue as regras já configuradas no sistema (assinatura ativa, etc.).',
   revision: 'O parceiro continua com acesso ao painel e à assinatura ativa, mas recebe um aviso para corrigir dados ou reenviar o PDF do termo. Use quando há erro pequeno no cadastro.',
-  manualWriteOff: 'CORTESIA / PROMOÇÃO: aprova o parceiro e libera o acesso completo SEM cobrar a assinatura no Stripe. Use só para parcerias estratégicas ou testes.',
-  finalReject: 'Reprovação definitiva: cancela a assinatura no Stripe, tenta reembolso integral da última fatura paga e encerra o acesso. Use quando o parceiro NÃO deve ficar na plataforma.',
+  finalReject:
+    'Encerra a parceria: cancela a assinatura no Stripe, tenta reembolso integral da última fatura paga e marca o cadastro como reprovado. Use quando o parceiro NÃO deve ficar na plataforma.',
   delete: 'Apaga o registro do parceiro do banco de dados E remove a conta de login. Não tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.',
   suspend: 'Suspende temporariamente o acesso do parceiro ao painel, sem cancelar a assinatura no Stripe. Pode ser reativado depois.',
 };
@@ -264,86 +264,6 @@ export default function PartnersManagement() {
   };
 
 
-  const handleManualPaymentWriteOff = async (partnerId: string) => {
-    try {
-      const partner = partners.find(p => p.id === partnerId);
-      if (!partner) {
-        toast({
-          title: 'Erro',
-          description: 'Parceiro não encontrado',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) {
-        toast({
-          title: 'Erro',
-          description: 'Usuário não identificado',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Atualizar parceiro: aprovar + ativar assinatura manualmente
-      const updateData: PartnerUpdateData = {
-        status: 'approved',
-        is_active: true,
-        subscription_status: 'active', // Ativar assinatura sem pagamento
-        subscription_start_date: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        approved_at: new Date().toISOString(),
-        approved_by: authUser.id,
-      };
-
-      const { data: updatedPartner, error } = await supabase
-        .from('institutional_partners')
-        .update(updateData)
-        .eq('id', partnerId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ [PartnersManagement] Erro ao dar baixa manual:', error);
-        throw error;
-      }
-
-      if (!updatedPartner) {
-        throw new Error('Nenhum parceiro foi atualizado. Verifique se você tem permissão.');
-      }
-
-      console.log('✅ [PartnersManagement] Baixa manual realizada com sucesso:', updatedPartner);
-
-      // Enviar email de notificação
-      if (partner?.contact_email) {
-        notifyPartnerApproved({
-          partnerEmail: partner.contact_email,
-          partnerName: partner.name,
-        }).catch(err => {
-          console.warn('Aviso: Não foi possível enviar email de notificação (não crítico):', err);
-        });
-      }
-
-      toast({
-        title: '✅ Baixa manual realizada!',
-        description: `Parceiro ${partner.name} teve acesso liberado sem pagamento. Assinatura ativada manualmente.`,
-      });
-
-      // Atualizar lista
-      loadPartners();
-      setSelectedPartner(null);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao dar baixa manual:', err);
-      toast({
-        title: 'Erro ao dar baixa manual',
-        description: err.message || 'Não foi possível liberar acesso. Tente novamente.',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const partnerDashboardAccess = (s: string) =>
     s === 'approved' || s === 'revision_requested';
 
@@ -437,7 +357,8 @@ export default function PartnersManagement() {
       const messages: Record<string, { title: string; description: string }> = {
         approved: {
           title: 'Parceiro aprovado!',
-          description: 'O parceiro passa a aparecer no Descubra MS. Email de notificação enviado.',
+          description:
+            'Cadastro liberado para o fluxo normal (pagamento/assinatura). E-mail de notificação enviado. A vitrine pública segue as regras de assinatura ativa.',
         },
         revision_requested: {
           title: 'Devolvido para ajuste',
@@ -665,42 +586,25 @@ export default function PartnersManagement() {
                     variant="secondary"
                     onClick={() => updatePartnerStatus(partner.id, 'revision_requested')}
                   >
-                    Pedir ajuste
+                    Pedir ajustes
                     <HelpHint text={ACTION_HELP.revision} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() =>
-                      setConfirmDialog({
-                        title: 'Liberar acesso grátis (cortesia)?',
-                        description:
-                          `O parceiro "${partner.name}" será aprovado e a assinatura será marcada como ATIVA sem cobrar nada no Stripe. Use só para promoções ou parcerias estratégicas.`,
-                        confirmLabel: 'Sim, liberar grátis',
-                        onConfirm: () => handleManualPaymentWriteOff(partner.id),
-                      })
-                    }
-                  >
-                    <Gift className="w-4 h-4 mr-1" />
-                    Liberar grátis (cortesia)
-                    <HelpHint text={ACTION_HELP.manualWriteOff} />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
                     onClick={() =>
                       setConfirmDialog({
-                        title: 'Reprovar e cancelar assinatura?',
+                        title: 'Reprovar e encerrar (Stripe)?',
                         description:
-                          `Isso vai CANCELAR a assinatura do parceiro "${partner.name}" no Stripe, tentar REEMBOLSO INTEGRAL da última fatura paga e ENCERRAR o acesso. Não tem volta automática.`,
-                        confirmLabel: 'Sim, reprovar definitivamente',
+                          `Isso vai CANCELAR a assinatura do parceiro "${partner.name}" no Stripe, tentar REEMBOLSO INTEGRAL da última fatura paga e ENCERRAR o acesso. O cadastro permanece no histórico como reprovado. Não tem volta automática.`,
+                        confirmLabel: 'Sim, encerrar',
                         destructive: true,
                         onConfirm: () => updatePartnerStatus(partner.id, 'rejected'),
                       })
                     }
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Reprovar e cancelar
+                    Reprovar e encerrar (Stripe)
                     <HelpHint text={ACTION_HELP.finalReject} />
                   </Button>
                 </>
@@ -1199,31 +1103,16 @@ export default function PartnersManagement() {
                         setSelectedPartner(null);
                       }}
                     >
-                      Pedir ajuste
+                      Pedir ajustes
                       <HelpHint text={ACTION_HELP.revision} />
-                    </Button>
-                    <Button
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                      onClick={() =>
-                        setConfirmDialog({
-                          title: 'Liberar acesso grátis (cortesia)?',
-                          description: `O parceiro "${selectedPartner.name}" será aprovado e a assinatura ficará ATIVA sem cobrança no Stripe. Use só para promoções.`,
-                          confirmLabel: 'Sim, liberar grátis',
-                          onConfirm: () => handleManualPaymentWriteOff(selectedPartner.id),
-                        })
-                      }
-                    >
-                      <Gift className="w-4 h-4 mr-2" />
-                      Liberar grátis (cortesia)
-                      <HelpHint text={ACTION_HELP.manualWriteOff} />
                     </Button>
                     <Button
                       variant="destructive"
                       onClick={() =>
                         setConfirmDialog({
-                          title: 'Reprovar e cancelar assinatura?',
-                          description: `Cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro "${selectedPartner.name}". Não tem volta automática.`,
-                          confirmLabel: 'Sim, reprovar definitivamente',
+                          title: 'Reprovar e encerrar (Stripe)?',
+                          description: `Cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro "${selectedPartner.name}". O cadastro não é apagado. Não tem volta automática.`,
+                          confirmLabel: 'Sim, encerrar',
                           destructive: true,
                           onConfirm: () => {
                             updatePartnerStatus(selectedPartner.id, 'rejected');
@@ -1233,27 +1122,10 @@ export default function PartnersManagement() {
                       }
                     >
                       <X className="w-4 h-4 mr-2" />
-                      Reprovar e cancelar
+                      Reprovar e encerrar (Stripe)
                       <HelpHint text={ACTION_HELP.finalReject} />
                     </Button>
                   </>
-                )}
-                {(selectedPartner.subscription_status === 'pending' || selectedPartner.subscription_status === 'unpaid') && selectedPartner.status === 'approved' && (
-                  <Button
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() =>
-                      setConfirmDialog({
-                        title: 'Liberar acesso grátis (cortesia)?',
-                        description: `Marca a assinatura do parceiro "${selectedPartner.name}" como ATIVA sem cobrar nada no Stripe.`,
-                        confirmLabel: 'Sim, liberar grátis',
-                        onConfirm: () => handleManualPaymentWriteOff(selectedPartner.id),
-                      })
-                    }
-                  >
-                    <Gift className="w-4 h-4 mr-2" />
-                    Liberar grátis (cortesia)
-                    <HelpHint text={ACTION_HELP.manualWriteOff} />
-                  </Button>
                 )}
                 {selectedPartner.status === 'approved' && (
                   <Button

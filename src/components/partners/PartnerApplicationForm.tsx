@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { fetchPartnerAcceptingNewApplications } from '@/lib/partnerAcceptingApplications';
 
 // Função para criar schema dinâmico baseado em includePassword
 const createPartnerSchema = (includePassword: boolean) => {
@@ -314,6 +315,13 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
     setSubmitError(null);
 
     try {
+      const acceptingNew = await fetchPartnerAcceptingNewApplications();
+      if (!acceptingNew) {
+        throw new Error(
+          'No momento não estamos aceitando novos cadastros de parceiros pelo site. Tente novamente mais tarde ou fale com a equipe Descubra MS.',
+        );
+      }
+
       console.log('📝 [PartnerApplicationForm] Iniciando processo de cadastro...');
       // 1. Se includePassword, criar conta no Supabase Auth primeiro
       let authUserId: string | null = null;

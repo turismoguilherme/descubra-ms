@@ -10,6 +10,8 @@ import PartnerTermsAcceptance from './PartnerTermsAcceptance';
 import PartnerPaymentStep from './PartnerPaymentStep';
 import StripeConnectStep from './StripeConnectStep';
 import WelcomeModal from './WelcomeModal';
+import { fetchPartnerAcceptingNewApplications } from '@/lib/partnerAcceptingApplications';
+import { PartnerProgramClosedPanel } from './PartnerProgramClosedPanel';
 
 interface OnboardingData {
   partnerId?: string;
@@ -36,8 +38,22 @@ export default function PartnerOnboardingWizard() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [loadingPartnerData, setLoadingPartnerData] = useState(false);
   const [stripeConnected, setStripeConnected] = useState(false);
+  const [acceptingNewApplications, setAcceptingNewApplications] = useState<boolean | null>(null);
 
   const progress = (currentStep / steps.length) * 100;
+
+  /** Cadastro já existente (retorno Stripe, link com id, etc.) — não bloquear quando pausamos novos. */
+  const isResumeFlow = Boolean(searchParams.get('partner_id'));
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPartnerAcceptingNewApplications().then((open) => {
+      if (!cancelled) setAcceptingNewApplications(open);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Verificar se há parâmetros de URL para retomar o cadastro
   useEffect(() => {
@@ -198,15 +214,35 @@ export default function PartnerOnboardingWizard() {
     }
   };
 
-  if (loadingPartnerData) {
+  if (loadingPartnerData || acceptingNewApplications === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <Loader2 className="w-12 h-12 animate-spin text-ms-primary-blue mx-auto mb-4" />
-            <p className="text-gray-600">Carregando dados do cadastro...</p>
+            <p className="text-gray-600">
+              {loadingPartnerData ? 'Carregando dados do cadastro...' : 'Carregando...'}
+            </p>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (!acceptingNewApplications && !isResumeFlow) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          <Card className="shadow-2xl">
+            <CardHeader>
+              <CardTitle className="text-xl text-ms-primary-blue">Programa de parceiros</CardTitle>
+              <CardDescription>Cadastro pelo site</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PartnerProgramClosedPanel />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

@@ -5,7 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Save, Loader2, Percent, ExternalLink, CreditCard, Link2 } from 'lucide-react';
+import { DollarSign, Save, Loader2, Percent, ExternalLink, CreditCard, Link2, UserPlus } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import {
+  PARTNER_ACCEPTING_NEW_APPLICATIONS_KEY,
+  parsePartnerAcceptingNewApplicationsValue,
+} from '@/lib/partnerAcceptingApplications';
 
 export default function PartnerSettingsManager() {
   const { toast } = useToast();
@@ -14,6 +19,7 @@ export default function PartnerSettingsManager() {
   const [stripeConnectLink, setStripeConnectLink] = useState<string>('');
   const [paymentLink, setPaymentLink] = useState<string>('');
   const [voluntaryRefundPercentIfApproved, setVoluntaryRefundPercentIfApproved] = useState<string>('0');
+  const [acceptingNewPartnerApplications, setAcceptingNewPartnerApplications] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -89,6 +95,17 @@ export default function PartnerSettingsManager() {
 
       if (!refundErr && refundPct?.setting_value !== undefined && refundPct?.setting_value !== null) {
         setVoluntaryRefundPercentIfApproved(String(refundPct.setting_value));
+      }
+
+      const { data: acceptingRow, error: acceptingErr } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', PARTNER_ACCEPTING_NEW_APPLICATIONS_KEY)
+        .maybeSingle();
+
+      if (!acceptingErr && acceptingRow?.setting_value !== undefined && acceptingRow?.setting_value !== null) {
+        setAcceptingNewPartnerApplications(parsePartnerAcceptingNewApplicationsValue(acceptingRow.setting_value));
       }
     } catch (error) {
       console.error('Erro ao carregar settings:', error);
@@ -206,9 +223,23 @@ export default function PartnerSettingsManager() {
 
       if (refundSaveErr) throw refundSaveErr;
 
+      const { error: acceptingSaveErr } = await supabase.from('site_settings').upsert(
+        {
+          platform: 'ms',
+          setting_key: PARTNER_ACCEPTING_NEW_APPLICATIONS_KEY,
+          setting_value: acceptingNewPartnerApplications,
+          description:
+            'Quando false, a página pública "Seja um Parceiro" não aceita novos cadastros (retomar com link/partner_id continua).',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'platform,setting_key' },
+      );
+
+      if (acceptingSaveErr) throw acceptingSaveErr;
+
       toast({
         title: 'Salvo com sucesso!',
-        description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}% | Reembolso parcial cancel. voluntário (aprovado): ${voluntaryPct}%`,
+        description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}% | Reembolso parcial cancel. voluntário (aprovado): ${voluntaryPct}% | Novos cadastros: ${acceptingNewPartnerApplications ? 'abertos' : 'pausados'}`,
       });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -244,6 +275,24 @@ export default function PartnerSettingsManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border border-border p-4 bg-muted/30">
+          <div className="space-y-1">
+            <Label htmlFor="accepting_new_partners" className="flex items-center gap-2 text-base font-medium">
+              <UserPlus className="w-4 h-4 text-ms-primary-blue" />
+              Aceitar novos cadastros pelo site
+            </Label>
+            <p className="text-sm text-muted-foreground max-w-xl">
+              Quando desligado, a página &quot;Seja um Parceiro&quot; mostra aviso e não inicia cadastro novo.
+              Quem já começou pode retomar com o link que contém o código do parceiro.
+            </p>
+          </div>
+          <Switch
+            id="accepting_new_partners"
+            checked={acceptingNewPartnerApplications}
+            onCheckedChange={setAcceptingNewPartnerApplications}
+          />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="monthly_fee">Valor Mensal da Assinatura (R$)</Label>
           <div className="flex items-center gap-2">
