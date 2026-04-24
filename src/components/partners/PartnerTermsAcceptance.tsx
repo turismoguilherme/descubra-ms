@@ -126,9 +126,21 @@ export default function PartnerTermsAcceptance({
         console.error('Erro ao gerar PDF de aceite:', pdfErr);
       }
 
+      // Opção B: o PDF enviado pelo parceiro tem prioridade; aceite segue mesmo se o PDF automático falhar.
       await savePartnerTermsAcceptance(partnerId, partnerName, partnerEmail, termsVersion, pdfUrl, ipAddress, undefined, uploadedPdfUrl);
 
-      toast({ title: 'Termo aceito!', description: 'Aceite registrado e documento assinado enviado para revisão.' });
+      toast({
+        title: 'Termo aceito!',
+        description: 'Aceite registrado e documento assinado enviado para revisão.',
+      });
+      if (!pdfUrl?.trim()) {
+        toast({
+          title: 'Observação',
+          description:
+            'O PDF de registro automático não pôde ser gerado agora. Seu arquivo assinado enviado foi salvo e será a base da revisão.',
+          duration: 9000,
+        });
+      }
       onComplete({ termsAccepted: true, termsVersion });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

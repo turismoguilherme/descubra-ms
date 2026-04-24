@@ -524,38 +524,29 @@ export default function PartnersManagement() {
               </div>
             )}
 
-            {/* Status do termo de parceria */}
+            {/* Indicador discreto: termo pendente / enviado */}
             {(() => {
               const t = terms[partner.id];
               if (!t) {
                 return (
                   <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                    <FileText className="w-3 h-3" /> Termo: <span className="text-amber-600 font-medium">não enviado</span>
+                    <FileText className="w-3 h-3" /> Termo:{' '}
+                    <span className="text-amber-700 font-medium">pendente</span>
                   </div>
                 );
               }
-              const labels: Record<string, { text: string; cls: string }> = {
-                pending: { text: 'aguardando revisão', cls: 'text-yellow-700' },
-                approved: { text: 'aprovado', cls: 'text-green-700' },
-                rejected: { text: 'rejeitado', cls: 'text-red-700' },
-                revision_requested: { text: 'em ajuste', cls: 'text-orange-700' },
+              const labels: Record<string, string> = {
+                pending: 'aguardando revisão',
+                approved: 'aprovado',
+                rejected: 'rejeitado',
+                revision_requested: 'em ajuste',
               };
-              const l = labels[t.review_status] || labels.pending;
+              const st = labels[t.review_status] || labels.pending;
               return (
-                <div className="mt-2 text-xs flex items-center gap-2 flex-wrap">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <FileText className="w-3 h-3" /> Termo: <span className={`${l.cls} font-medium`}>{l.text}</span>
-                  </span>
-                  {t.uploaded_pdf_url && (
-                    <a
-                      href={t.uploaded_pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      <ExternalLink className="w-3 h-3" /> abrir PDF assinado
-                    </a>
-                  )}
+                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                  <FileText className="w-3 h-3 shrink-0" /> Termo:{' '}
+                  <span className="text-green-800 font-medium">enviado</span>
+                  <span className="text-muted-foreground">({st})</span>
                 </div>
               );
             })()}
@@ -826,6 +817,17 @@ export default function PartnersManagement() {
           
           {selectedPartner && (
             <div className="space-y-4">
+              <p className="text-sm text-muted-foreground border-b border-border pb-3">
+                <span className="font-medium text-foreground">Cadastro recebido em</span>{' '}
+                {new Date(selectedPartner.created_at).toLocaleString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+
               {selectedPartner.logo_url && (
                 <img 
                   src={selectedPartner.logo_url} 
@@ -974,7 +976,8 @@ export default function PartnersManagement() {
                   if (!t) {
                     return (
                       <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-md">
-                        Este parceiro ainda não enviou o termo de parceria assinado.
+                        Termo ainda <strong>pendente</strong>: o parceiro não concluiu o envio do PDF assinado neste
+                        cadastro.
                       </p>
                     );
                   }
@@ -985,39 +988,64 @@ export default function PartnersManagement() {
                     revision_requested: { text: 'Em ajuste', cls: 'bg-orange-100 text-orange-800' },
                   };
                   const l = labels[t.review_status] || labels.pending;
+                  const signedLabel = new Date(t.signed_at).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
                   return (
                     <div className="space-y-3">
                       <div className="flex flex-wrap items-center gap-3 text-sm">
                         <Badge className={l.cls}>{l.text}</Badge>
-                        <span className="text-gray-600">
-                          Versão {t.terms_version} • assinado em {new Date(t.signed_at).toLocaleString('pt-BR')}
-                        </span>
-                        {t.ip_address && <span className="text-gray-500 text-xs">IP: {t.ip_address}</span>}
+                        <span className="text-gray-600">Versão do termo: {t.terms_version}</span>
                       </div>
+
+                      <p className="text-sm text-gray-700 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+                        <span className="font-medium text-gray-900">Aceite registrado</span> em {signedLabel}
+                        {t.ip_address ? (
+                          <>
+                            {' '}
+                            · IP: <span className="font-mono text-xs">{t.ip_address}</span>
+                          </>
+                        ) : null}
+                        <span className="block text-xs text-muted-foreground mt-1">
+                          Registro do clique de aceite no fluxo; não equivale a certificado digital ICP-Brasil.
+                        </span>
+                      </p>
+
+                      {!t.pdf_url && t.uploaded_pdf_url && (
+                        <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                          PDF de registro automático <strong>indisponível</strong> neste aceite. A revisão deve usar
+                          principalmente a <strong>cópia assinada enviada pelo parceiro</strong> (upload).
+                        </p>
+                      )}
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="border rounded-lg p-3 bg-gray-50">
                           <p className="text-xs font-semibold mb-2 flex items-center gap-1">
-                            <FileText className="w-3 h-3" /> PDF gerado pelo sistema
+                            <FileText className="w-3 h-3" /> PDF modelo (gerado pelo sistema)
                           </p>
                           {t.pdf_url ? (
                             <Button variant="outline" size="sm" asChild className="w-full">
                               <a href={t.pdf_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="w-3 h-3 mr-1" /> Visualizar
+                                <ExternalLink className="w-3 h-3 mr-1" /> Abrir PDF modelo
                               </a>
                             </Button>
                           ) : (
-                            <p className="text-xs text-gray-500">Não disponível</p>
+                            <p className="text-xs text-gray-500">Não gerado neste aceite</p>
                           )}
                         </div>
                         <div className="border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
                           <p className="text-xs font-semibold mb-2 flex items-center gap-1">
-                            <FileText className="w-3 h-3 text-primary" /> PDF assinado pelo parceiro
+                            <FileText className="w-3 h-3 text-primary" /> Cópia assinada enviada pelo parceiro
+                            (upload)
                           </p>
                           {t.uploaded_pdf_url ? (
                             <Button variant="default" size="sm" asChild className="w-full">
                               <a href={t.uploaded_pdf_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="w-3 h-3 mr-1" /> Visualizar
+                                <ExternalLink className="w-3 h-3 mr-1" /> Abrir arquivo enviado
                               </a>
                             </Button>
                           ) : (

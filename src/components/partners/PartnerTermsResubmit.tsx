@@ -135,6 +135,14 @@ export default function PartnerTermsResubmit({
         .eq('id', partnerId);
 
       toast({ title: 'Enviado', description: 'Novo termo enviado para análise.' });
+      if (!pdfUrl?.trim()) {
+        toast({
+          title: 'Observação',
+          description:
+            'O PDF de registro automático não pôde ser gerado agora. O arquivo assinado enviado foi salvo e será a base da revisão.',
+          duration: 9000,
+        });
+      }
       onComplete();
     } catch (e: unknown) {
       const err = e instanceof Error ? e : new Error(String(e));
