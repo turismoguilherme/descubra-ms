@@ -603,7 +603,43 @@ export default function PartnersManagement() {
               </div>
             )}
 
-            <div className="flex gap-2 mt-3">
+            {/* Status do termo de parceria */}
+            {(() => {
+              const t = terms[partner.id];
+              if (!t) {
+                return (
+                  <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Termo: <span className="text-amber-600 font-medium">não enviado</span>
+                  </div>
+                );
+              }
+              const labels: Record<string, { text: string; cls: string }> = {
+                pending: { text: 'aguardando revisão', cls: 'text-yellow-700' },
+                approved: { text: 'aprovado', cls: 'text-green-700' },
+                rejected: { text: 'rejeitado', cls: 'text-red-700' },
+                revision_requested: { text: 'em ajuste', cls: 'text-orange-700' },
+              };
+              const l = labels[t.review_status] || labels.pending;
+              return (
+                <div className="mt-2 text-xs flex items-center gap-2 flex-wrap">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Termo: <span className={`${l.cls} font-medium`}>{l.text}</span>
+                  </span>
+                  {t.uploaded_pdf_url && (
+                    <a
+                      href={t.uploaded_pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" /> abrir PDF assinado
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
+
+            <div className="flex gap-2 mt-3 flex-wrap">
               <Button
                 size="sm"
                 variant="outline"
@@ -612,7 +648,7 @@ export default function PartnersManagement() {
                 <Eye className="w-4 h-4 mr-1" />
                 Ver Detalhes
               </Button>
-              
+
               {(partner.status === 'pending' || partner.status === 'revision_requested') && (
                 <>
                   <Button
@@ -621,32 +657,51 @@ export default function PartnersManagement() {
                     onClick={() => updatePartnerStatus(partner.id, 'approved')}
                   >
                     <Check className="w-4 h-4 mr-1" />
-                    Aprovar
+                    Aprovar cadastro
+                    <HelpHint text={ACTION_HELP.approve} />
                   </Button>
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={() => updatePartnerStatus(partner.id, 'revision_requested')}
-                    title="Parceiro continua com assinatura ativa e acesso ao painel para corrigir envios"
                   >
-                    Devolver p/ ajuste
+                    Pedir ajuste
+                    <HelpHint text={ACTION_HELP.revision} />
                   </Button>
                   <Button
                     size="sm"
                     className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => handleManualPaymentWriteOff(partner.id)}
-                    title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Liberar acesso grátis (cortesia)?',
+                        description:
+                          `O parceiro "${partner.name}" será aprovado e a assinatura será marcada como ATIVA sem cobrar nada no Stripe. Use só para promoções ou parcerias estratégicas.`,
+                        confirmLabel: 'Sim, liberar grátis',
+                        onConfirm: () => handleManualPaymentWriteOff(partner.id),
+                      })
+                    }
                   >
-                    <Check className="w-4 h-4 mr-1" />
-                    Baixa Manual
+                    <Gift className="w-4 h-4 mr-1" />
+                    Liberar grátis (cortesia)
+                    <HelpHint text={ACTION_HELP.manualWriteOff} />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => updatePartnerStatus(partner.id, 'rejected')}
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Reprovar e cancelar assinatura?',
+                        description:
+                          `Isso vai CANCELAR a assinatura do parceiro "${partner.name}" no Stripe, tentar REEMBOLSO INTEGRAL da última fatura paga e ENCERRAR o acesso. Não tem volta automática.`,
+                        confirmLabel: 'Sim, reprovar definitivamente',
+                        destructive: true,
+                        onConfirm: () => updatePartnerStatus(partner.id, 'rejected'),
+                      })
+                    }
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Reprovar (definitivo)
+                    Reprovar e cancelar
+                    <HelpHint text={ACTION_HELP.finalReject} />
                   </Button>
                 </>
               )}
@@ -658,6 +713,7 @@ export default function PartnersManagement() {
                   onClick={() => updatePartnerStatus(partner.id, 'suspended')}
                 >
                   Suspender
+                  <HelpHint text={ACTION_HELP.suspend} />
                 </Button>
               )}
 
