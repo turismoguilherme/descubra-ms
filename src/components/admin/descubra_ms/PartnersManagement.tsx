@@ -361,11 +361,7 @@ export default function PartnersManagement() {
       }
 
       if (status === 'rejected') {
-        const ok = window.confirm(
-          'Reprovação definitiva: o parceiro perde o acesso, a assinatura no Stripe será cancelada e será tentado o reembolso integral da última fatura paga. Deseja continuar?',
-        );
-        if (!ok) return;
-
+        // Confirmação é feita via AlertDialog antes desta função ser chamada
         const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
           body: { partnerId },
         });
