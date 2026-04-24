@@ -276,8 +276,8 @@ export default function PartnersManagement() {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
         toast({
           title: 'Erro',
           description: 'Usuário não identificado',
@@ -292,10 +292,9 @@ export default function PartnersManagement() {
         is_active: true,
         subscription_status: 'active', // Ativar assinatura sem pagamento
         subscription_start_date: new Date().toISOString(),
-        // Criar uma data de fim (opcional, pode ser null para assinatura permanente)
         updated_at: new Date().toISOString(),
         approved_at: new Date().toISOString(),
-        approved_by: user.id,
+        approved_by: authUser.id,
       };
 
       const { data: updatedPartner, error } = await supabase
