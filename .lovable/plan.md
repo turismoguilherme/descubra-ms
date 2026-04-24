@@ -2,76 +2,61 @@
 
 ## Diagnóstico
 
-### 1. PDF do termo NÃO aparece no formulário do parceiro
+Hoje no admin existem **duas telas separadas** para parceiros, e isso está confundindo:
 
-**Causa raiz confirmada**: a query `SELECT * FROM platform_policies WHERE key='partner_terms'` retornou **vazio**. A tabela está completamente vazia. Quando você clicou em "Salvar" no admin, o upsert falhou silenciosamente (provavelmente RLS) e o registro nunca foi criado no banco — só ficou no `localStorage` do seu navegador. Por isso, ao abrir o cadastro de parceiro (outra sessão/aba), o `policyService.getPublishedPolicy('partner_terms', 'descubra_ms')` não encontra nada e o iframe não renderiza.
+1. **Aba "Lista" (Parceiros)** → mostra cadastro + botões `Aprovar`, `Devolver p/ ajuste`, `Baixa Manual`, `Reprovar (definitivo)`, `Excluir Permanentemente`. **NÃO mostra o PDF assinado.**
+2. **Aba "Termos"** → é onde o PDF físico assinado pelo parceiro aparece (campo `uploaded_pdf_url` da tabela `partner_terms_acceptances`). Você provavelmente nunca abriu essa aba — por isso "não consegue ver o documento".
 
-**Fix**: 
-- Inserir uma linha base `partner_terms` na tabela (seed) para que o upsert tenha onde gravar
-- Garantir RLS de `INSERT/UPDATE` em `platform_policies` para admins
-- Mostrar erro visível no admin quando o upsert falhar (em vez de só logar no console)
+## O que cada botão faz hoje (significado real no código)
 
-### 2. Erros de build
-
-| Erro | Causa | Fix |
-|---|---|---|
-| `jose@5.9.6` em `googleServiceAccountToken.ts` | Import npm sem mapeamento Deno | Usar `https://deno.land/x/jose@v5.9.6/index.ts` |
-| `subscription_status` em `PartnerLoginForm.tsx` | Coluna não existe na tabela `institutional_partners` (confirmado via schema) | Remover do SELECT (linhas 102 e 117) |
-| `admin_notifications` em `partnerCancellationService.ts` | Tabela não existe (confirmado) | Envolver em try/catch silencioso OU criar a tabela. Como já tem try/catch, o erro é só de tipo TS — adicionar `// @ts-nocheck` ou cast `as any` |
-
-### 3. Limpeza de dados mortos (ENORME ganho de espaço)
-
-Confirmei via query:
-
-| Tabela | Total | Removível | Ganho |
-|---|---|---|---|
-| `security_audit_log` | 341.572 | 341.561 (>90 dias) | **~58 MB** |
-| `koda_response_cache` | 24 | 24 expirados | pequeno |
-| `guata_response_cache` | 36 | 36 expirados | pequeno |
-| `system_health_checks` | 755 | 750 (>30 dias) | ~400 kB |
-| `event_cleanup_logs` | 69 | 38 (>60 dias) | pequeno |
-
-A `security_audit_log` sozinha ocupa **58 MB** e tem 341 mil linhas. Limpar logs antigos > 90 dias libera quase tudo.
-
-## Plano de execução
-
-### Migrations (SQL)
-
-1. **Seed `partner_terms`** — INSERT inicial se não existir, para o admin conseguir fazer upsert
-2. **RLS `platform_policies`** — política de INSERT/UPDATE/DELETE para `admin`/`tech` (só leitura pública)
-3. **Limpeza de dados mortos**:
-   ```sql
-   DELETE FROM security_audit_log WHERE created_at < NOW() - INTERVAL '90 days';
-   DELETE FROM koda_response_cache WHERE expires_at < NOW();
-   DELETE FROM guata_response_cache WHERE expires_at < NOW();
-   DELETE FROM system_health_checks WHERE checked_at < NOW() - INTERVAL '30 days';
-   DELETE FROM event_cleanup_logs WHERE created_at < NOW() - INTERVAL '60 days';
-   VACUUM ANALYZE security_audit_log;
-   ```
-
-### Código
-
-| Arquivo | Mudança |
+| Botão | O que acontece de fato |
 |---|---|
-| `supabase/functions/_shared/googleServiceAccountToken.ts` | Trocar `npm:jose@5.9.6` por `https://deno.land/x/jose@v5.9.6/index.ts` |
-| `src/components/auth/PartnerLoginForm.tsx` | Remover `subscription_status` e `voluntary_cancel_access_until` dos 2 SELECTs (não existem) |
-| `src/services/partners/partnerCancellationService.ts` | Adicionar `// @ts-nocheck` ou cast `(supabase.from('admin_notifications') as any)` |
-| `src/components/admin/settings/PoliciesEditor.tsx` | Mostrar toast de erro destacado quando upsert falhar (já loga, mas usuário não percebe) |
+| **Aprovar** | Marca `status=approved` + `is_active=true`. Parceiro ainda precisa **pagar** a assinatura no Stripe para ter acesso. |
+| **Devolver p/ ajuste** | Marca `status=revision_requested`. Parceiro recebe email e pode reenviar dados/PDF. Mantém acesso. |
+| **Baixa Manual** | Aprova **+ ativa a assinatura sem pagamento** (`subscription_status=active`). Usado para **promoções/cortesias** (acesso grátis). |
+| **Reprovar (definitivo)** | Cancela assinatura no Stripe, tenta **reembolso integral** da última fatura e **encerra acesso**. Irreversível em termos de cobrança. |
+| **Excluir Permanentemente** | **Apaga** o registro do parceiro do banco + remove conta de auth. Não tem volta. |
 
-## Sobre rotas/dados mortos extras
+## O que vou implementar
 
-Posso fazer uma análise mais profunda em segundo passo (separado), mapeando:
-- Arquivos `.disabled`, `.backup`, `.sql` soltos no repo
-- Componentes React não importados em lugar nenhum
-- Edge functions sem chamadas no front
-- Tabelas sem nenhum SELECT/INSERT no código
+### 1. Mostrar o PDF assinado direto no card e modal de detalhes do parceiro (aba Lista)
 
-Mas isso é trabalhoso e arriscado — sugiro fazer **depois** de confirmar que o termo PDF passou a funcionar. Foco agora: corrigir os 4 itens acima.
+No `PartnersManagement.tsx`, ao carregar a lista, buscar também o termo mais recente (`partner_terms_acceptances`) de cada parceiro e exibir:
+
+- **No card do parceiro**: badge "Termo: Pendente / Aprovado / Rejeitado" + ícone para abrir o PDF assinado em nova aba (se existir `uploaded_pdf_url`).
+- **No modal "Ver Detalhes"**: nova seção **"Termo de Parceria"** com:
+  - Status da revisão
+  - Data de assinatura + IP
+  - Botão **"Ver PDF Digital (gerado)"** → abre `pdf_url`
+  - Botão **"Ver PDF Físico Assinado"** → abre `uploaded_pdf_url`
+  - Botões **"Aprovar termo"** / **"Solicitar ajuste"** / **"Rejeitar termo"** (mesma lógica da aba Termos, agora acessível direto daqui)
+
+### 2. Renomear botões para deixar o significado claro
+
+Trocar os labels para serem autoexplicativos, sem mudar a lógica:
+
+- `Baixa Manual` → **"Liberar acesso grátis (cortesia)"** com tooltip "Aprova e ativa a assinatura sem cobrança no Stripe — para promoções"
+- `Reprovar (definitivo)` → **"Reprovar e cancelar assinatura"** com tooltip "Cancela no Stripe, tenta reembolso e encerra acesso"
+- `Excluir Permanentemente` → **"Apagar do banco (irreversível)"** com tooltip "Remove parceiro e conta de login — não tem volta"
+- `Devolver p/ ajuste` → **"Pedir ajuste ao parceiro"**
+- Adicionar pequeno ícone `?` ao lado de cada botão abrindo um popover com explicação curta em PT-BR.
+
+### 3. Tornar o `window.confirm()` (alert nativo feio) um Dialog do shadcn
+
+Trocar os `window.confirm` de "Reprovar definitivo" e "Excluir permanentemente" por `AlertDialog` do shadcn com texto explicando exatamente o que vai acontecer (incluindo se haverá tentativa de reembolso, se Stripe será cancelado etc.).
+
+### 4. Manter a aba "Termos" funcionando como está
+
+Continua útil para revisão em massa de todos os termos. Apenas adicionamos atalho na lista de parceiros para não obrigar a navegar entre abas.
+
+## Arquivos afetados
+
+- `src/components/admin/descubra_ms/PartnersManagement.tsx` — adicionar fetch de termos, seção no modal, renomear botões, popovers de ajuda, AlertDialog
+- Reaproveitar a função `updateStatus` da `PartnerTermsReview.tsx` extraindo para `src/services/partners/partnerTermsReviewService.ts` (novo) para evitar duplicação de lógica
 
 ## Resultado esperado
 
-- Você anexa o PDF no admin → grava no banco → parceiro vê o iframe
-- Build passa (3 erros TS + 1 erro Deno corrigidos)
-- Banco fica ~58 MB mais leve
-- Toast vermelho avisa se algum upsert falhar no admin
+- Você abre **Parceiros → Ver Detalhes** e já vê o PDF assinado + status do termo + botões para aprovar/rejeitar o termo
+- Nenhum botão fica com nome ambíguo: cada um tem tooltip e popover de ajuda explicando exatamente o efeito (acesso, Stripe, reembolso, exclusão)
+- Confirmações destrutivas viram diálogos claros, não mais `alert()` do navegador
 
