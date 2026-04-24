@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Check, 
-  X, 
-  Eye, 
-  Clock, 
+import {
+  Check,
+  X,
+  Eye,
+  Clock,
   MapPin,
   Phone,
   Globe,
@@ -20,9 +20,15 @@ import {
   Video,
   ExternalLink,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  HelpCircle,
+  Trash2,
+  Gift,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { notifyPartnerApproved, notifyPartnerRejected } from '@/services/email/notificationEmailService';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 import {
@@ -32,8 +38,62 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+// Tipo do termo mais recente associado ao parceiro
+interface PartnerTerm {
+  id: string;
+  partner_id: string;
+  pdf_url: string | null;
+  uploaded_pdf_url: string | null;
+  review_status: string;
+  signed_at: string;
+  ip_address: string | null;
+  terms_version: number;
+  review_notes: string | null;
+}
+
+// Pequeno botão "?" com explicação curta — substitui o tooltip nativo do navegador
+const HelpHint = ({ text }: { text: string }) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <button
+        type="button"
+        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-muted-foreground hover:text-foreground"
+        aria-label="O que esta ação faz?"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+      </button>
+    </PopoverTrigger>
+    <PopoverContent side="top" className="w-72 text-xs">
+      {text}
+    </PopoverContent>
+  </Popover>
+);
+
+// Texto explicativo de cada ação destrutiva/sensível
+const ACTION_HELP = {
+  approve: 'Marca o cadastro como aprovado. O parceiro só passa a aparecer publicamente quando a assinatura no Stripe estiver paga (ou após "Liberar acesso grátis").',
+  revision: 'O parceiro continua com acesso ao painel e à assinatura ativa, mas recebe um aviso para corrigir dados ou reenviar o PDF do termo. Use quando há erro pequeno no cadastro.',
+  manualWriteOff: 'CORTESIA / PROMOÇÃO: aprova o parceiro e libera o acesso completo SEM cobrar a assinatura no Stripe. Use só para parcerias estratégicas ou testes.',
+  finalReject: 'Reprovação definitiva: cancela a assinatura no Stripe, tenta reembolso integral da última fatura paga e encerra o acesso. Use quando o parceiro NÃO deve ficar na plataforma.',
+  delete: 'Apaga o registro do parceiro do banco de dados E remove a conta de login. Não tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.',
+  suspend: 'Suspende temporariamente o acesso do parceiro ao painel, sem cancelar a assinatura no Stripe. Pode ser reativado depois.',
+};
 
 interface Partner {
   id: string;
