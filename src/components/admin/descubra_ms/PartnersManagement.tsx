@@ -131,13 +131,25 @@ interface PartnerUpdateData {
 
 export default function PartnersManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [terms, setTerms] = useState<Record<string, PartnerTerm>>({});
   const [loading, setLoading] = useState(true);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [activeTab, setActiveTab] = useState('pending');
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [updatingTerm, setUpdatingTerm] = useState(false);
+  // Diálogo de confirmação para ações destrutivas
+  const [confirmDialog, setConfirmDialog] = useState<null | {
+    title: string;
+    description: string;
+    confirmLabel: string;
+    onConfirm: () => void | Promise<void>;
+    destructive?: boolean;
+  }>(null);
   const { toast } = useToast();
 
-  const loadPartners = async () => {
+  const loadPartners = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -146,7 +158,27 @@ export default function PartnersManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPartners(data || []);
+      const list = data || [];
+      setPartners(list);
+
+      // Buscar o termo mais recente de cada parceiro
+      const ids = list.map((p) => p.id);
+      if (ids.length > 0) {
+        const { data: termsData } = await supabase
+          .from('partner_terms_acceptances')
+          .select('id, partner_id, pdf_url, uploaded_pdf_url, review_status, signed_at, ip_address, terms_version, review_notes')
+          .in('partner_id', ids)
+          .order('signed_at', { ascending: false });
+
+        const map: Record<string, PartnerTerm> = {};
+        (termsData || []).forEach((t: any) => {
+          // Só guarda o primeiro (mais recente) de cada parceiro
+          if (!map[t.partner_id]) map[t.partner_id] = t as PartnerTerm;
+        });
+        setTerms(map);
+      } else {
+        setTerms({});
+      }
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao carregar parceiros:', err);
@@ -158,11 +190,79 @@ export default function PartnersManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadPartners();
-  }, []);
+  }, [loadPartners]);
+
+  // Atualiza o status de revisão do termo (aprovar / pedir ajuste / rejeitar)
+  const updateTermStatus = async (
+    partnerId: string,
+    status: 'approved' | 'rejected' | 'revision_requested',
+  ) => {
+    const term = terms[partnerId];
+    if (!term) {
+      toast({
+        title: 'Sem termo enviado',
+        description: 'Este parceiro ainda não enviou o termo de parceria.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setUpdatingTerm(true);
+    try {
+      // Reprovação definitiva também cancela assinatura no Stripe
+      if (status === 'rejected') {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
+          body: { partnerId },
+        });
+        if (fnError) throw fnError;
+        const payload = fnData as { error?: string } | undefined;
+        if (payload?.error) throw new Error(payload.error);
+      }
+
+      const { error } = await supabase
+        .from('partner_terms_acceptances')
+        .update({
+          review_status: status,
+          reviewed_by: user?.id || null,
+          reviewed_at: new Date().toISOString(),
+          review_notes: reviewNotes || null,
+        } as any)
+        .eq('id', term.id);
+      if (error) throw error;
+
+      if (status === 'revision_requested') {
+        await supabase
+          .from('institutional_partners')
+          .update({ status: 'revision_requested', is_active: true, updated_at: new Date().toISOString() })
+          .eq('id', partnerId);
+      }
+
+      toast({
+        title: 'Termo atualizado',
+        description:
+          status === 'approved'
+            ? 'Termo aprovado com sucesso.'
+            : status === 'revision_requested'
+              ? 'Termo devolvido para o parceiro corrigir.'
+              : 'Termo rejeitado e assinatura cancelada.',
+      });
+      setReviewNotes('');
+      await loadPartners();
+    } catch (err: any) {
+      console.error('Erro ao atualizar termo:', err);
+      toast({
+        title: 'Erro',
+        description: err?.message || 'Não foi possível atualizar o termo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingTerm(false);
+    }
+  };
+
 
   const handleManualPaymentWriteOff = async (partnerId: string) => {
     try {
