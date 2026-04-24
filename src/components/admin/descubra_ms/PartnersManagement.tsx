@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Check, 
-  X, 
-  Eye, 
-  Clock, 
+import {
+  Check,
+  X,
+  Eye,
+  Clock,
   MapPin,
   Phone,
   Globe,
@@ -20,9 +20,15 @@ import {
   Video,
   ExternalLink,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  HelpCircle,
+  Trash2,
+  Gift,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { notifyPartnerApproved, notifyPartnerRejected } from '@/services/email/notificationEmailService';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 import {
@@ -32,8 +38,62 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+// Tipo do termo mais recente associado ao parceiro
+interface PartnerTerm {
+  id: string;
+  partner_id: string;
+  pdf_url: string | null;
+  uploaded_pdf_url: string | null;
+  review_status: string;
+  signed_at: string;
+  ip_address: string | null;
+  terms_version: number;
+  review_notes: string | null;
+}
+
+// Pequeno botão "?" com explicação curta — substitui o tooltip nativo do navegador
+const HelpHint = ({ text }: { text: string }) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <button
+        type="button"
+        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-muted-foreground hover:text-foreground"
+        aria-label="O que esta ação faz?"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+      </button>
+    </PopoverTrigger>
+    <PopoverContent side="top" className="w-72 text-xs">
+      {text}
+    </PopoverContent>
+  </Popover>
+);
+
+// Texto explicativo de cada ação destrutiva/sensível
+const ACTION_HELP = {
+  approve: 'Marca o cadastro como aprovado. O parceiro só passa a aparecer publicamente quando a assinatura no Stripe estiver paga (ou após "Liberar acesso grátis").',
+  revision: 'O parceiro continua com acesso ao painel e à assinatura ativa, mas recebe um aviso para corrigir dados ou reenviar o PDF do termo. Use quando há erro pequeno no cadastro.',
+  manualWriteOff: 'CORTESIA / PROMOÇÃO: aprova o parceiro e libera o acesso completo SEM cobrar a assinatura no Stripe. Use só para parcerias estratégicas ou testes.',
+  finalReject: 'Reprovação definitiva: cancela a assinatura no Stripe, tenta reembolso integral da última fatura paga e encerra o acesso. Use quando o parceiro NÃO deve ficar na plataforma.',
+  delete: 'Apaga o registro do parceiro do banco de dados E remove a conta de login. Não tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.',
+  suspend: 'Suspende temporariamente o acesso do parceiro ao painel, sem cancelar a assinatura no Stripe. Pode ser reativado depois.',
+};
 
 interface Partner {
   id: string;
@@ -71,13 +131,25 @@ interface PartnerUpdateData {
 
 export default function PartnersManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [terms, setTerms] = useState<Record<string, PartnerTerm>>({});
   const [loading, setLoading] = useState(true);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [activeTab, setActiveTab] = useState('pending');
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [updatingTerm, setUpdatingTerm] = useState(false);
+  // Diálogo de confirmação para ações destrutivas
+  const [confirmDialog, setConfirmDialog] = useState<null | {
+    title: string;
+    description: string;
+    confirmLabel: string;
+    onConfirm: () => void | Promise<void>;
+    destructive?: boolean;
+  }>(null);
   const { toast } = useToast();
 
-  const loadPartners = async () => {
+  const loadPartners = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -86,7 +158,27 @@ export default function PartnersManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPartners(data || []);
+      const list = data || [];
+      setPartners(list);
+
+      // Buscar o termo mais recente de cada parceiro
+      const ids = list.map((p) => p.id);
+      if (ids.length > 0) {
+        const { data: termsData } = await supabase
+          .from('partner_terms_acceptances')
+          .select('id, partner_id, pdf_url, uploaded_pdf_url, review_status, signed_at, ip_address, terms_version, review_notes')
+          .in('partner_id', ids)
+          .order('signed_at', { ascending: false });
+
+        const map: Record<string, PartnerTerm> = {};
+        (termsData || []).forEach((t: any) => {
+          // Só guarda o primeiro (mais recente) de cada parceiro
+          if (!map[t.partner_id]) map[t.partner_id] = t as PartnerTerm;
+        });
+        setTerms(map);
+      } else {
+        setTerms({});
+      }
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao carregar parceiros:', err);
@@ -98,11 +190,79 @@ export default function PartnersManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadPartners();
-  }, []);
+  }, [loadPartners]);
+
+  // Atualiza o status de revisão do termo (aprovar / pedir ajuste / rejeitar)
+  const updateTermStatus = async (
+    partnerId: string,
+    status: 'approved' | 'rejected' | 'revision_requested',
+  ) => {
+    const term = terms[partnerId];
+    if (!term) {
+      toast({
+        title: 'Sem termo enviado',
+        description: 'Este parceiro ainda não enviou o termo de parceria.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setUpdatingTerm(true);
+    try {
+      // Reprovação definitiva também cancela assinatura no Stripe
+      if (status === 'rejected') {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
+          body: { partnerId },
+        });
+        if (fnError) throw fnError;
+        const payload = fnData as { error?: string } | undefined;
+        if (payload?.error) throw new Error(payload.error);
+      }
+
+      const { error } = await supabase
+        .from('partner_terms_acceptances')
+        .update({
+          review_status: status,
+          reviewed_by: user?.id || null,
+          reviewed_at: new Date().toISOString(),
+          review_notes: reviewNotes || null,
+        } as any)
+        .eq('id', term.id);
+      if (error) throw error;
+
+      if (status === 'revision_requested') {
+        await supabase
+          .from('institutional_partners')
+          .update({ status: 'revision_requested', is_active: true, updated_at: new Date().toISOString() })
+          .eq('id', partnerId);
+      }
+
+      toast({
+        title: 'Termo atualizado',
+        description:
+          status === 'approved'
+            ? 'Termo aprovado com sucesso.'
+            : status === 'revision_requested'
+              ? 'Termo devolvido para o parceiro corrigir.'
+              : 'Termo rejeitado e assinatura cancelada.',
+      });
+      setReviewNotes('');
+      await loadPartners();
+    } catch (err: any) {
+      console.error('Erro ao atualizar termo:', err);
+      toast({
+        title: 'Erro',
+        description: err?.message || 'Não foi possível atualizar o termo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingTerm(false);
+    }
+  };
+
 
   const handleManualPaymentWriteOff = async (partnerId: string) => {
     try {
@@ -116,8 +276,8 @@ export default function PartnersManagement() {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
         toast({
           title: 'Erro',
           description: 'Usuário não identificado',
@@ -132,10 +292,9 @@ export default function PartnersManagement() {
         is_active: true,
         subscription_status: 'active', // Ativar assinatura sem pagamento
         subscription_start_date: new Date().toISOString(),
-        // Criar uma data de fim (opcional, pode ser null para assinatura permanente)
         updated_at: new Date().toISOString(),
         approved_at: new Date().toISOString(),
-        approved_by: user.id,
+        approved_by: authUser.id,
       };
 
       const { data: updatedPartner, error } = await supabase
@@ -202,11 +361,7 @@ export default function PartnersManagement() {
       }
 
       if (status === 'rejected') {
-        const ok = window.confirm(
-          'Reprovação definitiva: o parceiro perde o acesso, a assinatura no Stripe será cancelada e será tentado o reembolso integral da última fatura paga. Deseja continuar?',
-        );
-        if (!ok) return;
-
+        // Confirmação é feita via AlertDialog antes desta função ser chamada
         const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
           body: { partnerId },
         });
@@ -248,9 +403,9 @@ export default function PartnersManagement() {
 
       if (status === 'approved') {
         updateData.approved_at = new Date().toISOString();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          updateData.approved_by = user.id;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          updateData.approved_by = authUser.id;
         }
       }
 
@@ -320,7 +475,7 @@ export default function PartnersManagement() {
   };
 
   const deletePartner = async (partnerId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este parceiro? A conta de acesso será removida para permitir novo cadastro com o mesmo e-mail (exceto se for usuário ViajarTur ou admin).')) return;
+    // Confirmação é feita via AlertDialog antes desta função ser chamada
 
     try {
       const { data, error } = await supabase.functions.invoke('delete-partner-and-auth', {
@@ -448,7 +603,43 @@ export default function PartnersManagement() {
               </div>
             )}
 
-            <div className="flex gap-2 mt-3">
+            {/* Status do termo de parceria */}
+            {(() => {
+              const t = terms[partner.id];
+              if (!t) {
+                return (
+                  <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Termo: <span className="text-amber-600 font-medium">não enviado</span>
+                  </div>
+                );
+              }
+              const labels: Record<string, { text: string; cls: string }> = {
+                pending: { text: 'aguardando revisão', cls: 'text-yellow-700' },
+                approved: { text: 'aprovado', cls: 'text-green-700' },
+                rejected: { text: 'rejeitado', cls: 'text-red-700' },
+                revision_requested: { text: 'em ajuste', cls: 'text-orange-700' },
+              };
+              const l = labels[t.review_status] || labels.pending;
+              return (
+                <div className="mt-2 text-xs flex items-center gap-2 flex-wrap">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Termo: <span className={`${l.cls} font-medium`}>{l.text}</span>
+                  </span>
+                  {t.uploaded_pdf_url && (
+                    <a
+                      href={t.uploaded_pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" /> abrir PDF assinado
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
+
+            <div className="flex gap-2 mt-3 flex-wrap">
               <Button
                 size="sm"
                 variant="outline"
@@ -457,7 +648,7 @@ export default function PartnersManagement() {
                 <Eye className="w-4 h-4 mr-1" />
                 Ver Detalhes
               </Button>
-              
+
               {(partner.status === 'pending' || partner.status === 'revision_requested') && (
                 <>
                   <Button
@@ -466,32 +657,51 @@ export default function PartnersManagement() {
                     onClick={() => updatePartnerStatus(partner.id, 'approved')}
                   >
                     <Check className="w-4 h-4 mr-1" />
-                    Aprovar
+                    Aprovar cadastro
+                    <HelpHint text={ACTION_HELP.approve} />
                   </Button>
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={() => updatePartnerStatus(partner.id, 'revision_requested')}
-                    title="Parceiro continua com assinatura ativa e acesso ao painel para corrigir envios"
                   >
-                    Devolver p/ ajuste
+                    Pedir ajuste
+                    <HelpHint text={ACTION_HELP.revision} />
                   </Button>
                   <Button
                     size="sm"
                     className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => handleManualPaymentWriteOff(partner.id)}
-                    title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Liberar acesso grátis (cortesia)?',
+                        description:
+                          `O parceiro "${partner.name}" será aprovado e a assinatura será marcada como ATIVA sem cobrar nada no Stripe. Use só para promoções ou parcerias estratégicas.`,
+                        confirmLabel: 'Sim, liberar grátis',
+                        onConfirm: () => handleManualPaymentWriteOff(partner.id),
+                      })
+                    }
                   >
-                    <Check className="w-4 h-4 mr-1" />
-                    Baixa Manual
+                    <Gift className="w-4 h-4 mr-1" />
+                    Liberar grátis (cortesia)
+                    <HelpHint text={ACTION_HELP.manualWriteOff} />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => updatePartnerStatus(partner.id, 'rejected')}
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Reprovar e cancelar assinatura?',
+                        description:
+                          `Isso vai CANCELAR a assinatura do parceiro "${partner.name}" no Stripe, tentar REEMBOLSO INTEGRAL da última fatura paga e ENCERRAR o acesso. Não tem volta automática.`,
+                        confirmLabel: 'Sim, reprovar definitivamente',
+                        destructive: true,
+                        onConfirm: () => updatePartnerStatus(partner.id, 'rejected'),
+                      })
+                    }
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Reprovar (definitivo)
+                    Reprovar e cancelar
+                    <HelpHint text={ACTION_HELP.finalReject} />
                   </Button>
                 </>
               )}
@@ -503,6 +713,7 @@ export default function PartnersManagement() {
                   onClick={() => updatePartnerStatus(partner.id, 'suspended')}
                 >
                   Suspender
+                  <HelpHint text={ACTION_HELP.suspend} />
                 </Button>
               )}
 
@@ -837,9 +1048,9 @@ export default function PartnersManagement() {
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedPartner.gallery_images.map((img, idx) => (
-                      <img 
+                      <img
                         key={idx}
-                        src={img} 
+                        src={img}
                         alt={`Foto ${idx + 1}`}
                         className="w-full h-24 object-cover rounded-lg"
                       />
@@ -848,6 +1059,125 @@ export default function PartnersManagement() {
                 </div>
               )}
 
+              {/* SEÇÃO: Termo de Parceria */}
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4" />
+                  Termo de Parceria
+                </h4>
+                {(() => {
+                  const t = terms[selectedPartner.id];
+                  if (!t) {
+                    return (
+                      <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-md">
+                        Este parceiro ainda não enviou o termo de parceria assinado.
+                      </p>
+                    );
+                  }
+                  const labels: Record<string, { text: string; cls: string }> = {
+                    pending: { text: 'Aguardando revisão', cls: 'bg-yellow-100 text-yellow-800' },
+                    approved: { text: 'Aprovado', cls: 'bg-green-100 text-green-800' },
+                    rejected: { text: 'Rejeitado', cls: 'bg-red-100 text-red-800' },
+                    revision_requested: { text: 'Em ajuste', cls: 'bg-orange-100 text-orange-800' },
+                  };
+                  const l = labels[t.review_status] || labels.pending;
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <Badge className={l.cls}>{l.text}</Badge>
+                        <span className="text-gray-600">
+                          Versão {t.terms_version} • assinado em {new Date(t.signed_at).toLocaleString('pt-BR')}
+                        </span>
+                        {t.ip_address && <span className="text-gray-500 text-xs">IP: {t.ip_address}</span>}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="border rounded-lg p-3 bg-gray-50">
+                          <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                            <FileText className="w-3 h-3" /> PDF gerado pelo sistema
+                          </p>
+                          {t.pdf_url ? (
+                            <Button variant="outline" size="sm" asChild className="w-full">
+                              <a href={t.pdf_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3 mr-1" /> Visualizar
+                              </a>
+                            </Button>
+                          ) : (
+                            <p className="text-xs text-gray-500">Não disponível</p>
+                          )}
+                        </div>
+                        <div className="border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
+                          <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-primary" /> PDF assinado pelo parceiro
+                          </p>
+                          {t.uploaded_pdf_url ? (
+                            <Button variant="default" size="sm" asChild className="w-full">
+                              <a href={t.uploaded_pdf_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3 mr-1" /> Visualizar
+                              </a>
+                            </Button>
+                          ) : (
+                            <p className="text-xs text-red-600 font-medium">Ainda não enviado</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs">Notas de revisão (opcional)</Label>
+                        <Textarea
+                          value={reviewNotes}
+                          onChange={(e) => setReviewNotes(e.target.value)}
+                          placeholder="Observações para o parceiro ou para o histórico interno..."
+                          className="mt-1 text-sm"
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={updatingTerm}
+                          onClick={() => updateTermStatus(selectedPartner.id, 'approved')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {updatingTerm ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+                          Aprovar termo
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={updatingTerm}
+                          onClick={() => updateTermStatus(selectedPartner.id, 'revision_requested')}
+                        >
+                          {updatingTerm ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Clock className="w-4 h-4 mr-1" />}
+                          Pedir reenvio
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={updatingTerm}
+                          onClick={() =>
+                            setConfirmDialog({
+                              title: 'Rejeitar termo e cancelar assinatura?',
+                              description:
+                                'Isso vai cancelar a assinatura no Stripe, tentar reembolso e encerrar o acesso do parceiro. Não tem volta automática.',
+                              confirmLabel: 'Rejeitar definitivamente',
+                              destructive: true,
+                              onConfirm: () => updateTermStatus(selectedPartner.id, 'rejected'),
+                            })
+                          }
+                        >
+                          {updatingTerm ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <X className="w-4 h-4 mr-1" />}
+                          Rejeitar termo
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* AÇÕES DO CADASTRO */}
               <div className="flex gap-2 pt-4 border-t flex-wrap">
                 {(selectedPartner.status === 'pending' || selectedPartner.status === 'revision_requested') && (
                   <>
@@ -859,7 +1189,8 @@ export default function PartnersManagement() {
                       }}
                     >
                       <Check className="w-4 h-4 mr-2" />
-                      Aprovar Parceiro
+                      Aprovar cadastro
+                      <HelpHint text={ACTION_HELP.approve} />
                     </Button>
                     <Button
                       variant="secondary"
@@ -868,40 +1199,60 @@ export default function PartnersManagement() {
                         setSelectedPartner(null);
                       }}
                     >
-                      Devolver p/ ajuste
+                      Pedir ajuste
+                      <HelpHint text={ACTION_HELP.revision} />
                     </Button>
                     <Button
                       className="bg-purple-600 hover:bg-purple-700 text-white"
-                      onClick={() => {
-                        handleManualPaymentWriteOff(selectedPartner.id);
-                      }}
-                      title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                      onClick={() =>
+                        setConfirmDialog({
+                          title: 'Liberar acesso grátis (cortesia)?',
+                          description: `O parceiro "${selectedPartner.name}" será aprovado e a assinatura ficará ATIVA sem cobrança no Stripe. Use só para promoções.`,
+                          confirmLabel: 'Sim, liberar grátis',
+                          onConfirm: () => handleManualPaymentWriteOff(selectedPartner.id),
+                        })
+                      }
                     >
-                      <Check className="w-4 h-4 mr-2" />
-                      Dar Baixa Manual (Promoção)
+                      <Gift className="w-4 h-4 mr-2" />
+                      Liberar grátis (cortesia)
+                      <HelpHint text={ACTION_HELP.manualWriteOff} />
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={() => {
-                        updatePartnerStatus(selectedPartner.id, 'rejected');
-                        setSelectedPartner(null);
-                      }}
+                      onClick={() =>
+                        setConfirmDialog({
+                          title: 'Reprovar e cancelar assinatura?',
+                          description: `Cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro "${selectedPartner.name}". Não tem volta automática.`,
+                          confirmLabel: 'Sim, reprovar definitivamente',
+                          destructive: true,
+                          onConfirm: () => {
+                            updatePartnerStatus(selectedPartner.id, 'rejected');
+                            setSelectedPartner(null);
+                          },
+                        })
+                      }
                     >
                       <X className="w-4 h-4 mr-2" />
-                      Reprovar (definitivo)
+                      Reprovar e cancelar
+                      <HelpHint text={ACTION_HELP.finalReject} />
                     </Button>
                   </>
                 )}
                 {(selectedPartner.subscription_status === 'pending' || selectedPartner.subscription_status === 'unpaid') && selectedPartner.status === 'approved' && (
                   <Button
                     className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => {
-                      handleManualPaymentWriteOff(selectedPartner.id);
-                    }}
-                    title="Dar baixa manual - Libera acesso sem pagamento (para promoções)"
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Liberar acesso grátis (cortesia)?',
+                        description: `Marca a assinatura do parceiro "${selectedPartner.name}" como ATIVA sem cobrar nada no Stripe.`,
+                        confirmLabel: 'Sim, liberar grátis',
+                        onConfirm: () => handleManualPaymentWriteOff(selectedPartner.id),
+                      })
+                    }
                   >
-                    <Check className="w-4 h-4 mr-2" />
-                    Dar Baixa Manual (Promoção)
+                    <Gift className="w-4 h-4 mr-2" />
+                    Liberar grátis (cortesia)
+                    <HelpHint text={ACTION_HELP.manualWriteOff} />
                   </Button>
                 )}
                 {selectedPartner.status === 'approved' && (
@@ -912,23 +1263,60 @@ export default function PartnersManagement() {
                       setSelectedPartner(null);
                     }}
                   >
-                    Suspender Parceiro
+                    Suspender
+                    <HelpHint text={ACTION_HELP.suspend} />
                   </Button>
                 )}
                 <Button
                   variant="destructive"
-                  onClick={() => {
-                    deletePartner(selectedPartner.id);
-                    setSelectedPartner(null);
-                  }}
+                  onClick={() =>
+                    setConfirmDialog({
+                      title: 'Apagar parceiro do banco de dados?',
+                      description: `Remove o parceiro "${selectedPartner.name}" e a conta de login dele. NÃO tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.`,
+                      confirmLabel: 'Sim, apagar permanentemente',
+                      destructive: true,
+                      onConfirm: () => {
+                        deletePartner(selectedPartner.id);
+                        setSelectedPartner(null);
+                      },
+                    })
+                  }
                 >
-                  Excluir Permanentemente
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Apagar do banco (irreversível)
+                  <HelpHint text={ACTION_HELP.delete} />
                 </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog global para confirmações destrutivas */}
+      <AlertDialog
+        open={!!confirmDialog}
+        onOpenChange={(open) => { if (!open) setConfirmDialog(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmDialog?.destructive ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : undefined}
+              onClick={async () => {
+                const fn = confirmDialog?.onConfirm;
+                setConfirmDialog(null);
+                if (fn) await fn();
+              }}
+            >
+              {confirmDialog?.confirmLabel || 'Confirmar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
