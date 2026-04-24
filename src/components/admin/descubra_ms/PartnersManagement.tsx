@@ -475,7 +475,7 @@ export default function PartnersManagement() {
   };
 
   const deletePartner = async (partnerId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este parceiro? A conta de acesso será removida para permitir novo cadastro com o mesmo e-mail (exceto se for usuário ViajarTur ou admin).')) return;
+    // Confirmação é feita via AlertDialog antes desta função ser chamada
 
     try {
       const { data, error } = await supabase.functions.invoke('delete-partner-and-auth', {
