@@ -17,9 +17,12 @@ serve(async (req) => {
     });
   }
 
+  let eventIdForAudit: string | null = null;
+
   try {
     const body = await req.json();
     const { event_id, reason } = body;
+    eventIdForAudit = event_id ?? null;
     
     console.log('Refund request received:', { event_id, reason });
 
@@ -41,7 +44,7 @@ serve(async (req) => {
     // Buscar dados do evento
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, name, sponsor_payment_status, organizador_email, organizador_nome')
+      .select('id, titulo, sponsor_payment_status, organizador_email, organizador_nome, is_sponsored, is_visible')
       .eq('id', event_id)
       .single();
 
@@ -55,6 +58,8 @@ serve(async (req) => {
       );
     }
 
+    const eventName = (event as any).titulo || 'Evento';
+
     // Verificar se o evento foi pago
     if (event.sponsor_payment_status !== 'paid') {
       return new Response(
@@ -65,6 +70,16 @@ serve(async (req) => {
         }
       );
     }
+
+    // Marcar início do processamento no trilho de auditoria.
+    await supabase
+      .from('events')
+      .update({
+        refund_status: 'processing',
+        refund_requested_at: new Date().toISOString(),
+        refund_error_message: null,
+      })
+      .eq('id', event_id);
 
     // Buscar checkout_session_id de master_financial_records
     const { data: paymentRecord, error: paymentError } = await supabase
@@ -172,7 +187,7 @@ serve(async (req) => {
       reason: 'requested_by_customer',
       metadata: {
         event_id: event_id,
-        event_name: event.name,
+        event_name: eventName,
         reason: reason || 'Evento rejeitado pelo administrador',
         refund_type: 'fee_deducted', // Indica que taxa foi descontada
         original_amount: paymentIntent.amount,
@@ -183,13 +198,24 @@ serve(async (req) => {
 
     console.log('Reembolso criado no Stripe:', refund.id);
 
-    // Atualizar evento: sponsor_payment_status = 'refunded'
+    const refundStatus = refund.status === 'succeeded'
+      ? 'succeeded'
+      : refund.status === 'canceled'
+        ? 'canceled'
+        : 'pending';
+
+    // Atualizar trilho de auditoria + status do evento conforme retorno do Stripe.
     const { error: updateError } = await supabase
       .from('events')
       .update({
-        sponsor_payment_status: 'refunded',
-        is_sponsored: false,
-        is_visible: false,
+        refund_status: refundStatus,
+        stripe_refund_id: refund.id,
+        refund_amount: refundAmountInReais,
+        refund_error_message: null,
+        refunded_at: refund.status === 'succeeded' ? new Date().toISOString() : null,
+        sponsor_payment_status: refund.status === 'succeeded' ? 'refunded' : 'paid',
+        is_sponsored: refund.status === 'succeeded' ? false : event.is_sponsored,
+        is_visible: refund.status === 'succeeded' ? false : event.is_visible,
       })
       .eq('id', event_id);
 
@@ -204,15 +230,15 @@ serve(async (req) => {
       .insert({
         record_type: 'refund',
         amount: refundAmountInReais,
-        description: `Reembolso de evento em destaque: ${event.name} (taxa de processamento do Stripe descontada: R$ ${stripeFee.toFixed(2)})`,
+          description: `Reembolso de evento em destaque: ${eventName} (taxa de processamento do Stripe descontada: R$ ${stripeFee.toFixed(2)})`,
         stripe_invoice_id: refund.id,
-        status: 'completed',
+          status: refund.status === 'succeeded' ? 'completed' : 'pending',
         paid_date: new Date().toISOString().split('T')[0],
         source: 'event_sponsor',
         currency: 'BRL',
         metadata: {
           event_id: event_id,
-          event_name: event.name,
+          event_name: eventName,
           original_payment_id: paymentRecord.stripe_invoice_id,
           refund_id: refund.id,
           reason: reason || 'Evento rejeitado pelo administrador',
@@ -236,8 +262,8 @@ serve(async (req) => {
             type: 'event_refunded',
             to: event.organizador_email,
             data: {
-              organizerName: event.organizador_nome,
-              eventName: event.name,
+        organizerName: event.organizador_nome,
+        eventName: eventName,
               reason: reason || 'Evento rejeitado pelo administrador',
               refundAmount: refundAmount / 100, // Converter centavos para reais
             },
@@ -256,7 +282,10 @@ serve(async (req) => {
         refund_amount: refundAmountInReais,
         original_amount: paymentAmount,
         stripe_fee_deducted: stripeFee,
-        message: 'Reembolso processado com sucesso (taxa do Stripe descontada)' 
+        refund_status: refundStatus,
+        message: refund.status === 'succeeded'
+          ? 'Reembolso processado com sucesso (taxa do Stripe descontada)'
+          : 'Solicitação de reembolso enviada; aguardando confirmação final do Stripe'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -266,6 +295,25 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Erro ao processar reembolso:', error);
+
+    if (eventIdForAudit) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        await supabase
+          .from('events')
+          .update({
+            refund_status: 'failed',
+            refund_error_message: error?.message || 'Falha ao processar reembolso',
+          })
+          .eq('id', eventIdForAudit);
+      } catch (auditError) {
+        console.error('Erro ao registrar falha de auditoria do reembolso:', auditError);
+      }
+    }
+
     return new Response(
       JSON.stringify({ error: error.message || 'Failed to process refund' }),
       { 

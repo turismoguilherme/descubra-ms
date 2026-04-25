@@ -99,6 +99,12 @@ serve(async (req) => {
         // Evento do Stripe Connect - conta do parceiro atualizada
         await handleStripeConnectAccountUpdated(event.data.object as Stripe.Account, supabase);
         break;
+      case 'refund.updated':
+        await handleRefundUpdated(event.data.object as Stripe.Refund, supabase);
+        break;
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object as Stripe.Charge, supabase);
+        break;
       default:
         console.log(`Evento não processado: ${event.type}`);
     }
@@ -274,6 +280,68 @@ async function handlePaymentLinkSubscriptionCompleted(session: Stripe.Checkout.S
 
   } catch (error) {
     console.error('Erro ao processar Payment Link de assinatura:', error);
+  }
+}
+
+async function handleRefundUpdated(refund: Stripe.Refund, supabase: any) {
+  try {
+    const metadata = refund.metadata || {};
+    const eventId = metadata.event_id;
+    if (!eventId) return;
+
+    const isSucceeded = refund.status === 'succeeded';
+    const mappedStatus = isSucceeded
+      ? 'succeeded'
+      : refund.status === 'canceled'
+        ? 'canceled'
+        : refund.status === 'failed'
+          ? 'failed'
+          : 'pending';
+
+    const { error } = await supabase
+      .from('events')
+      .update({
+        refund_status: mappedStatus,
+        stripe_refund_id: refund.id,
+        refund_amount: (refund.amount ?? 0) / 100,
+        refund_error_message: refund.failure_reason || null,
+        refunded_at: isSucceeded ? new Date().toISOString() : null,
+        sponsor_payment_status: isSucceeded ? 'refunded' : 'paid',
+        is_sponsored: isSucceeded ? false : undefined,
+        is_visible: isSucceeded ? false : undefined,
+      })
+      .eq('id', eventId);
+
+    if (error) {
+      console.error('Erro ao atualizar evento a partir de refund.updated:', error);
+      return;
+    }
+
+    // Atualizar registro financeiro de reembolso vinculado ao evento.
+    await supabase
+      .from('master_financial_records')
+      .update({
+        status: isSucceeded ? 'completed' : mappedStatus === 'failed' ? 'failed' : 'pending',
+      })
+      .eq('record_type', 'refund')
+      .eq('stripe_invoice_id', refund.id);
+
+    console.log(`Reembolso do evento ${eventId} sincronizado via refund.updated: ${mappedStatus}`);
+  } catch (error) {
+    console.error('Erro ao processar refund.updated:', error);
+  }
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge, supabase: any) {
+  try {
+    const refunds = charge.refunds?.data || [];
+    for (const refund of refunds) {
+      const eventId = refund.metadata?.event_id;
+      if (!eventId) continue;
+      await handleRefundUpdated(refund as Stripe.Refund, supabase);
+    }
+  } catch (error) {
+    console.error('Erro ao processar charge.refunded:', error);
   }
 }
 

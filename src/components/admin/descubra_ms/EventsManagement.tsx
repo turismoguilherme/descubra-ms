@@ -84,6 +84,11 @@ interface Event {
   rejection_reason?: string | null;
   moderation_decision_source?: string | null;
   moderated_at?: string | null;
+  refund_status?: string | null;
+  stripe_refund_id?: string | null;
+  refund_amount?: number | null;
+  refunded_at?: string | null;
+  refund_error_message?: string | null;
 }
 
 /** Mapeia linha do Supabase (PT) para o modelo usado na UI */
@@ -118,6 +123,11 @@ function normalizeEventFromDb(row: Record<string, unknown>): Event {
     rejection_reason: (r.rejection_reason as string) || null,
     moderation_decision_source: (r.moderation_decision_source as string) || null,
     moderated_at: (r.moderated_at as string) || null,
+    refund_status: (r.refund_status as string) || null,
+    stripe_refund_id: (r.stripe_refund_id as string) || null,
+    refund_amount: (r.refund_amount as number) || null,
+    refunded_at: (r.refunded_at as string) || null,
+    refund_error_message: (r.refund_error_message as string) || null,
   };
 }
 
@@ -2323,6 +2333,37 @@ export default function EventsManagement() {
                         )}
                       </div>
                     </div>
+
+                    {selectedEvent.refund_status && (
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <p className="text-xs text-gray-600 uppercase mb-2">Status do Reembolso</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="bg-white">
+                            {selectedEvent.refund_status}
+                          </Badge>
+                          {selectedEvent.refund_amount && (
+                            <span className="text-sm text-gray-700">
+                              Valor: R$ {Number(selectedEvent.refund_amount).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        {selectedEvent.stripe_refund_id && (
+                          <p className="text-xs text-gray-600 mt-2">
+                            Referência Stripe: {selectedEvent.stripe_refund_id}
+                          </p>
+                        )}
+                        {selectedEvent.refunded_at && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            Concluído em: {new Date(selectedEvent.refunded_at).toLocaleString('pt-BR')}
+                          </p>
+                        )}
+                        {selectedEvent.refund_error_message && (
+                          <p className="text-xs text-red-700 mt-1">
+                            Erro: {selectedEvent.refund_error_message}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     
                     {/* Configuração de Payment Link - Apenas para eventos aprovados */}
                     {selectedEvent.is_visible && (selectedEvent as Event & { approval_status?: string }).approval_status === 'approved' && (
