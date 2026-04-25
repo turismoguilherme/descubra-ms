@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Calendar,
   Check,
@@ -135,6 +136,11 @@ export default function EventsManagement() {
   const [sponsorPrice, setSponsorPrice] = useState<string>('499.90');
   const [loadingSponsorPrice, setLoadingSponsorPrice] = useState(false);
   const [savingSponsorPrice, setSavingSponsorPrice] = useState(false);
+  const [agentConfigId, setAgentConfigId] = useState<string | null>(null);
+  const [agentActive, setAgentActive] = useState(false);
+  const [autoApprovalEnabled, setAutoApprovalEnabled] = useState(false);
+  const [loadingAutoApproval, setLoadingAutoApproval] = useState(false);
+  const [savingAutoApproval, setSavingAutoApproval] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -142,6 +148,42 @@ export default function EventsManagement() {
   const [deleteConfirmName, setDeleteConfirmName] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const getMissingColumnFromError = (error: unknown): string | null => {
+    const message = (error as { message?: string })?.message || '';
+    const match = message.match(/Could not find the '([^']+)' column/i);
+    return match?.[1] || null;
+  };
+
+  const updateEventWithFallback = async (
+    eventId: string,
+    initialData: Record<string, unknown>
+  ) => {
+    let payload = { ...initialData };
+    let lastError: unknown = null;
+
+    // Remove dinamicamente colunas ausentes no schema e tenta novamente.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const result = await supabase
+        .from('events')
+        .update(payload)
+        .eq('id', eventId)
+        .select('*');
+
+      if (!result.error) return result;
+
+      lastError = result.error;
+      const missingColumn = getMissingColumnFromError(result.error);
+      if (!missingColumn || !(missingColumn in payload)) {
+        throw result.error;
+      }
+
+      console.warn(`⚠️ Campo ausente no schema, removendo do update: ${missingColumn}`);
+      delete payload[missingColumn];
+    }
+
+    throw lastError || new Error('Falha ao atualizar evento após tentativas de compatibilidade');
+  };
 
   const loadEvents = async () => {
     setLoading(true);
@@ -266,6 +308,139 @@ export default function EventsManagement() {
     }
   };
 
+  const fetchAutoApprovalSettings = async () => {
+    setLoadingAutoApproval(true);
+    try {
+      const { data, error } = await supabase
+        .from('ai_agent_config')
+        .select('id, active, tasks')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        setAgentConfigId(null);
+        setAgentActive(false);
+        setAutoApprovalEnabled(false);
+        return;
+      }
+
+      setAgentConfigId(data.id);
+      setAgentActive(Boolean(data.active));
+
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+      const autoApprovalTask = tasks.find(
+        (task: any) =>
+          task?.name === 'Aprovação Automática de Eventos' ||
+          (task?.type === 'notification' && String(task?.name || '').toLowerCase().includes('aprovação automática'))
+      );
+
+      setAutoApprovalEnabled(Boolean(autoApprovalTask?.enabled));
+    } catch (error) {
+      console.error('Erro ao buscar configuração de autoaprovação:', error);
+      toast({
+        title: 'Aviso',
+        description: 'Não foi possível carregar a configuração de autoaprovação agora.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingAutoApproval(false);
+    }
+  };
+
+  const handleToggleAutoApproval = async (enabled: boolean) => {
+    setSavingAutoApproval(true);
+    try {
+      if (!agentConfigId) {
+        const newTasks = [
+          {
+            id: '5',
+            type: 'notification',
+            name: 'Aprovação Automática de Eventos',
+            schedule: 'A cada hora',
+            enabled,
+          },
+        ];
+
+        const { data, error } = await supabase
+          .from('ai_agent_config')
+          .insert({
+            active: enabled, // Se ativar autoaprovação, ativa o agente automaticamente.
+            autonomy_level: 50,
+            tasks: newTasks,
+            permissions: {},
+          })
+          .select('id, active')
+          .single();
+
+        if (error) throw error;
+
+        setAgentConfigId(data.id);
+        setAgentActive(Boolean(data.active));
+      } else {
+        const { data: currentConfig, error: loadError } = await supabase
+          .from('ai_agent_config')
+          .select('active, tasks')
+          .eq('id', agentConfigId)
+          .single();
+
+        if (loadError) throw loadError;
+
+        const tasks = Array.isArray(currentConfig.tasks) ? [...currentConfig.tasks] : [];
+        const taskIndex = tasks.findIndex(
+          (task: any) =>
+            task?.name === 'Aprovação Automática de Eventos' ||
+            (task?.type === 'notification' && String(task?.name || '').toLowerCase().includes('aprovação automática'))
+        );
+
+        if (taskIndex >= 0) {
+          tasks[taskIndex] = { ...tasks[taskIndex], enabled };
+        } else {
+          tasks.push({
+            id: '5',
+            type: 'notification',
+            name: 'Aprovação Automática de Eventos',
+            schedule: 'A cada hora',
+            enabled,
+          });
+        }
+
+        const nextActive = enabled ? true : Boolean(currentConfig.active);
+
+        const { error: updateError } = await supabase
+          .from('ai_agent_config')
+          .update({
+            active: nextActive,
+            tasks,
+          })
+          .eq('id', agentConfigId);
+
+        if (updateError) throw updateError;
+
+        setAgentActive(nextActive);
+      }
+
+      setAutoApprovalEnabled(enabled);
+      toast({
+        title: enabled ? 'Autoaprovação ativada' : 'Autoaprovação desativada',
+        description: enabled
+          ? 'Novos eventos pendentes poderão ser analisados automaticamente.'
+          : 'Os eventos voltarão a depender de aprovação manual no painel.',
+      });
+    } catch (error) {
+      console.error('Erro ao salvar configuração de autoaprovação:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar a configuração de autoaprovação.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingAutoApproval(false);
+    }
+  };
+
   // Salvar preço configurável
   const handleSaveSponsorPrice = async () => {
     const priceValue = parseFloat(sponsorPrice);
@@ -315,6 +490,7 @@ export default function EventsManagement() {
     loadEvents();
     fetchDefaultPaymentLink();
     fetchSponsorPrice();
+    fetchAutoApprovalSettings();
     
   }, []);
 
@@ -343,7 +519,7 @@ export default function EventsManagement() {
       // Buscar dados mais recentes do banco para verificar status de pagamento
       const { data: currentEventData, error: fetchError } = await supabase
         .from('events')
-        .select('sponsor_payment_status, is_sponsored, sponsor_tier, is_visible, approval_status')
+        .select('sponsor_payment_status, is_sponsored, is_visible, approval_status')
         .eq('id', eventId)
         .single();
 
@@ -385,36 +561,8 @@ export default function EventsManagement() {
       console.log('Dados para atualização:', updateData);
 
       // Atualizar evento com todos os campos de uma vez
-      let { data: updatedEvent, error } = await supabase
-        .from('events')
-        .update(updateData)
-        .eq('id', eventId)
-        .select();
-
-      // Se der erro porque approval_status não existe, tentar sem ele
-      if (error && error.code === 'PGRST204' && error.message?.includes('approval_status')) {
-        console.warn('⚠️ Campo approval_status não existe, atualizando apenas is_visible');
-        const fallbackData = {
-          is_visible: true,
-          updated_at: new Date().toISOString(),
-        };
-        const result = await supabase
-          .from('events')
-          .update(fallbackData)
-          .eq('id', eventId)
-          .select();
-        
-        if (result.error) {
-          console.error('Erro ao atualizar evento:', result.error);
-          throw result.error;
-        }
-        
-        updatedEvent = result.data;
-        error = null;
-      } else if (error) {
-        console.error('Erro ao atualizar evento:', error);
-        throw error;
-      }
+      const result = await updateEventWithFallback(eventId, updateData);
+      const updatedEvent = result.data;
 
       if (!updatedEvent || updatedEvent.length === 0) {
         throw new Error('Nenhum evento foi atualizado. Verifique se você tem permissão para atualizar este evento.');
@@ -579,60 +727,8 @@ export default function EventsManagement() {
       console.log('🔄 Atualizando evento com dados:', updateData);
 
       // Tentar atualizar com approval_status primeiro
-      let { data: updatedEvent, error } = await supabase
-        .from('events')
-        .update(updateData)
-        .eq('id', eventId)
-        .select('*');
-
-      // Se der erro porque approval_status não existe, tentar sem ele
-      if (error && error.code === 'PGRST204' && error.message?.includes('approval_status')) {
-        console.warn('⚠️ Campo approval_status não existe, atualizando apenas is_visible');
-        const fallbackData = {
-          is_visible: false,
-          updated_at: new Date().toISOString(),
-        };
-        const result = await supabase
-          .from('events')
-          .update(fallbackData)
-          .eq('id', eventId)
-          .select('*');
-        
-        if (result.error) {
-          console.error('❌ Erro ao rejeitar evento (fallback):', result.error);
-          throw result.error;
-        }
-        
-        updatedEvent = result.data;
-        error = null;
-      } else if (error) {
-        // Se o erro for por outro campo (como approved_by), tentar sem campos opcionais
-        if (error.code === 'PGRST204' && error.message?.includes('approved_by')) {
-          console.warn('⚠️ Campo approved_by não existe, removendo do update');
-          const fallbackData = {
-            is_visible: false,
-            updated_at: new Date().toISOString(),
-            approval_status: 'rejected',
-          };
-          const result = await supabase
-            .from('events')
-            .update(fallbackData)
-            .eq('id', eventId)
-            .select('*');
-          
-          if (result.error) {
-            console.error('❌ Erro ao rejeitar evento (fallback 2):', result.error);
-            throw result.error;
-          }
-          
-          updatedEvent = result.data;
-          error = null;
-        } else {
-          console.error('❌ Erro ao rejeitar evento:', error);
-          console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
-          throw error;
-        }
-      }
+      const result = await updateEventWithFallback(eventId, updateData);
+      const updatedEvent = result.data;
 
       if (!updatedEvent || updatedEvent.length === 0) {
         throw new Error('Nenhum evento foi atualizado. Verifique se você tem permissão.');
@@ -1306,6 +1402,51 @@ export default function EventsManagement() {
           </Button>
         </div>
       </div>
+
+      {/* Card de Configuração de Pagamento - Colapsável */}
+      <Card className="border-emerald-200">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              Aprovação Automática de Eventos
+            </span>
+            <Badge variant={autoApprovalEnabled ? 'default' : 'secondary'} className={autoApprovalEnabled ? 'bg-emerald-600' : ''}>
+              {autoApprovalEnabled ? 'Ativada' : 'Desativada'}
+            </Badge>
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Controle se eventos pendentes podem ser aprovados/rejeitados automaticamente pelo agente.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-sm">Autoaprovação de eventos</p>
+              <p className="text-xs text-gray-500">
+                Quando ligada, o sistema verifica eventos pendentes periodicamente.
+              </p>
+            </div>
+            <Switch
+              checked={autoApprovalEnabled}
+              onCheckedChange={handleToggleAutoApproval}
+              disabled={loadingAutoApproval || savingAutoApproval}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-md border p-3 bg-gray-50">
+            <div>
+              <p className="font-medium text-sm">Agente IA 24/7</p>
+              <p className="text-xs text-gray-500">
+                Status geral do scheduler que executa as tarefas automáticas.
+              </p>
+            </div>
+            <Badge variant={agentActive ? 'default' : 'secondary'} className={agentActive ? 'bg-blue-600' : ''}>
+              {agentActive ? 'Ativo' : 'Inativo'}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Card de Configuração de Pagamento - Colapsável */}
       <Card className="border-blue-200">

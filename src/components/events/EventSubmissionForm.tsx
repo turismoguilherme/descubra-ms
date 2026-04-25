@@ -138,9 +138,6 @@ export const EventSubmissionForm: React.FC = () => {
   // Função para detectar a região turística baseada na cidade
   const detectTouristRegion = async (cidade: string): Promise<string | null> => {
     try {
-      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
-
       const cidadeLower = cidade.toLowerCase().trim();
 
       // Mapeamento de cidades para slugs de regiões
@@ -160,21 +157,14 @@ export const EventSubmissionForm: React.FC = () => {
       for (const [regionSlug, cities] of Object.entries(regionMappings)) {
         if (cities.some(city => cidadeLower.includes(city))) {
           // Buscar o ID da região no banco
-          const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/tourist_regions?slug=eq.${regionSlug}&select=id`,
-            {
-              headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-              }
-            }
-          );
+          const { data: regions, error } = await supabase
+            .from("tourist_regions")
+            .select("id")
+            .eq("slug", regionSlug)
+            .limit(1);
 
-          if (response.ok) {
-            const regions = await response.json();
-            if (regions.length > 0) {
-              return regions[0].id;
-            }
+          if (!error && regions && regions.length > 0) {
+            return regions[0].id;
           }
           break;
         }
@@ -190,9 +180,6 @@ export const EventSubmissionForm: React.FC = () => {
   const onSubmit = async (data: EventFormData) => {
     setIsSubmitting(true);
     try {
-      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
-
       // Detectar automaticamente a região turística baseada na cidade
       const touristRegionId = await detectTouristRegion(data.cidade);
 
@@ -216,23 +203,21 @@ export const EventSubmissionForm: React.FC = () => {
         sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
       };
 
-      // Criar evento no banco
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/events`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(eventData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao enviar evento');
+      if (touristRegionId) {
+        eventData.tourist_region_id = touristRegionId;
       }
 
-      const createdEvents = await response.json();
+      // Criar evento no banco
+      const { data: createdEvents, error: insertError } = await supabase
+        .from("events")
+        .insert(eventData as any)
+        .select("id");
+
+      if (insertError) {
+        const statusLabel = (insertError as any)?.code ? ` [${(insertError as any).code}]` : "";
+        throw new Error(`${insertError.message || "Erro ao enviar evento"}${statusLabel}`);
+      }
+
       const eventId = createdEvents[0]?.id;
 
       // Se for evento em destaque, redirecionar para checkout Stripe
@@ -310,9 +295,15 @@ export const EventSubmissionForm: React.FC = () => {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao enviar evento:', err);
+      const isAuthPolicyError =
+        err.message.includes("401") ||
+        err.message.toLowerCase().includes("row-level security") ||
+        err.message.toLowerCase().includes("permission denied");
       toast({
         title: "Erro ao enviar evento",
-        description: err.message || "Tente novamente mais tarde.",
+        description: isAuthPolicyError
+          ? "O envio público de eventos está temporariamente bloqueado por regra de segurança. Já estamos aplicando a correção."
+          : (err.message || "Tente novamente mais tarde."),
         variant: "destructive",
       });
     } finally {
