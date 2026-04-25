@@ -131,6 +131,18 @@ function normalizeEventFromDb(row: Record<string, unknown>): Event {
   };
 }
 
+function toDateTimeLocalValue(value?: string | null): string {
+  if (!value) return '';
+  // If already in yyyy-MM-ddTHH:mm format, keep as-is to prevent cursor jumps while editing.
+  if (value.includes('T')) return value.slice(0, 16);
+  // If only date is available, default to midnight to keep input editable.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T00:00`;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+}
+
 export default function EventsManagement() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1895,7 +1907,7 @@ export default function EventsManagement() {
                   <Input
                     id="edit-start-date"
                     type="datetime-local"
-                    value={editingEvent.start_date ? new Date(editingEvent.start_date).toISOString().slice(0, 16) : ''}
+                    value={toDateTimeLocalValue(editingEvent.start_date)}
                     onChange={(e) => setEditingEvent({...editingEvent, start_date: e.target.value})}
                   />
                 </div>
@@ -1906,7 +1918,7 @@ export default function EventsManagement() {
                   <Input
                     id="edit-end-date"
                     type="datetime-local"
-                    value={editingEvent.end_date ? new Date(editingEvent.end_date).toISOString().slice(0, 16) : ''}
+                    value={toDateTimeLocalValue(editingEvent.end_date)}
                     onChange={(e) => setEditingEvent({...editingEvent, end_date: e.target.value})}
                   />
                 </div>
@@ -2365,8 +2377,10 @@ export default function EventsManagement() {
                       </div>
                     )}
                     
-                    {/* Configuração de Payment Link - Apenas para eventos aprovados */}
-                    {selectedEvent.is_visible && (selectedEvent as Event & { approval_status?: string }).approval_status === 'approved' && (
+                    {/* Configuração de Payment Link - Apenas para eventos com patrocínio/pagamento */}
+                    {selectedEvent.is_visible &&
+                      (selectedEvent as Event & { approval_status?: string }).approval_status === 'approved' &&
+                      (selectedEvent.is_sponsored || selectedEvent.sponsor_payment_status === 'paid') && (
                       <div className="mt-4">
                         <EventPaymentConfig
                           eventId={selectedEvent.id}
