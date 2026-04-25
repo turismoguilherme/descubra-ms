@@ -143,6 +143,19 @@ function toDateTimeLocalValue(value?: string | null): string {
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
 }
 
+function splitDateTimeParts(value?: string | null): { date: string; time: string } {
+  const normalized = toDateTimeLocalValue(value);
+  if (!normalized) return { date: '', time: '00:00' };
+  const [date, time] = normalized.split('T');
+  return { date: date || '', time: time || '00:00' };
+}
+
+function buildDateTimeValue(date: string, time: string): string {
+  if (!date) return '';
+  const safeTime = time && /^\d{2}:\d{2}$/.test(time) ? time : '00:00';
+  return `${date}T${safeTime}`;
+}
+
 export default function EventsManagement() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1234,6 +1247,9 @@ export default function EventsManagement() {
     }
   };
 
+  const editStartParts = splitDateTimeParts(editingEvent?.start_date);
+  const editEndParts = splitDateTimeParts(editingEvent?.end_date);
+
   const EventCard = ({ event, showActions = true }: { event: Event; showActions?: boolean }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -1906,10 +1922,31 @@ export default function EventsManagement() {
                   <Label htmlFor="edit-start-date">Data de Início</Label>
                   <Input
                     id="edit-start-date"
-                    type="datetime-local"
-                    value={toDateTimeLocalValue(editingEvent.start_date)}
-                    onChange={(e) => setEditingEvent({...editingEvent, start_date: e.target.value})}
+                    type="date"
+                    value={editStartParts.date}
+                    onChange={(e) => {
+                      const nextDate = e.target.value;
+                      setEditingEvent({
+                        ...editingEvent,
+                        start_date: buildDateTimeValue(nextDate, editStartParts.time),
+                      });
+                    }}
                   />
+                  <div className="mt-2">
+                    <Label htmlFor="edit-start-time" className="text-xs text-gray-500">Horário de Início</Label>
+                    <Input
+                      id="edit-start-time"
+                      type="time"
+                      value={editStartParts.time}
+                      onChange={(e) => {
+                        const nextTime = e.target.value;
+                        setEditingEvent({
+                          ...editingEvent,
+                          start_date: buildDateTimeValue(editStartParts.date, nextTime),
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Data de fim */}
@@ -1917,10 +1954,31 @@ export default function EventsManagement() {
                   <Label htmlFor="edit-end-date">Data de Fim</Label>
                   <Input
                     id="edit-end-date"
-                    type="datetime-local"
-                    value={toDateTimeLocalValue(editingEvent.end_date)}
-                    onChange={(e) => setEditingEvent({...editingEvent, end_date: e.target.value})}
+                    type="date"
+                    value={editEndParts.date}
+                    onChange={(e) => {
+                      const nextDate = e.target.value;
+                      setEditingEvent({
+                        ...editingEvent,
+                        end_date: buildDateTimeValue(nextDate, editEndParts.time),
+                      });
+                    }}
                   />
+                  <div className="mt-2">
+                    <Label htmlFor="edit-end-time" className="text-xs text-gray-500">Horário de Fim</Label>
+                    <Input
+                      id="edit-end-time"
+                      type="time"
+                      value={editEndParts.time}
+                      onChange={(e) => {
+                        const nextTime = e.target.value;
+                        setEditingEvent({
+                          ...editingEvent,
+                          end_date: buildDateTimeValue(editEndParts.date, nextTime),
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
