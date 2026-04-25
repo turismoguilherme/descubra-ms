@@ -156,6 +156,16 @@ function buildDateTimeValue(date: string, time: string): string {
   return `${date}T${safeTime}`;
 }
 
+function normalizeTimeParts(time: string): { hour: string; minute: string } {
+  const [rawHour = '00', rawMinute = '00'] = time.split(':');
+  const hour = /^\d{2}$/.test(rawHour) ? rawHour : '00';
+  const minute = /^\d{2}$/.test(rawMinute) ? rawMinute : '00';
+  return { hour, minute };
+}
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, idx) => String(idx).padStart(2, '0'));
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, idx) => String(idx).padStart(2, '0'));
+
 export default function EventsManagement() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1249,6 +1259,8 @@ export default function EventsManagement() {
 
   const editStartParts = splitDateTimeParts(editingEvent?.start_date);
   const editEndParts = splitDateTimeParts(editingEvent?.end_date);
+  const startTimeParts = normalizeTimeParts(editStartParts.time);
+  const endTimeParts = normalizeTimeParts(editEndParts.time);
 
   const EventCard = ({ event, showActions = true }: { event: Event; showActions?: boolean }) => (
     <Card className="hover:shadow-md transition-shadow">
@@ -1934,18 +1946,40 @@ export default function EventsManagement() {
                   />
                   <div className="mt-2">
                     <Label htmlFor="edit-start-time" className="text-xs text-gray-500">Horário de Início</Label>
-                    <Input
-                      id="edit-start-time"
-                      type="time"
-                      value={editStartParts.time}
-                      onChange={(e) => {
-                        const nextTime = e.target.value;
-                        setEditingEvent({
-                          ...editingEvent,
-                          start_date: buildDateTimeValue(editStartParts.date, nextTime),
-                        });
-                      }}
-                    />
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <select
+                        id="edit-start-time-hour"
+                        value={startTimeParts.hour}
+                        className="w-full border rounded-md p-2"
+                        onChange={(e) => {
+                          const nextHour = e.target.value;
+                          setEditingEvent({
+                            ...editingEvent,
+                            start_date: buildDateTimeValue(editStartParts.date, `${nextHour}:${startTimeParts.minute}`),
+                          });
+                        }}
+                      >
+                        {HOUR_OPTIONS.map((h) => (
+                          <option key={`start-hour-${h}`} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <select
+                        id="edit-start-time-minute"
+                        value={startTimeParts.minute}
+                        className="w-full border rounded-md p-2"
+                        onChange={(e) => {
+                          const nextMinute = e.target.value;
+                          setEditingEvent({
+                            ...editingEvent,
+                            start_date: buildDateTimeValue(editStartParts.date, `${startTimeParts.hour}:${nextMinute}`),
+                          });
+                        }}
+                      >
+                        {MINUTE_OPTIONS.map((m) => (
+                          <option key={`start-minute-${m}`} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -1966,18 +2000,40 @@ export default function EventsManagement() {
                   />
                   <div className="mt-2">
                     <Label htmlFor="edit-end-time" className="text-xs text-gray-500">Horário de Fim</Label>
-                    <Input
-                      id="edit-end-time"
-                      type="time"
-                      value={editEndParts.time}
-                      onChange={(e) => {
-                        const nextTime = e.target.value;
-                        setEditingEvent({
-                          ...editingEvent,
-                          end_date: buildDateTimeValue(editEndParts.date, nextTime),
-                        });
-                      }}
-                    />
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <select
+                        id="edit-end-time-hour"
+                        value={endTimeParts.hour}
+                        className="w-full border rounded-md p-2"
+                        onChange={(e) => {
+                          const nextHour = e.target.value;
+                          setEditingEvent({
+                            ...editingEvent,
+                            end_date: buildDateTimeValue(editEndParts.date, `${nextHour}:${endTimeParts.minute}`),
+                          });
+                        }}
+                      >
+                        {HOUR_OPTIONS.map((h) => (
+                          <option key={`end-hour-${h}`} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <select
+                        id="edit-end-time-minute"
+                        value={endTimeParts.minute}
+                        className="w-full border rounded-md p-2"
+                        onChange={(e) => {
+                          const nextMinute = e.target.value;
+                          setEditingEvent({
+                            ...editingEvent,
+                            end_date: buildDateTimeValue(editEndParts.date, `${endTimeParts.hour}:${nextMinute}`),
+                          });
+                        }}
+                      >
+                        {MINUTE_OPTIONS.map((m) => (
+                          <option key={`end-minute-${m}`} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
