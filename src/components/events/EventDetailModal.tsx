@@ -318,28 +318,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Logo/Banner do Evento */}
-            {event.logo_evento && (
-              <div className="py-6">
-                {/* Usar URL original diretamente (já otimizada no upload, sem tentar /render/image/) */}
-                <img
-                  src={event.logo_evento}
-                  alt={`Logo do evento ${getTranslatedName(event)}`}
-                  className="w-full h-auto object-contain rounded-xl"
-                  onLoad={(e) => {
-                    
-                  }}
-                  onError={(e) => {
-                    
-                  }}
-                />
-              </div>
-            )}
-
             {/* Descrição */}
             {getTranslatedDescription(event) && (
               <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-3">Sobre o Evento</h3>
+                <h3 className="font-semibold text-gray-900 mb-3 text-center">Sobre o Evento</h3>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {getTranslatedDescription(event)}
                 </p>

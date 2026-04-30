@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,7 @@ interface EventItem {
 
 const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [translations, setTranslations] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -121,6 +122,17 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       loadAllEvents();
     }
   }, [autoLoad]);
+
+  // Abrir detalhes quando a URL vier com ?evento=<id>
+  useEffect(() => {
+    const eventIdFromUrl = searchParams.get('evento');
+    if (!eventIdFromUrl || allEvents.length === 0) return;
+
+    const matchedEvent = allEvents.find((event) => event.id === eventIdFromUrl);
+    if (matchedEvent) {
+      setSelectedEvent(matchedEvent);
+    }
+  }, [allEvents, searchParams]);
 
   // Buscar traduções quando idioma ou eventos mudarem
   useEffect(() => {
@@ -184,28 +196,22 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
       const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&approval_status=eq.approved&select=*,tourist_region:tourist_regions(id,name,slug,color,color_hover)`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          }
-        }
-      );
-
-      if (!response.ok) {
-        console.error("Erro ao carregar eventos");
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      console.log('📊 Eventos brutos recebidos da API:', data?.length || 0);
-      console.log('📋 Primeiro evento bruto:', data?.[0]);
-
-      const events: EventItem[] = (data || []).map((event: unknown, index: number) => {
+      const mapEvents = (rawData: unknown[]): EventItem[] => {
+        return (rawData || []).map((event: unknown, index: number) => {
         try {
+          // Compatibilidade de schema: alguns ambientes usam colunas em PT-BR
+          // (titulo, descricao, data_inicio, local) e outros usam colunas legadas em EN.
+          const eventName = event.name || event.titulo || '';
+          const eventDescription = event.description || event.descricao || '';
+          const eventStartDate = event.start_date || event.data_inicio;
+          const eventEndDate = event.end_date || event.data_fim;
+          const eventLocation = event.location || event.local || '';
+          const eventImageUrl = event.image_url || event.imagem_url || event.imagem_principal;
+          const eventVideoUrl = event.video_url || event.video_promocional;
+          const organizerPhone = event.organizador_telefone || event.telefone_organizador;
+          const organizerEmail = event.organizador_email || event.email_organizador;
+          const organizerName = event.organizador_nome || event.organizador;
+
           // Calcular is_sponsored ANTES de criar o objeto
           const isSponsoredRaw = event.is_sponsored;
           const paymentStatus = event.sponsor_payment_status;
@@ -213,21 +219,21 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           
           const mappedEvent = {
             id: event.id,
-            name: event.name || '',
-            description: event.description || '',
-            start_date: event.start_date,
-            end_date: event.end_date,
+            name: eventName,
+            description: eventDescription,
+            start_date: eventStartDate,
+            end_date: eventEndDate,
             start_time: event.start_time,
             end_time: event.end_time,
-            location: event.location || '',
-            image_url: event.image_url,
+            location: eventLocation,
+            image_url: eventImageUrl,
             logo_evento: event.logo_evento,
             is_sponsored: isSponsoredCalculated,
             site_oficial: event.site_oficial,
-            video_url: event.video_url,
-            organizador_telefone: event.organizador_telefone,
-            organizador_email: event.organizador_email,
-            organizador_nome: event.organizador_nome,
+            video_url: eventVideoUrl,
+            organizador_telefone: organizerPhone,
+            organizador_email: organizerEmail,
+            organizador_nome: organizerName,
             tourist_region_id: event.tourist_region_id,
             tourist_region: event.tourist_region || null,
           };
@@ -236,10 +242,10 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           if (event.video_url || event.logo_evento || event.image_url) {
             console.log(`🎬 Evento ${index + 1} com mídia:`, {
               id: event.id,
-              name: event.name,
-              video_url: event.video_url,
+              name: eventName,
+              video_url: eventVideoUrl,
               logo_evento: event.logo_evento,
-              image_url: event.image_url,
+              image_url: eventImageUrl,
               is_visible: event.is_visible
             });
           }
@@ -249,7 +255,47 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           console.error('Erro ao mapear evento:', error, event);
           return null;
         }
-      }).filter((event): event is EventItem => event !== null);
+        }).filter((event): event is EventItem => event !== null);
+      };
+
+      const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      };
+
+      // 1) Tenta consulta completa com região (join).
+      // 2) Se falhar por schema/relacionamento no ambiente, cai para consulta simples.
+      let data: unknown[] = [];
+      const primaryResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*,tourist_region:tourist_regions(id,name,slug,color,color_hover)`,
+        { headers }
+      );
+
+      if (primaryResponse.ok) {
+        data = await primaryResponse.json();
+      } else {
+        const primaryError = await primaryResponse.text();
+        console.warn('Falha na consulta com join de região, ativando fallback:', primaryError);
+
+        const fallbackResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*`,
+          { headers }
+        );
+
+        if (!fallbackResponse.ok) {
+          const fallbackError = await fallbackResponse.text();
+          console.error("Erro ao carregar eventos (fallback também falhou):", fallbackError);
+          setAllEvents([]);
+          return;
+        }
+
+        data = await fallbackResponse.json();
+      }
+
+      console.log('📊 Eventos brutos recebidos da API:', data?.length || 0);
+      console.log('📋 Primeiro evento bruto:', data?.[0]);
+
+      const events = mapEvents(data);
 
       // Ordenar: patrocinados primeiro, depois por data
       events.sort((a, b) => {
@@ -731,7 +777,14 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       {/* Modal de Detalhes - Novo Componente Profissional */}
       <EventDetailModal
         event={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={() => {
+          setSelectedEvent(null);
+          if (searchParams.get('evento')) {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete('evento');
+            setSearchParams(nextParams, { replace: true });
+          }
+        }}
         getTranslatedName={getTranslatedName}
         getTranslatedDescription={getTranslatedDescription}
         getTranslatedLocation={getTranslatedLocation}
